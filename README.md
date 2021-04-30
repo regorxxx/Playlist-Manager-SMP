@@ -1,5 +1,5 @@
 # Playlist-Manager-SMP
-A playlist manager for foobar2000 and Spider Monkey Panel to save and load (auto)playlists on demand.
+A playlist manager for foobar2000 and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand.
 
 ![Animation2](https://user-images.githubusercontent.com/83307074/116749102-f8b7b900-a9ef-11eb-9054-08fcb349813d.gif)
 
