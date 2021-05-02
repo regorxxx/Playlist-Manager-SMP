@@ -6,9 +6,9 @@ var prefix = 'EDIT';
 //Always loaded along other buttons and panel
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\buttons_panel_xxx.js');
 var g_font = _gdiFont('Segoe UI', 12);
-var buttonCoordinatesOne = {x: 0, y: () => {return window.Height - 22}, w: () => {return window.Width / 4}, h: 22};
-var buttonCoordinatesTwo = {x: () => {return 0 + window.Width / 4}, y: () => {return window.Height - 22}, w: () => {return window.Width / 4}, h: 22};
-var buttonCoordinatesThree = {x: () => {return 0 + window.Width / 4*2}, y: () => {return window.Height - 22}, w: () => {return window.Width / 4 * 2}, h: 22};
+var buttonCoordinatesOne = {x: 0, y: () => {return window.Height - 22;}, w: () => {return window.Width / 4;}, h: 22};
+var buttonCoordinatesTwo = {x: () => {return 0 + window.Width / 4;}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 4;}, h: 22};
+var buttonCoordinatesThree = {x: () => {return 0 + window.Width / 4*2;}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 4 * 2;}, h: 22};
 var buttonOrientation = 'x';
 
 prefix = getUniquePrefix(prefix, '_'); // Puts new ID before '_'
@@ -46,7 +46,7 @@ var newButtons = {
 		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
 	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constAutoPlaylistStates()[0] + (list.autoPlaylistStates[0] == list.constAutoPlaylistStates()[0] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[1] + (list.autoPlaylistStates[0] == list.constAutoPlaylistStates()[1] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[2] + (list.autoPlaylistStates[0] == list.constAutoPlaylistStates()[2] ?  '  <--' : '');} , prefix, newButtonsProperties),
 	// Cycle filtering between playlist lock states: all, not locked, locked
-	ThreeButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation,false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, () => {return list.showStates[0]}, function () {
+	ThreeButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation,false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, () => {return list.showStates[0];}, function () {
 		let t0 = Date.now();
 		let t1 = 0;
 		list.showStates.rotate(1);

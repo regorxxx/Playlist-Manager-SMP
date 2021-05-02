@@ -414,7 +414,7 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 String.prototype.replaceLast = function replaceLast(word, newWord) {
 	const n = this.lastIndexOf(word);
 	return this.slice(0, n) + this.slice(n).replace(word, newWord);
-}
+};
 
 function _q(value) {
 	return '"' + value + '"';

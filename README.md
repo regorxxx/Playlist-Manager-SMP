@@ -7,7 +7,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 
 ![Animation2](https://user-images.githubusercontent.com/83307074/116749102-f8b7b900-a9ef-11eb-9054-08fcb349813d.gif)
 
-# Features
+## Features
 ![Animation3](https://user-images.githubusercontent.com/83307074/116749322-4d5b3400-a9f0-11eb-9e55-cdd91370f624.gif)
 
 * Manages Playlist files and AutoPlaylists.  
@@ -76,7 +76,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 	
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
-# Installation
+## Installation
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts  
 Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg)  
 For ex: mine is c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...  

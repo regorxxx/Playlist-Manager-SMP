@@ -121,7 +121,7 @@ var properties = {
 	ShowSep				: ['Show name/category separators: ', true],
 	ListColours			: ['Color codes for the list. Use contextual menu to set them: ', ''],
 	firstPopup			: ['Playlist Manager: Fired once', false],
-}
+};
 properties['PlaylistPath'].push({func: isString}, properties['PlaylistPath'][1]);
 properties['AutoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['AutoSave'][1]);
 properties['Extension'].push({func: (val) => {return (Array.from(writablePlaylistFormats).indexOf(val) != -1);}}, properties['Extension'][1]);
@@ -134,7 +134,7 @@ setProperties(properties, prefix);
 	if (!prop['firstPopup'][1]) {
 		prop['firstPopup'][1] = true;
 		overwriteProperties(prop); // Updates panel
-		const readmePath = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\readme\\playlist_manager.txt'
+		const readmePath = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\readme\\playlist_manager.txt';
 		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, "e"))) {
 			const readme = utils.ReadTextFile(readmePath, 65001);
 			if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager');}
@@ -262,7 +262,8 @@ function on_playlist_items_added(playlistIndex) {
 // and since its timer is lower than the interval it fires before the next call is done. That's the regular use case.
 // But we can also call the debounced func directly to delay it's execution (for ex. while updating files).
 var debouncedAutoUpdate = (autoUpdateTimer) ? debounce(autoUpdate, autoUpdateTimer - 50) : null;
-const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null; 
+const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
+function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 function autoUpdate() {
 	const playlistPathArray = getFiles(getPropertyByKey(properties, 'PlaylistPath', prefix), readablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
