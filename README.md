@@ -14,22 +14,22 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Playlist files are linked to physical files (.m3u8, .m3u, .pls or .fpl).
   * AutoPlaylists are saved into json format.
   * All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
-* AutoPlaylists: contains all functionality on Auto*playlist Manager by marc2003 plus more.
+* AutoPlaylists: contains all functionality on Auto-playlist Manager by marc2003 plus more.
   * Create, rename, delete AutoPlaylists.
   * Edit query, sort pattern and sort forcing.
   * Adds tooltip info, UI features, filters, etc.
   * Number of tracks output is updated at foobar startup. (and/or 'at manual refresh')
 * Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar (if all items are on library). i.e. "As fast as the native format".
-* Auto*saves changes within foobar to binded playlists files. (configurable)
+* Auto-saves changes within foobar to binded playlists files. (configurable)
 * Automatically updates changes within the tracked folder. (configurable)
 * New updates are delayed when performing internal updates/processing to avoid conflicts.
 * Bind playlist to files:
   * Tracks playlists for changes and update binded files.
-  * Auto*saving (configurable).
+  * Auto-saving (configurable).
   * Deleting the file also ask to delete the binded playlist.
   * Renaming the files also renames the binded playlist.
   * Show binded playlist (becomes active playlist).
-* Lock/unlock playlists (so they are read*only).
+* Lock/unlock playlists (so they are read-only).
   * Automatically locking of native foobar playlists files (.fpl). (configurable)
   * When locked, playlists can not be updated nor edited. They can be deleted.
   * Filename can be changed, but not playlist name (inside the file). This allows to set different playlist and file names if required.
@@ -56,7 +56,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Category: Az | Za
 * UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
   * Invisible unicode chars plus (*)
-  * (a*f)
+  * (a-f)
   * (*) 
   * Or none
 * 3 different writable formats. (some limits apply for .pls playlist files) (configurable)
@@ -75,6 +75,9 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Colours for different playlists types and status (configurable).
 	
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
+
+### Current limitation
+.fpl playlists (native format) are read only and have some limitations since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without an UI widnow), neither load them as handle lists (to work with them without refreshing the UI).
 
 ## Installation
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts  
