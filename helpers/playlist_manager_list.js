@@ -12,16 +12,16 @@ function _list(x, y, w, h) {
 	
 	// Font Awesome
 	const g_font_icon_char = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 5), 0);}
-	const icon_char_header = '\uf015';
+	// const icon_char_header = '\uf015';
 	const icon_char_playlistLocked = '\uf0f6';
 	const icon_char_playlist = '\uf0f6';
-	const icon_char_playlistEmpty = '\uf016';
-	const icon_char_playlistSelected = '\uf053';
+	// const icon_char_playlistEmpty = '\uf016';
+	// const icon_char_playlistSelected = '\uf053';
 	
 	// Icons
 	var icon_char_playlistLockedW = _gr.CalcTextWidth(icon_char_playlistLocked, g_font_icon_char());
 	var icon_char_playlistW = _gr.CalcTextWidth(icon_char_playlist, g_font_icon_char());
-	var icon_char_playlistEmptyW = _gr.CalcTextWidth(icon_char_playlist, g_font_icon_char());
+	// var icon_char_playlistEmptyW = _gr.CalcTextWidth(icon_char_playlist, g_font_icon_char());
 	
 	// UI offset
 	const y_offset = _scale(6);
@@ -46,7 +46,7 @@ function _list(x, y, w, h) {
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
 		icon_char_playlistLockedW = _gr.CalcTextWidth(icon_char_playlistLocked, g_font_icon_char());
 		icon_char_playlistW = _gr.CalcTextWidth(icon_char_playlist, g_font_icon_char());
-		icon_char_playlistEmptyW = _gr.CalcTextWidth(icon_char_playlist, g_font_icon_char());
+		// icon_char_playlistEmptyW = _gr.CalcTextWidth(icon_char_playlist, g_font_icon_char());
 	}
 	
 	this.header_text = window.Name;
@@ -102,7 +102,6 @@ function _list(x, y, w, h) {
 					if (dataKey.length){
 						// Show always current letter at top. Also shows number
 						if (indexSortStateOffset == -1 && i == 0) {
-							let sepIndex = (i + indexSortStateOffset);
 							let sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
 							if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
 							drawDottedLine(gr, this.x, this.y + y_offset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
@@ -259,7 +258,7 @@ function _list(x, y, w, h) {
 	
 	this.cacheLastPosition = () => { // Saves info to restore position later!
 		if (this.in_range && this.index != -1) {this.lastIndex = this.index;}
-		if (this.index > this.rows && this.offset !== 0) {this.lastOffset = this.offset};
+		if (this.index > this.rows && this.offset !== 0) {this.lastOffset = this.offset;}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.data.length) {currentItemIndex = this.data.length - 1;}
 		bMaintainFocus = (currentItemIndex != -1); // Skip at init or when mouse leaves panel
@@ -271,29 +270,31 @@ function _list(x, y, w, h) {
 	this.lbtn_up = (x, y) => {
 		if (this.trace(x, y)) {
 			switch (true) {
-			case this.up_btn.lbtn_up(x, y):
-			case this.down_btn.lbtn_up(x, y):
-			case !this.in_range: //TODO: Add different menu for header
-				break;
-			default:
-				if (x > this.x && x < this.x + Math.min(this.data[this.index].width, this.text_width)) {
-					if (utils.IsKeyPressed(VK_CONTROL)) { // Pressing control
-						const z = this.index;
-						var old_nameId = this.data[z].nameId;
-						var duplicated = getPlaylistIndexArray(old_nameId);
-						if (duplicated.length == 0) {
-							this.edit(x, y, 1); // Uses lbtn_up menu 1 Load playlist
-						} else if (duplicated.length == 1) {
-							this.edit(x, y, 2); // Uses lbtn_up menu 1 Show binded playlist
+				case this.up_btn.lbtn_up(x, y):
+				case this.down_btn.lbtn_up(x, y):
+				case !this.in_range: //TODO: Add different menu for header
+					break;
+				default:
+				{
+					if (x > this.x && x < this.x + Math.min(this.data[this.index].width, this.text_width)) {
+						if (utils.IsKeyPressed(VK_CONTROL)) { // Pressing control
+							const z = this.index;
+							let old_nameId = this.data[z].nameId;
+							let duplicated = getPlaylistIndexArray(old_nameId);
+							if (duplicated.length == 0) {
+								this.edit(x, y, 1); // Uses lbtn_up menu 1 Load playlist
+							} else if (duplicated.length == 1) {
+								this.edit(x, y, 2); // Uses lbtn_up menu 1 Show binded playlist
+							}
+						} else { // Only mouse
+							// this.edit(x, y);
+							if (!this.bDoubleclick) { // it's not a second lbtn click
+								this.timeOut = this.delayedEdit(x,y, undefined, this.index);
+							} else {this.bDoubleclick = false;}
 						}
-					} else { // Only mouse
-						// this.edit(x, y);
-						if (!this.bDoubleclick) { // it's not a second lbtn click
-							this.timeOut = this.delayedEdit(x,y, undefined, this.index);
-						} else {this.bDoubleclick = false;}
 					}
+					break;
 				}
-				break;
 			}
 			return true;
 		} else {
@@ -304,21 +305,23 @@ function _list(x, y, w, h) {
 	this.lbtn_dblclk = (x, y) => {
 		if (this.trace(x, y)) {
 			switch (true) {
-			case !this.in_range:
-				break;
-			default:
-				clearTimeout(this.timeOut);
-				this.timeOut = null;
-				this.bDoubleclick = true;
-				const z = this.index;
-				var old_nameId = this.data[z].nameId;
-				var duplicated = getPlaylistIndexArray(old_nameId);
-				if (duplicated.length == 0) {
-					this.edit(x, y, 1); // Uses lbtn_up menu 1 Load playlist
-				} else if (duplicated.length == 1) {
-					this.edit(x, y, 2); // Uses lbtn_up menu 1 Show binded playlist
+				case !this.in_range:
+					break;
+				default:
+				{
+					clearTimeout(this.timeOut);
+					this.timeOut = null;
+					this.bDoubleclick = true;
+					const z = this.index;
+					const old_nameId = this.data[z].nameId;
+					const duplicated = getPlaylistIndexArray(old_nameId);
+					if (duplicated.length == 0) {
+						this.edit(x, y, 1); // Uses lbtn_up menu 1 Load playlist
+					} else if (duplicated.length == 1) {
+						this.edit(x, y, 2); // Uses lbtn_up menu 1 Show binded playlist
+					}
+					break;
 				}
-				break;
 			}
 			return true;
 		} else {
@@ -327,18 +330,17 @@ function _list(x, y, w, h) {
 	}
 	
 	this.rbtn_up = (x, y) => {
-		const z = this.index;
-        panel.m.AppendMenuItem(MF_STRING, 1000, 'Add new empty playlist file...');
-        panel.m.AppendMenuItem(MF_STRING, 1001, 'Create new playlist file from active playlist...');
+		panel.m.AppendMenuItem(MF_STRING, 1000, 'Add new empty playlist file...');
+		panel.m.AppendMenuItem(MF_STRING, 1001, 'Create new playlist file from active playlist...');
 		panel.m.AppendMenuItem(MF_STRING, 1002, 'Add new AutoPlaylist...');
-        panel.m.AppendMenuSeparator();
-        if (this.deleted_items.length) {
-            this.deleted_items.slice(0, 8).forEach((item, i) => {
-                    panel.s10.AppendMenuItem(MF_STRING, i + 1010, item.name);
-            })
-            panel.s10.AppendTo(panel.m, MF_STRING, 'Restore');
-            panel.m.AppendMenuSeparator();
-        }
+		panel.m.AppendMenuSeparator();
+		if (this.deleted_items.length) {
+			this.deleted_items.slice(0, 8).forEach((item, i) => {
+					panel.s10.AppendMenuItem(MF_STRING, i + 1010, item.name);
+			})
+			panel.s10.AppendTo(panel.m, MF_STRING, 'Restore');
+			panel.m.AppendMenuSeparator();
+		}
 		panel.m.AppendMenuItem( MF_STRING, 1100, 'Manual refresh');
 		panel.m.AppendMenuSeparator();
 		panel.m.AppendMenuItem( MF_STRING, 1200, 'Add playlists from json file...');
@@ -346,12 +348,12 @@ function _list(x, y, w, h) {
 		const sortMethodsMenuLength = Object.keys(this.sortMethods()).length;
 		const sortMethodsMenuIndex = 1300;
 		if (sortMethodsMenuLength) {
-            Object.keys(this.sortMethods()).forEach((item, i) => {
-                    panel.s20.AppendMenuItem(MF_STRING, i + sortMethodsMenuIndex, item);
-            })
+			Object.keys(this.sortMethods()).forEach((item, i) => {
+					panel.s20.AppendMenuItem(MF_STRING, i + sortMethodsMenuIndex, item);
+			})
 			panel.s20.CheckMenuRadioItem(sortMethodsMenuIndex, sortMethodsMenuIndex + sortMethodsMenuLength - 1, sortMethodsMenuIndex + Object.keys(this.sortMethods()).indexOf(this.methodState));
-            panel.s20.AppendTo(panel.m, MF_STRING, 'Change sorting method...');
-        }
+			panel.s20.AppendTo(panel.m, MF_STRING, 'Change sorting method...');
+		}
 		const showSizeMenuIndex = 1350;
 		['Yes (and refresh autoplaylists size by query ouput)', 'Yes (only for standard playlists)', 'No'].forEach((item, i) => {
 			panel.s30.AppendMenuItem(MF_STRING, i + showSizeMenuIndex, item);
@@ -395,125 +397,152 @@ function _list(x, y, w, h) {
 		const sortMethodsMenuIndex = 1300; // See this.rbtn_up
 		const sortMethodsMenuIndexTop = sortMethodsMenuIndex + Object.keys(this.sortMethods()).length - 1; // See this.rbtn_up
 		switch (true) {
-		case idx == 1000:
-			this.add(true);
-			break;
-		case idx == 1001:
-			this.add(false);
-			break;
-		case idx == 1002:
-			this.addAutoplaylist();
-			break;
-		case idx >= 1010 && idx <= 1017: // Restore deleted items (8 items)
-			const item = idx - 1010;
-			this.addToData(this.deleted_items[item]);
-			if (this.deleted_items[item].isAutoPlaylist) {
-				this.update(true, true); // Only paint and save to json
-				this.filter();
-			} else {
-				_restoreFile(this.deleted_items[item].path);
-				// Revert timestamps
-				var newPath = this.deleted_items[item].path.split('.').slice(0,-1).join('.').split('\\');
-				var new_name = newPath.pop().split('_ts_')[0];
-				newPath = newPath.concat([new_name]).join('\\') + this.deleted_items[item].extension;
-				_renameFile(this.deleted_items[item].path, newPath);
-				this.update(false, true); // Updates path..
-				this.filter();
+			case idx == 1000:
+			{
+				this.add(true);
+				break;
 			}
-			this.deleted_items.splice(item, 1);
-			break;
-		case idx == 1100: // Updates with new changes
-			var test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
-			this.bUpdateAutoplaylist = true; 
-			this.update(undefined, true, z); // Forces AutoPlaylist size update according to query and tags
-			this.filter();
-			test.Print();
-			break;
-		case idx == 1200: // Loads json file from Auto-playlist list by marc2003
-			this.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
-			this.loadExternalJson();
-			break;
-		case (idx >= sortMethodsMenuIndex && idx <= sortMethodsMenuIndexTop):
-			const previousMethodState = this.methodState;
-			this.methodState = Object.keys(this.sortMethods())[idx - sortMethodsMenuIndex];
-			this.sortState = Object.keys(this.sortMethods()[this.methodState])[0];
-			// Update properties to save between reloads, but property descriptions changes according to this.methodState
-			this.properties['MethodState'][1] = this.methodState;
-			const removeProperties = {SortState: [this.properties['SortState'][0], null]}; // need to remove manually since we change the ID (description)!
-			this.properties['SortState'][0] = this.properties['SortState'][0].replace(Object.keys(this.sortMethods()[previousMethodState]).join(','),''); // remove old keys
-			this.properties['SortState'][0] += Object.keys(this.sortMethods()[this.methodState]); // add new ones
-			this.properties['SortState'][1] = this.sortState; // and change value
-			// And set properties
-			overwriteProperties(removeProperties); // Deletes old properties used as placeholders
-			overwriteProperties(this.properties);
-			this.sort(undefined, true); // uses current sort state and repaint
-			break;
-		case idx == 1350 || idx == 1351 || idx == 1352: // Show playlist size?
-			this.bShowSize = (idx < 1352) ? true : false;
-			this.properties['UpdateAutoplaylist'][1] = (idx == 1350) ? true : false; // True will force a refresh on script loading
-			this.properties['ShowSize'][1] = this.bShowSize;
-			overwriteProperties(this.properties);
-			break;
-		// case idx >= 1360 || idx < 1361: // Use UUIDs?
-			// this.bUseUUID = (idx == 1360) ? true : false;
-			// this.properties['UseUUID'][1] = this.bUseUUID;
-			// overwriteProperties(this.properties);
-			// break;
-		case idx >= 1360 && idx < 1370: // Use UUIDs?
-			const index = idx - 1360;
-			if (index < this.optionsUUID().length) {
-				this.optionUUID = this.optionsUUID()[index];
-				this.properties['OptionUUID'][1] = this.optionUUID;
-				this.bUseUUID = (index == this.optionsUUID().length - 1) ? false : true;
-				this.properties['UseUUID'][1] = this.bUseUUID;
+			case idx == 1001:
+			{
+				this.add(false);
+				break;
+			}
+			case idx == 1002:
+			{
+				this.addAutoplaylist();
+				break;
+			}
+			case idx >= 1010 && idx <= 1017: // Restore deleted items (8 items)
+			{
+				const item = idx - 1010;
+				this.addToData(this.deleted_items[item]);
+				if (this.deleted_items[item].isAutoPlaylist) {
+					this.update(true, true); // Only paint and save to json
+					this.filter();
+				} else {
+					_restoreFile(this.deleted_items[item].path);
+					// Revert timestamps
+					var newPath = this.deleted_items[item].path.split('.').slice(0,-1).join('.').split('\\');
+					var new_name = newPath.pop().split('_ts_')[0];
+					newPath = newPath.concat([new_name]).join('\\') + this.deleted_items[item].extension;
+					_renameFile(this.deleted_items[item].path, newPath);
+					this.update(false, true); // Updates path..
+					this.filter();
+				}
+				this.deleted_items.splice(item, 1);
+				break;
+			}
+			case idx == 1100: // Updates with new changes
+			{
+				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+				this.bUpdateAutoplaylist = true; 
+				this.update(undefined, true, z); // Forces AutoPlaylist size update according to query and tags
+				this.filter();
+				test.Print();
+				break;
+			}
+			case idx == 1200: // Loads json file from Auto-playlist list by marc2003
+				this.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
+				this.loadExternalJson();
+				break;
+			case (idx >= sortMethodsMenuIndex && idx <= sortMethodsMenuIndexTop):
+			{
+				this.methodState = Object.keys(this.sortMethods())[idx - sortMethodsMenuIndex];
+				this.sortState = Object.keys(this.sortMethods()[this.methodState])[0];
+				// Update properties to save between reloads, but property descriptions changes according to this.methodState
+				this.properties['MethodState'][1] = this.methodState;
+				const removeProperties = {SortState: [this.properties['SortState'][0], null]}; // need to remove manually since we change the ID (description)!
+				this.properties['SortState'][0] = this.properties['SortState'][0].replace(Object.keys(this.sortMethods()[previousMethodState]).join(','),''); // remove old keys
+				this.properties['SortState'][0] += Object.keys(this.sortMethods()[this.methodState]); // add new ones
+				this.properties['SortState'][1] = this.sortState; // and change value
+				// And set properties
+				overwriteProperties(removeProperties); // Deletes old properties used as placeholders
 				overwriteProperties(this.properties);
-			} else {console.log('Playlist manager: Warning. optionsUUID length is lower than menu index')}
-			break;
-		case idx == 1370 || idx == 1371: // Save filtering between sessions
-			this.bSaveFilterStates = (idx == 1370) ? true : false;
-			this.properties['SaveFilterStates'][1] = this.bSaveFilterStates;
-			overwriteProperties(this.properties);
-			break;
-		case idx == 1380 || idx == 1381: // Save filtering between sessions
-			this.bShowSep = (idx == 1380) ? true : false;
-			this.properties['ShowSep'][1] = this.bShowSep;
-			overwriteProperties(this.properties);
-			break;
-		case idx == 1390:
-			let input = '';
-			try {input = utils.InputBox(window.ID, 'Enter path', window.Name, this.playlistsPath, true);}
-			catch (e) {return;}
-			if (!input.length){return;}
-			if (input == this.playlistsPath){return;}
-			this.playlistsPath = input;
-			let bDone = _isFolder(this.playlistsPath);
-			if (!bDone) {bDone = _createFolder(this.playlistsPath);}
-			if (!bDone) {
-				fb.ShowPopupMessage('Path can not be found or created:\n\'' + this.playlistsPath + '\'', window.Name);
-				return;
+				this.sort(undefined, true); // uses current sort state and repaint
+				break;
 			}
-			// Update property to save between reloads
-			this.properties['PlaylistPath'][1] = this.playlistsPath;
-			overwriteProperties(this.properties);
-			this.checkConfig();
-			window.Repaint();
-			break;
-		case idx == 1391: // Opens path with file selected or just the folder
-			if (this.data[z] !== undefined && this.data[z].isAutoPlaylist) {_explorer(this.filename);} // Open AutoPlaylist json file
-			else {_explorer(_isFile(this.data[z] !== undefined ? this.data[z].path : null) ? this.data[z].path : this.playlistsPath);} // Open playlist path
-			break;
-		case idx >= 1450 && idx < 1460:
-			if (idx == 1450) {this.colours.autoPlaylistColour = utils.ColourPicker(window.ID, this.colours.autoPlaylistColour);}
-			if (idx == 1451) {this.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, this.colours.lockedPlaylistColour);}
-			if (idx == 1452) {this.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, this.colours.selectedPlaylistColour);}
-			if (idx == 1453) {this.colours = {};}
-			// Update property to save between reloads
-			let coloursString = convertObjectToString(this.colours);
-			this.properties['ListColours'][1] = coloursString;
-			overwriteProperties(this.properties);
-			this.checkConfig();
-			window.Repaint();
-			break;
+			case idx == 1350 || idx == 1351 || idx == 1352: // Show playlist size?
+			{
+				this.bShowSize = (idx < 1352) ? true : false;
+				this.properties['UpdateAutoplaylist'][1] = (idx == 1350) ? true : false; // True will force a refresh on script loading
+				this.properties['ShowSize'][1] = this.bShowSize;
+				overwriteProperties(this.properties);
+				break;
+			// case idx >= 1360 || idx < 1361: // Use UUIDs?
+				// this.bUseUUID = (idx == 1360) ? true : false;
+				// this.properties['UseUUID'][1] = this.bUseUUID;
+				// overwriteProperties(this.properties);
+				// break;
+			}
+			case idx >= 1360 && idx < 1370: // Use UUIDs?
+			{
+				const index = idx - 1360;
+				if (index < this.optionsUUID().length) {
+					this.optionUUID = this.optionsUUID()[index];
+					this.properties['OptionUUID'][1] = this.optionUUID;
+					this.bUseUUID = (index == this.optionsUUID().length - 1) ? false : true;
+					this.properties['UseUUID'][1] = this.bUseUUID;
+					overwriteProperties(this.properties);
+				} else {console.log('Playlist manager: Warning. optionsUUID length is lower than menu index')}
+				break;
+			}
+			case idx == 1370 || idx == 1371: // Save filtering between sessions
+			{
+				this.bSaveFilterStates = (idx == 1370) ? true : false;
+				this.properties['SaveFilterStates'][1] = this.bSaveFilterStates;
+				overwriteProperties(this.properties);
+				break;
+			}
+			case idx == 1380 || idx == 1381: // Save filtering between sessions
+			{
+				this.bShowSep = (idx == 1380) ? true : false;
+				this.properties['ShowSep'][1] = this.bShowSep;
+				overwriteProperties(this.properties);
+				break;
+			}
+			case idx == 1390:
+			{
+				let input = '';
+				try {input = utils.InputBox(window.ID, 'Enter path', window.Name, this.playlistsPath, true);}
+				catch (e) {return;}
+				if (!input.length){return;}
+				if (input == this.playlistsPath){return;}
+				this.playlistsPath = input;
+				let bDone = _isFolder(this.playlistsPath);
+				if (!bDone) {bDone = _createFolder(this.playlistsPath);}
+				if (!bDone) {
+					fb.ShowPopupMessage('Path can not be found or created:\n\'' + this.playlistsPath + '\'', window.Name);
+					return;
+				}
+				// Update property to save between reloads
+				this.properties['PlaylistPath'][1] = this.playlistsPath;
+				overwriteProperties(this.properties);
+				this.checkConfig();
+				window.Repaint();
+				break;
+			}
+			case idx == 1391: // Opens path with file selected or just the folder
+			{
+				if (this.data[z] !== undefined && this.data[z].isAutoPlaylist) {_explorer(this.filename);} // Open AutoPlaylist json file
+				else {_explorer(_isFile(this.data[z] !== undefined ? this.data[z].path : null) ? this.data[z].path : this.playlistsPath);} // Open playlist path
+				break;
+			}
+			case idx >= 1450 && idx < 1460:
+			{
+				if (idx == 1450) {this.colours.autoPlaylistColour = utils.ColourPicker(window.ID, this.colours.autoPlaylistColour);}
+				if (idx == 1451) {this.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, this.colours.lockedPlaylistColour);}
+				if (idx == 1452) {this.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, this.colours.selectedPlaylistColour);}
+				if (idx == 1453) {this.colours = {};}
+				// Update property to save between reloads
+				let coloursString = convertObjectToString(this.colours);
+				this.properties['ListColours'][1] = coloursString;
+				overwriteProperties(this.properties);
+				this.checkConfig();
+				window.Repaint();
+				break;
+			}
+			default:
+				break;
 		}
 	}
 	
@@ -577,7 +606,6 @@ function _list(x, y, w, h) {
 				console.log('Playlist Manager: Error adding tracks to playlist. Handle list has no tracks.');
 			return false;
 		}
-		const numPlaylist = this.items;
 		if (this.data[playlistIndex].isLocked) { // Skip locked playlists
 			console.log('Playlist Manager: Skipping save on locked playlist.');
 			return false;
@@ -1128,182 +1156,191 @@ function _list(x, y, w, h) {
             m.AppendMenuItem(MF_STRING, 9, 'Delete');
             const idx = (menuIdx === null) ? m.TrackPopupMenu(x, y) : menuIdx;
             switch (idx) {
-            case 1: // Load playlist within foobar. Only 1 instance allowed
-				var old_nameId = this.data[z].nameId;
-				var old_name = this.data[z].name;
-				var duplicated = getPlaylistIndexArray(old_nameId);
-				if (duplicated && duplicated.length > 1) {
-					fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
-				} else {
-					var [fbPlaylistIndex] = clearPlaylistByName(old_nameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
-					if (this.data[z].isAutoPlaylist) { // AutoPlaylist
-						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.PlaylistCount;}
-						if (!checkQuery(this.data[z].query, false)) {fb.ShowPopupMessage('Query not valid:\n' + this.data[z].query, window.Name); return;}
-						plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, this.data[z].query, this.data[z].sort, this.data[z].bSortForced ? 1 : 0);
-						plman.ActivePlaylist = fbPlaylistIndex;
-					} else { // Or file
-						if (_isFile(this.data[z].path)) {
-							if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
+				case 1: // Load playlist within foobar. Only 1 instance allowed
+				{
+					const old_nameId = this.data[z].nameId;
+					const old_name = this.data[z].name;
+					const duplicated = getPlaylistIndexArray(old_nameId);
+					if (duplicated && duplicated.length > 1) {
+						fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+					} else {
+						let [fbPlaylistIndex] = clearPlaylistByName(old_nameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
+						if (this.data[z].isAutoPlaylist) { // AutoPlaylist
+							if (!fbPlaylistIndex) {fbPlaylistIndex = plman.PlaylistCount;}
+							if (!checkQuery(this.data[z].query, false)) {fb.ShowPopupMessage('Query not valid:\n' + this.data[z].query, window.Name); return;}
+							plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, this.data[z].query, this.data[z].sort, this.data[z].bSortForced ? 1 : 0);
 							plman.ActivePlaylist = fbPlaylistIndex;
-							// Try to load handles from library first, greatly speeds up non fpl large playlists
-							// But it will fail as soon as any track is not found on library
-							let bDone = this.data[z].extension != '.fpl' ? loadTracksFromPlaylist(this.data[z].path, plman.ActivePlaylist) : false;
-							if (!bDone) {plman.AddLocations(fbPlaylistIndex, [this.data[z].path], true);}
-							if (this.data[z].extension == '.fpl') { // Workaround for fpl playlist limitations...
-								setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
-							}
-						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
-					}
-				}
-                break;
-            case 2: // Show binded playlist
-				var new_nameId = this.data[z].nameId;
-				var index = plman.FindPlaylist(new_nameId);
-				plman.ActivePlaylist = index;
-                break;
-            case 3: // Renames both playlist file and playlist within foobar. Only 1 instance allowed
-				var new_name = '';
-				try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, this.data[z].name, true);} 
-				catch(e) {return;}
-				if (!new_name.lengt) {return;}
-				var new_nameId = new_name + ((this.bUseUUID && this.data[z].id.length) ? this.data[z].id : ''); // May have enabled/disabled UUIDs just before renaming
-				var old_name = this.data[z].name;
-				var old_nameId = this.data[z].nameId;
-				var old_id = this.data[z].id;
-				var new_id = (this.bUseUUID && old_id.length) ? old_id : nextId(this.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
-				var duplicated = plman.FindPlaylist(new_nameId);
-				if (duplicated != -1) { // Playlist already exists on foobar...
-					fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
-				// } else if (_isFile(this.data[z].path.replace(old_name,new_name))){ // File already exists on the folder..
-					// fb.ShowPopupMessage('You can not have duplicated playlist files on the same folder: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
-				} else {
-					if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
-					if (new_name.length && new_name != old_name) {
-						if (this.data[z].isAutoPlaylist) {
-							this.data[z].name = new_name;
-							if (this.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
-								this.data[z].id = new_id;
-								this.data[z].nameId = new_name + this.data[z].id;
-							} else {
-								this.data[z].id = '';
-								this.data[z].nameId = new_name; 
-							}
-							this.update(true, true);
-							this.filter();
-						} else {
+						} else { // Or file
 							if (_isFile(this.data[z].path)) {
-								// Locked files have the name variable as read only, so we only change the filename. We can not replace old_name with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
-								let newPath = this.data[z].path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([new_name]).join('\\') + this.data[z].extension;
-								// let newPath = this.data[z].path.replace(old_name + this.data[z].extension, new_name + this.data[z].extension);
-								let bRenamedSucessfully = _renameFile(this.data[z].path, newPath);
-								if (bRenamedSucessfully) {
-									this.data[z].path = newPath;
-									if (!this.data[z].isLocked) {
-										let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
-										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (this.bUseUUID ? new_id : '')];
-										let bDone = editTextFile(this.data[z].path, originalStrings, newStrings);
-										if (!bDone) {
-											fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + this.data[z].path, window.Name);
-										} else {
-											this.data[z].name = new_name;
-											if (this.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
-												this.data[z].id = new_id;
-												this.data[z].nameId = new_name + this.data[z].id;
-											} else {
-												this.data[z].id = '';
-												this.data[z].nameId = new_name; 
-											}
-											new_nameId = this.data[z].nameId; // Update var with new id
-											this.update_plman(new_nameId, old_nameId);
-											this.update(true, true);
-											this.filter();
-										}
-									} else {
-										this.update(true, true);
-										this.filter();
-									}
-								} else {fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + this.data[z].path, window.Name);}
+								if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
+								plman.ActivePlaylist = fbPlaylistIndex;
+								// Try to load handles from library first, greatly speeds up non fpl large playlists
+								// But it will fail as soon as any track is not found on library
+								let bDone = this.data[z].extension != '.fpl' ? loadTracksFromPlaylist(this.data[z].path, plman.ActivePlaylist) : false;
+								if (!bDone) {plman.AddLocations(fbPlaylistIndex, [this.data[z].path], true);}
+								if (this.data[z].extension == '.fpl') { // Workaround for fpl playlist limitations...
+									setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
+								}
 							} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
 						}
 					}
+					break;
 				}
-                break;
-            case 4: 
-				if (menuCheck_45) { // Updates playlist file with any new changes on the playlist binded within foobar
-					if (_isFile(this.data[z].path)) {
-						var old_nameId = this.data[z].nameId;
-						var old_name = this.data[z].name;
-						var duplicated = getPlaylistIndexArray(old_nameId);
-						if (duplicated.length > 1) { // There is more than 1 playlist with same name
-							fb.ShowPopupMessage('You have more than one playlist with the same name: ' + old_name + '\n' + 'Please delete any duplicates and leave only the one you want.'  + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
-						} else {
-							if (this.data[z].isLocked) { // Safety check for locked files (but can be overridden)
-								let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
-								if (answer == popup.yes) {
-									this.updatePlaylist(z);
+				case 2: // Show binded playlist
+				{
+					const new_nameId = this.data[z].nameId;
+					const index = plman.FindPlaylist(new_nameId);
+					plman.ActivePlaylist = index;
+					break;
+				}
+				case 3: // Renames both playlist file and playlist within foobar. Only 1 instance allowed
+				{
+					let new_name = '';
+					try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, this.data[z].name, true);} 
+					catch(e) {return;}
+					if (!new_name.lengt) {return;}
+					const new_nameId = new_name + ((this.bUseUUID && this.data[z].id.length) ? this.data[z].id : ''); // May have enabled/disabled UUIDs just before renaming
+					const old_name = this.data[z].name;
+					const old_nameId = this.data[z].nameId;
+					const old_id = this.data[z].id;
+					constnew_id = (this.bUseUUID && old_id.length) ? old_id : nextId(this.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
+					var duplicated = plman.FindPlaylist(new_nameId);
+					if (duplicated != -1) { // Playlist already exists on foobar...
+						fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+					// } else if (_isFile(this.data[z].path.replace(old_name,new_name))){ // File already exists on the folder..
+						// fb.ShowPopupMessage('You can not have duplicated playlist files on the same folder: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+					} else {
+						if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
+						if (new_name.length && new_name != old_name) {
+							if (this.data[z].isAutoPlaylist) {
+								this.data[z].name = new_name;
+								if (this.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
+									this.data[z].id = new_id;
+									this.data[z].nameId = new_name + this.data[z].id;
+								} else {
+									this.data[z].id = '';
+									this.data[z].nameId = new_name; 
 								}
-							} else { // not locked
-								this.updatePlaylist(z);
+								this.update(true, true);
+								this.filter();
+							} else {
+								if (_isFile(this.data[z].path)) {
+									// Locked files have the name variable as read only, so we only change the filename. We can not replace old_name with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
+									let newPath = this.data[z].path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([new_name]).join('\\') + this.data[z].extension;
+									// let newPath = this.data[z].path.replace(old_name + this.data[z].extension, new_name + this.data[z].extension);
+									let bRenamedSucessfully = _renameFile(this.data[z].path, newPath);
+									if (bRenamedSucessfully) {
+										this.data[z].path = newPath;
+										if (!this.data[z].isLocked) {
+											let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
+											let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (this.bUseUUID ? new_id : '')];
+											let bDone = editTextFile(this.data[z].path, originalStrings, newStrings);
+											if (!bDone) {
+												fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + this.data[z].path, window.Name);
+											} else {
+												this.data[z].name = new_name;
+												if (this.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
+													this.data[z].id = new_id;
+													this.data[z].nameId = new_name + this.data[z].id;
+												} else {
+													this.data[z].id = '';
+													this.data[z].nameId = new_name; 
+												}
+												this.update_plman(this.data[z].nameId, old_nameId); // Update with new id
+												this.update(true, true);
+												this.filter();
+											}
+										} else {
+											this.update(true, true);
+											this.filter();
+										}
+									} else {fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + this.data[z].path, window.Name);}
+								} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
 							}
 						}
-					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
-				} else { // Change AutoPlaylist query
-					let new_query = '';
-					try {new_query = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, this.data[z].query);}
-					catch(e) {return;}
-					if (!checkQuery(new_query, false)) {fb.ShowPopupMessage('Query not valid:\n' + new_query, window.Name); return;}
-					if (new_query != this.data[z].query) {
-						this.data[z].query = new_query;
-						this.data[z].size = fb.GetQueryItems(fb.GetLibraryItems(), new_query).Count;
-						this.update(true, true);
-						this.filter();
 					}
+					break;
 				}
-                break;
-            case 5:  
-				if (menuCheck_45) { // Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
-					if (_isFile(this.data[z].path)) {
-						var old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
-						var new_nameId = this.data[z].nameId;
-						var new_name = this.data[z].name;
-						var duplicated = plman.FindPlaylist(new_nameId);
-						if (duplicated != -1) {
-							fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
-						} else {
-							this.update_plman(new_nameId, old_nameId);
-							this.updatePlaylist(z);
-						}
-					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
-				} else { // Change AutoPlaylist sort
-					let new_sort = '';
-					try {new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, this.data[z].sort);}
-					catch(e) {return;}
-					let bDone = false;
-					if (new_sort != this.data[z].sort) { // Pattern
-						this.data[z].sort = new_sort;
-						bDone = true;
-					}
-					if (this.data[z].sort.length) { // And force sorting
-						this.data[z].bSortForced = WshShell.Popup('Force sort?\n(currently ' + this.data[z].bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) == popup.yes;
-						bDone = true;
-					}
-					if (bDone) {
-						this.update(true, true);
-						this.filter();
-					}
-				}
-                break;
-            case 6: // Adds category
-				var category = '';
-				try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, this.data[z].category !== null ? this.data[z].category : '', true);} 
-				catch(e) {return;}
+				case 4: 
 				{
-					var old_name = this.data[z].name;
+					if (menuCheck_45) { // Updates playlist file with any new changes on the playlist binded within foobar
+						if (_isFile(this.data[z].path)) {
+							const old_nameId = this.data[z].nameId;
+							const old_name = this.data[z].name;
+							const duplicated = getPlaylistIndexArray(old_nameId);
+							if (duplicated.length > 1) { // There is more than 1 playlist with same name
+								fb.ShowPopupMessage('You have more than one playlist with the same name: ' + old_name + '\n' + 'Please delete any duplicates and leave only the one you want.'  + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
+							} else {
+								if (this.data[z].isLocked) { // Safety check for locked files (but can be overridden)
+									let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+									if (answer == popup.yes) {
+										this.updatePlaylist(z);
+									}
+								} else { // not locked
+									this.updatePlaylist(z);
+								}
+							}
+						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
+					} else { // Change AutoPlaylist query
+						let new_query = '';
+						try {new_query = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, this.data[z].query);}
+						catch(e) {return;}
+						if (!checkQuery(new_query, false)) {fb.ShowPopupMessage('Query not valid:\n' + new_query, window.Name); return;}
+						if (new_query != this.data[z].query) {
+							this.data[z].query = new_query;
+							this.data[z].size = fb.GetQueryItems(fb.GetLibraryItems(), new_query).Count;
+							this.update(true, true);
+							this.filter();
+						}
+					}
+					break;
+				}
+				case 5:
+				{
+					if (menuCheck_45) { // Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
+						if (_isFile(this.data[z].path)) {
+							const old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
+							const new_nameId = this.data[z].nameId;
+							const new_name = this.data[z].name;
+							var duplicated = plman.FindPlaylist(new_nameId);
+							if (duplicated != -1) {
+								fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+							} else {
+								this.update_plman(new_nameId, old_nameId);
+								this.updatePlaylist(z);
+							}
+						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);}
+					} else { // Change AutoPlaylist sort
+						let new_sort = '';
+						try {new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, this.data[z].sort);}
+						catch(e) {return;}
+						let bDone = false;
+						if (new_sort != this.data[z].sort) { // Pattern
+							this.data[z].sort = new_sort;
+							bDone = true;
+						}
+						if (this.data[z].sort.length) { // And force sorting
+							this.data[z].bSortForced = WshShell.Popup('Force sort?\n(currently ' + this.data[z].bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) == popup.yes;
+							bDone = true;
+						}
+						if (bDone) {
+							this.update(true, true);
+							this.filter();
+						}
+					}
+					break;
+				}
+				case 6: // Adds category
+				{
+					let category = '';
+					try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, this.data[z].category !== null ? this.data[z].category : '', true);} 
+					catch(e) {return;}
 					if (this.data[z].isAutoPlaylist) {
 						this.data[z].category = category;
 						this.update(true, true);
 						this.filter();
 					} else {
+						const old_name = this.data[z].name;
 						if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
 						let bDone = editTextFile(this.data[z].path,'#CATEGORY:' + this.data[z].category,'#CATEGORY:' + category);
 						if (!bDone) {
@@ -1314,41 +1351,47 @@ function _list(x, y, w, h) {
 							this.filter();
 						}
 					}
+					break;
 				}
-                break;
-            case 7: // Adds tag(s)
-				var tags = '';
-				try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, this.data[z].tags.join(';'), true);} 
-				catch(e) {return;}
+				case 7: // Adds tag(s)
 				{
-					var old_name = this.data[z].name;
+					let tags = '';
+					try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, this.data[z].tags.join(';'), true);} 
+					catch(e) {return;}
 					tags = tags.split(';').filter(Boolean); // This filters blank values
-					if (this.data[z].isAutoPlaylist) {
-						this.data[z].tags = tags;
-						this.update(true, true);
-						this.filter();
-					} else {
-						if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
-						let bDone = editTextFile(this.data[z].path,'#TAGS:' + this.data[z].tags.join(';'),'#TAGS:' + tags.join(';'));
-						if (!bDone) {
-							fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + this.data[z].path, window.Name + '\nTag(s): ' + tags);
-						} else {
+					if (! new Set(tags).isEqual(new Set(this.data[z].tags))) { // Compares arrays
+						if (this.data[z].isAutoPlaylist) {
 							this.data[z].tags = tags;
-							this.update(true , true);
+							this.update(true, true);
 							this.filter();
+						} else {
+							const old_name = this.data[z].name;
+							if (_isFile(this.data[z].path)) {
+								if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
+								let bDone = editTextFile(this.data[z].path,'#TAGS:' + this.data[z].tags.join(';'),'#TAGS:' + tags.join(';'));
+								if (!bDone) {
+									fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + this.data[z].path, window.Name + '\nTag(s): ' + tags);
+								} else {
+									this.data[z].tags = tags;
+									this.update(true , true);
+									this.filter();
+								}
+							} else {
+								fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + this.data[z].path, window.Name);
+							}
 						}
 					}
+					break;
 				}
-                break;
-            case 8: // Locks playlist file
-					var old_name = this.data[z].name;
-					var old_nameId = this.data[z].nameId;
+				case 8: // Locks playlist file
+				{
 					let boolText = this.data[z].isLocked ? ['true','false'] : ['false','true'];
 					if (this.data[z].isAutoPlaylist) {
 						this.data[z].isLocked = !this.data[z].isLocked;
 						this.update(true, true);
 						this.filter();
 					} else {
+						const old_name = this.data[z].name;
 						if (_isFile(this.data[z].path)) {
 							if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
 							let bDone = editTextFile(this.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1]);
@@ -1363,54 +1406,58 @@ function _list(x, y, w, h) {
 							fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + this.data[z].path, window.Name);
 						}
 					}
-                break;
-            case 9: // Deletes playlist file and(?) playlist loaded
-				var old_nameId = this.data[z].nameId;
-				var duplicated = plman.FindPlaylist(old_nameId);
-				// Adds timestamp to filename
-				if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
-				if (!this.data[z].isAutoPlaylist) { // Only for not AutoPlaylists
-					if (_isFile(this.data[z].path)) {
-						var newPath = this.data[z].path.split('.').slice(0,-1).join('.').split('\\')
-						var new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
-						newPath = newPath.concat([new_name]).join('\\') + this.data[z].extension;
-						_renameFile(this.data[z].path, newPath);
-						// and delete it
-						_recycleFile(newPath);
-					} else {
-						fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);
-						return;
-					}
+					break;
 				}
-				this.totalFileSize -= this.data[z].size;
-				this.data[z].path = newPath;
-                this.deleted_items.unshift(this.data[z]);
-				this.removeFromData(this.data[z]); // Use this instead of this.data.splice(z, 1) to remove from all data arrays!
-				if (duplicated != -1) {
-					let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
-					if (answer == popup.yes) {
-						plman.RemovePlaylistSwitch(duplicated);
+				case 9: // Deletes playlist file and(?) playlist loaded
+				{
+					// Adds timestamp to filename
+					if (debouncedAutoUpdate != null) {debouncedAutoUpdate();} // This delays autoupdate
+					if (!this.data[z].isAutoPlaylist) { // Only for not AutoPlaylists
+						if (_isFile(this.data[z].path)) {
+							var newPath = this.data[z].path.split('.').slice(0,-1).join('.').split('\\')
+							var new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
+							newPath = newPath.concat([new_name]).join('\\') + this.data[z].extension;
+							_renameFile(this.data[z].path, newPath);
+							// and delete it
+							_recycleFile(newPath);
+						} else {
+							fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[z].name + '\nPath: ' + this.data[z].path, window.Name);
+							return;
+						}
 					}
+					// Delete from data
+					const old_nameId = this.data[z].nameId;
+					const duplicated = plman.FindPlaylist(old_nameId);
+					this.totalFileSize -= this.data[z].size;
+					this.data[z].path = newPath;
+					this.deleted_items.unshift(this.data[z]);
+					this.removeFromData(this.data[z]); // Use this instead of this.data.splice(z, 1) to remove from all data arrays!
+					if (duplicated != -1) {
+						let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
+						if (answer == popup.yes) {
+							plman.RemovePlaylistSwitch(duplicated);
+						}
+					}
+					this.update(true, true);
+					this.filter();
+					break;
 				}
-                this.update(true, true);
-				this.filter();
-                break;
-            }
-        }
+			}
+		}
 		
-        this.delayedEdit = delayFn(this.edit, 100);
+		this.delayedEdit = delayFn(this.edit, 100);
 		
-        this.update_plman = (name, oldName) => {
-            let i = 0;
-            while (i < plman.PlaylistCount) {
-                if (plman.GetPlaylistName(i) == oldName) {
-                    plman.RenamePlaylist(i, name);
-                } else {
-                    i++;
-                }
-            }
-        }
-        
+		this.update_plman = (name, oldName) => {
+			let i = 0;
+			while (i < plman.PlaylistCount) {
+				if (plman.GetPlaylistName(i) == oldName) {
+					plman.RenamePlaylist(i, name);
+				} else {
+					i++;
+				}
+			}
+		}
+		
 	
 		this.initProperties = () => { // Some properties require code fired after setting them...
 			let bDone = false;
@@ -1532,16 +1579,12 @@ function _list(x, y, w, h) {
 		switch (idx) {
 			case 0:
 				return 'invisible';
-				break;
 			case 1:
 				return 'letters';
-				break;
 			case 2:
 				return 'indicator';
-				break;
 			case 3:
 				return null;
-				break;
 			default:
 				return null;
 		}

@@ -1183,13 +1183,12 @@ function convertObjectToString(object, separator = ',') {
 // Use this to change states on buttons on click. So every click changes to next state.
 // arr = [0,1,2]; arr.rotate(1); -> [1,2,0]
 Array.prototype.rotate = (function() {
-    var unshift = Array.prototype.unshift, splice = Array.prototype.splice;
-
-    return function(count) {
-        var len = this.length >>> 0, count = count >> 0;
-        unshift.apply(this, splice.call(this, count % len, len));
-        return this;
-    };
+	var unshift = Array.prototype.unshift, splice = Array.prototype.splice;
+	return function(count) {
+		var len = this.length >>> 0, count = count >> 0;
+		unshift.apply(this, splice.call(this, count % len, len));
+		return this;
+	};
 })();
 
 /* 
@@ -1197,62 +1196,66 @@ Array.prototype.rotate = (function() {
 */
 
 Set.prototype.isSuperset = function(subset) {
-    for (let elem of subset) {
-        if (!this.has(elem)) {
-            return false;
-        }
-    }
-    return true;
+	for (let elem of subset) {
+		if (!this.has(elem)) {
+			return false;
+		}
+	}
+	return true;
 }
 
 Set.prototype.union = function(setB) {
-    let union = new Set(this);
-    for (let elem of setB) {
-        union.add(elem);
-    }
-    return union;
+	let union = new Set(this);
+	for (let elem of setB) {
+		union.add(elem);
+	}
+	return union;
 }
 
 Set.prototype.intersection = function(setB) {
-    let intersection = new Set();
-    for (let elem of setB) {
-        if (this.has(elem)) {
-            intersection.add(elem);
-        }
-    }
-    return intersection;
+	let intersection = new Set();
+	for (let elem of setB) {
+		if (this.has(elem)) {
+			intersection.add(elem);
+		}
+	}
+	return intersection;
 }
 
 Set.prototype.difference = function(setB) {
-    let difference = new Set(this);
-    for (let elem of setB) {
-        difference.delete(elem);
-    }
-    return difference;
+	let difference = new Set(this);
+	for (let elem of setB) {
+		difference.delete(elem);
+	}
+	return difference;
+}
+
+Set.prototype.isEqual = function(subset) {
+	return (this.size === subset.size && this.isSuperset(subset));
 }
 
 Set.prototype.unionSize = function(setB) {
-    let size = 0;
-    for (let elem of setB) {
-        if (!this.has(elem)) {size++};
-    }
-    return size;
+	let size = 0;
+	for (let elem of setB) {
+		if (!this.has(elem)) {size++};
+	}
+	return size;
 }
 
 Set.prototype.intersectionSize = function(setB) {
-    let size = 0;
-    for (let elem of setB) {
-        if (this.has(elem)) {size++};
-    }
-    return size;
+	let size = 0;
+	for (let elem of setB) {
+		if (this.has(elem)) {size++};
+	}
+	return size;
 }
 
 Set.prototype.differenceSize = function(setB) {
-    let size = this.size;
-    for (let elem of setB) {
-        if (this.has(elem)) {size--};
-    }
-    return size;
+	let size = this.size;
+	for (let elem of setB) {
+		if (this.has(elem)) {size--};
+	}
+	return size;
 }
 
 /* 
