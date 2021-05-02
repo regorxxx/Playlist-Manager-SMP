@@ -88,6 +88,6 @@ For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...
 Then load 'playlist_manager.js' into a SMP panel within foobar.
 
 [changelog]: CHANGELOG.md
-[version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg
+[version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg?include_prereleases
 [codacy_badge]: https://api.codacy.com/project/badge/Grade/329cf09cbffc46618a64d04e51f32011
 [codefactor_badge]: https://www.codefactor.io/repository/github/regorxxx/Playlist-Manager-SMP/badge/main
