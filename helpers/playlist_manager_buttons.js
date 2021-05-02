@@ -19,8 +19,8 @@ var newButtonsProperties = { //You can simply add new properties here
 setProperties(newButtonsProperties, prefix); //This sets all the panel properties at once
 
 // we change the default coordinates here to accommodate text for x orientation. Apply this on vertical as global!
-// if (buttonOrientation == 'x') {buttonCoordinates.w += 0;}
-// if (buttonOrientation == 'y') {buttonCoordinates.h += 0;}
+// if (buttonOrientation === 'x') {buttonCoordinates.w += 0;}
+// if (buttonOrientation === 'y') {buttonCoordinates.h += 0;}
 
 var newButtons = {
 	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed. 
@@ -44,7 +44,7 @@ var newButtons = {
 		list.filter(); // Current filter states
 		t1 = Date.now();
 		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constAutoPlaylistStates()[0] + (list.autoPlaylistStates[0] == list.constAutoPlaylistStates()[0] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[1] + (list.autoPlaylistStates[0] == list.constAutoPlaylistStates()[1] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[2] + (list.autoPlaylistStates[0] == list.constAutoPlaylistStates()[2] ?  '  <--' : '');} , prefix, newButtonsProperties),
+	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constAutoPlaylistStates()[0] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[0] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[1] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[1] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[2] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[2] ?  '  <--' : '');} , prefix, newButtonsProperties),
 	// Cycle filtering between playlist lock states: all, not locked, locked
 	ThreeButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation,false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, () => {return list.showStates[0];}, function () {
 		let t0 = Date.now();
@@ -54,7 +54,7 @@ var newButtons = {
 		list.filter(); // Current filter states
 		t1 = Date.now();
 		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constShowStates()[0] + (list.showStates[0] == list.constShowStates()[0] ?  '  <--\n' : '\n') + list.constShowStates()[1] + (list.showStates[0] == list.constShowStates()[1] ?  '  <--\n' : '\n') + list.constShowStates()[2] + (list.showStates[0] == list.constShowStates()[2] ?  '  <--' : '');}, prefix, newButtonsProperties),
+	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constShowStates()[0] + (list.showStates[0] === list.constShowStates()[0] ?  '  <--\n' : '\n') + list.constShowStates()[1] + (list.showStates[0] === list.constShowStates()[1] ?  '  <--\n' : '\n') + list.constShowStates()[2] + (list.showStates[0] === list.constShowStates()[2] ?  '  <--' : '');}, prefix, newButtonsProperties),
 };
 // Check if the button list already has the same button ID
 for (var buttonName in newButtons) {

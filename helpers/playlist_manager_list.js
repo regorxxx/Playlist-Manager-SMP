@@ -839,7 +839,7 @@ function _list(x, y, w, h) {
 		const keys = Object.keys(this.sortMethods()[methodState]);
 		let index = keys.indexOf(sortState);
 		if (index === -1) {return null;}
-		return (index === 0) ? keys[++index] : keys[--index];
+		return ((index === 0) ? keys[++index] : keys[--index]);
 	}
 	this.getIndexSortState = (sortState = this.sortState, methodState = this.methodState) => {
 		const keys = Object.keys(this.sortMethods()[methodState]);
