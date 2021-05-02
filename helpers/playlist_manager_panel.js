@@ -5,7 +5,7 @@ var panel_properties = {
 	fontSize : ['PANEL.FONTS.SIZE', 12],
 	coloursMode : ['PANEL.COLOURS.MODE', 0],
 	customBackground : ['PANEL.COLOURS.CUSTOM.BACKGROUND', RGB(0, 0, 0)]
-}
+};
 
 setProperties(panel_properties, "panel_");
 

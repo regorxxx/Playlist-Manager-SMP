@@ -124,7 +124,7 @@ var properties = {
 };
 properties['PlaylistPath'].push({func: isString}, properties['PlaylistPath'][1]);
 properties['AutoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['AutoSave'][1]);
-properties['Extension'].push({func: (val) => {return (Array.from(writablePlaylistFormats).indexOf(val) != -1);}}, properties['Extension'][1]);
+properties['Extension'].push({func: (val) => {return (Array.from(writablePlaylistFormats).indexOf(val) !== -1);}}, properties['Extension'][1]);
 properties['AutoUpdate'].push({range: [[0,0],[100, Infinity]]}, properties['AutoUpdate'][1]);
 var prefix = 'plm_';
 setProperties(properties, prefix);
@@ -241,7 +241,7 @@ function on_playlists_changed() { // To show/hide loaded indicators...
 
 // Autosave
 // Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
-// if Autosave == 0, then it does nothing...
+// if Autosave === 0, then it does nothing...
 var debouncedUpdate = (autoSaveTimer) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
 function on_playlist_items_reordered(playlistIndex) {
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
@@ -267,7 +267,7 @@ function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debo
 function autoUpdate() {
 	const playlistPathArray = getFiles(getPropertyByKey(properties, 'PlaylistPath', prefix), readablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
-	if (playlistPathArrayLength != (list.dataAll.length - list.itemsAutoplaylist)) { // Most times that's good enough. Count total items minus virtual playlists
+	if (playlistPathArrayLength !== (list.dataAll.length - list.itemsAutoplaylist)) { // Most times that's good enough. Count total items minus virtual playlists
 		list.update(false, true, list.lastIndex);
 		list.filter(); // Maintains focus on last selected item
 		return true;
@@ -276,7 +276,7 @@ function autoUpdate() {
 		for (let i = 0; i < playlistPathArrayLength; i++) {
 			totalFileSize += isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
 		}
-		if (totalFileSize != list.totalFileSize) { // User may have replaced a file with foobar executed
+		if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar executed
 			list.update(false, true);
 			list.filter(); // Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
 			return true;
@@ -286,11 +286,11 @@ function autoUpdate() {
 }
 
 function oPlaylist (id, path, name = undefined, extension = undefined, size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = []) {
-	if (extension === undefined) {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
-	if (name === undefined) {
+	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
+	if (typeof name === 'undefined') {
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
 		name = arr[1];
-		if (name.endsWith(arr[2])) {name = name.replaceLast(arr[2],'')} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+		if (name.endsWith(arr[2])) {name = name.replaceLast(arr[2],'');} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 	}
 	this.id = id;
 	this.name = name;
@@ -326,9 +326,9 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'Pla
 		var size = null;
 		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
 			let text = utils.ReadTextFile(playlistPathArray[i], convertCharsetToCodepage('UTF-8')).split('\r\n');
-			if (text !== undefined && text.length >= 1) {
-				let commentsText = text.filter(function(e) { return e.startsWith('#') });
-				if (commentsText !== undefined && commentsText.length >= 1) { // Use playlist info
+			if (typeof text !== 'undefined' && text.length >= 1) {
+				let commentsText = text.filter(function(e) {return e.startsWith('#');});
+				if (typeof commentsText !== 'undefined' && commentsText.length >= 1) { // Use playlist info
 					let lines = commentsText.length;
 					let lineText = '';
 					let j = 0;
@@ -359,13 +359,13 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'Pla
 							iFound++;
 							size = Number(lineText.split(':')[1]);
 						}
-						if (iFound == 6) {break;}
+						if (iFound === 6) {break;}
 						j++;
 					}
 				}
 			}			
 			if (size === null) { // Or count tracks
-				var filteredText = text.filter(function(e) { return !e.startsWith('#') });
+				var filteredText = text.filter(function(e) {return !e.startsWith('#');});
 				size = filteredText.length;
 			}
 		} else if (playlistPathArray[i].endsWith('.fpl')) { // AddLocations is async so it doesn't work...
@@ -381,14 +381,14 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'Pla
 			// }
 		} else if (playlistPathArray[i].endsWith('.pls')) {
 			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
-			if (text !== undefined && text.length >= 1) {
-				let sizeText = text.filter(function(e) { return e.startsWith('NumberOfEntries') });
-				if (sizeText !== undefined && sizeText.length >= 1) { // Use playlist info
+			if (typeof text !== 'undefined' && text.length >= 1) {
+				let sizeText = text.filter(function(e) {return e.startsWith('NumberOfEntries');});
+				if (typeof sizeText !== 'undefined' && sizeText.length >= 1) { // Use playlist info
 					size = sizeText[0].split('=')[1];
 				}
 			}			
 			if (size === null) { // Or count tracks
-				let fileText = text.filter(function(e) { return e.startsWith('File') });
+				let fileText = text.filter(function(e) {return e.startsWith('File');});
 				size = fileText.length;
 			}	
 		}

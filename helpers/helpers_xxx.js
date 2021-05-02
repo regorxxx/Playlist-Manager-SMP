@@ -1202,7 +1202,7 @@ Set.prototype.isSuperset = function(subset) {
 		}
 	}
 	return true;
-}
+};
 
 Set.prototype.union = function(setB) {
 	let union = new Set(this);
@@ -1210,7 +1210,7 @@ Set.prototype.union = function(setB) {
 		union.add(elem);
 	}
 	return union;
-}
+};
 
 Set.prototype.intersection = function(setB) {
 	let intersection = new Set();
@@ -1220,7 +1220,7 @@ Set.prototype.intersection = function(setB) {
 		}
 	}
 	return intersection;
-}
+};
 
 Set.prototype.difference = function(setB) {
 	let difference = new Set(this);
@@ -1228,11 +1228,11 @@ Set.prototype.difference = function(setB) {
 		difference.delete(elem);
 	}
 	return difference;
-}
+};
 
 Set.prototype.isEqual = function(subset) {
 	return (this.size === subset.size && this.isSuperset(subset));
-}
+};
 
 Set.prototype.unionSize = function(setB) {
 	let size = 0;
@@ -1240,7 +1240,7 @@ Set.prototype.unionSize = function(setB) {
 		if (!this.has(elem)) {size++};
 	}
 	return size;
-}
+};
 
 Set.prototype.intersectionSize = function(setB) {
 	let size = 0;
@@ -1248,7 +1248,7 @@ Set.prototype.intersectionSize = function(setB) {
 		if (this.has(elem)) {size++};
 	}
 	return size;
-}
+};
 
 Set.prototype.differenceSize = function(setB) {
 	let size = this.size;
@@ -1256,7 +1256,7 @@ Set.prototype.differenceSize = function(setB) {
 		if (this.has(elem)) {size--};
 	}
 	return size;
-}
+};
 
 /* 
 	Combinatory 

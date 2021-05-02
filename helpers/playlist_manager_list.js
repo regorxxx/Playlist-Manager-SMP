@@ -144,7 +144,7 @@ function _list(x, y, w, h) {
 				gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 		}
 		// Selection indicator
-		if (this.index !== undefined && this.data[this.index] !== undefined) {
+		if (typeof this.index !== 'undefined' && typeof this.data[this.index] !== 'undefined') {
 			if ((this.index - this.offset) >= 0 && (this.index - this.offset) < this.rows) {
 				// Icon
 				// gr.GdiDrawText(icon_char_playlistSelected, g_font_icon_char(), this.colours.selectedPlaylistColour, this.x + 5 + this.data[this.index].width , this.y + y_offset + _scale(1) + ((((this.index) ? this.index : this.offset) - this.offset) * panel.row_height), this.text_width, panel.row_height, LEFT);
