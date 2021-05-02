@@ -1,5 +1,9 @@
 # Playlist-Manager-SMP
-A playlist manager for [foobar200](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
+[![version][version_badge]][changelog]
+[![CodeFactor][codefactor_badge]](https://www.codefactor.io/repository/github/regorxxx/Playlist-Manager-SMP/overview/main)
+[![CodacyBadge][codacy_badge]](https://www.codacy.com/gh/regorxxx/Playlist-Manager-SMP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=regorxxx/Playlist-Manager-SMP&amp;utm_campaign=Badge_Grade)
+![GitHub](https://img.shields.io/github/license/regorxxx/)  
+A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
 
 ![Animation2](https://user-images.githubusercontent.com/83307074/116749102-f8b7b900-a9ef-11eb-9054-08fcb349813d.gif)
 
@@ -79,3 +83,8 @@ For ex: mine is c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\
 For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...  
 Then load 'playlist_manager.js' into a SMP panel within foobar.
+
+[changelog]: CHANGELOG.md
+[version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg
+[codacy_badge]: https://api.codacy.com/project/badge/Grade/329cf09cbffc46618a64d04e51f32011
+[codefactor_badge]: https://www.codefactor.io/repository/github/regorxxx/Playlist-Manager-SMP/badge/main
