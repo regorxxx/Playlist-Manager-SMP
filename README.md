@@ -76,8 +76,8 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 	
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
-### Current limitation
-.fpl playlists (native format) are read only and have some limitations since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without an UI widnow), neither load them as handle lists (to work with them without refreshing the UI).
+### Current limitations
+.fpl playlists (native format) are read only and can not be autosaved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).
 
 ## Installation
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts  
