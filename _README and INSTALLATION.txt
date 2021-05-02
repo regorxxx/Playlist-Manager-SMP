@@ -1,9 +1,15 @@
+REQUISITES:
+-------------
+Spider Monkey Panel:
+https://theqwertiest.github.io/foo_spider_monkey_panel/
+
 INSTALLATION: 
 -------------
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts
-Any other path WILL NOT work without editing the scripts.
+Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg)
 For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...
-For portable installations: .\foobar2000\profile\scripts\SMP\xxx-scripts\...
+For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\... 
+For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
 Then load any script into a SMP panel within foobar. See info for usage. 
 
 INFO: 

@@ -28,8 +28,8 @@ const cyclicTags = new Set(["dynamic_genre"]); // These are numeric tags with li
 // Object keys must match the tag names at cyclicTags... 
 const cyclicTagsDescriptor =	{	
 									//dyngenre_map_xxx.js
-									dynamic_genre: function(tagValue, valueRange, bReturnLimits) {return dyn_genre_range(tagValue, valueRange, bReturnLimits);}
-								} 
+									dynamic_genre(tagValue, valueRange, bReturnLimits) {return dyn_genre_range(tagValue, valueRange, bReturnLimits);},
+								};
 // Add here the external files required for cyclic tags
 var bLoadTags; // This tells the helper to load tags descriptors extra files. False by default
 if (bLoadTags) {
@@ -38,11 +38,12 @@ if (bLoadTags) {
 					];
 
 	for (let i = 0; i < externalPath.length; i++) {
-		if ((isCompatible('1.4.0') ? utils.IsFile(externalPath[i]) : utils.FileTest(externalPath[i], "e"))) { //TODO: Deprecated
-			console.log('cyclicTagsDescriptor - File loaded: ' + externalPath[i]);
-			include(externalPath[i], {always_evaluate: false});
+		const path = externalPath[i];
+		if ((isCompatible('1.4.0') ? utils.IsFile(path) : utils.FileTest(path, "e"))) { //TODO: Deprecated
+			console.log('cyclicTagsDescriptor - File loaded: ' + path);
+			include(path, {always_evaluate: false});
 		} else {
-			console.log('cyclicTagsDescriptor - WARNING missing: ' + externalPath[i]);
+			console.log('cyclicTagsDescriptor - WARNING missing: ' + path);
 		}
 	}
 }
@@ -65,7 +66,7 @@ const ONE_DAY = 86400000;
 const ONE_WEEK = 604800000;
 
 const LM = _scale(5);
-const TM = _scale(15)
+const TM = _scale(15);
 
 const chars = {
 	up : '\uF077',
@@ -101,28 +102,28 @@ const popup = {
 };
 
 // Combinations of invisible chars may be used on UI elements to assign IDs...
-const hiddenChars = ['\u200b','\u200c','\u200d','\u200e']
+const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 
 /* 
 	Functions
 */
 
 // Useful for comparing properties...
-const zeroOrGreaterThan = (value, limit) => {return (value == 0) ? 0 : ((value < limit) ? limit : value)};
+const zeroOrGreaterThan = (value, limit) => {return (value === 0) ? 0 : ((value < limit) ? limit : value);};
 
 // Repeat execution indefinitely according to interval (ms). Ex:
 // const repeatedFunction = repeatFn(function, ms);
 // repeatedFunction(arguments);
 const repeatFn = (func, ms) => {
-	return (...args) => {setInterval(func.bind(this, ...args), ms);}
-}
+	return (...args) => {setInterval(func.bind(this, ...args), ms);};
+};
 
 // Delay execution according to interval (ms). Ex:
 // const delayedFunction = delayFn(function, ms);
 // delayedFunction(arguments);
 const delayFn = (func, ms) => {
-	return (...args) => {return setTimeout(func.bind(this, ...args), ms);}
-}
+	return (...args) => {return setTimeout(func.bind(this, ...args), ms);};
+};
 
 // Halt execution if trigger rate is greater than delay (ms), so it fires only once after successive calls. Ex:
 // const debouncedFunction = debounce(function, delay[, immediate]);
@@ -135,9 +136,9 @@ const debounce = (func, delay, immediate) => {
 		if (immediate && !timerId) {
 			boundFunc();
 		}
-		const calleeFunc = immediate ? () => { timerId = null } : boundFunc;
+		const calleeFunc = immediate ? () => {timerId = null;} : boundFunc;
 		timerId = setTimeout(calleeFunc, delay);
-	}
+	};
 };
 
 // Limit the rate at which a function can fire to delay (ms).
@@ -159,23 +160,23 @@ const throttle = (func, delay, immediate) => {
 			}
 			timerId = null; 
 		}, delay);
-	}
+	};
 };
 
 // Fire functions only once
 var doOnceCache = [];
 const doOnce = (task, fn) => {
 	return (...args) => {
-		if(doOnceCache.indexOf(task) == -1) {
+		if(doOnceCache.indexOf(task) === -1) {
 			doOnceCache.push(task);
 			return fn(...args);
 		}
-	}
-}
+	};
+};
 
 function _isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
-};
+}
 
 /* 
 	File manipulation 
@@ -273,7 +274,7 @@ function _restoreFile(file) {
 		const items = app.NameSpace(10).Items();
 		const numItems = items.Count;
 		for (let i = 0; i < numItems; i++) {
-			if (items.Item(i).Name == OriginalFileName) {
+			if (items.Item(i).Name === OriginalFileName) {
 				_renameFile(items.Item(i).Path, file);
 				break;
 			}
@@ -349,6 +350,7 @@ function _runCmd(command, wait) {
 	try {
 		WshShell.Run(command, 0, wait);
 	} catch (e) {
+		console.log('_runCmd(): failed to run command ' + command);
 	}
 }
 
@@ -357,11 +359,11 @@ function editTextFile(filePath, originalString, newString) {
 	let bDone = false;
 	if (_isFile(filePath)){
 		let fileText = utils.ReadTextFile(filePath);
-		if (fileText !== undefined && fileText.length >= 1) {
+		if (typeof fileText !== 'undefined' && fileText.length >= 1) {
 			let fileTextNew = fileText;
-			if (isArray(originalString) && isArray(newString) && originalString.length == newString.length) {
+			if (isArray(originalString) && isArray(newString) && originalString.length === newString.length) {
 				originalString = originalString.filter(Boolean); // '' values makes no sense to be replaced
-				if (isArrayStrings(originalString) && isArrayStrings(newString, true) && originalString.length == newString.length) { //newString may have blank values but both arrays must have same length
+				if (isArrayStrings(originalString) && isArrayStrings(newString, true) && originalString.length === newString.length) { //newString may have blank values but both arrays must have same length
 					let replacements = newString.length;
 					for (let i = 0; i < replacements; i++) {
 						fileTextNew = fileTextNew.replace(originalString[i], newString[i]);
@@ -370,12 +372,12 @@ function editTextFile(filePath, originalString, newString) {
 			} else if (isString(originalString) && isString(newString)) {
 				fileTextNew = fileTextNew.replace(originalString, newString);
 			}
-			if (fileTextNew != fileText) {
+			if (fileTextNew !== fileText) {
 				bDone = utils.WriteTextFile(filePath, fileTextNew, true);
 				// Check
 				if (_isFile(filePath) && bDone) {
 					let check = utils.ReadTextFile(filePath, convertCharsetToCodepage("UTF-8"));
-					bDone = (check == fileTextNew);
+					bDone = (check === fileTextNew);
 				}
 			}
 		}
@@ -387,8 +389,8 @@ function findRecursivePaths(path = fb.ProfilePath){
 	let arr = [], pathArr = [];
 	arr = utils.Glob(path + '*.*', 0x00000020); // Directory
 	arr.forEach( (subPath) => {
-		if (subPath.indexOf('\\..') != -1 || subPath.indexOf('\\.') != -1) {return;}
-		if (subPath == path) {return;}
+		if (subPath.indexOf('\\..') !== -1 || subPath.indexOf('\\.') !== -1) {return;}
+		if (subPath === path) {return;}
 		pathArr.push(subPath);
 		pathArr = pathArr.concat(findRecursivePaths(subPath + '\\'));
 	});
@@ -400,7 +402,7 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 	if (isArrayStrings(inPaths)) {
 		let pathArr = [];
 		inPaths.forEach( (path) => {pathArr = pathArr.concat(findRecursivePaths(path));});
-		pathArr.forEach( (path) => {fileArr = fileArr.concat(utils.Glob(path + '\\' +  fileMask))});
+		pathArr.forEach( (path) => {fileArr = fileArr.concat(utils.Glob(path + '\\' +  fileMask));});
 	}
 	return fileArr;
 }
@@ -419,12 +421,12 @@ function _q(value) {
 }
 
 function capitalize(s) {
-  if (typeof s !== 'string') return '';
-  return s.charAt(0).toUpperCase() + s.slice(1)
+  if (typeof s !== 'string') {return '';}
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function capitalizeAll(s, sep = ' ') {
-  if (typeof s !== 'string') return '';
+  if (typeof s !== 'string') {return '';}
   return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1);}).join(sep); // Split, capitalize each subString and join
 }
 
@@ -436,19 +438,15 @@ function isString(str){
 
 function nextId(method, bNext = true, bCharsForced = true) {
 	switch (true) {
-		case method == 'invisible':
+		case method === 'invisible':
 			return nextIdInvisible(bNext, bCharsForced);
-			break;
-		case method == 'letters':
+		case method === 'letters':
 			return nextIdLetters(bNext, bCharsForced);
-			break;
-		case method == 'indicator':
+		case method === 'indicator':
 			return nextIdIndicator(bNext);
-			break;
 		default:
 			return null;
 	}
-
 }
 
 const nextIdInvisible = (function() {
@@ -554,7 +552,7 @@ function getPlaylistIndexArray(name) {
 	let i = 0;
 	let index = [];
 	while (i < plman.PlaylistCount) {
-		if (plman.GetPlaylistName(i) == name) {
+		if (plman.GetPlaylistName(i) === name) {
 			index.push(i);
 		}
 		i++;
@@ -565,7 +563,7 @@ function getPlaylistIndexArray(name) {
 // Removes all playlists with that name
 function removePlaylistByName(name) { 
 	let index = plman.FindPlaylist(name);
-	while (index != -1){
+	while (index !== -1){
 		plman.RemovePlaylist(index);
 		index = plman.FindPlaylist(name);
 	}
@@ -592,7 +590,7 @@ function arePlaylistNamesDuplicated() {
 		names.add(plman.GetPlaylistName(i));
 		i++;
 	}
-	return !(names.size == count);
+	return !(names.size === count);
 }
 
 // Playlists with same name
@@ -606,24 +604,24 @@ function findPlaylistNamesDuplicated() {
 	}
 	const namesArrayNoDuplicates = [...new Set(namesArray)];
 	namesArrayNoDuplicates.forEach((item) => {
-	  const i = namesArray.indexOf(item);
-	  namesArray = namesArray.slice(0, i).concat(namesArray.slice(i + 1, namesArray.length))
-	})
+		const i = namesArray.indexOf(item);
+		namesArray = namesArray.slice(0, i).concat(namesArray.slice(i + 1, namesArray.length));
+	});
 	return namesArray;
 }
 
-function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = undefined, useUUID = null, bLocked = false, category = '', tags = []) {
+function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = []) {
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '))
+		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, "split"); //TODO: Deprecated
 		playlistPath = playlistPath.replaceLast(arr[2], extension);
-		if (!playlistName) {playlistName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2];} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+		if (!playlistName.length) {playlistName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2];} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let playlistText = [];
 		// -------------- m3u
-		if (extension == '.m3u8' || extension == '.m3u') {
+		if (extension === '.m3u8' || extension === '.m3u') {
 			// Header text
 			playlistText.push('#EXTM3U');
 			playlistText.push('#EXTENC:UTF-8');
@@ -635,7 +633,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 			playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
 			playlistText.push('#PLAYLISTSIZE:');
 			// Tracks text
-			if (playlistIndex != -1) { // Tracks from playlist
+			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
 				// let tfo = fb.TitleFormat('%path%');
 				let tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + '%path%');
@@ -647,11 +645,11 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 				playlistText[7] += 0; // Add number of tracks to size
 			} 
 		// ---------------- PLS
-		} else if (extension == '.pls') { // The standard doesn't allow comments... so no UUID here.
+		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			// Header text
 			playlistText.push('[playlist]');
 			// Tracks text
-			if (playlistIndex != -1) { // Tracks from playlist
+			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
 				let tfo = fb.TitleFormat('File#placeholder#=%path%' + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
 				let items = plman.GetPlaylistItems(playlistIndex);
@@ -660,7 +658,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 				let trackTextLength = trackText.length;
 				for (let i = 0; i < trackTextLength; i++) { // It appears 3 times...
 					trackText[i] = trackText[i].replace('#placeholder#', i + 1).replace('#placeholder#', i + 1).replace('#placeholder#', i + 1);
-					trackText[i] += '\r\n' // EoL after every track info group... just for readability
+					trackText[i] += '\r\n'; // EoL after every track info group... just for readability
 				}
 				playlistText = playlistText.concat(trackText);
 				playlistText.push('NumberOfEntries=' + items.Count); // Add number of tracks to size footer
@@ -676,7 +674,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage("UTF-8"));
-			bDone = (check == playlistText);
+			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
 	}
@@ -686,24 +684,24 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 function addHandleToPlaylist(handleList, playlistPath) {
 	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(file)[2] : utils.FileTest(file, "split")[2]; //TODO: Deprecated
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '))
+		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
 		let trackText = [];
 		let addSize = handleList.Count;
 		// -------------- m3u
-		if (extension == '.m3u8' || extension == '.m3u') {
+		if (extension === '.m3u8' || extension === '.m3u') {
 			// Tracks text
-			if (addSize != 0) {
+			if (addSize !== 0) {
 				let tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + '%path%');
 				trackText = tfo.EvalWithMetadbs(handleList);
 			} else { //  Else empty handle
 				return false;
 			} 
 		// ---------------- PLS
-		} else if (extension == '.pls') { // The standard doesn't allow comments... so no UUID here.
-			if (addSize != 0) { // Tracks from playlist
+		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
+			if (addSize !== 0) { // Tracks from playlist
 				// Tracks text
 				let tfo = fb.TitleFormat('File#placeholder#=%path%' + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
 				trackText = tfo.EvalWithMetadbs(handleList);
@@ -711,7 +709,7 @@ function addHandleToPlaylist(handleList, playlistPath) {
 				let trackTextLength = trackText.length;
 				for (let i = 0; i < trackTextLength; i++) { // It appears 3 times...
 					trackText[i] = trackText[i].replace('#placeholder#', i + 1).replace('#placeholder#', i + 1).replace('#placeholder#', i + 1);
-					trackText[i] += '\r\n' // EoL after every track info group... just for readability
+					trackText[i] += '\r\n'; // EoL after every track info group... just for readability
 				}
 			} else { //  Else empty handle
 				return false;
@@ -720,27 +718,27 @@ function addHandleToPlaylist(handleList, playlistPath) {
 		// Read original file
 		let originalText = utils.ReadTextFile(playlistPath).split('\r\n');
 		let bFound = false;
-		if (originalText !== undefined && originalText.length) { // We don't check if it's a playlist by its content! Can break things if used wrong...
-			let lines = originalText.length
-			if (extension == '.m3u8' || extension == '.m3u') {;
+		if (typeof originalText !== 'undefined' && originalText.length) { // We don't check if it's a playlist by its content! Can break things if used wrong...
+			let lines = originalText.length;
+			if (extension === '.m3u8' || extension === '.m3u') {
 				let j = 0;
 				while (j < lines) { // Changes size Line
 					if (originalText[j].startsWith('#PLAYLISTSIZE:')) {
 						size = Number(originalText[j].split(':')[1]);
-						let newSize = size + addSize
+						let newSize = size + addSize;
 						originalText[j] = '#PLAYLISTSIZE:' + newSize;
 						bFound = true;
 						break;
 					}
 					j++;
 				}
-			} else if (extension == '.pls') {
+			} else if (extension === '.pls') {
 				let j = 0;
 				if (originalText[lines - 2].startsWith('NumberOfEntries=')) {
 					bFound = true;
 					// End of Footer
 					size = Number(originalText[lines - 2].split('=')[1]);
-					let newSize = size + addSize
+					let newSize = size + addSize;
 					trackText.push('NumberOfEntries=' + newSize);
 					trackText.push('Version=2');
 					originalText.pop(); //Removes old NumberOfEntries=..
@@ -757,7 +755,7 @@ function addHandleToPlaylist(handleList, playlistPath) {
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage("UTF-8"));
-			bDone = (check == playlistText);
+			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
 	}
@@ -768,19 +766,19 @@ function getFilePathsFromPlaylist(playlistPath) {
 	let paths = [];
 	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, "split")[2]; //TODO: Deprecated
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('getFilePathsFromPlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '))
+		console.log('getFilePathsFromPlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return paths;
 	}
 	if (_isFile(playlistPath)) {
 		// Read original file
 		let originalText = utils.ReadTextFile(playlistPath).split('\r\n');
-		if (originalText !== undefined && originalText.length) {
-			let lines = originalText.length
-			if (extension == '.m3u8' || extension == '.m3u') {;
+		if (typeof originalText !== 'undefined' && originalText.length) {
+			let lines = originalText.length;
+			if (extension === '.m3u8' || extension === '.m3u') {
 				for (let j = 0; j < lines; j++) {
 					if (!originalText[j].startsWith('#')) {paths.push(originalText[j]);}
 				}
-			} else if (extension == '.pls') {
+			} else if (extension === '.pls') {
 				for (let j = 0; j < lines; j++) {
 					if (originalText[j].startsWith('File')) {
 						// Path may contain '=' so get anything past first '='
@@ -799,7 +797,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 function loadTracksFromPlaylist(playlistPath, playlistIndex) {
 	let test = new FbProfiler('Group #1');
 	let bDone = false;
-	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase()});
+	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
 	const playlistLength = filePaths.length;
 	let handlePlaylist = [...Array(playlistLength)];
 	let poolItems = fb.GetLibraryItems().Convert();
@@ -817,7 +815,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex) {
 			count++;
 		}
 	}
-	if (count == filePaths.length) {
+	if (count === filePaths.length) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 		plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
 		bDone = true;
@@ -827,9 +825,9 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex) {
 }
 
 function loadPlaylists(playlistArray) {
-	let playlistArray_length = playlistArray.length;
+	let playlistArrayLength = playlistArray.length;
 	let i = 0;
-	while (i < playlistArray_length) {
+	while (i < playlistArrayLength) {
 		let playlist = playlistArray[i];
 		let newIndex = plman.CreatePlaylist(plman.PlaylistCount, playlist.name);
 		plman.AddLocations(newIndex, [playlist.path], true);
@@ -847,23 +845,23 @@ function loadPlaylists(playlistArray) {
 function queryReplaceWithCurrent(query, handle) {
 	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return;}
 	if (!handle) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
-	if (query.indexOf('#') != -1) {
+	if (query.indexOf('#') !== -1) {
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
 		let next = -1;
-		while (curr != next) {
+		while (curr !== next) {
 			curr = idx[idx.length - 1];
 			next = query.indexOf('#', curr + 1);
-			if (next != -1 && curr != next) {idx.push(next);}
+			if (next !== -1 && curr !== next) {idx.push(next);}
 			else {break;}
 		}
 		let count = idx.length;
-		if (count % 2 == 0) { // Must be on pairs of 2
+		if (count % 2 === 0) { // Must be on pairs of 2
 			let tempQuery = '';
 			let tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
-				tfo = tfo.indexOf('$') == -1 ? "[%" + tfo + "%]" : "[" + tfo + "]";
+				tfo = tfo.indexOf('$') === -1 ? "[%" + tfo + "%]" : "[" + tfo + "]";
 				tfo = fb.TitleFormat(tfo);
 				tfoVal = tfo.EvalWithMetadb(handle);
 				tempQuery = tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + tfoVal;
@@ -877,14 +875,14 @@ function queryReplaceWithCurrent(query, handle) {
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 function query_join(queryArray, setLogic) {
 		const logicDic = ["and", "or", "and not", "or not", "AND", "OR", "AND NOT", "OR NOT"];
-		if (logicDic.indexOf(setLogic) == -1) {
+		if (logicDic.indexOf(setLogic) === -1) {
 			console.log("query_join(): setLogic (" + setLogic + ") is wrong");
 			return;
 		}
 		let arrayLength = queryArray.length;
 		// Wrong array
 		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
-		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength == 0) {
+		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
 			console.log("query_join(): queryArray [" + queryArray + "] was null, empty or not an array");
 			return; //Array was null or not an array
 		}
@@ -892,7 +890,7 @@ function query_join(queryArray, setLogic) {
 		let query = "";
 		let i = 0;
 		while (i < arrayLength) {
-			if (i == 0) {
+			if (i === 0) {
 				query += (arrayLength > 1 ? "(" : "") + queryArray[i] + (arrayLength > 1 ? ")" : "");
 			} else {
 				query += " " + setLogic + " (" + queryArray[i] + ")";
@@ -910,11 +908,11 @@ function query_join(queryArray, setLogic) {
 // For 1D arrays, only 'tagsArrayLogic' is used. i.e. "STYLE IS style1 OR STYLE IS style2 ..."
 function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLogic) {
 		// Wrong tagsArray
-		if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length == 0) {
+		if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
 			console.log("query_combinations(): tagsArray [" + tagsArray + "] was null, empty or not an array");
 			return; //Array was null or not an array
 		}
-		if (queryKey === undefined || queryKey === null || !queryKey) {
+		if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
 			console.log("query_combinations(): queryKey not set");
 			return;
 		}
@@ -924,7 +922,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 			let queryArray = [];
 			while (i < queryKeyLength) {
 				queryArray.push(query_combinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic));
-				i++
+				i++;
 			}
 			return queryArray;
 		}
@@ -932,13 +930,13 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 		let query = "";
 		let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]' ? 1 : 0; //subtagsArray
 		if (!isArray) { //no subtagsArrays
-			if (logicDic.indexOf(tagsArrayLogic) == -1) {
+			if (logicDic.indexOf(tagsArrayLogic) === -1) {
 				console.log("query_combinations(): tagsArrayLogic (" + tagsArrayLogic + ") is wrong");
 				return;
 			}
 			let i = 0;
 			while (i < tagsArrayLength) {
-				if (i == 0) {
+				if (i === 0) {
 					query += queryKey + " IS " + tagsArray[0];
 				} else {
 					query += " " + tagsArrayLogic + " " + queryKey + " IS " + tagsArray[i];
@@ -946,19 +944,19 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 				i++;
 			}
 		} else {
-			if (logicDic.indexOf(tagsArrayLogic) == -1 || !logicDic.indexOf(subtagsArrayLogic) == -1) {
+			if (logicDic.indexOf(tagsArrayLogic) === -1 || !logicDic.indexOf(subtagsArrayLogic) === -1) {
 				console.log("query_combinations(): tagsArrayLogic (" + tagsArrayLogic + ") or subtagsArrayLogic (" + subtagsArrayLogic + ") are wrong");
 				return;
 			}
 			let k = tagsArray[0].length; //SubtagsArrays length
 			let i = 0;
 			while (i < tagsArrayLength) {
-				if (i != 0) {
+				if (i !== 0) {
 					query += " " + tagsArrayLogic + " ";
 				}
 				let j = 0;
 				while (j < k) {
-					if (j == 0) {
+					if (j === 0) {
 						query += (k > 1 ? "(" : "") + queryKey + " IS " + tagsArray[i][0]; // only adds pharentesis when more than one subtag! Estetic fix...
 					} else {
 						query += " " + subtagsArrayLogic + " " + queryKey + " IS " + tagsArray[i][j];
@@ -984,19 +982,19 @@ function getTagsValues(handle, tagsArray, bMerged = false) {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
 	
-	const sel_info = sel.GetFileInfo();
+	const selInfo = sel.GetFileInfo();
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
 	let i = 0;
 	
 	while (i < tagArray_length) {
 		let tagValues = [];
-		const tagIdx = sel_info.MetaFind(tagsArray[i]);
-        const tagNumber = (tagIdx != -1) ? sel_info.MetaValueCount(tagIdx) : 0;
-		if (tagNumber != 0) {
+		const tagIdx = selInfo.MetaFind(tagsArray[i]);
+        const tagNumber = (tagIdx !== -1) ? selInfo.MetaValueCount(tagIdx) : 0;
+		if (tagNumber !== 0) {
 			let j = 0;
 			while (j < tagNumber) {
-				tagValues[j] = sel_info.MetaValue(tagIdx,j);
+				tagValues[j] = selInfo.MetaValue(tagIdx,j);
 				j++;
 			}
 		}
@@ -1018,15 +1016,15 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	let tagString = "";
 	const outputArray_length = handle.Count;
 	while (i < tagArray_length) {
-		if (bMerged) {tagString += i == 0 ? "[%" + tagsArray[i] + "%]" : "[, " + "%" + tagsArray[i] + "%]";} // We have all values separated by comma
-		else {tagString += i == 0 ? "[%" + tagsArray[i] + "%]" : "| " + "[%" + tagsArray[i] + "%]";} // We have tag values separated by comma and different tags by |
+		if (bMerged) {tagString += i === 0 ? "[%" + tagsArray[i] + "%]" : "[, " + "%" + tagsArray[i] + "%]";} // We have all values separated by comma
+		else {tagString += i === 0 ? "[%" + tagsArray[i] + "%]" : "| " + "[%" + tagsArray[i] + "%]";} // We have tag values separated by comma and different tags by |
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
 	outputArray = tfo.EvalWithMetadbs(handle);
 	if (bMerged) { // Just an array of values per track: n x 1
 		for (let i = 0; i < outputArray_length; i++) {
-			outputArray[i] = outputArray[i].split(', ')
+			outputArray[i] = outputArray[i].split(', ');
 			}
 	} else { // Array of values tag and per track; n x tagNumber
 		let tfo = fb.TitleFormat(tagString); 
@@ -1050,12 +1048,12 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false) 
 	let outputArray = [];
 	let i = 0;
 	while (i < tagArray_length) {
-		if (tagsArray[i].toLowerCase() == "skip") {
+		if (tagsArray[i].toLowerCase() === "skip") {
 			outputArray[i] = [[]];
 			i++;
 			continue;
 		}
-		let tagString = ((tagsArray[i].indexOf('$') == -1) ? (bEmptyVal ? "%" + tagsArray[i] + "%" : "[%" + tagsArray[i] + "%]") : (bEmptyVal ? tagsArray[i]: "[" + tagsArray[i] + "]")); // Tagname or TF expression, with or without empty values
+		let tagString = ((tagsArray[i].indexOf('$') === -1) ? (bEmptyVal ? "%" + tagsArray[i] + "%" : "[%" + tagsArray[i] + "%]") : (bEmptyVal ? tagsArray[i]: "[" + tagsArray[i] + "]")); // Tagname or TF expression, with or without empty values
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
 		for (let j = 0; j < outputArrayi_length; j++) {
@@ -1087,7 +1085,7 @@ function compareTagsValues(handle, tagsArray, bMerged = false) {
 	Array and objects manipulation 
 */
 function isArray(checkKeys) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length == 0){
+	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
 		return false; //Array was null or not an array
 	}
 	return true;
@@ -1095,7 +1093,7 @@ function isArray(checkKeys) {
 
 
 function isArrayStrings(checkKeys, bAllowEmpty = false) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length == 0) {
+	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		return false; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
@@ -1112,7 +1110,7 @@ function isArrayStrings(checkKeys, bAllowEmpty = false) {
 }
 
 function isArrayNumbers(checkKeys) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length == 0) {
+	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		return false; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
@@ -1130,7 +1128,7 @@ function isArrayNumbers(checkKeys) {
 // Outputs {key: value, key: value, ...}
 // or  {key: [value, ...], key: [value, ...]}
 function convertStringToObject(string, valueType, separator = ',', secondSeparator) {
-	if (string === null || string == '') {
+	if (string === null || string === '') {
 		return null;
 	} else {
 		let output = {};
@@ -1142,9 +1140,9 @@ function convertStringToObject(string, valueType, separator = ',', secondSeparat
 				if (subArray.length >= 2) {
 					output[subArray[0]] = []; // First value is always the key
 					for (let i = 1; i < subArray.length; i++) {
-						if (valueType == 'string') {
+						if (valueType === 'string') {
 							output[subArray[0]].push(subArray[i]);
-						} else if (valueType == 'number') {
+						} else if (valueType === 'number') {
 							output[subArray[0]].push(Number(subArray[i]));
 						}
 					}
@@ -1153,9 +1151,9 @@ function convertStringToObject(string, valueType, separator = ',', secondSeparat
 		} else { // Only once
 			array = string.split(separator);
 			for (let i = 0; i < array.length; i += 2) {
-				if (valueType == 'string') {
+				if (valueType === 'string') {
 					output[array[i]] = array[i + 1];
-				} else if (valueType == 'number') {
+				} else if (valueType === 'number') {
 					output[array[i]] = Number(array[i + 1]);
 				}
 			}
@@ -1277,13 +1275,13 @@ function k_combinations(aSet, k) {
 			return;
 		}
 		// K-sized set has only one K-sized subset.
-		if (k == aSetLength) {
+		if (k === aSetLength) {
 			return [aSet];
 		}
 		
 		let i, j, combs;
 		// There is N 1-sized subsets in a N-sized set.
-		if (k == 1) {
+		if (k === 1) {
 			combs = [];
 			for (i = 0; i < aSetLength; i++) {
 				combs.push([aSet[i]]);
@@ -1317,7 +1315,7 @@ function combinations(aSet) {
 			return; //Array was null or not an array
 		}
 		// 1-sized set has only one subset.
-		if (aSetLength == 1) {
+		if (aSetLength === 1) {
 			return [aSet];
 		}
 		
@@ -1348,7 +1346,7 @@ function fact(n) {
 
 // Total number of possible k-combinations
 function nk_combinations(n, k) {
-		if (k == n) {
+		if (k === n) {
 			return 1;
 		} else if (k > n){
 			return 0;
@@ -1375,7 +1373,7 @@ function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 1200) {
 			this.Deactivate();
 			return;
 		} else {
-			if (this.tooltip.Text != value) {
+			if (this.tooltip.Text !== value) {
 				this.tooltip.Text = value;
 				this.Activate();
 			}
@@ -1497,7 +1495,7 @@ function _sb(t, x, y, w, h, v, fn) {
 }
 
 function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
-	if (y1 == y2) { // Horizontal
+	if (y1 === y2) { // Horizontal
 		const numberDots = Math.floor((x2 - x1) / dot_sep / 2);
 		let newX1 = x1;
 		let newX2 = x1 + dot_sep;
@@ -1506,7 +1504,7 @@ function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
 			newX1 += dot_sep * 2;
 			newX2 += dot_sep * 2;
 		}
-	} else if (x1 == x2) { // Vertical
+	} else if (x1 === x2) { // Vertical
 		const numberDots = Math.floor((y2 - y1) / dot_sep / 2);
 		let newY1 = y1;
 		let newY2 = y1 + dot_sep;
@@ -1517,7 +1515,7 @@ function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
 		}
 	} else { // Any angle: Would work alone, but checking coordinates first is faster...
 		const numberDots = Math.floor(((x2 - x1)**2 + (y2 - y1)**2)**(1/2) / dot_sep / 2);
-		const angle = (y2 != y1) ? Math.atan((x2 - x1)/(y2 - y1)) : 0;
+		const angle = (y2 !== y1) ? Math.atan((x2 - x1)/(y2 - y1)) : 0;
 		const xStep = dot_sep * Math.cos(angle);
 		const yStep = dot_sep * Math.sin(angle);
 		let newX1 = x1;
@@ -1589,7 +1587,7 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = "", count = 1, bPa
 	let bNumber = count > 0 ? true : false;
 	let output = null;
 	for (let k in propertiesDescriptor){
-		if (k == key) {
+		if (k === key) {
 			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 			break;
 		}
@@ -1619,7 +1617,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = "", count = 1, bPaddi
 			output[k] = [null,null];
 			output[k][0] =  prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k][1] = window.GetProperty(output[k][0]);
-			if (propertiesDescriptor[k].length == 4) {
+			if (propertiesDescriptor[k].length === 4) {
 				if (!checkProperty(propertiesDescriptor[k], output[k][1])) {
 					output[k][1] = propertiesDescriptor[k][3];
 				}
@@ -1636,7 +1634,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = "", count = 1, bPaddi
 function getPropertiesValues(propertiesDescriptor, prefix = "", count = 1, skip = -1, bPadding = true) {
 	let properties = getProperties(propertiesDescriptor, prefix, count, bPadding);
 	let propertiesValues = [];
-	if (skip == -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
+	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in properties){
 		i++;
@@ -1652,7 +1650,7 @@ function getPropertiesValues(propertiesDescriptor, prefix = "", count = 1, skip 
 function getPropertiesKeys(propertiesDescriptor, prefix = "", count = 1, skip = -1, bPadding = true) {
 	let bNumber = count > 0 ? true : false;
 	let propertiesKeys = [];
-	if (skip == -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
+	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in propertiesDescriptor){
 		i++;
@@ -1669,13 +1667,13 @@ function getPropertiesKeys(propertiesDescriptor, prefix = "", count = 1, skip = 
 function enumeratePropertiesValues(propertiesDescriptor, prefix = "", count = 1, sep = "|", skip = -1, bPadding = true) {
 	let bNumber = count > 0 ? true : false;
 	let output = "";
-	if (skip == -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
+	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in propertiesDescriptor){
 		i++;
 		if (i < skip) {
 			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0])); // TODO: toString();
-			output += (output == "") ? value : sep + value ;
+			output += (output === "") ? value : sep + value ;
 			if (bNumber) {count++};
 		}
 	}
@@ -1691,7 +1689,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = "", count = 1,
 function checkProperty(property, withValue) {
 	let bPass = true;
 	let report = '';
-	if (property.length != 4) {return true;}  // No checks needed (?)
+	if (property.length !== 4) {return true;}  // No checks needed (?)
 	const valToCheck = (withValue !== undefined ? withValue : property[1]);
 	const checks = property[2];
 	if (checks.hasOwnProperty('lower') && valToCheck >= checks['lower']) {
@@ -1706,7 +1704,7 @@ function checkProperty(property, withValue) {
 	if (checks.hasOwnProperty('greaterEq') && valToCheck < checks['greaterEq']) {
 		bPass = false; report += 'Value must be greater than or equal to' + checks['greaterEQ'] + '\n';
 	}
-	if (checks.hasOwnProperty('eq') && checks['eq'].indexOf(valToCheck) == -1) {
+	if (checks.hasOwnProperty('eq') && checks['eq'].indexOf(valToCheck) === -1) {
 		bPass = false; report += 'Value must be equal to (any) ' + checks['eq'].join(', ') + '\n';
 	}
 	if (checks.hasOwnProperty('range') && !checks['range'].some( (pair) => {return (valToCheck >= pair[0] && valToCheck <= pair[1]);})) {
@@ -1730,7 +1728,7 @@ const range = (start, stop, step) => Array.from({ length: (stop - start) / step 
 function round(floatnum, decimals){
 	let result;
 	if (decimals > 0) {
-		if (decimals == 15) {result = floatnum;}
+		if (decimals === 15) {result = floatnum;}
 		else {result = Math.round(floatnum * Math.pow(10, decimals)) / Math.pow(10, decimals);}
 	} else {result =  Math.round(floatnum);}
 	return result;
@@ -1767,7 +1765,7 @@ function isCompatible(requiredVersionStr = '1.4.0') {
     }
 
     for(let i = 0; i< currentVersion.length; ++i) {
-      if (currentVersion[i] != requiredVersion[i]) {
+      if (currentVersion[i] !== requiredVersion[i]) {
           return currentVersion[i] > requiredVersion[i];
       }
     }
