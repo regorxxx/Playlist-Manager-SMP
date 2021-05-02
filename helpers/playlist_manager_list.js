@@ -15,7 +15,7 @@ function _list(x, y, w, h) {
 	// const icon_char_header = '\uf015';
 	const icon_char_playlistLocked = '\uf0f6';
 	const icon_char_playlist = '\uf0f6';
-	// const icon_char_playlistEmpty = '\uf016';
+	const icon_char_playlistEmpty = '\uf016';
 	// const icon_char_playlistSelected = '\uf053';
 	
 	// Icons
@@ -184,12 +184,11 @@ function _list(x, y, w, h) {
 	
 	this.simulateWheelToIndex = (toIndex, currentItemIndex = this.lastIndex, originalOffset = this.lastOffset) => {
 		this.index = toIndex;
-		let iDifference = currentItemIndex - originalOffset
+		let iDifference = currentItemIndex - originalOffset;
 		this.offset = 0;
 		let cache = 0;
 		if (iDifference >= 0 && iDifference < currentItemIndex) {
-			while (true) {
-				if (this.index - this.offset <= iDifference) {break;}
+			while (this.index - this.offset > iDifference) {
 				this.wheel(-1, false);
 				if (cache == this.offset) {break;}
 				cache = this.offset;
@@ -213,42 +212,50 @@ function _list(x, y, w, h) {
 			this.index = Math.floor((y - this.y - y_offset) / panel.row_height) + this.offset;
 			this.in_range = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
 			switch (true) {
-			case this.up_btn.move(x, y):
-			case this.down_btn.move(x, y):
-				break;
-			case !this.in_range:
-				this.tooltip.SetValue(null); // Removes tt when not over a list element
-				this.index = -1;
-				// this.lastOffset = 0;
-				window.Repaint(); // Removes selection indicator
-				break;
-			default:
-				switch (true) {
-				case x > this.x && x < this.x + Math.min(this.data[this.index].width, this.text_width):
-					// Cursor
-					window.SetCursor(IDC_HAND);
-					// Selection indicator
-					window.RepaintRect(x, y - panel.row_height, this.text_width, (this.index + 2 )* panel.row_height);
-					// Tooltip
-					let path = (this.data[this.index].path) ? '(' + this.data[this.index].path.replace(this.playlistsPath,'')  + ')' : ''
-					let playlistDataText = (this.data[this.index].isAutoPlaylist) ? 'Autoplaylist: ' : 'Playlist: ';
-					playlistDataText += this.data[this.index].nameId + ' - ' +  this.data[this.index].size + ' Tracks ' + path;
-					playlistDataText += '\n' + 'Status: ' + (this.data[this.index].isLocked ? 'Locked (read-only)' : 'Writable');
-					playlistDataText += '\n' + 'Category: ' + (this.data[this.index].category ? this.data[this.index].category : '-');
-					playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(this.data[this.index].tags) ? this.data[this.index].tags : '-');
-					// Tooltip text for Autoplaylists
-					if (this.data[this.index].isAutoPlaylist) {
-						playlistDataText += '\n' + 'Query: ' + (this.data[this.index].query ? this.data[this.index].query : '-');
-						playlistDataText += '\n' + 'Sort: ' + (this.data[this.index].sort ? this.data[this.index].sort + (this.data[this.index].bSortForced ? ' (forced)' : ''): '-');
-					}
-					this.tooltip.SetValue(playlistDataText, true);
+				case this.up_btn.move(x, y):
+				case this.down_btn.move(x, y):
 					break;
-				default:
+				case !this.in_range:
+				{
 					this.tooltip.SetValue(null); // Removes tt when not over a list element
+					this.index = -1;
+					// this.lastOffset = 0;
 					window.Repaint(); // Removes selection indicator
 					break;
 				}
-				break;
+				default:
+				{
+					switch (true) {
+						case x > this.x && x < this.x + Math.min(this.data[this.index].width, this.text_width):
+						{
+							// Cursor
+							window.SetCursor(IDC_HAND);
+							// Selection indicator
+							window.RepaintRect(x, y - panel.row_height, this.text_width, (this.index + 2 )* panel.row_height);
+							// Tooltip
+							const path = (this.data[this.index].path) ? '(' + this.data[this.index].path.replace(this.playlistsPath,'')  + ')' : ''
+							let playlistDataText = (this.data[this.index].isAutoPlaylist) ? 'Autoplaylist: ' : 'Playlist: ';
+							playlistDataText += this.data[this.index].nameId + ' - ' +  this.data[this.index].size + ' Tracks ' + path;
+							playlistDataText += '\n' + 'Status: ' + (this.data[this.index].isLocked ? 'Locked (read-only)' : 'Writable');
+							playlistDataText += '\n' + 'Category: ' + (this.data[this.index].category ? this.data[this.index].category : '-');
+							playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(this.data[this.index].tags) ? this.data[this.index].tags : '-');
+							// Tooltip text for Autoplaylists
+							if (this.data[this.index].isAutoPlaylist) {
+								playlistDataText += '\n' + 'Query: ' + (this.data[this.index].query ? this.data[this.index].query : '-');
+								playlistDataText += '\n' + 'Sort: ' + (this.data[this.index].sort ? this.data[this.index].sort + (this.data[this.index].bSortForced ? ' (forced)' : ''): '-');
+							}
+							this.tooltip.SetValue(playlistDataText, true);
+							break;
+						}
+						default:
+						{
+							this.tooltip.SetValue(null); // Removes tt when not over a list element
+							window.Repaint(); // Removes selection indicator
+							break;
+						}
+					}
+					break;
+				}
 			}
 			return true;
 		} else {
@@ -742,7 +749,7 @@ function _list(x, y, w, h) {
 			});
 		}
 		// if (dataExternalPlaylists.length) {this.data = this.data.concat(dataExternalPlaylists)}; // Add to database
-		if (dataExternalPlaylists.length) {this.addToData(dataExternalPlaylists)}; // Add to database
+		if (dataExternalPlaylists.length) {this.addToData(dataExternalPlaylists);} // Add to database
 		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
 		this.filter(); // Then filter
 		test.Print();

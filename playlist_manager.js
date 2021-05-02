@@ -142,7 +142,6 @@ setProperties(properties, prefix);
 	}
 }
 
-var bToolbar = null; // Draw buttons without panel background
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 
@@ -308,7 +307,7 @@ function oPlaylist (id, path, name = undefined, extension = undefined, size = '?
 	this.tags = isArrayStrings(tags) ? tags : [];
 	this.bShow = true; // TODO:
 	
-};
+}
 
 function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'PlaylistPath', prefix)) {
 	const playlistPathArray = getFiles(folderPath, readablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
