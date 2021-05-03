@@ -610,6 +610,33 @@ function findPlaylistNamesDuplicated() {
 	return namesArray;
 }
 
+function sendToPlaylist(handleList, playlistName) {
+	// Clear playlist if needed. Preferred to removing it, since then we could undo later...
+	// Look if target playlist already exists
+	let i = 0;
+	let plc = plman.PlaylistCount;
+	while (i < plc) {
+		if (plman.GetPlaylistName(i) === playlistName) {
+			plman.ActivePlaylist = i;
+			break;
+		} else {
+			i++;
+		}
+	}	
+	if (i === plc) { //if no playlist was found before
+		plman.CreatePlaylist(plc, playlistName);
+		plman.ActivePlaylist = plc;
+	}
+	if (plman.PlaylistItemCount(plman.ActivePlaylist)) {
+		plman.UndoBackup(plman.ActivePlaylist);
+		plman.ClearPlaylist(plman.ActivePlaylist);
+	}
+	// Create playlist
+	console.log('Final selection: ' +  handleList.Count  + ' tracks');
+	plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+	return handleList;
+}
+
 function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = []) {
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
