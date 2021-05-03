@@ -93,55 +93,61 @@ function _list(x, y, w, h) {
 		const categoryHeaderColour = blendColours(panel.colours.background, panel.colours.text, 0.6);
 		const categoryHeaderLineColour = blendColours(panel.colours.background, categoryHeaderColour, 0.5);
 		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // We compare to the next one or the previous one according to sort order
-		for (let i = 0; i < Math.min(this.items, this.rows); i++) {
-				// Add category sep
-				if (this.bShowSep) {
-					let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to both use-cases 
-					if (this.methodState === 'By category'){dataKey = 'category';}
-					else if (this.methodState === 'By name'){dataKey = 'name';}
-					if (dataKey.length){
-						// Show always current letter at top. Also shows number
-						if (indexSortStateOffset === -1 && i === 0) {
-							let sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
-							if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
-							drawDottedLine(gr, this.x, this.y + y_offset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
-						}
-						// The rest... note numbers are always at top or at bottom anyway
-						if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0 && this.data[i + this.offset][dataKey].length && this.data[i + indexSortStateOffset + this.offset][dataKey].length && this.data[i + this.offset][dataKey][0].toUpperCase() !== this.data[i + indexSortStateOffset + this.offset][dataKey][0].toUpperCase() && isNaN(this.data[i + this.offset][dataKey][0])) {
-							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
-							drawDottedLine(gr, this.x, this.y + y_offset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-							gr.GdiDrawText(this.data[i + this.offset][dataKey][0].toUpperCase(), panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
-						}
-						// Show always current letter at bottom. Also shows number
-						if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
-							let sepIndex = (i + indexSortStateOffset);
-							let sepLetter = (this.data[i + this.offset - 1][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
-							if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
-							drawDottedLine(gr, this.x, this.y + y_offset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
-						}
+		const rows = Math.min(this.items, this.rows);
+		for (let i = 0; i < rows; i++) {
+			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
+			if (i + this.offset >= this.items) {
+				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
+				break;
+			}
+			// Add category sep
+			if (this.bShowSep) {
+				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to both use-cases 
+				if (this.methodState === 'By category'){dataKey = 'category';}
+				else if (this.methodState === 'By name'){dataKey = 'name';}
+				if (dataKey.length){
+					// Show always current letter at top. Also shows number
+					if (indexSortStateOffset === -1 && i === 0) {
+						let sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
+						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
+						drawDottedLine(gr, this.x, this.y + y_offset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+					}
+					// The rest... note numbers are always at top or at bottom anyway
+					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0 && this.data[i + this.offset][dataKey].length && this.data[i + indexSortStateOffset + this.offset][dataKey].length && this.data[i + this.offset][dataKey][0].toUpperCase() !== this.data[i + indexSortStateOffset + this.offset][dataKey][0].toUpperCase() && isNaN(this.data[i + this.offset][dataKey][0])) {
+						let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
+						drawDottedLine(gr, this.x, this.y + y_offset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
+						gr.GdiDrawText(this.data[i + this.offset][dataKey][0].toUpperCase(), panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+					}
+					// Show always current letter at bottom. Also shows number
+					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
+						let sepIndex = (i + indexSortStateOffset);
+						let sepLetter = (this.data[i + this.offset - 1][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
+						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
+						drawDottedLine(gr, this.x, this.y + y_offset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
 				}
-				// Playlists
-				let playlistDataText =  this.data[i + this.offset].name + (this.bShowSize ? ' (' + this.data[i + this.offset].size + ')' : '');
-				if (this.data[i + this.offset].isLocked) { // Highlight read only playlists
-					gr.GdiDrawText(icon_char_playlistLocked, g_font_icon_char(), lockedPlaylistIconColour, this.text_x + 5, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
-					gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.lockedPlaylistColour,  this.x + 5 + icon_char_playlistLockedW, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
-				} else if (this.data[i + this.offset].isAutoPlaylist) { // Highlight autoplaylists
-					gr.GdiDrawText(icon_char_playlistLocked, g_font_icon_char(), autoPlaylistIconColour, this.text_x + 5, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
-					gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.autoPlaylistColour,  this.x + 5 + icon_char_playlistLockedW, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
-				} else {
-					gr.GdiDrawText((this.data[i + this.offset].size) ? icon_char_playlist : icon_char_playlistEmpty, g_font_icon_char(), icon_colour, this.text_x + 5, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
-					gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colours.text, this.x + 5 + icon_char_playlistW, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
-				}
-				// Add playing now indicator
-				let playlistDataTextRight = '';
-				if (plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[i + this.offset].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playing_char;}
-				// Add loaded indicator
-				else if (plman.FindPlaylist(this.data[i + this.offset].nameId) !== -1) {playlistDataTextRight += loaded_char;}
-				// Draw
-				gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
+			}
+			// Playlists
+			let playlistDataText =  this.data[i + this.offset].name + (this.bShowSize ? ' (' + this.data[i + this.offset].size + ')' : '');
+			if (this.data[i + this.offset].isLocked) { // Highlight read only playlists
+				gr.GdiDrawText(icon_char_playlistLocked, g_font_icon_char(), lockedPlaylistIconColour, this.text_x + 5, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.lockedPlaylistColour,  this.x + 5 + icon_char_playlistLockedW, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+			} else if (this.data[i + this.offset].isAutoPlaylist) { // Highlight autoplaylists
+				gr.GdiDrawText(icon_char_playlistLocked, g_font_icon_char(), autoPlaylistIconColour, this.text_x + 5, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.autoPlaylistColour,  this.x + 5 + icon_char_playlistLockedW, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+			} else {
+				gr.GdiDrawText((this.data[i + this.offset].size) ? icon_char_playlist : icon_char_playlistEmpty, g_font_icon_char(), icon_colour, this.text_x + 5, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+				gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colours.text, this.x + 5 + icon_char_playlistW, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+			}
+			// Add playing now indicator
+			let playlistDataTextRight = '';
+			if (plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[i + this.offset].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playing_char;}
+			// Add loaded indicator
+			else if (plman.FindPlaylist(this.data[i + this.offset].nameId) !== -1) {playlistDataTextRight += loaded_char;}
+			// Draw
+			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + y_offset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 		}
 		// Selection indicator
 		if (typeof this.index !== 'undefined' && typeof this.data[this.index] !== 'undefined') {
@@ -815,6 +821,7 @@ function _list(x, y, w, h) {
 			overwriteProperties(this.properties);
 		}
 		window.Repaint();
+		console.log('filter');
 	}
 	
 	this.sortMethods = () =>{ // These are constant. We expect the first sorting order of every method is the natural one...
@@ -1045,8 +1052,8 @@ function _list(x, y, w, h) {
 			if (index !== -1) {
 				this.data.splice(index ,1);
 				this.items--;
-			} else {console.log('Playlist Mananger: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));
-			index = this.dataAll.indexOf(objectPlaylist);}
+			} else {console.log('Playlist Mananger: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+			index = this.dataAll.indexOf(objectPlaylist);
 			if (index !== -1) {
 				this.dataAll.splice(index ,1);
 				this.itemsAll--;
@@ -1439,16 +1446,18 @@ function _list(x, y, w, h) {
 					this.data[z].path = newPath;
 					this.deleted_items.unshift(this.data[z]);
 					this.removeFromData(this.data[z]); // Use this instead of this.data.splice(z, 1) to remove from all data arrays!
+					this.update(true, true); // Call this inmediatly after removal! If paint fires before updating things get weird
+					this.filter();
 					if (duplicated !== -1) {
 						let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
 						if (answer === popup.yes) {
 							plman.RemovePlaylistSwitch(duplicated);
 						}
 					}
-					this.update(true, true);
-					this.filter();
 					break;
 				}
+				default:
+					break;
 			}
 		}
 		

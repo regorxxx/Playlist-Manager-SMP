@@ -130,7 +130,7 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 		const h_calc = _isFunction(this.h) ? this.h() : this.h;
 		
 		this.g_theme.DrawThemeBackground(gr, x_calc, y_calc, w_calc, h_calc);
-		if (icon !== null) {
+		if (this.icon !== null) {
 			let iconWidthCalculated = _isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
 			let textWidthCalculated = _isFunction(this.text) ? this.textWidth() : this.textWidth;
 			let iconCalculated = _isFunction(this.icon) ? this.icon() : this.icon;
