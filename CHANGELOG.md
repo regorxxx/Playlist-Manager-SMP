@@ -7,6 +7,7 @@
 
 ## [Unreleased][]
 ### Added
+- Menu framework: 'playlist_manager_menu.js' contains now the lbtn contextual menus.
 
 ### Changed
 
@@ -15,7 +16,7 @@
 ## [0.2.0] - 2021-05-04
 ### Added
 - Check while painting to avoid situations where the code fails but doesn't crash.
-- Menu framework: 'playlist_manager_menu.js' contains now the contextual menus.
+- Menu framework: 'playlist_manager_menu.js' contains now the rbtn contextual menus.
 - Menu framework: 'menu_xxx.js' added.
 - Changing UUID option now updates all already created playlists (both files and associated playlists within foobar), not only new ones.
 
@@ -36,5 +37,5 @@
 ### Removed
 
 [Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.1.0...v.0.2.0
+[0.2.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/623c80a...v0.1.0
