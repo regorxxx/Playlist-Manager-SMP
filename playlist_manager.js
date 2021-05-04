@@ -196,7 +196,6 @@ function on_mouse_rbtn_up(x, y) {
 	// You must return true, if you want to suppress the default context menu.
 	// Note: left shift + left windows key will bypass this callback and will open default context menu.
 	return createMenuRight().btn_up(x, y);
-	// return panel.rbtn_up(x, y, list); 
 }
 
 function on_mouse_wheel(s) {

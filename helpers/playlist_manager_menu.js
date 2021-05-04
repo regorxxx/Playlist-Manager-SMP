@@ -7,8 +7,273 @@ const menu_rbtn = new _menu();
 const menu_lbtn = new _menu();
 
 // on callbacks
-function createMenuLeft() {
-	return;
+function createMenuLeft(forcedIndex = null) {
+	// Constants
+	const z = (forcedIndex === null) ? list.index : forcedIndex; // When delaying menu, the mouse may move to other index...
+	list.tooltip.SetValue(null);
+	const menu = menu_lbtn;
+	menu.clear(); // Reset one every call
+	// Main
+	const menuName = menu.newMenu();
+	// Helpers
+	const isPlsLoaded = () => {return plman.FindPlaylist(list.data[z].nameId) !== -1;}
+	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;}
+	const isAutoPls = () => {return list.data[z].isAutoPlaylist;}
+	const isLockPls = () => {return list.data[z].isLocked;}
+	// Entries
+	// Load playlist within foobar. Only 1 instance allowed
+	menu.newEntry({menuName, entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}});
+	// Show binded playlist
+	menu.newEntry({menuName, entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
+	menu.newEntry({menuName, entryText: 'sep'});
+	// Renames both playlist file and playlist within foobar. Only 1 instance allowed
+	menu.newEntry({menuName, entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
+		let new_name = '';
+		try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, list.data[z].name, true);} 
+		catch(e) {return;}
+		if (!new_name.length) {return;}
+		const new_nameId = new_name + ((list.bUseUUID && list.data[z].id.length) ? list.data[z].id : ''); // May have enabled/disabled UUIDs just before renaming
+		const old_name = list.data[z].name;
+		const old_nameId = list.data[z].nameId;
+		const old_id = list.data[z].id;
+		const new_id = (list.bUseUUID && old_id.length) ? old_id : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
+		var duplicated = plman.FindPlaylist(new_nameId);
+		if (duplicated !== -1) { // Playlist already exists on foobar...
+			fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+		// } else if (_isFile(list.data[z].path.replace(old_name,new_name))){ // File already exists on the folder..
+			// fb.ShowPopupMessage('You can not have duplicated playlist files on the same folder: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+		} else {
+			delayAutoUpdate();
+			if (new_name.length && new_name !== old_name) {
+				if (list.data[z].isAutoPlaylist) {
+					list.data[z].name = new_name;
+					if (list.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
+						list.data[z].id = new_id;
+						list.data[z].nameId = new_name + list.data[z].id;
+					} else {
+						list.data[z].id = '';
+						list.data[z].nameId = new_name; 
+					}
+					list.update(true, true);
+					list.filter();
+				} else {
+					if (_isFile(list.data[z].path)) {
+						// Locked files have the name variable as read only, so we only change the filename. We can not replace old_name with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
+						let newPath = list.data[z].path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([new_name]).join('\\') + list.data[z].extension;
+						// let newPath = list.data[z].path.replace(old_name + list.data[z].extension, new_name + list.data[z].extension);
+						let bRenamedSucessfully = _renameFile(list.data[z].path, newPath);
+						if (bRenamedSucessfully) {
+							list.data[z].path = newPath;
+							if (!list.data[z].isLocked) {
+								let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
+								let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
+								let bDone = editTextFile(list.data[z].path, originalStrings, newStrings);
+								if (!bDone) {
+									fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + list.data[z].path, window.Name);
+								} else {
+									list.data[z].name = new_name;
+									if (list.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
+										list.data[z].id = new_id;
+										list.data[z].nameId = new_name + list.data[z].id;
+									} else {
+										list.data[z].id = '';
+										list.data[z].nameId = new_name; 
+									}
+									list.update_plman(list.data[z].nameId, old_nameId); // Update with new id
+									list.update(true, true);
+									list.filter();
+								}
+							} else {
+								list.update(true, true);
+								list.filter();
+							}
+						} else {fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + list.data[z].path, window.Name);}
+					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
+				}
+			}
+		}
+	}});
+	if (isAutoPls()) {
+		// Change AutoPlaylist sort
+		menu.newEntry({menuName, entryText: 'Edit sort pattern...', func: () => {
+			let new_sort = '';
+			try {new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, list.data[z].sort);}
+			catch(e) {return;}
+			let bDone = false;
+			if (new_sort !== list.data[z].sort) { // Pattern
+				list.data[z].sort = new_sort;
+				bDone = true;
+			}
+			if (list.data[z].sort.length) { // And force sorting
+				list.data[z].bSortForced = WshShell.Popup('Force sort?\n(currently ' + list.data[z].bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
+				bDone = true;
+			}
+			if (bDone) {
+				list.update(true, true);
+				list.filter();
+			}
+		}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+		// Change AutoPlaylist query
+		menu.newEntry({menuName, entryText: 'Edit query...', func: () => {
+			let new_query = '';
+			try {new_query = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, list.data[z].query);}
+			catch(e) {return;}
+			if (!checkQuery(new_query, false)) {fb.ShowPopupMessage('Query not valid:\n' + new_query, window.Name); return;}
+			if (new_query !== list.data[z].query) {
+				list.data[z].query = new_query;
+				list.data[z].size = fb.GetQueryItems(fb.GetLibraryItems(), new_query).Count;
+				list.update(true, true);
+				list.filter();
+			}
+		}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+	} else {
+		// Updates playlist file with any new changes on the playlist binded within foobar
+		menu.newEntry({menuName, entryText: !isLockPls() ? 'Update playlist file' : 'Force playlist file update', func: () => {
+			if (_isFile(list.data[z].path)) {
+				const old_nameId = list.data[z].nameId;
+				const old_name = list.data[z].name;
+				const duplicated = getPlaylistIndexArray(old_nameId);
+				if (duplicated.length > 1) { // There is more than 1 playlist with same name
+					fb.ShowPopupMessage('You have more than one playlist with the same name: ' + old_name + '\n' + 'Please delete any duplicates and leave only the one you want.'  + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
+				} else {
+					if (list.data[z].isLocked) { // Safety check for locked files (but can be overridden)
+						let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+						if (answer === popup.yes) {
+							list.updatePlaylist(z);
+						}
+					} else { // not locked
+						list.updatePlaylist(z);
+					}
+				}
+			} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
+		}, flags: isPlsLoaded() ? MF_STRING : MF_GRAYED});
+		// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
+		menu.newEntry({menuName, entryText: isPlsActive() ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
+			if (_isFile(list.data[z].path)) {
+				const old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
+				const new_nameId = list.data[z].nameId;
+				const new_name = list.data[z].name;
+				var duplicated = plman.FindPlaylist(new_nameId);
+				if (duplicated !== -1) {
+					fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+				} else {
+					list.update_plman(new_nameId, old_nameId);
+					list.updatePlaylist(z);
+				}
+			} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
+		}, flags: isPlsActive() ? MF_STRING : MF_GRAYED});
+	}
+	menu.newEntry({menuName, entryText: 'sep'});
+	// Adds category
+	menu.newEntry({menuName, entryText: 'Add category...', func: () => {
+		let category = '';
+		try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, list.data[z].category !== null ? list.data[z].category : '', true);} 
+		catch(e) {return;}
+		if (list.data[z].isAutoPlaylist) {
+			list.data[z].category = category;
+			list.update(true, true);
+			list.filter();
+		} else {
+			const old_name = list.data[z].name;
+			delayAutoUpdate();
+			let bDone = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category);
+			if (!bDone) {
+				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
+			} else {
+				list.data[z].category = category;
+				list.update(true, true);
+				list.filter();
+			}
+		}
+	}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+	 // Adds tag(s)
+	menu.newEntry({menuName, entryText: 'Add tag(s)...', func: () => {
+		let tags = '';
+		try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, list.data[z].tags.join(';'), true);} 
+		catch(e) {return;}
+		tags = tags.split(';').filter(Boolean); // This filters blank values
+		if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
+			if (list.data[z].isAutoPlaylist) {
+				list.data[z].tags = tags;
+				list.update(true, true);
+				list.filter();
+			} else {
+				const old_name = list.data[z].name;
+				if (_isFile(list.data[z].path)) {
+					delayAutoUpdate();
+					let bDone = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'));
+					if (!bDone) {
+						fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
+					} else {
+						list.data[z].tags = tags;
+						list.update(true , true);
+						list.filter();
+					}
+				} else {
+					fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+				}
+			}
+		}
+	}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+	menu.newEntry({menuName, entryText: 'sep'});
+	// Locks playlist file
+	menu.newEntry({menuName, entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
+		const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
+		if (list.data[z].isAutoPlaylist) {
+			list.data[z].isLocked = !list.data[z].isLocked;
+			list.update(true, true);
+			list.filter();
+		} else {
+			const old_name = list.data[z].name;
+			if (_isFile(list.data[z].path)) {
+				delayAutoUpdate();
+				let bDone = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1]);
+				if (!bDone) {
+					fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+				} else {
+					list.data[z].isLocked = !list.data[z].isLocked;
+					list.update(true, true);
+					list.filter();
+				}
+			} else {
+				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+			}
+		}
+	}});
+	// Deletes playlist file and playlist loaded
+	menu.newEntry({menuName, entryText: 'Delete', func: () => {
+		// Adds timestamp to filename
+		delayAutoUpdate();
+		if (!list.data[z].isAutoPlaylist) { // Only for not AutoPlaylists
+			if (_isFile(list.data[z].path)) {
+				let newPath = list.data[z].path.split('.').slice(0,-1).join('.').split('\\')
+				const new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
+				newPath = newPath.concat([new_name]).join('\\') + list.data[z].extension;
+				_renameFile(list.data[z].path, newPath);
+				// and delete it
+				_recycleFile(newPath);
+				list.data[z].path = newPath;
+			} else {
+				fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);
+				return;
+			}
+		}
+		// Delete from data
+		const old_nameId = list.data[z].nameId;
+		const duplicated = plman.FindPlaylist(old_nameId);
+		if (list.data[z].size) {list.totalFileSize -= list.data[z].size;}
+		list.deleted_items.unshift(list.data[z]);
+		list.removeFromData(list.data[z]); // Use this instead of list.data.splice(z, 1) to remove from all data arrays!
+		list.update(true, true); // Call this inmediatly after removal! If paint fires before updating things get weird
+		list.filter();
+		if (duplicated !== -1) {
+			let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				plman.RemovePlaylistSwitch(duplicated);
+			}
+		}
+	}});
+	return menu;
 }
 
 function createMenuRight() {
