@@ -493,7 +493,7 @@ const nextIdLetters = (function() {
 		const num = chars.length;
 		var prevId = nextIndex.length + charsForced.join('').length;
 
-		return function(bNext = true) {
+		return function(bNext = true, bCharsForced = true) {
 			if (!bNext) {return prevId;}
 			let a = nextIndex[0];
 			let b = nextIndex[1];

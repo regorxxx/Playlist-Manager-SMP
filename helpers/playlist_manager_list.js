@@ -28,6 +28,7 @@ function _list(x, y, w, h) {
 	
 	// Cache
 	var currentItemIndex = -1;
+	this.getCurrentItemIndex = () => {return currentItemIndex;}
 	var bMaintainFocus = (currentItemIndex !== -1); // Skip at init() or when mouse leaves panel
 	var currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
@@ -460,6 +461,7 @@ function _list(x, y, w, h) {
 				break;
 			case (idx >= sortMethodsMenuIndex && idx <= sortMethodsMenuIndexTop):
 			{
+				const previousMethodState = list.methodState;
 				this.methodState = Object.keys(this.sortMethods())[idx - sortMethodsMenuIndex];
 				this.sortState = Object.keys(this.sortMethods()[this.methodState])[0];
 				// Update properties to save between reloads, but property descriptions changes according to this.methodState
@@ -821,7 +823,6 @@ function _list(x, y, w, h) {
 			overwriteProperties(this.properties);
 		}
 		window.Repaint();
-		console.log('filter');
 	}
 	
 	this.sortMethods = () =>{ // These are constant. We expect the first sorting order of every method is the natural one...
@@ -1005,6 +1006,51 @@ function _list(x, y, w, h) {
 		if (this.bUpdateAutoplaylist) {this.bUpdateAutoplaylist = false;}
 		this.header_textUpdate();
 		if (!bNotPaint){window.Repaint();}
+	}
+	
+	this.updateAllUUID = () => {
+		this.dataAutoPlaylists.forEach((pls) => {this.updateUUID(pls);});
+		this.data.forEach((pls) => {this.updateUUID(pls);});
+		this.dataAll.forEach((pls) => {this.updateUUID(pls);});
+		this.update(true, true);
+		this.filter();
+	}
+	
+	this.updateUUID = (playlistObj) => {
+		delayAutoUpdate();
+		const old_name = playlistObj.name;
+		const old_id = playlistObj.ud;
+		const old_nameId = playlistObj.nameId;
+		const new_id = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), true) : ''; // May have enabled/disabled UUIDs just before renaming
+		const new_nameId = old_name + ((this.bUseUUID) ? new_id : '');
+		if (new_nameId != old_nameId) {
+			playlistObj.id = new_id;
+			playlistObj.nameId = new_nameId;
+			let duplicated = plman.FindPlaylist(new_nameId);
+			if (duplicated !== -1) { // Playlist already exists on foobar...
+				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+			} else {
+				const plsIdx = plman.FindPlaylist(old_nameId);
+				if (plsIdx != -1) {
+					if (playlistObj.isAutoPlaylist) {
+						this.update_plman(new_nameId, old_nameId); // Update with new id
+					} else {
+						if (_isFile(playlistObj.path)) {
+							if (!playlistObj.isLocked) {
+								let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
+								let newStrings = ['#PLAYLIST:' + old_name, '#UUID:' + new_id];
+								let bDone = editTextFile(playlistObj.path, originalStrings, newStrings);
+								if (!bDone) {
+									fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + old_name + '\nPath: ' + playlistObj.path, window.Name);
+								} else {
+									this.update_plman(new_nameId, old_nameId); // Update with new id
+								}
+							}
+						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + playlistObj.path, window.Name);}
+					}
+				}
+			}
+		}
 	}
 	
 	this.init = () => {
@@ -1212,12 +1258,12 @@ function _list(x, y, w, h) {
 					let new_name = '';
 					try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, this.data[z].name, true);} 
 					catch(e) {return;}
-					if (!new_name.lengt) {return;}
+					if (!new_name.length) {return;}
 					const new_nameId = new_name + ((this.bUseUUID && this.data[z].id.length) ? this.data[z].id : ''); // May have enabled/disabled UUIDs just before renaming
 					const old_name = this.data[z].name;
 					const old_nameId = this.data[z].nameId;
 					const old_id = this.data[z].id;
-					constnew_id = (this.bUseUUID && old_id.length) ? old_id : nextId(this.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
+					const new_id = (this.bUseUUID && old_id.length) ? old_id : nextId(this.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
 					var duplicated = plman.FindPlaylist(new_nameId);
 					if (duplicated !== -1) { // Playlist already exists on foobar...
 						fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);

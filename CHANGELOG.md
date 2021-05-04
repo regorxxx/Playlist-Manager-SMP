@@ -7,10 +7,15 @@
 ## [Unreleased][]
 ### Added
 - Check while painting to avoid situations where the code fails but doesn't crash.
+- Menu framework: 'playlist_manager_menu.js' contains now the contextual menus.
+- Menu framework: 'menu_xxx.js' added.
+- Changing UUID option now updates all already created playlists (both files and associated playlists within foobar), not only new ones.
 
 ### Changed
 - Bugfix when removing playlist from the bottom of the list. The panel had a silent bug while repainting and showed a weird behaviour without crashing. Fixed the source of the problem.
 - Buttons framework: icon bugfix.
+- Bugfix on "sort by..." menu.
+- Menu framework: Converted all menus (instead of methods by index).
 
 ### Removed
 

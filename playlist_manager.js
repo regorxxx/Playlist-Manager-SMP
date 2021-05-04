@@ -103,6 +103,7 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\buttons_panel_xxx.
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_list.js');
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_panel.js');
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_buttons.js');
+include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_menu.js');
 
 var properties = {
 	PlaylistPath		: ['Path to the folder containing the playlists' , fb.ProfilePath + 'playlist_manager\\'],
@@ -193,8 +194,9 @@ function on_mouse_leave() {
 
 function on_mouse_rbtn_up(x, y) {
 	// You must return true, if you want to suppress the default context menu.
-	// Note: left shift + left windows key will bypass this callback and will open default context menu. 
-	return panel.rbtn_up(x, y, list); 
+	// Note: left shift + left windows key will bypass this callback and will open default context menu.
+	return createMenuRight().btn_up(x, y);
+	// return panel.rbtn_up(x, y, list); 
 }
 
 function on_mouse_wheel(s) {
