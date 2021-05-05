@@ -71,3 +71,9 @@ Features:
 		- Size (configurable).
 		- Separators between different names/categories (configurable).
 		- Colours for different playlists types and status (configurable).
+	- Shortcuts:
+		- Double Click: Load playlist / Make binded playlist active
+		- Left Click: playlist contextual menu
+		- Rigth Click: panel menu
+		- Ctrl + Left Button: Load playlist / Make binded playlist active
+		- Shift + Left Button: Delete playlist

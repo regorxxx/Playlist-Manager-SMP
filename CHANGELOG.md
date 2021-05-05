@@ -2,10 +2,18 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.2.0](#220---2021-05-04)
+- [0.2.1](#021---2021-05-05)
+- [0.2.0](#020---2021-05-04)
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+
+### Changed
+
+### Removed
+
+## [0.2.1] - 2021-05-05
 ### Added
 - Menu framework: 'playlist_manager_menu.js' contains now the lbtn contextual menus.
 - Shift + Left button: deletes playlist (same than menu entry).
@@ -41,6 +49,7 @@
 
 ### Removed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/623c80a...v0.1.0
