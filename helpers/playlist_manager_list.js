@@ -122,8 +122,8 @@ function _list(x, y, w, h) {
 					}
 					// Show always current letter at bottom. Also shows number
 					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
-						let sepIndex = (i + indexSortStateOffset);
-						let sepLetter = (this.data[i + this.offset - 1][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
+						let sepIndex = i + indexSortStateOffset;
+						let sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
 						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + y_offset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + y_offset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + y_offset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
@@ -296,6 +296,8 @@ function _list(x, y, w, h) {
 							const duplicated = getPlaylistIndexArray(this.data[z].nameId);
 							if (duplicated.length === 0) {list.loadPlaylist(z);} 
 							else if (duplicated.length === 1) {list.showBindedPlaylist(z);}
+						} else if (utils.IsKeyPressed(VK_SHIFT)) { // Pressing control
+							this.removePlaylist(this.index);
 						} else { // Only mouse
 							if (!this.bDoubleclick) { // It's not a second lbtn click
 								this.timeOut = delayFn(createMenuLeft().btn_up, 100)(x,y); // Creates the menu and calls it later
@@ -528,8 +530,14 @@ function _list(x, y, w, h) {
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
+		} else {
+			_jsonParseFile(externalPath).forEach((item) => {
+				if (!checkQuery(item.query, false)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
+				item.size = fb.GetQueryItems(fb.GetLibraryItems(), item.query).Count;
+				// width is done along all playlist internally later...
+				dataExternalPlaylists.push(item);
+			});
 		}
-		// if (dataExternalPlaylists.length) {this.data = this.data.concat(dataExternalPlaylists)}; // Add to database
 		if (dataExternalPlaylists.length) {this.addToData(dataExternalPlaylists);} // Add to database
 		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
 		this.filter(); // Then filter
@@ -832,13 +840,12 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = [];
 			if (this.dataAll) {
 				this.dataAll.forEach((item) => { // Only saves autoplaylists to json
-						if (item.isAutoPlaylist) {
-							this.dataAutoPlaylists.push(item);
-						}
-					});
-				if (this.dataAutoPlaylists.length) {
-					_save(this.filename, JSON.stringify(this.dataAutoPlaylists, this.replacer));
-				}
+					if (item.isAutoPlaylist) {
+						console.log(item);
+						this.dataAutoPlaylists.push(item);
+					}
+				});
+				_save(this.filename, JSON.stringify(this.dataAutoPlaylists, this.replacer));
 			}
 		}
 		
@@ -984,6 +991,39 @@ function _list(x, y, w, h) {
 			const new_nameId = this.data[idx].nameId;
 			const index = plman.FindPlaylist(new_nameId);
 			plman.ActivePlaylist = index;
+		}
+		
+		this.removePlaylist = (idx) => {
+			// Adds timestamp to filename
+			delayAutoUpdate();
+			if (!this.data[idx].isAutoPlaylist) { // Only for not AutoPlaylists
+				if (_isFile(this.data[idx].path)) {
+					let newPath = this.data[idx].path.split('.').slice(0,-1).join('.').split('\\')
+					const new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
+					newPath = newPath.concat([new_name]).join('\\') + this.data[idx].extension;
+					_renameFile(this.data[idx].path, newPath);
+					// and delete it
+					_recycleFile(newPath);
+					this.data[idx].path = newPath;
+				} else {
+					fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[idx].name + '\nPath: ' + this.data[idx].path, window.Name);
+					return;
+				}
+			}
+			// Delete from data
+			const old_nameId = this.data[idx].nameId;
+			const duplicated = plman.FindPlaylist(old_nameId);
+			if (this.data[idx].size) {this.totalFileSize -= this.data[idx].size;}
+			this.deleted_items.unshift(this.data[idx]);
+			this.removeFromData(this.data[idx]); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
+			this.update(true, true); // Call this inmediatly after removal! If paint fires before updating things get weird
+			this.filter();
+			if (duplicated !== -1) {
+				let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
+				if (answer === popup.yes) {
+					plman.RemovePlaylistSwitch(duplicated);
+				}
+			}
 		}
 		
 		this.update_plman = (name, oldName) => {
@@ -1154,7 +1194,7 @@ function _list(x, y, w, h) {
 	this.bShowSize = this.properties['ShowSize'][1];
 	this.bUpdateAutoplaylist = this.properties['UpdateAutoplaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
 	this.bUseUUID = this.properties['UseUUID'][1];
-	this.optionsUUID = () => {return ['Yes: Using invisible chars plus (*) indicator (experimental)','Yes: Using a-f chars','Yes: Using only (*) indicator','No'];} //see rbtn_up and rbtn_done
+	this.optionsUUID = () => {return ['Yes: Using invisible chars plus (*) indicator (experimental)','Yes: Using a-f chars','Yes: Using only (*) indicator','No: Only the name'];}
 	this.optionUUID = this.properties['OptionUUID'][1];
 	this.bFplLock = this.properties['FplLock'][1];
 	this.bSaveFilterStates = this.properties['SaveFilterStates'][1];

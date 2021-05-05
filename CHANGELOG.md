@@ -8,8 +8,13 @@
 ## [Unreleased][]
 ### Added
 - Menu framework: 'playlist_manager_menu.js' contains now the lbtn contextual menus.
+- Shift + Left button: deletes playlist (same than menu entry).
 
 ### Changed
+- Bugfix: json importing was not working for files created by the panel.
+- Bugfix: json was not updated when removing the last autoplaylist. Now gets updated even if that means writing an empty file.
+- Bugfix: crash while painting if there was only 1 item and using sorting + separators.
+- Some code cleaning.
 
 ### Removed
 
