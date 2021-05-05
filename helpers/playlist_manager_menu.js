@@ -315,7 +315,7 @@ function createMenuRight() {
 			const options = Object.keys(list.sortMethods());
 			const optionsLength = options.length;
 			if (optionsLength) {
-				options.forEach((item, i) => {
+				options.forEach((item) => {
 					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 						const previousMethodState = list.methodState;
 						list.methodState = item;
@@ -446,7 +446,7 @@ function createMenuRight() {
 			if (panel.list_objects.length || panel.text_objects.length) {
 				const options = panel.fonts.sizes;
 				const optionsLength = options.length;
-				options.forEach((item, i) => {
+				options.forEach((item) => {
 					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 						panel.fonts.size = item;
 						// Update property to save between reloads
