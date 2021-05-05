@@ -16,10 +16,10 @@ function createMenuLeft(forcedIndex = null) {
 	// Main
 	const menuName = menu.newMenu();
 	// Helpers
-	const isPlsLoaded = () => {return plman.FindPlaylist(list.data[z].nameId) !== -1;}
-	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;}
-	const isAutoPls = () => {return list.data[z].isAutoPlaylist;}
-	const isLockPls = () => {return list.data[z].isLocked;}
+	const isPlsLoaded = () => {return plman.FindPlaylist(list.data[z].nameId) !== -1;};
+	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;};
+	const isAutoPls = () => {return list.data[z].isAutoPlaylist;};
+	const isLockPls = () => {return list.data[z].isLocked;};
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
@@ -296,7 +296,7 @@ function createMenuRight() {
 			menu.newEntry({menuName, entryText: 'Manual refresh', func: () => {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.bUpdateAutoplaylist = true; 
-				list.update(undefined, true, z); // Forces AutoPlaylist size update according to query and tags
+				list.update(void 0, true, z); // Forces AutoPlaylist size update according to query and tags
 				list.filter();
 				test.Print();
 			}});
@@ -329,7 +329,7 @@ function createMenuRight() {
 						// And set properties
 						overwriteProperties(removeProperties); // Deletes old properties used as placeholders
 						overwriteProperties(list.properties);
-						list.sort(undefined, true); // uses current sort state and repaint
+						list.sort(void 0, true); // uses current sort state and repaint
 					}});
 				});
 			}
@@ -342,7 +342,7 @@ function createMenuRight() {
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bShowSize = (i <= 1) ? true : false;
-					list.properties['UpdateAutoplaylist'][1] = (i == 0) ? true : false; // True will force a refresh on script loading
+					list.properties['UpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
 					list.properties['ShowSize'][1] = list.bShowSize;
 					overwriteProperties(list.properties);
 				}});
@@ -415,8 +415,8 @@ function createMenuRight() {
 			window.Repaint();
 		}});
 		menu.newEntry({menuName, entryText: 'Open playlist\'s folder', func: () => {
-			if (list.data[z] !== undefined && list.data[z].isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
-			else {_explorer(_isFile(list.data[z] !== undefined ? list.data[z].path : null) ? list.data[z].path : list.playlistsPath);} // Open playlist path
+			if (list.data[z] && list.data[z].isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
+			else {_explorer(_isFile(list.data[z] ? list.data[z].path : null) ? list.data[z].path : list.playlistsPath);} // Open playlist path
 		}});
 	}
 	menu.newEntry({menuName, entryText: 'sep'});
@@ -462,7 +462,7 @@ function createMenuRight() {
 		{	// Background color
 			const subMenuName = menu.newMenu('Background...');
 			if (panel.custom_background) {
-				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom']
+				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
 					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {

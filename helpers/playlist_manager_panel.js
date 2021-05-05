@@ -38,9 +38,9 @@ function _panel(custom_background = false) {
 		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
 		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
 		this.row_height = this.fonts.normal.Height;
-		this.list_objects.forEach((item) => {item.size()})
-		this.list_objects.forEach((item) => {item.update()})
-		this.text_objects.forEach((item) => {item.size()})
+		this.list_objects.forEach((item) => {item.size();});
+		this.list_objects.forEach((item) => {item.update();});
+		this.text_objects.forEach((item) => {item.size();});
 	}
 	
 	this.size = () => {

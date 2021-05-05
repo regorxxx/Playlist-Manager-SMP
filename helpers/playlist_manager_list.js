@@ -11,7 +11,7 @@ function _list(x, y, w, h) {
 	// const icon_char_playlistEmpty = String.fromCharCode(41);
 	
 	// Font Awesome
-	const g_font_icon_char = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 5), 0);}
+	const g_font_icon_char = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 5), 0);};
 	// const icon_char_header = '\uf015';
 	const icon_char_playlistLocked = '\uf0f6';
 	const icon_char_playlist = '\uf0f6';
@@ -240,7 +240,7 @@ function _list(x, y, w, h) {
 							// Selection indicator
 							window.RepaintRect(x, y - panel.row_height, this.text_width, (this.index + 2 )* panel.row_height);
 							// Tooltip
-							const path = (this.data[this.index].path) ? '(' + this.data[this.index].path.replace(this.playlistsPath,'')  + ')' : ''
+							const path = (this.data[this.index].path) ? '(' + this.data[this.index].path.replace(this.playlistsPath,'')  + ')' : '';
 							let playlistDataText = (this.data[this.index].isAutoPlaylist) ? 'Autoplaylist: ' : 'Playlist: ';
 							playlistDataText += this.data[this.index].nameId + ' - ' +  this.data[this.index].size + ' Tracks ' + path;
 							playlistDataText += '\n' + 'Status: ' + (this.data[this.index].isLocked ? 'Locked (read-only)' : 'Writable');
