@@ -1621,7 +1621,7 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPa
 			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 			break;
 		}
-		if (bNumber) {count++};
+		if (bNumber) {count++;}
 	}
 	return output;
 }
@@ -1640,7 +1640,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 			if (!checkProperty(propertiesDescriptor[k], output[k])) {
 				output[k] = propertiesDescriptor[k][3];
 			}
-			if (bNumber) {count++};
+			if (bNumber) {count++;}
 		}
 	} else {
 		for (let k in propertiesDescriptor){ // entire properties object with fixed descriptions
@@ -1654,7 +1654,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 				output[k][2] =  propertiesDescriptor[k][2];
 				output[k][3] =  propertiesDescriptor[k][3];
 			}
-			if (bNumber) {count++};
+			if (bNumber) {count++;}
 		}
 	}
 	return output;
@@ -1686,7 +1686,7 @@ function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = 
 		i++;
 		if (i < skip) {
 			propertiesKeys.push(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
-			if (bNumber) {count++};
+			if (bNumber) {count++;}
 		}
 	}
 	return propertiesKeys;
@@ -1704,7 +1704,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 		if (i < skip) {
 			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0])); // TODO: toString();
 			output += (output === '') ? value : sep + value ;
-			if (bNumber) {count++};
+			if (bNumber) {count++;}
 		}
 	}
 	return output;

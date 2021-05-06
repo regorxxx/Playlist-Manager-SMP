@@ -482,7 +482,7 @@ function _list(x, y, w, h) {
 						_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
 						return;
 					}
-					 // If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
+					// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for .pls playlists...
 					this.data[dataIndex].size = plman.PlaylistItemCount(fbPlaylistIndex);
 					this.data[dataIndex].nameId = this.data[dataIndex].name + UUID;
@@ -606,7 +606,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	
-	this.sortMethods = () =>{ // These are constant. We expect the first sorting order of every method is the natural one...
+	this.sortMethods = () => { // These are constant. We expect the first sorting order of every method is the natural one...
 				return {'By name': 
 							{
 							'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
@@ -635,7 +635,7 @@ function _list(x, y, w, h) {
 		const index = keys.indexOf(sortState);
 		return index;
 	}
-	 // Use these to always get valid values
+	// Use these to always get valid values
 	this.getSortState = () => {
 		const keys = Object.keys(this.sortMethods()[this.methodState]);
 		let index = keys.indexOf(this.sortState);
