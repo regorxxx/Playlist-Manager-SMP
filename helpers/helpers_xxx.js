@@ -21,9 +21,9 @@ folders.data = fb.ProfilePath + 'js_data\\';
 // Tags descriptors: 
 // Always use .toLowerCase first before checking if the set has the string. For ex
 // numericTags.has(tagName.toLowerCase())
-const dynamicTags = new Set(["rating","$year(%date%)"]); // Tags only found by title formatting
-const numericTags = new Set(["date","year","bpm","dynamic range","album dynamic range","rating","$year(%date%)"]);  // These are tags which are always a number
-const cyclicTags = new Set(["dynamic_genre"]); // These are numeric tags with limited range: {0...K, k + 1 = 0}
+const dynamicTags = new Set(['rating','$year(%date%)']); // Tags only found by title formatting
+const numericTags = new Set(['date','year','bpm','dynamic range','album dynamic range','rating','$year(%date%)']);  // These are tags which are always a number
+const cyclicTags = new Set(['dynamic_genre']); // These are numeric tags with limited range: {0...K, k + 1 = 0}
 // Put here the corresponding function for the cyclic tag. Swap lower/upper values before return if required. They must be always ordered.
 // ALWAYS RETURN [valueLower, valueUpper, lowerLimit, upperLimit];
 // Object keys must match the tag names at cyclicTags... 
@@ -40,7 +40,7 @@ if (bLoadTags) {
 
 	for (let i = 0; i < externalPath.length; i++) {
 		const path = externalPath[i];
-		if ((isCompatible('1.4.0') ? utils.IsFile(path) : utils.FileTest(path, "e"))) { //TODO: Deprecated
+		if ((isCompatible('1.4.0') ? utils.IsFile(path) : utils.FileTest(path, 'e'))) { //TODO: Deprecated
 			console.log('cyclicTagsDescriptor - File loaded: ' + path);
 			include(path, {always_evaluate: false});
 		} else {
@@ -49,11 +49,11 @@ if (bLoadTags) {
 	}
 }
 
-const logicDic = ["and", "or", "and not", "or not", "AND", "OR", "AND NOT", "OR NOT"];
+const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR NOT'];
 
 // Playlists descriptors
-const writablePlaylistFormats = new Set([".m3u",".m3u8",".pls"]); // These are playlist formats which are writable
-const readablePlaylistFormats = new Set([".m3u",".m3u8",".pls",".fpl"]); // These are playlist formats which are writable
+const writablePlaylistFormats = new Set(['.m3u','.m3u8','.pls']); // These are playlist formats which are writable
+const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl']); // These are playlist formats which are writable
 
 // UI
 const scaleDPI = {}; // Caches _scale() values;
@@ -270,7 +270,7 @@ function _recycleFile(file) {
 // Beware of collisions... same file deleted 2 times has the same virtual name on bin...
 function _restoreFile(file) {
 	if (!_isFile(file)) {
-		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(file) : utils.FileTest(file, "split"); //TODO: Deprecated
+		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(file) : utils.FileTest(file, 'split'); //TODO: Deprecated
 		const OriginalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		const items = app.NameSpace(10).Items();
 		const numItems = items.Count;
@@ -281,10 +281,10 @@ function _restoreFile(file) {
 			}
 		}
 		let bFound = _isFile(file);
-		if (!bFound){console.log('_restoreFile(): Can not restore file, "' + OriginalFileName + '" was not found at the bin.');}
+		if (!bFound){console.log('_restoreFile(): Can not restore file, \'' + OriginalFileName + '\' was not found at the bin.');}
 		return bFound;
 	} else {
-		console.log('_restoreFile(): Can not restore file to "' + file + '" since there is already another file at the same path.');
+		console.log('_restoreFile(): Can not restore file to \'' + file + '\' since there is already another file at the same path.');
 		return false;
 	}
 }
@@ -298,7 +298,7 @@ function _open(file) {
 }
 
 function _save(file, value) {
-	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, "split")[0]; //TODO: Deprecated
+	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
 	if (_isFolder(filePath) && utils.WriteTextFile(file, value)) {
 		return true;
 	}
@@ -340,7 +340,7 @@ function getFiles(folderPath, extensionSet) {
 
 function _run() {
 	try {
-		WshShell.Run([...arguments].map((arg)=>{return _q(arg);}).join(' '));
+		WshShell.Run([...arguments].map((arg) => {return _q(arg);}).join(' '));
 		return true;
 	} catch (e) {
 		return false;
@@ -377,7 +377,7 @@ function editTextFile(filePath, originalString, newString) {
 				bDone = utils.WriteTextFile(filePath, fileTextNew, true);
 				// Check
 				if (_isFile(filePath) && bDone) {
-					let check = utils.ReadTextFile(filePath, convertCharsetToCodepage("UTF-8"));
+					let check = utils.ReadTextFile(filePath, convertCharsetToCodepage('UTF-8'));
 					bDone = (check === fileTextNew);
 				}
 			}
@@ -640,11 +640,11 @@ function sendToPlaylist(handleList, playlistName) {
 
 function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = []) {
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
+		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
-		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, "split"); //TODO: Deprecated
+		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split'); //TODO: Deprecated
 		playlistPath = playlistPath.replaceLast(arr[2], extension);
 		if (!playlistName.length) {playlistName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2];} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let playlistText = [];
@@ -701,7 +701,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		let bDone = utils.WriteTextFile(playlistPath, playlistText, true);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
-			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage("UTF-8"));
+			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));
 			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
@@ -710,9 +710,9 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 }
 
 function addHandleToPlaylist(handleList, playlistPath) {
-	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(file)[2] : utils.FileTest(file, "split")[2]; //TODO: Deprecated
+	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(file)[2] : utils.FileTest(file, 'split')[2]; //TODO: Deprecated
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('savePlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
+		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
@@ -782,7 +782,7 @@ function addHandleToPlaylist(handleList, playlistPath) {
 		let bDone = utils.WriteTextFile(playlistPath, playlistText, true);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
-			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage("UTF-8"));
+			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));
 			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
@@ -792,9 +792,9 @@ function addHandleToPlaylist(handleList, playlistPath) {
 
 function getFilePathsFromPlaylist(playlistPath) {
 	let paths = [];
-	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, "split")[2]; //TODO: Deprecated
+	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('getFilePathsFromPlaylist(): Wrong extension set "' + extension + '", only allowed ' + Array.from(writablePlaylistFormats).join(', '));
+		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return paths;
 	}
 	if (_isFile(playlistPath)) {
@@ -889,7 +889,7 @@ function queryReplaceWithCurrent(query, handle) {
 			let tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
-				tfo = tfo.indexOf('$') === -1 ? "[%" + tfo + "%]" : "[" + tfo + "]";
+				tfo = tfo.indexOf('$') === -1 ? '[%' + tfo + '%]' : '[' + tfo + ']';
 				tfo = fb.TitleFormat(tfo);
 				tfoVal = tfo.EvalWithMetadb(handle);
 				tempQuery = tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + tfoVal;
@@ -902,26 +902,25 @@ function queryReplaceWithCurrent(query, handle) {
 
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 function query_join(queryArray, setLogic) {
-		const logicDic = ["and", "or", "and not", "or not", "AND", "OR", "AND NOT", "OR NOT"];
 		if (logicDic.indexOf(setLogic) === -1) {
-			console.log("query_join(): setLogic (" + setLogic + ") is wrong");
+			console.log('query_join(): setLogic (' + setLogic + ') is wrong');
 			return;
 		}
 		let arrayLength = queryArray.length;
 		// Wrong array
 		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
 		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-			console.log("query_join(): queryArray [" + queryArray + "] was null, empty or not an array");
+			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array');
 			return; //Array was null or not an array
 		}
 		
-		let query = "";
+		let query = '';
 		let i = 0;
 		while (i < arrayLength) {
 			if (i === 0) {
-				query += (arrayLength > 1 ? "(" : "") + queryArray[i] + (arrayLength > 1 ? ")" : "");
+				query += (arrayLength > 1 ? '(' : '') + queryArray[i] + (arrayLength > 1 ? ')' : '');
 			} else {
-				query += " " + setLogic + " (" + queryArray[i] + ")";
+				query += ' ' + setLogic + ' (' + queryArray[i] + ')';
 			}
 			i++;
 		}
@@ -931,17 +930,17 @@ function query_join(queryArray, setLogic) {
 // It gets either a 2D array of tag values [[,],...], output from k_combinations(), or 1D array, and creates a query for all those combinations. 
 // For 2D, every subset uses 'subtagsArrayLogic' between the tags. And then 'tagsArrayLogic' between subsets. QueryKey is the tag name.
 // So that means you can create queries like:
-// "(MOOD IS mood1 AND MOOD IS mood2) OR (MOOD IS mood1 AND MOOD IS mood3) OR ..."
+// '(MOOD IS mood1 AND MOOD IS mood2) OR (MOOD IS mood1 AND MOOD IS mood3) OR ...'
 // Currently configurable only AND (NOT) / OR (NOT) logics.
-// For 1D arrays, only 'tagsArrayLogic' is used. i.e. "STYLE IS style1 OR STYLE IS style2 ..."
+// For 1D arrays, only 'tagsArrayLogic' is used. i.e. 'STYLE IS style1 OR STYLE IS style2 ...'
 function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLogic) {
 		// Wrong tagsArray
 		if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
-			console.log("query_combinations(): tagsArray [" + tagsArray + "] was null, empty or not an array");
+			console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array');
 			return; //Array was null or not an array
 		}
 		if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
-			console.log("query_combinations(): queryKey not set");
+			console.log('query_combinations(): queryKey not set');
 			return;
 		}
 		if (isArrayStrings(queryKey)) {
@@ -955,43 +954,43 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 			return queryArray;
 		}
 		let tagsArrayLength = tagsArray.length;
-		let query = "";
+		let query = '';
 		let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]' ? 1 : 0; //subtagsArray
 		if (!isArray) { //no subtagsArrays
 			if (logicDic.indexOf(tagsArrayLogic) === -1) {
-				console.log("query_combinations(): tagsArrayLogic (" + tagsArrayLogic + ") is wrong");
+				console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
 				return;
 			}
 			let i = 0;
 			while (i < tagsArrayLength) {
 				if (i === 0) {
-					query += queryKey + " IS " + tagsArray[0];
+					query += queryKey + ' IS ' + tagsArray[0];
 				} else {
-					query += " " + tagsArrayLogic + " " + queryKey + " IS " + tagsArray[i];
+					query += ' ' + tagsArrayLogic + ' ' + queryKey + ' IS ' + tagsArray[i];
 				}
 				i++;
 			}
 		} else {
 			if (logicDic.indexOf(tagsArrayLogic) === -1 || !logicDic.indexOf(subtagsArrayLogic) === -1) {
-				console.log("query_combinations(): tagsArrayLogic (" + tagsArrayLogic + ") or subtagsArrayLogic (" + subtagsArrayLogic + ") are wrong");
+				console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
 				return;
 			}
 			let k = tagsArray[0].length; //SubtagsArrays length
 			let i = 0;
 			while (i < tagsArrayLength) {
 				if (i !== 0) {
-					query += " " + tagsArrayLogic + " ";
+					query += ' ' + tagsArrayLogic + ' ';
 				}
 				let j = 0;
 				while (j < k) {
 					if (j === 0) {
-						query += (k > 1 ? "(" : "") + queryKey + " IS " + tagsArray[i][0]; // only adds pharentesis when more than one subtag! Estetic fix...
+						query += (k > 1 ? '(' : '') + queryKey + ' IS ' + tagsArray[i][0]; // only adds pharentesis when more than one subtag! Estetic fix...
 					} else {
-						query += " " + subtagsArrayLogic + " " + queryKey + " IS " + tagsArray[i][j];
+						query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' IS ' + tagsArray[i][j];
 					}
 					j++;
 				}
-				query += (k > 1 ? ")" : "");
+				query += (k > 1 ? ')' : '');
 				i++;
 			}
 		}
@@ -1041,11 +1040,11 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
 	let i = 0;
-	let tagString = "";
+	let tagString = '';
 	const outputArray_length = handle.Count;
 	while (i < tagArray_length) {
-		if (bMerged) {tagString += i === 0 ? "[%" + tagsArray[i] + "%]" : "[, " + "%" + tagsArray[i] + "%]";} // We have all values separated by comma
-		else {tagString += i === 0 ? "[%" + tagsArray[i] + "%]" : "| " + "[%" + tagsArray[i] + "%]";} // We have tag values separated by comma and different tags by |
+		if (bMerged) {tagString += i === 0 ? '[%' + tagsArray[i] + '%]' : '[, ' + '%' + tagsArray[i] + '%]';} // We have all values separated by comma
+		else {tagString += i === 0 ? '[%' + tagsArray[i] + '%]' : '| ' + '[%' + tagsArray[i] + '%]';} // We have tag values separated by comma and different tags by |
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
@@ -1076,12 +1075,12 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false) 
 	let outputArray = [];
 	let i = 0;
 	while (i < tagArray_length) {
-		if (tagsArray[i].toLowerCase() === "skip") {
+		if (tagsArray[i].toLowerCase() === 'skip') {
 			outputArray[i] = [[]];
 			i++;
 			continue;
 		}
-		let tagString = ((tagsArray[i].indexOf('$') === -1) ? (bEmptyVal ? "%" + tagsArray[i] + "%" : "[%" + tagsArray[i] + "%]") : (bEmptyVal ? tagsArray[i]: "[" + tagsArray[i] + "]")); // Tagname or TF expression, with or without empty values
+		let tagString = ((tagsArray[i].indexOf('$') === -1) ? (bEmptyVal ? '%' + tagsArray[i] + '%' : '[%' + tagsArray[i] + '%]') : (bEmptyVal ? tagsArray[i]: '[' + tagsArray[i] + ']')); // Tagname or TF expression, with or without empty values
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
 		for (let j = 0; j < outputArrayi_length; j++) {
@@ -1265,7 +1264,7 @@ Set.prototype.isEqual = function(subset) {
 Set.prototype.unionSize = function(setB) {
 	let size = 0;
 	for (let elem of setB) {
-		if (!this.has(elem)) {size++};
+		if (!this.has(elem)) {size++;}
 	}
 	return size;
 };
@@ -1273,7 +1272,7 @@ Set.prototype.unionSize = function(setB) {
 Set.prototype.intersectionSize = function(setB) {
 	let size = 0;
 	for (let elem of setB) {
-		if (this.has(elem)) {size++};
+		if (this.has(elem)) {size++;}
 	}
 	return size;
 };
@@ -1281,7 +1280,7 @@ Set.prototype.intersectionSize = function(setB) {
 Set.prototype.differenceSize = function(setB) {
 	let size = this.size;
 	for (let elem of setB) {
-		if (this.has(elem)) {size--};
+		if (this.has(elem)) {size--;}
 	}
 	return size;
 };
@@ -1297,12 +1296,12 @@ function k_combinations(aSet, k) {
 		// Wrong set
 		let isArray = Object.prototype.toString.call(aSet) === '[object Array]' ? 1 : 0; //set
 		if (!isArray || typeof aSet === 'undefined' || aSet === null || aSetLength === null || aSetLength === 0) {
-			console.log("k_combinations(): checkarraykeys [" + aSet + "] was null, empty or not an array");
+			console.log('k_combinations(): checkarraykeys [' + aSet + '] was null, empty or not an array');
 			return; //Array was null or not an array
 		}
 		// Wrong K-size
 		if (!k || k > aSetLength) {
-			console.log("select_pairs: wrong combinatory number (" + k + ").");
+			console.log('select_pairs: wrong combinatory number (' + k + ').');
 			return;
 		}
 		// K-sized set has only one K-sized subset.
@@ -1342,7 +1341,7 @@ function combinations(aSet) {
 		// Wrong set
 		let isArray = Object.prototype.toString.call(aSet) === '[object Array]' ? 1 : 0; //set
 		if (!isArray || typeof aSet === 'undefined' || aSet === null || aSetLength === null || aSetLength === 0) {
-			console.log("combinations(): checkarraykeys [" + aSet + "] was null, empty or not an array");
+			console.log('combinations(): checkarraykeys [' + aSet + '] was null, empty or not an array');
 			return; //Array was null or not an array
 		}
 		// 1-sized set has only one subset.
@@ -1410,7 +1409,7 @@ function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 1200) {
 			}
 			if (bForceActivate) {this.Activate();} // Only on force to avoid flicker
 		}
-	}
+	};
 	
 	this.SetFont = function (font_name, font_size_pxopt, font_styleopt) {
 		this.tooltip.SetFont(font_name, font_size_pxopt, font_styleopt);
@@ -1470,7 +1469,7 @@ function blendColours(c1, c2, f) {
 }
 
 function _gdiFont(name, size, style) {
-	let id = name.toLowerCase() + "_" + size + "_" + (style || 0);
+	let id = name.toLowerCase() + '_' + size + '_' + (style || 0);
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}
@@ -1574,10 +1573,10 @@ function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
 // Sets all properties at once using an object like this: {propertyKey : ['description',defaultValue]}
 // Note it uses the get method by default. Change bForce to use Set method. 
 // For ex. for setting properties with UI buttons after initialization.
-function setProperties(propertiesDescriptor, prefix = "", count = 1, bPadding = true, bForce = false) {
+function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
 	let bNumber = count > 0 ? true : false;
 	for (let k in propertiesDescriptor){
-		let description = prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
+		let description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 		if (bForce) { // Only use set when overwriting... this is done to have default values set first and then overwriting if needed.
 			if (!checkProperty(propertiesDescriptor[k])) {window.SetProperty(description, propertiesDescriptor[k][3]);}
 			else {window.SetProperty(description, propertiesDescriptor[k][1]);}
@@ -1585,7 +1584,7 @@ function setProperties(propertiesDescriptor, prefix = "", count = 1, bPadding = 
 			if (!checkProperty(propertiesDescriptor[k])) {checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][3]));}
 			else {checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][1]));}
 		}
-		if (bNumber) {count++};
+		if (bNumber) {count++;}
 	}
 }
 
@@ -1603,23 +1602,23 @@ function overwriteProperties(propertiesDescriptor) { // Equivalent to setPropert
 
 // Recreates the property object like this: {propertyKey : ['description',defaultValue]} -> {propertyKey : userSetValue}
 // Returns the entire list of values
-function getProperties(propertiesDescriptor, prefix = "", count = 1, bPadding = true) {
+function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true) {
 	let bNumber = count > 0 ? true : false;
 	let output = {};
 	for (let k in propertiesDescriptor){
-		output[k] = window.GetProperty(prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
+		output[k] = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 		if (bNumber) {count++};
 	}
 	return output;
 }
 
 // // Recreates the property object and gets the property variable associated to propertyKey: {propertyKey : ['description', defaultValue]} -> userSetValue
-function getPropertyByKey(propertiesDescriptor, key, prefix = "", count = 1, bPadding = true) {
+function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPadding = true) {
 	let bNumber = count > 0 ? true : false;
 	let output = null;
 	for (let k in propertiesDescriptor){
 		if (k === key) {
-			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
+			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 			break;
 		}
 		if (bNumber) {count++};
@@ -1629,14 +1628,14 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = "", count = 1, bPa
 
 // Recreates the property object and returns it: {propertyKey : ['description',defaultValue]} -> {propertyKey : ['prefix + count(padded) + 'description', userSetValue]}
 // Use this to get descriptions along the values, instead of the previous ones
-function getPropertiesPairs(propertiesDescriptor, prefix = "", count = 1, bPadding = true, bOnlyValues = false) {
+function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bOnlyValues = false) {
 	let bNumber = count > 0 ? true : false;
 	let output = {};
 	if (bOnlyValues) { // only outputs values, without description
 		let cacheDescription = null;
 		for (let k in propertiesDescriptor){
 			output[k] = null;
-			cacheDescription = prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
+			cacheDescription = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k] = window.GetProperty(cacheDescription);
 			if (!checkProperty(propertiesDescriptor[k], output[k])) {
 				output[k] = propertiesDescriptor[k][3];
@@ -1646,7 +1645,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = "", count = 1, bPaddi
 	} else {
 		for (let k in propertiesDescriptor){ // entire properties object with fixed descriptions
 			output[k] = [null,null];
-			output[k][0] =  prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
+			output[k][0] =  prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k][1] = window.GetProperty(output[k][0]);
 			if (propertiesDescriptor[k].length === 4) {
 				if (!checkProperty(propertiesDescriptor[k], output[k][1])) {
@@ -1662,7 +1661,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = "", count = 1, bPaddi
 }
 
 // Like getProperties() but outputs just an array of values: {propertyKey : ['description',defaultValue]} -> [userSetValue1, userSetValue2, ...]
-function getPropertiesValues(propertiesDescriptor, prefix = "", count = 1, skip = -1, bPadding = true) {
+function getPropertiesValues(propertiesDescriptor, prefix = '', count = 1, skip = -1, bPadding = true) {
 	let properties = getProperties(propertiesDescriptor, prefix, count, bPadding);
 	let propertiesValues = [];
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
@@ -1678,7 +1677,7 @@ function getPropertiesValues(propertiesDescriptor, prefix = "", count = 1, skip 
 }
 
 // Like getPropertiesValues() but the array of keys: {propertyKey : ['description',defaultValue]} -> [propertyKey1, propertyKey2, ...]
-function getPropertiesKeys(propertiesDescriptor, prefix = "", count = 1, skip = -1, bPadding = true) {
+function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = -1, bPadding = true) {
 	let bNumber = count > 0 ? true : false;
 	let propertiesKeys = [];
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
@@ -1686,7 +1685,7 @@ function getPropertiesKeys(propertiesDescriptor, prefix = "", count = 1, skip = 
 	for (let k in propertiesDescriptor){
 		i++;
 		if (i < skip) {
-			propertiesKeys.push(prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
+			propertiesKeys.push(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 			if (bNumber) {count++};
 		}
 	}
@@ -1695,16 +1694,16 @@ function getPropertiesKeys(propertiesDescriptor, prefix = "", count = 1, skip = 
 
 // Recreates the property object and returns user set values: {propertyKey : ['description',defaultValue]} -> userSetValue1 , userSetValue2, ...
 // Only returns an array of values; useful for enumerating properties at once (like tags, etc.)
-function enumeratePropertiesValues(propertiesDescriptor, prefix = "", count = 1, sep = "|", skip = -1, bPadding = true) {
+function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1, sep = '|', skip = -1, bPadding = true) {
 	let bNumber = count > 0 ? true : false;
-	let output = "";
+	let output = '';
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in propertiesDescriptor){
 		i++;
 		if (i < skip) {
-			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ("00" + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0])); // TODO: toString();
-			output += (output === "") ? value : sep + value ;
+			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0])); // TODO: toString();
+			output += (output === '') ? value : sep + value ;
 			if (bNumber) {count++};
 		}
 	}
@@ -1745,7 +1744,7 @@ function checkProperty(property, withValue) {
 		bPass = false; report += 'Value obey this condition: ' + checks['func'] + '\n';
 	}
 	if (!bPass) {
-		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n"' + property[0] + '"\nWrong value: ' + valToCheck + '\nReplaced with: ' + property[3] + '\n' + report);
+		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\nWrong value: ' + valToCheck + '\nReplaced with: ' + property[3] + '\n' + report);
 	}
 	return bPass;
 }

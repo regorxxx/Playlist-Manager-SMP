@@ -191,7 +191,7 @@ function createMenuLeft(forcedIndex = null) {
 				}
 			}
 		}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
-		 // Adds tag(s)
+		// Adds tag(s)
 		menu.newEntry({menuName, entryText: 'Add tag(s)...', func: () => {
 			let tags = '';
 			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, list.data[z].tags.join(';'), true);} 

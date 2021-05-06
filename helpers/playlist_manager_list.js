@@ -407,7 +407,7 @@ function _list(x, y, w, h) {
 			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 			return false;
 		}
-		 // If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
+		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 		this.data[playlistIndex].size += handleList.Count;
 		this.data[playlistIndex].fileSize = isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'); //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
 		console.log('Playlist Manager: drag n drop done.');
@@ -447,7 +447,7 @@ function _list(x, y, w, h) {
 				this.dataAll.forEach((item) => { // But only if those names are being used by playlist at the manager
 						if (!item.isAutoPlaylist) {
 							const idx = plmanDuplicates.indexOf(item.nameId);
-							if (idx !== -1) {duplicates.push(idx)}
+							if (idx !== -1) {duplicates.push(idx);}
 						}
 					});
 				if (duplicates.length) {
@@ -478,7 +478,7 @@ function _list(x, y, w, h) {
 				if (bDeleted) {
 					let done = savePlaylist(fbPlaylistIndex, playlistPath, this.playlistsExtension, playlistName, this.optionsUUIDTranslate(), this.data[dataIndex].isLocked);
 					if (!done) {
-						fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name)
+						fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 						_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
 						return;
 					}
@@ -491,7 +491,7 @@ function _list(x, y, w, h) {
 					this.data[dataIndex].fileSize = isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'); //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
 					plman.RenamePlaylist(fbPlaylistIndex, this.data[dataIndex].nameId);
 				} else {
-					fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name)
+					fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
 					return;
 				}
 				console.log('Playlist Manager: done.');
@@ -545,8 +545,8 @@ function _list(x, y, w, h) {
 		return true;
 	}
 	
-	this.constShowStates = () => {return ['Filter: All','Filter: Not locked','Filter: Locked']}; // These are constant
-	this.constAutoPlaylistStates = () => {return ['All','Autopls','!Autpls']};
+	this.constShowStates = () => {return ['Filter: All','Filter: Not locked','Filter: Locked'];}; // These are constant
+	this.constAutoPlaylistStates = () => {return ['All','Autopls','!Autpls'];};
 	this.showStates = this.constShowStates(); // These rotate over time
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
 	this.isFilterActive = () => {return (list.constShowStates()[0] !== list.showStates[0] || list.constAutoPlaylistStates()[0] !== list.autoPlaylistStates[0]);}
@@ -804,7 +804,7 @@ function _list(x, y, w, h) {
 		const old_nameId = playlistObj.nameId;
 		const new_id = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), true) : ''; // May have enabled/disabled UUIDs just before renaming
 		const new_nameId = old_name + ((this.bUseUUID) ? new_id : '');
-		if (new_nameId != old_nameId) {
+		if (new_nameId !== old_nameId) {
 			playlistObj.id = new_id;
 			playlistObj.nameId = new_nameId;
 			let duplicated = plman.FindPlaylist(new_nameId);
@@ -812,7 +812,7 @@ function _list(x, y, w, h) {
 				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
 			} else {
 				const plsIdx = plman.FindPlaylist(old_nameId);
-				if (plsIdx != -1) {
+				if (plsIdx !== -1) {
 					if (playlistObj.isAutoPlaylist) {
 						this.update_plman(new_nameId, old_nameId); // Update with new id
 					} else {

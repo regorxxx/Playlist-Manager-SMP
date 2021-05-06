@@ -7,7 +7,7 @@ var panel_properties = {
 	customBackground : ['PANEL.COLOURS.CUSTOM.BACKGROUND', RGB(0, 0, 0)]
 };
 
-setProperties(panel_properties, "panel_");
+setProperties(panel_properties, 'panel_');
 
 function _panel(custom_background = false) {
 	
@@ -59,7 +59,7 @@ function _panel(custom_background = false) {
 			break;
 		case this.colours.mode === 1:
 			// col = utils.GetSysColour(15);
-			col = window.GetColourCUI(3, "{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}");
+			col = window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
 			break;
 		case this.colours.mode === 2:
 			col = this.colours.custom_background;
@@ -70,7 +70,7 @@ function _panel(custom_background = false) {
 	}
 	
 	window.DlgCode = DLGC_WANTALLKEYS;
-	this.properties = getPropertiesPairs(panel_properties, "panel_"); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
+	this.properties = getPropertiesPairs(panel_properties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.fonts = {};
 	this.colours = {};
 	this.w = 0;

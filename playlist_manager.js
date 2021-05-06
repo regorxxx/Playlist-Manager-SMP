@@ -12,13 +12,13 @@
 		- Manages Playlist files and AutoPlaylists.
 			- Playlist files are linked to physical files (.m3u8, .m3u, .pls or .fpl).
 			- AutoPlaylists are saved into json format.
-			- All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
+			- All playlist are loaded in cache once, filtering just changes the 'painted' playlist on the list.
 		- AutoPlaylists: contains all functionality on Auto-playlist Manager by marc2003 plus more.
 			- Create, rename, delete AutoPlaylists.
 			- Edit query, sort pattern and sort forcing.
 			- Adds tooltip info, UI features, filters, etc.
 			- Number of tracks output is updated at foobar startup. (and/or 'at manual refresh')
-		- Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar (if all items are on library). i.e. "As fast as the native format".
+		- Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar (if all items are on library). i.e. 'As fast as the native format'.
 		- Auto-saves changes within foobar to binded playlists files. (configurable)
 		- Automatically updates changes within the tracked folder. (configurable)
 		- New updates are delayed when performing internal updates/processing to avoid conflicts.
@@ -136,7 +136,7 @@ setProperties(properties, prefix);
 		prop['firstPopup'][1] = true;
 		overwriteProperties(prop); // Updates panel
 		const readmePath = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\readme\\playlist_manager.txt';
-		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, "e"))) {
+		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, 'e'))) {
 			const readme = utils.ReadTextFile(readmePath, 65001);
 			if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager');}
 		}

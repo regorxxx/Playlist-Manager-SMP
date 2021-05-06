@@ -5,11 +5,11 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
 /* 
 	This is the framework to create buttons as new objects with its own properties and tooltips. They can be merged and loaded multiple times
 	as new buttons instances on the same toolbar. Coordinates get updated when loading multiple buttons, removing the need to manually set them.
-	Check "_buttons_panel_blank.js" to see the universal buttons structure. It loads on foobar but does nothing, it's just empty. Callbacks are missing too.
+	Check '_buttons_panel_blank.js' to see the universal buttons structure. It loads on foobar but does nothing, it's just empty. Callbacks are missing too.
 	
 	NOTE REGARDING CHANGES TO buttons_xxx.js and USE:
 		- Callbacks: The standard file is meant to be used along a standalone panel/bar with only buttons. Contains the callbacks to draw all the buttons.
-		Here all callbacks funcs have been renamed to "..._buttn", so you must call those on the callbacks of the main panel file:
+		Here all callbacks funcs have been renamed to '..._buttn', so you must call those on the callbacks of the main panel file:
 			function on_mouse_move(x, y){
 				on_mouse_move_buttn(x, y);
 				...
@@ -67,7 +67,7 @@ function calcNextButtonCoordinates(buttonCoordinates,  buttonOrientation = 'x' ,
 	return newCoordinates;
 }
 
-function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Segoe UI', 12), description, prefix = "", buttonsProperties = {}, icon = null, g_font_icon = _gdiFont("FontAwesome", 12)) {
+function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, g_font_icon = _gdiFont('FontAwesome', 12)) {
 	this.state = state ? state : ButtonStates.normal;
 	this.x = x;
 	this.y = y;
@@ -84,7 +84,7 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 	this.iconWidth = _isFunction(this.icon) ? () => {return _gr.CalcTextWidth(this.icon(), g_font_icon);} : _gr.CalcTextWidth(this.icon, g_font_icon);
 	this.fonClick = fonClick;
 	this.prefix = prefix; // This let us identify properties later for different instances of the same button, like an unique ID
-	this.descriptionWithID = _isFunction(this.description) ? () => {return this.prefix ? this.prefix.replace("_","") + ': ' + this.description() : this.description();}: (this.prefix ? this.prefix.replace("_","") + ': ' + this.description : this.description); // Adds prefix to description, whether it's a func or a string
+	this.descriptionWithID = _isFunction(this.description) ? () => {return this.prefix ? this.prefix.replace('_','') + ': ' + this.description() : this.description();}: (this.prefix ? this.prefix.replace('_','') + ': ' + this.description : this.description); // Adds prefix to description, whether it's a func or a string
 	this.buttonsProperties = Object.assign({}, buttonsProperties); // Clone properties for later use
 
 	this.containXY = function (x, y) {
@@ -239,12 +239,12 @@ function on_size_buttn() {
 }
 
 
-function getUniquePrefix(string, sep = "_"){
-	if (string === null || string === "") {return "";}
-	let newPrefix = string.replace(sep,"") + 0;  // First ID
+function getUniquePrefix(string, sep = '_'){
+	if (string === null || !string.length) {return '';}
+	let newPrefix = string.replace(sep,'') + 0;  // First ID
 	let i = 1;
 	while (propertiesPrefixes.has(newPrefix)) { // The rest
-		newPrefix = string.replace(sep,"") + i;
+		newPrefix = string.replace(sep,'') + i;
 		i++;
 	}
 	propertiesPrefixes.add(newPrefix);
