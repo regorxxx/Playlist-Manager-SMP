@@ -1607,7 +1607,7 @@ function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 	let output = {};
 	for (let k in propertiesDescriptor){
 		output[k] = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
-		if (bNumber) {count++};
+		if (bNumber) {count++;}
 	}
 	return output;
 }
