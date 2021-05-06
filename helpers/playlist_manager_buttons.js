@@ -30,7 +30,7 @@ var newButtons = {
 		let t1 = 0;
 		let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
 		list.setSortState(newSortState);
-		list.sort(undefined, true); // Uses current state
+		list.sort(void(0), true); // Uses current state
 		t1 = Date.now();
 		console.log('Call to Sort took ' + (t1 - t0) + ' milliseconds.');
 	}, null, g_font, () => {return !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';} , prefix, newButtonsProperties, () => {return !list.getIndexSortState() ? '\uf175' : '\uf176';}, _gdiFont('FontAwesome', 12)),

@@ -296,7 +296,7 @@ function createMenuRight() {
 			menu.newEntry({menuName, entryText: 'Manual refresh', func: () => {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.bUpdateAutoplaylist = true; 
-				list.update(void 0, true, z); // Forces AutoPlaylist size update according to query and tags
+				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 				list.filter();
 				test.Print();
 			}});
@@ -329,7 +329,7 @@ function createMenuRight() {
 						// And set properties
 						overwriteProperties(removeProperties); // Deletes old properties used as placeholders
 						overwriteProperties(list.properties);
-						list.sort(void 0, true); // uses current sort state and repaint
+						list.sort(void(0), true); // uses current sort state and repaint
 					}});
 				});
 			}

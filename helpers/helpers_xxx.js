@@ -340,7 +340,7 @@ function getFiles(folderPath, extensionSet) {
 
 function _run() {
 	try {
-		WshShell.Run(_.map(arguments, _q).join(' '));
+		WshShell.Run([...arguments].map((arg)=>{return _q(arg);}).join(' '));
 		return true;
 	} catch (e) {
 		return false;
@@ -1721,7 +1721,7 @@ function checkProperty(property, withValue) {
 	let bPass = true;
 	let report = '';
 	if (property.length !== 4) {return true;}  // No checks needed (?)
-	const valToCheck = (withValue !== undefined ? withValue : property[1]);
+	const valToCheck = (typeof withValue !== 'undefined' ? withValue : property[1]);
 	const checks = property[2];
 	if (checks.hasOwnProperty('lower') && valToCheck >= checks['lower']) {
 		bPass = false; report += 'Value must be lower than ' + checks['lower'] + '\n';

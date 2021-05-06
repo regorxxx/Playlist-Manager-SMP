@@ -286,7 +286,7 @@ function autoUpdate() {
 	return false;
 }
 
-function oPlaylist (id, path, name = undefined, extension = undefined, size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = []) {
+function oPlaylist (id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = []) {
 	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
 	if (typeof name === 'undefined') {
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
@@ -394,7 +394,7 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'Pla
 			}	
 		}
 		let fileSize = isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
-		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : undefined, undefined, size !== null ? size : undefined, fileSize, bLocked, undefined, undefined, category.length ? category : undefined, isArrayStrings(tags) ? tags : undefined);
+		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0));
 		i++;
 	}
 	// if (bCreated) {plman.RemovePlaylist(newFplIndex);}

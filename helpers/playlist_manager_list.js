@@ -380,7 +380,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			console.log('Playlist Manager: drag n drop done.');
-			this.update(undefined, true);
+			this.update(void(0), true);
 			this.filter();
 			return true;
 		}
@@ -392,7 +392,7 @@ function _list(x, y, w, h) {
 			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
 			return false;
 		}
-		if (handleList === undefined || handleList === null || handleList.Count === 0) {
+		if (typeof handleList === 'undefined' || handleList === null || handleList.Count === 0) {
 				console.log('Playlist Manager: Error adding tracks to playlist. Handle list has no tracks.');
 			return false;
 		}
@@ -887,7 +887,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.replacer = (key, value) => {
-			return key === 'width' ? undefined : value;
+			return key === 'width' ? void(0) : value;
 		}
 		
 		this.addAutoplaylist = () => {
