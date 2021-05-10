@@ -12,6 +12,14 @@ For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
 Then load any script into a SMP panel within foobar. See info for usage. 
 
+PORTABLE TIP: 
+-------------
+Some scripts have configurable paths to save json data, track playlists, etc. Those can be found on the properties panel.
+Instead of using the menus and adding an absolute path, it would be advisable to edit them manually to ensure they are relative too:
+For ex. for the playlist manager, the tracked folder:
+H:\\MySoftware\foobar2000\profile\playlist_manager\ --> .\profile\playlist_manager\	(>= 1.6:)
+													--> .\playlist_manager\			(<= 1.5:)
+
 INFO: 
 -------------
 This is general info for all the scripts. Within all files you will find 4 big scripts (playlist manager, search_bydistance, world map and buttons framework).

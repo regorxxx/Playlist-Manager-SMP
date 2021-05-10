@@ -123,7 +123,7 @@ var properties = {
 	ListColours			: ['Color codes for the list. Use contextual menu to set them: ', ''],
 	firstPopup			: ['Playlist Manager: Fired once', false],
 };
-properties['PlaylistPath'].push({func: isString}, properties['PlaylistPath'][1]);
+properties['PlaylistPath'].push({func: isString, portable: true}, properties['PlaylistPath'][1]);
 properties['AutoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['AutoSave'][1]);
 properties['Extension'].push({func: (val) => {return (Array.from(writablePlaylistFormats).indexOf(val) !== -1);}}, properties['Extension'][1]);
 properties['AutoUpdate'].push({range: [[0,0],[100, Infinity]]}, properties['AutoUpdate'][1]);
@@ -135,6 +135,7 @@ setProperties(properties, prefix);
 	if (!prop['firstPopup'][1]) {
 		prop['firstPopup'][1] = true;
 		overwriteProperties(prop); // Updates panel
+		isPortable(prop['PlaylistPath'][0]);
 		const readmePath = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\readme\\playlist_manager.txt';
 		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, 'e'))) {
 			const readme = utils.ReadTextFile(readmePath, 65001);

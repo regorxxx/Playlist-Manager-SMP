@@ -8,9 +8,8 @@
 
 ## [Unreleased][]
 ### Added
-
+- Portable: Additional checks for portable installations.
 ### Changed
-
 ### Removed
 
 ## [0.2.1] - 2021-05-05

@@ -841,7 +841,6 @@ function _list(x, y, w, h) {
 			if (this.dataAll) {
 				this.dataAll.forEach((item) => { // Only saves autoplaylists to json
 					if (item.isAutoPlaylist) {
-						console.log(item);
 						this.dataAutoPlaylists.push(item);
 					}
 				});

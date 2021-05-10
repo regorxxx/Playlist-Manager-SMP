@@ -408,6 +408,15 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 	return fileArr;
 }
 
+function isPortable(propertyText, bWarn = true) {
+	let bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
+	if (bPort && bWarn) {
+		if (isArray(propertyText)) {propertyText = propertyText.join('\n');}
+		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n' + propertyText, window.Name);
+	}
+	return bPort;
+}
+
 /* 
 	String manipulation 
 */
@@ -1743,6 +1752,10 @@ function checkProperty(property, withValue) {
 	if (checks.hasOwnProperty('func') && checks['func'] && !checks['func'](valToCheck)) {
 		bPass = false; report += 'Value obey this condition: ' + checks['func'] + '\n';
 	}
+	if (checks.hasOwnProperty('portable') && checks['portable'] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
+		console.log(window.Name + ' - Portable installation: replacing path \'' + property[0] + '\' with \'' + property[3] + '\''); // Silent?
+		// TODO warn about using relative paths?
+	}
 	if (!bPass) {
 		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\nWrong value: ' + valToCheck + '\nReplaced with: ' + property[3] + '\n' + report);
 	}
@@ -1813,7 +1826,7 @@ function memoryUsed(bConsole = false) { // In Mbs
 	let memUsage = -1;
 	if (isCompatible('1.4.0')) {memUsage = round(window.JsMemoryStats.memory_usage/1000000,2);} 
 	else {memUsage = round(window.PanelMemoryUsage/1000000,2);} //TODO: Deprecated
-	if (bConsole) {console.log(window.Name + ' mem usage: ' + memUsage + 'Mb')}
+	if (bConsole) {console.log(window.Name + ' mem usage: ' + memUsage + 'Mb');}
 	return memUsage;
 }
 
@@ -1824,4 +1837,30 @@ function memoryUsed(bConsole = false) { // In Mbs
 // From Underscore 
 function isBoolean(obj) {
    return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
+}
+
+/* 
+	crc32
+	https://stackoverflow.com/questions/18638900/javascript-crc32
+*/
+const crcTable = [];
+function makeCRCTable() {
+    let c;
+    for(let n =0; n < 256; n++){
+        c = n;
+        for(var k =0; k < 8; k++){
+            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        crcTable[n] = c;
+    }
+    return crcTable;
+}
+
+function crc32(str) {
+    if (!crcTable.lengt) {makeCRCTable();}
+    let crc = 0 ^ (-1);
+    for (let i = 0; i < str.length; i++ ) {
+        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    }
+    return (crc ^ (-1)) >>> 0;
 }
