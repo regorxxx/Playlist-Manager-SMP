@@ -12,7 +12,7 @@ function createMenuLeft(forcedIndex = null) {
 	const z = (forcedIndex === null) ? list.index : forcedIndex; // When delaying menu, the mouse may move to other index...
 	list.tooltip.SetValue(null);
 	const menu = menu_lbtn;
-	menu.clear(); // Reset one every call
+	menu.clear(); // Reset on every call
 	// Main
 	const menuName = menu.newMenu();
 	// Helpers

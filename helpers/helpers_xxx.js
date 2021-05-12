@@ -299,7 +299,7 @@ function _open(file) {
 
 function _save(file, value) {
 	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
-	if (_isFolder(filePath) && utils.WriteTextFile(file, value)) {
+	if (_isFolder(filePath) && utils.WriteTextFile(file, value, true)) {
 		return true;
 	}
 	console.log('Error saving to ' + file);
@@ -430,8 +430,9 @@ function _q(value) {
 	return '"' + value + '"';
 }
 
+
 function capitalize(s) {
-  if (typeof s !== 'string') {return '';}
+  if (!isString(s)) {return '';}
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
@@ -444,6 +445,10 @@ function capitalizeAll(s, sep = ' ') {
 // We don't care about object-wrapped strings, they are deprecated and not recommended.
 function isString(str){
 	return (typeof str === 'string' && str.length > 0) ? true : false;
+}
+
+function isStringWeak(str){
+	return (typeof str === 'string') ? true : false;
 }
 
 function nextId(method, bNext = true, bCharsForced = true) {
@@ -537,9 +542,6 @@ const nextIdIndicator = (function() { // Same structure to ease compatibility
 		};
 }());
 
-function capitalizeFirstLetter(string) {
-    return string[0].toUpperCase() + string.slice(1);
-}
 
 /* 
 	Playlist manipulation 
