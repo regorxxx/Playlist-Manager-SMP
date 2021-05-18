@@ -2,9 +2,9 @@
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
 
 var panel_properties = {
-	fontSize : ['PANEL.FONTS.SIZE', 12],
-	coloursMode : ['PANEL.COLOURS.MODE', 0],
-	customBackground : ['PANEL.COLOURS.CUSTOM.BACKGROUND', RGB(0, 0, 0)]
+	fontSize : ['Font size', _scale(10)],
+	coloursMode : ['Colour mode', 0],
+	customBackground : ['Custom background colour', RGB(0, 0, 0)]
 };
 
 setProperties(panel_properties, 'panel_');
@@ -75,7 +75,7 @@ function _panel(custom_background = false) {
 	this.colours = {};
 	this.w = 0;
 	this.h = 0;
-	this.fonts.sizes = [10, 11, 12, 13, 14, 16];
+	this.fonts.sizes = [_scale(8), _scale(9), _scale(10), _scale(11), _scale(12), _scale(14)];
 	this.fonts.size = this.properties['fontSize'][1];
 	if (custom_background) {
 		this.custom_background = true;

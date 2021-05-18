@@ -4,6 +4,11 @@ For example: (that's a folder within my foobar profile)
 	C:\Users\XXX\AppData\Roaming\foobar2000\playlist_manager\server\
 Autoplaylist json files are stored in your profile folder:
 	foobar2000\js_data\
+	
+Playlists are saved with (tracks) absolute paths by default, you can change that behavior on the menus. 
+When using relative paths, the tracks' folders should be in the same path than the tracked folder. i.e.:
+	Tracked Folder: Z:\My music\
+	Music Folders: Z:\My music\CDs, Z:\My music\DVDs\, ...
 
 Finally, you can import another Autoplaylist data file by this script or Auto-playlist Manager by marc2003 using the contextual menu.
 Note: left shift + left windows key + right mouse click will open default context menu.
@@ -20,6 +25,7 @@ Features:
 		- Number of tracks output is updated at foobar startup. (and/or 'at manual refresh')
 	- Auto-saves changes within foobar to binded playlists files. (configurable)
 	- Automatically updates changes within the tracked folder. (configurable)
+	- Playlist may use absolute or relative paths. (configurable)
 	- New updates are delayed when performing internal updates/processing to avoid conflicts.
 	- Bind playlist to files:
 		- Tracks playlists for changes and update binded files.
@@ -34,7 +40,7 @@ Features:
 	- Playlist unique IDs. You can have multiple playlists with same name on the UI and binded to different files. (configurable)
 		- If changing UUIDs config while having playlists already loaded, then new config will be used whenever they get updated.
 		- You can manually force new UUID config just by renaming the files.
-	- Show playlist size on the list. (some limits apply for .fpl playlist files) (configurable)
+	- Show playlist size on the list. (some limits apply for .fpl playlist files (*)) (configurable)
 		- All (refresh autoplaylists queries)
 		- Only standard playlist
 		- No size
@@ -57,7 +63,7 @@ Features:
 		- (a-f)
 		- (*) 
 		- Or none
-	- 3 different writable formats. (some limits apply for .pls playlist files) (configurable)
+	- 3 different writable formats. (some limits apply for .pls playlist files (**)) (configurable)
 	- Filter (configurable) and sorting gets saved between reloads.
 	- RecycleBin: deleting and restoring.
 		- Uses timestamps to uniquely identify files: no collisions with other files within the RecycleBin.
@@ -77,3 +83,6 @@ Features:
 		- Rigth Click: panel menu
 		- Ctrl + Left Button: Load playlist / Make binded playlist active
 		- Shift + Left Button: Delete playlist
+		
+(*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
+(**).pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.

@@ -181,7 +181,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0} = {}) {
 		});
 	}
 	
-	this.btn_up = (x, y, object) => {
+	this.btn_up = (x, y, object, forcedEntry = '') => {
 		// Add conditional entries/menus
 		entryArrTemp = [...entryArr]; // Create backup to restore later
 		entryArr.forEach( (entry) => {
@@ -215,20 +215,25 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0} = {}) {
 		});
 		// Call other object's menu creation
 		if (object && object.hasOwnProperty('btn_up')) {
-			object.btn_up(this.getNumEntries()); // The current num of entries may be used to create another menu
+			object.btn_up(this.getNumEntries()); // The current num of entries may be used to create another menu with that initial idx
 		}
 		// Find currently selected item
-		const currIdx = this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y);
+		const currIdx = forcedEntry.length ? this.getIdx(forcedEntry) : this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y);
 		let bDone;
-		this.getEntry().forEach( (func, entryIdx) => {
-			if (entryIdx === currIdx) {
-				func();
-				return bDone = true;
+		if (typeof currIdx !== 'undefined' && currIdx !== -1) {
+			this.getEntry().forEach( (func, entryIdx) => {
+				if (bDone) {return;}
+				if (entryIdx === currIdx) {
+					func();
+					return bDone = true;
+				}
+			});
+			// Call other object's menu selection
+			if (!bDone && object && object.hasOwnProperty('btn_up_done')) {
+				object.btn_up_done(currIdx);
 			}
-		});
-		// Call other object's menu selection
-		if (!bDone && object && object.hasOwnProperty('btn_up_done')) {
-			object.btn_up_done(currIdx);
+		} else if (forcedEntry.length) {
+			console.log('menu_xxx: Tried to call a menu with forced entry (\'' + forcedEntry + '\') but it doesn\'t exist. It may point to a bug or error.');
 		}
 		// Clear all
 		this.clear();

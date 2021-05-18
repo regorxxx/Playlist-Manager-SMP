@@ -9,7 +9,18 @@
 ## [Unreleased][]
 ### Added
 - Portable: Additional checks for portable installations.
+- Relative Paths: playlists can now be saved with paths relative to the playlist folder.
+- Menu: entry to change playlist extension.
+- Menu: entry to relative/abs path config.
+- Fpl playlist data (like tags, size or category) is now saved between sessions (removing some of the intrinsic limitations of the closed format).
+- Multiple info popups at some points when working with fpl and pls playlists for the first time.
 ### Changed
+- Bugfix: All data arrays get updated on playlist saving/editing (previously only displayed data was updated, leading to some display bugs).
+- Bugfix: Multiple bugfixes for fpl and pls file edits. 
+- Helpers: Playlist loading is done using cache for both absolute and relative path playlists, independently  of configuration (for saving).
+- Using pls format disables UUIDs menu and forces UUID refresh to none for consistency.
+- Using pls format disables some menus for editing data (pls format doesn't allow extra comments).
+- Changed the background text when filtering the lists and # items was 0. (previously it showed the default text)
 ### Removed
 
 ## [0.2.1] - 2021-05-05

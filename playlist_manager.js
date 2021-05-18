@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 /* 	Playlist Manager v 0.2 11/02/21
-	Manager for offline playlists. Shows a virtual list of all playlists files within a configured folder (PlaylistPath).
+	Manager for offline playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	After loading it on a panel, check panel properties to add a tracked folder (without quotes). For example: (that's a folder within my foobar profile)
 	C:\Users\XXX\AppData\Roaming\foobar2000\playlist_manager\server\
 	Autoplaylist json files are stored in your profile folder:
@@ -106,36 +106,39 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_b
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_menu.js');
 
 var properties = {
-	PlaylistPath		: ['Path to the folder containing the playlists' , fb.ProfilePath + 'playlist_manager\\'],
-	AutoSave			: ['Auto-save delay when making changes within loaded foobar playlists (in ms). 0 disables it.' , 3000],
-	FplLock				: ['Load .fpl native playlists as read only?' , true],
-	Extension			: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')' , '.m3u8'],
-	AutoUpdate			: ['Periodically checks playlist path (in ms). Recommended > 1000. 0 disables it.' , 5000],
-	ShowSize			: ['Show playlist size' , true],
-	UpdateAutoplaylist	: ['Update Autoplaylist size by query output' , true],
-	UseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).' , true],
-	OptionUUID			: ['UUID current method' , ''],
-	MethodState			: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	SortState			: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	SaveFilterStates	: ['Maintain filters between sessions?: ', true], // Description and value filled on list.init() with defaults. Just a placeholder
-	FilterStates		: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
-	ShowSep				: ['Show name/category separators: ', true],
-	ListColours			: ['Color codes for the list. Use contextual menu to set them: ', ''],
-	firstPopup			: ['Playlist Manager: Fired once', false],
+	playlistPath		: ['Path to the folder containing the playlists' , fb.ProfilePath + 'playlist_manager\\'],
+	autoSave			: ['Auto-save delay when making changes within loaded foobar playlists (in ms). 0 disables it.', 3000],
+	bFplLock			: ['Load .fpl native playlists as read only?' , true],
+	extension			: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
+	autoUpdate			: ['Periodically checks playlist path (in ms). Recommended > 1000. 0 disables it.' , 5000],
+	bShowSize			: ['Show playlist size' , true],
+	bUpdateAutoplaylist	: ['Update Autoplaylist size by query output' , true],
+	bUseUUID			: ['Use UUIDs along playlist names (not available for .pls playlists).' , true],
+	optionUUID			: ['UUID current method' , ''],
+	methodState			: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
+	sortState			: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
+	bSaveFilterStates	: ['Maintain filters between sessions?: ', true], // Description and value filled on list.init() with defaults. Just a placeholder
+	filterStates		: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
+	bShowSep				: ['Show name/category separators: ', true],
+	listColours			: ['Color codes for the list. Use contextual menu to set them: ', ''],
+	bFirstPopup			: ['Playlist Manager: Fired once', false],
+	bRelativePath		: ['Use relative paths for all new playlists', false],
+	bFirstPopupFpl		: ['Playlist Manager fpl: Fired once', false],
+	bFirstPopupPls		: ['Playlist Manager pls: Fired once', false],
 };
-properties['PlaylistPath'].push({func: isString, portable: true}, properties['PlaylistPath'][1]);
-properties['AutoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['AutoSave'][1]);
-properties['Extension'].push({func: (val) => {return (Array.from(writablePlaylistFormats).indexOf(val) !== -1);}}, properties['Extension'][1]);
-properties['AutoUpdate'].push({range: [[0,0],[100, Infinity]]}, properties['AutoUpdate'][1]);
+properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
+properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]);
+properties['extension'].push({func: (val) => {return writablePlaylistFormats.has(val);}}, properties['extension'][1]);
+properties['autoUpdate'].push({range: [[0,0],[100, Infinity]]}, properties['autoUpdate'][1]);
 var prefix = 'plm_';
 setProperties(properties, prefix);
 
 { // Info Popup
 	let prop = getPropertiesPairs(properties, prefix);
-	if (!prop['firstPopup'][1]) {
-		prop['firstPopup'][1] = true;
+	if (!prop['bFirstPopup'][1]) {
+		prop['bFirstPopup'][1] = true;
 		overwriteProperties(prop); // Updates panel
-		isPortable(prop['PlaylistPath'][0]);
+		isPortable(prop['playlistPath'][0]);
 		const readmePath = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\readme\\playlist_manager.txt';
 		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, 'e'))) {
 			const readme = utils.ReadTextFile(readmePath, 65001);
@@ -147,8 +150,8 @@ setProperties(properties, prefix);
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 
-const autoSaveTimer =  zeroOrGreaterThan(getPropertyByKey(properties, 'AutoSave', prefix), 1000); // Safety limit 0 or > 1000
-const autoUpdateTimer =  zeroOrGreaterThan(getPropertyByKey(properties, 'AutoUpdate', prefix), 100); // Safety limit 0 or > 100
+const autoSaveTimer =  zeroOrGreaterThan(getPropertyByKey(properties, 'autoSave', prefix), 1000); // Safety limit 0 or > 1000
+const autoUpdateTimer =  zeroOrGreaterThan(getPropertyByKey(properties, 'autoUpdate', prefix), 100); // Safety limit 0 or > 100
 
 function on_colours_changed() {
 	panel.colours_changed();
@@ -267,7 +270,7 @@ var debouncedAutoUpdate = (autoUpdateTimer) ? debounce(autoUpdate, autoUpdateTim
 const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
 function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 function autoUpdate() {
-	const playlistPathArray = getFiles(getPropertyByKey(properties, 'PlaylistPath', prefix), readablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
+	const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', prefix), readablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	if (playlistPathArrayLength !== (list.dataAll.length - list.itemsAutoplaylist)) { // Most times that's good enough. Count total items minus virtual playlists
 		list.update(false, true, list.lastIndex);
@@ -312,7 +315,7 @@ function oPlaylist (id, path, name = void(0), extension = void(0), size = '?', f
 	
 }
 
-function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'PlaylistPath', prefix)) {
+function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
 	const playlistPathArray = getFiles(folderPath, readablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
 	const playlistPathArray_length = playlistPathArray.length;
 	let playlistArray = [];
@@ -371,16 +374,7 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'Pla
 				size = filteredText.length;
 			}
 		} else if (playlistPathArray[i].endsWith('.fpl')) { // AddLocations is async so it doesn't work...
-			// if (bCreated) {
-				// plman.AddLocations(newFplIndex, [playlistPathArray[i]], true);
-				// size = plman.PlaylistItemCount(newFplIndex)
-			// } else {
-				// newFplIndex = plman.CreatePlaylist(plman.PlaylistCount, 'temp');
-				// plman.AddLocations(newFplIndex, [playlistPathArray[i]], true);
-				// size = plman.PlaylistItemCount(newFplIndex);
-				// console.log(size);
-				// bCreated = true;
-			// }
+			// Nothing
 		} else if (playlistPathArray[i].endsWith('.pls')) {
 			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
 			if (typeof text !== 'undefined' && text.length >= 1) {

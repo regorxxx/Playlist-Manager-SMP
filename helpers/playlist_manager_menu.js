@@ -20,6 +20,7 @@ function createMenuLeft(forcedIndex = null) {
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;};
 	const isAutoPls = () => {return list.data[z].isAutoPlaylist;};
 	const isLockPls = () => {return list.data[z].isLocked;};
+	const isPlsEditable = () => {return list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8'  || list.data[z].extension === '.fpl' || list.data[z].isAutoPlaylist;};
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
@@ -47,14 +48,11 @@ function createMenuLeft(forcedIndex = null) {
 				delayAutoUpdate();
 				if (new_name.length && new_name !== old_name) {
 					if (list.data[z].isAutoPlaylist) {
-						list.data[z].name = new_name;
-						if (list.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
-							list.data[z].id = new_id;
-							list.data[z].nameId = new_name + list.data[z].id;
-						} else {
-							list.data[z].id = '';
-							list.data[z].nameId = new_name; 
-						}
+						list.editData(list.data[z], {
+							name: new_name,
+							id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
+							nameId: list.bUseUUID ? new_name + new_id : new_name,
+						});
 						list.update(true, true);
 						list.filter();
 					} else {
@@ -64,7 +62,9 @@ function createMenuLeft(forcedIndex = null) {
 							// let newPath = list.data[z].path.replace(old_name + list.data[z].extension, new_name + list.data[z].extension);
 							let bRenamedSucessfully = _renameFile(list.data[z].path, newPath);
 							if (bRenamedSucessfully) {
-								list.data[z].path = newPath;
+								list.editData(list.data[z], {
+									path: newPath,
+								});
 								if (!list.data[z].isLocked) {
 									let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
 									let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
@@ -72,14 +72,11 @@ function createMenuLeft(forcedIndex = null) {
 									if (!bDone) {
 										fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + list.data[z].path, window.Name);
 									} else {
-										list.data[z].name = new_name;
-										if (list.bUseUUID) { // May have enabled/disabled UUIDs just before renaming
-											list.data[z].id = new_id;
-											list.data[z].nameId = new_name + list.data[z].id;
-										} else {
-											list.data[z].id = '';
-											list.data[z].nameId = new_name; 
-										}
+										list.editData(list.data[z], {
+											name: new_name,
+											id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
+											nameId: list.bUseUUID ? new_name + new_id : new_name,
+										});
 										list.update_plman(list.data[z].nameId, old_nameId); // Update with new id
 										list.update(true, true);
 										list.filter();
@@ -104,11 +101,15 @@ function createMenuLeft(forcedIndex = null) {
 				catch(e) {return;}
 				let bDone = false;
 				if (new_sort !== list.data[z].sort) { // Pattern
-					list.data[z].sort = new_sort;
+					list.editData(list.data[z], {
+						sort: new_sort,
+					});
 					bDone = true;
 				}
 				if (list.data[z].sort.length) { // And force sorting
-					list.data[z].bSortForced = WshShell.Popup('Force sort?\n(currently ' + list.data[z].bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
+					list.editData(list.data[z], {
+						bSortForced: WshShell.Popup('Force sort?\n(currently ' + list.data[z].bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes,
+					});
 					bDone = true;
 				}
 				if (bDone) {
@@ -123,8 +124,10 @@ function createMenuLeft(forcedIndex = null) {
 				catch(e) {return;}
 				if (!checkQuery(new_query, false)) {fb.ShowPopupMessage('Query not valid:\n' + new_query, window.Name); return;}
 				if (new_query !== list.data[z].query) {
-					list.data[z].query = new_query;
-					list.data[z].size = fb.GetQueryItems(fb.GetLibraryItems(), new_query).Count;
+					list.editData(list.data[z], {
+						query: new_query,
+						size: fb.GetQueryItems(fb.GetLibraryItems(), new_query).Count,
+					});
 					list.update(true, true);
 					list.filter();
 				}
@@ -174,8 +177,10 @@ function createMenuLeft(forcedIndex = null) {
 			let category = '';
 			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, list.data[z].category !== null ? list.data[z].category : '', true);} 
 			catch(e) {return;}
-			if (list.data[z].isAutoPlaylist) {
-				list.data[z].category = category;
+			if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+				list.editData(list.data[z], {
+					category: category,
+				});
 				list.update(true, true);
 				list.filter();
 			} else {
@@ -185,12 +190,14 @@ function createMenuLeft(forcedIndex = null) {
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
 				} else {
-					list.data[z].category = category;
+					list.editData(list.data[z], {
+						category: category,
+					});
 					list.update(true, true);
 					list.filter();
 				}
 			}
-		}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+		}, flags: !isLockPls() &&  isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Adds tag(s)
 		menu.newEntry({menuName, entryText: 'Add tag(s)...', func: () => {
 			let tags = '';
@@ -198,8 +205,10 @@ function createMenuLeft(forcedIndex = null) {
 			catch(e) {return;}
 			tags = tags.split(';').filter(Boolean); // This filters blank values
 			if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
-				if (list.data[z].isAutoPlaylist) {
-					list.data[z].tags = tags;
+				if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+					list.editData(list.data[z], {
+						tags: tags,
+					});
 					list.update(true, true);
 					list.filter();
 				} else {
@@ -210,7 +219,9 @@ function createMenuLeft(forcedIndex = null) {
 						if (!bDone) {
 							fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
 						} else {
-							list.data[z].tags = tags;
+							list.editData(list.data[z], {
+								tags: tags,
+							});
 							list.update(true , true);
 							list.filter();
 						}
@@ -219,15 +230,17 @@ function createMenuLeft(forcedIndex = null) {
 					}
 				}
 			}
-		}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({menuName, entryText: 'sep'});
 	{	// File management
 		// Locks playlist file
 		menu.newEntry({menuName, entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
 			const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
-			if (list.data[z].isAutoPlaylist) {
-				list.data[z].isLocked = !list.data[z].isLocked;
+			if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+				list.editData(list.data[z], {
+					isLocked: !list.data[z].isLocked,
+				});
 				list.update(true, true);
 				list.filter();
 			} else {
@@ -238,7 +251,9 @@ function createMenuLeft(forcedIndex = null) {
 					if (!bDone) {
 						fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
 					} else {
-						list.data[z].isLocked = !list.data[z].isLocked;
+						list.editData(list.data[z], {
+							isLocked: !list.data[z].isLocked,
+						});
 						list.update(true, true);
 						list.filter();
 					}
@@ -246,7 +261,7 @@ function createMenuLeft(forcedIndex = null) {
 					fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
 				}
 			}
-		}});
+		}, flags: isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({menuName, entryText: 'Delete', func: () => {list.removePlaylist(z);}});
 	}
@@ -301,7 +316,7 @@ function createMenuRight() {
 				test.Print();
 			}});
 		}
-		{	// Import json	
+		{	// Import json
 			menu.newEntry({menuName, entryText: 'Add playlists from json file...', func: () => {
 				list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
 				list.loadExternalJson();
@@ -310,6 +325,43 @@ function createMenuRight() {
 	}
 	menu.newEntry({menuName, entryText: 'sep'});
 	{ // List config
+		{	// Relative folder
+			const subMenuName = menu.newMenu('Save paths relative to folder...');
+			const options = ['Yes, relative to playlists folder', 'No, use absolute paths (default)'];
+			const optionsLength = options.length;
+			if (optionsLength) {
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						list.bRelativePath = (i === 0) ? true : false;
+						list.properties['bRelativePath'][1] = list.bRelativePath;
+						overwriteProperties(list.properties);
+						if (i === 0) {fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name);}
+						else {fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name);}
+					}});
+				});
+				menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bRelativePath ? 0 : 1);});
+			}
+		}
+		{	// Playlist extension
+			const subMenuName = menu.newMenu('Change playlist extension (saving)...');
+			const options = Array.from(writablePlaylistFormats);
+			const optionsLength = options.length;
+			if (optionsLength) {
+				options.forEach((item) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						if (item === '.pls') {
+							let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
+							if (answer !== popup.yes) {return;}
+							menu.btn_up(void(0), void(0), void(0), list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
+						}
+						list.playlistsExtension = item;
+						list.properties['extension'][1] = list.playlistsExtension;
+						overwriteProperties(list.properties);
+					}});
+				});
+			}
+			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
+		}
 		{	// Sorting
 			const subMenuName = menu.newMenu('Change sorting method...');
 			const options = Object.keys(list.sortMethods());
@@ -321,11 +373,11 @@ function createMenuRight() {
 						list.methodState = item;
 						list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
 						// Update properties to save between reloads, but property descriptions change according to list.methodState
-						list.properties['MethodState'][1] = list.methodState;
-						const removeProperties = {SortState: [list.properties['SortState'][0], null]}; // need to remove manually since we change the ID (description)!
-						list.properties['SortState'][0] = list.properties['SortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
-						list.properties['SortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
-						list.properties['SortState'][1] = list.sortState; // and change value
+						list.properties['methodState'][1] = list.methodState;
+						const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
+						list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
+						list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
+						list.properties['sortState'][1] = list.sortState; // and change value
 						// And set properties
 						overwriteProperties(removeProperties); // Deletes old properties used as placeholders
 						overwriteProperties(list.properties);
@@ -342,13 +394,13 @@ function createMenuRight() {
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bShowSize = (i <= 1) ? true : false;
-					list.properties['UpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
-					list.properties['ShowSize'][1] = list.bShowSize;
+					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
+					list.properties['bShowSize'][1] = list.bShowSize;
 					overwriteProperties(list.properties);
 				}});
 			});
 			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.properties['UpdateAutoplaylist'][1] ? 0 : (list.bShowSize ? 1 : 2));});
+			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.properties['bUpdateAutoplaylist'][1] ? 0 : (list.bShowSize ? 1 : 2));});
 		}
 		{	// UUID
 			const subMenuName = menu.newMenu('Use UUIDs for playlist names...');
@@ -357,12 +409,12 @@ function createMenuRight() {
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.optionUUID = item;
-					list.properties['OptionUUID'][1] = list.optionUUID;
+					list.properties['optionUUID'][1] = list.optionUUID;
 					list.bUseUUID = (i === optionsLength - 1) ? false : true;
-					list.properties['UseUUID'][1] = list.bUseUUID;
+					list.properties['bUseUUID'][1] = list.bUseUUID;
 					overwriteProperties(list.properties);
 					list.updateAllUUID();
-				}});
+				}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING}); // Disable UUID for .pls playlists
 			});
 			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
 		}
@@ -373,7 +425,7 @@ function createMenuRight() {
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bSaveFilterStates = (i === 0) ? true : false;
-					list.properties['SaveFilterStates'][1] = list.bSaveFilterStates;
+					list.properties['bSaveFilterStates'][1] = list.bSaveFilterStates;
 					overwriteProperties(list.properties);
 				}});
 			});
@@ -386,7 +438,7 @@ function createMenuRight() {
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bShowSep = (i === 0) ? true : false;
-					list.properties['ShowSep'][1] = list.bShowSep;
+					list.properties['bShowSep'][1] = list.bShowSep;
 					overwriteProperties(list.properties);
 				}});
 			});
@@ -409,9 +461,15 @@ function createMenuRight() {
 				return;
 			}
 			// Update property to save between reloads
-			list.properties['PlaylistPath'][1] = list.playlistsPath;
+			list.properties['playlistPath'][1] = list.playlistsPath;
 			overwriteProperties(list.properties);
 			list.checkConfig();
+			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+			list.header_textUpdate();
+			list.bUpdateAutoplaylist = true; 
+			list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
+			list.filter();
+			test.Print();
 			window.Repaint();
 		}});
 		menu.newEntry({menuName, entryText: 'Open playlist\'s folder', func: () => {
@@ -432,7 +490,7 @@ function createMenuRight() {
 					if (i === 2) {list.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, list.colours.selectedPlaylistColour);}
 					// Update property to save between reloads
 					let coloursString = convertObjectToString(list.colours);
-					list.properties['ListColours'][1] = coloursString;
+					list.properties['listColours'][1] = coloursString;
 					overwriteProperties(list.properties);
 					list.checkConfig();
 					window.Repaint();
@@ -444,19 +502,38 @@ function createMenuRight() {
 		{	// Font size
 			const subMenuName = menu.newMenu('Font size...');
 			if (panel.list_objects.length || panel.text_objects.length) {
-				const options = panel.fonts.sizes;
+				const options = [...panel.fonts.sizes, 'Other...'];
 				const optionsLength = options.length;
-				options.forEach((item) => {
+				options.forEach((item, index) => {
 					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						panel.fonts.size = item;
-						// Update property to save between reloads
-						panel.properties['fontSize'][1] = panel.fonts.size;
-						overwriteProperties(panel.properties);
-						panel.font_changed();
-						window.Repaint();
+						if (index !== optionsLength - 1) {
+							if (panel.fonts.size !== item) {
+								panel.fonts.size = item;
+								// Update property to save between reloads
+								panel.properties['fontSize'][1] = item;
+								overwriteProperties(panel.properties);
+								panel.font_changed();
+								window.Repaint();
+							}
+						} else {
+							let input;
+							try {input = Number(utils.InputBox(window.ID, 'Input a number :', window.Name, panel.fonts.size, true));} 
+							catch(e) {return;}
+							if (!Number.isSafeInteger(input))
+							if (input === panel.fonts.size) {return;}
+							panel.fonts.size = input;
+							// Update property to save between reloads
+							panel.properties['fontSize'][1] = input;
+							overwriteProperties(panel.properties);
+							panel.font_changed();
+							window.Repaint();
+						}
 					}});
 				});
-				menu.checkMenu(subMenuName, options[0], options[optionsLength - 1], () => {return panel.fonts.sizes.indexOf(panel.fonts.size);});
+				menu.checkMenu(menuName, options[0], options[optionsLength - 1], () => {
+					let idx = options.indexOf(panel.fonts.size);
+					return idx !== -1 ? idx : optionsLength - 1;
+				});
 			}
 		}
 		{	// Background color
