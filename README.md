@@ -14,6 +14,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Playlist files are linked to physical files (.m3u8, .m3u, .pls or .fpl).
   * AutoPlaylists are saved into json format.
   * All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
+  * Paths within the playlist may be absolute or relative to a folder (configurable).
 * AutoPlaylists: contains all functionality on Auto-playlist Manager by marc2003 plus more.
   * Create, rename, delete AutoPlaylists.
   * Edit query, sort pattern and sort forcing.
@@ -59,6 +60,10 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * (a-f)
   * (*) 
   * Or none
+* Additional tools for playlists:
+  * Check for dead items on playlists files (without having to load them on foobar!).
+  * Check for playlists with mixed relative and absolute paths.
+  * Check for playlists with items not present on library.
 * 3 different writable formats. (some limits apply for .pls playlist files) (configurable)
 * Filter (configurable) and sorting gets saved between reloads.
 * RecycleBin: deleting and restoring.
@@ -77,7 +82,9 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
 ### Current limitations
-.fpl playlists (native format) are read only and can not be autosaved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).
+.fpl playlists (native format) are read only and can not be autosaved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).  
+Whenever that changes, I will add full support for .fpl, and end pre-release state.
+
 
 ## Also integrates
  1. [Menu-Framework-SMP](https://github.com/regorxxx/Menu-Framework-SMP): Helper which allows to easily create customizable and dynamic menus.
