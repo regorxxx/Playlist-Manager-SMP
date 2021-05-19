@@ -18,6 +18,7 @@ Features:
 		- Playlist files are linked to physical files.
 		- AutoPlaylists are saved into json format.
 		- All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
+		- Paths within the playlist may be absolute or relative to a folder (configurable).
 	- AutoPlaylists: contains all functionality on Auto-playlist Manager by marc2003 plus more.
 		- Create, rename, delete AutoPlaylists.
 		- Edit query, sort pattern and sort forcing.
@@ -58,11 +59,15 @@ Features:
 		- Name: Az | Za
 		- Size: Ascd. | Desc.
 		- Category: Az | Za
-	--UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
+	- UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
 		- Invisible Unicode chars plus (*)
 		- (a-f)
 		- (*) 
 		- Or none
+	- Additional tools for playlists:
+		- Check for dead items on playlists files (without having to load them on foobar!).
+		- Check for playlists with mixed relative and absolute paths.
+		- Check for playlists with items not present on library.
 	- 3 different writable formats. (some limits apply for .pls playlist files (**)) (configurable)
 	- Filter (configurable) and sorting gets saved between reloads.
 	- RecycleBin: deleting and restoring.
