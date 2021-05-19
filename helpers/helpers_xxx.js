@@ -806,6 +806,10 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
 
 function getFilePathsFromPlaylist(playlistPath) {
 	let paths = [];
+	if (!playlistPath || !playlistPath.length) {
+		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
+		return paths;
+	}
 	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
@@ -834,19 +838,27 @@ function getFilePathsFromPlaylist(playlistPath) {
 	return paths;
 }
 
+// Cache paths
+var libItemsAbsPaths = [];
+var libItemsRelPaths = {};
+
+function precacheLibraryPaths() {
+	libItemsAbsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(fb.GetLibraryItems());
+}
+
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 	let test = new FbProfiler('loadTracksFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
-	if (!filePaths.some((path) => {return path.indexOf('.\\') !== -1;})) {relPath = '';} // No need to check rel paths if they are all absolute
+	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	let handlePlaylist = [...Array(playlistLength)];
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
-	const poolItemsAbsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
-	const poolItemsRelPaths = relPath.length ? poolItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');}) : null; // Faster than tf again
+	const poolItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
+	const poolItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : poolItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
 	let pathPool = new Map();
 	let filePool = new Set(filePaths);
 	let path;
@@ -885,8 +897,52 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 		bDone = true;
 	}
 	test.Print();
-	console.log(bDone);
+	if (!libItemsAbsPaths.length) {libItemsAbsPaths = poolItemsAbsPaths;}
+	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
 	return bDone;
+}
+
+// Loading m3u, m3u8 & pls playlist files is really slow when there are many files
+// Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
+function arePathsInMediaLibrary(filePaths, relPath = '') {
+	let test = new FbProfiler('arePathsInMediaLibrary');
+	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
+	const playlistLength = filePaths.length;
+	const poolItems = fb.GetLibraryItems();
+	const poolItemsCount = poolItems.Count;
+	const poolItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
+	const poolItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : poolItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
+	let filePool = new Set(filePaths.map((path) => {return path.toLowerCase();}));
+	let path;
+	let count = 0;
+	if (relPath.length) {
+		for (let i = 0; i < poolItemsCount; i++) {
+			path = poolItemsAbsPaths[i].toLowerCase();
+			if (filePool.has(path)) {
+				count++;
+				continue;
+			}
+			path = poolItemsRelPaths[i].toLowerCase();
+			if (filePool.has(path)) {
+				count++;
+				continue;
+			}
+		}
+	} else {
+		for (let i = 0; i < poolItemsCount; i++) {
+			path = poolItemsAbsPaths[i].toLowerCase();
+			if (filePool.has(path)) {
+				count++;
+				continue;
+			}
+		}
+	}
+	test.Print();
+	if (libItemsAbsPaths.length !== poolItems.Count) {libItemsAbsPaths = poolItemsAbsPaths;}
+	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
+	console.log(count);
+	console.log(playlistLength);
+	return (count === playlistLength);
 }
 
 function loadPlaylists(playlistArray) {
@@ -1254,6 +1310,12 @@ Array.prototype.rotate = (function() {
 		return this;
 	};
 })();
+
+function compareKeys(a, b) {
+	const aKeys = Object.keys(a).sort();
+	const bKeys = Object.keys(b).sort();
+	return JSON.stringify(aKeys) === JSON.stringify(bKeys);
+}
 
 /* 
 	Sets

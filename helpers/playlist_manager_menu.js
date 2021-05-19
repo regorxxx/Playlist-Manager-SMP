@@ -283,6 +283,15 @@ function createMenuRight() {
 	}
 	menu.newEntry({menuName, entryText: 'sep'});
 	{	// File management
+		{	// Refresh
+			menu.newEntry({menuName, entryText: 'Manual refresh', func: () => {
+				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+				list.bUpdateAutoplaylist = true; 
+				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
+				list.filter();
+				test.Print();
+			}});
+		}
 		{	// Restore
 			const subMenuName = menu.newMenu('Restore...');
 			if (list.deleted_items.length) {
@@ -307,19 +316,63 @@ function createMenuRight() {
 				});
 			}
 		}
-		{	// Refresh
-			menu.newEntry({menuName, entryText: 'Manual refresh', func: () => {
-				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
-				list.bUpdateAutoplaylist = true; 
-				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
-				list.filter();
-				test.Print();
-			}});
-		}
 		{	// Import json
 			menu.newEntry({menuName, entryText: 'Add playlists from json file...', func: () => {
 				list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
 				list.loadExternalJson();
+			}});
+		}
+	}
+	menu.newEntry({menuName, entryText: 'sep'});
+	{
+		// Playlist errors
+		const subMenuName = menu.newMenu('Check playlists consistency...');
+		{	// Absolute/relative paths consistency
+			menu.newEntry({menuName: subMenuName, entryText: 'Absolute/relative paths...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other enviroments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				let found = [];
+				list.dataAll.forEach((playlist) => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const filePaths = getFilePathsFromPlaylist(playlist.path);
+						if (filePaths.some((path) => {return path.startsWith('.\\');}) && filePaths.some((path) => {return !path.startsWith('.\\');})) {found.push(playlist.path);}
+					}
+				});
+				fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+			}});
+		}
+		{	// External items
+			menu.newEntry({menuName: subMenuName, entryText: 'External items...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				let found = [];
+				list.dataAll.forEach((playlist) => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const filePaths = getFilePathsFromPlaylist(playlist.path);
+						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
+							if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path)})) {
+								found.push(playlist.path + '(contains dead items)');;
+							} else {
+								found.push(playlist.path);
+							}
+						}
+					}
+				});
+				fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+			}});
+		}
+		{	// Dead items
+			menu.newEntry({menuName: subMenuName, entryText: 'Dead items...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for dead items (i.e. items that don\'t exist in their path).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				let found = [];
+				list.dataAll.forEach((playlist) => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const filePaths = getFilePathsFromPlaylist(playlist.path);
+						if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path)})) {found.push(playlist.path);}
+					}
+				});
+				fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
 			}});
 		}
 	}

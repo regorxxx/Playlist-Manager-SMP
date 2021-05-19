@@ -2,16 +2,23 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.2.2](#022---2021-05-19)
 - [0.2.1](#021---2021-05-05)
 - [0.2.0](#020---2021-05-04)
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+
+## [0.2.2] - 2021-05-19
+### Added
 - Portable: Additional checks for portable installations.
 - Relative Paths: playlists can now be saved with paths relative to the playlist folder.
 - Menu: entry to change playlist extension.
 - Menu: entry to relative/abs path config.
+- Menu: different tools to check for errors (absolute/relative paths mixing, dead items on playlist files, etc.)
 - Fpl playlist data (like tags, size or category) is now saved between sessions (removing some of the intrinsic limitations of the closed format).
 - Multiple info popups at some points when working with fpl and pls playlists for the first time.
 ### Changed
@@ -20,7 +27,8 @@
 - Helpers: Playlist loading is done using cache for both absolute and relative path playlists, independently  of configuration (for saving).
 - Using pls format disables UUIDs menu and forces UUID refresh to none for consistency.
 - Using pls format disables some menus for editing data (pls format doesn't allow extra comments).
-- Changed the background text when filtering the lists and # items was 0. (previously it showed the default text)
+- Changed the background text when filtering the lists and # items was 0. (previously it showed the default text).
+- Playlist loading should be much faster after the first time all libray paths have been cached, since that was the main culprit of loading time (+1 sec for 70k tracks).
 ### Removed
 
 ## [0.2.1] - 2021-05-05
@@ -60,6 +68,7 @@
 ### Removed
 
 [Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.1...HEAD
+[0.2.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/623c80a...v0.1.0
