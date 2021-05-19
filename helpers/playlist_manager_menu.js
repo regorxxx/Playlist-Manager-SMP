@@ -293,7 +293,7 @@ function createMenuRight() {
 			}});
 		}
 		{	// Restore
-			const subMenuName = menu.newMenu('Restore...');
+			const subMenuName = menu.newMenu('Restore...', void(0), list.deleted_items.length ? MF_STRING : MF_GRAYED);
 			if (list.deleted_items.length) {
 				list.deleted_items.slice(0, 8).forEach((item, i) => {
 					menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {

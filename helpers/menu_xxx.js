@@ -67,10 +67,10 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	this.properties = properties; // To simplify usage along other scripts
 	
 	// To create new elements
-	this.newMenu = (menuName = 'main', subMenuFrom = 'main') => {
+	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
 		if (menuName === subMenuFrom) {subMenuFrom = '';}
 		menuArr.push({menuName, subMenuFrom});
-		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, bIsMenu: true});}
+		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
 	}
 	this.newMenu(); // Default menu
@@ -171,8 +171,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 			} else { // Append sub-menus
 				const subMenuName = _isFunction(entry.menuName) ? entry.menuName() : entry.menuName;
 				if (subMenuName !== menuArr[0].menuName) {
+					const flags = _isFunction(entry.flags) ? entry.flags() : entry.flags;
 					const subMenuFrom = _isFunction(entry.subMenuFrom) ? entry.subMenuFrom() : entry.subMenuFrom;
-					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), MF_STRING, subMenuName);
+					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuName);
 				}
 			}
 		});
@@ -220,7 +221,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		menuMap.clear();
 		entryMap.clear();
 		idxMap.clear();
-		entryArr = [...entryArrTemp];
+		entryArr = [...entryArrTemp]; // Since menu is cleared on every call too, entryArrTemp is [] whenever clear is called from the outside!
 		entryArrTemp = [];
 		idx = 0;
 	}

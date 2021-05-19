@@ -1219,7 +1219,7 @@ function _list(x, y, w, h) {
 		}
 		
 		_createFolder(folders.data);
-		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName + '.json';
+		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
 		_recycleFile(this.filename + '.old') // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
 		this.initProperties() // This only set properties if they have no values...
