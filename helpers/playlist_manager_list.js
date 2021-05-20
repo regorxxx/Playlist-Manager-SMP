@@ -286,7 +286,7 @@ function _list(x, y, w, h) {
 		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 	}
 	
-	this.lbtn_up = (x, y) => {
+	this.lbtn_up = (x, y, mask) => {
 		if (this.trace(x, y)) {
 			switch (true) {
 				case this.up_btn.lbtn_up(x, y):
@@ -295,14 +295,17 @@ function _list(x, y, w, h) {
 					break;
 				default:
 				{
-					if (x > this.x && x < this.x + Math.min(this.data[this.index].width, this.text_width)) {
-						if (utils.IsKeyPressed(VK_CONTROL)) { // Pressing control
-							const z = this.index;
+					const z = this.index;
+					if (x > this.x && x < this.x + Math.min(this.data[z].width, this.text_width)) {
+						if (mask === MK_CONTROL) { // Pressing control
 							const duplicated = getPlaylistIndexArray(this.data[z].nameId);
 							if (duplicated.length === 0) {list.loadPlaylist(z);} 
 							else if (duplicated.length === 1) {list.showBindedPlaylist(z);}
-						} else if (utils.IsKeyPressed(VK_SHIFT)) { // Pressing control
-							this.removePlaylist(this.index);
+						} else if (mask === MK_SHIFT) { // Pressing SHIFT
+							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+							if (selItems && selItems.Count) {this.addTracksToPlaylist(z, selItems);}
+						} else if (mask === MK_SHIFT + MK_CONTROL) { // Pressing control + SHIFT
+							this.removePlaylist(z);
 						} else { // Only mouse
 							if (!this.bDoubleclick) { // It's not a second lbtn click
 								this.timeOut = delayFn(createMenuLeft().btn_up, 100)(x,y); // Creates the menu and calls it later
@@ -477,7 +480,7 @@ function _list(x, y, w, h) {
 				if (bCallback && this.data[dataIndex].isLocked) { // Skips locked playlists only for auto-saving!
 					return;
 				}
-				delayAutoUpdate();
+				const delay = setInterval(delayAutoUpdate(), this.autoUpdateDelayTimer);
 				console.log('Playlist Manager: Updating playlist...');
 				const playlistPath = this.data[dataIndex].path;
 				let bDeleted = false;
@@ -506,6 +509,7 @@ function _list(x, y, w, h) {
 					fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
 					return;
 				}
+				clearInterval(delay);
 				console.log('Playlist Manager: done.');
 				this.update(true, true); // We have already updated data before only for the variables changed
 				this.filter();
@@ -707,7 +711,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.update = (bJustPaint = false, bNotPaint = false, currentItemIndex = -1) => {
-		delayAutoUpdate();
+		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		// Saves currently selected item for later use
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
 		if (bJustPaint) {
@@ -737,7 +741,6 @@ function _list(x, y, w, h) {
 								// So checking it every time the panel is painted is totally useless...
 								if (!checkQuery(item.query, false)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
 								item.size = fb.GetQueryItems(fb.GetLibraryItems(), item.query).Count;
-								delayAutoUpdate();
 							} // Updates size for Autoplaylists. Warning takes a lot of time! Only when required...
 							if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + icon_char_playlistW;} 
 							else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + icon_char_playlistW;}
@@ -812,6 +815,7 @@ function _list(x, y, w, h) {
 		if (this.bUpdateAutoplaylist) {this.bUpdateAutoplaylist = false;}
 		this.header_textUpdate();
 		if (!bNotPaint){window.Repaint();}
+		clearInterval(delay);
 	}
 	
 	this.updateAllUUID = () => {
@@ -821,7 +825,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.updateUUID = (playlistObj) => {
-		delayAutoUpdate();
+		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const old_name = playlistObj.name;
 		const old_id = playlistObj.ud;
 		const old_nameId = playlistObj.nameId;
@@ -855,6 +859,7 @@ function _list(x, y, w, h) {
 				}
 			}
 		}
+		clearInterval(delay);
 	}
 	
 	this.init = () => {
@@ -876,7 +881,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.addToData = (objectPlaylist) => {
-			delayAutoUpdate();
+			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (isArray(objectPlaylist)) {
 				for (const objectPlaylist_i of objectPlaylist) {this.addToData(objectPlaylist_i);}
 				return;
@@ -893,10 +898,11 @@ function _list(x, y, w, h) {
 			this.items++;
 			this.dataAll.push(objectPlaylist);
 			this.itemsAll++;
+			clearInterval(delay);
 		}
 		
 		this.editData = (objectPlaylist, properties) => {
-			delayAutoUpdate();
+			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (isArray(objectPlaylist)) {
 				for (const objectPlaylist_i of objectPlaylist) {this.editData(objectPlaylist_i);}
 				return;
@@ -924,9 +930,11 @@ function _list(x, y, w, h) {
 			if (index !== -1) { // Changes data on the other arrays too since they link to same object
 				Object.keys(properties).forEach( (property) => {this.dataAll[index][property] = properties[property];});
 			} else {console.log('Playlist Mananger: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+			clearInterval(delay);
 		}
 		
 		this.removeFromData = (objectPlaylist) => {
+			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (isArray(objectPlaylist)) {
 				for (const objectPlaylist_i of objectPlaylist) {this.removeFromData(objectPlaylist_i);}
 				return;
@@ -935,27 +943,28 @@ function _list(x, y, w, h) {
 			if (objectPlaylist.isAutoPlaylist) {
 				index = this.dataAutoPlaylists.indexOf(objectPlaylist);
 				if (index !== -1) {
-					this.dataAutoPlaylists.splice(index ,1);
+					this.dataAutoPlaylists.splice(index, 1);
 					this.itemsAutoplaylist--;
 				} else {console.log('Playlist Mananger: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
 			}
 			if (objectPlaylist.extension === '.fpl') {
 				index = this.dataFpl.indexOf(objectPlaylist);
 				if (index !== -1) {
-					this.dataFpl.splice(index ,1);
+					this.dataFpl.splice(index, 1);
 					this.itemsFpl--;
 				} else {console.log('Playlist Mananger: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
 			}
 			index = this.data.indexOf(objectPlaylist);
 			if (index !== -1) {
-				this.data.splice(index ,1);
+				this.data.splice(index, 1);
 				this.items--;
 			} else {console.log('Playlist Mananger: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
 			index = this.dataAll.indexOf(objectPlaylist);
 			if (index !== -1) {
-				this.dataAll.splice(index ,1);
+				this.dataAll.splice(index, 1);
 				this.itemsAll--;
 			} else {console.log('Playlist Mananger: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+			clearInterval(delay);
 		}
 		
 		this.replacer = (key, value) => {
@@ -1068,15 +1077,28 @@ function _list(x, y, w, h) {
 		
 		this.removePlaylist = (idx) => {
 			// Adds timestamp to filename
-			delayAutoUpdate();
+			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (!this.data[idx].isAutoPlaylist) { // Only for not AutoPlaylists
 				if (_isFile(this.data[idx].path)) {
 					let newPath = this.data[idx].path.split('.').slice(0,-1).join('.').split('\\')
 					const new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
 					newPath = newPath.concat([new_name]).join('\\') + this.data[idx].extension;
 					_renameFile(this.data[idx].path, newPath);
-					// and delete it
-					_recycleFile(newPath);
+					// And delete it
+					// Beware of calling this while pressing shift. File will be removed without sending to recycle bin!
+					if (utils.IsKeyPressed(VK_SHIFT)) {
+						const debouncedRecycle = debounce(() => {
+							if (utils.IsKeyPressed(VK_SHIFT)) { // TODO: Bug win 7, returns false at some point
+								delayAutoUpdate();
+								debouncedRecycle(newPath);
+								return;
+							} else {
+								_recycleFile(newPath);
+								console.log('done');
+							}
+						}, this.autoUpdateDelayTimer);
+						debouncedRecycle();
+					} else {_recycleFile(newPath);}
 					this.editData(this.data[idx], {
 						path: newPath,
 					});
@@ -1090,6 +1112,7 @@ function _list(x, y, w, h) {
 			const duplicated = plman.FindPlaylist(old_nameId);
 			if (this.data[idx].size) {this.totalFileSize -= this.data[idx].size;}
 			this.deleted_items.unshift(this.data[idx]);
+			clearInterval(delay);
 			this.removeFromData(this.data[idx]); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
 			this.update(true, true); // Call this inmediatly after removal! If paint fires before updating things get weird
 			this.filter();
@@ -1280,6 +1303,7 @@ function _list(x, y, w, h) {
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length
+	this.autoUpdateDelayTimer = this.properties.autoUpdate[1] / 100; // Timer should be at least 1/100 autoupdate timer to work reliably
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel(1); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel(-1); });
 	this.init();

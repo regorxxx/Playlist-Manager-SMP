@@ -68,6 +68,7 @@ Features:
 		- Check for dead items on playlists files (without having to load them on foobar!).
 		- Check for playlists with mixed relative and absolute paths.
 		- Check for playlists with items not present on library.
+		- Check for playlists with size mismatch (file tag vs # tracks).
 	- 3 different writable formats. (some limits apply for .pls playlist files (**)) (configurable)
 	- Filter (configurable) and sorting gets saved between reloads.
 	- RecycleBin: deleting and restoring.
@@ -87,7 +88,8 @@ Features:
 		- Left Click: playlist contextual menu
 		- Rigth Click: panel menu
 		- Ctrl + Left Button: Load playlist / Make binded playlist active
-		- Shift + Left Button: Delete playlist
+		- Shift + Left Button: Send current selection to playlist
+		- Ctrl + Shift + Left Button: Delete playlist
 		
 (*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
 (**).pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.

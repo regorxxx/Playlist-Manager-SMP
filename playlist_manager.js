@@ -107,10 +107,10 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_m
 
 var properties = {
 	playlistPath		: ['Path to the folder containing the playlists' , fb.ProfilePath + 'playlist_manager\\'],
-	autoSave			: ['Auto-save delay when making changes within loaded foobar playlists (in ms). 0 disables it.', 3000],
+	autoSave			: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000],
 	bFplLock			: ['Load .fpl native playlists as read only?' , true],
 	extension			: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
-	autoUpdate			: ['Periodically checks playlist path (in ms). Recommended > 1000. 0 disables it.' , 5000],
+	autoUpdate			: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000],
 	bShowSize			: ['Show playlist size' , true],
 	bUpdateAutoplaylist	: ['Update Autoplaylist size by query output' , true],
 	bUseUUID			: ['Use UUIDs along playlist names (not available for .pls playlists).' , true],
@@ -127,9 +127,9 @@ var properties = {
 	bFirstPopupPls		: ['Playlist Manager pls: Fired once', false],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
-properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]);
+properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
 properties['extension'].push({func: (val) => {return writablePlaylistFormats.has(val);}}, properties['extension'][1]);
-properties['autoUpdate'].push({range: [[0,0],[100, Infinity]]}, properties['autoUpdate'][1]);
+properties['autoUpdate'].push({range: [[0,0],[200, Infinity]]}, properties['autoUpdate'][1]); // Safety limit 0 or > 200
 var prefix = 'plm_';
 setProperties(properties, prefix);
 
@@ -150,8 +150,8 @@ setProperties(properties, prefix);
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 
-const autoSaveTimer =  zeroOrGreaterThan(getPropertyByKey(properties, 'autoSave', prefix), 1000); // Safety limit 0 or > 1000
-const autoUpdateTimer =  zeroOrGreaterThan(getPropertyByKey(properties, 'autoUpdate', prefix), 100); // Safety limit 0 or > 100
+const autoSaveTimer =  getPropertyByKey(properties, 'autoSave', prefix); 
+const autoUpdateTimer =  getPropertyByKey(properties, 'autoUpdate', prefix);
 
 function on_colours_changed() {
 	panel.colours_changed();
@@ -167,9 +167,9 @@ function on_key_down(k) {
 	list.key_down(k);
 }
 
-function on_mouse_lbtn_up(x, y) {
+function on_mouse_lbtn_up(x, y, mask) {
 	if (cur_btn === null) {
-		list.lbtn_up(x, y);
+		list.lbtn_up(x, y, mask);
 	}
 	on_mouse_lbtn_up_buttn(x, y);
 }
@@ -380,7 +380,7 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'pla
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				let sizeText = text.filter(function(e) {return e.startsWith('NumberOfEntries');});
 				if (typeof sizeText !== 'undefined' && sizeText.length >= 1) { // Use playlist info
-					size = sizeText[0].split('=')[1];
+					size = Number(sizeText[0].split('=')[1]);
 				}
 			}			
 			if (size === null) { // Or count tracks

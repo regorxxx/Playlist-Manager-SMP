@@ -375,6 +375,41 @@ function createMenuRight() {
 				fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
 			}});
 		}
+		{	// Size mismatch
+			menu.newEntry({menuName: subMenuName, entryText: 'Playlist size mismatch...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				let found = [];
+				list.dataAll.forEach((playlist) => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
+						let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path).split('\r\n') : void(0);
+						let size;
+						if (typeof text !== 'undefined' && text.length) {
+							let lines = text.length;
+							if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+								let j = 0;
+								while (j < lines) { // Changes size Line
+									if (text[j].startsWith('#PLAYLISTSIZE:')) {
+										size = Number(text[j].split(':')[1]);
+										break;
+									}
+									j++;
+								}
+							} else if (playlist.extension === '.pls') {
+								let j = 0;
+								if (text[lines - 2].startsWith('NumberOfEntries=')) {
+									size = Number(text[lines - 2].split('=')[1]);
+								}
+							}
+						}
+						if (typeof size === 'undefined') {found.push(playlist.path + '(no size tag found)');}
+						else if (filePathsNum !== size) {found.push(playlist.path + '(tag: ' + size + ', paths: ' + filePathsNum + ')');}
+					}
+				});
+				fb.ShowPopupMessage('Found these playlists with size missmatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+			}});
+		}
 	}
 	menu.newEntry({menuName, entryText: 'sep'});
 	{ // List config
