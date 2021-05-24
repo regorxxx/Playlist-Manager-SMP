@@ -119,12 +119,14 @@ var properties = {
 	sortState			: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
 	bSaveFilterStates	: ['Maintain filters between sessions?: ', true], // Description and value filled on list.init() with defaults. Just a placeholder
 	filterStates		: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowSep				: ['Show name/category separators: ', true],
+	bShowSep			: ['Show name/category separators: ', true],
 	listColours			: ['Color codes for the list. Use contextual menu to set them: ', ''],
 	bFirstPopup			: ['Playlist Manager: Fired once', false],
 	bRelativePath		: ['Use relative paths for all new playlists', false],
 	bFirstPopupFpl		: ['Playlist Manager fpl: Fired once', false],
 	bFirstPopupPls		: ['Playlist Manager pls: Fired once', false],
+	categoryState		: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
+	bShowTips			: ['Usage text on tooltips.', true],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -197,9 +199,9 @@ function on_mouse_leave() {
 }
 
 function on_mouse_rbtn_up(x, y) {
-	// You must return true, if you want to suppress the default context menu.
+	// Must return true, if you want to suppress the default context menu.
 	// Note: left shift + left windows key will bypass this callback and will open default context menu.
-	return createMenuRight().btn_up(x, y);
+	return (list.traceHeader(x, y) ? createMenuRightTop().btn_up(x, y) : createMenuRight().btn_up(x, y));
 }
 
 function on_mouse_wheel(s) {

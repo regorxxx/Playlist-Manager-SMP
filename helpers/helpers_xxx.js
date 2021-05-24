@@ -1247,6 +1247,10 @@ function isArrayNumbers(checkKeys) {
 	return true;
 }
 
+function isArrayEqual(arrayA, arrayB) {
+	return new Set(arrayA).isEqual(new Set(arrayB));
+}
+
 // Expects key,value,key,value,...
 // or key,value,value;key,value,...
 // Outputs {key: value, key: value, ...}

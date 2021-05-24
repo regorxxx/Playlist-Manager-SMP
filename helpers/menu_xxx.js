@@ -120,12 +120,18 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	}
 	
 	this.checkMenu = (menuName, entryTextA, entryTextB, idxFunc) => {
-		checkMenuMap.set(menuName, () => {
-			if (_isFunction(menuName)) {menuName = menuName();}
-			if (_isFunction(entryTextA)) {entryTextA = entryTextA();}
+		if (_isFunction(menuName)) {menuName = menuName();}
+		if (_isFunction(entryTextA)) {entryTextA = entryTextA();}
+		if (entryTextB) { // Radio check
 			if (_isFunction(entryTextB)) {entryTextB = entryTextB();}
-			return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(entryTextA), this.getIdx(entryTextB), this.getIdx(entryTextA) + idxFunc());
-		});
+			checkMenuMap.set(menuName, () => {
+				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(entryTextA), this.getIdx(entryTextB), this.getIdx(entryTextA) + idxFunc());
+			});
+		} else { // Item check
+			checkMenuMap.set(menuName + entryTextA, () => {
+				return menuMap.get(menuName).CheckMenuItem(this.getIdx(entryTextA), idxFunc());
+			});
+		}
 	}
 	
 	this.concat = (menuObj) => {

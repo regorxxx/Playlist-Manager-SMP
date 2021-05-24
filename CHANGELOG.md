@@ -10,12 +10,21 @@
 ## [Unreleased][]
 ### Added
 - Menu: tool to check for size missmatch. Compares # paths against size tag on files for .m3u8, .m3u or .pls. Also reports playlist files withou those tags.
+- Menu: New header menu invoked with R. Click at the top of the panel.
+- Menu: Show/hide shortcuts info on tooltips.
+- Filter: Playlist may now be filtered by category, multiple selection allowed in a menu.
+- Filter: If lists are being filtered by category, an indicator is shown in the header text.
+- Tooltip: Tooltip for header with complete path, current category filter and shortcuts info.
+- Tooltip: Tooltip for playlists with shortcuts info.
 - Shortcut: Shift + Click sends current selection directly to playlist file (without needing to load it first).
 ### Changed
 - Shortcut: Shift + Ctrl + Click deletes selected playlist. (previously it was assigned to Shift).
+- Menu: Config menus (R. Click) moved to header menus. For consistency now all contextual menus related to the playlists are invoked within the list, and the rest at the top.
+- Menu framework: updated.
 ### Removed
 ### Fixed
 - Deleting a playlist while pressing shift no longer deletes it without sending the file to the recycle bin (for later restoring). It matches menu behaviour now.
+- Selection indicator not being removed when moving mouse from list to header.
 
 ## [0.2.2] - 2021-05-19
 ### Added

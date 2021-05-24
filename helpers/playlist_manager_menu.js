@@ -3,15 +3,16 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\menu_xxx.js');
 
 // Menus
-const menu_rbtn = new _menu();
-const menu_lbtn = new _menu();
+const menuRbtn = new _menu();
+const menuLbtn = new _menu();
+const menuRbtnTop = new _menu();
 
 // on callbacks
 function createMenuLeft(forcedIndex = null) {
 	// Constants
 	const z = (forcedIndex === null) ? list.index : forcedIndex; // When delaying menu, the mouse may move to other index...
 	list.tooltip.SetValue(null);
-	const menu = menu_lbtn;
+	const menu = menuLbtn;
 	menu.clear(); // Reset on every call
 	// Main
 	const menuName = menu.newMenu();
@@ -27,6 +28,15 @@ function createMenuLeft(forcedIndex = null) {
 		menu.newEntry({menuName, entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}});
 		// Show binded playlist
 		menu.newEntry({menuName, entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
+		menu.newEntry({menuName, entryText: 'sep'});
+		menu.newEntry({menuName, entryText: 'Send selection to playlist', func: () => {
+			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+			if (selItems && selItems.Count) {
+				list.addTracksToPlaylist(z, selItems);
+				const index = plman.FindPlaylist(list.data[z].nameId);
+				if (index !== -1) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
+			}
+		}});
 		menu.newEntry({menuName, entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
 		menu.newEntry({menuName, entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
@@ -264,6 +274,10 @@ function createMenuLeft(forcedIndex = null) {
 		}, flags: isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({menuName, entryText: 'Delete', func: () => {list.removePlaylist(z);}});
+		menu.newEntry({menuName, entryText: 'Open playlist folder', func: () => {
+			if (list.data[z] && list.data[z].isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
+			else {_explorer(_isFile(list.data[z] ? list.data[z].path : null) ? list.data[z].path : list.playlistsPath);} // Open playlist path
+		}});
 	}
 	return menu;
 }
@@ -271,7 +285,7 @@ function createMenuLeft(forcedIndex = null) {
 function createMenuRight() {
 	// Constants
 	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
-	const menu = menu_rbtn;
+	const menu = menuRbtn;
 	menu.clear(); // Reset one every call
 	// Main
 	const menuName = menu.newMenu();
@@ -411,129 +425,17 @@ function createMenuRight() {
 			}});
 		}
 	}
-	menu.newEntry({menuName, entryText: 'sep'});
-	{ // List config
-		{	// Relative folder
-			const subMenuName = menu.newMenu('Save paths relative to folder...');
-			const options = ['Yes, relative to playlists folder', 'No, use absolute paths (default)'];
-			const optionsLength = options.length;
-			if (optionsLength) {
-				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						list.bRelativePath = (i === 0) ? true : false;
-						list.properties['bRelativePath'][1] = list.bRelativePath;
-						overwriteProperties(list.properties);
-						if (i === 0) {fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name);}
-						else {fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name);}
-					}});
-				});
-				menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bRelativePath ? 0 : 1);});
-			}
-		}
-		{	// Playlist extension
-			const subMenuName = menu.newMenu('Change playlist extension (saving)...');
-			const options = Array.from(writablePlaylistFormats);
-			const optionsLength = options.length;
-			if (optionsLength) {
-				options.forEach((item) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						if (item === '.pls') {
-							let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
-							if (answer !== popup.yes) {return;}
-							menu.btn_up(void(0), void(0), void(0), list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
-						}
-						list.playlistsExtension = item;
-						list.properties['extension'][1] = list.playlistsExtension;
-						overwriteProperties(list.properties);
-					}});
-				});
-			}
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
-		}
-		{	// Sorting
-			const subMenuName = menu.newMenu('Change sorting method...');
-			const options = Object.keys(list.sortMethods());
-			const optionsLength = options.length;
-			if (optionsLength) {
-				options.forEach((item) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						const previousMethodState = list.methodState;
-						list.methodState = item;
-						list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
-						// Update properties to save between reloads, but property descriptions change according to list.methodState
-						list.properties['methodState'][1] = list.methodState;
-						const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
-						list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
-						list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
-						list.properties['sortState'][1] = list.sortState; // and change value
-						// And set properties
-						overwriteProperties(removeProperties); // Deletes old properties used as placeholders
-						overwriteProperties(list.properties);
-						list.sort(void(0), true); // uses current sort state and repaint
-					}});
-				});
-			}
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
-		}
-		{	// Playlist Size
-			const subMenuName = menu.newMenu('Show Playlist size...');
-			const options = ['Yes: And refresh autoplaylists size by query ouput', 'Yes: Only for standard playlists', 'No: Only shown on tooltip'];
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.bShowSize = (i <= 1) ? true : false;
-					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
-					list.properties['bShowSize'][1] = list.bShowSize;
-					overwriteProperties(list.properties);
-				}});
-			});
-			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.properties['bUpdateAutoplaylist'][1] ? 0 : (list.bShowSize ? 1 : 2));});
-		}
-		{	// UUID
-			const subMenuName = menu.newMenu('Use UUIDs for playlist names...');
-			const options = list.optionsUUID();
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.optionUUID = item;
-					list.properties['optionUUID'][1] = list.optionUUID;
-					list.bUseUUID = (i === optionsLength - 1) ? false : true;
-					list.properties['bUseUUID'][1] = list.bUseUUID;
-					overwriteProperties(list.properties);
-					list.updateAllUUID();
-				}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING}); // Disable UUID for .pls playlists
-			});
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
-		}
-		{	// Filtering
-			const subMenuName = menu.newMenu('Save filtering between sessions...');
-			const options = ['Yes: Always restore last used','No: Reset on startup'];
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.bSaveFilterStates = (i === 0) ? true : false;
-					list.properties['bSaveFilterStates'][1] = list.bSaveFilterStates;
-					overwriteProperties(list.properties);
-				}});
-			});
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bSaveFilterStates ? 0 : 1);});
-		}
-		{	// Name/category sep
-			const subMenuName = menu.newMenu('Show name/category separators...');
-			const options = ['Yes: Dotted line and initials','No: Only shown on tooltip'];
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.bShowSep = (i === 0) ? true : false;
-					list.properties['bShowSep'][1] = list.bShowSep;
-					overwriteProperties(list.properties);
-				}});
-			});
-			menu.checkMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowSep ? 0 : 1);});
-		}
-	}
-	menu.newEntry({menuName, entryText: 'sep'});
+	return menu;
+}
+
+function createMenuRightTop() {
+	// Constants
+	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
+	const menu = menuRbtnTop;
+	menu.clear(); // Reset one every call
+	// Main
+	const menuName = menu.newMenu();
+	// Entries
 	{	// Playlist folder
 		menu.newEntry({menuName, entryText: 'Set playlists folder...', func: () => {
 			let input = '';
@@ -560,10 +462,160 @@ function createMenuRight() {
 			test.Print();
 			window.Repaint();
 		}});
-		menu.newEntry({menuName, entryText: 'Open playlist\'s folder', func: () => {
-			if (list.data[z] && list.data[z].isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
-			else {_explorer(_isFile(list.data[z] ? list.data[z].path : null) ? list.data[z].path : list.playlistsPath);} // Open playlist path
-		}});
+		menu.newEntry({menuName, entryText: 'Open playlists folder', func: () => {_explorer(list.playlistsPath);}});
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Category
+		const subMenuName = menu.newMenu('Categories shown...');
+		if (panel.custom_background) {
+			const options = list.categories();
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					const categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => {return categ !== item;}) : (item === '(None)' ? ['(None)', ...list.categoryState] : list.categoryState.concat([item]).sort());
+					// Update property to save between reloads
+					list.properties['categoryState'][1] =  JSON.stringify(categoryState);
+					overwriteProperties(list.properties);
+					list.filter({categoryState});
+				}});
+				menu.newCheckMenu(subMenuName, item, void(0), () => {return list.categoryState.indexOf(item) !== -1;});
+			});
+		}
+	}
+	menu.newEntry({entryText: 'sep'});
+	{ // List config
+		{	// Relative folder
+			const subMenuName = menu.newMenu('Save paths relative to folder...');
+			const options = ['Yes, relative to playlists folder', 'No, use absolute paths (default)'];
+			const optionsLength = options.length;
+			if (optionsLength) {
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						list.bRelativePath = (i === 0) ? true : false;
+						list.properties['bRelativePath'][1] = list.bRelativePath;
+						overwriteProperties(list.properties);
+						if (i === 0) {fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name);}
+						else {fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name);}
+					}});
+				});
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bRelativePath ? 0 : 1);});
+			}
+		}
+		{	// Playlist extension
+			const subMenuName = menu.newMenu('Change playlist extension (saving)...');
+			const options = Array.from(writablePlaylistFormats);
+			const optionsLength = options.length;
+			if (optionsLength) {
+				options.forEach((item) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						if (item === '.pls') {
+							let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
+							if (answer !== popup.yes) {return;}
+							menu.btn_up(void(0), void(0), void(0), list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
+						}
+						list.playlistsExtension = item;
+						list.properties['extension'][1] = list.playlistsExtension;
+						overwriteProperties(list.properties);
+					}});
+				});
+			}
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
+		}
+		{	// Sorting
+			const subMenuName = menu.newMenu('Change sorting method...');
+			const options = Object.keys(list.sortMethods());
+			const optionsLength = options.length;
+			if (optionsLength) {
+				options.forEach((item) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						const previousMethodState = list.methodState;
+						list.methodState = item;
+						list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
+						// Update properties to save between reloads, but property descriptions change according to list.methodState
+						list.properties['methodState'][1] = list.methodState;
+						const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
+						list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
+						list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
+						list.properties['sortState'][1] = list.sortState; // and change value
+						// And set properties
+						overwriteProperties(removeProperties); // Deletes old properties used as placeholders
+						overwriteProperties(list.properties);
+						list.sort(void(0), true); // uses current sort state and repaint
+					}});
+				});
+			}
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
+		}
+		{	// Playlist Size
+			const subMenuName = menu.newMenu('Show Playlist size...');
+			const options = ['Yes: And refresh autoplaylists size by query ouput', 'Yes: Only for standard playlists', 'No: Only shown on tooltip'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bShowSize = (i <= 1) ? true : false;
+					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
+					list.properties['bShowSize'][1] = list.bShowSize;
+					overwriteProperties(list.properties);
+				}});
+			});
+			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.properties['bUpdateAutoplaylist'][1] ? 0 : (list.bShowSize ? 1 : 2));});
+		}
+		{	// UUID
+			const subMenuName = menu.newMenu('Use UUIDs for playlist names...');
+			const options = list.optionsUUID();
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.optionUUID = item;
+					list.properties['optionUUID'][1] = list.optionUUID;
+					list.bUseUUID = (i === optionsLength - 1) ? false : true;
+					list.properties['bUseUUID'][1] = list.bUseUUID;
+					overwriteProperties(list.properties);
+					list.updateAllUUID();
+				}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING}); // Disable UUID for .pls playlists
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
+		}
+		{	// Filtering
+			const subMenuName = menu.newMenu('Save filtering between sessions...');
+			const options = ['Yes: Always restore last used','No: Reset on startup'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bSaveFilterStates = (i === 0) ? true : false;
+					list.properties['bSaveFilterStates'][1] = list.bSaveFilterStates;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bSaveFilterStates ? 0 : 1);});
+		}
+		{	// Name/category sep
+			const subMenuName = menu.newMenu('Show name/category separators...');
+			const options = ['Yes: Dotted line and initials','No: Only shown on tooltip'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bShowSep = (i === 0) ? true : false;
+					list.properties['bShowSep'][1] = list.bShowSep;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowSep ? 0 : 1);});
+		}
+		{	// Name/category sep
+			const subMenuName = menu.newMenu('Show usage info on tooltips..');
+			const options = ['Yes: Show shortcuts','No: Only show basic info'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bShowTips = (i === 0) ? true : false;
+					list.properties['bShowTips'][1] = list.bShowTips;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowTips ? 0 : 1);});
+		}
 	}
 	menu.newEntry({menuName, entryText: 'sep'});
 	{	// Panel config
@@ -618,7 +670,7 @@ function createMenuRight() {
 						}
 					}});
 				});
-				menu.checkMenu(menuName, options[0], options[optionsLength - 1], () => {
+				menu.newCheckMenu(menuName, options[0], options[optionsLength - 1], () => {
 					let idx = options.indexOf(panel.fonts.size);
 					return idx !== -1 ? idx : optionsLength - 1;
 				});
@@ -638,7 +690,7 @@ function createMenuRight() {
 						window.Repaint();
 					}});
 				});
-				menu.checkMenu(subMenuName, options[0], options[optionsLength - 1], () => {return panel.colours.mode;});
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return panel.colours.mode;});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuName, entryText: 'Set custom colour...', func: () => {
 					panel.colours.custom_background = utils.ColourPicker(window.ID, panel.colours.custom_background);

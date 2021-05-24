@@ -26,6 +26,10 @@ function _list(x, y, w, h) {
 	// UI offset
 	const y_offset = _scale(6);
 	
+	// Header
+	var headerW = -1;
+	var headerH = -1;
+	
 	// Cache
 	var currentItemIndex = -1;
 	this.getCurrentItemIndex = () => {return currentItemIndex;}
@@ -53,7 +57,8 @@ function _list(x, y, w, h) {
 	this.header_text = window.Name;
 	
 	this.header_textUpdate = () => {
-		this.header_text = (this.playlistsPath && this.itemsAll) ? 'Playlists: ' + this.playlistsPathDirName + ' (' + this.itemsAll + ' pls.)' : 'Playlist Manager: empty folder';
+		const bCategoryFilter = !isArrayEqual(this.categoryState, this.categories());
+		this.header_text = (this.playlistsPath && this.itemsAll) ? 'Playlists: ' + this.playlistsPathDirName + ' (' + this.itemsAll + ' pls.)' + (bCategoryFilter ? '[*]' : '') : 'Playlist Manager: empty folder';
 	}
 	
 	this.paint = (gr) => {
@@ -68,6 +73,8 @@ function _list(x, y, w, h) {
 		gr.GdiDrawText(this.header_text, panel.fonts.title, panel.colours.highlight, LM + iconw + 5, 0, panel.w - (LM * 2), TM, LEFT);
 		let line_y = (panel.fonts.size < 14 && iconH % 2) ? iconH + 2 : iconH + 1;
 		gr.DrawLine(this.x, line_y , this.x + this.w, line_y, 1, panel.colours.highlight);
+		headerW = LM + iconw + 5;
+		headerH = line_y;
 		// Empty Panel
 		this.text_x = 0;
 		this.text_width = this.w;
@@ -168,8 +175,12 @@ function _list(x, y, w, h) {
 		this.down_btn.paint(gr, panel.colours.text);
 	}
 
-	this.trace = (x, y) => {
+	this.trace = (x, y) => { // On panel
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+	}
+	
+	this.traceHeader = (x, y) => { // On Header
+		return x > 0 && x < panel.w && y > 0 && y < headerH;
 	}
 	
 	this.wheel = (s, bPaint = true) => {
@@ -218,15 +229,27 @@ function _list(x, y, w, h) {
 		this.mx = x;
 		this.my = y;
 		window.SetCursor(IDC_ARROW);
+		if (this.traceHeader(x,y)) { // Tooltip for header
+			let headerText = this.playlistsPath;
+			headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
+			// Tips
+			if (this.bShowTips) {
+				headerText += '\n\n' + '(R. Click for config menus)';
+			}
+			this.tooltip.SetValue(headerText, true);
+			this.index = -1;
+			this.inRange = false;
+			window.Repaint(); // Removes selection indicator
+		}
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			this.index = Math.floor((y - this.y - y_offset) / panel.row_height) + this.offset;
-			this.in_range = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
+			this.inRange = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
 			switch (true) {
 				case this.up_btn.move(x, y):
 				case this.down_btn.move(x, y):
 					break;
-				case !this.in_range:
+				case !this.inRange:
 				{
 					this.tooltip.SetValue(null); // Removes tt when not over a list element
 					this.index = -1;
@@ -243,7 +266,7 @@ function _list(x, y, w, h) {
 							window.SetCursor(IDC_HAND);
 							// Selection indicator
 							window.RepaintRect(x, y - panel.row_height, this.text_width, (this.index + 2 )* panel.row_height);
-							// Tooltip
+							// Tooltip for playlists
 							const pls = this.data[this.index];
 							const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath,'')  + ')' : '';
 							let playlistDataText = (pls.isAutoPlaylist) ? 'Autoplaylist: ' : 'Playlist: ';
@@ -251,10 +274,18 @@ function _list(x, y, w, h) {
 							playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
 							playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
 							playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags : '-');
-							// Tooltip text for Autoplaylists
+							// Text for Autoplaylists
 							if (pls.isAutoPlaylist) {
 								playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
 								playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : ''): '-');
+							}
+							// Tips
+							if (this.bShowTips) {
+								playlistDataText += '\n\n' + '(L. Click to manage playlist)';
+								playlistDataText += '\n' + '(R. Click for other tools / new playlists)';
+								playlistDataText += '\n' + '(Ctrl + L. Click to load / show playlist)';
+								playlistDataText += '\n' + '(Shift + L. Click to send selection to playlist)';
+								playlistDataText += '\n' + '(Ctrl + Shift + L. Click to recycle playlist)';
 							}
 							this.tooltip.SetValue(playlistDataText, true);
 							break;
@@ -276,7 +307,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.cacheLastPosition = () => { // Saves info to restore position later!
-		if (this.in_range && this.index !== -1) {this.lastIndex = this.index;}
+		if (this.inRange && this.index !== -1) {this.lastIndex = this.index;}
 		if (this.index > this.rows && this.offset !== 0) {this.lastOffset = this.offset;}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.data.length) {currentItemIndex = this.data.length - 1;}
@@ -291,7 +322,7 @@ function _list(x, y, w, h) {
 			switch (true) {
 				case this.up_btn.lbtn_up(x, y):
 				case this.down_btn.lbtn_up(x, y):
-				case !this.in_range: //TODO: Add different menu for header
+				case !this.inRange:
 					break;
 				default:
 				{
@@ -303,7 +334,11 @@ function _list(x, y, w, h) {
 							else if (duplicated.length === 1) {list.showBindedPlaylist(z);}
 						} else if (mask === MK_SHIFT) { // Pressing SHIFT
 							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-							if (selItems && selItems.Count) {this.addTracksToPlaylist(z, selItems);}
+							if (selItems && selItems.Count) {
+								this.addTracksToPlaylist(z, selItems);
+								const index = plman.FindPlaylist(this.data[z].nameId);
+								if (index !== -1) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
+							}
 						} else if (mask === MK_SHIFT + MK_CONTROL) { // Pressing control + SHIFT
 							this.removePlaylist(z);
 						} else { // Only mouse
@@ -324,7 +359,7 @@ function _list(x, y, w, h) {
 	this.lbtn_dblclk = (x, y) => {
 		if (this.trace(x, y)) {
 			switch (true) {
-				case !this.in_range:
+				case !this.inRange:
 					break;
 				default:
 				{
@@ -362,7 +397,7 @@ function _list(x, y, w, h) {
 		if (_isFile(null)) { // Sends files (playlists) to tracked folder
 			return true;
 		}
-		if (this.index !== -1 && this.in_range) { // Sends tracks to playlist file directly
+		if (this.index !== -1 && this.inRange) { // Sends tracks to playlist file directly
 			this.addTracksToPlaylist(this.index, handleList);
 			return true;
 		}
@@ -480,7 +515,7 @@ function _list(x, y, w, h) {
 				if (bCallback && this.data[dataIndex].isLocked) { // Skips locked playlists only for auto-saving!
 					return;
 				}
-				const delay = setInterval(delayAutoUpdate(), this.autoUpdateDelayTimer);
+				const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 				console.log('Playlist Manager: Updating playlist...');
 				const playlistPath = this.data[dataIndex].path;
 				let bDeleted = false;
@@ -561,13 +596,19 @@ function _list(x, y, w, h) {
 		return true;
 	}
 	
+	this.categories = () => {
+		let categ = new Set();
+		this.dataAll.forEach( (playlist) => {if (playlist.category.length) {categ.add(playlist.category);}});
+		return ['(None)', ...[...categ].sort()];
+	}
+	this.categoryState = [];
 	this.constShowStates = () => {return ['Filter: All','Filter: Not locked','Filter: Locked'];}; // These are constant
 	this.constAutoPlaylistStates = () => {return ['All','Autopls','!Autpls'];};
 	this.showStates = this.constShowStates(); // These rotate over time
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
 	this.isFilterActive = () => {return (list.constShowStates()[0] !== list.showStates[0] || list.constAutoPlaylistStates()[0] !== list.autoPlaylistStates[0]);}
 	
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], showState = this.showStates[0]} = {}) => {
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], showState = this.showStates[0], categoryState = this.categoryState} = {}) => {
 		// On first filter we use this.dataAll as origin
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			this.data = [...this.dataAll]; // Copy of objects
@@ -583,6 +624,18 @@ function _list(x, y, w, h) {
 			this.data = this.data.filter((item) => {return !item.isLocked;});
 		} else if (showState === this.constShowStates()[2]) {
 			this.data = this.data.filter((item) => {return item.isLocked;});
+		}
+		// Update header whenever it's needed
+		if (!isArrayEqual(categoryState, this.categoryState)) {
+			this.categoryState = categoryState;
+			this.header_textUpdate();
+		}
+		// And again with categories
+		if (!isArrayEqual(categoryState, this.categories())) {
+			this.data = this.data.filter((item) => {
+				if (categoryState.indexOf('(None)') !== -1) {return !item.category.length || categoryState.indexOf(item.category) !== -1;}
+				else {return categoryState.indexOf(item.category) !== -1;}
+			});
 		}
 		// Focus
 		this.items = this.data.length;
@@ -1088,13 +1141,13 @@ function _list(x, y, w, h) {
 					// Beware of calling this while pressing shift. File will be removed without sending to recycle bin!
 					if (utils.IsKeyPressed(VK_SHIFT)) {
 						const debouncedRecycle = debounce(() => {
-							if (utils.IsKeyPressed(VK_SHIFT)) { // TODO: Bug win 7, returns false at some point
+							if (utils.IsKeyPressed(VK_SHIFT)) {
 								delayAutoUpdate();
 								debouncedRecycle(newPath);
 								return;
 							} else {
 								_recycleFile(newPath);
-								console.log('done');
+								console.log('Delete done');
 							}
 						}, this.autoUpdateDelayTimer);
 						debouncedRecycle();
@@ -1216,6 +1269,18 @@ function _list(x, y, w, h) {
 			}
 		}
 		
+		this.checkConfigPostUpdate = () => { // Forces right settings
+			let bDone = false;
+			// Restore categories shown between sessions if bSaveFilterStates is false, or at first init
+			if (!this.categoryState || !this.categoryState.length || !this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories())) {
+				this.categoryState = this.categories();
+				this.properties['categoryState'][1] = JSON.stringify(this.categoryState);
+				this.header_textUpdate();
+				bDone = true;
+			}
+			if (bDone) {overwriteProperties(this.properties);}
+		}
+		
 		this.reset = () => {
 			this.items = 0;
 			this.itemsAll = 0;
@@ -1233,6 +1298,7 @@ function _list(x, y, w, h) {
 			this.deleted_items = [];
 			this.showStates = this.constShowStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
+			this.categoryState = JSON.parse(this.properties['categoryState'][1]);
 			this.methodState = this.properties['methodState'][1];
 			this.sortState = this.properties['sortState'][1];
 			this.optionUUID = this.properties['optionUUID'][1];
@@ -1249,7 +1315,8 @@ function _list(x, y, w, h) {
 		this.reset()
 		this.checkConfig();
 		this.update(false, true);
-		this.filter();
+		this.checkConfigPostUpdate();
+		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
@@ -1300,6 +1367,7 @@ function _list(x, y, w, h) {
 	this.bFplLock = this.properties['bFplLock'][1];
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
 	this.bShowSep = this.properties['bShowSep'][1];
+	this.bShowTips = this.properties['bShowTips'][1];
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length
