@@ -53,15 +53,21 @@
 include(fb.ComponentPath + 'docs\\Flags.js');
 
 function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} = {}) {
+	var menuArrTemp = [];
 	var menuArr = [];
 	var menuMap = new Map();
+	
 	var entryArrTemp = [];
 	var entryArr = [];
-	var entryMap = new Map();
+	var condEntryArrTemp = [];
 	var condEntryArr = [];
-	var idxMap = new Map();
-	var checkMenuMap = new Map();
+	var entryMap = new Map();
+	
+	var checkMenuArrTemp = [];
 	var checkMenuArr = [];
+	var checkMenuMap = new Map();
+	
+	var idxMap = new Map();
 	var idx = idxInitial;
 	
 	this.properties = properties; // To simplify usage along other scripts
@@ -141,6 +147,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	this.btn_up = (x, y, object, forcedEntry = '') => {
 		// Add conditional entries/menus
 		entryArrTemp = [...entryArr]; // Create backup to restore later
+		menuArrTemp = [...menuArr];
+		condEntryArrTemp = [...condEntryArr];
+		checkMenuArrTemp = [...checkMenuArr];
 		// Call other object's menu creation. It allows multiple instances of this framework, either manually appending items
 		// or an entire new instance. Separators may be added too.
 		let objectArr = [];
@@ -224,11 +233,21 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	}
 	
 	this.clear = () => {
+		// These should be always cleared and created again on every call
 		menuMap.clear();
 		entryMap.clear();
 		idxMap.clear();
-		entryArr = [...entryArrTemp]; // Since menu is cleared on every call too, entryArrTemp is [] whenever clear is called from the outside!
+		checkMenuMap.clear();
+		// Since menu is cleared on every call too, entry arrays are cleared whenever this.clear is called from the outside
+		// Otherwise they are reused on next call
+		entryArr = [...entryArrTemp];
 		entryArrTemp = [];
+		menuArr = [...menuArrTemp];
+		menuArrTemp = [];
+		condEntryArr = [...condEntryArrTemp];
+		condEntryArrTemp = [];
+		checkMenuArr = [...checkMenuArrTemp];
+		checkMenuArrTemp = [];
 		idx = 0;
 	}
 }

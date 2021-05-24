@@ -191,6 +191,11 @@ function createMenuLeft(forcedIndex = null) {
 				list.editData(list.data[z], {
 					category: category,
 				});
+				// Add new category to current view! (otherwise it gets filtered)
+				// Easy way: intersect current view + new one with refreshed list
+				list.categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
+				list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
+				overwriteProperties(list.properties);
 				list.update(true, true);
 				list.filter();
 			} else {
@@ -203,6 +208,10 @@ function createMenuLeft(forcedIndex = null) {
 					list.editData(list.data[z], {
 						category: category,
 					});
+					// Add new category to current view! (otherwise it gets filtered)
+					// Easy way: intersect current view + new one with refreshed list
+					list.categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
+					list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
 					list.update(true, true);
 					list.filter();
 				}
@@ -465,7 +474,7 @@ function createMenuRightTop() {
 		menu.newEntry({menuName, entryText: 'Open playlists folder', func: () => {_explorer(list.playlistsPath);}});
 	}
 	menu.newEntry({entryText: 'sep'});
-	{	// Category
+	{	// Category Filter
 		const subMenuName = menu.newMenu('Categories shown...');
 		if (panel.custom_background) {
 			const options = list.categories();
