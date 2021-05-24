@@ -9,7 +9,7 @@
 
 ## [Unreleased][]
 ### Added
-- Menu: tool to check for size missmatch. Compares # paths against size tag on files for .m3u8, .m3u or .pls. Also reports playlist files withou those tags.
+- Menu: tool to check for size mismatch. Compares # paths against size tag on files for .m3u8, .m3u or .pls. Also reports playlist files without those tags.
 - Menu: New header menu invoked with R. Click at the top of the panel.
 - Menu: Show/hide shortcuts info on tooltips.
 - Filter: Playlist may now be filtered by category, multiple selection allowed in a menu.
@@ -23,7 +23,7 @@
 - Menu framework: updated.
 ### Removed
 ### Fixed
-- Deleting a playlist while pressing shift no longer deletes it without sending the file to the recycle bin (for later restoring). It matches menu behaviour now.
+- Deleting a playlist while pressing shift no longer deletes it without sending the file to the recycle bin (for later restoring). It matches menu behavior now.
 - Selection indicator not being removed when moving mouse from list to header.
 
 ## [0.2.2] - 2021-05-19
