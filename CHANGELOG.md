@@ -2,12 +2,19 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.3.0](#030---2021-05-26)
 - [0.2.2](#022---2021-05-19)
 - [0.2.1](#021---2021-05-05)
 - [0.2.0](#020---2021-05-04)
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.3.0] - 2021-05-26
 ### Added
 - Menu: tool to check for size mismatch. Compares # paths against size tag on files for .m3u8, .m3u or .pls. Also reports playlist files without those tags.
 - Menu: New header menu invoked with R. Click at the top of the panel.

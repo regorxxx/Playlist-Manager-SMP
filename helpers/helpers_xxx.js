@@ -116,7 +116,7 @@ const zeroOrGreaterThan = (value, limit) => {return (value === 0) ? 0 : ((value 
 // const repeatedFunction = repeatFn(function, ms);
 // repeatedFunction(arguments);
 const repeatFn = (func, ms) => {
-	return (...args) => {setInterval(func.bind(this, ...args), ms);};
+	return (...args) => {return setInterval(func.bind(this, ...args), ms);};
 };
 
 // Delay execution according to interval (ms). Ex:
@@ -550,13 +550,16 @@ const nextIdIndicator = (function() { // Same structure to ease compatibility
 */
 
 // Select n tracks from playlist and remove the rest
-function removeNotSelectedTracks(playlistIndex, nTracks) {
+// Start is zero by default
+// When nTracks is negative, then the count is done 
+// reversed from start to zero
+// When nTracks is negative and start is zero or not provided,
+// then start is set to playlist length
+function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
         plman.ClearPlaylistSelection(playlistIndex);
-        let selection = [];
-		let i = 0;
-        for (i; i < nTracks; ++i) {
-            selection[i] = i;
-        }
+		const sign = Math.sign(nTracks);
+		start = sign < 0 && !start ?  plman.PlaylistItemCount(playlistIndex) - 1 : start;
+		const selection = range(start, start + sign * (Math.abs(nTracks) - 1), sign);
         plman.SetPlaylistSelection(playlistIndex, selection, true);
         plman.RemovePlaylistSelection(playlistIndex, true);
 }

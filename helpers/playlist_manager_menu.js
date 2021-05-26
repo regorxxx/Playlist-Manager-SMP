@@ -13,9 +13,7 @@ function createMenuLeft(forcedIndex = null) {
 	const z = (forcedIndex === null) ? list.index : forcedIndex; // When delaying menu, the mouse may move to other index...
 	list.tooltip.SetValue(null);
 	const menu = menuLbtn;
-	menu.clear(); // Reset on every call
-	// Main
-	const menuName = menu.newMenu();
+	menu.clear(true); // Reset on every call
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(list.data[z].nameId) !== -1;};
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;};
@@ -25,11 +23,11 @@ function createMenuLeft(forcedIndex = null) {
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
-		menu.newEntry({menuName, entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}});
+		menu.newEntry({entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}});
 		// Show binded playlist
-		menu.newEntry({menuName, entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
-		menu.newEntry({menuName, entryText: 'sep'});
-		menu.newEntry({menuName, entryText: 'Send selection to playlist', func: () => {
+		menu.newEntry({entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: 'sep'});
+		menu.newEntry({entryText: 'Send selection to playlist', func: () => {
 			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 			if (selItems && selItems.Count) {
 				list.addTracksToPlaylist(z, selItems);
@@ -37,9 +35,9 @@ function createMenuLeft(forcedIndex = null) {
 				if (index !== -1) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
 			}
 		}});
-		menu.newEntry({menuName, entryText: 'sep'});
+		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
-		menu.newEntry({menuName, entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
+		menu.newEntry({entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
 			let new_name = '';
 			try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, list.data[z].name, true);} 
 			catch(e) {return;}
@@ -105,7 +103,7 @@ function createMenuLeft(forcedIndex = null) {
 	{	// Edit and update
 		if (isAutoPls()) {
 			// Change AutoPlaylist sort
-			menu.newEntry({menuName, entryText: 'Edit sort pattern...', func: () => {
+			menu.newEntry({entryText: 'Edit sort pattern...', func: () => {
 				let new_sort = '';
 				try {new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, list.data[z].sort);}
 				catch(e) {return;}
@@ -128,7 +126,7 @@ function createMenuLeft(forcedIndex = null) {
 				}
 			}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
 			// Change AutoPlaylist query
-			menu.newEntry({menuName, entryText: 'Edit query...', func: () => {
+			menu.newEntry({entryText: 'Edit query...', func: () => {
 				let new_query = '';
 				try {new_query = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, list.data[z].query);}
 				catch(e) {return;}
@@ -144,7 +142,7 @@ function createMenuLeft(forcedIndex = null) {
 			}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
 		} else {
 			// Updates playlist file with any new changes on the playlist binded within foobar
-			menu.newEntry({menuName, entryText: !isLockPls() ? 'Update playlist file' : 'Force playlist file update', func: () => {
+			menu.newEntry({entryText: !isLockPls() ? 'Update playlist file' : 'Force playlist file update', func: () => {
 				if (_isFile(list.data[z].path)) {
 					const old_nameId = list.data[z].nameId;
 					const old_name = list.data[z].name;
@@ -164,7 +162,7 @@ function createMenuLeft(forcedIndex = null) {
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
 			}, flags: isPlsLoaded() ? MF_STRING : MF_GRAYED});
 			// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
-			menu.newEntry({menuName, entryText: isPlsActive() ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
+			menu.newEntry({entryText: isPlsActive() ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
 				if (_isFile(list.data[z].path)) {
 					const old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
 					const new_nameId = list.data[z].nameId;
@@ -180,10 +178,10 @@ function createMenuLeft(forcedIndex = null) {
 			}, flags: isPlsActive() ? MF_STRING : MF_GRAYED});
 		}
 	}
-	menu.newEntry({menuName, entryText: 'sep'});
+	menu.newEntry({entryText: 'sep'});
 	{	// Tags and category
 		// Adds category
-		menu.newEntry({menuName, entryText: 'Add category...', func: () => {
+		menu.newEntry({entryText: 'Add category...', func: () => {
 			let category = '';
 			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, list.data[z].category !== null ? list.data[z].category : '', true);} 
 			catch(e) {return;}
@@ -218,7 +216,7 @@ function createMenuLeft(forcedIndex = null) {
 			}
 		}, flags: !isLockPls() &&  isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Adds tag(s)
-		menu.newEntry({menuName, entryText: 'Add tag(s)...', func: () => {
+		menu.newEntry({entryText: 'Add tag(s)...', func: () => {
 			let tags = '';
 			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, list.data[z].tags.join(';'), true);} 
 			catch(e) {return;}
@@ -251,10 +249,10 @@ function createMenuLeft(forcedIndex = null) {
 			}
 		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
 	}
-	menu.newEntry({menuName, entryText: 'sep'});
+	menu.newEntry({entryText: 'sep'});
 	{	// File management
 		// Locks playlist file
-		menu.newEntry({menuName, entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
+		menu.newEntry({entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
 			const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
 			if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
 				list.editData(list.data[z], {
@@ -282,8 +280,8 @@ function createMenuLeft(forcedIndex = null) {
 			}
 		}, flags: isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Deletes playlist file and playlist loaded
-		menu.newEntry({menuName, entryText: 'Delete', func: () => {list.removePlaylist(z);}});
-		menu.newEntry({menuName, entryText: 'Open playlist folder', func: () => {
+		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
+		menu.newEntry({entryText: 'Open playlist folder', func: () => {
 			if (list.data[z] && list.data[z].isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
 			else {_explorer(_isFile(list.data[z] ? list.data[z].path : null) ? list.data[z].path : list.playlistsPath);} // Open playlist path
 		}});
@@ -295,19 +293,17 @@ function createMenuRight() {
 	// Constants
 	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtn;
-	menu.clear(); // Reset one every call
-	// Main
-	const menuName = menu.newMenu();
+	menu.clear(true); // Reset one every call
 	// Entries
 	{ // New Playlists
-		menu.newEntry({menuName, entryText: 'Add new empty playlist file...', func: () => {list.add(true);}});
-		menu.newEntry({menuName, entryText: 'Create new playlist file from active playlist...', func: () => {list.add(false);}});
-		menu.newEntry({menuName, entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
+		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add(true);}});
+		menu.newEntry({entryText: 'Create new playlist file from active playlist...', func: () => {list.add(false);}});
+		menu.newEntry({entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
 	}
-	menu.newEntry({menuName, entryText: 'sep'});
+	menu.newEntry({entryText: 'sep'});
 	{	// File management
 		{	// Refresh
-			menu.newEntry({menuName, entryText: 'Manual refresh', func: () => {
+			menu.newEntry({entryText: 'Manual refresh', func: () => {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.bUpdateAutoplaylist = true; 
 				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
@@ -340,13 +336,13 @@ function createMenuRight() {
 			}
 		}
 		{	// Import json
-			menu.newEntry({menuName, entryText: 'Add playlists from json file...', func: () => {
+			menu.newEntry({entryText: 'Add playlists from json file...', func: () => {
 				list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
 				list.loadExternalJson();
 			}});
 		}
 	}
-	menu.newEntry({menuName, entryText: 'sep'});
+	menu.newEntry({entryText: 'sep'});
 	{
 		// Playlist errors
 		const subMenuName = menu.newMenu('Check playlists consistency...');
@@ -441,12 +437,10 @@ function createMenuRightTop() {
 	// Constants
 	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtnTop;
-	menu.clear(); // Reset one every call
-	// Main
-	const menuName = menu.newMenu();
+	menu.clear(true); // Reset one every call
 	// Entries
 	{	// Playlist folder
-		menu.newEntry({menuName, entryText: 'Set playlists folder...', func: () => {
+		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
 			let input = '';
 			try {input = utils.InputBox(window.ID, 'Enter path', window.Name, list.playlistsPath, true);}
 			catch (e) {return;}
@@ -471,7 +465,7 @@ function createMenuRightTop() {
 			test.Print();
 			window.Repaint();
 		}});
-		menu.newEntry({menuName, entryText: 'Open playlists folder', func: () => {_explorer(list.playlistsPath);}});
+		menu.newEntry({entryText: 'Open playlists folder', func: () => {_explorer(list.playlistsPath);}});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Category Filter
@@ -626,7 +620,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowTips ? 0 : 1);});
 		}
 	}
-	menu.newEntry({menuName, entryText: 'sep'});
+	menu.newEntry({entryText: 'sep'});
 	{	// Panel config
 		{	// List colors
 			const subMenuName = menu.newMenu('Set custom colour...');
@@ -679,7 +673,7 @@ function createMenuRightTop() {
 						}
 					}});
 				});
-				menu.newCheckMenu(menuName, options[0], options[optionsLength - 1], () => {
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {
 					let idx = options.indexOf(panel.fonts.size);
 					return idx !== -1 ? idx : optionsLength - 1;
 				});

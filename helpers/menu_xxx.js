@@ -56,21 +56,21 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	var menuArrTemp = [];
 	var menuArr = [];
 	var menuMap = new Map();
+	var menuMap = new Map();
 	
 	var entryArrTemp = [];
 	var entryArr = [];
-	var condEntryArrTemp = [];
-	var condEntryArr = [];
-	var entryMap = new Map();
 	
-	var checkMenuArrTemp = [];
 	var checkMenuArr = [];
 	var checkMenuMap = new Map();
 	
+	var entryMap = new Map();
+	var entryMapInverted = new Map();
 	var idxMap = new Map();
-	var idx = idxInitial;
+	var idx = 0;
 	
 	this.properties = properties; // To simplify usage along other scripts
+	this.lastCall = '';
 	
 	// To create new elements
 	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
@@ -92,7 +92,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	
 	this.newCondEntry = ({entryText = '', condFunc}) => {
 		entryArr.push({entryText, condFunc});
-		return entryArr[condEntryArr.length -1];
+		return entryArr[entryArr.length -1];
 	}
 
 	this.getNumEntries = () => {return entryArr.length;}
@@ -102,8 +102,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	
 	// Internal
 	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);}
-	this.getIdx = (entryText) => {return (!entryText) ? entryMap : entryMap.get(entryText);}
-	this.getEntry = (idx) => {return (!idx) ? idxMap : idxMap.get(idx);}
+	this.getIdx = (menuNameEntryText) => {return (!menuNameEntryText) ? entryMap : entryMap.get(menuNameEntryText);}
+	this.getEntry = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);}
+	this.getEntryFunc = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx);}
 	this.getCheckMenu = (menuName) => {return (!menuName) ? checkMenuMap : checkMenuMap.get(menuName);}
 	
 	this.createMenu = (menuName = menuArr[0].menuName) => {
@@ -120,7 +121,8 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 			if (_isFunction(flags)) {flags = flags();}
 			if (_isFunction(entryText)) {entryText = entryText();}
 			menuMap.get(menuName).AppendMenuItem(flags, idx, entryText);
-			entryMap.set(entryText, idx);
+			entryMap.set(menuName + '\\' + entryText, idx);
+			entryMapInverted.set(idx, menuName + '\\' + entryText);
 			idxMap.set(idx, func);
 		}
 	}
@@ -131,11 +133,11 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		if (entryTextB) { // Radio check
 			if (_isFunction(entryTextB)) {entryTextB = entryTextB();}
 			checkMenuMap.set(menuName, () => {
-				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(entryTextA), this.getIdx(entryTextB), this.getIdx(entryTextA) + idxFunc());
+				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(menuName + '\\' + entryTextA), this.getIdx(menuName + '\\' + entryTextB), this.getIdx(menuName + '\\' + entryTextA) + idxFunc());
 			});
 		} else { // Item check
 			checkMenuMap.set(menuName + entryTextA, () => {
-				return menuMap.get(menuName).CheckMenuItem(this.getIdx(entryTextA), idxFunc());
+				return menuMap.get(menuName).CheckMenuItem(this.getIdx(menuName + '\\' + entryTextA), idxFunc());
 			});
 		}
 	}
@@ -145,11 +147,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	}
 	
 	this.btn_up = (x, y, object, forcedEntry = '') => {
-		// Add conditional entries/menus
 		entryArrTemp = [...entryArr]; // Create backup to restore later
 		menuArrTemp = [...menuArr];
-		condEntryArrTemp = [...condEntryArr];
-		checkMenuArrTemp = [...checkMenuArr];
+		// Add conditional entries/menus
 		// Call other object's menu creation. It allows multiple instances of this framework, either manually appending items
 		// or an entire new instance. Separators may be added too.
 		let objectArr = [];
@@ -210,9 +210,11 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		const currIdx = forcedEntry.length ? this.getIdx(forcedEntry) : this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y);
 		let bDone;
 		if (typeof currIdx !== 'undefined' && currIdx !== -1) {
-			this.getEntry().forEach( (func, entryIdx) => {
+			this.getEntryFunc().forEach( (func, entryIdx) => {
 				if (bDone) {return;}
 				if (entryIdx === currIdx) {
+					this.lastCall = forcedEntry.length ? forcedEntry : this.getEntry(currIdx);
+					this.clear(); // Needed to not recreate conditional entries on recursive calls!
 					func();
 					bDone = true;
 					return;
@@ -232,22 +234,22 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		return bSupressDefaultMenu;
 	}
 	
-	this.clear = () => {
+	this.clear = (bForce = false) => {
 		// These should be always cleared and created again on every call
 		menuMap.clear();
 		entryMap.clear();
+		entryMapInverted.clear();
 		idxMap.clear();
 		checkMenuMap.clear();
 		// Since menu is cleared on every call too, entry arrays are cleared whenever this.clear is called from the outside
 		// Otherwise they are reused on next call
-		entryArr = [...entryArrTemp];
+		if (entryArrTemp.length) {entryArr = [...entryArrTemp];}
+		else if (bForce) {entryArr = [];}
 		entryArrTemp = [];
-		menuArr = [...menuArrTemp];
+		if (menuArrTemp.length) {menuArr = [...menuArrTemp];}
+		else if (bForce) {menuArr = []; this.newMenu();}
 		menuArrTemp = [];
-		condEntryArr = [...condEntryArrTemp];
-		condEntryArrTemp = [];
-		checkMenuArr = [...checkMenuArrTemp];
-		checkMenuArrTemp = [];
+		checkMenuArr = [];
 		idx = 0;
 	}
 }
