@@ -52,6 +52,8 @@ Features:
 		- Category / Tag(s).
 		- Status (lock).
 		- Query. Sort Pattern. (AutoPlaylists)
+		- Shorcuts info. (configurable)
+		- Tooltip for header with complete path, current category filter and shortcuts info. (configurable)
 	- Cyclic filters:
 		- Show All | Only Autoplaylists | Only Playlists
 		- Show All | Not locked | Only locked
@@ -64,6 +66,8 @@ Features:
 		- (a-f)
 		- (*) 
 		- Or none
+	- Category filters: playlist may be filtered by category (like virtual folders), multiple selection allowed in a menu.
+		- When lists are being filtered by category, an indicator is shown in the header text.
 	- Additional tools for playlists:
 		- Check for dead items on playlists files (without having to load them on foobar!).
 		- Check for playlists with mixed relative and absolute paths.
