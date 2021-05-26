@@ -88,7 +88,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Shift + Left Button: Send current selection to playlist
   * Ctrl + Shift + Left Button: Delete playlist
 
-(*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
+(*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.  
 (**).pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
  
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
