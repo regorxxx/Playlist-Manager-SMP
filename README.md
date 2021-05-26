@@ -37,7 +37,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Playlist unique IDs. You can have multiple playlists with same name on the UI and binded to different files. (configurable)
   * If changing UUIDs config while having playlists already loaded, then new config will be used whenever they get updated.
   * You can manually force new UUID config just by renaming the files.
-* Show playlist size on the list. (some limits apply for .fpl playlist files) (configurable)
+* Show playlist size on the list. (some limits apply for .fpl playlist files (*)) (configurable)
   * All (refresh autoplaylists queries)
   * Only standard playlist
   * No size
@@ -60,11 +60,13 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * (a-f)
   * (*) 
   * Or none
+* Category filters: playlist may be filtered by category (like virtual folders), multiple selection allowed in a menu.
+  * When lists are being filtered by category, an indicator is shown in the header text.
 * Additional tools for playlists:
   * Check for dead items on playlists files (without having to load them on foobar!).
   * Check for playlists with mixed relative and absolute paths.
   * Check for playlists with items not present on library.
-* 3 different writable formats. (some limits apply for .pls playlist files) (configurable)
+* 3 different writable formats. (some limits apply for .pls playlist files (**)) (configurable)
 * Filter (configurable) and sorting gets saved between reloads.
 * RecycleBin: deleting and restoring.
   * Uses timestamps to uniquely identify files: no collisions with other files within the RecycleBin.
@@ -78,7 +80,17 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Size (configurable).
   * Separators between different names/categories (configurable).
   * Colours for different playlists types and status (configurable).
-	
+* Shortcuts:
+  * Double Click: Load playlist / Make binded playlist active
+  * Left Click: playlist contextual menu
+  * Rigth Click: panel menu
+  * Ctrl + Left Button: Load playlist / Make binded playlist active
+  * Shift + Left Button: Send current selection to playlist
+  * Ctrl + Shift + Left Button: Delete playlist
+
+(*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
+(**).pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
+ 
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
 ### Current limitations
