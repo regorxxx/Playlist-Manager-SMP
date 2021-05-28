@@ -849,14 +849,26 @@ function getFilePathsFromPlaylist(playlistPath) {
 var libItemsAbsPaths = [];
 var libItemsRelPaths = {};
 
-function precacheLibraryPaths() {
+function precacheLibraryPaths() { // TODO: Share between panels
 	libItemsAbsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(fb.GetLibraryItems());
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
-	let test = new FbProfiler('loadTracksFromPlaylist');
+	let bDone = false;
+	let handlePlaylist = getHandlesFromPlaylist(playlistPath, playlistIndex, relPath);
+	if (handlePlaylist) {
+		plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
+		bDone = true;
+	}
+	return bDone;
+}
+
+// Loading m3u, m3u8 & pls playlist files is really slow when there are many files
+// Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
+function getHandlesFromPlaylist(playlistPath, playlistIndex, relPath = '') {
+	let test = new FbProfiler('getHandlesFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
 	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
@@ -900,13 +912,11 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 	}
 	if (count === filePaths.length) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
-		plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
-		bDone = true;
-	}
+	} else {handlePlaylist = null;}
 	test.Print();
 	if (!libItemsAbsPaths.length) {libItemsAbsPaths = poolItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
-	return bDone;
+	return handlePlaylist;
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files

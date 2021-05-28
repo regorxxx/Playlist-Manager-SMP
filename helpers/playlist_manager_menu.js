@@ -473,6 +473,12 @@ function createMenuRightTop() {
 		if (panel.custom_background) {
 			const options = list.categories();
 			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
+				list.properties['categoryState'][1] =  JSON.stringify(options);
+				overwriteProperties(list.properties);
+				list.filter({categoryState: options});
+			}});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					const categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => {return categ !== item;}) : (item === '(None)' ? ['(None)', ...list.categoryState] : list.categoryState.concat([item]).sort());
@@ -514,7 +520,7 @@ function createMenuRightTop() {
 						if (item === '.pls') {
 							let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
 							if (answer !== popup.yes) {return;}
-							menu.btn_up(void(0), void(0), void(0), list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
+							menu.btn_up(void(0), void(0), void(0), 'Use UUIDs for playlist names...\\' + list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
 						}
 						list.playlistsExtension = item;
 						list.properties['extension'][1] = list.playlistsExtension;

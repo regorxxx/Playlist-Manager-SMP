@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.3.1](#031---2021-05-28)
 - [0.3.0](#030---2021-05-26)
 - [0.2.2](#022---2021-05-19)
 - [0.2.1](#021---2021-05-05)
@@ -13,6 +14,15 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.3.1] - 2021-05-28
+### Added
+- Menu: entry on header menu to reset all categories shown.
+### Changed
+- Menu framework: updated.
+### Removed
+### Fixed
+- Changing extension to .pls did not update the UUID to "nothing".
 
 ## [0.3.0] - 2021-05-26
 ### Added
@@ -32,6 +42,7 @@
 ### Fixed
 - Deleting a playlist while pressing shift no longer deletes it without sending the file to the recycle bin (for later restoring). It matches menu behavior now.
 - Selection indicator not being removed when moving mouse from list to header.
+- Library paths not being cached when 'loading a playlist by comparing paths' fails.
 
 ## [0.2.2] - 2021-05-19
 ### Added
@@ -86,7 +97,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.0...v0.2.1

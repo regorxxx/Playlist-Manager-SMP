@@ -56,7 +56,6 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	var menuArrTemp = [];
 	var menuArr = [];
 	var menuMap = new Map();
-	var menuMap = new Map();
 	
 	var entryArrTemp = [];
 	var entryArr = [];
@@ -97,6 +96,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 
 	this.getNumEntries = () => {return entryArr.length;}
 	this.getEntries = () => {return [...entryArr];}
+	this.getMenus = () => {return [...menuArr];}
 	this.getMainMenuName = () => {return menuArr[0].menuName;}
 	this.hasMenu = (menuName) => {return (menuArr.indexOf(menuName) !== -1);}
 	
@@ -121,8 +121,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 			if (_isFunction(flags)) {flags = flags();}
 			if (_isFunction(entryText)) {entryText = entryText();}
 			menuMap.get(menuName).AppendMenuItem(flags, idx, entryText);
-			entryMap.set(menuName + '\\' + entryText, idx);
-			entryMapInverted.set(idx, menuName + '\\' + entryText);
+			const entryName = menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText;
+			entryMap.set(entryName, idx);
+			entryMapInverted.set(idx, entryName);
 			idxMap.set(idx, func);
 		}
 	}
@@ -130,14 +131,16 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	this.checkMenu = (menuName, entryTextA, entryTextB, idxFunc) => {
 		if (_isFunction(menuName)) {menuName = menuName();}
 		if (_isFunction(entryTextA)) {entryTextA = entryTextA();}
+		const entryNameA = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextA : entryTextA;
 		if (entryTextB) { // Radio check
 			if (_isFunction(entryTextB)) {entryTextB = entryTextB();}
+			const entryNameB = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextB : entryTextB;
 			checkMenuMap.set(menuName, () => {
-				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(menuName + '\\' + entryTextA), this.getIdx(menuName + '\\' + entryTextB), this.getIdx(menuName + '\\' + entryTextA) + idxFunc());
+				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(entryNameA), this.getIdx(entryNameB), this.getIdx(entryNameA) + idxFunc());
 			});
 		} else { // Item check
 			checkMenuMap.set(menuName + entryTextA, () => {
-				return menuMap.get(menuName).CheckMenuItem(this.getIdx(menuName + '\\' + entryTextA), idxFunc());
+				return menuMap.get(menuName).CheckMenuItem(this.getIdx(entryNameA), idxFunc());
 			});
 		}
 	}
@@ -214,6 +217,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 				if (bDone) {return;}
 				if (entryIdx === currIdx) {
 					this.lastCall = forcedEntry.length ? forcedEntry : this.getEntry(currIdx);
+					console.log('Called: ' + this.lastCall);
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
 					func();
 					bDone = true;
@@ -249,7 +253,6 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		if (menuArrTemp.length) {menuArr = [...menuArrTemp];}
 		else if (bForce) {menuArr = []; this.newMenu();}
 		menuArrTemp = [];
-		checkMenuArr = [];
 		idx = 0;
 	}
 }
