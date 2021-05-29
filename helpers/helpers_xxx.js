@@ -999,10 +999,17 @@ function queryReplaceWithCurrent(query, handle) {
 			let tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
-				tfo = tfo.indexOf('$') === -1 ? '[%' + tfo + '%]' : '[' + tfo + ']';
+				// tfo = tfo.indexOf('$') === -1 ? '[%' + tfo + '%]' : '[' + tfo + ']';
+				tfo = tfo.indexOf('$') === -1 ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
 				tfo = fb.TitleFormat(tfo);
 				tfoVal = tfo.EvalWithMetadb(handle);
-				tempQuery = tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + tfoVal;
+				if (tfoVal.indexOf('#') !== -1) { // Split multivalue tags if possible!
+					tempQuery = tfoVal.map((val) => {return tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + val;})
+					tempQuery = query_join(tempQuery, 'AND');
+				} else {
+					tempQuery = tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + tfoVal;
+				}
+				// tempQuery = tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + tfoVal;
 			}
 			query = tempQuery;
 		}

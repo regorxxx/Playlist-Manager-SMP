@@ -70,6 +70,8 @@ The main folder (the one you found this readme) contains these scripts. Linked b
 			- _resources\fontawesome-webfont.ttf
 	+ playlist_tools_menu.js
 		- buttons_playlist_tools_menu.js (*)
+		- Pplaylist Tools button requires some fonts.
+			- _resources\fontawesome-webfont.ttf
 	+ mainmenu_edit.js (*)
 		- ALSO SEE: skip_tag_from_playback.js
 		- Adds menu entries to File menu.
