@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.4.0](#040---2021-06-07)
 - [0.3.1](#031---2021-05-28)
 - [0.3.0](#030---2021-05-26)
 - [0.2.2](#022---2021-05-19)
@@ -12,6 +13,14 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.4.0] - 2021-06-07
+### Added
+### Changed
+- Helpers: Moved all SMP scripts without UI (those not meant to be loaded directly on panels) to 'main'.
+- Helpers: Split 'helpers_xxx.js' file into multiple ones for easier future maintenance.
 ### Removed
 ### Fixed
 
@@ -97,7 +106,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.1...v0.2.2

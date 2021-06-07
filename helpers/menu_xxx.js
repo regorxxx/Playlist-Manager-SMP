@@ -123,7 +123,13 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 			menuMap.get(menuName).AppendMenuItem(flags, idx, entryText);
 			const entryName = menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText;
 			entryMap.set(entryName, idx);
-			entryMapInverted.set(idx, entryName);
+			if (entryName.indexOf('\t') !== -1) {
+				const entryNameNoTabs = entryName.split('\t')[0];
+				entryMap.set(entryNameNoTabs, idx);
+				entryMapInverted.set(idx, entryNameNoTabs);
+			} else {
+				entryMapInverted.set(idx, entryName);
+			}
 			idxMap.set(idx, func);
 		}
 	}

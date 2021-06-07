@@ -1,5 +1,4 @@
 'use strict';
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
 
 var prefix = 'EDIT';
  

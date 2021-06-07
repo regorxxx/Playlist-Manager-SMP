@@ -1,6 +1,7 @@
 ﻿'use strict';
-include(fb.ComponentPath + 'docs\\Flags.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
+
+include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
+include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI.js');
 
 /* 
 	This is the framework to create buttons as new objects with its own properties and tooltips. They can be merged and loaded multiple times
