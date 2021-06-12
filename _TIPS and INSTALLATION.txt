@@ -39,10 +39,10 @@ The root folder (the one you found this readme) contains these scripts which can
 			- _resources\guifx_v2_transports.ttf
 			- _resources\fontawesome-webfont.ttf
 	+ world_map.js (*)[+]
-		- May be used along Biography 1.1.3.
+		- May be used along Biography 1.1.X or 1.2.X
 
 It should be noted that 2 of the big scripts are not listed on the root folder, since they need a button to "work" in a panel.
-The main folder (the one named main) contains these scripts (without UI). Linked buttons (for panels) are listed below for convenience:
+The main folder (the one named 'main') contains these scripts (without UI). Linked buttons (for panels) are listed below for convenience:
 	+ playlist_tools_menu.js [+]
 		- buttons_playlist_tools_menu.js (*)
 		- Playlist Tools button requires some fonts.

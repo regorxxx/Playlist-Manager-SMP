@@ -2,6 +2,7 @@
 //01/06/21
 
 include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_foobar.js');
+include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
 
 /* 
 	Global Variables 
@@ -141,7 +142,7 @@ function _jsonParse(value) {
 		let data = JSON.parse(value);
 		return data;
 	} catch (e) {
-		return [];
+		return null;
 	}
 }
 
@@ -231,7 +232,7 @@ function findRecursivePaths(path = fb.ProfilePath){
 function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath]){
 	let fileArr = [];
 	if (isArrayStrings(inPaths)) {
-		let pathArr = [];
+		let pathArr = inPaths; // Add itself
 		inPaths.forEach( (path) => {pathArr = pathArr.concat(findRecursivePaths(path));});
 		pathArr.forEach( (path) => {fileArr = fileArr.concat(utils.Glob(path + '\\' +  fileMask));});
 	}

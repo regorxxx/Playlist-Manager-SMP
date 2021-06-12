@@ -324,7 +324,7 @@ function precacheLibraryPaths() { // TODO: Share between panels
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 	let bDone = false;
-	let handlePlaylist = getHandlesFromPlaylist(playlistPath, playlistIndex, relPath);
+	let handlePlaylist = getHandlesFromPlaylist(playlistPath, relPath);
 	if (handlePlaylist) {
 		plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
 		bDone = true;
@@ -334,7 +334,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function getHandlesFromPlaylist(playlistPath, playlistIndex, relPath = '') {
+function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false) {
 	let test = new FbProfiler('getHandlesFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
@@ -377,7 +377,7 @@ function getHandlesFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 			count++;
 		}
 	}
-	if (count === filePaths.length) {
+	if (count === filePaths.length || bOmitNotFound) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 	} else {handlePlaylist = null;}
 	test.Print();

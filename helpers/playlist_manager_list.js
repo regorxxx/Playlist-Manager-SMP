@@ -935,7 +935,7 @@ function _list(x, y, w, h) {
 						this.dataFpl.push(item);
 					}
 				});
-				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl], this.replacer));
+				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl], this.replacer, '\t'));
 			}
 		}
 		
