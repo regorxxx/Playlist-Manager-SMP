@@ -630,26 +630,6 @@ function createMenuRightTop() {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Panel config
-		{	// List colors
-			const subMenuName = menu.newMenu('Set custom colour...');
-			const options = ['Autoplaylists...','Locked Playlists...','Selection rectangle...'];
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					if (i === 0) {list.colours.autoPlaylistColour = utils.ColourPicker(window.ID, list.colours.autoPlaylistColour);}
-					if (i === 1) {list.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, list.colours.lockedPlaylistColour);}
-					if (i === 2) {list.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, list.colours.selectedPlaylistColour);}
-					// Update property to save between reloads
-					let coloursString = convertObjectToString(list.colours);
-					list.properties['listColours'][1] = coloursString;
-					overwriteProperties(list.properties);
-					list.checkConfig();
-					window.Repaint();
-				}});
-			});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Reset all to default', func: () => {list.colours = {};}});
-		}
 		{	// Font size
 			const subMenuName = menu.newMenu('Font size...');
 			if (panel.list_objects.length || panel.text_objects.length) {
@@ -687,30 +667,89 @@ function createMenuRightTop() {
 				});
 			}
 		}
-		{	// Background color
-			const subMenuName = menu.newMenu('Background...');
-			if (panel.custom_background) {
-				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom'];
+		{	// List colors
+			const subMenuName = menu.newMenu('Set custom colour...');
+			const options = ['Autoplaylists...','Locked Playlists...','Selection rectangle...'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					if (i === 0) {list.colours.autoPlaylistColour = utils.ColourPicker(window.ID, list.colours.autoPlaylistColour);}
+					if (i === 1) {list.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, list.colours.lockedPlaylistColour);}
+					if (i === 2) {list.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, list.colours.selectedPlaylistColour);}
+					// Update property to save between reloads
+					let coloursString = convertObjectToString(list.colours);
+					list.properties['listColours'][1] = coloursString;
+					overwriteProperties(list.properties);
+					list.checkConfig();
+					window.Repaint();
+				}});
+			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{	// Text color
+				const subMenuSecondName = menu.newMenu('Standard text...', subMenuName);
+				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						panel.colours.mode = i;
+					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+						panel.colours.bCustomText = i !== 0;
 						// Update property to save between reloads
-						panel.properties['coloursMode'][1] = panel.colours.mode;
+						panel.properties['bCustomText'][1] = panel.colours.bCustomText;
 						overwriteProperties(panel.properties);
+						panel.colours_changed();
 						window.Repaint();
 					}});
 				});
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return panel.colours.mode;});
-				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuName, entryText: 'Set custom colour...', func: () => {
-					panel.colours.custom_background = utils.ColourPicker(window.ID, panel.colours.custom_background);
+				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return panel.colours.bCustomText;});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'Set custom colour...', func: () => {
+					panel.colours.customText = utils.ColourPicker(window.ID, panel.colours.customText);
 					// Update property to save between reloads
-					panel.properties['customBackground'][1] = panel.colours.custom_background;
+					panel.properties['customText'][1] = panel.colours.customText;
 					overwriteProperties(panel.properties);
+					panel.colours_changed();
 					window.Repaint();
-				}, flags: panel.colours.mode === 2 ? MF_STRING : MF_GRAYED,});
+				}, flags: panel.colours.bCustomText ? MF_STRING : MF_GRAYED,});
 			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{	// Background color
+				const subMenuSecondName = menu.newMenu('Background...', subMenuName);
+				if (panel.custom_background) {
+					const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom'];
+					const optionsLength = options.length;
+					options.forEach((item, i) => {
+						menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+							panel.colours.mode = i;
+							// Update property to save between reloads
+							panel.properties['coloursMode'][1] = panel.colours.mode;
+							overwriteProperties(panel.properties);
+							window.Repaint();
+						}});
+					});
+					menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return panel.colours.mode;});
+					menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
+					menu.newEntry({menuName: subMenuSecondName, entryText: 'Set custom colour...', func: () => {
+						panel.colours.custom_background = utils.ColourPicker(window.ID, panel.colours.custom_background);
+						// Update property to save between reloads
+						panel.properties['customBackground'][1] = panel.colours.custom_background;
+						overwriteProperties(panel.properties);
+						window.Repaint();
+					}, flags: panel.colours.mode === 2 ? MF_STRING : MF_GRAYED,});
+				}
+			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Reset all to default', func: () => {
+				list.colours = {};
+				panel.colours.mode = 0;
+				panel.properties['coloursMode'][1] = panel.colours.mode;
+				let coloursString = convertObjectToString(list.colours);
+				list.properties['listColours'][1] = coloursString;
+				panel.colours.bCustomText = false;
+				panel.properties['bCustomText'][1] = panel.colours.bCustomText;
+				panel.colours_changed();
+				overwriteProperties(list.properties);
+				list.checkConfig();
+				window.Repaint();
+			}});
 		}
 	}
 	return menu;

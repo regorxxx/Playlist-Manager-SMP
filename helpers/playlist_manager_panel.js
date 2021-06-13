@@ -5,8 +5,10 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI.js'
 
 var panel_properties = {
 	fontSize : ['Font size', _scale(10)],
-	coloursMode : ['Colour mode', 0],
-	customBackground : ['Custom background colour', RGB(0, 0, 0)]
+	coloursMode : ['Background olour mode', 0],
+	customBackground : ['Custom background colour', RGB(0, 0, 0)],
+	bCustomText : ['Text custom colour mode', false],
+	customText : ['Custom text colour', RGB(0, 0, 0)],
 };
 
 setProperties(panel_properties, 'panel_');
@@ -16,13 +18,14 @@ function _panel(custom_background = false) {
 	this.colours_changed = () => {
 		if (window.InstanceType) {
 			this.colours.background = window.GetColourDUI(1);
-			this.colours.text = window.GetColourDUI(0);
+			this.colours.text = this.colours.bCustomText ? this.colours.customText : window.GetColourDUI(0);
 			this.colours.highlight = window.GetColourDUI(2);
 		} else {
 			this.colours.background = window.GetColourCUI(3);
-			this.colours.text = window.GetColourCUI(0);
+			this.colours.text = this.colours.bCustomText ? this.colours.customText : window.GetColourCUI(0);
 			this.colours.highlight = blendColours(this.colours.text, this.colours.background, 0.4);
 		}
+		if (this.custom_text) {this.colours.text = this.colours.custom_text;}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
 	}
 	
@@ -86,6 +89,8 @@ function _panel(custom_background = false) {
 	} else {
 		this.custom_background = false;
 	}
+	this.colours.bCustomText = this.properties.bCustomText[1];
+	this.colours.customText = this.properties.customText[1];
 	this.list_objects = [];
 	this.text_objects = [];
 	this.font_changed();

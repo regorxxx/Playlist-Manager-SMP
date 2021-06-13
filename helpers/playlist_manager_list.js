@@ -576,19 +576,21 @@ function _list(x, y, w, h) {
 		}
 		let answer = WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n (no = json file by this playlist manager)', 0, window.Name, popup.question + popup.yes_no);
 		let dataExternalPlaylists = [];
+		const data = _jsonParseFile(externalPath);
+		if (!data) {return false;}
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
 			// {name,query,sort,forced} maps to {...,name,query,sort,bSortForced,...}
 			// Need to fill all the other values
-			_jsonParseFile(externalPath).forEach((item) => {
+			data.forEach((item) => {
 				if (!checkQuery(item.query, false)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
 				let size = fb.GetQueryItems(fb.GetLibraryItems(), item.query).Count;
 				let oAutoPlaylistItem = new oPlaylist('', '', item.name, '', size, 0, false, true, {query: item.query, sort: item.sort, bSortForced: item.forced}, '', []);
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
-		} else {
-			_jsonParseFile(externalPath).forEach((item) => {
+		} else if (answer === popup.no) {
+			data.forEach((item) => {
 				if (!checkQuery(item.query, false)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
 				item.size = fb.GetQueryItems(fb.GetLibraryItems(), item.query).Count;
 				// width is done along all playlist internally later...
@@ -792,7 +794,10 @@ function _list(x, y, w, h) {
 			this.dataFpl = [];
 			if (_isFile(this.filename)) {
 				if (this.bUpdateAutoplaylist && this.bShowSize) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
-				_jsonParseFile(this.filename).forEach((item) => {
+					const data = _jsonParseFile(this.filename);
+					if (!data && utils.GetFileSize(this.filename)) {fb.ShowPopupMessage('Playlists json file is probably corrupt (try restoring a backup and then use manual refresh): ' + this.filename, window.Name); return;}
+					else if (!data) {return;}
+					data.forEach((item) => {
 						if (item.isAutoPlaylist) {
 							if (this.bUpdateAutoplaylist && this.bShowSize) { 
 								// Only re-checks query when forcing update of size for performance reasons
