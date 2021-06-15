@@ -2,7 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.4.1](#041---2021-06-13)
+- [0.4.1](#041---2021-06-15)
 - [0.4.0](#040---2021-06-07)
 - [0.3.1](#031---2021-05-28)
 - [0.3.0](#030---2021-05-26)
@@ -17,7 +17,7 @@
 ### Removed
 ### Fixed
 
-## [0.4.1] - 2021-06-13
+## [0.4.1] - 2021-06-15
 ### Added
 - Integration: Listeners to share tracked playlist path with other panels (use 'window.NotifyOthers('Playlist manager: playlistPath', null)'). Used on [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP) to use tracked playlist files as source for pools. i.e. Playlist A would match first a playlist within foobar with same name, then a playlist file with matching '#PLAYLIST:Playlist A' tag and finally any playlist file named 'Playlist A.m3u8'. Autoplaylists are excluded (use queries instead) and fpl files too. This feature allows to use virtual playlists as containers, where you can easily collect tracks (since Playlist Manager allows to send tracks directly to a file without loading it) to be used later on pools without polluting the UI with tons of dummy playlists.
 - Colors: added menu option to change standard text color, switchange between CUI\DUI color or custom one.
