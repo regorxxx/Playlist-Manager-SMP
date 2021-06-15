@@ -32,7 +32,7 @@ var newButtons = {
 		list.sort(void(0), true); // Uses current state
 		t1 = Date.now();
 		console.log('Call to Sort took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';} , prefix, newButtonsProperties, () => {return !list.getIndexSortState() ? '\uf175' : '\uf176';}, _gdiFont('FontAwesome', 12)),
+	}, null, g_font, () => {return !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';} , prefix, newButtonsProperties, () => {return !list.getIndexSortState() ? chars.downLongArrow : chars.upLongArrow;}, _gdiFont('FontAwesome', 12)),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
 	// TODO: '\uf15d' : '\uf15e' for letters. '\uf162' : '\uf163' for numbers. '\uf160' : '\uf161' for attributes.
 	TwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesTwo, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesTwo, buttonOrientation,false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, () => {return list.autoPlaylistStates[0];}, function () {
@@ -43,7 +43,7 @@ var newButtons = {
 		list.filter(); // Current filter states
 		t1 = Date.now();
 		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constAutoPlaylistStates()[0] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[0] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[1] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[1] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[2] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[2] ?  '  <--' : '');} , prefix, newButtonsProperties),
+	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constAutoPlaylistStates()[0] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[0] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[1] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[1] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[2] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[2] ?  '  <--' : '');} , prefix, newButtonsProperties, chars.filter, _gdiFont('FontAwesome', 10)),
 	// Cycle filtering between playlist lock states: all, not locked, locked
 	ThreeButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation,false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, () => {return list.showStates[0];}, function () {
 		let t0 = Date.now();
@@ -53,7 +53,7 @@ var newButtons = {
 		list.filter(); // Current filter states
 		t1 = Date.now();
 		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constShowStates()[0] + (list.showStates[0] === list.constShowStates()[0] ?  '  <--\n' : '\n') + list.constShowStates()[1] + (list.showStates[0] === list.constShowStates()[1] ?  '  <--\n' : '\n') + list.constShowStates()[2] + (list.showStates[0] === list.constShowStates()[2] ?  '  <--' : '');}, prefix, newButtonsProperties),
+	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constShowStates()[0] + (list.showStates[0] === list.constShowStates()[0] ?  '  <--\n' : '\n') + list.constShowStates()[1] + (list.showStates[0] === list.constShowStates()[1] ?  '  <--\n' : '\n') + list.constShowStates()[2] + (list.showStates[0] === list.constShowStates()[2] ?  '  <--' : '');}, prefix, newButtonsProperties, chars.filter, _gdiFont('FontAwesome', 10)),
 };
 // Check if the button list already has the same button ID
 for (var buttonName in newButtons) {

@@ -26,6 +26,9 @@
 - Integration: Moved some functions to 'playlist_manager_helpers.js' to easily integrate others scripts with the playlists objects.
 - Data: json file for playlists is now formatted to be readable.
 - Colors: background color menu moved to 'Set custom colour...' submenu. Now all colour options reside in the same submenu.
+- Buttons framework: skip icon drawing if font is not found.
+- Buttons: icons to all buttons.
+- Helpers: warn about missing font on console if trying to load a font and is not found.
 ### Removed
 ### Fixed
 - Colors: panel did not repaint with default color values in some cases after using 'Reset all to default' entry.

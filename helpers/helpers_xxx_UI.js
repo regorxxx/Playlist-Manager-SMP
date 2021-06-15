@@ -2,6 +2,7 @@
 //01/06/21
 
 include(fb.ComponentPath + 'docs\\Flags.js');
+include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI_chars.js');
 
 /* 
 	Global Variables 
@@ -27,29 +28,6 @@ const SF_CENTRE = 285212672;
 
 const LM = _scale(5);
 const TM = _scale(15);
-
-const chars = {
-	up : '\uF077',
-	down : '\uF078',
-	close : '\uF00D',
-	rating_on : '\uF005',
-	rating_off : '\uF006',
-	heart_on : '\uF004',
-	heart_off : '\uF08A',
-	prev : '\uF049',
-	next : '\uF050',
-	play : '\uF04B',
-	pause : '\uF04C',
-	stop : '\uF04D',
-	preferences : '\uF013',
-	search : '\uF002',
-	console : '\uF120',
-	info : '\uF05A',
-	audioscrobbler : '\uF202',
-	minus : '\uF068',
-	music : '\uF001',
-	menu : '\uF0C9'
-};
 
 const popup = {
 	ok : 0,
@@ -253,6 +231,7 @@ function _gdiFont(name, size, style) {
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}
+	if (fonts[id].Name !== name) {console.log('Missing font: ' + name);}
 	return fonts[id];
 }
 

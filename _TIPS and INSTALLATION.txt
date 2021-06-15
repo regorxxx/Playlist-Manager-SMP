@@ -40,54 +40,72 @@ The root folder (the one you found this readme) contains these scripts which can
 			- _resources\fontawesome-webfont.ttf
 	+ world_map.js (*)[+]
 		- May be used along Biography 1.1.X or 1.2.X
+	+ buttons_playlist_tools.js (*)
+		- Independend button for Playlist Tools..
+		- Is a symlink to '.\buttons\buttons_playlist_tools.js'
+		- Playlist manager requires some fonts.
+			- _resources\fontawesome-webfont.ttf (optional)
+	+ buttons_toolbar.js (*)
+		- Has buttons for Search By Distance and Playlist Tools.
+		- Toolbar which which with fully configutable buttons using menu.
+		- May use any of the buttons \ tools listed below.
+		- Is a symlink to '.\buttons\toolbars\_buttons_toolbar.js'
+		- Playlist manager requires some fonts.
+			- _resources\fontawesome-webfont.ttf (optional)
 
-It should be noted that 2 of the big scripts are not listed on the root folder, since they need a button to "work" in a panel.
 The main folder (the one named 'main') contains these scripts (without UI). Linked buttons (for panels) are listed below for convenience:
-	+ playlist_tools_menu.js [+]
-		- buttons_playlist_tools_menu.js (*)
+	+ .\main\playlist_tools_menu.js [+]
+		- .\buttons\buttons_playlist_tools.js (*)
 		- Playlist Tools button requires some fonts.
-			- _resources\fontawesome-webfont.ttf
+			- _resources\fontawesome-webfont.ttf (optional)
 		- Includes all these script too:
-			+ top_tracks.js
-				- buttons_search_top_tracks.js (*)
-				- buttons_playlist_tools_menu.js (*)
-			+ top_tracks_from_date.js
-				- buttons_search_top_tracks_from_date.js (*)
-				- buttons_playlist_tools_menu.js (*)
-			+ tags_automation.js
-				- buttons_tags_automation.js (*)
-				- buttons_playlist_tools_menu.js (*)
-			+ search_same_by.js
-				- buttons_search_same_by.js (*)
-				- buttons_playlist_tools_menu.js (*)
-			+ search_same_style_moods.js
-				- buttons_search_same_style_moods.js (*)
-			+ search_same_style.js
-				- buttons_search_same_style.js (*)
-			+ search_bydistance.js [+]
+			+ .\main\top_tracks.js
+				- .\buttons\buttons_search_top_tracks.js (*)
+				- .\buttons\buttons_playlist_tools.js (*)
+			+ .\main\top_tracks_from_date.js
+				- .\buttons\buttons_search_top_tracks_from_date.js (*)
+				- .\buttons\buttons_playlist_tools.js (*)
+			+ .\main\tags_automation.js
+				- .\buttons\buttons_tags_automation.js (*)
+				- .\buttons\buttons_playlist_tools.js (*)
+			+ .\main\search_same_by.js
+				- .\buttons\buttons_search_same_by.js (*)
+				- .\buttons\buttons_playlist_tools.js (*)
+			+ .\main\search_same_style_moods.js
+				- .\buttons\buttons_search_same_style_moods.js (*)
+			+ .\main\search_same_style.js
+				- .\buttons\buttons_search_same_style.js (*)
+			+ .\main\search_bydistance.js [+]
 				- ALSO READ: helpers\music_graph_descriptors_xxx.js
 				- ALSO SEE: Draw Graph.html
-				- buttons_search_bydistance_customizable.js (*)
-				- buttons_search_bydistance.js (*)
-				- buttons_playlist_tools_menu.js (*)
+				- .\buttons\buttons_search_bydistance_customizable.js (*) (fully configurable with menus)
+				- .\buttons\buttons_search_bydistance_DYNGENRE.js (*) (pre-configured)
+				- .\buttons\buttons_search_bydistance_GRAPH.js (*) (pre-configured)
+				- .\buttons\buttons_search_bydistance_WEIGHT.js (*) (pre-configured)
+				- .\buttons\buttons_search_bydistance.js (*) (uses properties panel for config)
+				- .\buttons\buttons_playlist_tools.js (*)
 			+ Draw Graph.html
 				- ALSO READ: helpers\music_graph_descriptors_xxx.js
 				- ALSO SEE: search_bydistance.js
 				- NOT meant to be used within foobar.
 				- Load the file in any browser to use it.
-			+ remove_duplicates.js
-				- buttons_remove_duplicates.js (*)
-				- buttons_playlist_tools_menu.js (*)
+			+ .\main\remove_duplicates.js
+				- .\buttons\buttons_remove_duplicates.js (*)
+				- .\buttons\buttons_playlist_tools.js (*)
 			+ mainmenu_edit.js (*)
 				- ALSO SEE: skip_tag_from_playback.js
 				- Adds menu entries to File menu.
-			+ skip_tag_from_playback.js
+			+ .\main\skip_tag_from_playback.js
 				- ALSO SEE: mainmenu_edit.js
 				- Meant to be used along standard foobar buttons.
 				- Link button to File\Spider Monkey Panel\x...
-			+ find_remove_from_playlists.js
+			+ .\main\find_remove_from_playlists.js
 				- ALSO SEE: playlist_tools_menu.js
-				- buttons_playlist_tools_menu.js (*)
+				- .\buttons\buttons_playlist_tools.js (*)
+			+ .\helpers\playlist_history.js
+				- ALSO SEE: playlist_tools_menu.js
+				- .\buttons\buttons_playlist_history.js (*)
+
 
 As can be seen, Playlist Tools contains both, its own button (a menu) or individual buttons for the different tools integrated on it.
 Search By Distance would be one of those scripts integrated too, but it's considered also an standalone release because it includes
@@ -97,32 +115,36 @@ All these js files (except those with (*)) contain only the functions, i.e. they
 You would need a button, a main menu call, etc. to use them. So they are meant to be called by other scripts.
 If you want to use them as standalone scripts within a panel, check the examples at 'buttons' folder.
 Those are individual working buttons (check list). Since they are working standalone examples, all are marked with (*).
-	+ buttons_playlist_tools_menu.js (*)
-	+ buttons_remove_duplicates.js (*)
-	+ buttons_search_bydistance.js (*)
-	+ buttons_search_bydistance_customizable.js (*)
-	+ buttons_search_same_style.js (*)
-	+ buttons_search_same_style_moods.js
-	+ buttons_search_same_by.js (*)
-	+ buttons_search_top_tracks.js (*)
-	+ buttons_search_top_tracks_from_date.js (*)
-	+ buttons_tags_automation.js (*)
+	+ .\buttons\buttons_playlist_tools.js (*)
+	+ .\buttons\buttons_remove_duplicates.js (*)
+	+ .\buttons\buttons_search_bydistance.js (*)
+	+ .\buttons\buttons_search_bydistance_customizable.js (*)
+	+ .\buttons\buttons_search_bydistance_DYNGENRE.js (*)
+	+ .\buttons\buttons_search_bydistance_GRAPH.js (*)
+	+ .\buttons\buttons_search_bydistance_WEIGHT.js (*)
+	+ .\buttons\buttons_search_same_style.js (*)
+	+ .\buttons\buttons_search_same_style_moods.js
+	+ .\buttons\buttons_search_same_by.js (*)
+	+ .\buttons\buttons_search_top_tracks.js (*)
+	+ .\buttons\buttons_search_top_tracks_from_date.js (*)
+	+ .\buttons\buttons_tags_automation.js (*)
+	+ .\buttons\buttons_playlist_history.js (*)
 
 For complete buttons bar with merged buttons, check list below. Adding/removing buttons to create your own bar is easy.
-A matter of adding/removing 1 line at those files (check 'buttonsPath'). You can use '..._example_merged' files too as template.
-	+ search_bydistance.js
-		- _buttons_merged_sbd_customizable.js (*)
+	+ .\main\search_bydistance.js
+		- buttons_toolbar.js (*) (and just configure it to only add related buttons)
+		- .\buttons\toolbars\_buttons_toolbar_sbd_customizable.js (*)
 	+ ALL:
-		- _buttons_merged.js (*)
+		- buttons_toolbar.js (*)
 
 The buttons framework has some examples that can be used to create your own combinations of buttons and bars.
 They do nothing by their-selves, since they have no functionality associated to pressing the button.
-	+ _buttons_panel_blank.js
-	+ _buttons_example_merged_double.js
-	+ _buttons_example_merged.js
-	+ _buttons_example.js
-	+ _buttons_blank_merged.js
-	+ _buttons_blank.js
+	+ .\buttons\examples\_buttons_panel_blank.js
+	+ .\buttons\examples\_buttons_example_merged_double.js
+	+ .\buttons\examples\_buttons_example_merged.js
+	+ .\buttons\examples\_buttons_example.js
+	+ .\buttons\examples\_buttons_blank_merged.js
+	+ .\buttons\examples\_buttons_blank.js
 	
 The 'helpers' folder contains common files used by most of the scripts. Don't touch or load these alone, although there are 3 exceptions.
 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js' and 'dyngenre_map_xxx.js' files, which are related to 'search_bydistance' & 'search_same_by'. 
