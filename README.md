@@ -88,7 +88,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Shift + Left Button: Send current selection to playlist
   * Ctrl + Shift + Left Button: Delete playlist
 * Other scripts integration:
-  * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP) integration: Pools may use playlists files tracked by the manager.
+  * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
 
 (*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.  
 (**) .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
