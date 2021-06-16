@@ -69,7 +69,7 @@ function _list(x, y, w, h) {
 	
 	this.paint = (gr) => {
 		// HEADER
-		var g_font_wd2 = _gdiFont('wingdings 2', _scale((panel.fonts.size <= 14) ? panel.fonts.size + 2 : panel.fonts.size), 0);
+		var g_font_wd2 = _gdiFont('Wingdings 2', _scale((panel.fonts.size <= 14) ? panel.fonts.size + 2 : panel.fonts.size), 0);
 		var icon_colour = blendColours(panel.colours.highlight, panel.colours.background, 0.1);
 		var icon_char = String.fromCharCode(46);
 		var iconw = gr.CalcTextWidth(icon_char, g_font_wd2);

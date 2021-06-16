@@ -16,6 +16,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- Fonts: missing font due to a typo (wingdings 2 -> Wingdings 2);
 
 ## [0.4.1] - 2021-06-15
 ### Added
