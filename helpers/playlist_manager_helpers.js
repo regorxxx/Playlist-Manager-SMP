@@ -56,11 +56,11 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'pla
 						lineText = commentsText[j];
 						if (lineText.startsWith('#PLAYLIST:')) {
 							iFound++;
-							name = lineText.split(':')[1];
+							name = lineText.split(':').slice(1).join(':'); // Name may contain ':' too!
 						}
 						if (lineText.startsWith('#UUID:')) {
 							iFound++;
-							uuid = lineText.split(':')[1];
+							uuid = lineText.split(':').slice(1).join(':');
 						}
 						if (lineText.startsWith('#LOCKED:')) {
 							iFound++;
@@ -68,11 +68,11 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'pla
 						}
 						if (lineText.startsWith('#CATEGORY:')) {
 							iFound++;
-							category = lineText.split(':')[1];
+							category = lineText.split(':').slice(1).join(':');
 						}
 						if (lineText.startsWith('#TAGS:')) {
 							iFound++;
-							tags = lineText.split(':')[1].split(';').filter(Boolean); // All values separated by ; as an array
+							tags = lineText.split(':').slice(1).join(':').split(';').filter(Boolean); // All values separated by ; as an array
 						}
 						if (lineText.startsWith('#PLAYLISTSIZE:')) {
 							iFound++;

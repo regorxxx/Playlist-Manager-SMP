@@ -14,19 +14,27 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Autoplaylists: use of 'SORT BY', 'SORT DESCENDING BY' or 'SORT ASCENDING BY' at the end of the query is now allowed. Validity of those sort patterns is also checked (along query's validity), to minimize input typos. They should cover now 100% functionality of native autoplaylists. (Note marc2003's manager did not check their validity, so it simply crashed if something was wrong on the query or failed silently). 
+- UI: names on playlist list now are truncated a few px before the category letters separators and playing/loaded indicators so they don't overlap anymore.
+- Helpers: updated.
 ### Removed
 ### Fixed
-- Fonts: missing font due to a typo (wingdings 2 -> Wingdings 2);
+- Fonts: missing font due to a typo (wingdings 2 -> Wingdings 2).
+- Properties: fixed some instances where unused old properties were not being deleted due to property checking firing when setting them to null.
+- Playlist Manager Path: checks if user set path has a '\' at the end, and adds it if missing (otherwise playlists are not saved into the folder but using the folder name as prefix!).
+- Playlists paths: filenames are sanitized before saving playlists to file, replacing illegal chars. Note that filenames and playlists names can be different, so the original name -non-sanitized- is still used as playlist name.
+- Playlists names: loading playlists from files now correctly retrieve ':' char on all text values (name, tags, categories, ...).
+- Importing Json: solved error when importing autoplaylists from marc2003's manager and the autoplaylists used 'SORT BY', 'SORT DESCENDING BY' or 'SORT ASCENDING BY' within the query at query check step. They should be now 100% compatible, while still checking validity of those sort patterns (note marc2003's manager did not check their validity, so it simply crashed if something was wrong on the query).
 
 ## [0.4.1] - 2021-06-15
 ### Added
 - Integration: Listeners to share tracked playlist path with other panels (use 'window.NotifyOthers('Playlist manager: playlistPath', null)'). Used on [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP) to use tracked playlist files as source for pools. i.e. Playlist A would match first a playlist within foobar with same name, then a playlist file with matching '#PLAYLIST:Playlist A' tag and finally any playlist file named 'Playlist A.m3u8'. Autoplaylists are excluded (use queries instead) and fpl files too. This feature allows to use virtual playlists as containers, where you can easily collect tracks (since Playlist Manager allows to send tracks directly to a file without loading it) to be used later on pools without polluting the UI with tons of dummy playlists.
-- Colors: added menu option to change standard text color, switchange between CUI\DUI color or custom one.
+- Colors: added menu option to change standard text color, switch between CUI\DUI color or custom one.
 ### Changed
 - Portable: when properties are set for the first time, now use relative paths on profile folder for portable installations (>= 1.6).
 - Integration: Moved some functions to 'playlist_manager_helpers.js' to easily integrate others scripts with the playlists objects.
 - Data: json file for playlists is now formatted to be readable.
-- Colors: background color menu moved to 'Set custom colour...' submenu. Now all colour options reside in the same submenu.
+- Colors: background color menu moved to 'Set custom color...' sub-menu. Now all color options reside in the same sub-menu.
 - Buttons framework: skip icon drawing if font is not found.
 - Buttons: added icons to all buttons.
 - Helpers: warn about missing font on console if trying to load a font and it is not found.

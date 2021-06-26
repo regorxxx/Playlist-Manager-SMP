@@ -20,7 +20,11 @@ const chars = {
 	plus			: '\uf067',
 	wand			: '\uf0d0',
 	wrench			: '\uf0ad',
+	cogs			: '\uf085',
 	calendar		: '\uf073',
+	bolt			: '\uf0e7',
+	dotCircle		: '\uf192',
+	hourglass		: '\uf254',
 	// Files
 	folderOpenBlack	: '\uf07c',
 	folderOpenWhite	: '\uf115',
@@ -30,6 +34,7 @@ const chars = {
 	emptyFileBlack	: '\uf15b',
 	fileBlack		: '\uf15c',
 	save 			: '\uf0c7',
+	fileCode		: '\uf1c9',
 	// Utilities
 	search			: '\uf002',
 	menu			: '\uf0C9',
@@ -42,6 +47,8 @@ const chars = {
 	duplicates 		: '\uf0c5',
 	filter 			: '\uf0b0',
 	info 			: '\uf05A',
+	tasks 			: '\uf0cb',
+	history			: '\uf1da',
 	// Playback
 	prev			: '\uf049',
 	next			: '\uf050',
@@ -59,6 +66,7 @@ const chars = {
 	levelDown 		: '\uf149',
 	levelUp 		: '\uf148',
 	prevCircle 		: '\uf0e2',
+	nextCircle 		: '\uf01e',
 	// Sort
 	sortAlphaAsc	: '\uf15d',
 	sortAlphaDes	: '\uf15e',

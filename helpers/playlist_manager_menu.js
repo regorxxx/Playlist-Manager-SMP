@@ -129,14 +129,14 @@ function createMenuLeft(forcedIndex = null) {
 			}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
 			// Change AutoPlaylist query
 			menu.newEntry({entryText: 'Edit query...', func: () => {
-				let new_query = '';
-				try {new_query = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, list.data[z].query);}
+				let newQuery = '';
+				try {newQuery = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, list.data[z].query);}
 				catch(e) {return;}
-				if (!checkQuery(new_query, false)) {fb.ShowPopupMessage('Query not valid:\n' + new_query, window.Name); return;}
-				if (new_query !== list.data[z].query) {
+				if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return;}
+				if (newQuery !== list.data[z].query) {
 					list.editData(list.data[z], {
-						query: new_query,
-						size: fb.GetQueryItems(fb.GetLibraryItems(), new_query).Count,
+						query: newQuery,
+						size: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
 					});
 					list.update(true, true);
 					list.filter();
@@ -447,7 +447,8 @@ function createMenuRightTop() {
 			try {input = utils.InputBox(window.ID, 'Enter path', window.Name, list.playlistsPath, true);}
 			catch (e) {return;}
 			if (!input.length){return;}
-			if (input === list.playlistsPath){return;}
+			if (input === list.playlistsPath) {return;}
+			if (!input.endsWith('\\')) {input += '\\';}
 			list.playlistsPath = input;
 			let bDone = _isFolder(list.playlistsPath);
 			if (!bDone) {bDone = _createFolder(list.playlistsPath);}
@@ -549,7 +550,7 @@ function createMenuRightTop() {
 						list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
 						list.properties['sortState'][1] = list.sortState; // and change value
 						// And set properties
-						overwriteProperties(removeProperties); // Deletes old properties used as placeholders
+						deleteProperties(removeProperties); // Deletes old properties used as placeholders
 						overwriteProperties(list.properties);
 						list.sort(void(0), true); // uses current sort state and repaint
 					}});

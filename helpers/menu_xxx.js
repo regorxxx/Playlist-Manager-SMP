@@ -74,6 +74,10 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	// To create new elements
 	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
 		if (menuName === subMenuFrom) {subMenuFrom = '';}
+		// Replace & with && to display it right on window, but check for && first to not duplicate!
+		// No need to define regex and reuse since it's not expected to use it a lot anyway!
+		if (typeof subMenuFrom === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
@@ -81,11 +85,15 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	this.newMenu(); // Default menu
 	
 	this.newEntry = ({entryText = null, func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
+		if (typeof entryText === 'string' && entryText.indexOf('&') !== - 1) {entryText = entryText.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		entryArr.push({entryText, func, menuName, flags, bIsMenu: false});
 		return entryArr[entryArr.length -1];
 	}
 	
 	this.newCheckMenu = (menuName, entryTextA, entryTextB, idxFun) => {
+		if (typeof entryTextA === 'string' && entryTextA.indexOf('&') !== - 1) {entryTextA = entryTextA.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
 	}
 	
@@ -95,7 +103,8 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	}
 
 	this.getNumEntries = () => {return entryArr.length;}
-	this.getEntries = () => {return [...entryArr];}
+	this.getEntries = () => {return [...entryArr];} // To get all menu entries, but those created by conditional menus are not set yet!
+	this.getEntriesAll = (object) => {this.initMenu(object); const copy = [...entryArr]; this.clear(); return copy;} // To get all menu entries, even cond ones!
 	this.getMenus = () => {return [...menuArr];}
 	this.getMainMenuName = () => {return menuArr[0].menuName;}
 	this.hasMenu = (menuName) => {return (menuArr.indexOf(menuName) !== -1);}
@@ -155,7 +164,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		entryArr = entryArr.concat(menuObj.getEntries());
 	}
 	
-	this.btn_up = (x, y, object, forcedEntry = '') => {
+	this.initMenu = (object) => {
 		entryArrTemp = [...entryArr]; // Create backup to restore later
 		menuArrTemp = [...menuArr];
 		// Add conditional entries/menus
@@ -215,6 +224,12 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 				idxAcum = objectMenu.btn_up(idxAcum); // The current num of entries may be used to create another menu with that initial idx, subsequent calls should return/use the new idx
 			}
 		}
+		return manualMenuArr;
+	}
+	
+	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null) => {
+		// Recreate menu(s)
+		const manualMenuArr = this.initMenu(object);
 		// Find currently selected item
 		const currIdx = forcedEntry.length ? this.getIdx(forcedEntry) : this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y);
 		let bDone;
@@ -225,7 +240,8 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 					this.lastCall = forcedEntry.length ? forcedEntry : this.getEntry(currIdx);
 					console.log('Called: ' + this.lastCall);
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
-					func();
+					if (bExecute) {func();}
+					else if (replaceFunc) {replaceFunc(this.lastCall);}
 					bDone = true;
 					return;
 				}

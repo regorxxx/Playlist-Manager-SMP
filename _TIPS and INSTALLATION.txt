@@ -20,6 +20,9 @@ For ex. for the playlist manager, the tracked folder:
 H:\\MySoftware\foobar2000\profile\playlist_manager\ --> .\profile\playlist_manager\	(>= 1.6:)
 													--> .\playlist_manager\			(<= 1.5:)
 
+When an script finds it's being loaded within a portable installation, will set the default paths using relative paths. It will also warn
+with popups and/or the console about the use of absolute paths on portable installations.
+
 INFO: 
 -------------
 This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist Manager, Search By Distance, World Map and Playlist Tools).
@@ -42,14 +45,14 @@ The root folder (the one you found this readme) contains these scripts which can
 		- May be used along Biography 1.1.X or 1.2.X
 	+ buttons_playlist_tools.js (*)
 		- Independend button for Playlist Tools..
-		- Is a symlink to '.\buttons\buttons_playlist_tools.js'
+		- Is a duplicate of '.\buttons\buttons_playlist_tools.js'
 		- Playlist manager requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
 	+ buttons_toolbar.js (*)
 		- Has buttons for Search By Distance and Playlist Tools.
 		- Toolbar which which with fully configutable buttons using menu.
 		- May use any of the buttons \ tools listed below.
-		- Is a symlink to '.\buttons\toolbars\_buttons_toolbar.js'
+		- Is a duplicate of '.\buttons\toolbars\_buttons_toolbar.js'
 		- Playlist manager requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
 

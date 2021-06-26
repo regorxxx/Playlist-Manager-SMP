@@ -8,9 +8,17 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI_cha
 	Global Variables 
 */
 
-function on_script_unload() {
+// Callbacks: append to any previously existing callback
+function onScriptUnload() {
 	window.Tooltip.Deactivate();
 }
+if (on_script_unload) {
+	const oldFunc = on_script_unload;
+	on_script_unload = function() {
+		oldFunc();
+		onScriptUnload();
+	}
+} else {var on_script_unload = onScriptUnload;}
 
 const WshShellUI = new ActiveXObject('WScript.Shell');
 const _bmp = gdi.CreateImage(1, 1);

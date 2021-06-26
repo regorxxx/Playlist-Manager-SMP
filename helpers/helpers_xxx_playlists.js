@@ -16,6 +16,16 @@ const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl']); // Thes
 	Playlist manipulation 
 */
 
+// Outputs indexes of all playlists with that name
+function playlistCountNoLocked() {
+	const playlistsNum = plman.PlaylistCount
+	let count = 0;
+	for (let i = 0; i < playlistsNum; i++) {
+		if (!plman.IsPlaylistLocked(i)) {count++;};
+	}
+	return count;
+}
+
 // Select n tracks from playlist and remove the rest
 // Start is zero by default
 // When nTracks is negative, then the count is done 

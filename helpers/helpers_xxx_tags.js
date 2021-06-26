@@ -190,12 +190,39 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 		return query;
 }
 
-function checkQuery(query, bAllowEmpty) {
+function checkQuery(query, bAllowEmpty, bAllowSort = false) {
 	let bPass = true;
 	if (!bAllowEmpty && !query.length) {return false;}
-	try {fb.GetQueryItems(new FbMetadbHandleList(), query);}
+	let queryNoSort = query;
+	if (bAllowSort) {
+		const fromIndex = query.indexOf('SORT');
+		if (query.indexOf('SORT') !== -1) {
+			if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0]}
+			else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0]}
+			else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0]}
+			else {return false;} // Has a typo on sort
+			if (query.indexOf('$', fromIndex) !== -1) { // Functions require quotes around them
+				const firstQuote = query.indexOf('"', fromIndex);
+				if (firstQuote === -1)  {return false;} 
+				else if (firstQuote === query.lastIndexOf('"')) {return false;}
+				else if (query.slice(fromIndex).match(/"/g).length % 2 !== 0) {return false;}
+			}
+		}
+	}
+	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}
 	catch (e) {bPass = false;}
 	return bPass;
+}
+
+// Must check query first to be sure it's a valid query!
+function stripSort(query) {
+	let queryNoSort = query;
+	if (query.indexOf('SORT') !== -1) {
+		if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0]}
+		else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0]}
+		else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0]}
+	}
+	return queryNoSort;
 }
 
 function getTagsValues(handle, tagsArray, bMerged = false) {
