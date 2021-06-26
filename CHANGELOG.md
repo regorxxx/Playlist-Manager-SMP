@@ -28,12 +28,12 @@
 - Data: json file for playlists is now formatted to be readable.
 - Colors: background color menu moved to 'Set custom colour...' submenu. Now all colour options reside in the same submenu.
 - Buttons framework: skip icon drawing if font is not found.
-- Buttons: icons to all buttons.
-- Helpers: warn about missing font on console if trying to load a font and is not found.
+- Buttons: added icons to all buttons.
+- Helpers: warn about missing font on console if trying to load a font and it is not found.
 ### Removed
 ### Fixed
 - Colors: panel did not repaint with default color values in some cases after using 'Reset all to default' entry.
-- Avoid 2 possible crashes when playlist json files get corrupted. Warns about it whit a popup (to restore a backup).
+- Avoid 2 possible crashes when playlist json files get corrupted. Warns about it with a popup (to restore a backup).
 
 ## [0.4.0] - 2021-06-07
 ### Added
