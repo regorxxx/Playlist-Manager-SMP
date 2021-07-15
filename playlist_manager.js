@@ -1,88 +1,17 @@
 ﻿'use strict';
 
-/* 	Playlist Manager v 0.2 11/02/21
-	Manager for offline playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
-	After loading it on a panel, check panel properties to add a tracked folder (without quotes). For example: (that's a folder within my foobar profile)
-	C:\Users\XXX\AppData\Roaming\foobar2000\playlist_manager\server\
-	Autoplaylist json files are stored in your profile folder:
-	foobar2000\js_data\
-	Finally, you can import another Autoplaylist data file by this script or Auto-playlist Manager by marc2003 using the contextual menu.
-	Note: left shift + left windows key + right mouse click will open default context menu.
-	Features:
-		- Manages Playlist files and AutoPlaylists.
-			- Playlist files are linked to physical files (.m3u8, .m3u, .pls or .fpl).
-			- AutoPlaylists are saved into json format.
-			- All playlist are loaded in cache once, filtering just changes the 'painted' playlist on the list.
-		- AutoPlaylists: contains all functionality on Auto-playlist Manager by marc2003 plus more.
-			- Create, rename, delete AutoPlaylists.
-			- Edit query, sort pattern and sort forcing.
-			- Adds tooltip info, UI features, filters, etc.
-			- Number of tracks output is updated at foobar startup. (and/or 'at manual refresh')
-		- Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar (if all items are on library). i.e. 'As fast as the native format'.
-		- Auto-saves changes within foobar to binded playlists files. (configurable)
-		- Automatically updates changes within the tracked folder. (configurable)
-		- New updates are delayed when performing internal updates/processing to avoid conflicts.
-		- Bind playlist to files:
-			- Tracks playlists for changes and update binded files.
-			- Auto-saving (configurable).
-			- Deleting the file also ask to delete the binded playlist.
-			- Renaming the files also renames the binded playlist.
-			- Show binded playlist (becomes active playlist).
-		- Lock/unlock playlists (so they are read-only).
-			- Automatically locking of native foobar playlists files (.fpl). (configurable)
-			- When locked, playlists can not be updated nor edited. They can be deleted.
-			- Filename can be changed, but not playlist name (inside the file). This allows to set different playlist and file names if required.
-		- Playlist unique IDs. You can have multiple playlists with same name on the UI and binded to different files. (configurable)
-			- If changing UUIDs config while having playlists already loaded, then new config will be used whenever they get updated.
-			- You can manually force new UUID config just by renaming the files.
-		- Show playlist size on the list. (some limits apply for .fpl playlist files) (configurable)
-			- All (refresh autoplaylists queries)
-			- Only standard playlist
-			- No size
-		- If you choose not to refresh autoplaylist sizes, then the first calculated size gets used: when imported from json or creating the autoplaylist.
-		- Tooltips show different playlist info:
-			- Name plus UUID.
-			- Playlist size (tracks). Also for AutoPlaylists (the number of tracks output by the query).
-			- Category / Tag(s).
-			- Status (lock).
-			- Query. Sort Pattern. (AutoPlaylists)
-		- Cyclic filters:
-			- Show All | Only Autoplaylists | Only Playlists
-			- Show All | Not locked | Only locked
-		- Cyclic Sorting:
-			- Name: Az | Za
-			- Size: Ascd. | Desc.
-			- Category: Az | Za
-		--UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
-			- Invisible unicode chars plus (*)
-			- (a-f)
-			- (*) 
-			- Or none
-		- 3 different writable formats. (some limits apply for .pls playlist files) (configurable)
-		- Filter (configurable) and sorting gets saved between reloads.
-		- RecycleBin: deleting and restoring.
-			- Uses timestamps to uniquely identify files: no collisions with other files within the RecycleBin.
-		- A backup of the previous playlist json file is created every time the panel is loaded. Old backups are sent to recycle bin.
-		- Properties descriptions change according to things set on the panel, not just the values. i.e. if you change the sort method, then the description reflects the associated states dynamically.
-		 - UI:
-			- UI resizable on the fly.
-			- Selection indicators.
-			- Now playing and loaded playlist indicators.
-			- Empty / not empty playlist indicators. To be used as fallback when size is not shown.
-			- Size (configurable).
-			- Separators between different names/categories (configurable).
-			- Colours for different playlists types and status (configurable).
+/* 	Playlist Manager v 0.4 12/07/21
+	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
+	See .\helpers\readme\playlist_manager.txt for list of features.
+	
 	TODO (by relevance):
 		- Better fpl support?
 			* Save data to json, load data from json, overwrite only non fpl files
+				+ Use queries by path instead of fpl and sort items by playlist order.
 			* Replace 'update playlist' with save file UI for fpl files, when locked
 			* Native FPL support ? (requires new SMP version)
-			* Use queries by path instead of fpl and sort items by playlist order.
 		- UUID:
 			* nextId() called only for new playlist, reuse old id?
-			* Reassign UUIDs when changing method?
-				+ First save loaded playlist and then close them?
-				+ Rename loaded playlists?
 			* Save UUID on json but not on files?
 		- Search box
 			* By Name
@@ -91,22 +20,19 @@
 		- Drag n drop: (requires new SMP version)
 			* Add playlists files to folder (requires new SMP version)
 			* Add tracks to playlist file (requires new SMP version)
-		- Different menu for header (?):
-			* Filter by category (create list by caching all categories on files)
-			* Filter by tag
-		- Change all inputs to try error
+		- Filter by tag
 */
 
 window.DefinePanel('Playlist Manager', { author: 'XXX' , version: '0.2', features: { drag_n_drop: false }});
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_properties.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_playlists.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\buttons_panel_xxx.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_list.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_panel.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_buttons.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_menu.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_helpers.js');
+include('helpers\\helpers_xxx.js');
+include('helpers\\helpers_xxx_properties.js');
+include('helpers\\helpers_xxx_playlists.js');
+include('helpers\\buttons_panel_xxx.js');
+include('helpers\\playlist_manager_list.js');
+include('helpers\\playlist_manager_panel.js');
+include('helpers\\playlist_manager_buttons.js');
+include('helpers\\playlist_manager_menu.js');
+include('helpers\\playlist_manager_helpers.js');
 
 var properties = {
 	playlistPath		: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
@@ -130,6 +56,11 @@ var properties = {
 	bFirstPopupPls		: ['Playlist Manager pls: Fired once', false],
 	categoryState		: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
 	bShowTips			: ['Usage text on tooltips.', true],
+	bAutoLoadTag		: ['Automatically add \'bAutoLoad\' to all playlists', false],
+	bAutoLockTag		: ['Automatically add \'bAutoLock\' to all playlists', false],
+	bAutoCustomTag		: ['Automatically add custom tags to all playlists', false],
+	autoCustomTag		: ['Custom tags to add', ''],
+	bApplyAutoTags		: ['Apply actions based on tags (lock, load)', false],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -144,7 +75,7 @@ setProperties(properties, prefix);
 		prop['bFirstPopup'][1] = true;
 		overwriteProperties(prop); // Updates panel
 		isPortable(prop['playlistPath'][0]);
-		const readmePath = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\readme\\playlist_manager.txt';
+		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, 'e'))) {
 			const readme = utils.ReadTextFile(readmePath, 65001);
 			if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager');}

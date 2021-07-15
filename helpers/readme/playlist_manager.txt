@@ -1,5 +1,5 @@
 ﻿Manager for offline playlists. Shows a virtual list of all playlists files within a configured folder (PlaylistPath).
-After loading it on a panel, set a tracked folder using the appropiate menu or check the panel properties. 
+After loading it on a panel, set a tracked folder using the appropriate menu or check the panel properties. 
 For example: (that's a folder within my foobar profile)
 	C:\Users\XXX\AppData\Roaming\foobar2000\playlist_manager\server\
 Autoplaylist json files are stored in your profile folder:
@@ -52,7 +52,7 @@ Features:
 		- Category / Tag(s).
 		- Status (lock).
 		- Query. Sort Pattern. (AutoPlaylists)
-		- Shorcuts info. (configurable)
+		- Shortcuts info. (configurable)
 		- Tooltip for header with complete path, current category filter and shortcuts info. (configurable)
 	- Cyclic filters:
 		- Show All | Only Autoplaylists | Only Playlists
@@ -83,7 +83,7 @@ Features:
 		- UI resizable on the fly.
 		- Selection indicators.
 		- Now playing and loaded playlist indicators.
-		- Empty / not empty playlist indicators. To be used as fallback when size is not shown.
+		- Empty / not empty playlist indicators. To be used as fall-back when size is not shown.
 		- Size (configurable).
 		- Separators between different names/categories (configurable).
 		- Colours for different playlists types and status (configurable).

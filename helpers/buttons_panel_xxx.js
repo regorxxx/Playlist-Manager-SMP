@@ -1,7 +1,7 @@
 ﻿'use strict';
 
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI.js');
+include('helpers_xxx_prototypes.js');
+include('helpers_xxx_UI.js');
 
 /* 
 	This is the framework to create buttons as new objects with its own properties and tooltips. They can be merged and loaded multiple times
@@ -103,6 +103,9 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 	};
 
 	this.draw = function (gr) {
+		const w_calc = _isFunction(this.w) ? this.w() : this.w;
+		const h_calc = _isFunction(this.h) ? this.h() : this.h;
+		if (w_calc <= 0 || h_calc <= 0) {return;}
 		if (this.state === ButtonStates.hide) {
 			return;
 		}
@@ -127,17 +130,20 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 		
 		const x_calc = _isFunction(this.x) ? this.x() : this.x;
 		const y_calc = _isFunction(this.y) ? this.y() : this.y;
-		const w_calc = _isFunction(this.w) ? this.w() : this.w;
-		const h_calc = _isFunction(this.h) ? this.h() : this.h;
 		
 		this.g_theme.DrawThemeBackground(gr, x_calc, y_calc, w_calc, h_calc);
+		const offset = 10;
 		if (this.icon !== null) {
 			let iconWidthCalculated = _isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
-			let textWidthCalculated = _isFunction(this.text) ? this.textWidth() : this.textWidth;
+			let textWidthCalculated = w_calc - iconWidthCalculated - offset;
 			let iconCalculated = _isFunction(this.icon) ? this.icon() : this.icon;
 			let textCalculated = _isFunction(this.text) ? this.text() : this.text;
-			gr.GdiDrawText(iconCalculated, this.g_font_icon, RGB(0, 0, 0), x_calc - iconWidthCalculated / 2 - textWidthCalculated / 2, y_calc, w_calc, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
-			gr.GdiDrawText(textCalculated, this.g_font, RGB(0, 0, 0), x_calc + iconWidthCalculated, y_calc, w_calc, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			gr.GdiDrawText(iconCalculated, this.g_font_icon, RGB(0, 0, 0), x_calc + offset, y_calc, w_calc - iconWidthCalculated - offset, h_calc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
+			if (w_calc > iconWidthCalculated * 4 + offset * 4) {
+				gr.GdiDrawText(textCalculated, this.g_font, RGB(0, 0, 0), x_calc + iconWidthCalculated, y_calc, w_calc - offset, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			} else {
+				gr.GdiDrawText(textCalculated, this.g_font, RGB(0, 0, 0), x_calc + offset * 2 + iconWidthCalculated , y_calc, w_calc - offset * 3 - iconWidthCalculated, h_calc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			}
 		} else {
 			let textCalculated = _isFunction(this.text) ? this.text() : this.text;
 			gr.GdiDrawText(textCalculated, this.g_font, RGB(0, 0, 0), x_calc, y_calc, w_calc, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text

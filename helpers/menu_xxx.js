@@ -91,7 +91,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		return entryArr[entryArr.length -1];
 	}
 	
-	this.newCheckMenu = (menuName, entryTextA, entryTextB, idxFun) => {
+	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA, entryTextB, idxFun) => {
 		if (typeof entryTextA === 'string' && entryTextA.indexOf('&') !== - 1) {entryTextA = entryTextA.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
@@ -227,11 +227,11 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		return manualMenuArr;
 	}
 	
-	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null) => {
+	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0) => {
 		// Recreate menu(s)
 		const manualMenuArr = this.initMenu(object);
 		// Find currently selected item
-		const currIdx = forcedEntry.length ? this.getIdx(forcedEntry) : this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y);
+		const currIdx = forcedEntry.length ? this.getIdx(forcedEntry) : this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y, flag);
 		let bDone;
 		if (typeof currIdx !== 'undefined' && currIdx !== -1) {
 			this.getEntryFunc().forEach( (func, entryIdx) => {

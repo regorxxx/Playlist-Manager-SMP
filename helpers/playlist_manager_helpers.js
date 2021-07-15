@@ -1,10 +1,10 @@
 'use strict';
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_properties.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_file.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
+include('helpers_xxx.js');
+include('helpers_xxx_properties.js');
+include('helpers_xxx_file.js');
+include('helpers_xxx_prototypes.js');
 
-function oPlaylist (id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = []) {
+function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = []) {
 	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
 	if (typeof name === 'undefined') {
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
@@ -29,7 +29,7 @@ function oPlaylist (id, path, name = void(0), extension = void(0), size = '?', f
 	
 }
 
-function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
+function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
 	const playlistPathArray = getFiles(folderPath, readablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
 	const playlistPathArray_length = playlistPathArray.length;
 	let playlistArray = [];
@@ -109,4 +109,104 @@ function loadPlaylistsFromFolder (folderPath = getPropertyByKey(properties, 'pla
 	// if (bCreated) {plman.RemovePlaylist(newFplIndex);}
 	
 	return playlistArray;
+}
+
+function setTag(tags, list, z) {
+	let bDone = false;
+	if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
+		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+			list.editData(list.data[z], {
+				tags: tags,
+			});
+			list.update(true, true);
+			list.filter();
+			bDone = true;
+		} else {
+			const old_name = list.data[z].name;
+			if (_isFile(list.data[z].path)) {
+				delayAutoUpdate();
+				bDone = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'));
+				if (!bDone) {
+					fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
+				} else {
+					list.editData(list.data[z], {
+						tags: tags,
+					});
+					list.update(true , true);
+					list.filter();
+				}
+			} else {
+				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+			}
+		}
+	}
+	return bDone;
+}
+
+function setCategory(category, list, z) {
+	let bDone = false;
+	if (list.data[z].category !== category) {
+		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+			list.editData(list.data[z], {
+				category: category,
+			});
+			// Add new category to current view! (otherwise it gets filtered)
+			// Easy way: intersect current view + new one with refreshed list
+			list.categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
+			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
+			overwriteProperties(list.properties);
+			list.update(true, true);
+			list.filter();
+			bDone = true;
+		} else {
+			const old_name = list.data[z].name;
+			delayAutoUpdate();
+			bDone = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category);
+			if (!bDone) {
+				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
+			} else {
+				list.editData(list.data[z], {
+					category: category,
+				});
+				// Add new category to current view! (otherwise it gets filtered)
+				// Easy way: intersect current view + new one with refreshed list
+				list.categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
+				list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
+				list.update(true, true);
+				list.filter();
+			}
+		}
+	}
+	return bDone;
+}
+
+function switchLock(list, z) {
+	let bDone = false;
+	const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
+	if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+		list.editData(list.data[z], {
+			isLocked: !list.data[z].isLocked,
+		});
+		list.update(true, true);
+		list.filter();
+		bDone = true;
+	} else {
+		const old_name = list.data[z].name;
+		if (_isFile(list.data[z].path)) {
+			delayAutoUpdate();
+			bDone = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1]);
+			if (!bDone) {
+				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+			} else {
+				list.editData(list.data[z], {
+					isLocked: !list.data[z].isLocked,
+				});
+				list.update(true, true);
+				list.filter();
+			}
+		} else {
+			fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+		}
+	}
+	return bDone;
 }

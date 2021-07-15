@@ -1,8 +1,8 @@
 ﻿'use strict';
 //01/06/21
 
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_file.js');
+include('helpers_xxx_prototypes.js');
+include('helpers_xxx_file.js');
 
 /* 
 	Global Variables 
@@ -192,7 +192,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		}
 		// Write to file
 		playlistText = playlistText.join('\r\n');
-		let bDone = utils.WriteTextFile(playlistPath, playlistText, true);
+		let bDone = _save(playlistPath, playlistText);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));
@@ -277,7 +277,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
 		trackText = trackText.join('\r\n');
 		originalText = originalText.join('\r\n');
 		let playlistText = originalText.concat('\r\n', trackText);
-		let bDone = utils.WriteTextFile(playlistPath, playlistText, true);
+		let bDone = _save(playlistPath, playlistText);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));

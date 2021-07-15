@@ -1,12 +1,12 @@
 'use strict';
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_properties.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_playlists.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_tags.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_file.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\playlist_manager_panel.js');
+include('helpers_xxx.js');
+include('helpers_xxx_UI.js');
+include('helpers_xxx_prototypes.js');
+include('helpers_xxx_properties.js');
+include('helpers_xxx_playlists.js');
+include('helpers_xxx_tags.js');
+include('helpers_xxx_file.js');
+include('playlist_manager_panel.js');
 
 function _list(x, y, w, h) {
 	
@@ -597,6 +597,11 @@ function _list(x, y, w, h) {
 				dataExternalPlaylists.push(item);
 			});
 		}
+		// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
+		dataExternalPlaylists.forEach((oPlaylist) => {
+			if (this.bAutoLoadTag && oPlaylist.tags.indexOf('bAutoLoad') === -1) {oPlaylist.tags.push('bAutoLoad');}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(oPlaylist.tags).has(tag)) {oPlaylist.tags.push(tag);}});}
+		});
 		if (dataExternalPlaylists.length) {this.addToData(dataExternalPlaylists);} // Add to database
 		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
 		this.filter(); // Then filter
@@ -611,7 +616,7 @@ function _list(x, y, w, h) {
 	}
 	this.categoryState = [];
 	this.constShowStates = () => {return ['Filter: All','Filter: Not locked','Filter: Locked'];}; // These are constant
-	this.constAutoPlaylistStates = () => {return ['All','Autopls','!Autpls'];};
+	this.constAutoPlaylistStates = () => {return ['All','Autoplaylists','No Autoplaylists'];};
 	this.showStates = this.constShowStates(); // These rotate over time
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
 	this.isFilterActive = () => {return (list.constShowStates()[0] !== list.showStates[0] || list.constAutoPlaylistStates()[0] !== list.autoPlaylistStates[0]);}
@@ -771,8 +776,9 @@ function _list(x, y, w, h) {
 		if (bPaint) {window.Repaint();}
 	}
 	
-	this.update = (bJustPaint = false, bNotPaint = false, currentItemIndex = -1) => {
+	this.update = (bJustPaint = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
+		const oldCategories = this.categories();
 		// Saves currently selected item for later use
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
 		if (bJustPaint) {
@@ -847,6 +853,28 @@ function _list(x, y, w, h) {
 					return item;
 				});
 			this.data = this.data.concat(this.dataAutoPlaylists);
+			// Auto-Tags & Actions
+			this.data.forEach((item, z) => {
+				let bSave = false;
+				let oriTags = [...item.tags];
+				// Auto-Tags
+				if (this.bAutoLoadTag && item.tags.indexOf('bAutoLoad') === -1) {item.tags.push('bAutoLoad'); bSave = true;}
+				if (this.bAutoLockTag && item.tags.indexOf('bAutoLock') === -1) {item.tags.push('bAutoLock'); bSave = true;}
+				if (this.bAutoCustomTag) {
+					this.autoCustomTag.forEach( (tag) => {
+						if (! new Set(item.tags).has(tag)) {item.tags.push(tag); bSave = true}
+					});
+				}
+				if (bSave && !item.isAutoPlaylist && item.extension !== '.fpl' && item.extension !== '.pls') {
+					let bDone = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'));
+					if (!bDone) {console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + item.path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar and force and update to save it with the required format.');}
+				}
+				// Perform Auto-Tags actions
+				if (this.bApplyAutoTags) {
+					if (item.tags.indexOf('bAutoLoad') !== -1) {this.loadPlaylist(z)}
+					if (item.tags.indexOf('bAutoLock') !== -1) {item.isLocked = true;}
+				}
+			});
 			this.dataAll = [...this.data];
 		}
 		// Always
@@ -877,6 +905,10 @@ function _list(x, y, w, h) {
 		this.save(); // Updates this.dataAutoPlaylists
 		this.itemsAutoplaylist = this.dataAutoPlaylists.length;
 		if (this.bUpdateAutoplaylist) {this.bUpdateAutoplaylist = false;}
+		if (!bInit && !isArrayEqual(oldCategories, this.categories())) { // When adding new files, new categories may appear, but those must not be filtered! Skip this on init
+			this.categoryState = this.categoryState.concat([...new Set(this.categories()).difference(new Set(oldCategories))]); // Add new ones
+			this.categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))]; // Remove missing ones
+		}
 		this.header_textUpdate();
 		if (!bNotPaint){window.Repaint();}
 		clearInterval(delay);
@@ -976,19 +1008,19 @@ function _list(x, y, w, h) {
 				index = this.dataAutoPlaylists.indexOf(objectPlaylist);
 				if (index !== -1) {
 				Object.keys(properties).forEach( (property) => {this.dataAutoPlaylists[index][property] = properties[property];});
-				} else {console.log('Playlist Mananger: error editing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+				} else {console.log('Playlist Manager: error editing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
 			}
 			if (objectPlaylist.extension === '.fpl') {
 				index = this.dataFpl.indexOf(objectPlaylist);
 				if (index !== -1) {
 				Object.keys(properties).forEach( (property) => {this.dataFpl[index][property] = properties[property];});
-				} else {console.log('Playlist Mananger: error editing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+				} else {console.log('Playlist Manager: error editing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
 			}
 			index = this.data.indexOf(objectPlaylist);
 			if (index !== -1) {
 				Object.keys(properties).forEach( (property) => {this.data[index][property] = properties[property];});
 			} else {console.log('Playlist Mananger: error editing playlist object from \'this.data\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));} 
-			index = this.dataAll.indexOf(objectPlaylist);
+			index = this.dataAll.indexOf(Manager);
 			*/
 			const index = this.dataAll.indexOf(objectPlaylist);
 			if (index !== -1) { // Changes data on the other arrays too since they link to same object
@@ -1049,6 +1081,10 @@ function _list(x, y, w, h) {
 			const new_queryObj = {query: newQuery, sort: new_sort, bSortForced: new_forced};
 			const queryCount = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count;
 			const objectPlaylist = new oPlaylist('', '', newName, '', queryCount, 0, false, true, new_queryObj);
+			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
+			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag)}});}
+			// Save
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
@@ -1064,13 +1100,19 @@ function _list(x, y, w, h) {
 			if (!input.length) {return;}
 			const new_name = input;
 			const oPlaylistPath = this.playlistsPath + sanitize(new_name) + this.playlistsExtension;
+			// Auto-Tags
+			const oPlaylistTags = [];
+			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
+			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag)}});}
+			// Save file
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
-				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', '', (this.bRelativePath ? this.playlistsPath : ''));
+				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''));
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					const objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s')) //TODO: Deprecated
+					const objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags) //TODO: Deprecated
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
@@ -1292,7 +1334,7 @@ function _list(x, y, w, h) {
 		
 		this.checkConfigPostUpdate = (bDone) => { // Forces right settings
 			// Restore categories shown between sessions if bSaveFilterStates is false, or at first init
-			if (!this.categoryState || !this.categoryState.length || !this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories())) {
+			if (!this.categoryState || !this.categoryState.length || (!this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories()))) {
 				this.categoryState = this.categories();
 				this.properties['categoryState'][1] = JSON.stringify(this.categoryState);
 				this.header_textUpdate();
@@ -1325,16 +1367,21 @@ function _list(x, y, w, h) {
 			this.bShowSep = this.properties['bShowSep'][1];
 			this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 			this.bRelativePath = this.properties['bRelativePath'][1];
+			this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
+			this.bAutoLockTag = this.properties['bAutoLockTag'][1];
+			this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
+			this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
+			this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
 		}
 		
-		_createFolder(folders.data);
+		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
 		_recycleFile(this.filename + '.old') // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
 		this.initProperties() // This only set properties if they have no values...
 		this.reset()
 		let bDone = this.checkConfig();
-		this.update(false, true);
+		this.update(false, true, void(0), true); // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
 	}
@@ -1389,6 +1436,11 @@ function _list(x, y, w, h) {
 	this.bShowSep = this.properties['bShowSep'][1];
 	this.bShowTips = this.properties['bShowTips'][1];
 	this.bRelativePath = this.properties['bRelativePath'][1];
+	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
+	this.bAutoLockTag = this.properties['bAutoLockTag'][1];
+	this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
+	this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
+	this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length
 	this.autoUpdateDelayTimer = this.properties.autoUpdate[1] / 100; // Timer should be at least 1/100 autoupdate timer to work reliably

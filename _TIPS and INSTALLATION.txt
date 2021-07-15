@@ -3,14 +3,27 @@ REQUISITES:
 Spider Monkey Panel:
 https://theqwertiest.github.io/foo_spider_monkey_panel/
 
+WINE USERS: 
+-------------
+All scripts try to use wine-friendly methods, focusing on config settings that can be changed via
+menus or the UI panel, instead of using HTML (which only works on windows), known working fonts, etc.
+
+Please read this page and feel free to report (me) any problems with these scripts:
+https://theqwertiest.github.io/foo_spider_monkey_panel/docs/wine/
+
 INSTALLATION: 
 -------------
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts
-Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg)
+Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg) (*)
 For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...
 For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\... 
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
 Then load any script into a SMP panel within foobar. See info for usage. 
+
+(*) To change the hardcoded installation path, go to .\helpers\helpers_xxx.js
+and change the variable named 'folders.xxxName'. This is a workaround for some SMP limitations
+when working with relative paths. Its use is at your own responsibility but feel free to report
+any problem with it.
 
 PORTABLE TIP: 
 -------------
@@ -26,7 +39,7 @@ with popups and/or the console about the use of absolute paths on portable insta
 INFO: 
 -------------
 This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist Manager, Search By Distance, World Map and Playlist Tools).
-And a collection of small utilities and/or buttons (search same by..., top tracks, remove duplicates, etc.). 
+And a collection of small utilities and/or buttons (search same by..., top tracks, remove duplicates, device priority, etc.). 
 All files have extensive comments and descriptions at the header and all along the code, so you can check specific info about what everything does in its own file.
 
 There is a thread at hydrogenaud.io which contains several images and explanations of what each thing does while it was work in progress (now you have github).
@@ -49,11 +62,12 @@ The root folder (the one you found this readme) contains these scripts which can
 		- Playlist manager requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
 	+ buttons_toolbar.js (*)
-		- Has buttons for Search By Distance and Playlist Tools.
-		- Toolbar which which with fully configutable buttons using menu.
+		- Has buttons for Search By Distance, Playlist Tools and others.
+		- Toolbar which which with fully configurable buttons using menu.
 		- May use any of the buttons \ tools listed below.
 		- Is a duplicate of '.\buttons\toolbars\_buttons_toolbar.js'
-		- Playlist manager requires some fonts.
+		- Every button and tool has a readme which will be shown when you add them.
+		- Requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
 
 The main folder (the one named 'main') contains these scripts (without UI). Linked buttons (for panels) are listed below for convenience:
@@ -109,7 +123,6 @@ The main folder (the one named 'main') contains these scripts (without UI). Link
 				- ALSO SEE: playlist_tools_menu.js
 				- .\buttons\buttons_playlist_history.js (*)
 
-
 As can be seen, Playlist Tools contains both, its own button (a menu) or individual buttons for the different tools integrated on it.
 Search By Distance would be one of those scripts integrated too, but it's considered also an standalone release because it includes
 so many things it can be used alone (and again, also has its own buttons to use if desired).
@@ -118,7 +131,11 @@ All these js files (except those with (*)) contain only the functions, i.e. they
 You would need a button, a main menu call, etc. to use them. So they are meant to be called by other scripts.
 If you want to use them as standalone scripts within a panel, check the examples at 'buttons' folder.
 Those are individual working buttons (check list). Since they are working standalone examples, all are marked with (*).
-	+ .\buttons\buttons_playlist_tools.js (*)
+	+ .\buttons\buttons_playlist_tools.js (*) (below 4 buttons require this one to be loaded too)
+		+ .\buttons\buttons_playlist_tools_macro_custom.js (*)
+		+ .\buttons\buttons_playlist_tools_macros.js (*)
+		+ .\buttons\buttons_playlist_tools_pool.js (*)
+		+ .\buttons\buttons_playlist_history.js (*)
 	+ .\buttons\buttons_remove_duplicates.js (*)
 	+ .\buttons\buttons_search_bydistance.js (*)
 	+ .\buttons\buttons_search_bydistance_customizable.js (*)
@@ -131,8 +148,9 @@ Those are individual working buttons (check list). Since they are working standa
 	+ .\buttons\buttons_search_top_tracks.js (*)
 	+ .\buttons\buttons_search_top_tracks_from_date.js (*)
 	+ .\buttons\buttons_tags_automation.js (*)
-	+ .\buttons\buttons_playlist_history.js (*)
-
+	+ .\buttons\buttons_device_priority.js (*)
+	+ .\buttons\buttons_save_tags.js (*)
+	
 For complete buttons bar with merged buttons, check list below. Adding/removing buttons to create your own bar is easy.
 	+ .\main\search_bydistance.js
 		- buttons_toolbar.js (*) (and just configure it to only add related buttons)

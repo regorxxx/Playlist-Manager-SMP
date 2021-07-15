@@ -2,7 +2,7 @@
 //01/06/21
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include(fb.ComponentPath + 'docs\\Flags.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_basic_js.js');
+include('helpers_xxx_basic_js.js');
 
 /* 
 	Global Variables 
@@ -10,10 +10,10 @@ include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_basic_
 
 // Folders
 const folders = {};
-folders.SMP = fb.ProfilePath + 'scripts\\SMP\\';
-folders.xdata = folders.SMP+ 'xxx-data\\';
-folders.xxx = folders.SMP + 'xxx-scripts\\';
-folders.data = fb.ProfilePath + 'js_data\\';
+folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install path (this is relative to the profile path)
+folders.dataName = 'js_data\\';
+folders.xxx = fb.ProfilePath + folders.xxxName; 
+folders.data = fb.ProfilePath + folders.dataName;
 
 /* 
 	Functions

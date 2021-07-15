@@ -1,8 +1,8 @@
 ﻿'use strict';
 //01/06/21
 
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_foobar.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
+include('helpers_xxx_foobar.js');
+include('helpers_xxx_prototypes.js');
 
 /* 
 	Global Variables 
@@ -130,6 +130,7 @@ function _open(file, codePage = 0) {
 
 function _save(file, value) {
 	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
+	if (!_isFolder(filePath)) {_createFolder(filePath);}
 	if (_isFolder(filePath) && utils.WriteTextFile(file, value, true)) {
 		return true;
 	}
@@ -245,4 +246,11 @@ function _q(value) {
 
 function sanitize(value) {
 	return value.replace(/[\/\\|:]/g, '-').replace(/\*/g, 'x').replace(/"/g, "''").replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '');
+}
+
+function UUID() {
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g , function(c) {
+		const rnd = Math.random() * 16 | 0, v = c === 'x' ? rnd : (rnd&0x3|0x8) ;
+		return v.toString(16);
+	});
 }

@@ -67,6 +67,7 @@ const chars = {
 	levelUp 		: '\uf148',
 	prevCircle 		: '\uf0e2',
 	nextCircle 		: '\uf01e',
+	exchange		: '\uf0ec',
 	// Sort
 	sortAlphaAsc	: '\uf15d',
 	sortAlphaDes	: '\uf15e',

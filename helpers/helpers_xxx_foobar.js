@@ -1,7 +1,7 @@
 ﻿'use strict';
 //01/06/21
 
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_file.js');
+include('helpers_xxx_file.js');
 
 /* 
 	Panels

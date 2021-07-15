@@ -2,7 +2,7 @@
 //01/06/21
 
 include(fb.ComponentPath + 'docs\\Flags.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_UI_chars.js');
+include('helpers_xxx_UI_chars.js');
 
 /* 
 	Global Variables 
@@ -53,7 +53,9 @@ const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 
 function _scale(size) {
 	if (!scaleDPI[size]) {
-		const DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); // TODO Linux: const DPI = 96
+		let DPI;
+		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')}
+		catch (e) {DPI = 96} // Fix for linux
 		scaleDPI[size] = Math.round(size * DPI / 72);
 	}
 	return scaleDPI[size];
@@ -222,12 +224,46 @@ function toRGB(col) { // returns an array like [192, 0, 0]
 }
 
 function blendColours(c1, c2, f) {
+	// When factor is 0, result is 100% color1, when factor is 1, result is 100% color2.
 	c1 = toRGB(c1);
 	c2 = toRGB(c2);
 	const r = Math.round(c1[0] + f * (c2[0] - c1[0]));
 	const g = Math.round(c1[1] + f * (c2[1] - c1[1]));
 	const b = Math.round(c1[2] + f * (c2[2] - c1[2]));
 	return RGB(r, g, b);
+}
+
+function getAlpha(col) {
+	return ((col >> 24) & 0xff);
+}
+
+function getRed(col) {
+	return ((col >> 16) & 0xff);
+}
+
+function getGreen(col) {
+	return ((col >> 8) & 0xff);
+}
+
+function getBlue(col) {
+	return (col & 0xff);
+}
+
+function tintColor(color, percent) {
+	const red = getRed(color);
+	const green = getGreen(color);
+	const blue = getBlue(color);
+
+	return RGBA(lightenColorVal(red, percent), lightenColorVal(green, percent), lightenColorVal(blue, percent), getAlpha(color));
+}
+function darkenColorVal(color, percent) {
+	const shift = Math.max(color * percent / 100, percent / 2);
+	const val = Math.round(color - shift);
+	return Math.max(val, 0);
+}
+function lightenColorVal(color, percent) {
+	const val = Math.round(color + ((255-color) * (percent / 100)));
+	return Math.min(val, 255);
 }
 
 /* 
@@ -242,7 +278,6 @@ function _gdiFont(name, size, style) {
 	if (fonts[id].Name !== name) {console.log('Missing font: ' + name);}
 	return fonts[id];
 }
-
 
 function _textWidth(value, font) {
 	return _gr.CalcTextWidth(value, font);

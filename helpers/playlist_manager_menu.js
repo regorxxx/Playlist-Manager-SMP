@@ -1,8 +1,8 @@
 'use strict';
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_properties.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_prototypes.js');
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\menu_xxx.js');
+include('helpers_xxx.js');
+include('helpers_xxx_properties.js');
+include('helpers_xxx_prototypes.js');
+include('menu_xxx.js');
 
 // Menus
 const menuRbtn = new _menu();
@@ -187,35 +187,7 @@ function createMenuLeft(forcedIndex = null) {
 			let category = '';
 			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, list.data[z].category !== null ? list.data[z].category : '', true);} 
 			catch(e) {return;}
-			if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-				list.editData(list.data[z], {
-					category: category,
-				});
-				// Add new category to current view! (otherwise it gets filtered)
-				// Easy way: intersect current view + new one with refreshed list
-				list.categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
-				list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
-				overwriteProperties(list.properties);
-				list.update(true, true);
-				list.filter();
-			} else {
-				const old_name = list.data[z].name;
-				delayAutoUpdate();
-				let bDone = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category);
-				if (!bDone) {
-					fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
-				} else {
-					list.editData(list.data[z], {
-						category: category,
-					});
-					// Add new category to current view! (otherwise it gets filtered)
-					// Easy way: intersect current view + new one with refreshed list
-					list.categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
-					list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
-					list.update(true, true);
-					list.filter();
-				}
-			}
+			setCategory(category, list, z);
 		}, flags: !isLockPls() &&  isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Adds tag(s)
 		menu.newEntry({entryText: 'Add tag(s)...', func: () => {
@@ -223,63 +195,14 @@ function createMenuLeft(forcedIndex = null) {
 			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, list.data[z].tags.join(';'), true);} 
 			catch(e) {return;}
 			tags = tags.split(';').filter(Boolean); // This filters blank values
-			if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
-				if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-					list.editData(list.data[z], {
-						tags: tags,
-					});
-					list.update(true, true);
-					list.filter();
-				} else {
-					const old_name = list.data[z].name;
-					if (_isFile(list.data[z].path)) {
-						delayAutoUpdate();
-						let bDone = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'));
-						if (!bDone) {
-							fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
-						} else {
-							list.editData(list.data[z], {
-								tags: tags,
-							});
-							list.update(true , true);
-							list.filter();
-						}
-					} else {
-						fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
-					}
-				}
-			}
+			setTag(tags, list, z);
 		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
 		// Locks playlist file
 		menu.newEntry({entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
-			const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
-			if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-				list.editData(list.data[z], {
-					isLocked: !list.data[z].isLocked,
-				});
-				list.update(true, true);
-				list.filter();
-			} else {
-				const old_name = list.data[z].name;
-				if (_isFile(list.data[z].path)) {
-					delayAutoUpdate();
-					let bDone = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1]);
-					if (!bDone) {
-						fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
-					} else {
-						list.editData(list.data[z], {
-							isLocked: !list.data[z].isLocked,
-						});
-						list.update(true, true);
-						list.filter();
-					}
-				} else {
-					fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
-				}
-			}
+			switchLock(list, z);
 		}, flags: isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
@@ -616,7 +539,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowSep ? 0 : 1);});
 		}
 		{	// Name/category sep
-			const subMenuName = menu.newMenu('Show usage info on tooltips..');
+			const subMenuName = menu.newMenu('Show usage info on tooltips...');
 			const options = ['Yes: Show shortcuts','No: Only show basic info'];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
@@ -627,6 +550,49 @@ function createMenuRightTop() {
 				}});
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowTips ? 0 : 1);});
+		}
+		{	// AutoTags  & Actions
+			const subMenuName = menu.newMenu('Playlist AutoTags and actions');
+			{
+				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
+				const options = ['bAutoLoad', 'bAutoLock'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					const itemKey = item + 'Tag';
+					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+						list[itemKey] = !list[itemKey];
+						list.properties[itemKey][1] = list[itemKey];
+						overwriteProperties(list.properties);
+					}});
+					menu.newCheckMenu(subMenuNameTwo, item, void(0),  () => {return list[itemKey];});
+				});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
+					let tag = '';
+					try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'bAutoLoad,bAutoLock');}
+					catch(e) {return;}
+					tag = tag.trim();
+					list.bAutoCustomTag = tag.length ? true : false;
+					list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
+					list.autoCustomTag = tag.split(',');
+					list.properties.autoCustomTag[1] = tag;
+					overwriteProperties(list.properties);
+				}});
+				menu.newCheckMenu(subMenuNameTwo, 'Custom tag...', void(0),  () => {return list.bAutoCustomTag;});
+			}
+			{
+				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
+				const options = ['Yes: when loading playlists', 'No: ignore them'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+						list.bApplyAutoTags = (i === 0) ? true : false;
+						list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
+						overwriteProperties(list.properties);
+					}});
+				});
+				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
+			}
 		}
 	}
 	menu.newEntry({entryText: 'sep'});

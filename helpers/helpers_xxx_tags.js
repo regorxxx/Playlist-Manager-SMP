@@ -1,7 +1,8 @@
 ﻿'use strict';
 //01/06/21
 
-include(fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\helpers_xxx_foobar.js');
+include('helpers_xxx.js');
+include('helpers_xxx_foobar.js');
 
 /* 
 	Global Variables 
@@ -23,7 +24,7 @@ const cyclicTagsDescriptor =	{
 var bLoadTags; // This tells the helper to load tags descriptors extra files. False by default
 if (bLoadTags) {
 	let externalPath = 	[
-						fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers\\dyngenre_map_xxx.js', //for dynamic_genre range function
+						folders.xxx + 'helpers\\dyngenre_map_xxx.js', //for dynamic_genre range function
 					];
 
 	for (let i = 0; i < externalPath.length; i++) {
