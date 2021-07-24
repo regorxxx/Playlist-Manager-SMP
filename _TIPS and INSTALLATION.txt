@@ -30,11 +30,37 @@ PORTABLE TIP:
 Some scripts have configurable paths to save json data, track playlists, etc. Those can be found on the properties panel.
 Instead of using the menus and adding an absolute path, it would be advisable to edit them manually to ensure they are relative too:
 For ex. for the playlist manager, the tracked folder:
-H:\\MySoftware\foobar2000\profile\playlist_manager\ --> .\profile\playlist_manager\	(>= 1.6:)
+H:\MySoftware\foobar2000\profile\playlist_manager\ --> .\profile\playlist_manager\	(>= 1.6:)
 													--> .\playlist_manager\			(<= 1.5:)
 
 When an script finds it's being loaded within a portable installation, will set the default paths using relative paths. It will also warn
 with popups and/or the console about the use of absolute paths on portable installations.
+
+FOO_JESUS TIP:
+-------------
+If using Autosave & Autobackup component (https://www.foobar2000.org/components/view/foo_jesus) it's recommended to add 'js_data' and 
+'playlist_manager' folders at 'Preferences\Advanced\Autosave & Autobackup\Files and directories to backup (...)'. 'js_data' contains 
+config json data for most of these scripts, while 'playlist_manager' folder is the default folder to save playlists files for the playlist manager (*).
+
+(*) When the default path is changed or when using multiple playlist manager panels (and thus different paths), don't forget to add them 
+to Autosave config too. There is a limit though, paths outside the profile folder can not be autosaved by the component. That happens 
+when tracking a playlist folder at the place where the music resides (for relative paths playlist usage), network locations, etc. 
+In some cases this limitation can be bypassed by creating a SymLink at the profile folder to the external path.
+For ex: C:\Foobar2000\profile\my_external_folder\ -> symlink -> H:\Music\
+
+Presets TIP:
+-------------
+There are multiple useful presets for components, the UI or these SMP scripts at the folder named 'Presets'. Readmes can be found there.
+Some of them are meant to be loaded automatically (recipes and themes for Search By Distance) to then be set at buttons, others are meant
+to be loaded on demand to modify the panel behavior (Playlist Tools). Masstagger presets can be loaded at its panel, while UI TF scripts
+are meant to be used at different places of UI config (columns, library view, etc.) if desired. In both cases their use is in line with these SMP scripts,
+so they make it easier to tag or visualize most commonly used tags, variables, etc. (for ex. a CUI script which displays keys in Camelot Wheel notation with colors).
+	- Masstagger
+	- Playlist Tools
+	- Search by [distance]
+	- UI
+		- DUI
+		- CUI
 
 INFO: 
 -------------
@@ -56,6 +82,8 @@ The root folder (the one you found this readme) contains these scripts which can
 			- _resources\fontawesome-webfont.ttf
 	+ world_map.js (*)[+]
 		- May be used along Biography 1.1.X or 1.2.X
+		- A pre-built artist-country database is provided: 
+			_resources\worldMap.json
 	+ buttons_playlist_tools.js (*)
 		- Independend button for Playlist Tools..
 		- Is a duplicate of '.\buttons\buttons_playlist_tools.js'

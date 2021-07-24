@@ -4,7 +4,7 @@ include('helpers_xxx_properties.js');
 include('helpers_xxx_file.js');
 include('helpers_xxx_prototypes.js');
 
-function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = []) {
+function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = []) {
 	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
 	if (typeof name === 'undefined') {
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
@@ -25,6 +25,7 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.bSortForced = queryObj['bSortForced'];
 	this.category = category;
 	this.tags = isArrayStrings(tags) ? tags : [];
+	this.trackTags = isArray(trackTags) ? trackTags : [];
 	this.bShow = true; // TODO:
 	
 }
@@ -42,6 +43,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		var bLocked = false;
 		var category = '';
 		var tags = [];
+		var trackTags = [];
 		var size = null;
 		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
 			let text = utils.ReadTextFile(playlistPathArray[i], convertCharsetToCodepage('UTF-8')).split('\r\n');
@@ -53,6 +55,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 					let j = 0;
 					let iFound = 0;
 					while (j < lines) {
+						let temp = '';
 						lineText = commentsText[j];
 						if (lineText.startsWith('#PLAYLIST:')) {
 							iFound++;
@@ -74,11 +77,16 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 							iFound++;
 							tags = lineText.split(':').slice(1).join(':').split(';').filter(Boolean); // All values separated by ; as an array
 						}
+						if (lineText.startsWith('#TRACKTAGS:')) {
+							iFound++;
+							temp = lineText.split(':').slice(1).join(':');
+							trackTags = temp.length ? JSON.parse(lineText.split(':').slice(1).join(':')) : []; // Array of objects
+						}
 						if (lineText.startsWith('#PLAYLISTSIZE:')) {
 							iFound++;
 							size = Number(lineText.split(':')[1]);
 						}
-						if (iFound === 6) {break;}
+						if (iFound === 7) {break;}
 						j++;
 					}
 				}
@@ -103,12 +111,46 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 			}	
 		}
 		let fileSize = isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
-		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0));
+		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0));
 		i++;
 	}
 	// if (bCreated) {plman.RemovePlaylist(newFplIndex);}
 	
 	return playlistArray;
+}
+
+function setTrackTags(trackTags, list, z) {
+	let bDone = false;
+	const oldTags = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
+	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
+	if (oldTags !== newTags) { // Compares objects
+		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+			list.editData(list.data[z], {
+				trackTags: trackTags,
+			});
+			list.update(true, true);
+			list.filter();
+			bDone = true;
+		} else {
+			const old_name = list.data[z].name;
+			if (_isFile(list.data[z].path)) {
+				delayAutoUpdate();
+				bDone = editTextFile(list.data[z].path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags);
+				if (!bDone) {
+					fb.ShowPopupMessage('Error changing track tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + trackTags);
+				} else {
+					list.editData(list.data[z], {
+						trackTags: trackTags,
+					});
+					list.update(true , true);
+					list.filter();
+				}
+			} else {
+				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+			}
+		}
+	}
+	return bDone;
 }
 
 function setTag(tags, list, z) {

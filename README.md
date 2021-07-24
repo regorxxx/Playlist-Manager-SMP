@@ -20,34 +20,52 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Edit query, sort pattern and sort forcing.
   * Adds tooltip info, UI features, filters, etc.
   * Number of tracks output is updated at foobar startup. (and/or 'at manual refresh')
+  * Queries and sort patterns are checked for validity before using them, instead of crashing.
 * Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar (if all items are on library). i.e. "As fast as the native format".
-* Auto-saves changes within foobar to binded playlists files. (configurable)
+* Auto-saves changes within foobar to bound playlists files. (configurable)
 * Automatically updates changes within the tracked folder. (configurable)
 * New updates are delayed when performing internal updates/processing to avoid conflicts.
 * Bind playlist to files:
-  * Tracks playlists for changes and update binded files.
+  * Tracks playlists for changes and update bound files.
   * Auto-saving (configurable).
-  * Deleting the file also ask to delete the binded playlist.
-  * Renaming the files also renames the binded playlist.
-  * Show binded playlist (becomes active playlist).
+  * Deleting the file also ask to delete the bound playlist.
+  * Renaming the files also renames the bound playlist.
+  * Show bound playlist (becomes active playlist).
 * Lock/unlock playlists (so they are read-only).
   * Automatically locking of native foobar playlists files (.fpl). (configurable)
   * When locked, playlists can not be updated nor edited. They can be deleted.
   * Filename can be changed, but not playlist name (inside the file). This allows to set different playlist and file names if required.
-* Playlist unique IDs. You can have multiple playlists with same name on the UI and binded to different files. (configurable)
+* Playlist unique IDs. You can have multiple playlists with same name on the UI and bound to different files. (configurable)
   * If changing UUIDs config while having playlists already loaded, then new config will be used whenever they get updated.
   * You can manually force new UUID config just by renaming the files.
 * Show playlist size on the list. (some limits apply for .fpl playlist files (*)) (configurable)
-  * All (refresh autoplaylists queries)
+  * All (refresh AutoPlaylists queries)
   * Only standard playlist
   * No size
-* If you choose not to refresh autoplaylist sizes, then the first calculated size gets used: when imported from json or creating the autoplaylist.
+* If you choose not to refresh AutoPlaylists sizes, then the first calculated size gets used: when imported from json or creating the AutoPlaylist.
+* Playlist Tags and actions: 
+  * Playlists may be tagged with 'bAutoLoad', 'bAutoLock' or a custom set of tags (for arbitrary purposes).
+  * Auto-Functions: automatically applies some actions whenever a playlist is loaded on the panel according to the tags present on it. 
+    * 'bAutoLoad' makes the playlist to be loaded within foobar automatically (on the UI). Meant to be used on remote servers with online controllers.
+    * 'bAutoLock' locks the playlist as soon as it's loaded on the panel.
+* Track Auto-tagging: add tag values automatically to any track added on playlist.
+  * Can be configured separately for standard playlists, Autoplaylists, locked playlists and individual playlists.
+  * Standard playlists may be used to easily tag your library just by sending them to the right playlist (which don't need to be loaded at all).
+  * Autoplaylists Auto-tagging allows to automatically (and periodically) apply some tagging logic to the current library following some condition.
+  * Multiple playlists may be used as pools, using a final Autoplaylist which checks for an specific added tag (by other playlists -aka pools-).
+  * Allows multiple inputs:
+    * TF expressions (or %tags%).
+    * JavaScript functions (defined at 'helpers_xxx_utils.js').
+    * Value (string or number).
 * Tooltips show different playlist info:
-  * Name plus UUID.
-  * Playlist size (tracks). Also for AutoPlaylists (the number of tracks output by the query).
-  * Category / Tag(s).
-  * Status (lock).
-  * Query. Sort Pattern. (AutoPlaylists)
+  * Header with filters, categories and total number of playlists.
+  * Playlists:
+    * Name plus UUID.
+    * Playlist size (tracks). Also for AutoPlaylists (the number of tracks output by the query).
+    * Category / Tag(s).
+    * Track Tag(s).
+    * Status (lock).
+    * Query. Sort Pattern. (AutoPlaylists)
 * Cyclic filters:
   * Show All | Only Autoplaylists | Only Playlists
   * Show All | Not locked | Only locked
@@ -56,7 +74,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Size: Ascd. | Desc.
   * Category: Az | Za
 * UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
-  * Invisible unicode chars plus (*)
+  * Invisible Unicode chars plus (*)
   * (a-f)
   * (*) 
   * Or none
@@ -77,16 +95,16 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Selection indicators.
   * Now playing and loaded playlist indicators.
   * Empty / not empty playlist indicators. To be used as fallback when size is not shown.
-  * Size (configurable).
+  * Font Size (configurable).
   * Separators between different names/categories (configurable).
-  * Colours for different playlists types and status (configurable).
+  * Colors for different playlists types, status, text, background and selection (configurable).
 * Shortcuts:
-  * Double Click: Load playlist / Make binded playlist active
+  * Double Click: Load playlist / Make bound playlist active
   * Left Click: playlist contextual menu
-  * Rigth Click: panel menu
-  * Ctrl + Left Button: Load playlist / Make binded playlist active
-  * Shift + Left Button: Send current selection to playlist
-  * Ctrl + Shift + Left Button: Delete playlist
+  * Right Click: panel menu
+  * Ctrl + Left Click: Load playlist / Make bound playlist active
+  * Shift + Left Click: Send current selection to playlist
+  * Ctrl + Shift + Left Click: Delete playlist
 * Other scripts integration:
   * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
 
@@ -96,7 +114,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
 ### Current limitations
-.fpl playlists (native format) are read only and can not be autosaved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).  
+.fpl playlists (native format) are read only and can not be auto-saved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).  
 Whenever that changes, I will add full support for .fpl, and end pre-release state.
 
 

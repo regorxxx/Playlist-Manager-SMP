@@ -230,19 +230,19 @@ function getTagsValues(handle, tagsArray, bMerged = false) {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
 	
-	const selInfo = sel.GetFileInfo();
+	const handleInfo = handle.GetFileInfo();
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
 	let i = 0;
 	
 	while (i < tagArray_length) {
 		let tagValues = [];
-		const tagIdx = selInfo.MetaFind(tagsArray[i]);
-        const tagNumber = (tagIdx !== -1) ? selInfo.MetaValueCount(tagIdx) : 0;
+		const tagIdx = handleInfo.MetaFind(tagsArray[i]);
+        const tagNumber = (tagIdx !== -1) ? handleInfo.MetaValueCount(tagIdx) : 0;
 		if (tagNumber !== 0) {
 			let j = 0;
 			while (j < tagNumber) {
-				tagValues[j] = selInfo.MetaValue(tagIdx,j);
+				tagValues[j] = handleInfo.MetaValue(tagIdx,j);
 				j++;
 			}
 		}

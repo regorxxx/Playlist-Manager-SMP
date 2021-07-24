@@ -131,7 +131,7 @@ function sendToPlaylist(handleList, playlistName) {
 	return handleList;
 }
 
-function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = [], relPath = '') {
+function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = []) {
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
@@ -152,6 +152,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 			playlistText.push('#LOCKED:' + bLocked);
 			playlistText.push('#CATEGORY:' + category);
 			playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
+			playlistText.push('#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''));
 			playlistText.push('#PLAYLISTSIZE:');
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
@@ -160,10 +161,10 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + (relPath.length ? '$replace(%path%,\'' + relPath + '\',' + repl + ')' : '%path%'));
 				const items = plman.GetPlaylistItems(playlistIndex);
 				trackText = tfo.EvalWithMetadbs(items);
-				playlistText[7] += items.Count; // Add number of tracks to size
+				playlistText[8] += items.Count; // Add number of tracks to size
 				playlistText = playlistText.concat(trackText);
 			} else { //  Else empty playlist
-				playlistText[7] += 0; // Add number of tracks to size
+				playlistText[8] += 0; // Add number of tracks to size
 			} 
 		// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
@@ -345,7 +346,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false) {
-	let test = new FbProfiler('getHandlesFromPlaylist');
+	// let test = new FbProfiler('getHandlesFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
 	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
@@ -390,7 +391,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 	if (count === filePaths.length || bOmitNotFound) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 	} else {handlePlaylist = null;}
-	test.Print();
+	// test.Print();
 	if (!libItemsAbsPaths.length) {libItemsAbsPaths = poolItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
 	return handlePlaylist;
@@ -399,7 +400,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function arePathsInMediaLibrary(filePaths, relPath = '') {
-	let test = new FbProfiler('arePathsInMediaLibrary');
+	// let test = new FbProfiler('arePathsInMediaLibrary');
 	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
@@ -431,7 +432,7 @@ function arePathsInMediaLibrary(filePaths, relPath = '') {
 			}
 		}
 	}
-	test.Print();
+	// test.Print();
 	if (libItemsAbsPaths.length !== poolItems.Count) {libItemsAbsPaths = poolItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
 	console.log(count);

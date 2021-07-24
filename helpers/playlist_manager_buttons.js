@@ -5,9 +5,9 @@ var prefix = 'EDIT';
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
 var g_font = _gdiFont('Segoe UI', 12);
-var buttonCoordinatesOne = {x: 0, y: () => {return window.Height - 22;}, w: () => {return window.Width / 4;}, h: 22};
-var buttonCoordinatesTwo = {x: () => {return 0 + window.Width / 4;}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 4;}, h: 22};
-var buttonCoordinatesThree = {x: () => {return 0 + window.Width / 4*2;}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 4 * 2;}, h: 22};
+var buttonCoordinatesOne = {x: 1, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
+var buttonCoordinatesTwo = {x: () => {return buttonCoordinatesOne.x + buttonCoordinatesOne.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
+var buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + buttonCoordinatesTwo.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 3 - 1;}, h: 22};
 var buttonOrientation = 'x';
 
 prefix = getUniquePrefix(prefix, '_'); // Puts new ID before '_'

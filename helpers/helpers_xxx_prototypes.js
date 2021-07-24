@@ -106,25 +106,16 @@ Array.prototype.rotate = (function() {
 	};
 })();
 
-// Randomly rearanges the items in an array
+// Randomly rearranges the items in an array, modifies original
 Array.prototype.shuffle = function() {
-	const result = [];
-	const len = this.length;
-	for (let i = len - 1; i >= 0; i--) {
-		// picks an integer between 0 and i:
-		const r = Math.floor(Math.random() * (i + 1));   // NOTE: use a better RNG if cryptographic security is needed
-		// inserts the arr[i] element in the r-th free space in the shuffled array:
-		for (let j = 0, k = 0; j <= len - 1; j++) {
-			if (typeof result[j] === 'undefined') {
-				if (k === r) {
-					result[j] = this[i];    // NOTE: if array contains objects, this doesn't clone them! Use a better clone function instead, if that is needed. 
-					break;
-				}
-				k++;
-			}
-		}
+	let last = this.length;
+	let n;
+	while (last > 0) {
+		n = Math.floor(Math.random() * last);
+		--last;
+		[this[n], this[last]] = [this[last], this[n]];
 	}
-	return result;
+	return this;
 };
 
 /* 

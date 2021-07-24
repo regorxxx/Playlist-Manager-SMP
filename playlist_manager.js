@@ -35,32 +35,39 @@ include('helpers\\playlist_manager_menu.js');
 include('helpers\\playlist_manager_helpers.js');
 
 var properties = {
-	playlistPath		: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
-	autoSave			: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000],
-	bFplLock			: ['Load .fpl native playlists as read only?' , true],
-	extension			: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
-	autoUpdate			: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000],
-	bShowSize			: ['Show playlist size' , true],
-	bUpdateAutoplaylist	: ['Update Autoplaylist size by query output' , true],
-	bUseUUID			: ['Use UUIDs along playlist names (not available for .pls playlists).' , true],
-	optionUUID			: ['UUID current method' , ''],
-	methodState			: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	sortState			: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	bSaveFilterStates	: ['Maintain filters between sessions?: ', true], // Description and value filled on list.init() with defaults. Just a placeholder
-	filterStates		: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowSep			: ['Show name/category separators: ', true],
-	listColours			: ['Color codes for the list. Use contextual menu to set them: ', ''],
-	bFirstPopup			: ['Playlist Manager: Fired once', false],
-	bRelativePath		: ['Use relative paths for all new playlists', false],
-	bFirstPopupFpl		: ['Playlist Manager fpl: Fired once', false],
-	bFirstPopupPls		: ['Playlist Manager pls: Fired once', false],
-	categoryState		: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowTips			: ['Usage text on tooltips.', true],
-	bAutoLoadTag		: ['Automatically add \'bAutoLoad\' to all playlists', false],
-	bAutoLockTag		: ['Automatically add \'bAutoLock\' to all playlists', false],
-	bAutoCustomTag		: ['Automatically add custom tags to all playlists', false],
-	autoCustomTag		: ['Custom tags to add', ''],
-	bApplyAutoTags		: ['Apply actions based on tags (lock, load)', false],
+	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
+	autoSave				: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000],
+	bFplLock				: ['Load .fpl native playlists as read only?' , true],
+	extension				: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
+	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000],
+	bShowSize				: ['Show playlist size' , true],
+	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output' , true],
+	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).' , true],
+	optionUUID				: ['UUID current method' , ''],
+	methodState				: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
+	sortState				: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
+	bSaveFilterStates		: ['Maintain filters between sessions?: ', true], // Description and value filled on list.init() with defaults. Just a placeholder
+	filterStates			: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
+	bShowSep				: ['Show name/category separators: ', true],
+	listColours				: ['Color codes for the list. Use contextual menu to set them: ', ''],
+	bFirstPopup				: ['Playlist Manager: Fired once', false],
+	bRelativePath			: ['Use relative paths for all new playlists', false],
+	bFirstPopupFpl			: ['Playlist Manager fpl: Fired once', false],
+	bFirstPopupPls			: ['Playlist Manager pls: Fired once', false],
+	categoryState			: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
+	bShowTips				: ['Usage text on tooltips.', true],
+	bAutoLoadTag			: ['Automatically add \'bAutoLoad\' to all playlists', false],
+	bAutoLockTag			: ['Automatically add \'bAutoLock\' to all playlists', false],
+	bAutoCustomTag			: ['Automatically add custom tags to all playlists', false],
+	autoCustomTag			: ['Custom tags to add', ''],
+	bApplyAutoTags			: ['Apply actions based on tags (lock, load)', false],
+	// autoPlaylistTags		: ['Playlist tags and actions config', JSON.parse({bAutoLoadTag: false, bAutoLockTag: false, bAutoCustomTag: false, bApplyAutoTags: false, autoCustomTag: ''})],
+	bAutoTrackTag			: ['Enable auto-tagging for added tracks (at autosave)', false],
+	bAutoTrackTagAlways		: ['Enable auto-tagging for added tracks (always)', false],
+	bAutoTrackTagPls		: ['Auto-tagging for standard playlists', false],
+	bAutoTrackTagLockPls	: ['Auto-tagging for locked playlists', false],
+	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false],
+	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -78,7 +85,7 @@ setProperties(properties, prefix);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, 'e'))) {
 			const readme = utils.ReadTextFile(readmePath, 65001);
-			if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager');}
+			if (readme.length) {fb.ShowPopupMessage(readme, window.Name);}
 		}
 	}
 }
@@ -200,7 +207,13 @@ function on_playlist_items_removed(playlistIndex) {
 }
   
 function on_playlist_items_added(playlistIndex) {
-	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
+	if (debouncedUpdate) {debouncedUpdate(playlistIndex, true);}
+	else if (list.bAutoTrackTag) {
+		if (list.bAutoTrackTagAlways) {list.updatePlaylistOnlyTracks(playlistIndex);}
+		else if (plman.IsAutoPlaylist(playlistIndex)) {
+			if (list.bAutoTrackTagAutoPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
+		} else if (list.bAutoTrackTagPls || bAutoTrackTagLockPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
+	}
 }
 
 // Auto-update if there are a different number of items on folder or the total file sizes change
