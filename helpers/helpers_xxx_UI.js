@@ -54,7 +54,7 @@ const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 function _scale(size) {
 	if (!scaleDPI[size]) {
 		let DPI;
-		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')}
+		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI');}
 		catch (e) {DPI = 96;} // Fix for linux
 		scaleDPI[size] = Math.round(size * DPI / 72);
 	}

@@ -39,7 +39,7 @@ function _list(x, y, w, h) {
 	
 	// Cache
 	var currentItemIndex = -1;
-	this.getCurrentItemIndex = () => {return currentItemIndex;}
+	this.getCurrentItemIndex = () => {return currentItemIndex;};
 	var bMaintainFocus = (currentItemIndex !== -1); // Skip at init() or when mouse leaves panel
 	var currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
@@ -240,7 +240,7 @@ function _list(x, y, w, h) {
 			let headerText = this.playlistsPath;
 			headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
 			headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.showStates[0] !== this.constShowStates()[0] ?  this.showStates[0] : '(All)');
-			headerText += '\n' + 'Current view: '+ this.data.length + ' Playlists (' + this.data.filter((oPls) => {return oPls.isAutoPlaylist}).length + ' AutoPlaylists)';
+			headerText += '\n' + 'Current view: '+ this.data.length + ' Playlists (' + this.data.filter((oPls) => {return oPls.isAutoPlaylist;}).length + ' AutoPlaylists)';
 			// Tips
 			if (this.bShowTips) {
 				headerText += '\n\n' + '(R. Click for config menus)';
@@ -283,7 +283,7 @@ function _list(x, y, w, h) {
 							playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
 							playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
 							playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
-							playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0]}).join(', ') : '-');
+							playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0];}).join(', ') : '-');
 							// Text for Autoplaylists
 							if (pls.isAutoPlaylist) {
 								playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
@@ -514,7 +514,7 @@ function _list(x, y, w, h) {
 							if (currVal.indexOf(value) === -1) {tags[name] = [...currVal, value];} // Don't duplicate values
 						} else {tags[name] = value;}
 					}
-				})
+				});
 				if (Object.keys(tags).length) {tagsArr.push(tags);}
 			}
 			if (!tagsArr.length) {console.log('Playlist Manager: no tags will be added...');}
@@ -524,7 +524,7 @@ function _list(x, y, w, h) {
 	
 	this.updateTrackTags = (handleList, tagsArr) => { // Need to do it in 2 steps to only apply the changes after the playlist file have been updated successfully
 		if (!handleList || !handleList.Count || !tagsArr || !tagsArr.length) {return;}
-		console.log('Playlist Manager: Auto-tagging tracks...')
+		console.log('Playlist Manager: Auto-tagging tracks...');
 		handleList.UpdateFileInfoFromJSON(JSON.stringify(tagsArr));
 	}
 	
@@ -732,7 +732,7 @@ function _list(x, y, w, h) {
 	this.constAutoPlaylistStates = () => {return ['All','Autoplaylists','No Autoplaylists'];};
 	this.showStates = this.constShowStates(); // These rotate over time
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
-	this.isFilterActive = () => {return (list.constShowStates()[0] !== list.showStates[0] || list.constAutoPlaylistStates()[0] !== list.autoPlaylistStates[0]);}
+	this.isFilterActive = () => {return (list.constShowStates()[0] !== list.showStates[0] || list.constAutoPlaylistStates()[0] !== list.autoPlaylistStates[0]);};
 	
 	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], showState = this.showStates[0], categoryState = this.categoryState} = {}) => {
 		// On first filter we use this.dataAll as origin
@@ -989,7 +989,7 @@ function _list(x, y, w, h) {
 				if (this.bAutoLockTag && item.tags.indexOf('bAutoLock') === -1) {item.tags.push('bAutoLock'); bSave = true;}
 				if (this.bAutoCustomTag) {
 					this.autoCustomTag.forEach( (tag) => {
-						if (! new Set(item.tags).has(tag)) {item.tags.push(tag); bSave = true}
+						if (! new Set(item.tags).has(tag)) {item.tags.push(tag); bSave = true;}
 					});
 				}
 				if (bSave && !item.isAutoPlaylist && item.extension !== '.fpl' && item.extension !== '.pls') {
@@ -1558,7 +1558,7 @@ function _list(x, y, w, h) {
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
 	this.bUseUUID = this.properties['bUseUUID'][1];
-	this.optionsUUID = () => {return ['Yes: Using invisible chars plus (*) indicator (experimental)','Yes: Using a-f chars','Yes: Using only (*) indicator','No: Only the name'];}
+	this.optionsUUID = () => {return ['Yes: Using invisible chars plus (*) indicator (experimental)','Yes: Using a-f chars','Yes: Using only (*) indicator','No: Only the name'];};
 	this.optionUUID = this.properties['optionUUID'][1];
 	this.bFplLock = this.properties['bFplLock'][1];
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];

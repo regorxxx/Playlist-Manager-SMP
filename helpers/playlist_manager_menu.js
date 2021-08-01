@@ -322,7 +322,7 @@ function createMenuRight() {
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
-						if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path)})) {found.push(playlist.path);}
+						if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path);})) {found.push(playlist.path);}
 					}
 				});
 				fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);

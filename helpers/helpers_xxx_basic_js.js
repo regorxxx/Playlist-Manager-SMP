@@ -28,7 +28,7 @@ function clone(obj) {
 }
 
 function getRegExpFlags(regExp) {
-		if (typeof regExp.source.flags == 'string') {
+		if (typeof regExp.source.flags === 'string') {
 		return regExp.source.flags;
 	} else {
 		let flags = [];

@@ -79,7 +79,7 @@ function queryReplaceWithCurrent(query, handle) {
 					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => {return s !== '(';})) : '';
 					// const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2) : '';
 					const interQuery = interQueryStart + interQueryEnd;
-					const multiQuery  = tfoVal.split('#').map((val) => {return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + val;})
+					const multiQuery  = tfoVal.split('#').map((val) => {return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + val;});
 					// tempQuery = tfoVal.split('#').map((val) => {return tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + val;})
 					// tempQuery = query_join(tempQuery, 'AND');
 					tempQuery += interQuery + query_join(multiQuery, 'AND');
@@ -219,9 +219,9 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false) {
 function stripSort(query) {
 	let queryNoSort = query;
 	if (query.indexOf('SORT') !== -1) {
-		if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0]}
-		else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0]}
-		else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0]}
+		if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0];}
+		else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0];}
+		else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0];}
 	}
 	return queryNoSort;
 }
