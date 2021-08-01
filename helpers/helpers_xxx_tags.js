@@ -198,9 +198,9 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false) {
 	if (bAllowSort) {
 		const fromIndex = query.indexOf('SORT');
 		if (query.indexOf('SORT') !== -1) {
-			if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0]}
-			else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0]}
-			else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0]}
+			if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0];}
+			else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0];}
+			else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0];}
 			else {return false;} // Has a typo on sort
 			if (query.indexOf('$', fromIndex) !== -1) { // Functions require quotes around them
 				const firstQuote = query.indexOf('"', fromIndex);

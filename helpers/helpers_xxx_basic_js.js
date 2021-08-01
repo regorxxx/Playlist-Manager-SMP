@@ -6,7 +6,7 @@
   Deep clones all properties except functions
 */
 function clone(obj) {
-	if (typeof obj == 'function') {
+	if (typeof obj === 'function') {
 		return obj;
 	}
 	let result = Array.isArray(obj) ? [] : {};
@@ -14,11 +14,11 @@ function clone(obj) {
 		// include prototype properties
 		let value = obj[key];
 		let type = {}.toString.call(value).slice(8, -1);
-		if (type == 'Array' || type == 'Object') {
+		if (type === 'Array' || type === 'Object') {
 			result[key] = clone(value);
-		} else if (type == 'Date') {
+		} else if (type === 'Date') {
 			result[key] = new Date(value.getTime());
-		} else if (type == 'RegExp') {
+		} else if (type === 'RegExp') {
 			result[key] = RegExp(value.source, getRegExpFlags(value));
 		} else {
 			result[key] = value;

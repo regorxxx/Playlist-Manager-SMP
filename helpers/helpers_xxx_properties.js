@@ -17,6 +17,7 @@ include('helpers_xxx_file.js');
 function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
 	let bNumber = count > 0 ? true : false;
 	for (let k in propertiesDescriptor){
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		let description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 		if (bForce) { // Only use set when overwriting... this is done to have default values set first and then overwriting if needed.
 			if (!checkProperty(propertiesDescriptor[k])) {window.SetProperty(description, propertiesDescriptor[k][3]);}
@@ -34,6 +35,7 @@ function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 // For ex. for saving properties within a constructor (so this.propertiesDescriptor already contains count, padding, etc.).
 function overwriteProperties(propertiesDescriptor) { // Equivalent to setProperties(propertiesDescriptor,'',0,false,true);
 	for (let k in propertiesDescriptor){
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		if (!checkProperty(propertiesDescriptor[k])) {
 			window.SetProperty(propertiesDescriptor[k][0], propertiesDescriptor[k][3]);
 		} else {
@@ -47,6 +49,7 @@ function overwriteProperties(propertiesDescriptor) { // Equivalent to setPropert
 // Omits property checking so allows setting one to null and delete it, while overwriteProperties() will throw a checking popup
 function deleteProperties(propertiesDescriptor) { 
 	for (let k in propertiesDescriptor) {
+	if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		window.SetProperty(propertiesDescriptor[k][0], null);
 	}
 	return propertiesDescriptor;
@@ -58,6 +61,7 @@ function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 	let bNumber = count > 0 ? true : false;
 	let output = {};
 	for (let k in propertiesDescriptor){
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		output[k] = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 		if (bNumber) {count++;}
 	}
@@ -69,6 +73,7 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPa
 	let bNumber = count > 0 ? true : false;
 	let output = null;
 	for (let k in propertiesDescriptor){
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		if (k === key) {
 			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 			break;
@@ -86,6 +91,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 	if (bOnlyValues) { // only outputs values, without description
 		let cacheDescription = null;
 		for (let k in propertiesDescriptor){
+			if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 			output[k] = null;
 			cacheDescription = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k] = window.GetProperty(cacheDescription);
@@ -96,6 +102,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 		}
 	} else {
 		for (let k in propertiesDescriptor){ // entire properties object with fixed descriptions
+			if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 			output[k] = [null,null];
 			output[k][0] =  prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k][1] = window.GetProperty(output[k][0]);
@@ -119,6 +126,7 @@ function getPropertiesValues(propertiesDescriptor, prefix = '', count = 1, skip 
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in properties){
+		if (!properties.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
 			let property = properties[k];
@@ -135,6 +143,7 @@ function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = 
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in propertiesDescriptor){
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
 			propertiesKeys.push(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
@@ -152,6 +161,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
 	for (let k in propertiesDescriptor){
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
 			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0])); // TODO: toString();

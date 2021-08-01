@@ -18,10 +18,10 @@ const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl']); // Thes
 
 // Outputs indexes of all playlists with that name
 function playlistCountNoLocked() {
-	const playlistsNum = plman.PlaylistCount
+	const playlistsNum = plman.PlaylistCount;
 	let count = 0;
 	for (let i = 0; i < playlistsNum; i++) {
-		if (!plman.IsPlaylistLocked(i)) {count++;};
+		if (!plman.IsPlaylistLocked(i)) {count++;}
 	}
 	return count;
 }
@@ -253,7 +253,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
 			if (addSize !== 0) {
 				const repl = '.\\';
 				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + (relPath.length ? '$replace(%path%,\'' + relPath + '\',' + repl + ')' : '%path%'));
-				trackText = [...tfo.EvalWithMetadbs(handleList), ...trackText]
+				trackText = [...tfo.EvalWithMetadbs(handleList), ...trackText];
 			} else { //  Else empty handle
 				return false;
 			} 

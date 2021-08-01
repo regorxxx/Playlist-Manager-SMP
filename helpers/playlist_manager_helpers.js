@@ -125,9 +125,7 @@ function setTrackTags(trackTags, list, z) {
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
 	if (oldTags !== newTags) { // Compares objects
 		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-			list.editData(list.data[z], {
-				trackTags: trackTags,
-			});
+			list.editData(list.data[z], {trackTags});
 			list.update(true, true);
 			list.filter();
 			bDone = true;
@@ -139,9 +137,7 @@ function setTrackTags(trackTags, list, z) {
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing track tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + trackTags);
 				} else {
-					list.editData(list.data[z], {
-						trackTags: trackTags,
-					});
+					list.editData(list.data[z], {trackTags});
 					list.update(true , true);
 					list.filter();
 				}
@@ -157,9 +153,7 @@ function setTag(tags, list, z) {
 	let bDone = false;
 	if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
 		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-			list.editData(list.data[z], {
-				tags: tags,
-			});
+			list.editData(list.data[z], {tags});
 			list.update(true, true);
 			list.filter();
 			bDone = true;
@@ -171,9 +165,7 @@ function setTag(tags, list, z) {
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
 				} else {
-					list.editData(list.data[z], {
-						tags: tags,
-					});
+					list.editData(list.data[z], {tags});
 					list.update(true , true);
 					list.filter();
 				}
@@ -189,9 +181,7 @@ function setCategory(category, list, z) {
 	let bDone = false;
 	if (list.data[z].category !== category) {
 		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-			list.editData(list.data[z], {
-				category: category,
-			});
+			list.editData(list.data[z], {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
 			list.categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
@@ -207,9 +197,7 @@ function setCategory(category, list, z) {
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
 			} else {
-				list.editData(list.data[z], {
-					category: category,
-				});
+				list.editData(list.data[z], {category});
 				// Add new category to current view! (otherwise it gets filtered)
 				// Easy way: intersect current view + new one with refreshed list
 				list.categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
@@ -226,9 +214,7 @@ function switchLock(list, z) {
 	let bDone = false;
 	const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
 	if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
-		list.editData(list.data[z], {
-			isLocked: !list.data[z].isLocked,
-		});
+		list.editData(list.data[z], {isLocked: !list.data[z].isLocked});
 		list.update(true, true);
 		list.filter();
 		bDone = true;
@@ -240,9 +226,7 @@ function switchLock(list, z) {
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
 			} else {
-				list.editData(list.data[z], {
-					isLocked: !list.data[z].isLocked,
-				});
+				list.editData(list.data[z], {isLocked: !list.data[z].isLocked});
 				list.update(true, true);
 				list.filter();
 			}

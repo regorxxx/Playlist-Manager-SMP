@@ -802,23 +802,23 @@ function _list(x, y, w, h) {
 	}
 	
 	this.sortMethods = () => { // These are constant. We expect the first sorting order of every method is the natural one...
-				return {'By name': 
-							{
-							'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
-							'Za': (a, b) => {return 0 - a.name.localeCompare(b.name);},
-							},
-						'By size': 
-							{
-							'(S) Asc.': (a, b) => {return a.size - b.size;},
-							'(S) Des.': (a, b) => {return b.size - a.size;}
-							},
-						'By category': 
-							{
-							'(C) Az': (a, b) => {return a.category.localeCompare(b.category);}, 
-							'(C) Za': (a, b) => {return 0 - a.category.localeCompare(b.category);}
-							}			
-						}
-	;}
+		return {'By name': 
+					{
+					'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
+					'Za': (a, b) => {return 0 - a.name.localeCompare(b.name);},
+					},
+				'By size': 
+					{
+					'(S) Asc.': (a, b) => {return a.size - b.size;},
+					'(S) Des.': (a, b) => {return b.size - a.size;}
+					},
+				'By category': 
+					{
+					'(C) Az': (a, b) => {return a.category.localeCompare(b.category);}, 
+					'(C) Za': (a, b) => {return 0 - a.category.localeCompare(b.category);}
+					}			
+		};
+	}
 	this.getOppositeSortState = (sortState, methodState = this.methodState) => { // first or second key
 		const keys = Object.keys(this.sortMethods()[methodState]);
 		let index = keys.indexOf(sortState);
@@ -998,7 +998,7 @@ function _list(x, y, w, h) {
 				}
 				// Perform Auto-Tags actions
 				if (this.bApplyAutoTags) {
-					if (item.tags.indexOf('bAutoLoad') !== -1) {this.loadPlaylist(z)}
+					if (item.tags.indexOf('bAutoLoad') !== -1) {this.loadPlaylist(z);}
 					if (item.tags.indexOf('bAutoLock') !== -1) {item.isLocked = true;}
 				}
 			});
@@ -1013,7 +1013,7 @@ function _list(x, y, w, h) {
 		}
 		this.totalFileSize = totalFileSize; // Better to set it on one step to not call autoupdate in the middle of this update!
 		this.sort(); // Sorts data according to current sort state
-		if (!bMaintainFocus) {this.offset = 0} // Don't move the list focus...
+		if (!bMaintainFocus) {this.offset = 0;} // Don't move the list focus...
 		else {
 			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
 				// Get current index of the previously selected item to not move the list focus when updating...
@@ -1210,7 +1210,7 @@ function _list(x, y, w, h) {
 			const objectPlaylist = new oPlaylist('', '', newName, '', queryCount, 0, false, true, new_queryObj);
 			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
-			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag)}});}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
 			// Save
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
@@ -1221,7 +1221,7 @@ function _list(x, y, w, h) {
 			let input = '';
 			const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 			const oldName = oldNameId.substring(0, oldNameId.length - this.uuiidLength); // name - UUID x chars long
-			let boxText = bEmpty ? 'Enter playlist name' : 'Enter playlist name.\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.'
+			let boxText = bEmpty ? 'Enter playlist name' : 'Enter playlist name.\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
 			try {input = utils.InputBox(window.ID, boxText, window.Name, bEmpty ? '' : oldName, true);} 
 			catch(e) {return;}
 			if (!input.length) {return;}
@@ -1231,7 +1231,7 @@ function _list(x, y, w, h) {
 			const oPlaylistTags = [];
 			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
-			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag)}});}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
 			// Save file
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
@@ -1239,7 +1239,7 @@ function _list(x, y, w, h) {
 				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''));
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					const objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags) //TODO: Deprecated
+					const objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags); //TODO: Deprecated
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
@@ -1313,7 +1313,7 @@ function _list(x, y, w, h) {
 			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (!this.data[idx].isAutoPlaylist) { // Only for not AutoPlaylists
 				if (_isFile(this.data[idx].path)) {
-					let newPath = this.data[idx].path.split('.').slice(0,-1).join('.').split('\\')
+					let newPath = this.data[idx].path.split('.').slice(0,-1).join('.').split('\\');
 					const new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
 					newPath = newPath.concat([new_name]).join('\\') + this.data[idx].extension;
 					_renameFile(this.data[idx].path, newPath);
@@ -1504,10 +1504,10 @@ function _list(x, y, w, h) {
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
-		_recycleFile(this.filename + '.old') // recycle old backup
+		_recycleFile(this.filename + '.old'); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
-		this.initProperties() // This only set properties if they have no values...
-		this.reset()
+		this.initProperties(); // This only set properties if they have no values...
+		this.reset();
 		let bDone = this.checkConfig();
 		this.update(false, true, void(0), true); // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
@@ -1553,7 +1553,7 @@ function _list(x, y, w, h) {
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
 	this.properties = getPropertiesPairs(properties, prefix); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.playlistsPath = this.properties['playlistPath'][1];
-	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop()
+	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsExtension = this.properties['extension'][1];
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!

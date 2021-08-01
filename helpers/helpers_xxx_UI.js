@@ -17,7 +17,7 @@ if (on_script_unload) {
 	on_script_unload = function() {
 		oldFunc();
 		onScriptUnload();
-	}
+	};
 } else {var on_script_unload = onScriptUnload;}
 
 const WshShellUI = new ActiveXObject('WScript.Shell');
@@ -55,7 +55,7 @@ function _scale(size) {
 	if (!scaleDPI[size]) {
 		let DPI;
 		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')}
-		catch (e) {DPI = 96} // Fix for linux
+		catch (e) {DPI = 96;} // Fix for linux
 		scaleDPI[size] = Math.round(size * DPI / 72);
 	}
 	return scaleDPI[size];
@@ -380,7 +380,7 @@ function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
 			size = getClosestDivisor(diffX, size);
 			const rep = diffX / size;
 			for (let i = 0; i <= rep; i++) {
-				drawDottedLine(gr, iX, y1, iX, y2 - dotSize, lineWidth, colour, dotSize)
+				drawDottedLine(gr, iX, y1, iX, y2 - dotSize, lineWidth, colour, dotSize);
 				iX += size;
 			}
 			break;
@@ -389,7 +389,7 @@ function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
 			size = getClosestDivisor(diffY, size);
 			const rep = diffY / size;
 			for (let i = 0; i <= rep; i++) {
-				drawDottedLine(gr, x1, iY, x2 - dotSize, iY, lineWidth, colour, dotSize)
+				drawDottedLine(gr, x1, iY, x2 - dotSize, iY, lineWidth, colour, dotSize);
 				iY += size;
 			}
 			break;

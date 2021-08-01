@@ -303,8 +303,8 @@ function createMenuRight() {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
-							if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path)})) {
-								found.push(playlist.path + '(contains dead items)');;
+							if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path);})) {
+								found.push(playlist.path + '(contains dead items)');
 							} else {
 								found.push(playlist.path);
 							}
@@ -685,8 +685,8 @@ function createMenuRightTop() {
 							let input;
 							try {input = Number(utils.InputBox(window.ID, 'Input a number :', window.Name, panel.fonts.size, true));} 
 							catch(e) {return;}
-							if (!Number.isSafeInteger(input))
 							if (input === panel.fonts.size) {return;}
+							if (!Number.isSafeInteger(input)) {return;}
 							panel.fonts.size = input;
 							// Update property to save between reloads
 							panel.properties['fontSize'][1] = input;
