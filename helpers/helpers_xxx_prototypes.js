@@ -45,13 +45,18 @@ String.prototype.replaceAll = function replaceAll(word, newWord) {
 };
 
 function capitalize(s) {
-  if (!isString(s)) {return '';}
-  return s.charAt(0).toUpperCase() + s.slice(1);
+	if (!isString(s)) {return '';}
+	return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function capitalizeAll(s, sep = ' ') {
-  if (typeof s !== 'string') {return '';}
-  return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1);}).join(sep); // Split, capitalize each subString and join
+	if (typeof s !== 'string') {return '';}
+	if (isArray(sep)) {
+		let copy = s;
+		for (const sep_i of sep) {copy = capitalizeAll(copy, sep_i);}
+		return copy;
+	}
+	return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1);}).join(sep); // Split, capitalize each subString and join
 }
 
 /* 
