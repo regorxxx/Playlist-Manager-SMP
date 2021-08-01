@@ -33,6 +33,7 @@
 - Playlists names: loading playlists from files now correctly retrieve ':' char on all text values (name, tags, categories, ...).
 - Importing JSON: solved error when importing Autoplaylists from marc2003's manager and the Autoplaylists used 'SORT BY', 'SORT DESCENDING BY' or 'SORT ASCENDING BY' within the query at query check step. They should be now 100% compatible, while still checking validity of those sort patterns (note marc2003's manager did not check their validity, so it simply crashed if something was wrong on the query).
 - UI: names on playlist list now are truncated a few px before the category letters separators and playing/loaded indicators so they don't overlap anymore.
+- UI: crash when setting custom font size.
 - Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'autosave' one).
 - Multiple minor improvements and fixes on path handling for portable installations.
 - Multiple minor improvements and fixes when saving files on non existing folder.
