@@ -38,6 +38,12 @@ String.prototype.replaceLast = function replaceLast(word, newWord) {
 	return this.slice(0, n) + this.slice(n).replace(word, newWord);
 };
 
+String.prototype.replaceAll = function replaceAll(word, newWord) {
+	let copy = this;
+	while (copy.indexOf(word) !== -1) {copy = copy.replace(word, newWord);}
+	return copy;
+};
+
 function capitalize(s) {
   if (!isString(s)) {return '';}
   return s.charAt(0).toUpperCase() + s.slice(1);

@@ -102,19 +102,19 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		return entryArr[entryArr.length -1];
 	}
 
-	this.getNumEntries = () => {return entryArr.length;}
-	this.getEntries = () => {return [...entryArr];} // To get all menu entries, but those created by conditional menus are not set yet!
-	this.getEntriesAll = (object) => {this.initMenu(object); const copy = [...entryArr]; this.clear(); return copy;} // To get all menu entries, even cond ones!
-	this.getMenus = () => {return [...menuArr];}
-	this.getMainMenuName = () => {return menuArr[0].menuName;}
-	this.hasMenu = (menuName) => {return (menuArr.indexOf(menuName) !== -1);}
+	this.getNumEntries = () => {return entryArr.length;};
+	this.getEntries = () => {return [...entryArr];}; // To get all menu entries, but those created by conditional menus are not set yet!
+	this.getEntriesAll = (object) => {this.initMenu(object); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
+	this.getMenus = () => {return [...menuArr];};
+	this.getMainMenuName = () => {return menuArr[0].menuName;};
+	this.hasMenu = (menuName) => {return (menuArr.indexOf(menuName) !== -1);};
 	
 	// Internal
-	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);}
-	this.getIdx = (menuNameEntryText) => {return (!menuNameEntryText) ? entryMap : entryMap.get(menuNameEntryText);}
-	this.getEntry = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);}
-	this.getEntryFunc = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx);}
-	this.getCheckMenu = (menuName) => {return (!menuName) ? checkMenuMap : checkMenuMap.get(menuName);}
+	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);};
+	this.getIdx = (menuNameEntryText) => {return (!menuNameEntryText) ? entryMap : entryMap.get(menuNameEntryText);};
+	this.getEntry = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);};
+	this.getEntryFunc = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx);};
+	this.getCheckMenu = (menuName) => {return (!menuName) ? checkMenuMap : checkMenuMap.get(menuName);};
 	
 	this.createMenu = (menuName = menuArr[0].menuName) => {
 		if (_isFunction(menuName)) {menuName = menuName();}

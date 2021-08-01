@@ -201,9 +201,12 @@ function createMenuLeft(forcedIndex = null) {
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
 			const currValue = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
-			try {tags = utils.InputBox(window.ID, 'Enter array of objects: [{"tagName":"tagValue"}]\nTagValue may be:\n- String or number.\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).', window.Name, currValue, true);} 
+			try {tags = utils.InputBox(window.ID, 'Enter array of objects: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number.\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).', window.Name, currValue, true);} 
 			catch(e) {return;}
-			if (tags.length) {try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}}
+			if (tags.length) {
+				tags = tags.replaceAll('\'\'','"'); // Replace quotes
+				try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
+			}
 			setTrackTags(tags, list, z);
 		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
 	}
