@@ -381,7 +381,7 @@ function createMenuRightTop() {
 			let input = '';
 			try {input = utils.InputBox(window.ID, 'Enter path', window.Name, list.playlistsPath, true);}
 			catch (e) {return;}
-			if (!input.length){return;}
+			if (!input.length) {return;}
 			if (input === list.playlistsPath) {return;}
 			if (!input.endsWith('\\')) {input += '\\';}
 			list.playlistsPath = input;
