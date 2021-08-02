@@ -21,7 +21,7 @@ function createMenuLeft(forcedIndex = null) {
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;};
 	const isAutoPls = () => {return list.data[z].isAutoPlaylist;};
 	const isLockPls = () => {return list.data[z].isLocked;};
-	const isPlsEditable = () => {return list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8'  || list.data[z].extension === '.fpl' || list.data[z].isAutoPlaylist;};
+	const isPlsEditable = () => {return list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8' || list.data[z].extension === '.fpl' || list.data[z].isAutoPlaylist;};
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
@@ -209,6 +209,21 @@ function createMenuLeft(forcedIndex = null) {
 			}
 			setTrackTags(tags, list, z);
 		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
+	}
+	menu.newEntry({entryText: 'sep'});
+	{ // Export and Rel. Paths handling
+		menu.newEntry({entryText: 'Force relative paths...', func: () => {
+			convertToRelPaths(list, z);
+		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
+			exportPlaylistFile(list, z, list.properties['converterPath'][1]);
+		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
+			exportPlaylistFileWithTracks(list, z, list.properties['converterPath'][1]);
+		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: 'Export and Convert Tracks to...', func: () => {
+			exportPlaylistFileWithTracksConvert(list, z, list.properties['converterTF'][1], list.properties['converterPreset'][1], list.properties['converterPath'][1]);
+		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
@@ -540,104 +555,139 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
 		}
-		menu.newEntry({entryText: 'sep'});
-		{	// Playlist AutoTags  & Actions
-			const subMenuName = menu.newMenu('Playlist AutoTags and actions');
-			{
-				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
-				const options = ['bAutoLoad', 'bAutoLock'];
-				const optionsLength = options.length;
-				options.forEach((item, i) => {
-					const itemKey = item + 'Tag';
-					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
-						list[itemKey] = !list[itemKey];
-						list.properties[itemKey][1] = list[itemKey];
-						overwriteProperties(list.properties);
-					}});
-					menu.newCheckMenu(subMenuNameTwo, item, void(0),  () => {return list[itemKey];});
-				});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
-					let tag = '';
-					try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'bAutoLoad,bAutoLock');}
-					catch(e) {return;}
-					tag = tag.trim();
-					list.bAutoCustomTag = tag.length ? true : false;
-					list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
-					list.autoCustomTag = tag.split(',');
-					list.properties.autoCustomTag[1] = tag;
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Playlist AutoTags & Actions
+		const subMenuName = menu.newMenu('Playlist AutoTags and actions');
+		{
+			const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
+			const options = ['bAutoLoad', 'bAutoLock'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				const itemKey = item + 'Tag';
+				menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+					list[itemKey] = !list[itemKey];
+					list.properties[itemKey][1] = list[itemKey];
 					overwriteProperties(list.properties);
 				}});
-				menu.newCheckMenu(subMenuNameTwo, 'Custom tag...', void(0),  () => {return list.bAutoCustomTag;});
-			}
-			{
-				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
-				const options = ['Yes: when loading playlists', 'No: ignore them'];
-				const optionsLength = options.length;
-				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
-						list.bApplyAutoTags = (i === 0) ? true : false;
-						list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
-						overwriteProperties(list.properties);
-					}});
-				});
-				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
-			}
+				menu.newCheckMenu(subMenuNameTwo, item, void(0),  () => {return list[itemKey];});
+			});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
+				let tag = '';
+				try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'bAutoLoad,bAutoLock', true);}
+				catch(e) {return;}
+				tag = tag.trim();
+				list.bAutoCustomTag = tag.length ? true : false;
+				list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
+				list.autoCustomTag = tag.split(',');
+				list.properties.autoCustomTag[1] = tag;
+				overwriteProperties(list.properties);
+			}});
+			menu.newCheckMenu(subMenuNameTwo, 'Custom tag...', void(0),  () => {return list.bAutoCustomTag;});
 		}
-		{	// Tracks AutoTags
-			const subMenuName = menu.newMenu('Tracks AutoTags and actions');
-			{
-				const subMenuNameTwo = menu.newMenu('Automatically tag added tracks on...', subMenuName);
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
-					if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
-					list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
-					list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
-					overwriteProperties(list.properties);
-				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
-					if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
-					list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
-					list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
-					overwriteProperties(list.properties);
-				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
-					if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
-					list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
-					list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
-					overwriteProperties(list.properties);
-				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar, although it will take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize loading time.\n(*) Note enabling this option will not incur on an additional startup time penalty if you already have \'Show size\' enabled for AutoPlaylists.', window.Name);}
-					list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
-					list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
-					overwriteProperties(list.properties);
-				}, flags: list.bAutoTrackTag && list.bAutoTrackTagAutoPls ? MF_STRING: MF_GRAYED});
-				menu.newCheckMenu(subMenuNameTwo, 'Standard playlists', void(0),  () => {return list.bAutoTrackTagPls;});
-				menu.newCheckMenu(subMenuNameTwo, 'Locked playlists', void(0),  () => {return list.bAutoTrackTagLockPls;});
-				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists', void(0),  () => {return list.bAutoTrackTagAutoPls;});
-				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists (at startup)', void(0),  () => {return list.bAutoTrackTagAutoPlsInit;});
-			}
-			{
-				const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
-					if (!list.bAutoTrackTag) {fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load and/or save.\n\n(*) Use contextual menu.', window.Name);}
-					list.bAutoTrackTag = !list.bAutoTrackTag;
-					list.properties['bAutoTrackTag'][1] = list.bAutoTrackTag;
+		{
+			const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
+			const options = ['Yes: when loading playlists', 'No: ignore them'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+					list.bApplyAutoTags = (i === 0) ? true : false;
+					list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
 					overwriteProperties(list.properties);
 				}});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
-					if (!list.bAutoTrackTagAlways) {fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name);}
-					list.bAutoTrackTagAlways = !list.bAutoTrackTagAlways;
-					list.properties['bAutoTrackTagAlways'][1] = list.bAutoTrackTagAlways;
+			});
+			menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
+		}
+	}
+	{	// Tracks AutoTags
+		const subMenuName = menu.newMenu('Tracks AutoTags and actions');
+		{
+			const subMenuNameTwo = menu.newMenu('Automatically tag added tracks on...', subMenuName);
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
+				if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+				list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
+				list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
+				overwriteProperties(list.properties);
+			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
+				if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+				list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
+				list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
+				overwriteProperties(list.properties);
+			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
+				if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
+				list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
+				list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
+				overwriteProperties(list.properties);
+			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
+				if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar, although it will take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize loading time.\n(*) Note enabling this option will not incur on an additional startup time penalty if you already have \'Show size\' enabled for AutoPlaylists.', window.Name);}
+				list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
+				list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
+				overwriteProperties(list.properties);
+			}, flags: list.bAutoTrackTag && list.bAutoTrackTagAutoPls ? MF_STRING: MF_GRAYED});
+			menu.newCheckMenu(subMenuNameTwo, 'Standard playlists', void(0),  () => {return list.bAutoTrackTagPls;});
+			menu.newCheckMenu(subMenuNameTwo, 'Locked playlists', void(0),  () => {return list.bAutoTrackTagLockPls;});
+			menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists', void(0),  () => {return list.bAutoTrackTagAutoPls;});
+			menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists (at startup)', void(0),  () => {return list.bAutoTrackTagAutoPlsInit;});
+		}
+		{
+			const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
+				if (!list.bAutoTrackTag) {fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load and/or save.\n\n(*) Use contextual menu.', window.Name);}
+				list.bAutoTrackTag = !list.bAutoTrackTag;
+				list.properties['bAutoTrackTag'][1] = list.bAutoTrackTag;
+				overwriteProperties(list.properties);
+			}});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
+				if (!list.bAutoTrackTagAlways) {fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name);}
+				list.bAutoTrackTagAlways = !list.bAutoTrackTagAlways;
+				list.properties['bAutoTrackTagAlways'][1] = list.bAutoTrackTagAlways;
+				overwriteProperties(list.properties);
+			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+			menu.newCheckMenu(subMenuNameTwo, 'When saving and loading pls', void(0),  () => {return list.bAutoTrackTag;});
+			menu.newCheckMenu(subMenuNameTwo, 'Also adding tracks without autosave', void(0),  () => {return list.bAutoTrackTagAlways;});
+		}
+	}
+	{	// Export and Converter settings
+		{
+			const subMenuName = menu.newMenu('Export and convert...');
+			menu.newEntry({menuName: subMenuName, entryText: 'Set DSP preset...', func: () => {
+				let input = '';
+				try {input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, '...', true);}
+				catch(e) {return;}
+				if (!input.length) {input = '...';}
+				if (input !== list.properties['converterPreset'][1]) {
+					list.properties['converterPreset'][1] = input;
 					overwriteProperties(list.properties);
-				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-				menu.newCheckMenu(subMenuNameTwo, 'When saving and loading pls', void(0),  () => {return list.bAutoTrackTag;});
-				menu.newCheckMenu(subMenuNameTwo, 'Also adding tracks without autosave', void(0),  () => {return list.bAutoTrackTagAlways;});
-			}
+				}
+			}});
+			menu.newEntry({menuName: subMenuName, entryText: 'Set track filename expression...', func: () => {
+				let input = '';
+				try {input = utils.InputBox(window.ID, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, '%filename%.mp3', true);}
+				catch(e) {return;}
+				if (!input.length) {return;}
+				if (input !== list.properties['converterTF'][1]) {
+					list.properties['converterTF'][1] = input;
+					overwriteProperties(list.properties);
+				}
+			}});
+			menu.newEntry({menuName: subMenuName, entryText: 'Set default export folder...', func: () => {
+				let input = '';
+				try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Empty will use the current playlist path)', window.Name, '', true);}
+				catch(e) {return;}
+				if (!input.endsWith('\\')) {input += '\\';}
+				if (input !== list.properties['converterPath'][1]) {
+					list.properties['converterPath'][1] = input;
+					overwriteProperties(list.properties);
+				}
+			}});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});

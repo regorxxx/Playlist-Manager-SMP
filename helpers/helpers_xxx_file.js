@@ -25,13 +25,17 @@ function _isFolder(folder) {
 	else {return isString(folder) ? fso.FolderExists(folder) : false;} //TODO: Deprecated
 }
 
-function _createFolder(folder) {
+function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
+	if (!folder.length) {return false;}
 	if (!_isFolder(folder)) {
-		try {
-			fso.CreateFolder(folder);
-		} catch (e) {
-			return false;
-		}
+		const subFolders = folder.split('\\').map((_, i, arr) => {return i ? arr.slice(0, i).reduce((path, name) => {return path + '\\' + name;}) : _;});
+		subFolders.forEach((path) => {
+			try {
+				fso.CreateFolder(path);
+			} catch (e) {
+				return false;
+			}
+		});
 		return _isFolder(folder);
 	}
 	return false;
@@ -52,8 +56,11 @@ function _deleteFile(file) {
 
 // Rename/move
 function _renameFile(oldFilePath, newFilePath) {
+	if (!newFilePath.length) {return;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
+			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
+			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
 				fso.MoveFile(oldFilePath, newFilePath);
 			} catch (e) {
@@ -68,8 +75,11 @@ function _renameFile(oldFilePath, newFilePath) {
 
 // Copy
 function _copyFile(oldFilePath, newFilePath) {
+	if (!newFilePath.length) {return;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
+			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
+			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
 				fso.CopyFile(oldFilePath, newFilePath);
 			} catch (e) {

@@ -435,8 +435,6 @@ function arePathsInMediaLibrary(filePaths, relPath = '') {
 	// test.Print();
 	if (libItemsAbsPaths.length !== poolItems.Count) {libItemsAbsPaths = poolItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
-	console.log(count);
-	console.log(playlistLength);
 	return (count === playlistLength);
 }
 
