@@ -68,9 +68,7 @@ var properties = {
 	bAutoTrackTagLockPls	: ['Auto-tagging for locked playlists', false],
 	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false],
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
-	converterPreset			: ['Converter Preset name', '...'],
-	converterTF				: ['Filename TF expression for exporting', '%filename%.mp3'],
-	converterPath			: ['Default converter path', ''],
+	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

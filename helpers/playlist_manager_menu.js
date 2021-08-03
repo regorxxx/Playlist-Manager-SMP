@@ -221,9 +221,23 @@ function createMenuLeft(forcedIndex = null) {
 		menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
 			exportPlaylistFileWithTracks(list, z, list.properties['converterPath'][1]);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
-		menu.newEntry({entryText: 'Export and Convert Tracks to...', func: () => {
-			exportPlaylistFileWithTracksConvert(list, z, list.properties['converterTF'][1], list.properties['converterPreset'][1], list.properties['converterPath'][1]);
-		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		// Convert
+		const presets = JSON.parse(list.properties.converterPreset[1]);
+		const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? MF_STRING : MF_GRAYED);
+		presets.forEach((preset) => {
+			const path = preset.path;
+			let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+			const dsp = preset.dsp;
+			let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+			const tf = preset.tf;
+			let tfName = preset.tf;
+			if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
+			if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
+			if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+			menu.newEntry({menuName: subMenuName, entryText: pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+				exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path);
+			}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
@@ -658,35 +672,80 @@ function createMenuRightTop() {
 	{	// Export and Converter settings
 		{
 			const subMenuName = menu.newMenu('Export and convert...');
-			menu.newEntry({menuName: subMenuName, entryText: 'Set DSP preset...', func: () => {
-				let input = '';
-				try {input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, '...', true);}
-				catch(e) {return;}
-				if (!input.length) {input = '...';}
-				if (input !== list.properties['converterPreset'][1]) {
-					list.properties['converterPreset'][1] = input;
-					overwriteProperties(list.properties);
-				}
+			const presets = JSON.parse(list.properties.converterPreset[1]);
+			presets.forEach((preset, i) => {
+				const path = preset.path;
+				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+				const dsp = preset.dsp;
+				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+				const tf = preset.tf;
+				let tfName = preset.tf;
+				if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
+				if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
+				if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+				const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
+					let input = '';
+					try {input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, preset.dsp, true);}
+					catch(e) {return;}
+					if (!input.length) {input = '...';}
+					if (input !== preset.dsp) {
+						preset.dsp = input;
+						list.properties['converterPreset'][1] = JSON.stringify(presets);
+						overwriteProperties(list.properties);
+					}
+				}});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
+					let input = '';
+					try {input = utils.InputBox(window.ID, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, preset.tf, true);}
+					catch(e) {return;}
+					if (!input.length) {return;}
+					if (input !== preset.tf) {
+						preset.tf = input;
+						list.properties['converterPreset'][1] = JSON.stringify(presets);
+						overwriteProperties(list.properties);
+					}
+				}});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
+					let input = '';
+					try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Empty will use the current playlist path)', window.Name, preset.path, true);}
+					catch(e) {return;}
+					if (!input.endsWith('\\')) {input += '\\';}
+					if (input !== preset.path) {
+						preset.path = input;
+						list.properties['converterPreset'][1] = JSON.stringify(presets);
+						overwriteProperties(list.properties);
+					}
+				}});
+			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Add new preset', func: () => {
+				presets.push({dsp: '...', tf: '%filename%.mp3', path: ''});
+				list.properties['converterPreset'][1] = JSON.stringify(presets);
+				overwriteProperties(list.properties);
 			}});
-			menu.newEntry({menuName: subMenuName, entryText: 'Set track filename expression...', func: () => {
-				let input = '';
-				try {input = utils.InputBox(window.ID, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, '%filename%.mp3', true);}
-				catch(e) {return;}
-				if (!input.length) {return;}
-				if (input !== list.properties['converterTF'][1]) {
-					list.properties['converterTF'][1] = input;
+			const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
+			presets.forEach((preset, i) => {
+				const path = preset.path;
+				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+				const dsp = preset.dsp;
+				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+				const tf = preset.tf;
+				let tfName = preset.tf;
+				if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
+				if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
+				if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+					presets.splice(i, 1);
+					list.properties['converterPreset'][1] = JSON.stringify(presets);
 					overwriteProperties(list.properties);
-				}
-			}});
-			menu.newEntry({menuName: subMenuName, entryText: 'Set default export folder...', func: () => {
-				let input = '';
-				try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Empty will use the current playlist path)', window.Name, '', true);}
-				catch(e) {return;}
-				if (!input.endsWith('\\')) {input += '\\';}
-				if (input !== list.properties['converterPath'][1]) {
-					list.properties['converterPath'][1] = input;
-					overwriteProperties(list.properties);
-				}
+				}});
+			});
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'})
+			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
+				const defPresets = [{dsp: '...', tf: '%filename%.mp3', path: ''}];
+				list.properties['converterPreset'][1] = JSON.stringify(defPresets);
+				overwriteProperties(list.properties);
 			}});
 		}
 	}
