@@ -300,7 +300,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return paths;
 	}
-	if (_isFile(playlistPath)) {
+	if (_isFile(playlistPath)) { // TODO: skip blank lines ?
 		// Read original file
 		let originalText = utils.ReadTextFile(playlistPath).split('\r\n');
 		if (typeof originalText !== 'undefined' && originalText.length) {
@@ -346,27 +346,33 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false) {
-	// let test = new FbProfiler('getHandlesFromPlaylist');
+	let test = new FbProfiler('getHandlesFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
-	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
+	if (!filePaths.some((path) => {return path.startsWith('.\\') || !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	let handlePlaylist = [...Array(playlistLength)];
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
-	const poolItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
-	const poolItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : poolItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
+	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
+	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : newLibItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
 	let pathPool = new Map();
 	let filePool = new Set(filePaths);
+	const filePoolSize = filePool.size;
 	let path;
 	if (relPath.length) {
 		for (let i = 0; i < poolItemsCount; i++) {
-			path = poolItemsAbsPaths[i].toLowerCase();
+			path = newLibItemsAbsPaths[i].toLowerCase();
 			if (filePool.has(path)) {
 				pathPool.set(path, i);
 				continue;
 			}
-			path = poolItemsRelPaths[i].toLowerCase();
+			path = newLibItemsRelPaths[i].toLowerCase();
+			if (filePool.has(path)) {
+				pathPool.set(path, i);
+				continue;
+			}
+			path = path.replace('.\\', '');
 			if (filePool.has(path)) {
 				pathPool.set(path, i);
 				continue;
@@ -374,7 +380,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		}
 	} else {
 		for (let i = 0; i < poolItemsCount; i++) {
-			path = poolItemsAbsPaths[i].toLowerCase();
+			path = newLibItemsAbsPaths[i].toLowerCase();
 			if (filePool.has(path)) {
 				pathPool.set(path, i);
 				continue;
@@ -391,51 +397,41 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 	if (count === filePaths.length || bOmitNotFound) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 	} else {handlePlaylist = null;}
-	// test.Print();
-	if (!libItemsAbsPaths.length) {libItemsAbsPaths = poolItemsAbsPaths;}
-	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
+	test.Print();
+	if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
+	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
 	return handlePlaylist;
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function arePathsInMediaLibrary(filePaths, relPath = '') {
-	// let test = new FbProfiler('arePathsInMediaLibrary');
-	if (!filePaths.some((path) => {return path.startsWith('.\\');})) {relPath = '';} // No need to check rel paths if they are all absolute
+	let test = new FbProfiler('arePathsInMediaLibrary');
+	if (!filePaths.some((path) => {return path.startsWith('.\\') || !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
-	const poolItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
-	const poolItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : poolItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
+	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
+	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((_) => {return _.toLowerCase();}));
+	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : newLibItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
+	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((_) => {return _.toLowerCase();})) : null;
 	let filePool = new Set(filePaths.map((path) => {return path.toLowerCase();}));
+	const filePoolSize = filePool.size;
 	let path;
 	let count = 0;
 	if (relPath.length) {
-		for (let i = 0; i < poolItemsCount; i++) {
-			path = poolItemsAbsPaths[i].toLowerCase();
-			if (filePool.has(path)) {
-				count++;
-				continue;
-			}
-			path = poolItemsRelPaths[i].toLowerCase();
-			if (filePool.has(path)) {
-				count++;
-				continue;
-			}
-		}
+		filePool.forEach((path) => {
+			if (poolItemsAbsPaths.has(path)) {count++; return;}
+			else if (poolItemsRelPaths.has(path)) {count++; return;}
+			else if (poolItemsRelPaths.has('.\\' + path)) {count++; return;}
+		});
 	} else {
-		for (let i = 0; i < poolItemsCount; i++) {
-			path = poolItemsAbsPaths[i].toLowerCase();
-			if (filePool.has(path)) {
-				count++;
-				continue;
-			}
-		}
+		count = poolItemsAbsPaths.intersectionSize(filePool);
 	}
-	// test.Print();
-	if (libItemsAbsPaths.length !== poolItems.Count) {libItemsAbsPaths = poolItemsAbsPaths;}
-	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = poolItemsRelPaths;}
-	return (count === playlistLength);
+	test.Print();
+	if (libItemsAbsPaths.length !== poolItemsCount) {libItemsAbsPaths = newLibItemsAbsPaths;}
+	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
+	return (count === filePoolSize || count === playlistLength);
 }
 
 function loadPlaylists(playlistArray) {

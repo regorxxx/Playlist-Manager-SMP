@@ -335,7 +335,12 @@ function createMenuRight() {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
-							if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path);})) {
+							const bDead = filePaths.some((path) => {
+								// Skip streams & look for absolute and relative paths (with and without .\)
+								const bCheck = !path.startsWith('http://') && !path.startsWith('http://') && !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path) && !path.startsWith('.\\') && !_isFile(list.playlistsPath + path);
+								return bCheck;
+							});
+							if (bDead) {
 								found.push(playlist.path + '(contains dead items)');
 							} else {
 								found.push(playlist.path);
@@ -354,10 +359,29 @@ function createMenuRight() {
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
-						if (filePaths.some((path) => {return !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path);})) {found.push(playlist.path);}
+						const bDead = filePaths.some((path) => {
+							// Skip streams & look for absolute and relative paths (with and without .\)
+							const bCheck = !path.startsWith('http://') && !path.startsWith('http://') && !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path) && !path.startsWith('.\\') && !_isFile(list.playlistsPath + path);
+							return bCheck;
+						});
+						if (bDead) {found.push(playlist.path);}
 					}
 				});
 				fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+			}});
+		}
+		{	// Duplicates
+			menu.newEntry({menuName: subMenuName, entryText: 'Duplicated items...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				let found = [];
+				list.dataAll.forEach((playlist) => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const filePaths = getFilePathsFromPlaylist(playlist.path);
+						if (new Set(filePaths).size !== filePaths.length) {found.push(playlist.path);}
+					}
+				});
+				fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
 			}});
 		}
 		{	// Size mismatch
