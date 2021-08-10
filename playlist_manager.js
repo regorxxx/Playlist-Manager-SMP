@@ -128,10 +128,10 @@ function on_mouse_lbtn_dblclk(x, y) {
 	}
 }
 
-function on_mouse_move(x, y) {
-	on_mouse_move_buttn(x, y);
+function on_mouse_move(x, y, mask) {
+	on_mouse_move_buttn(x, y, mask);
 	if (cur_btn === null) {
-		list.move(x, y);
+		list.move(x, y, mask);
 	}
 }
 

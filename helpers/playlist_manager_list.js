@@ -46,7 +46,7 @@ function _list(x, y, w, h) {
 	var currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 	
 	// Global tooltip
-	this.tooltip = new _tt(null);  
+	this.tooltip = new _tt(null, void(0), void(0), 600);  
 	
 	this.size = () => {
 		this.index = 0;
@@ -232,7 +232,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	
-	this.move = (x, y) => {
+	this.move = (x, y, mask) => {
 		this.mx = x;
 		this.my = y;
 		window.SetCursor(IDC_ARROW);
@@ -289,13 +289,34 @@ function _list(x, y, w, h) {
 								playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
 								playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : ''): '-');
 							}
+							// Show current action
+							if (mask === MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + L. Click to load / show playlist)';}
+							else if (mask === MK_SHIFT) {playlistDataText += '\n\n' + '(Shift + L. Click to send selection to playlist)';}
+							else if (mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + Shift + L. Click to recycle playlist)';}
 							// Tips
-							if (this.bShowTips) {
+							else if (this.bShowTips) {
 								playlistDataText += '\n\n' + '(L. Click to manage playlist)';
 								playlistDataText += '\n' + '(R. Click for other tools / new playlists)';
 								playlistDataText += '\n' + '(Ctrl + L. Click to load / show playlist)';
 								playlistDataText += '\n' + '(Shift + L. Click to send selection to playlist)';
 								playlistDataText += '\n' + '(Ctrl + Shift + L. Click to recycle playlist)';
+							}
+							// Adding Duplicates on selection hint
+							if (mask === MK_SHIFT) {
+								if (!pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.size) {
+									const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+									if (selItems && selItems.Count) {
+										const filePaths = new Set(getFilePathsFromPlaylist(pls.path));
+										const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
+										if (filePaths.intersectionSize(new Set(selItemsPaths))) {playlistDataText += '\n' + 'Warning! Track(s) already present...';}
+										else {
+											const selItemsRelPaths = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '.\\');});
+											const selItemsRelPathsTwo = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '');});
+											if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {playlistDataText += '\n' + 'Warning! Track(s) already present...';}
+											else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {playlistDataText += '\n' + 'Warning! Track(s) already present...';}
+										}
+									}
+								}
 							}
 							this.tooltip.SetValue(playlistDataText, true);
 							break;

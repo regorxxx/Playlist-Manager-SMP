@@ -160,10 +160,12 @@ const nextIdIndicator = (function() { // Same structure to ease compatibility
 	Tooltip
 */
 
-function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 1200) {
+function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 600) {
 	this.tooltip = window.Tooltip;
-	this.font = this.tooltip.SetFont(font, fontsize);
-	this.width = this.tooltip.SetMaxWidth(width);
+	this.font = {font, fontsize};
+	this.tooltip.SetFont(font, fontsize);
+	this.width = width;
+	this.tooltip.SetMaxWidth(width);
 	this.text = this.tooltip.text = value;
 	this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
 	
