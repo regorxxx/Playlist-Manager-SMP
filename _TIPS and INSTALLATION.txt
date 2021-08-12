@@ -1,6 +1,6 @@
 REQUISITES:
 -------------
-Spider Monkey Panel:
+Spider Monkey Panel 1.5.2 or greater:
 https://theqwertiest.github.io/foo_spider_monkey_panel/
 
 WINE USERS: 
@@ -18,6 +18,7 @@ Any other path WILL NOT work without editing the scripts. (see images\_Installat
 For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...
 For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\... 
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
+Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
 Then load any script into a SMP panel within foobar. See info for usage. 
 
 (*) To change the hardcoded installation path, go to .\helpers\helpers_xxx.js
@@ -30,11 +31,13 @@ PORTABLE TIP:
 Some scripts have configurable paths to save json data, track playlists, etc. Those can be found on the properties panel.
 Instead of using the menus and adding an absolute path, it would be advisable to edit them manually to ensure they are relative too:
 For ex. for the playlist manager, the tracked folder:
-H:\MySoftware\foobar2000\profile\playlist_manager\ --> .\profile\playlist_manager\	(>= 1.6:)
+H:\MySoftware\foobar2000\profile\playlist_manager\	--> .\profile\playlist_manager\	(>= 1.6:)
 													--> .\playlist_manager\			(<= 1.5:)
 
 When an script finds it's being loaded within a portable installation, will set the default paths using relative paths. It will also warn
-with popups and/or the console about the use of absolute paths on portable installations.
+with popups and/or the console about the -non recommended- use of absolute paths on portable installations. If you are using a portable 
+installation on fixed discs with absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it 
+in a removable device (whose disk letter changes). The configured paths would look for a disk letter which would be different every time.
 
 FOO_JESUS TIP:
 -------------

@@ -774,6 +774,24 @@ function createMenuRightTop() {
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
+	{	// Duplicates handling
+		{
+			const subMenuName = menu.newMenu('Duplicates handling...');
+			const options = ['Skip duplicates when adding new tracks','Only warn about it on tooltip'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'When using Shift + L. Click on a playlist:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bForbidDuplicates = (i === 0) ? true : false;
+					list.properties['bForbidDuplicates'][1] = list.bForbidDuplicates;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bForbidDuplicates ? 0 : 1);});
+		}
+	}
+	menu.newEntry({entryText: 'sep'});
 	{	// Panel config
 		{	// Name/category sep
 			const subMenuName = menu.newMenu('Show name/category separators...');

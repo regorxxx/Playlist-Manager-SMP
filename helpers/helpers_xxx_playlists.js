@@ -346,7 +346,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false) {
-	let test = new FbProfiler('getHandlesFromPlaylist');
+	// let test = new FbProfiler('getHandlesFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
 	if (!filePaths.some((path) => {return path.startsWith('.\\') || !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
@@ -397,7 +397,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 	if (count === filePaths.length || bOmitNotFound) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 	} else {handlePlaylist = null;}
-	test.Print();
+	// test.Print();
 	if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
 	return handlePlaylist;
@@ -406,7 +406,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function arePathsInMediaLibrary(filePaths, relPath = '') {
-	let test = new FbProfiler('arePathsInMediaLibrary');
+	// let test = new FbProfiler('arePathsInMediaLibrary');
 	if (!filePaths.some((path) => {return path.startsWith('.\\') || !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
@@ -428,7 +428,7 @@ function arePathsInMediaLibrary(filePaths, relPath = '') {
 	} else {
 		count = poolItemsAbsPaths.intersectionSize(filePool);
 	}
-	test.Print();
+	// test.Print();
 	if (libItemsAbsPaths.length !== poolItemsCount) {libItemsAbsPaths = newLibItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
 	return (count === filePoolSize || count === playlistLength);

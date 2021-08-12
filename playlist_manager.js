@@ -3,24 +3,6 @@
 /* 	Playlist Manager v 0.4 12/07/21
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See .\helpers\readme\playlist_manager.txt for list of features.
-	
-	TODO (by relevance):
-		- Better fpl support?
-			* Save data to json, load data from json, overwrite only non fpl files
-				+ Use queries by path instead of fpl and sort items by playlist order.
-			* Replace 'update playlist' with save file UI for fpl files, when locked
-			* Native FPL support ? (requires new SMP version)
-		- UUID:
-			* nextId() called only for new playlist, reuse old id?
-			* Save UUID on json but not on files?
-		- Search box
-			* By Name
-			* By tag
-			* By category
-		- Drag n drop: (requires new SMP version)
-			* Add playlists files to folder (requires new SMP version)
-			* Add tracks to playlist file (requires new SMP version)
-		- Filter by tag
 */
 
 window.DefinePanel('Playlist Manager', { author: 'XXX' , version: '0.2', features: { drag_n_drop: false }});
@@ -68,7 +50,8 @@ var properties = {
 	bAutoTrackTagLockPls	: ['Auto-tagging for locked playlists', false],
 	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false],
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
-	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])]
+	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])],
+	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

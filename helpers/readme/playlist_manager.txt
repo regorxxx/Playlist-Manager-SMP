@@ -14,7 +14,7 @@ Finally, you can import another Autoplaylist data file by this script or Auto-pl
 Note: left shift + left windows key + right mouse click will open default context menu.
 
 Features:
-	 Manages Playlist files and AutoPlaylists.	-
+	 Manages Playlist files and AutoPlaylists.
 		- Playlist files are linked to physical files (.m3u8, .m3u, .pls or .fpl).
 		- AutoPlaylists are saved into json format.
 		- All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
@@ -63,13 +63,14 @@ Features:
 		 Value (string or number).
 	 Tooltips show different playlist info:
 		- Header with filters, categories and total number of playlists.
+		- Gives a warning when tracks from current selection are already on the playlist file (duplicates).
 		- Playlists:
-		 Name plus UUID.
-		 Playlist size (tracks). Also for AutoPlaylists (the number of tracks output by the query).
-		 Category / Tag(s).
-		 Track Tag(s).
-		 Status (lock).
-		 Query. Sort Pattern. (AutoPlaylists)
+			+ Name plus UUID.
+			+ Playlist size (tracks). Also for AutoPlaylists (the number of tracks output by the query).
+			+ Category / Tag(s).
+			+ Track Tag(s).
+			+ Status (lock).
+			+ Query. Sort Pattern. (AutoPlaylists)
 	 Cyclic filters:
 		- Show All | Only Autoplaylists | Only Playlists
 		- Show All | Not locked | Only locked
@@ -85,10 +86,12 @@ Features:
 	 Category filters: playlist may be filtered by category (like virtual folders), multiple selection allowed in a menu.
 		- When lists are being filtered by category, an indicator is shown in the header text.
 	 Additional tools for playlists:
-		- Check for dead items on playlists files (without having to load them on foobar!).
-		- Check for playlists with mixed relative and absolute paths.
-		- Check for playlists with items not present on library.
-	 3 different writable formats. (some limits apply for .pls playlist files (**)) (configurable)
+		- Check -on demand- for dead items on playlists files (without having to load them on foobar!). (**)
+		- Check -on demand- for duplicate items on playlists files (without having to load them on foobar!). (***)
+			+ Before adding new tracks to a playlist file, duplicates may be filtered from selected tracks on real time.
+		- Check -on demand- for playlists with mixed relative and absolute paths.
+		- Check -on demand- for playlists with items not present on library. (****)
+	 3 different writable formats. (some limits apply for .pls playlist files (*****)) (configurable)
 	 Filter (configurable) and sorting gets saved between reloads.
 	 RecycleBin: deleting and restoring.
 		- Uses timestamps to uniquely identify files: no collisions with other files within the RecycleBin.
@@ -112,5 +115,8 @@ Features:
 	 Other scripts integration:
 		- [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
 
-(*)	.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
-(**) .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
+(*) .fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.  
+(**) also recognizes streams (http and https) and skips them.
+(***) also recognizes subsongs from a same physical file (for example iso files).
+(****) also recognizes relative paths on playlists (with or without .\) when trying to match files against the library.
+(*****) .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.

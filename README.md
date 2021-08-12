@@ -59,6 +59,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
     * Value (string or number).
 * Tooltips show different playlist info:
   * Header with filters, categories and total number of playlists.
+  * Gives a warning when tracks from current selection are already on the playlist file (duplicates).
   * Playlists:
     * Name plus UUID.
     * Playlist size (tracks). Also for AutoPlaylists (the number of tracks output by the query).
@@ -81,10 +82,11 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Category filters: playlist may be filtered by category (like virtual folders), multiple selection allowed in a menu.
   * When lists are being filtered by category, an indicator is shown in the header text.
 * Additional tools for playlists:
-  * Check for dead items on playlists files (without having to load them on foobar!). (**)
-  * Check for duplicate items on playlists files (without having to load them on foobar!). (***)
-  * Check for playlists with mixed relative and absolute paths.
-  * Check for playlists with items not present on library. (****)
+  * Check -on demand- for dead items on playlists files (without having to load them on foobar!). (**)
+  * Check -on demand- for duplicate items on playlists files (without having to load them on foobar!). (***)
+    * Before adding new tracks to a playlist file, duplicates may be filtered from selected tracks on real time.
+  * Check -on demand- for playlists with mixed relative and absolute paths.
+  * Check -on demand- for playlists with items not present on library. (****)
 * 3 different writable formats. (some limits apply for .pls playlist files (*****)) (configurable)
 * Filter (configurable) and sorting gets saved between reloads.
 * RecycleBin: deleting and restoring.

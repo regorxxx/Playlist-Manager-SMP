@@ -308,13 +308,25 @@ function _list(x, y, w, h) {
 									if (selItems && selItems.Count) {
 										const filePaths = new Set(getFilePathsFromPlaylist(pls.path));
 										const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
-										if (filePaths.intersectionSize(new Set(selItemsPaths))) {playlistDataText += '\n' + 'Warning! Track(s) already present...';}
-										else {
+										let bDup = false;
+										if (filePaths.intersectionSize(new Set(selItemsPaths))) {
+											if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsPaths};}
+											bDup = true;
+										} else {
 											const selItemsRelPaths = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '.\\');});
 											const selItemsRelPathsTwo = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '');});
-											if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {playlistDataText += '\n' + 'Warning! Track(s) already present...';}
-											else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {playlistDataText += '\n' + 'Warning! Track(s) already present...';}
+											if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {
+												if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsRelPaths};}
+												bDup = true;
+											} else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {
+												if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsTwo};}
+												bDup = true;
+											}
 										}
+										if (bDup) {
+											if (this.bForbidDuplicates) {this.selPaths.pls = filePaths;}
+											playlistDataText += '\n' + 'Warning! Some track(s) already present...';
+										} else {this.selPaths = {pls: new Set(), sel: []};}
 									}
 								}
 							}
@@ -323,6 +335,7 @@ function _list(x, y, w, h) {
 						}
 						default:
 						{
+							this.selPaths = {pls: new Set(), sel: []};
 							this.tooltip.SetValue(null); // Removes tt when not over a list element
 							window.Repaint(); // Removes selection indicator
 							break;
@@ -364,11 +377,34 @@ function _list(x, y, w, h) {
 							if (duplicated.length === 0) {list.loadPlaylist(z);} 
 							else if (duplicated.length === 1) {list.showBindedPlaylist(z);}
 						} else if (mask === MK_SHIFT) { // Pressing SHIFT
-							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+							let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 							if (selItems && selItems.Count) {
-								this.addTracksToPlaylist(z, selItems);
-								const index = plman.FindPlaylist(this.data[z].nameId);
-								if (index !== -1) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
+								// Remove duplicates
+								if (this.bForbidDuplicates && this.selPaths.sel.length && this.selPaths.pls.size) { // Checked before at move()
+									const selPathsSet = new Set();
+									const toRemove = new Set();
+									this.selPaths.sel.forEach((path, idx) => {
+										if (this.selPaths.pls.has(path)) {toRemove.add(idx);} // Remove items already on pls
+										else {
+											if (!selPathsSet.has(path)) {selPathsSet.add(path);}
+											else {toRemove.add(idx);} // And duplicated items on selection
+										}
+									});
+									if (toRemove.size) {
+										selItems = selItems.Convert().filter((_, idx) => {return !toRemove.has(idx);});
+										selItems = new FbMetadbHandleList(selItems);
+										// Warn about duplication
+										if (!selItems.Count) {console.log('Playlist Manager: No tracks added, all are duplicated.');}
+										else {console.log('Playlist Manager: Skipped duplicated tracks.');}
+									}
+								}
+								// Add to pls
+								if (selItems && selItems.Count) {
+									this.addTracksToPlaylist(z, selItems);
+									const index = plman.FindPlaylist(this.data[z].nameId);
+									// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
+									if (index !== -1 && plman.ActivePlaylist !== index) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
+								}
 							}
 						} else if (mask === MK_SHIFT + MK_CONTROL) { // Pressing control + SHIFT
 							this.removePlaylist(z);
@@ -453,7 +489,7 @@ function _list(x, y, w, h) {
 					return false;
 				}
 			}
-			console.log('Playlist Manager: drag n drop done.');
+			console.log('Playlist Manager: Drag n drop done.');
 			this.update(void(0), true);
 			this.filter();
 			return true;
@@ -1597,6 +1633,8 @@ function _list(x, y, w, h) {
 	this.bAutoTrackTagLockPls = this.properties['bAutoTrackTagLockPls'][1];
 	this.bAutoTrackTagAutoPls = this.properties['bAutoTrackTagAutoPls'][1];
 	this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
+	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
+	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length
 	this.autoUpdateDelayTimer = this.properties.autoUpdate[1] / 100; // Timer should be at least 1/100 autoupdate timer to work reliably
