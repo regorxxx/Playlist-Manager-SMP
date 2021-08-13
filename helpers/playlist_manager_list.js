@@ -512,7 +512,7 @@ function _list(x, y, w, h) {
 			return false;
 		}
 		console.log('Playlist Manager: Updating playlist...');
-		const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls); // Done at 2 steps, first get tags
+		const [handleUpdate, tagsUpdate] = this.bAutoTrackTag ? this.getUpdateTrackTags(handleList, pls) : [null, null]; // Done at 2 steps, first get tags
 		const playlistPath = pls.path;
 		let done = addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''));
 		if (!done) {
@@ -524,7 +524,7 @@ function _list(x, y, w, h) {
 			size: pls.size + handleList.Count, 
 			fileSize: isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
 		});
-		this.updateTrackTags(handleUpdate, tagsUpdate); // Apply tags from before
+		if (this.bAutoTrackTag) {this.updateTrackTags(handleUpdate, tagsUpdate);} // Apply tags from before
 		console.log('Playlist Manager: drag n drop done.');
 		this.update(true, true); // We have already updated data before only for the variables changed
 		this.filter();
@@ -616,12 +616,13 @@ function _list(x, y, w, h) {
 	}
 	
 	this.updateTags = (handleList, pls) => {
+		if (!this.bAutoTrackTag) {return;}
 		if (pls.isAutoPlaylist) {
 			if (this.bAutoTrackTagAutoPls) {
 				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
 				this.updateTrackTags(handleUpdate, tagsUpdate);
 			}
-		} else if (this.bAutoTrackTag) {
+		} else {
 			if ((pls.isLocked && this.bAutoTrackTagLockPls) || (!pls.isLocked && this.bAutoTrackTagPls)) {
 				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
 				this.updateTrackTags(handleUpdate, tagsUpdate);
@@ -1543,6 +1544,7 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = []; // Only autoplaylists to save to json
 			this.dataFpl = []; // Only fpl playlists to save to json
 			this.deleted_items = [];
+			this.selPaths = {pls: new Set(), sel: []};
 			this.showStates = this.constShowStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
 			this.categoryState = JSON.parse(this.properties['categoryState'][1]);
@@ -1557,6 +1559,13 @@ function _list(x, y, w, h) {
 			this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
 			this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
 			this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
+			this.bAutoTrackTag = this.properties['bAutoTrackTag'][1];
+			this.bAutoTrackTagAlways = this.properties['bAutoTrackTagAlways'][1];
+			this.bAutoTrackTagPls = this.properties['bAutoTrackTagPls'][1];
+			this.bAutoTrackTagLockPls = this.properties['bAutoTrackTagLockPls'][1];
+			this.bAutoTrackTagAutoPls = this.properties['bAutoTrackTagAutoPls'][1];
+			this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
+			this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 		}
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
