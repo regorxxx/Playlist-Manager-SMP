@@ -585,7 +585,7 @@ function _list(x, y, w, h) {
 	this.updateTrackTags = (handleList, tagsArr) => { // Need to do it in 2 steps to only apply the changes after the playlist file have been updated successfully
 		if (!handleList || !handleList.Count || !tagsArr || !tagsArr.length) {return false;}
 		console.log('Playlist Manager: Auto-tagging tracks...');
-		if (handleList.Count !== tagsArr.length) {console.log('Auto tagging failed due to size mismatch between handle list and tags array'); return false;}
+		if (handleList.Count !== tagsArr.length) {console.log('Playlist Manager: Auto tagging failed due to size mismatch between handle list and tags array.'); return false;}
 		handleList.UpdateFileInfoFromJSON(JSON.stringify(tagsArr));
 		return true;
 	}
