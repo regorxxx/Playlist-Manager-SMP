@@ -541,6 +541,7 @@ function _list(x, y, w, h) {
 			newHandles.MakeDifference(oldHandles);
 		}
 		let tagsArr = [];
+		const newHandlesNoTags = new FbMetadbHandleList();
 		if (newHandles.Count) {
 			console.log('Playlist Manager: Auto-tagging enabled, retrieving tags for new tracks...');
 			for (let i = 0; i < newHandles.Count; ++i) {
@@ -572,17 +573,21 @@ function _list(x, y, w, h) {
 						} else {tags[name] = value;}
 					}
 				});
-				if (Object.keys(tags).length) {tagsArr.push(tags);}
+				if (Object.keys(tags).length) {tagsArr.push(tags);} //Tags with no values may produce holes in the list compared against the handles
+				else {newHandlesNoTags.Add(newHandles[i]);} // So they must be checked later
 			}
 			if (!tagsArr.length) {console.log('Playlist Manager: no tags will be added...');}
+			newHandles.MakeDifference(newHandlesNoTags); // Remove tracks that will not be tagged
 		}
 		return [newHandles, tagsArr];
 	}
 	
 	this.updateTrackTags = (handleList, tagsArr) => { // Need to do it in 2 steps to only apply the changes after the playlist file have been updated successfully
-		if (!handleList || !handleList.Count || !tagsArr || !tagsArr.length) {return;}
+		if (!handleList || !handleList.Count || !tagsArr || !tagsArr.length) {return false;}
 		console.log('Playlist Manager: Auto-tagging tracks...');
+		if (handleList.Count !== tagsArr.length) {console.log('Auto tagging failed due to size mismatch between handle list and tags array'); return false;}
 		handleList.UpdateFileInfoFromJSON(JSON.stringify(tagsArr));
+		return true;
 	}
 	
 	this.updatePlaylistOnlyTracks = (playlistIndex) => { // Skips saving to file
