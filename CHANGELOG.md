@@ -34,7 +34,7 @@
 ### Removed
 ### Fixed
 - Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
-- Categories: adding or removing playlists updates the category filter accordingly. i.e. when adding a new playlist with a new category, it doesn't get filtered but added to the current view, no matter what the current filtering is. Previously the new playlist would be hidden by default, since the category filter did only showed currently selected categories.
+- Categories: adding or removing playlists updates the category filter accordingly. i.e. when adding a new playlist with a new category, it doesn't get filtered but added to the current view, no matter what the current filtering is. Previously the new playlist would be hidden by default, since the category filter did only showed currently selected categories. The same when removing the last playlist within a category.
 - Fonts: missing font due to a typo (wingdings 2 -> Wingdings 2).
 - Properties: fixed some instances where unused old properties were not being deleted due to property checking firing when setting them to null.
 - Playlist Manager Path: checks if user set path has a '\' at the end, and adds it if missing (otherwise playlists are not saved into the folder but using the folder name as prefix!).
@@ -47,6 +47,7 @@
 - Adding current selection to a playlist file when it's loaded and it's also the current playlist no longer reinserts tracks, thus duplicating them.
 - Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'autosave' one).
 - Checking if all items on a playlist are in the library now works as expected when some items -file paths- are duplicated.
+- Restore menu list not working when deleting playlists.
 - Multiple minor improvements and fixes on path handling for portable installations.
 - Multiple minor improvements and fixes when saving files on non existing folder.
 
