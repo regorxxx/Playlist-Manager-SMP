@@ -216,10 +216,10 @@ function createMenuLeft(forcedIndex = null) {
 			convertToRelPaths(list, z);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
-			exportPlaylistFile(list, z, list.properties['converterPath'][1]);
+			exportPlaylistFile(list, z);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
-			exportPlaylistFileWithTracks(list, z, list.properties['converterPath'][1]);
+			exportPlaylistFileWithTracks(list, z);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 		// Convert
 		const presets = JSON.parse(list.properties.converterPreset[1]);
