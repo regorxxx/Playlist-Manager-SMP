@@ -278,25 +278,30 @@ function createMenuRight() {
 			}});
 		}
 		{	// Restore
-			const subMenuName = menu.newMenu('Restore...', void(0), list.deleted_items.length ? MF_STRING : MF_GRAYED);
-			if (list.deleted_items.length) {
-				list.deleted_items.slice(0, 8).forEach((item, i) => {
+			const subMenuName = menu.newMenu('Restore...', void(0), list.deletedItems.length ? MF_STRING : MF_GRAYED);
+			if (list.deletedItems.length) {
+				list.deletedItems.slice(0, 8).forEach((item, i) => {
 					menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
-						list.addToData(list.deleted_items[i]);
-						if (list.deleted_items[i].isAutoPlaylist) {
+						list.addToData(list.deletedItems[i]);
+						// Add new category to current view! (otherwise it gets filtered)
+						// Easy way: intersect current view + new one with refreshed list
+						list.categoryState = [...new Set(list.categoryState.concat(list.deletedItems[i].category)).intersection(new Set(list.categories()))];
+						list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
+						overwriteProperties(list.properties);
+						if (list.deletedItems[i].isAutoPlaylist) {
 							list.update(true, true); // Only paint and save to json
 							list.filter();
 						} else {
-							_restoreFile(list.deleted_items[i].path);
+							_restoreFile(list.deletedItems[i].path);
 							// Revert timestamps
-							let newPath = list.deleted_items[i].path.split('.').slice(0,-1).join('.').split('\\');
+							let newPath = list.deletedItems[i].path.split('.').slice(0,-1).join('.').split('\\');
 							const new_name = newPath.pop().split('_ts_')[0];
-							newPath = newPath.concat([new_name]).join('\\') + list.deleted_items[i].extension;
-							_renameFile(list.deleted_items[i].path, newPath);
+							newPath = newPath.concat([new_name]).join('\\') + list.deletedItems[i].extension;
+							_renameFile(list.deletedItems[i].path, newPath);
 							list.update(false, true); // Updates path..
 							list.filter();
 						}
-						list.deleted_items.splice(i, 1);
+						list.deletedItems.splice(i, 1);
 					}});
 				});
 			}

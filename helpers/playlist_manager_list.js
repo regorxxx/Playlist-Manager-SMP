@@ -812,8 +812,8 @@ function _list(x, y, w, h) {
 		// Update header whenever it's needed
 		if (!isArrayEqual(categoryState, this.categoryState)) {
 			this.categoryState = categoryState;
-			this.header_textUpdate();
 		}
+		this.header_textUpdate();
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
 			this.data = this.data.filter((item) => {
@@ -1093,6 +1093,7 @@ function _list(x, y, w, h) {
 		if (!bInit && !isArrayEqual(oldCategories, this.categories())) { // When adding new files, new categories may appear, but those must not be filtered! Skip this on init
 			this.categoryState = this.categoryState.concat([...new Set(this.categories()).difference(new Set(oldCategories))]); // Add new ones
 			this.categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))]; // Remove missing ones
+			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
 		}
 		this.header_textUpdate();
 		if (!bNotPaint){window.Repaint();}
@@ -1402,11 +1403,16 @@ function _list(x, y, w, h) {
 			const old_nameId = this.data[idx].nameId;
 			const duplicated = plman.FindPlaylist(old_nameId);
 			if (this.data[idx].size) {this.totalFileSize -= this.data[idx].size;}
-			this.deleted_items.unshift(this.data[idx]);
-			clearInterval(delay);
+			this.deletedItems.unshift(this.data[idx]);
 			this.removeFromData(this.data[idx]); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
-			this.update(true, true); // Call this inmediatly after removal! If paint fires before updating things get weird
+			this.update(true, true); // Call this immediately after removal! If paint fires before updating things get weird
+			// Delete category from current view if needed
+			// Easy way: intersect current view + with refreshed list
+			list.categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
+			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
+			overwriteProperties(list.properties);
 			this.filter();
+			clearInterval(delay);
 			if (duplicated !== -1) {
 				let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer === popup.yes) {
@@ -1543,7 +1549,7 @@ function _list(x, y, w, h) {
 			this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
 			this.dataAutoPlaylists = []; // Only autoplaylists to save to json
 			this.dataFpl = []; // Only fpl playlists to save to json
-			this.deleted_items = [];
+			this.deletedItems = [];
 			this.selPaths = {pls: new Set(), sel: []};
 			this.showStates = this.constShowStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
