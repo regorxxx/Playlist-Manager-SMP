@@ -216,10 +216,10 @@ function createMenuLeft(forcedIndex = null) {
 			convertToRelPaths(list, z);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
-			exportPlaylistFile(list, z, list.properties['converterPath'][1]);
+			exportPlaylistFile(list, z);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
-			exportPlaylistFileWithTracks(list, z, list.properties['converterPath'][1]);
+			exportPlaylistFileWithTracks(list, z);
 		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
 		// Convert
 		const presets = JSON.parse(list.properties.converterPreset[1]);
@@ -325,7 +325,7 @@ function createMenuRight() {
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
-						if (filePaths.some((path) => {return path.startsWith('.\\');}) && filePaths.some((path) => {return !path.startsWith('.\\');})) {found.push(playlist.path);}
+						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
 					}
 				});
 				fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
@@ -340,9 +340,17 @@ function createMenuRight() {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
+							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 							const bDead = filePaths.some((path) => {
 								// Skip streams & look for absolute and relative paths (with and without .\)
-								const bCheck = !path.startsWith('http://') && !path.startsWith('http://') && !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path) && !path.startsWith('.\\') && !_isFile(list.playlistsPath + path);
+								let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+								else {
+									let pathAbs = path;
+									if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+									else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+									bCheck = bCheck && !_isFile(pathAbs);
+								}
 								return bCheck;
 							});
 							if (bDead) {
@@ -363,10 +371,18 @@ function createMenuRight() {
 				let found = [];
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						const bDead = filePaths.some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
-							const bCheck = !path.startsWith('http://') && !path.startsWith('http://') && !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path) && !path.startsWith('.\\') && !_isFile(list.playlistsPath + path);
+							let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+							if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+							else {
+								let pathAbs = path;
+								if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+								else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+								bCheck = bCheck && !_isFile(pathAbs);
+							}
 							return bCheck;
 						});
 						if (bDead) {found.push(playlist.path);}

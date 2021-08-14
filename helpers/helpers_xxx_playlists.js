@@ -141,6 +141,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		playlistPath = playlistPath.replaceLast(arr[2], extension);
 		if (!playlistName.length) {playlistName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2];} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let playlistText = [];
+		const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
 		// -------------- m3u
 		if (extension === '.m3u8' || extension === '.m3u') {
 			// Header text
@@ -157,10 +158,24 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
-				const repl = '.\\';
-				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + (relPath.length ? '$replace(%path%,\'' + relPath + '\',' + repl + ')' : '%path%'));
+				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()%path%');
 				const items = plman.GetPlaylistItems(playlistIndex);
 				trackText = tfo.EvalWithMetadbs(items);
+				if (relPath.length) { // Relative path conversion
+					let trackPath = '';
+					let trackInfo = '';
+					let cache = '';
+					trackText = trackText.map((item, i) => {
+						[trackInfo, trackPath] = item.split('\n');
+						relPathSplit.forEach((folder) => {
+							cache = trackPath.replace(folder + '\\', '');
+							if (trackPath === cache) {trackPath = '..\\' + trackPath;}
+							else {trackPath = cache;}
+						});
+						if (!trackPath.startsWith('..\\')) {trackPath = '.\\' + trackPath;}
+						return trackInfo + '\n' + trackPath;
+					});
+				}
 				playlistText[8] += items.Count; // Add number of tracks to size
 				playlistText = playlistText.concat(trackText);
 			} else { //  Else empty playlist
@@ -173,10 +188,25 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
-				const repl = '.\\';
-				const tfo = fb.TitleFormat('File#placeholder#=' + (relPath.length ? '$replace(%path%,\'' + relPath + '\',' + repl + ')' : '%path%')  + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
+				const trackInfoPre = 'File#placeholder#=';
+				const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%path%' + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
 				const items = plman.GetPlaylistItems(playlistIndex);
 				trackText = tfo.EvalWithMetadbs(items);
+				if (relPath.length) { // Relative path conversion
+					let trackPath = '';
+					let trackInfo = '';
+					let cache = '';
+					trackText = trackText.map((item, i) => {
+						[trackPath, ...trackInfo] = item.split('\n');
+						relPathSplit.forEach((folder) => {
+							cache = trackPath.replace(folder + '\\', '');
+							if (trackPath === cache) {trackPath = '..\\' + trackPath;}
+							else {trackPath = cache;}
+						});
+						if (!trackPath.startsWith('..\\')) {trackPath = '.\\' + trackPath;}
+						return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
+					});
+				}
 				//Fix file numbering since foobar doesn't output list index...
 				let trackTextLength = trackText.length;
 				for (let i = 0; i < trackTextLength; i++) { // It appears 3 times...
@@ -247,13 +277,29 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
 		}
 		if (!bFound) {return false;} // Safety check
 		// New text
+		const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
 		// -------------- m3u
 		if (extension === '.m3u8' || extension === '.m3u') {
 			// Tracks text
 			if (addSize !== 0) {
-				const repl = '.\\';
-				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + (relPath.length ? '$replace(%path%,\'' + relPath + '\',' + repl + ')' : '%path%'));
-				trackText = [...tfo.EvalWithMetadbs(handleList), ...trackText];
+				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()%path%');
+				let newTrackText = tfo.EvalWithMetadbs(handleList);
+				if (relPath.length) { // Relative path conversion
+					let trackPath = '';
+					let trackInfo = '';
+					let cache = '';
+					newTrackText = newTrackText.map((item, i) => {
+						[trackInfo, trackPath] = item.split('\n');
+						relPathSplit.forEach((folder) => {
+							cache = trackPath.replace(folder + '\\', '');
+							if (trackPath === cache) {trackPath = '..\\' + trackPath;}
+							else {trackPath = cache;}
+						});
+						if (!trackPath.startsWith('..\\')) {trackPath = '.\\' + trackPath;}
+						return trackInfo + '\n' + trackPath;
+					});
+				}
+				trackText = [...newTrackText, ...trackText];
 			} else { //  Else empty handle
 				return false;
 			} 
@@ -261,9 +307,25 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			if (addSize !== 0) { // Tracks from playlist
 				// Tracks text
-				const repl = '.\\';
-				const tfo = fb.TitleFormat('File#placeholder#=' + (relPath.length ? '$replace(%path%,\'' + relPath + '\',' + repl + ')' : '%path%')  + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
-				trackText = [...tfo.EvalWithMetadbs(handleList), ...trackText];
+				const trackInfoPre = 'File#placeholder#=';
+				const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%path%' + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
+				let newTrackText = tfo.EvalWithMetadbs(handleList);
+				if (relPath.length) { // Relative path conversion
+					let trackPath = '';
+					let trackInfo = '';
+					let cache = '';
+					newTrackText = newTrackText.map((item, i) => {
+						[trackPath, ...trackInfo] = item.split('\n');
+						relPathSplit.forEach((folder) => {
+							cache = trackPath.replace(folder + '\\', '');
+							if (trackPath === cache) {trackPath = '..\\' + trackPath;}
+							else {trackPath = cache;}
+						});
+						if (!trackPath.startsWith('..\\')) {trackPath = '.\\' + trackPath;}
+						return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
+					});
+				}
+				trackText = [...newTrackText, ...trackText];
 				//Fix file numbering since foobar doesn't output list index...
 				let trackTextLength = trackText.length;
 				for (let i = 0; i < trackTextLength - 2; i++) { // It appears 3 times per track...
@@ -327,6 +389,28 @@ function getFilePathsFromPlaylist(playlistPath) {
 var libItemsAbsPaths = [];
 var libItemsRelPaths = {};
 
+function getRelPaths(pathArr, relPath = '') {
+	let relPathArr = [];
+	if (isArrayStrings(pathArr)) {
+		if (relPath.length) { // Relative path conversion
+			const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
+			let itemPath = '';
+			let cache = '';
+			relPathArr = pathArr.map((item, i) => {
+				itemPath = item;
+				relPathSplit.forEach((folder) => {
+					cache = itemPath.replace(folder + '\\', '');
+					if (itemPath === cache) {itemPath = '..\\' + itemPath;}
+					else {itemPath = cache;}
+				});
+				if (!itemPath.startsWith('..\\')) {itemPath = '.\\' + itemPath;}
+				return itemPath;
+			});
+		}
+	}
+	return relPathArr;
+}
+
 function precacheLibraryPaths() { // TODO: Share between panels
 	libItemsAbsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(fb.GetLibraryItems());
 }
@@ -346,16 +430,17 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false) {
-	// let test = new FbProfiler('getHandlesFromPlaylist');
+	console.log('getHandlesFromPlaylist')
+	let test = new FbProfiler('getHandlesFromPlaylist');
 	let bDone = false;
 	const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
-	if (!filePaths.some((path) => {return path.startsWith('.\\') || !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
+	if (!filePaths.some((path) => {return !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	let handlePlaylist = [...Array(playlistLength)];
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
 	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
-	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : newLibItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
+	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than TF again
 	let pathPool = new Map();
 	let filePool = new Set(filePaths);
 	const filePoolSize = filePool.size;
@@ -372,10 +457,12 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				pathPool.set(path, i);
 				continue;
 			}
-			path = path.replace('.\\', '');
-			if (filePool.has(path)) {
-				pathPool.set(path, i);
-				continue;
+			if (path.startsWith('.\\')) {
+				path = path.replace('.\\', '');
+				if (filePool.has(path)) {
+					pathPool.set(path, i);
+					continue;
+				}
 			}
 		}
 	} else {
@@ -396,8 +483,9 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 	}
 	if (count === filePaths.length || bOmitNotFound) {
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
+		console.log('found all')
 	} else {handlePlaylist = null;}
-	// test.Print();
+	test.Print();
 	if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
 	return handlePlaylist;
@@ -407,13 +495,13 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function arePathsInMediaLibrary(filePaths, relPath = '') {
 	// let test = new FbProfiler('arePathsInMediaLibrary');
-	if (!filePaths.some((path) => {return path.startsWith('.\\') || !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
+	if (!filePaths.some((path) => {return !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
 	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
 	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((_) => {return _.toLowerCase();}));
-	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : newLibItemsAbsPaths.map((path) => {return path.replace(relPath, '.\\');})) : null; // Faster than tf again
+	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than tf again
 	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((_) => {return _.toLowerCase();})) : null;
 	let filePool = new Set(filePaths.map((path) => {return path.toLowerCase();}));
 	const filePoolSize = filePool.size;
