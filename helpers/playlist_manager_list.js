@@ -998,6 +998,7 @@ function _list(x, y, w, h) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
 									if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
 									const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+									item.size = handleList.Count; // Update autopls size, even if it is not configured to do so, since it's essentially free here
 									if (handleList && item.size) {this.updateTags(handleList, item);}
 								}
 							}
