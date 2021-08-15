@@ -325,7 +325,7 @@ function createMenuRight() {
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
-						if (filePaths.some((path) => {return path.startsWith('.\\');}) && filePaths.some((path) => {return !path.startsWith('.\\');})) {found.push(playlist.path);}
+						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
 					}
 				});
 				fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
@@ -454,7 +454,7 @@ function createMenuRightTop() {
 			overwriteProperties(list.properties);
 			list.checkConfig();
 			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
-			list.header_textUpdate();
+			list.headerTextUpdate();
 			list.bUpdateAutoplaylist = true; 
 			list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 			list.filter();
@@ -467,26 +467,24 @@ function createMenuRightTop() {
 	menu.newEntry({entryText: 'sep'});
 	{	// Category Filter
 		const subMenuName = menu.newMenu('Categories shown...');
-		if (panel.custom_background) {
-			const options = list.categories();
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
-				list.properties['categoryState'][1] =  JSON.stringify(options);
+		const options = list.categories();
+		const optionsLength = options.length;
+		menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
+			list.properties['categoryState'][1] =  JSON.stringify(options);
+			overwriteProperties(list.properties);
+			list.filter({categoryState: options});
+		}});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		options.forEach((item, i) => {
+			menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+				const categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => {return categ !== item;}) : (item === '(None)' ? ['(None)', ...list.categoryState] : list.categoryState.concat([item]).sort());
+				// Update property to save between reloads
+				list.properties['categoryState'][1] =  JSON.stringify(categoryState);
 				overwriteProperties(list.properties);
-				list.filter({categoryState: options});
+				list.filter({categoryState});
 			}});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					const categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => {return categ !== item;}) : (item === '(None)' ? ['(None)', ...list.categoryState] : list.categoryState.concat([item]).sort());
-					// Update property to save between reloads
-					list.properties['categoryState'][1] =  JSON.stringify(categoryState);
-					overwriteProperties(list.properties);
-					list.filter({categoryState});
-				}});
-				menu.newCheckMenu(subMenuName, item, void(0), () => {return list.categoryState.indexOf(item) !== -1;});
-			});
-		}
+			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.categoryState.indexOf(item) !== -1;});
+		});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{ // List config

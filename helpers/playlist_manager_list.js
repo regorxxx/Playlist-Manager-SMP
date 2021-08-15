@@ -56,28 +56,32 @@ function _list(x, y, w, h) {
 		this.down_btn.x = this.up_btn.x;
 		this.up_btn.y = this.y + _scale(1);
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
+		this.headerTextUpdate();
 		iconCharPlaylistLockedW = _gr.CalcTextWidth(iconCharPlaylistLocked, gfontIconChar());
 		iconCharPlaylistW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar());
 		// iconCharPlaylistEmptyW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar());
 	}
 	
-	this.header_text = window.Name;
+	this.headerText = window.Name;
 	
-	this.header_textUpdate = () => {
+	this.headerTextUpdate = () => {
 		const bCategoryFilter = !isArrayEqual(this.categoryState, this.categories());
-		this.header_text = (this.playlistsPath && this.itemsAll) ? 'Playlists: ' + this.playlistsPathDirName + ' (' + this.itemsAll + ' pls.)' + (bCategoryFilter ? '[*]' : '') : 'Playlist Manager: empty folder';
+		this.headerText = (this.playlistsPath && this.itemsAll) ? 'Playlists: ' + this.playlistsPathDirName + ' (' + this.itemsAll + ' pls.)' + (bCategoryFilter ? '[*]' : '') : 'Playlist Manager: empty folder';
+		if (this.w < _gr.CalcTextWidth(this.headerText, panel.fonts.title) + 15) {
+			this.headerText = this.headerText.replace('Playlists: ','').replace('Playlist Manager: ','');
+		}
 	}
 	
 	this.paint = (gr) => {
 		// HEADER
-		var gfontWd2 = _gdiFont('Wingdings 2', _scale((panel.fonts.size <= 14) ? panel.fonts.size + 2 : panel.fonts.size), 0);
-		var iconColour = blendColours(panel.colours.highlight, panel.colours.background, 0.1);
-		var iconChar = String.fromCharCode(46);
-		var iconw = gr.CalcTextWidth(iconChar, gfontWd2);
-		var iconH = gr.CalcTextHeight(iconChar, gfontWd2);
+		const gfontWd2 = _gdiFont('Wingdings 2', _scale((panel.fonts.size <= 14) ? panel.fonts.size + 2 : panel.fonts.size), 0);
+		const iconColour = blendColours(panel.colours.highlight, panel.colours.background, 0.1);
+		const iconChar = String.fromCharCode(46);
+		const iconw = gr.CalcTextWidth(iconChar, gfontWd2);
+		const iconH = gr.CalcTextHeight(iconChar, gfontWd2);
 		// console.log(iconH % 2);
 		gr.GdiDrawText(iconChar, gfontWd2, blendColours(iconColour, panel.colours.background, 0.35), LM, -1, iconw, TM, LEFT);
-		gr.GdiDrawText(this.header_text, panel.fonts.title, panel.colours.highlight, LM + iconw + 5, 0, panel.w - (LM * 2), TM, LEFT);
+		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colours.highlight, LM + iconw + 5, 0, panel.w - (LM * 2), TM, LEFT);
 		let lineY = (panel.fonts.size < 14 && iconH % 2) ? iconH + 2 : iconH + 1;
 		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colours.highlight);
 		headerW = LM + iconw + 5;
@@ -244,6 +248,7 @@ function _list(x, y, w, h) {
 			// Tips
 			if (this.bShowTips) {
 				headerText += '\n\n' + '(R. Click for config menus)';
+				headerText += '\n' + '(Double Click to cycle categories)';
 			}
 			this.tooltip.SetValue(headerText, true);
 			this.index = -1;
@@ -440,6 +445,9 @@ function _list(x, y, w, h) {
 					break;
 				}
 			}
+			return true;
+		} else if (this.traceHeader(x, y)) {
+			cycleCategories();
 			return true;
 		} else {
 			return false;
@@ -818,7 +826,7 @@ function _list(x, y, w, h) {
 		if (!isArrayEqual(categoryState, this.categoryState)) {
 			this.categoryState = categoryState;
 		}
-		this.header_textUpdate();
+		this.headerTextUpdate();
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
 			this.data = this.data.filter((item) => {
@@ -1101,7 +1109,7 @@ function _list(x, y, w, h) {
 			this.categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))]; // Remove missing ones
 			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
 		}
-		this.header_textUpdate();
+		this.headerTextUpdate();
 		if (!bNotPaint){window.Repaint();}
 		clearInterval(delay);
 	}
@@ -1535,13 +1543,14 @@ function _list(x, y, w, h) {
 			if (!this.categoryState || !this.categoryState.length || (!this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories()))) {
 				this.categoryState = this.categories();
 				this.properties['categoryState'][1] = JSON.stringify(this.categoryState);
-				this.header_textUpdate();
+				this.headerTextUpdate();
 				bDone = true;
 			}
 			if (bDone) {overwriteProperties(this.properties);}
 		}
 		
 		this.reset = () => {
+			this.inRange = false;
 			this.items = 0;
 			this.itemsAll = 0;
 			this.itemsAutoplaylist = 0;
@@ -1610,6 +1619,7 @@ function _list(x, y, w, h) {
 	}
 	
 	panel.list_objects.push(this);
+	this.inRange = false;
 	this.x = x;
 	this.y = y;
 	this.w = w;

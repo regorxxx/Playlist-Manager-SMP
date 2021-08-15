@@ -395,3 +395,18 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '%filename%.mp3', pre
 	}
 	return bDone;
 }
+
+function cycleCategories() {
+	const options = ['All', ...list.categories()];
+	let idx = 0; // All is the default
+	if (list.categoryState.length === 1) { // If there is currently only one category selected then use the next one
+		idx = options.indexOf(list.categoryState[0]);
+		idx++;
+	}
+	else if (isArrayEqual(list.categoryState,list.categories())) {idx++;} // If it's already showing all categories, then use the first one
+	if (idx >= options.length) {idx = 0;} // And cycle
+	const selCategory = idx ? [options[idx]] : options.slice(1);
+	list.properties['categoryState'][1] =  JSON.stringify(selCategory);
+	overwriteProperties(list.properties);
+	list.filter({categoryState: selCategory});
+}
