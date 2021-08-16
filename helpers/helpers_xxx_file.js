@@ -141,7 +141,7 @@ function _open(file, codePage = 0) {
 function _save(file, value) {
 	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
 	if (!_isFolder(filePath)) {_createFolder(filePath);}
-	if (_isFolder(filePath) && utils.WriteTextFile(file, value, true)) {
+	if (_isFolder(filePath) && utils.WriteTextFile(file, value, false)) {
 		return true;
 	}
 	console.log('Error saving to ' + file);
