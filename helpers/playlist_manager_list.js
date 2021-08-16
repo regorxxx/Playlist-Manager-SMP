@@ -379,8 +379,8 @@ function _list(x, y, w, h) {
 					if (x > this.x && x < this.x + Math.min(this.data[z].width, this.text_width)) {
 						if (mask === MK_CONTROL) { // Pressing control
 							const duplicated = getPlaylistIndexArray(this.data[z].nameId);
-							if (duplicated.length === 0) {list.loadPlaylist(z);} 
-							else if (duplicated.length === 1) {list.showBindedPlaylist(z);}
+							if (duplicated.length === 0) {this.loadPlaylist(z);} 
+							else if (duplicated.length === 1) {this.showBindedPlaylist(z);}
 						} else if (mask === MK_SHIFT) { // Pressing SHIFT
 							let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 							if (selItems && selItems.Count) {
@@ -403,8 +403,17 @@ function _list(x, y, w, h) {
 										else {console.log('Playlist Manager: Skipped duplicated tracks.');}
 									}
 								}
-								// Add to pls
 								if (selItems && selItems.Count) {
+									// Warn about dead items
+									selItems.Convert().some((handle) => {
+										console.log(handle.RawPath)
+										if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
+											fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks on current selection, there may be more.\n\n' + handle.RawPath, window.Name); 
+											return true;
+										}
+										return false;
+									});
+									// Add to pls
 									this.addTracksToPlaylist(z, selItems);
 									const index = plman.FindPlaylist(this.data[z].nameId);
 									// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
@@ -440,14 +449,15 @@ function _list(x, y, w, h) {
 					this.bDoubleclick = true;
 					const z = this.index;
 					const duplicated = getPlaylistIndexArray(this.data[z].nameId);
-					if (duplicated.length === 0) {list.loadPlaylist(z);} 
-					else if (duplicated.length === 1) {list.showBindedPlaylist(z);}
+					if (duplicated.length === 0) {this.loadPlaylist(z);} 
+					else if (duplicated.length === 1) {this.showBindedPlaylist(z);}
 					break;
 				}
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) {
 			cycleCategories();
+			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
 			return false;
@@ -456,14 +466,27 @@ function _list(x, y, w, h) {
 	
 	this.key_down = (k) => {
 		switch (k) {
-		case VK_UP:
-			this.wheel(1);
-			return true;
-		case VK_DOWN:
-			this.wheel(-1);
-			return true;
-		default:
-			return false;
+			case VK_UP:
+				this.wheel(1);
+				return true;
+				break;
+			case VK_DOWN:
+				this.wheel(-1);
+				return true;
+				break;
+			case VK_CONTROL: // Updates tooltip even when mouse hasn't moved
+				if (utils.IsKeyPressed(VK_SHIFT)) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
+				else {this.move(this.mx, this.my, MK_CONTROL);}
+				return true;
+				break;
+			case VK_SHIFT:
+				if (utils.IsKeyPressed(VK_CONTROL)) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
+				else {this.move(this.mx, this.my, MK_SHIFT);}
+				return true;
+				break;
+			default:
+				return false;
+				break;
 		}
 	}
 	
@@ -729,6 +752,19 @@ function _list(x, y, w, h) {
 						fileSize: isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
 					});
 					plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);
+					// Warn about dead items
+					if (!bCallback || (!bCallback && this.bDeadCheckAutoSave)) {
+						const selItems = plman.GetPlaylistItems(fbPlaylistIndex).Convert();
+						if (selItems && selItems.length) {
+							selItems.some((handle) => {
+								if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
+									fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n' + handle.RawPath, window.Name); 
+									return true;
+								}
+								return false;
+							});
+						}
+					}
 					if (this.bAutoTrackTag && this.bAutoTrackTagPls && (debouncedUpdate || !bCallback)) {this.updateTrackTags(handleUpdate, tagsUpdate);} // Apply tags from before
 				} else {
 					fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
@@ -799,13 +835,20 @@ function _list(x, y, w, h) {
 		return ['(None)', ...[...categ].sort()];
 	}
 	this.categoryState = [];
+	this.tags = () => {
+		let tags = new Set();
+		this.dataAll.forEach( (playlist) => {if (playlist.tags.length) {playlist.tags.forEach((tag) => {tags.add(tag);});}});
+		return ['(None)', ...[...tags].sort()];
+	}
+	this.tagState = [];
+	this.constShowStates = () => {return ['All','Not locked','Locked'];}; // These are constant	this.categoryState = [];
 	this.constShowStates = () => {return ['All','Not locked','Locked'];}; // These are constant
 	this.constAutoPlaylistStates = () => {return ['All','Autoplaylists','No Autoplaylists'];};
 	this.showStates = this.constShowStates(); // These rotate over time
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
-	this.isFilterActive = () => {return (list.constShowStates()[0] !== list.showStates[0] || list.constAutoPlaylistStates()[0] !== list.autoPlaylistStates[0]);};
+	this.isFilterActive = () => {return (this.constShowStates()[0] !== this.showStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0]);};
 	
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], showState = this.showStates[0], categoryState = this.categoryState} = {}) => {
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], showState = this.showStates[0], categoryState = this.categoryState, nameState = '', tagState = this.tagState} = {}) => {
 		// On first filter we use this.dataAll as origin
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			this.data = [...this.dataAll]; // Copy of objects
@@ -822,11 +865,6 @@ function _list(x, y, w, h) {
 		} else if (showState === this.constShowStates()[2]) {
 			this.data = this.data.filter((item) => {return item.isLocked;});
 		}
-		// Update header whenever it's needed
-		if (!isArrayEqual(categoryState, this.categoryState)) {
-			this.categoryState = categoryState;
-		}
-		this.headerTextUpdate();
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
 			this.data = this.data.filter((item) => {
@@ -834,6 +872,19 @@ function _list(x, y, w, h) {
 				else {return categoryState.indexOf(item.category) !== -1;}
 			});
 		}
+		// And again with tags
+		if (!isArrayEqual(tagState, this.tags())) {
+			this.data = this.data.filter((item) => {
+				if (tagState.indexOf('(None)') !== -1) {return !item.tags.length || new Set(tagState).intersectionSize(new Set(item.tags));}
+				else {return new Set(tagState).intersectionSize(new Set(item.tags));}
+			});
+		}
+		// And again with names
+		// if (name.length)) {
+			// this.data = this.data.filter((item) => {
+				// return item.name.indexOf(name) !=== -1;}
+			// });
+		// }
 		// Focus
 		this.items = this.data.length;
 		if (bMaintainFocus) {
@@ -851,8 +902,9 @@ function _list(x, y, w, h) {
 				}
 			}
 		}
-		// Save current filter: rotate original matrix until it matches the current one
+		// Save current view filters
 		if (this.bSaveFilterStates) {
+			// Pls Filters: rotate original matrix until it matches the current one
 			let rotations = [0,0];
 			for (let i = 0; i < this.constAutoPlaylistStates().length; i++) {
 				if (this.autoPlaylistStates[0] === this.constAutoPlaylistStates().rotate(i)[0]) {
@@ -867,8 +919,20 @@ function _list(x, y, w, h) {
 				}
 			}
 			this.properties['filterStates'][1] = rotations[0] + ',' + rotations[1];
+			// Categories
+			if (!isArrayEqual(categoryState, this.categoryState)) {
+				this.categoryState = categoryState;
+			}
+			this.properties['categoryState'][1] = JSON.stringify(this.categoryState);
+			// Tags
+			if (!isArrayEqual(tagState, this.tagState)) {
+				this.tagState = tagState;
+			}
+			// Save
 			overwriteProperties(this.properties);
 		}
+		// Update header whenever it's needed
+		this.headerTextUpdate();
 		window.Repaint();
 	}
 	
@@ -1107,7 +1171,6 @@ function _list(x, y, w, h) {
 		if (!bInit && !isArrayEqual(oldCategories, this.categories())) { // When adding new files, new categories may appear, but those must not be filtered! Skip this on init
 			this.categoryState = this.categoryState.concat([...new Set(this.categories()).difference(new Set(oldCategories))]); // Add new ones
 			this.categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))]; // Remove missing ones
-			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
 		}
 		this.headerTextUpdate();
 		if (!bNotPaint){window.Repaint();}
@@ -1337,6 +1400,17 @@ function _list(x, y, w, h) {
 							plman.RenamePlaylist(plman.ActivePlaylist, new_name + UUID);
 						}
 					}
+					// Warn about dead items
+					const selItems = plman.GetPlaylistItems(plman.ActivePlaylist).Convert();
+					if (selItems && selItems.length) {
+						selItems.some((handle) => {
+							if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
+								fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n' + handle.RawPath, window.Name); 
+								return true;
+							}
+							return false;
+						});
+					}
 				} else {
 					fb.ShowPopupMessage('Playlist generation failed while writing file \'' + oPlaylistPath + '\'.', window.Name);
 				}
@@ -1422,10 +1496,8 @@ function _list(x, y, w, h) {
 			this.update(true, true); // Call this immediately after removal! If paint fires before updating things get weird
 			// Delete category from current view if needed
 			// Easy way: intersect current view + with refreshed list
-			list.categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
-			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
-			overwriteProperties(list.properties);
-			this.filter();
+			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
+			this.filter({categoryState});
 			clearInterval(delay);
 			if (duplicated !== -1) {
 				let answer = WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
@@ -1541,10 +1613,10 @@ function _list(x, y, w, h) {
 		this.checkConfigPostUpdate = (bDone) => { // Forces right settings
 			// Restore categories shown between sessions if bSaveFilterStates is false, or at first init
 			if (!this.categoryState || !this.categoryState.length || (!this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories()))) {
-				this.categoryState = this.categories();
-				this.properties['categoryState'][1] = JSON.stringify(this.categoryState);
-				this.headerTextUpdate();
-				bDone = true;
+				this.categoryState = this.categories(); // No need to save properties since it will be done at filter stage
+			}
+			if (!this.tagState || !this.tagState.length || (!this.bSaveFilterStates && !isArrayEqual(this.tagState, this.tags()))) {
+				this.tagState = this.tags(); // No need to save properties since it will be done at filter stage
 			}
 			if (bDone) {overwriteProperties(this.properties);}
 		}
@@ -1587,6 +1659,7 @@ function _list(x, y, w, h) {
 			this.bAutoTrackTagAutoPls = this.properties['bAutoTrackTagAutoPls'][1];
 			this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
 			this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
+			this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 		}
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
@@ -1665,6 +1738,7 @@ function _list(x, y, w, h) {
 	this.bAutoTrackTagAutoPls = this.properties['bAutoTrackTagAutoPls'][1];
 	this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
 	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
+	this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length

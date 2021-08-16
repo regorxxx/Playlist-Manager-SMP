@@ -51,7 +51,8 @@ var properties = {
 	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false],
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
 	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])],
-	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true]
+	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true],
+	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

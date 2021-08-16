@@ -394,9 +394,16 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			count++;
 		}
 	}
-	if (count === filePaths.length || bOmitNotFound) {
+	if (count === filePaths.length) {
+		console.log(playlistPath.split('\\').pop() + ': Found all tracks on library.');
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
-	} else {handlePlaylist = null;}
+	} else if (bOmitNotFound) {
+		console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').');
+		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
+	} else {
+		console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').'); 
+		handlePlaylist = null;
+	}
 	// test.Print();
 	if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
 	if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}

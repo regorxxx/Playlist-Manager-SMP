@@ -184,11 +184,9 @@ function setCategory(category, list, z) {
 			list.editData(list.data[z], {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
-			list.categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
-			list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
-			overwriteProperties(list.properties);
+			const categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
 			list.update(true, true);
-			list.filter();
+			list.filter({categoryState});
 			bDone = true;
 		} else {
 			const old_name = list.data[z].name;
@@ -200,10 +198,9 @@ function setCategory(category, list, z) {
 				list.editData(list.data[z], {category});
 				// Add new category to current view! (otherwise it gets filtered)
 				// Easy way: intersect current view + new one with refreshed list
-				list.categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
-				list.properties['categoryState'][1] =  JSON.stringify(list.categoryState);
+				const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
 				list.update(true, true);
-				list.filter();
+				list.filter({categoryState});
 			}
 		}
 	}
@@ -405,8 +402,6 @@ function cycleCategories() {
 	}
 	else if (isArrayEqual(list.categoryState,list.categories())) {idx++;} // If it's already showing all categories, then use the first one
 	if (idx >= options.length) {idx = 0;} // And cycle
-	const selCategory = idx ? [options[idx]] : options.slice(1);
-	list.properties['categoryState'][1] =  JSON.stringify(selCategory);
-	overwriteProperties(list.properties);
-	list.filter({categoryState: selCategory});
+	const categoryState = idx ? [options[idx]] : options.slice(1);
+	list.filter({categoryState});
 }

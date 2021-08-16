@@ -22,16 +22,23 @@
 - Duplicates: New tool to find duplicated items on playlists without loading them (R. Click, 'Check playlists consistency...' menu).
 - Tooltip & Duplicates: While pressing shift over a playlist, apart from the tooltip hint, a warning will be given if the current selection is already present on the destination playlist (to avoid adding duplicates). Note Shift + L.Click is the action associated to sending current selection to a playlist file.
 - Skip duplicates: new option to skip duplicates when adding selected items to a playlist. Checks both, if any of the new items is already on the playlist file and if the current selection contains duplicates. Console log shows when this happen without additional warnings or functionality changes (they are simply skipped). Configuration can be toggled at header menu. Only applies when sending selection directly to a playlist file (does not prevent adding duplicates via auto-save).
-- Categories: double clicking on the header cycles the categories shown one by one.
+- Categories: double clicking on the header cycles through the categories shown one by one.
+- Added tag filtering menu to only show playlists which contain selected tags. Tag filtering is always reset on startup, no matter what 'Save filtering between sessions' is set to. Use categories for 'virtual folders' or permanent playlist categorization, tags are meant only for informative purpose or auto-tag actions (thus not needing permanent filtering).
+- Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on autosaving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 ### Changed
 - AutoPlaylists: use of 'SORT BY', 'SORT DESCENDING BY' or 'SORT ASCENDING BY' at the end of the query is now allowed. Validity of those sort patterns is also checked (along query's validity), to minimize input typos. They should cover now 100% functionality of native Autoplaylists. (Note marc2003's manager did not check their validity, so it simply crashed if something was wrong on the query or failed silently). 
 - Installation: Installation path may now be changed by editing 'folders.xxxName' variable at '.\helpers\helpers_xxx.js'. This is a workaround for some SMP limitations when working with relative paths and text files, images or dynamic file loading.
 - Tooltip: Header tooltip now shows current filters applied and number of playlists / Autoplaylists. Note the header text always show the number of tracked playlists on the current folder, while the tooltip shows only those on the current view.
+- Current category view is now saved only when 'Save filtering between sessions' is enabled, otherwise it will be reset to show 'All' on startup.
+- Tooltip shortcuts are updated as soon as the key modifiers are pressed, even if the the mouse has not been moved (tooltip is redrawn). That should make easier to see the action which would be applied without needing to move the mouse constantly to update the tooltip.
+- Header tooltip (with current filter view) is updated after double clicking, even if the the mouse has not been moved  (tooltip is redrawn). That should make easier to see the current category applied while cycling without needing to move the mouse constantly to update the tooltip.
 - Helpers: updated. Whenever a folder needs to be created to save a new file, the entire tree is now created if needed. Previously it would fail as soon as any folder did not exist. This greatly speeds up setting panels since now the final folder does not need to exists at all to work, since it will be created on the fly.
 - Loading playlists, checking items on library and finding dead items now evaluates relative paths whether they start with .\ or not. Playlists created with the manager always use '.\', but this improves compatibility with playlists created with other software or manually.
 - Tooltip: Pressing shit, control or both will show on the tooltip the action which will be performed on playlists. If usage info is enabled on tooltips, then only the current action associated to the keys will be shown while pressing them (so it becomes obvious which one is from the list); otherwise -disabled- nothing will be shown until a key is pressed.
 - Tooltip: Adjusted max width to 600 px before splitting lines.
 - General speed improvements loading playlists, checking items on library and finding dead items.
+- Added descriptions at top of most menus.
+- Minor code cleanup.
 ### Removed
 ### Fixed
 - Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
