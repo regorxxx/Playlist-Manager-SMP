@@ -16,6 +16,13 @@ include('helpers\\playlist_manager_buttons.js');
 include('helpers\\playlist_manager_menu.js');
 include('helpers\\playlist_manager_helpers.js');
 
+let bCalcCacheLibraryPaths = false;
+precacheLibraryPathsAsync(100).then((x) => {
+	window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
+	bCalcCacheLibraryPaths = true;
+	console.log(x);
+});
+
 var properties = {
 	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
 	autoSave				: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000],

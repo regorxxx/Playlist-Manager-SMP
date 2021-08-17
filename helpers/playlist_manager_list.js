@@ -136,11 +136,23 @@ function _list(x, y, w, h) {
 						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
-					// The rest... note numbers are always at top or at bottom anyway
+/* 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0 && this.data[i + this.offset][dataKey].length && this.data[i + indexSortStateOffset + this.offset][dataKey].length && this.data[i + this.offset][dataKey][0].toUpperCase() !== this.data[i + indexSortStateOffset + this.offset][dataKey][0].toUpperCase() && isNaN(this.data[i + this.offset][dataKey][0])) {
+						console.log(this.data[i + this.offset][dataKey][0])
+						console.log(this.data[i + indexSortStateOffset + this.offset][dataKey][0])
 						let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(this.data[i + this.offset][dataKey][0].toUpperCase(), panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+					} */
+					// The rest... note numbers are always at top or at bottom anyway
+					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
+						const sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
+						const nextsepLetter = (this.data[i + indexSortStateOffset + this.offset][dataKey].length) ? this.data[i + indexSortStateOffset + this.offset][dataKey][0] : '-';
+						if (sepLetter !== nextsepLetter && isNaN(sepLetter)) {
+							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
+							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
+							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+						}
 					}
 					// Show always current letter at bottom. Also shows number
 					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
@@ -1672,7 +1684,14 @@ function _list(x, y, w, h) {
 		this.update(false, true, void(0), true); // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-		// this.updateAutoPlaylistsTracksInit();
+		if (this.bRelativePath) {
+			// setTimeout(() => {precacheLibraryRelPaths(this.playlistsPath);}, 5000);
+			const repeatedFn = () => {
+				if (bCalcCacheLibraryPaths) {precacheLibraryRelPaths(this.playlistsPath);}
+				else {setTimeout(repeatedFn, 1000);}
+			}
+			repeatedFn(); //immediate first run 
+		} // Calc relative path cache
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js

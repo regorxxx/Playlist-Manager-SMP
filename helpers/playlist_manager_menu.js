@@ -182,15 +182,15 @@ function createMenuLeft(forcedIndex = null) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Tags and category
-		// Adds category
-		menu.newEntry({entryText: 'Add category...', func: () => {
+		// Set category
+		menu.newEntry({entryText: 'Set category...', func: () => {
 			let category = '';
 			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, list.data[z].category !== null ? list.data[z].category : '', true);} 
 			catch(e) {return;}
 			setCategory(category, list, z);
 		}, flags: !isLockPls() &&  isPlsEditable() ? MF_STRING : MF_GRAYED});
-		// Adds tag(s)
-		menu.newEntry({entryText: 'Add playlist tag(s)...', func: () => {
+		// Set tag(s)
+		menu.newEntry({entryText: 'Set playlist tag(s)...', func: () => {
 			let tags = '';
 			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, list.data[z].tags.join(';'), true);} 
 			catch(e) {return;}
@@ -341,9 +341,17 @@ function createMenuRight() {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
+							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 							const bDead = filePaths.some((path) => {
 								// Skip streams & look for absolute and relative paths (with and without .\)
-								const bCheck = !path.startsWith('http://') && !path.startsWith('https://') && !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path) && !path.startsWith('.\\') && !_isFile(list.playlistsPath + path);
+								let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+								else {
+									let pathAbs = path;
+									if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+									else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+									bCheck = bCheck && !_isFile(pathAbs);
+								}
 								return bCheck;
 							});
 							if (bDead) {
@@ -364,10 +372,18 @@ function createMenuRight() {
 				let found = [];
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						const bDead = filePaths.some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
-							const bCheck = !path.startsWith('http://') && !path.startsWith('https://') && !_isFile(path.startsWith('.\\') ? path.replace('.\\', list.playlistsPath) : path) && !path.startsWith('.\\') && !_isFile(list.playlistsPath + path);
+							let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+							if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+							else {
+								let pathAbs = path;
+								if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+								else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+								bCheck = bCheck && !_isFile(pathAbs);
+							}
 							return bCheck;
 						});
 						if (bDead) {found.push(playlist.path);}

@@ -155,7 +155,8 @@ function setTag(tags, list, z) {
 		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
 			list.editData(list.data[z], {tags});
 			list.update(true, true);
-			list.filter();
+			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
+			list.filter({tagState});
 			bDone = true;
 		} else {
 			const old_name = list.data[z].name;
@@ -167,7 +168,9 @@ function setTag(tags, list, z) {
 				} else {
 					list.editData(list.data[z], {tags});
 					list.update(true , true);
-					list.filter();
+					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
+					list.filter({tagState});
+					console.log(tagState)
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
@@ -184,8 +187,8 @@ function setCategory(category, list, z) {
 			list.editData(list.data[z], {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
-			const categoryState = [...new Set(list.categoryState.push(category)).intersection(new Set(list.categories()))];
 			list.update(true, true);
+			const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
 			list.filter({categoryState});
 			bDone = true;
 		} else {
@@ -196,10 +199,10 @@ function setCategory(category, list, z) {
 				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
 			} else {
 				list.editData(list.data[z], {category});
+				list.update(true, true);
 				// Add new category to current view! (otherwise it gets filtered)
 				// Easy way: intersect current view + new one with refreshed list
 				const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
-				list.update(true, true);
 				list.filter({categoryState});
 			}
 		}
