@@ -185,12 +185,16 @@ function _list(x, y, w, h) {
 			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 		}
 		// Selection indicator
-		if (typeof this.index !== 'undefined' && typeof this.data[this.index] !== 'undefined') {
-			if ((this.index - this.offset) >= 0 && (this.index - this.offset) < this.rows) {
+		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
+		const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
+		const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
+		if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
+			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Icon
-				// gr.GdiDrawText(iconCharPlaylistSelected, gfontIconChar(), this.colours.selectedPlaylistColour, this.x + 5 + this.data[this.index].width , this.y + yOffset + _scale(1) + ((((this.index) ? this.index : this.offset) - this.offset) * panel.row_height), this.text_width, panel.row_height, LEFT);
+				// gr.GdiDrawText(iconCharPlaylistSelected, gfontIconChar(), this.colours.selectedPlaylistColour, this.x + 5 + this.data[currSelIdx].width , this.y + yOffset + _scale(1) + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), this.text_width, panel.row_height, LEFT);
 				// Rectangle
-				gr.DrawRect(this.x - 5, this.y + yOffset + ((((this.index) ? this.index : this.offset) - this.offset) * panel.row_height), this.x + this.w, panel.row_height, 0, this.colours.selectedPlaylistColour);
+				const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colours.selectedPlaylistColour);
 			}
 		}
 		// Up/down buttons
@@ -436,7 +440,12 @@ function _list(x, y, w, h) {
 							this.removePlaylist(z);
 						} else { // Only mouse
 							if (!this.bDoubleclick) { // It's not a second lbtn click
-								this.timeOut = delayFn(createMenuLeft().btn_up, 100)(x,y); // Creates the menu and calls it later
+								this.timeOut = delayFn((x,y) => {
+									this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
+									createMenuLeft().btn_up(x,y);
+									this.bSelMenu = false;
+								}, 100)(x,y); // Creates the menu and calls it later
+
 							} else {this.bDoubleclick = false;}
 						}
 					}
@@ -1729,6 +1738,7 @@ function _list(x, y, w, h) {
 	this.text_x = 0;
 	this.timeOut = null;
 	this.bDoubleclick = false;
+	this.bSelMenu = false;
 	this.filename = '';
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
 	this.properties = getPropertiesPairs(properties, prefix); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
