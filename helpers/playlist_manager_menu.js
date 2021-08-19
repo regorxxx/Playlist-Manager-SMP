@@ -10,12 +10,16 @@ const menuLbtn = new _menu();
 const menuRbtnTop = new _menu();
 
 // on callbacks
-function createMenuLeft(forcedIndex = null) {
+function createMenuLeft(forcedIndex = -1) {
 	// Constants
-	const z = (forcedIndex === null) ? list.index : forcedIndex; // When delaying menu, the mouse may move to other index...
+	const z = (forcedIndex === -1) ? list.index : forcedIndex; // When delaying menu, the mouse may move to other index...
 	list.tooltip.SetValue(null);
 	const menu = menuLbtn;
 	menu.clear(true); // Reset on every call
+	if (z === -1) {
+		fb.ShowPopupMessage('Selected index was -1 on createMenuLeft() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		return menu;
+	}
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(list.data[z].nameId) !== -1;};
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;};
@@ -259,7 +263,6 @@ function createMenuLeft(forcedIndex = null) {
 
 function createMenuRight() {
 	// Constants
-	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtn;
 	menu.clear(true); // Reset one every call
 	// Entries
@@ -273,6 +276,7 @@ function createMenuRight() {
 		{	// Refresh
 			menu.newEntry({entryText: 'Manual refresh', func: () => {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+				const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 				list.bUpdateAutoplaylist = true; 
 				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 				list.filter();

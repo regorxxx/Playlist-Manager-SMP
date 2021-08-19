@@ -9,6 +9,7 @@ window.DefinePanel('Playlist Manager', { author: 'XXX' , version: '0.2', feature
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
+include('helpers\\helpers_xxx_playlists_files.js');
 include('helpers\\buttons_panel_xxx.js');
 include('helpers\\playlist_manager_list.js');
 include('helpers\\playlist_manager_panel.js');

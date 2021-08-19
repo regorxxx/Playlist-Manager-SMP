@@ -4,6 +4,7 @@ include('helpers_xxx_UI.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_properties.js');
 include('helpers_xxx_playlists.js');
+include('helpers_xxx_playlists_files.js');
 include('helpers_xxx_tags.js');
 include('helpers_xxx_file.js');
 include('helpers_xxx_utils.js');
@@ -136,19 +137,11 @@ function _list(x, y, w, h) {
 						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
-/* 					// The rest... note numbers are always at top or at bottom anyway
-					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0 && this.data[i + this.offset][dataKey].length && this.data[i + indexSortStateOffset + this.offset][dataKey].length && this.data[i + this.offset][dataKey][0].toUpperCase() !== this.data[i + indexSortStateOffset + this.offset][dataKey][0].toUpperCase() && isNaN(this.data[i + this.offset][dataKey][0])) {
-						console.log(this.data[i + this.offset][dataKey][0])
-						console.log(this.data[i + indexSortStateOffset + this.offset][dataKey][0])
-						let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
-						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-						gr.GdiDrawText(this.data[i + this.offset][dataKey][0].toUpperCase(), panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
-					} */
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
 						const sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
 						const nextsepLetter = (this.data[i + indexSortStateOffset + this.offset][dataKey].length) ? this.data[i + indexSortStateOffset + this.offset][dataKey][0] : '-';
-						if (sepLetter !== nextsepLetter && isNaN(sepLetter)) {
+						if (sepLetter.toLowerCase() !== nextsepLetter && isNaN(sepLetter)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
@@ -232,6 +225,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.simulateWheelToIndex = (toIndex, currentItemIndex = this.lastIndex, originalOffset = this.lastOffset) => {
+		console.log('simulateWheelToIndex');
 		this.index = toIndex;
 		let iDifference = currentItemIndex - originalOffset;
 		this.offset = 0;
@@ -295,7 +289,7 @@ function _list(x, y, w, h) {
 							// Cursor
 							window.SetCursor(IDC_HAND);
 							// Selection indicator
-							window.RepaintRect(x, y - panel.row_height, this.text_width, (this.index + 2 )* panel.row_height);
+							window.Repaint();
 							// Tooltip for playlists
 							const pls = this.data[this.index];
 							const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath,'')  + ')' : '';
@@ -372,8 +366,10 @@ function _list(x, y, w, h) {
 	}
 	
 	this.cacheLastPosition = () => { // Saves info to restore position later!
-		if (this.inRange && this.index !== -1) {this.lastIndex = this.index;}
-		if (this.index > this.rows && this.offset !== 0) {this.lastOffset = this.offset;}
+		if (this.inRange && this.index !== -1) {
+			this.lastIndex = this.index;
+			this.lastOffset = this.offset;
+		}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.data.length) {currentItemIndex = this.data.length - 1;}
 		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
@@ -442,7 +438,7 @@ function _list(x, y, w, h) {
 							if (!this.bDoubleclick) { // It's not a second lbtn click
 								this.timeOut = delayFn((x,y) => {
 									this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
-									createMenuLeft().btn_up(x,y);
+									createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 100 ms delay to another pls (bug) or even out of range (crash)
 									this.bSelMenu = false;
 								}, 100)(x,y); // Creates the menu and calls it later
 
