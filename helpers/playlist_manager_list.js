@@ -1684,16 +1684,6 @@ function _list(x, y, w, h) {
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
-		// Convert previous files to new name mask
-		if (_isFile(this.filename) || _isFile(this.filename + '.old')) {
-			const newFilename = folders.data + 'playlistManager_' + this.playlistsPathDisk + '_' + this.playlistsPathDirName.replace(':','') + '.json';
-			let bDone = _copyFile(this.filename, newFilename);
-			if (bDone) {_recycleFile(this.filename);}
-			bDone = _copyFile(this.filename + '.old', newFilename + '.old');
-			if (bDone) {_recycleFile(this.filename + '.old');}
-		}
-		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDisk + '_' + this.playlistsPathDirName.replace(':','') + '.json';
-		// End
 		_recycleFile(this.filename + '.old'); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
 		this.initProperties(); // This only set properties if they have no values...
