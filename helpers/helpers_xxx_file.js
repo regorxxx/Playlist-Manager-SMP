@@ -17,17 +17,24 @@ const app = new ActiveXObject('Shell.Application');
 
 function _isFile(file) {
 	if (isCompatible('1.4.0')) {return utils.IsFile(file);} 
-	else {return isString(file) ? fso.FileExists(file) : false;} //TODO: Deprecated
+	else {
+		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
+		return isString(file) ? fso.FileExists(file) : false;
+	} //TODO: Deprecated
 }
 
 function _isFolder(folder) {
 	if (isCompatible('1.4.0')) {return utils.IsDirectory(folder);} 
-	else {return isString(folder) ? fso.FolderExists(folder) : false;} //TODO: Deprecated
+	else {
+		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
+		return isString(folder) ? fso.FolderExists(folder) : false;
+	} //TODO: Deprecated
 }
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
 	if (!folder.length) {return false;}
 	if (!_isFolder(folder)) {
+		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
 		const subFolders = folder.split('\\').map((_, i, arr) => {return i ? arr.slice(0, i).reduce((path, name) => {return path + '\\' + name;}) : _;});
 		subFolders.forEach((path) => {
 			try {
@@ -44,6 +51,7 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 // Delete. Can not be undone.
 function _deleteFile(file) {
 	if (_isFile(file)) {
+		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		try {
 			fso.DeleteFile(file);
 		} catch (e) {
@@ -59,6 +67,8 @@ function _renameFile(oldFilePath, newFilePath) {
 	if (!newFilePath.length) {return;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
+			if (oldFilePath.startsWith('.\\')) {oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\','');}
+			if (newFilePath.startsWith('.\\')) {newFilePath = fb.FoobarPath + newFilePath.replace('.\\','');}
 			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
 			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
@@ -78,6 +88,8 @@ function _copyFile(oldFilePath, newFilePath) {
 	if (!newFilePath.length) {return;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
+			if (oldFilePath.startsWith('.\\')) {oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\','');}
+			if (newFilePath.startsWith('.\\')) {newFilePath = fb.FoobarPath + newFilePath.replace('.\\','');}
 			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
 			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
@@ -97,6 +109,7 @@ function _copyFile(oldFilePath, newFilePath) {
 // Use utils.IsKeyPressed(VK_SHIFT) and debouncing as workaround
 function _recycleFile(file) {
 	if (_isFile(file)) {
+		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		try {
 			app.NameSpace(10).MoveHere(file);
 		} catch (e) {
@@ -111,6 +124,7 @@ function _recycleFile(file) {
 // Beware of collisions... same file deleted 2 times has the same virtual name on bin...
 function _restoreFile(file) {
 	if (!_isFile(file)) {
+		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(file) : utils.FileTest(file, 'split'); //TODO: Deprecated
 		const OriginalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		const items = app.NameSpace(10).Items();
@@ -163,6 +177,7 @@ function _jsonParseFile(file) {
 
 // Opens explorer on file (and selects it) or folder
 function _explorer(fileOrFolder) {
+	if (fileOrFolder.startsWith('.\\')) {fileOrFolder = fb.FoobarPath + fileOrFolder.replace('.\\','');}
 	if (_isFile(fileOrFolder)) {
 		WshShell.Run('explorer /select,' + _q(fileOrFolder));
 		return true; // There is no way to know if the explorer window got opened at the right path...
@@ -248,6 +263,34 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 		pathArr.forEach( (path) => {fileArr = fileArr.concat(utils.Glob(path + '\\' +  fileMask));});
 	}
 	return fileArr;
+}
+
+function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
+	let finalPath = '';
+	if (relPath.startsWith('.\\') && absPath === fb.FoobarPath ) {finalPath = fb.FoobarPath + relPath.replace('.\\','');}
+	else {
+		const relPathArr = relPath.split('\\').filter(Boolean);
+		const absPathArr = absPath.split('\\').filter(Boolean);
+		let bIntersect = new Set(relPathArr).intersectionSize(new Set(absPathArr));
+		if (bIntersect) {
+			bIntersect = false;
+			for (let i = relPathArr.length - 1; i >= 0; i--) {
+				for (let j = absPathArr.length - 1; j >= 0; j--) {
+					if (bIntersect) {
+						if (relPathArr[i] === '..') {relPathArr[i] = '';}
+						else if (relPathArr[i] !== absPathArr[i]) {relPathArr[i] = absPathArr[j];}
+					} else {bIntersect = relPathArr[i] === absPathArr[j];}
+				}
+			}
+			finalPath = relPathArr.join('\\');
+		} else {
+			finalPath = relPathArr.map((folder) => {return (folder !== '..' ? folder : '');}).filter(Boolean);
+			finalPath = absPathArr.slice(0, absPathArr.length - (relPathArr.length - finalPath.length)).concat(finalPath);
+			finalPath = finalPath.join('\\');
+		}
+	}
+	if (finalPath.length && relPath.endsWith('\\') && !finalPath.endsWith('\\')) {finalPath += '\\';}
+	return finalPath;
 }
 
 function _q(value) {

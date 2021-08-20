@@ -225,7 +225,6 @@ function _list(x, y, w, h) {
 	}
 	
 	this.simulateWheelToIndex = (toIndex, currentItemIndex = this.lastIndex, originalOffset = this.lastOffset) => {
-		console.log('simulateWheelToIndex');
 		this.index = toIndex;
 		let iDifference = currentItemIndex - originalOffset;
 		this.offset = 0;
@@ -328,13 +327,18 @@ function _list(x, y, w, h) {
 											if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsPaths};}
 											bDup = true;
 										} else {
+											const relPathSplit = this.playlistsPath.length ? this.playlistsPath.split('\\').filter(Boolean) : null;
 											const selItemsRelPaths = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '.\\');});
 											const selItemsRelPathsTwo = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '');});
+											const selItemsRelPathsThree = selItemsPaths.map((path) => {return getRelPath(path, relPathSplit);});
 											if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {
 												if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsRelPaths};}
 												bDup = true;
 											} else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {
 												if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsTwo};}
+												bDup = true;
+											} else if (filePaths.intersectionSize(new Set(selItemsRelPathsThree))) {
+												if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsThree};}
 												bDup = true;
 											}
 										}
@@ -418,7 +422,6 @@ function _list(x, y, w, h) {
 								if (selItems && selItems.Count) {
 									// Warn about dead items
 									selItems.Convert().some((handle) => {
-										console.log(handle.RawPath)
 										if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
 											fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks on current selection, there may be more.\n\n' + handle.RawPath, window.Name); 
 											return true;
@@ -1572,7 +1575,7 @@ function _list(x, y, w, h) {
 			if (!this.playlistsPath.endsWith('\\')) {
 				this.playlistsPath += '\\';
 				this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
-				this.colours['playlistsPath'] = this.playlistsPath;
+				this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
 				bDone = true;
 			}
 			// Check playlist extension
@@ -1681,6 +1684,16 @@ function _list(x, y, w, h) {
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
+		// Convert previous files to new name mask
+		if (_isFile(this.filename) || _isFile(this.filename + '.old')) {
+			const newFilename = folders.data + 'playlistManager_' + this.playlistsPathDisk + '_' + this.playlistsPathDirName.replace(':','') + '.json';
+			let bDone = _copyFile(this.filename, newFilename);
+			if (bDone) {_recycleFile(this.filename);}
+			bDone = _copyFile(this.filename + '.old', newFilename + '.old');
+			if (bDone) {_recycleFile(this.filename + '.old');}
+		}
+		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDisk + '_' + this.playlistsPathDirName.replace(':','') + '.json';
+		// End
 		_recycleFile(this.filename + '.old'); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
 		this.initProperties(); // This only set properties if they have no values...
@@ -1738,8 +1751,9 @@ function _list(x, y, w, h) {
 	this.filename = '';
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
 	this.properties = getPropertiesPairs(properties, prefix); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
-	this.playlistsPath = this.properties['playlistPath'][1];
+	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.') ? findRelPathInAbsPath(this.properties['playlistPath'][1]) : this.properties['playlistPath'][1];
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
+	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1];
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
