@@ -16,7 +16,7 @@ const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl']); // Thes
 	Playlist file manipulation 
 */
 
-function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = []) {
+function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], bBOM = false) {
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
@@ -96,7 +96,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		}
 		// Write to file
 		playlistText = playlistText.join('\r\n');
-		let bDone = _save(playlistPath, playlistText);
+		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));
@@ -107,7 +107,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 	return false;
 }
 
-function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
+function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = false) {
 	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('addHandleToPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
@@ -203,7 +203,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '') {
 		trackText = trackText.join('\r\n');
 		originalText = originalText.join('\r\n');
 		let playlistText = originalText.concat('\r\n', trackText);
-		let bDone = _save(playlistPath, playlistText);
+		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));

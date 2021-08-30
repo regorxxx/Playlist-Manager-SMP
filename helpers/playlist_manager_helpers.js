@@ -133,7 +133,7 @@ function setTrackTags(trackTags, list, z) {
 			const old_name = list.data[z].name;
 			if (_isFile(list.data[z].path)) {
 				delayAutoUpdate();
-				bDone = editTextFile(list.data[z].path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags);
+				bDone = editTextFile(list.data[z].path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM); // No BOM
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing track tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + trackTags);
 				} else {
@@ -162,7 +162,7 @@ function setTag(tags, list, z) {
 			const old_name = list.data[z].name;
 			if (_isFile(list.data[z].path)) {
 				delayAutoUpdate();
-				bDone = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'));
+				bDone = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM); // No BOM
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
 				} else {
@@ -194,7 +194,7 @@ function setCategory(category, list, z) {
 		} else {
 			const old_name = list.data[z].name;
 			delayAutoUpdate();
-			bDone = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category);
+			bDone = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM); // No BOM
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
 			} else {
@@ -222,7 +222,7 @@ function switchLock(list, z) {
 		const old_name = list.data[z].name;
 		if (_isFile(list.data[z].path)) {
 			delayAutoUpdate();
-			bDone = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1]);
+			bDone = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM); // No BOM
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
 			} else {
@@ -252,7 +252,7 @@ function convertToRelPaths(list, z) {
 		bDeleted = _recycleFile(playlistPath);
 	} else {bDeleted = true;}
 	if (bDeleted) {
-		bDone = _save(playlistPath, file);
+		bDone = _save(playlistPath, file, list.bBOM); // No BOM
 		if (!bDone) {
 			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 			_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -309,7 +309,7 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 		bDeleted = _recycleFile(newPath);
 	} else {bDeleted = true;}
 	if (bDeleted) {
-		bDone = _save(newPath, file);
+		bDone = _save(newPath, file, list.bBOM); // No BOM
 		if (!bDone) {
 			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
 			_restoreFile(newPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -381,7 +381,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '%filename%.mp3', pre
 			bDeleted = _recycleFile(newPath);
 		} else {bDeleted = true;}
 		if (bDeleted) {
-			bDone = _save(newPath, file);
+			bDone = _save(newPath, file, list.bBOM); // No BOM
 			if (!bDone) {
 				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
 				_restoreFile(newPath); // Since it failed we need to restore the original playlist back to the folder!

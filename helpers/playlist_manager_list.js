@@ -565,7 +565,7 @@ function _list(x, y, w, h) {
 		console.log('Playlist Manager: Updating playlist...');
 		const [handleUpdate, tagsUpdate] = this.bAutoTrackTag ? this.getUpdateTrackTags(handleList, pls) : [null, null]; // Done at 2 steps, first get tags
 		const playlistPath = pls.path;
-		let done = addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''));
+		let done = addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 		if (!done) {
 			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 			return false;
@@ -755,7 +755,7 @@ function _list(x, y, w, h) {
 					bDeleted = _recycleFile(playlistPath);
 				} else {bDeleted = true;}
 				if (bDeleted) {
-					let done = savePlaylist(fbPlaylistIndex, playlistPath, this.playlistsExtension, playlistName, this.optionsUUIDTranslate(), plsData.isLocked, plsData.category, plsData.tags, (this.bRelativePath ? this.playlistsPath : ''), plsData.trackTags);
+					let done = savePlaylist(fbPlaylistIndex, playlistPath, this.playlistsExtension, playlistName, this.optionsUUIDTranslate(), plsData.isLocked, plsData.category, plsData.tags, (this.bRelativePath ? this.playlistsPath : ''), plsData.trackTags, this.bBOM);
 					if (!done) {
 						fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 						_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -1149,7 +1149,7 @@ function _list(x, y, w, h) {
 					});
 				}
 				if (bSave && !item.isAutoPlaylist && item.extension !== '.fpl' && item.extension !== '.pls') {
-					let bDone = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'));
+					let bDone = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM); // No BOM
 					if (!bDone) {console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + item.path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar and force and update to save it with the required format.');}
 				}
 				// Perform Auto-Tags actions
@@ -1226,7 +1226,7 @@ function _list(x, y, w, h) {
 							if (!playlistObj.isLocked) {
 								let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
 								let newStrings = ['#PLAYLIST:' + old_name, '#UUID:' + new_id];
-								let bDone = editTextFile(playlistObj.path, originalStrings, newStrings);
+								let bDone = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM); // No BOM
 								if (!bDone) {
 									fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + old_name + '\nPath: ' + playlistObj.path, window.Name);
 								} else {
@@ -1255,7 +1255,7 @@ function _list(x, y, w, h) {
 						this.dataFpl.push(item);
 					}
 				});
-				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl], this.replacer, '\t'));
+				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl], this.replacer, '\t'), this.bBOM); // No BOM
 			}
 		}
 		
@@ -1392,7 +1392,7 @@ function _list(x, y, w, h) {
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
-				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''));
+				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
 					const objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags); //TODO: Deprecated
@@ -1768,6 +1768,7 @@ function _list(x, y, w, h) {
 	this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
 	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 	this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
+	this.bBOM = this.properties['bBOM'][1];
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length

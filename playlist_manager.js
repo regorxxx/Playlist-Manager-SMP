@@ -31,12 +31,12 @@ var properties = {
 	extension				: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
 	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000],
 	bShowSize				: ['Show playlist size' , true],
-	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output' , true],
-	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).' , true],
-	optionUUID				: ['UUID current method' , ''],
+	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output', true],
+	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).', true],
+	optionUUID				: ['UUID current method', ''],
 	methodState				: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
 	sortState				: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	bSaveFilterStates		: ['Maintain filters between sessions?: ', true], // Description and value filled on list.init() with defaults. Just a placeholder
+	bSaveFilterStates		: ['Maintain filters between sessions?', true], // Description and value filled on list.init() with defaults. Just a placeholder
 	filterStates			: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
 	bShowSep				: ['Show name/category separators: ', true],
 	listColours				: ['Color codes for the list. Use contextual menu to set them: ', ''],
@@ -60,7 +60,8 @@ var properties = {
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
 	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])],
 	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true],
-	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false]
+	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false],
+	bBOM					: ['Save files as UTF8 with BOM?', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

@@ -82,7 +82,7 @@ function createMenuLeft(forcedIndex = -1) {
 								if (!list.data[z].isLocked) {
 									let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
 									let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
-									let bDone = editTextFile(list.data[z].path, originalStrings, newStrings);
+									let bDone = editTextFile(list.data[z].path, originalStrings, newStrings, list.bBOM); // No BOM
 									if (!bDone) {
 										fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + list.data[z].path, window.Name);
 									} else {
@@ -565,6 +565,23 @@ function createMenuRightTop() {
 				});
 			}
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
+		}
+		{	// BOM
+			const subMenuName = menu.newMenu('Save files with BOM...');
+			const options = ['Yes: UTF8-BOM', 'No: UTF8'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Playlists and json:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			if (optionsLength) {
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						list.bBOM = (i === 0);
+						list.properties['bBOM'][1] = list.bBOM;
+						overwriteProperties(list.properties);
+					}});
+				});
+			}
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bBOM ? 0 : 1;});
 		}
 		menu.newEntry({entryText: 'sep'});
 		{	// Sorting
