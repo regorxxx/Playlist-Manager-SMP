@@ -20,12 +20,17 @@ function createMenuLeft(forcedIndex = -1) {
 		fb.ShowPopupMessage('Selected index was -1 on createMenuLeft() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
+	const pls = list.data[z];
+	if (!pls) {
+		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		return menu;
+	}
 	// Helpers
-	const isPlsLoaded = () => {return plman.FindPlaylist(list.data[z].nameId) !== -1;};
-	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== list.data[z].nameId;};
-	const isAutoPls = () => {return list.data[z].isAutoPlaylist;};
-	const isLockPls = () => {return list.data[z].isLocked;};
-	const isPlsEditable = () => {return list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8' || list.data[z].extension === '.fpl' || list.data[z].isAutoPlaylist;};
+	const isPlsLoaded = () => {return plman.FindPlaylist(pls.nameId) !== -1;};
+	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
+	const isAutoPls = () => {return pls.isAutoPlaylist;};
+	const isLockPls = () => {return pls.isLocked;};
+	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.fpl' || pls.isAutoPlaylist;};
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
@@ -33,36 +38,36 @@ function createMenuLeft(forcedIndex = -1) {
 		// Show binded playlist
 		menu.newEntry({entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
+		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 		menu.newEntry({entryText: 'Send selection to playlist', func: () => {
-			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 			if (selItems && selItems.Count) {
 				list.addTracksToPlaylist(z, selItems);
-				const index = plman.FindPlaylist(list.data[z].nameId);
+				const index = plman.FindPlaylist(pls.nameId);
 				if (index !== -1) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
 			}
-		}});
+		}, flags: !isAutoPls() && !isLockPls() && writablePlaylistFormats.has(pls.extension) && selItems.Count ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
-		menu.newEntry({entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
+		menu.newEntry({entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls() ? 'Rename...' : 'Rename... (only filename)'), func: () => {
 			let new_name = '';
-			try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, list.data[z].name, true);} 
+			try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, pls.name, true);} 
 			catch(e) {return;}
 			if (!new_name.length) {return;}
-			const new_nameId = new_name + ((list.bUseUUID && list.data[z].id.length) ? list.data[z].id : ''); // May have enabled/disabled UUIDs just before renaming
-			const old_name = list.data[z].name;
-			const old_nameId = list.data[z].nameId;
-			const old_id = list.data[z].id;
+			const new_nameId = new_name + ((list.bUseUUID && pls.id.length) ? pls.id : ''); // May have enabled/disabled UUIDs just before renaming
+			const old_name = pls.name;
+			const old_nameId = pls.nameId;
+			const old_id = pls.id;
 			const new_id = (list.bUseUUID && old_id.length) ? old_id : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
 			var duplicated = plman.FindPlaylist(new_nameId);
 			if (duplicated !== -1) { // Playlist already exists on foobar...
 				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
-			// } else if (_isFile(list.data[z].path.replace(old_name,new_name))){ // File already exists on the folder..
+			// } else if (_isFile(pls.path.replace(old_name,new_name))){ // File already exists on the folder..
 				// fb.ShowPopupMessage('You can not have duplicated playlist files on the same folder: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
 			} else {
 				delayAutoUpdate();
 				if (new_name.length && new_name !== old_name) {
-					if (list.data[z].isAutoPlaylist) {
-						list.editData(list.data[z], {
+					if (pls.isAutoPlaylist) {
+						list.editData(pls, {
 							name: new_name,
 							id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
 							nameId: list.bUseUUID ? new_name + new_id : new_name,
@@ -70,28 +75,31 @@ function createMenuLeft(forcedIndex = -1) {
 						list.update(true, true);
 						list.filter();
 					} else {
-						if (_isFile(list.data[z].path)) {
+						if (_isFile(pls.path)) {
 							// Locked files have the name variable as read only, so we only change the filename. We can not replace old_name with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
-							let newPath = list.data[z].path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([new_name]).join('\\') + list.data[z].extension;
-							// let newPath = list.data[z].path.replace(old_name + list.data[z].extension, new_name + list.data[z].extension);
-							let bRenamedSucessfully = _renameFile(list.data[z].path, newPath);
+							let newPath = pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([new_name]).join('\\') + pls.extension;
+							// let newPath = pls.path.replace(old_name + pls.extension, new_name + pls.extension);
+							let bRenamedSucessfully = _renameFile(pls.path, newPath);
 							if (bRenamedSucessfully) {
-								list.editData(list.data[z], {
+								list.editData(pls, {
 									path: newPath,
 								});
-								if (!list.data[z].isLocked) {
-									let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
-									let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
-									let bDone = editTextFile(list.data[z].path, originalStrings, newStrings, list.bBOM); // No BOM
+								if (!pls.isLocked) {
+									let bDone = false;
+									if (pls.extension === '.m3u' || pls.extension === '.m3u8') {
+										let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
+										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
+										bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+									} else {bDone = true;}
 									if (!bDone) {
-										fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + list.data[z].path, window.Name);
+										fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + pls.path, window.Name);
 									} else {
-										list.editData(list.data[z], {
+										list.editData(pls, {
 											name: new_name,
 											id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
 											nameId: list.bUseUUID ? new_name + new_id : new_name,
 										});
-										list.update_plman(list.data[z].nameId, old_nameId); // Update with new id
+										list.update_plman(pls.nameId, old_nameId); // Update with new id
 										list.update(true, true);
 										list.filter();
 									}
@@ -99,8 +107,8 @@ function createMenuLeft(forcedIndex = -1) {
 									list.update(true, true);
 									list.filter();
 								}
-							} else {fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + list.data[z].path, window.Name);}
-						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
+							} else {fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + pls.path, window.Name);}
+						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 					}
 				}
 			}
@@ -111,18 +119,18 @@ function createMenuLeft(forcedIndex = -1) {
 			// Change AutoPlaylist sort
 			menu.newEntry({entryText: 'Edit sort pattern...', func: () => {
 				let new_sort = '';
-				try {new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, list.data[z].sort);}
+				try {new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, pls.sort);}
 				catch(e) {return;}
 				let bDone = false;
-				if (new_sort !== list.data[z].sort) { // Pattern
-					list.editData(list.data[z], {
+				if (new_sort !== pls.sort) { // Pattern
+					list.editData(pls, {
 						sort: new_sort,
 					});
 					bDone = true;
 				}
-				if (list.data[z].sort.length) { // And force sorting
-					list.editData(list.data[z], {
-						bSortForced: WshShell.Popup('Force sort?\n(currently ' + list.data[z].bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes,
+				if (pls.sort.length) { // And force sorting
+					list.editData(pls, {
+						bSortForced: WshShell.Popup('Force sort?\n(currently ' + pls.bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes,
 					});
 					bDone = true;
 				}
@@ -134,11 +142,11 @@ function createMenuLeft(forcedIndex = -1) {
 			// Change AutoPlaylist query
 			menu.newEntry({entryText: 'Edit query...', func: () => {
 				let newQuery = '';
-				try {newQuery = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, list.data[z].query);}
+				try {newQuery = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, pls.query);}
 				catch(e) {return;}
 				if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return;}
-				if (newQuery !== list.data[z].query) {
-					list.editData(list.data[z], {
+				if (newQuery !== pls.query) {
+					list.editData(pls, {
 						query: newQuery,
 						size: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
 					});
@@ -149,14 +157,14 @@ function createMenuLeft(forcedIndex = -1) {
 		} else {
 			// Updates playlist file with any new changes on the playlist binded within foobar
 			menu.newEntry({entryText: !isLockPls() ? 'Update playlist file' : 'Force playlist file update', func: () => {
-				if (_isFile(list.data[z].path)) {
-					const old_nameId = list.data[z].nameId;
-					const old_name = list.data[z].name;
+				if (_isFile(pls.path)) {
+					const old_nameId = pls.nameId;
+					const old_name = pls.name;
 					const duplicated = getPlaylistIndexArray(old_nameId);
 					if (duplicated.length > 1) { // There is more than 1 playlist with same name
 						fb.ShowPopupMessage('You have more than one playlist with the same name: ' + old_name + '\n' + 'Please delete any duplicates and leave only the one you want.'  + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
 					} else {
-						if (list.data[z].isLocked) { // Safety check for locked files (but can be overridden)
+						if (pls.isLocked) { // Safety check for locked files (but can be overridden)
 							let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
 							if (answer === popup.yes) {
 								list.updatePlaylist(z);
@@ -165,14 +173,14 @@ function createMenuLeft(forcedIndex = -1) {
 							list.updatePlaylist(z);
 						}
 					}
-				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
+				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: isPlsLoaded() ? MF_STRING : MF_GRAYED});
 			// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
 			menu.newEntry({entryText: isPlsActive() ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
-				if (_isFile(list.data[z].path)) {
+				if (_isFile(pls.path)) {
 					const old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
-					const new_nameId = list.data[z].nameId;
-					const new_name = list.data[z].name;
+					const new_nameId = pls.nameId;
+					const new_name = pls.name;
 					var duplicated = plman.FindPlaylist(new_nameId);
 					if (duplicated !== -1) {
 						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
@@ -180,7 +188,7 @@ function createMenuLeft(forcedIndex = -1) {
 						list.update_plman(new_nameId, old_nameId);
 						list.updatePlaylist(z);
 					}
-				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + list.data[z].name + '\nPath: ' + list.data[z].path, window.Name);}
+				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: isPlsActive() ? MF_STRING : MF_GRAYED});
 		}
 	}
@@ -189,14 +197,14 @@ function createMenuLeft(forcedIndex = -1) {
 		// Set category
 		menu.newEntry({entryText: 'Set category...', func: () => {
 			let category = '';
-			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, list.data[z].category !== null ? list.data[z].category : '', true);} 
+			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, pls.category !== null ? pls.category : '', true);} 
 			catch(e) {return;}
 			setCategory(category, list, z);
 		}, flags: !isLockPls() &&  isPlsEditable() ? MF_STRING : MF_GRAYED});
 		// Set tag(s)
 		menu.newEntry({entryText: 'Set playlist tag(s)...', func: () => {
 			let tags = '';
-			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, list.data[z].tags.join(';'), true);} 
+			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, pls.tags.join(';'), true);} 
 			catch(e) {return;}
 			tags = tags.split(';').filter(Boolean); // This filters blank values
 			setTag(tags, list, z);
@@ -204,7 +212,7 @@ function createMenuLeft(forcedIndex = -1) {
 		// Adds track tag(s)
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
-			const currValue = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
+			const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 			try {tags = utils.InputBox(window.ID, 'Enter array of objects: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number.\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).', window.Name, currValue, true);} 
 			catch(e) {return;}
 			if (tags.length) {
@@ -218,16 +226,16 @@ function createMenuLeft(forcedIndex = -1) {
 	{ // Export and Rel. Paths handling
 		menu.newEntry({entryText: 'Force relative paths...', func: () => {
 			convertToRelPaths(list, z);
-		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
 			exportPlaylistFile(list, z);
-		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
 			exportPlaylistFileWithTracks(list, z);
-		}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+		}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 		// Convert
 		const presets = JSON.parse(list.properties.converterPreset[1]);
-		const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? MF_STRING : MF_GRAYED);
+		const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED);
 		menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		presets.forEach((preset) => {
@@ -242,7 +250,7 @@ function createMenuLeft(forcedIndex = -1) {
 			if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
 			menu.newEntry({menuName: subMenuName, entryText: pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 				exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path);
-			}, flags: writablePlaylistFormats.has(list.data[z].extension) ? MF_STRING : MF_GRAYED});
+			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 		});
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -254,8 +262,8 @@ function createMenuLeft(forcedIndex = -1) {
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
 		menu.newEntry({entryText: 'Open playlist folder', func: () => {
-			if (list.data[z] && list.data[z].isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
-			else {_explorer(_isFile(list.data[z] ? list.data[z].path : null) ? list.data[z].path : list.playlistsPath);} // Open playlist path
+			if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
+			else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
 		}});
 	}
 	return menu;

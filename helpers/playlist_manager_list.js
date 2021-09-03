@@ -140,8 +140,8 @@ function _list(x, y, w, h) {
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
 						const sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
-						const nextsepLetter = (this.data[i + indexSortStateOffset + this.offset][dataKey].length) ? this.data[i + indexSortStateOffset + this.offset][dataKey][0] : '-';
-						if (sepLetter.toLowerCase() !== nextsepLetter && isNaN(sepLetter)) {
+						const nextsepLetter = (this.data[i + indexSortStateOffset + this.offset][dataKey].length) ? this.data[i + indexSortStateOffset + this.offset][dataKey][0].toUpperCase() : '-';
+						if (sepLetter !== nextsepLetter && isNaN(sepLetter)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
@@ -305,8 +305,16 @@ function _list(x, y, w, h) {
 							}
 							// Show current action
 							if (mask === MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + L. Click to load / show playlist)';}
-							else if (mask === MK_SHIFT) {playlistDataText += '\n\n' + '(Shift + L. Click to send selection to playlist)';}
-							else if (mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + Shift + L. Click to recycle playlist)';}
+							else if (mask === MK_SHIFT) {
+								playlistDataText += '\n\n' + '(Shift + L. Click to send selection to playlist)';
+								if (pls.isAutoPlaylist) {playlistDataText += '\n' + '(AutoPlaylists are non editable, convert it first)';}
+								else if (pls.extension === '.fpl') {playlistDataText += '\n' + '(.fpl playlists are non editable, convert it first)';}
+								else if (pls.isLocked) {playlistDataText += '\n' + '(Locked playlists are non editable, unlock it first)';}
+								else {
+									const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+									if (!selItems || !selItems.Count) {playlistDataText += '\n' + '(No items on active playlist current selection)';}
+								}
+							} else if (mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + Shift + L. Click to recycle playlist)';}
 							// Tips
 							else if (this.bShowTips) {
 								playlistDataText += '\n\n' + '(L. Click to manage playlist)';
@@ -398,6 +406,7 @@ function _list(x, y, w, h) {
 							if (duplicated.length === 0) {this.loadPlaylist(z);} 
 							else if (duplicated.length === 1) {this.showBindedPlaylist(z);}
 						} else if (mask === MK_SHIFT) { // Pressing SHIFT
+							if (this.data[z].isAutoPlaylist || this.data[z].isLocked || this.data[z].extension === '.fpl') {return;} // Skip non writable playlists
 							let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 							if (selItems && selItems.Count) {
 								// Remove duplicates
@@ -831,7 +840,8 @@ function _list(x, y, w, h) {
 			});
 		} else if (answer === popup.no) {
 			data.forEach((item) => {
-				if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
+				if (!item.hasOwnProperty('query') || !item.hasOwnProperty('isAutoPlaylist') || !item.isAutoPlaylist) {return;} // May be a non AutoPlaylist item
+				if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;} // Don't allow empty but allow sort
 				item.size = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query)).Count;
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(item);

@@ -26,7 +26,7 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.category = category;
 	this.tags = isArrayStrings(tags) ? tags : [];
 	this.trackTags = isArray(trackTags) ? trackTags : [];
-	this.bShow = true; // TODO:
+	// this.bShow = true; // TODO:
 	
 }
 

@@ -52,6 +52,7 @@
 - Categories: adding or removing playlists updates the category filter accordingly. i.e. when adding a new playlist with a new category, it doesn't get filtered but added to the current view, no matter what the current filtering is. Previously the new playlist would be hidden by default, since the category filter did only showed currently selected categories. The same when removing the last playlist within a category.
 - Categories: due to a copy/paste typo, the menu to filter categories only worked when using custom background colors on the panel.
 - Menus: crash when selected playlist index was out of bounds on L. Click menu creation due to menu being created 100 ms later than clicking. If the mouse was moved really fast out of the list within that 100 ms delay, the selected playlist was considered null (crash). It would also change the playlist to which the menu applied if the mouse was moved to another playlist really fast (bug). Fixed both cases now, forcing the playlist index at the exact moment the L. Click was done (on button up).
+- Menus: send selection to playlist entry has now appropriate flags to be disabled when there is no selection, it's an autoplaylists, the playlist is locked or it's an .fpl playlist.
 - Fonts: missing font due to a typo (wingdings 2 -> Wingdings 2).
 - Properties: fixed some instances where unused old properties were not being deleted due to property checking firing when setting them to null.
 - Playlist Manager Path: checks if user set path has a '\' at the end, and adds it if missing (otherwise playlists are not saved into the folder but using the folder name as prefix!).
@@ -59,9 +60,13 @@
 - Playlists paths: filenames are sanitized before saving playlists to file, replacing illegal chars. Note that filenames and playlists names can be different, so the original name -non-sanitized- is still used as playlist name.
 - Playlists names: loading playlists from files now correctly retrieve ':' char on all text values (name, tags, categories, ...).
 - Importing JSON: solved error when importing Autoplaylists from marc2003's manager and the Autoplaylists used 'SORT BY', 'SORT DESCENDING BY' or 'SORT ASCENDING BY' within the query at query check step. They should be now 100% compatible, while still checking validity of those sort patterns (note marc2003's manager did not check their validity, so it simply crashed if something was wrong on the query).
+- Importing Json: now skips playlists at importing whenever they don't have a query or are not Autoplaylists. Feature was added at a time where the only playlists items on json where autoplaylists, now that .fpl playlists also have a virtual counterpart, additional checks must be done. Should also serve as sanity check for manually created autoplaylist json files.
+- Tooltip: when trying to send selection to a playlist and there is no selection, it's an Autoplaylist, the playlist is locked or it's an .fpl playlist, a warning is shown to note it's not possible to do so.
+- Shortcut: send selection (Shift + L. Click) is disabled when it's an Autoplaylist, the playlist is locked or it's an .fpl playlist.
 - UI: names on playlist list now are truncated a few px before the category letters separators and playing/loaded indicators so they don't overlap anymore.
 - UI: crash when setting custom font size.
 - UI: When a playlist of current view had no category, next category letter was not being shown on the letter separators. i.e. Jumping from none (-) to B, skipping A, when there were playlists with categories starting with A, B and some without categories. Long time UI only bug since first releases. Only happened for the category sorting view; when sorting by name, playlist always have a name by design, so first item header was never 'empty' and thus the next one was always shown fine.
+- UI: bug with uppercase playlist names not being correctly identified when mixed along lowercase names (spanning of the same separator multiple times).
 - Dead items: the menu entry to find dead items on playlists now skips streams (http or https).
 - Adding current selection to a playlist file when it's loaded and it's also the current playlist no longer reinserts tracks, thus duplicating them.
 - Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'autosave' one).
