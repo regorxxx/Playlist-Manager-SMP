@@ -14,6 +14,8 @@
 
 ## [Unreleased][]
 ### Added
+- AutoPlaylists: new option on contextual menu to clone the selected AutoPlaylists as a standard playlist. i.e. automatizes the process of loading it, copying the track, pasting them into a new playlist and creating a new playlist file from it.
+- AutoPlaylists: new filtering option on header menu for AutoPlaylists on cloning process to remove duplicates according to some tag(s) or TF expression(s). By default is set to 'artist,date,title'. Automatizes the process of removing duplicates by tags after cloning using tools like those found on Playlist-Tools-SMP.
 - Playlist Auto-tagging: expanding the tag feature, playlists may now be automatically tagged with 'bAutoLoad', 'bAutoLock' or a custom set of tags. The first two keywords are meant to be used along Auto-Functions.
 - Auto-Functions: automatically applies some actions whenever a playlist is loaded on the panel (i.e. folder tracking) according to the tags present on it. 'bAutoLoad' makes the playlist to be loaded within foobar automatically. 'bAutoLock' locks the playlist as soon as it's loaded on the panel. Functionality can be switched on/off. This feature allows to automatically load playlists (either selectively or all) from the tracked folder into foobar without any user interaction (specially useful for servers and syncing).
 - Track Auto-tagging: option to automatically add tag values to newly added tracks to a playlist. TF expressions (or %tags%), JavaScript functions (defined at 'helpers_xxx_utils.js') and strings/numbers can be assigned to tag(s). For ex, this would be an easy method to automatically tag as genre 'Rock' any track added to a 'Rock Playlist'. Obviously the use cases can be much more complex as soon as TF expressions or JavaScript is used. Values are appended to any existing tag value, it will not replace previous ones and will not add duplicates. It will also skip auto-tagging as soon as the same track was already at the playlist (thus not running multiple times for same tracks). Track Auto-tagging can be applied whether auto-save is enabled or not, as soon as a track is added. As result, it may be possible to apply it to native playlists by disabling auto-saving and creating a virtual copy of the playlist on the Playlist Manager (changes will never be saved to the physical file, but tracks will be auto-tagged anyway). Can be configured to apply it on standard playlists, locked ones and/or AutoPlaylists.
@@ -39,6 +41,7 @@
 - UI: current selection rectangle now has its width adjusted according to 'Show name/category separators', so it doesn't overlap with the letters at the right when enabled.
 - UI: when opening the contextual menu for a playlist (L. Click) the selection rectangle will be shown until the menu gets closed. Previously it was cleared as soon as the menu was created or the mouse leave the panel. Opening menus for things not directly related to an specific playlist will maintain the previous behavior.
 - UI: entire panel is repaint when moving the mouse over it instead of currently selected playlist only to ensure selection is always properly drawn even with extreme movements.
+- UI: Auto-Playlists size now gets updated when loading them (since it's essentially performance free).
 - Helpers: Split 'helpers_xxx_playlists.js' into 2 files (new one is 'helpers_xxx_playlists_files.js').
 - Helpers: updated. Whenever a folder needs to be created to save a new file, the entire tree is now created if needed. Previously it would fail as soon as any folder did not exist. This greatly speeds up setting panels since now the final folder does not need to exists at all to work, since it will be created on the fly.
 - Tooltip: Pressing shit, control or both will show on the tooltip the action which will be performed on playlists. If usage info is enabled on tooltips, then only the current action associated to the keys will be shown while pressing them (so it becomes obvious which one is from the list); otherwise -disabled- nothing will be shown until a key is pressed.
@@ -54,6 +57,7 @@
 - Menus: crash when selected playlist index was out of bounds on L. Click menu creation due to menu being created 100 ms later than clicking. If the mouse was moved really fast out of the list within that 100 ms delay, the selected playlist was considered null (crash). It would also change the playlist to which the menu applied if the mouse was moved to another playlist really fast (bug). Fixed both cases now, forcing the playlist index at the exact moment the L. Click was done (on button up).
 - Menus: send selection to playlist entry has now appropriate flags to be disabled when there is no selection, it's an Autoplaylist, the playlist is locked or it's an .fpl playlist.
 - Menus: using the menus to rename .pls playlist was failing due to a back coded check even if the playlist was properly renamed.
+- Menus: Force relative paths menu entry is now disabled when playlist is locked.
 - Fonts: missing font due to a typo (wingdings 2 -> Wingdings 2).
 - Properties: fixed some instances where unused old properties were not being deleted due to property checking firing when setting them to null.
 - Playlist Manager Path: checks if user set path has a '\' at the end, and adds it if missing (otherwise playlists are not saved into the folder but using the folder name as prefix!).
@@ -68,9 +72,12 @@
 - UI: crash when setting custom font size.
 - UI: When a playlist of current view had no category, next category letter was not being shown on the letter separators. i.e. Jumping from none (-) to B, skipping A, when there were playlists with categories starting with A, B and some without categories. Long time UI only bug since first releases. Only happened for the category sorting view; when sorting by name, playlist always have a name by design, so first item header was never 'empty' and thus the next one was always shown fine.
 - UI: bug with uppercase playlist names not being correctly identified when mixed along lowercase names (spanning of the same separator multiple times).
+- Playlist with special characters did not properly update the playlist path at some instances (the chars were not being stripped until manual refresh).
+- Crash when deleting an AutoPlaylist right after loading it if Track Tagging was enabled due to callback delays.
+- Bug on first playlist not being properly updated at some points (at least on manual update) due to a bad coded check for index !== 0.
 - Dead items: the menu entry to find dead items on playlists now skips streams (http or https).
 - Adding current selection to a playlist file when it's loaded and it's also the current playlist no longer reinserts tracks, thus duplicating them.
-- Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'autosave' one).
+- Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'auto-save' one).
 - Checking if all items on a playlist are in the library now works as expected when some items -file paths- are duplicated.
 - Restore menu list not working when deleting playlists.
 - Multiple minor improvements and fixes on path handling for portable installations.

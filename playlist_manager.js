@@ -61,7 +61,9 @@ var properties = {
 	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])],
 	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true],
 	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false],
-	bBOM					: ['Save files as UTF8 with BOM?', false]
+	bBOM					: ['Save files as UTF8 with BOM?', false],
+	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', 'artist,date,title'],
+	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -202,7 +204,7 @@ function on_playlist_items_removed(playlistIndex) {
   
 function on_playlist_items_added(playlistIndex) {
 	if (debouncedUpdate) {debouncedUpdate(playlistIndex, true);}
-	else if (list.bAutoTrackTag) {
+	else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
 		if (list.bAutoTrackTagAlways) {list.updatePlaylistOnlyTracks(playlistIndex);}
 		else if (plman.IsAutoPlaylist(playlistIndex)) {
 			if (list.bAutoTrackTagAutoPls) {list.updatePlaylistOnlyTracks(playlistIndex);}

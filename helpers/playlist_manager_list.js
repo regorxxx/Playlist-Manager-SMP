@@ -652,7 +652,7 @@ function _list(x, y, w, h) {
 	
 	this.updatePlaylistOnlyTracks = (playlistIndex) => { // Skips saving to file
 		if (!this.bAutoTrackTag) {return;}
-		if (!playlistIndex || playlistIndex === -1) {return;}
+		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) {return;}
 		if (playlistIndex >= plman.PlaylistCount) {return;} //May have deleted a playlist before delaying the update... so there is nothing to update
 		if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar playlists when auto-saving...	
 			const plmanDuplicates = findPlaylistNamesDuplicated();
@@ -719,7 +719,7 @@ function _list(x, y, w, h) {
 	this.updatePlaylist = (playlistIndex, bCallback = false) => { // Only changes total size
 		// playlistIndex: We have a foobar playlist and we iterate over playlist files
 		// Or we have the playlist file and we iterate over foobar playlists
-		if (!playlistIndex || playlistIndex === -1) {return;}
+		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) {return;}
 		if (bCallback) { 
 			if (playlistIndex >= plman.PlaylistCount) {return;} //May have deleted a playlist before delaying the update... so there is nothing to update
 			if (plman.IsAutoPlaylist(playlistIndex)) {return;} // Always skip updates for AutoPlaylists
@@ -777,7 +777,7 @@ function _list(x, y, w, h) {
 						nameId: plsData.name + UUID, 
 						id: UUID, 
 						extension: this.playlistsExtension,  // We may have forced saving on a fpl playlist
-						path: this.playlistsPath + plsData.name + this.playlistsExtension,
+						path: this.playlistsPath + sanitize(plsData.name) + this.playlistsExtension,
 						fileSize: isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
 					});
 					plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);
@@ -1389,12 +1389,13 @@ function _list(x, y, w, h) {
 			const oldName = oldNameId.substring(0, oldNameId.length - this.uuiidLength); // name - UUID x chars long
 			let boxText = bEmpty ? 'Enter playlist name' : 'Enter playlist name.\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
 			try {input = utils.InputBox(window.ID, boxText, window.Name, bEmpty ? '' : oldName, true);} 
-			catch(e) {return;}
-			if (!input.length) {return;}
+			catch(e) {return false;}
+			if (!input.length) {return false;}
 			const new_name = input;
 			const oPlaylistPath = this.playlistsPath + sanitize(new_name) + this.playlistsExtension;
 			// Auto-Tags
 			const oPlaylistTags = [];
+			let objectPlaylist = null;
 			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
@@ -1405,7 +1406,7 @@ function _list(x, y, w, h) {
 				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					const objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags); //TODO: Deprecated
+					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags); //TODO: Deprecated
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
@@ -1443,10 +1444,12 @@ function _list(x, y, w, h) {
 					}
 				} else {
 					fb.ShowPopupMessage('Playlist generation failed while writing file \'' + oPlaylistPath + '\'.', window.Name);
+					return false;
 				}
-			} else {fb.ShowPopupMessage('Playlist \'' + new_name + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name);}
+			} else {fb.ShowPopupMessage('Playlist \'' + new_name + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name); return false;}
 			this.update(true, true); // We have already updated data // TODO: true,true when split this.data from this.dataPaint... 
 			this.filter();
+			return objectPlaylist;
         }
 		
 		this.loadPlaylist = (idx) => {
@@ -1455,13 +1458,15 @@ function _list(x, y, w, h) {
 			const duplicated = getPlaylistIndexArray(old_nameId);
 			if (duplicated && duplicated.length > 1) {
 				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+				return false;
 			} else {
 				let [fbPlaylistIndex] = clearPlaylistByName(old_nameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 				if (this.data[idx].isAutoPlaylist) { // AutoPlaylist
 					if (!fbPlaylistIndex) {fbPlaylistIndex = plman.PlaylistCount;}
-					if (!checkQuery(this.data[idx].query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + this.data[idx].query, window.Name); return;}
+					if (!checkQuery(this.data[idx].query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + this.data[idx].query, window.Name); return;}
 					plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, this.data[idx].query, this.data[idx].sort, this.data[idx].bSortForced ? 1 : 0);
 					plman.ActivePlaylist = fbPlaylistIndex;
+					this.data[idx].size = plman.PlaylistItemCount(fbPlaylistIndex); // Update size on load
 				} else { // Or file
 					if (_isFile(this.data[idx].path)) {
 						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
@@ -1474,9 +1479,10 @@ function _list(x, y, w, h) {
 						if (this.data[idx].extension === '.fpl') { // Workaround for fpl playlist limitations...
 							setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
 						}
-					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[idx].name + '\nPath: ' + this.data[idx].path, window.Name);}
+					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + this.data[idx].name + '\nPath: ' + this.data[idx].path, window.Name); return false;}
 				}
 			}
+			return true;
 		}
 		
 		this.showBindedPlaylist = (idx) => {
@@ -1779,6 +1785,8 @@ function _list(x, y, w, h) {
 	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 	this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 	this.bBOM = this.properties['bBOM'][1];
+	this.removeDuplicatesAutoPls = this.properties['removeDuplicatesAutoPls'][1];
+	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length

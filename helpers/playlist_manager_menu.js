@@ -213,7 +213,7 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
 			const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
-			try {tags = utils.InputBox(window.ID, 'Enter array of objects: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number.\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).', window.Name, currValue, true);} 
+			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true);} 
 			catch(e) {return;}
 			if (tags.length) {
 				tags = tags.replaceAll('\'\'','"'); // Replace quotes
@@ -224,34 +224,41 @@ function createMenuLeft(forcedIndex = -1) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{ // Export and Rel. Paths handling
-		menu.newEntry({entryText: 'Force relative paths...', func: () => {
-			convertToRelPaths(list, z);
-		}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
-		menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
-			exportPlaylistFile(list, z);
-		}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
-		menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
-			exportPlaylistFileWithTracks(list, z);
-		}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
-		// Convert
-		const presets = JSON.parse(list.properties.converterPreset[1]);
-		const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED);
-		menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
-		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-		presets.forEach((preset) => {
-			const path = preset.path;
-			let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
-			const dsp = preset.dsp;
-			let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-			const tf = preset.tf;
-			let tfName = preset.tf;
-			if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
-			if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
-			if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
-			menu.newEntry({menuName: subMenuName, entryText: pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-				exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path);
+		if (isAutoPls()) {
+			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
+				cloneAsStandardPls(list, z, list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
+			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+		}
+		else {
+			menu.newEntry({entryText: 'Force relative paths...', func: () => {
+				convertToRelPaths(list, z);
+			}, flags: writablePlaylistFormats.has(pls.extension) && !isLockPls() ? MF_STRING : MF_GRAYED});
+			menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
+				exportPlaylistFile(list, z);
 			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
-		});
+			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
+				exportPlaylistFileWithTracks(list, z);
+			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			// Convert
+			const presets = JSON.parse(list.properties.converterPreset[1]);
+			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED);
+			menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			presets.forEach((preset) => {
+				const path = preset.path;
+				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+				const dsp = preset.dsp;
+				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+				const tf = preset.tf;
+				let tfName = preset.tf;
+				if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
+				if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
+				if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+				menu.newEntry({menuName: subMenuName, entryText: pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+					exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path);
+				}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
@@ -531,96 +538,101 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.tagState.indexOf(item) !== -1;});
 		});
 	}
+	{	// Sorting
+		const subMenuName = menu.newMenu('Change sorting method...');
+		const options = Object.keys(list.sortMethods());
+		const optionsLength = options.length;
+		menu.newEntry({menuName: subMenuName, entryText: 'Playlist list sorting:', flags: MF_GRAYED});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		if (optionsLength) {
+			options.forEach((item) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					const previousMethodState = list.methodState;
+					list.methodState = item;
+					list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
+					// Update properties to save between reloads, but property descriptions change according to list.methodState
+					list.properties['methodState'][1] = list.methodState;
+					const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
+					list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
+					list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
+					list.properties['sortState'][1] = list.sortState; // and change value
+					// And set properties
+					deleteProperties(removeProperties); // Deletes old properties used as placeholders
+					overwriteProperties(list.properties);
+					list.sort(void(0), true); // uses current sort state and repaint
+				}});
+			});
+		}
+		menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
+	}
 	menu.newEntry({entryText: 'sep'});
-	{ // List config
-		{	// Relative folder
-			const subMenuName = menu.newMenu('Save paths relative to folder...');
-			const options = ['Yes, relative to playlists folder', 'No, use absolute paths (default)'];
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'How track\'s paths are written:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			if (optionsLength) {
-				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						list.bRelativePath = (i === 0) ? true : false;
-						list.properties['bRelativePath'][1] = list.bRelativePath;
-						overwriteProperties(list.properties);
-						if (i === 0) {fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name);}
-						else {fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name);}
-					}});
-				});
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bRelativePath ? 0 : 1);});
+	{	// Playlist saving
+		const menuName = menu.newMenu('Playlist saving');
+		{
+			{	// Relative folder
+				const subMenuName = menu.newMenu('Save paths relative to folder...', menuName);
+				const options = ['Yes, relative to playlists folder', 'No, use absolute paths (default)'];
+				const optionsLength = options.length;
+				menu.newEntry({menuName: subMenuName, entryText: 'How track\'s paths are written:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				if (optionsLength) {
+					options.forEach((item, i) => {
+						menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+							list.bRelativePath = (i === 0) ? true : false;
+							list.properties['bRelativePath'][1] = list.bRelativePath;
+							overwriteProperties(list.properties);
+							if (i === 0) {fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name);}
+							else {fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name);}
+						}});
+					});
+					menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bRelativePath ? 0 : 1);});
+				}
+			}
+			{	// Playlist extension
+				const subMenuName = menu.newMenu('Change playlist extension (saving)...', menuName);
+				const options = Array.from(writablePlaylistFormats);
+				const optionsLength = options.length;
+				menu.newEntry({menuName: subMenuName, entryText: 'Writable formats:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				if (optionsLength) {
+					options.forEach((item) => {
+						menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+							if (item === '.pls') {
+								let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
+								if (answer !== popup.yes) {return;}
+								menu.btn_up(void(0), void(0), void(0), 'Use UUIDs for playlist names...\\' + list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
+							}
+							list.playlistsExtension = item;
+							list.properties['extension'][1] = list.playlistsExtension;
+							overwriteProperties(list.properties);
+						}});
+					});
+				}
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
+			}
+			{	// BOM
+				const subMenuName = menu.newMenu('Save files with BOM...', menuName);
+				const options = ['Yes: UTF8-BOM', 'No: UTF8'];
+				const optionsLength = options.length;
+				menu.newEntry({menuName: subMenuName, entryText: 'Playlists and json:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				if (optionsLength) {
+					options.forEach((item, i) => {
+						menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+							list.bBOM = (i === 0);
+							list.properties['bBOM'][1] = list.bBOM;
+							overwriteProperties(list.properties);
+						}});
+					});
+				}
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bBOM ? 0 : 1;});
 			}
 		}
-		{	// Playlist extension
-			const subMenuName = menu.newMenu('Change playlist extension (saving)...');
-			const options = Array.from(writablePlaylistFormats);
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'Writable formats:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			if (optionsLength) {
-				options.forEach((item) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						if (item === '.pls') {
-							let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
-							if (answer !== popup.yes) {return;}
-							menu.btn_up(void(0), void(0), void(0), 'Use UUIDs for playlist names...\\' + list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
-						}
-						list.playlistsExtension = item;
-						list.properties['extension'][1] = list.playlistsExtension;
-						overwriteProperties(list.properties);
-					}});
-				});
-			}
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
-		}
-		{	// BOM
-			const subMenuName = menu.newMenu('Save files with BOM...');
-			const options = ['Yes: UTF8-BOM', 'No: UTF8'];
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'Playlists and json:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			if (optionsLength) {
-				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						list.bBOM = (i === 0);
-						list.properties['bBOM'][1] = list.bBOM;
-						overwriteProperties(list.properties);
-					}});
-				});
-			}
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bBOM ? 0 : 1;});
-		}
-		menu.newEntry({entryText: 'sep'});
-		{	// Sorting
-			const subMenuName = menu.newMenu('Change sorting method...');
-			const options = Object.keys(list.sortMethods());
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'Playlist list sorting:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			if (optionsLength) {
-				options.forEach((item) => {
-					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-						const previousMethodState = list.methodState;
-						list.methodState = item;
-						list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
-						// Update properties to save between reloads, but property descriptions change according to list.methodState
-						list.properties['methodState'][1] = list.methodState;
-						const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
-						list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
-						list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
-						list.properties['sortState'][1] = list.sortState; // and change value
-						// And set properties
-						deleteProperties(removeProperties); // Deletes old properties used as placeholders
-						overwriteProperties(list.properties);
-						list.sort(void(0), true); // uses current sort state and repaint
-					}});
-				});
-			}
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
-		}
+	}
+	{	// Panel behavior
+		const menuName = menu.newMenu('Panel behavior');
 		{	// Filtering
-			const subMenuName = menu.newMenu('Save filtering between sessions...');
+			const subMenuName = menu.newMenu('Save filtering between sessions...', menuName);
 			const options = ['Yes: Always restore last used','No: Reset on startup'];
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'Sorting, category and Playlists view:', flags: MF_GRAYED});
@@ -634,26 +646,42 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bSaveFilterStates ? 0 : 1);});
 		}
-		menu.newEntry({entryText: 'sep'});
-		{	// Playlist Size
-			const subMenuName = menu.newMenu('Show Playlist size...');
-			const options = ['Yes: And refresh autoplaylists size by query ouput', 'Yes: Only for standard playlists', 'No: Only shown on tooltip'];
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Duplicates handling
+			const subMenuName = menu.newMenu('Duplicates handling...', menuName);
+			const options = ['Skip duplicates when adding new tracks', 'Only warn about it on tooltip'];
 			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'Track count on parenthesis:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'When using Shift + L. Click on a playlist:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.bShowSize = (i <= 1) ? true : false;
-					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
-					list.properties['bShowSize'][1] = list.bShowSize;
+					list.bForbidDuplicates = (i === 0) ? true : false;
+					list.properties['bForbidDuplicates'][1] = list.bForbidDuplicates;
 					overwriteProperties(list.properties);
 				}});
 			});
-			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.properties['bUpdateAutoplaylist'][1] ? 0 : (list.bShowSize ? 1 : 2));});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bForbidDuplicates ? 0 : 1);});
 		}
+		{	// Dead items handling
+			const subMenuName = menu.newMenu('Dead items handling...', menuName);
+			const options = ['Also check for dead items on auto-saving', 'Only on manual saving or when adding tracks'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Dead items warnings (streams are skipped):', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bDeadCheckAutoSave = (i === 0) ? true : false;
+					list.properties['bDeadCheckAutoSave'][1] = list.bDeadCheckAutoSave;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDeadCheckAutoSave ? 0 : 1);});
+		}
+	}
+	{	// Playlists behavior
+		const menuName = menu.newMenu('Playlists behavior');
 		{	// UUID
-			const subMenuName = menu.newMenu('Use UUIDs for playlist names...');
+			const subMenuName = menu.newMenu('Use UUIDs for playlist names...', menuName);
 			const options = list.optionsUUID();
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'For playlists tracked by Manager:', flags: MF_GRAYED});
@@ -670,229 +698,256 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
 		}
-	}
-	menu.newEntry({entryText: 'sep'});
-	{	// Playlist AutoTags & Actions
-		const subMenuName = menu.newMenu('Playlist AutoTags and actions');
-		menu.newEntry({menuName: subMenuName, entryText: 'Playlist file\'s Tags relatad actions:', flags: MF_GRAYED});
-		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-		{
-			const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
-			const options = ['bAutoLoad', 'bAutoLock'];
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Playlist Size
+			const subMenuName = menu.newMenu('Update AutoPlaylists size...', menuName);
+			const options = ['Yes: Automatically on every startup', 'No: Only when loading them'];
 			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Track count on parenthesis:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			options.forEach((item, i) => {
-				const itemKey = item + 'Tag';
-				menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
-					list[itemKey] = !list[itemKey];
-					list.properties[itemKey][1] = list[itemKey];
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
+					overwriteProperties(list.properties);
+					if (list.properties['bUpdateAutoplaylist'][1]) {
+						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retriever their tag count.(*)(**)\n\nIt will take more time to load the script at startup as consequence.\n(*) Note enabling this option will not incur on an additional startup time penalty if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
+						}
+				}});
+			});
+			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.properties['bUpdateAutoplaylist'][1] ? 0 : 1);});
+		}
+		{	// AutoPlaylist loading duplicates
+			const bEnabled = _isFile(folders.xxx + 'main\\remove_duplicates.js');
+			const subMenuName = menu.newMenu('On AutoPlaylist cloning, filter by...', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Removes duplicates after loading:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Enable filtering', func: () => {
+				list.bRemoveDuplicatesAutoPls = bRemoveDuplicatesAutoPls;
+				list.properties['bRemoveDuplicatesAutoPls'][1] = list.bRemoveDuplicatesAutoPls;
+				overwriteProperties(list.properties);
+			}, flags: bEnabled ? MF_STRING : MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
+				let input = '';
+				try {input = utils.InputBox(window.ID, 'Enter tag(s) or TF expression(s):\n(sep by comma)', window.Name, list.removeDuplicatesAutoPls.split(',').filter((n) => n), true);}
+				catch (e) {return;}
+				if (input) {input = input.split(',').filter((n) => n).join(',');}
+				if (input === list.removeDuplicatesAutoPls) {return;}
+				list.removeDuplicatesAutoPls = input;
+				list.properties['removeDuplicatesAutoPls'][1] = list.removeDuplicatesAutoPls;
+				overwriteProperties(list.properties);
+			}, flags: bEnabled ? MF_STRING : MF_GRAYED});
+			menu.newCheckMenu(subMenuName, 'Enable filtering', void(0), () => {return list.bRemoveDuplicatesAutoPls;});
+		}
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Playlist AutoTags & Actions
+			const subMenuName = menu.newMenu('Playlist AutoTags and actions', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Playlist file\'s Tags relatad actions:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{
+				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
+				const options = ['bAutoLoad', 'bAutoLock'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					const itemKey = item + 'Tag';
+					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+						list[itemKey] = !list[itemKey];
+						list.properties[itemKey][1] = list[itemKey];
+						overwriteProperties(list.properties);
+					}});
+					menu.newCheckMenu(subMenuNameTwo, item, void(0),  () => {return list[itemKey];});
+				});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
+					let tag = '';
+					try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'bAutoLoad,bAutoLock', true);}
+					catch(e) {return;}
+					tag = tag.trim();
+					list.bAutoCustomTag = tag.length ? true : false;
+					list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
+					list.autoCustomTag = tag.split(',');
+					list.properties.autoCustomTag[1] = tag;
 					overwriteProperties(list.properties);
 				}});
-				menu.newCheckMenu(subMenuNameTwo, item, void(0),  () => {return list[itemKey];});
-			});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
-				let tag = '';
-				try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'bAutoLoad,bAutoLock', true);}
-				catch(e) {return;}
-				tag = tag.trim();
-				list.bAutoCustomTag = tag.length ? true : false;
-				list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
-				list.autoCustomTag = tag.split(',');
-				list.properties.autoCustomTag[1] = tag;
-				overwriteProperties(list.properties);
-			}});
-			menu.newCheckMenu(subMenuNameTwo, 'Custom tag...', void(0),  () => {return list.bAutoCustomTag;});
+				menu.newCheckMenu(subMenuNameTwo, 'Custom tag...', void(0),  () => {return list.bAutoCustomTag;});
+			}
+			{
+				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
+				const options = ['Yes: when loading playlists', 'No: ignore them'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+						list.bApplyAutoTags = (i === 0) ? true : false;
+						list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
+						overwriteProperties(list.properties);
+					}});
+				});
+				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
+			}
 		}
-		{
-			const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
-			const options = ['Yes: when loading playlists', 'No: ignore them'];
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
-					list.bApplyAutoTags = (i === 0) ? true : false;
-					list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
+		{	// Tracks AutoTags
+			const subMenuName = menu.newMenu('Tracks AutoTags and actions', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Track\'s Tags related actions:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{
+				const subMenuNameTwo = menu.newMenu('Automatically tag added tracks on...', subMenuName);
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
+					if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+					list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
+					list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
+					overwriteProperties(list.properties);
+				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
+					if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+					list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
+					list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
+					overwriteProperties(list.properties);
+				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
+					if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
+					list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
+					list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
+					overwriteProperties(list.properties);
+				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
+					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar, although it will take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize loading time.\n(**) Note enabling this option will not incur on an additional startup time penalty if you already set AutoPlaylists size updating on startup too.\n(***) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
+					list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
+					list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
+					overwriteProperties(list.properties);
+				}, flags: list.bAutoTrackTag && list.bAutoTrackTagAutoPls ? MF_STRING: MF_GRAYED});
+				menu.newCheckMenu(subMenuNameTwo, 'Standard playlists', void(0),  () => {return list.bAutoTrackTagPls;});
+				menu.newCheckMenu(subMenuNameTwo, 'Locked playlists', void(0),  () => {return list.bAutoTrackTagLockPls;});
+				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists', void(0),  () => {return list.bAutoTrackTagAutoPls;});
+				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists (at startup)', void(0),  () => {return list.bAutoTrackTagAutoPlsInit;});
+			}
+			{
+				const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
+					if (!list.bAutoTrackTag) {fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load and/or save.\n\n(*) Use contextual menu.', window.Name);}
+					list.bAutoTrackTag = !list.bAutoTrackTag;
+					list.properties['bAutoTrackTag'][1] = list.bAutoTrackTag;
 					overwriteProperties(list.properties);
 				}});
-			});
-			menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
+					if (!list.bAutoTrackTagAlways) {fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name);}
+					list.bAutoTrackTagAlways = !list.bAutoTrackTagAlways;
+					list.properties['bAutoTrackTagAlways'][1] = list.bAutoTrackTagAlways;
+					overwriteProperties(list.properties);
+				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
+				menu.newCheckMenu(subMenuNameTwo, 'When saving and loading pls', void(0),  () => {return list.bAutoTrackTag;});
+				menu.newCheckMenu(subMenuNameTwo, 'Also adding tracks without autosave', void(0),  () => {return list.bAutoTrackTagAlways;});
+			}
 		}
-	}
-	{	// Tracks AutoTags
-		const subMenuName = menu.newMenu('Tracks AutoTags and actions');
-		menu.newEntry({menuName: subMenuName, entryText: 'Track\'s Tags related actions:', flags: MF_GRAYED});
-		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-		{
-			const subMenuNameTwo = menu.newMenu('Automatically tag added tracks on...', subMenuName);
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
-				if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
-				list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
-				list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
-				overwriteProperties(list.properties);
-			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
-				if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
-				list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
-				list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
-				overwriteProperties(list.properties);
-			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
-				if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
-				list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
-				list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
-				overwriteProperties(list.properties);
-			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-				if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar, although it will take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize loading time.\n(**) Note enabling this option will not incur on an additional startup time penalty if you already have \'Show size\' enabled for AutoPlaylists.\n(***) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what the \'Show Size\' config is.', window.Name);}
-				list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
-				list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
-				overwriteProperties(list.properties);
-			}, flags: list.bAutoTrackTag && list.bAutoTrackTagAutoPls ? MF_STRING: MF_GRAYED});
-			menu.newCheckMenu(subMenuNameTwo, 'Standard playlists', void(0),  () => {return list.bAutoTrackTagPls;});
-			menu.newCheckMenu(subMenuNameTwo, 'Locked playlists', void(0),  () => {return list.bAutoTrackTagLockPls;});
-			menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists', void(0),  () => {return list.bAutoTrackTagAutoPls;});
-			menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists (at startup)', void(0),  () => {return list.bAutoTrackTagAutoPlsInit;});
-		}
-		{
-			const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
-				if (!list.bAutoTrackTag) {fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load and/or save.\n\n(*) Use contextual menu.', window.Name);}
-				list.bAutoTrackTag = !list.bAutoTrackTag;
-				list.properties['bAutoTrackTag'][1] = list.bAutoTrackTag;
-				overwriteProperties(list.properties);
-			}});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
-				if (!list.bAutoTrackTagAlways) {fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name);}
-				list.bAutoTrackTagAlways = !list.bAutoTrackTagAlways;
-				list.properties['bAutoTrackTagAlways'][1] = list.bAutoTrackTagAlways;
-				overwriteProperties(list.properties);
-			}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
-			menu.newCheckMenu(subMenuNameTwo, 'When saving and loading pls', void(0),  () => {return list.bAutoTrackTag;});
-			menu.newCheckMenu(subMenuNameTwo, 'Also adding tracks without autosave', void(0),  () => {return list.bAutoTrackTagAlways;});
-		}
-	}
-	{	// Export and Converter settings
-		{
-			const subMenuName = menu.newMenu('Export and convert...');
-			menu.newEntry({menuName: subMenuName, entryText: 'Configuration of exporting presets:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			const presets = JSON.parse(list.properties.converterPreset[1]);
-			presets.forEach((preset, i) => {
-				const path = preset.path;
-				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
-				const dsp = preset.dsp;
-				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-				const tf = preset.tf;
-				let tfName = preset.tf;
-				if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
-				if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
-				if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
-				const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
-					let input = '';
-					try {input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, preset.dsp, true);}
-					catch(e) {return;}
-					if (!input.length) {input = '...';}
-					if (input !== preset.dsp) {
-						preset.dsp = input;
-						list.properties['converterPreset'][1] = JSON.stringify(presets);
-						overwriteProperties(list.properties);
-					}
-				}});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
-					let input = '';
-					try {input = utils.InputBox(window.ID, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, preset.tf, true);}
-					catch(e) {return;}
-					if (!input.length) {return;}
-					if (input !== preset.tf) {
-						preset.tf = input;
-						list.properties['converterPreset'][1] = JSON.stringify(presets);
-						overwriteProperties(list.properties);
-					}
-				}});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
-					let input = '';
-					try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Empty will use the current playlist path)', window.Name, preset.path, true);}
-					catch(e) {return;}
-					if (!input.endsWith('\\')) {input += '\\';}
-					if (input !== preset.path) {
-						preset.path = input;
-						list.properties['converterPreset'][1] = JSON.stringify(presets);
-						overwriteProperties(list.properties);
-					}
-				}});
-			});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Add new preset', func: () => {
-				presets.push({dsp: '...', tf: '%filename%.mp3', path: ''});
-				list.properties['converterPreset'][1] = JSON.stringify(presets);
-				overwriteProperties(list.properties);
-			}});
-			const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
-			presets.forEach((preset, i) => {
-				const path = preset.path;
-				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
-				const dsp = preset.dsp;
-				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-				const tf = preset.tf;
-				let tfName = preset.tf;
-				if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
-				if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
-				if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-					presets.splice(i, 1);
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Export and Converter settings
+			{
+				const subMenuName = menu.newMenu('Export and convert...', menuName);
+				menu.newEntry({menuName: subMenuName, entryText: 'Configuration of exporting presets:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				const presets = JSON.parse(list.properties.converterPreset[1]);
+				presets.forEach((preset, i) => {
+					const path = preset.path;
+					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+					const dsp = preset.dsp;
+					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+					const tf = preset.tf;
+					let tfName = preset.tf;
+					if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
+					if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
+					if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
+						let input = '';
+						try {input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, preset.dsp, true);}
+						catch(e) {return;}
+						if (!input.length) {input = '...';}
+						if (input !== preset.dsp) {
+							preset.dsp = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+						}
+					}});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
+						let input = '';
+						try {input = utils.InputBox(window.ID, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, preset.tf, true);}
+						catch(e) {return;}
+						if (!input.length) {return;}
+						if (input !== preset.tf) {
+							preset.tf = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+						}
+					}});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
+						let input = '';
+						try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Empty will use the current playlist path)', window.Name, preset.path, true);}
+						catch(e) {return;}
+						if (!input.endsWith('\\')) {input += '\\';}
+						if (input !== preset.path) {
+							preset.path = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+						}
+					}});
+				});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Add new preset', func: () => {
+					presets.push({dsp: '...', tf: '%filename%.mp3', path: ''});
 					list.properties['converterPreset'][1] = JSON.stringify(presets);
 					overwriteProperties(list.properties);
 				}});
-			});
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'})
-			menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
-				const defPresets = [{dsp: '...', tf: '%filename%.mp3', path: ''}];
-				list.properties['converterPreset'][1] = JSON.stringify(defPresets);
-				overwriteProperties(list.properties);
-			}});
+				const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
+				presets.forEach((preset, i) => {
+					const path = preset.path;
+					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+					const dsp = preset.dsp;
+					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+					const tf = preset.tf;
+					let tfName = preset.tf;
+					if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
+					if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
+					if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+						presets.splice(i, 1);
+						list.properties['converterPreset'][1] = JSON.stringify(presets);
+						overwriteProperties(list.properties);
+					}});
+				});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'})
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
+					const defPresets = [{dsp: '...', tf: '%filename%.mp3', path: ''}];
+					list.properties['converterPreset'][1] = JSON.stringify(defPresets);
+					overwriteProperties(list.properties);
+				}});
+			}
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
-	{	
-		{	// Duplicates handling
-			const subMenuName = menu.newMenu('Duplicates handling...');
-			const options = ['Skip duplicates when adding new tracks', 'Only warn about it on tooltip'];
+	{	// UI
+		const menuName = menu.newMenu('UI');
+		{	// Playlist Size
+			const subMenuName = menu.newMenu('Show Playlist size...', menuName);
+			const options = ['Yes: Shown along the playlist name', 'No: Only shown on tooltip'];
 			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'When using Shift + L. Click on a playlist:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'Track count on parenthesis:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.bForbidDuplicates = (i === 0) ? true : false;
-					list.properties['bForbidDuplicates'][1] = list.bForbidDuplicates;
+					list.bShowSize = (i === 0) ? true : false;
+					list.properties['bShowSize'][1] = list.bShowSize;
 					overwriteProperties(list.properties);
 				}});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bForbidDuplicates ? 0 : 1);});
+			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowSize ? 0 : 1);});
 		}
-		{	// Dead items handling
-			const subMenuName = menu.newMenu('Dead items handling...');
-			const options = ['Also check for dead items on auto-saving', 'Only on manual saving or when adding tracks'];
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'Dead items warnings (streams are skipped):', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.bDeadCheckAutoSave = (i === 0) ? true : false;
-					list.properties['bDeadCheckAutoSave'][1] = list.bDeadCheckAutoSave;
-					overwriteProperties(list.properties);
-				}});
-			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDeadCheckAutoSave ? 0 : 1);});
-		}
-	}
-	menu.newEntry({entryText: 'sep'});
-	{	// Panel config
 		{	// Name/category sep
-			const subMenuName = menu.newMenu('Show name/category separators...');
+			const subMenuName = menu.newMenu('Show name/category separators...', menuName);
 			const options = ['Yes: Dotted line and initials','No: Only shown on tooltip'];
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'When sorting by name/category:', flags: MF_GRAYED});
@@ -906,8 +961,9 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowSep ? 0 : 1);});
 		}
+		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Tooltips
-			const subMenuName = menu.newMenu('Show usage info on tooltips...');
+			const subMenuName = menu.newMenu('Show usage info on tooltips...', menuName);
 			const options = ['Yes: Show shortcuts','No: Only show basic info'];
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'On playlist and header tooltips:', flags: MF_GRAYED});
@@ -921,8 +977,9 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowTips ? 0 : 1);});
 		}
+		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Font size
-			const subMenuName = menu.newMenu('Font size...');
+			const subMenuName = menu.newMenu('Font size...', menuName);
 			if (panel.list_objects.length || panel.text_objects.length) {
 				const options = [...panel.fonts.sizes, 'Other...'];
 				const optionsLength = options.length;
@@ -959,8 +1016,8 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
-			const subMenuName = menu.newMenu('Set custom colour...');
-			const options = ['Autoplaylists...','Locked Playlists...','Selection rectangle...'];
+			const subMenuName = menu.newMenu('Set custom color...', menuName);
+			const options = ['AutoPlaylists...','Locked Playlists...','Selection rectangle...'];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {

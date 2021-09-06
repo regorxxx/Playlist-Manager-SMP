@@ -4,6 +4,7 @@ include('helpers_xxx_properties.js');
 include('helpers_xxx_file.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_clipboard.js');
+if (_isFile(folders.xxx + 'main\\remove_duplicates.js')) {include('..\\main\\remove_duplicates.js');}
 
 function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = []) {
 	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
@@ -269,6 +270,34 @@ function convertToRelPaths(list, z) {
 		return bDone;
 	}
 	clearInterval(delay);
+	return bDone;
+}
+
+function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+	let bDone = false;
+	const pls = list.data[z];
+	const playlistName = pls.name + ' (std)';
+	const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
+	const idx = getPlaylistIndexArray(list.data[z].nameId);
+	if (idx && idx.length === 1) { // Already loaded? Duplicate it
+		plman.ActivePlaylist = idx[0];
+		const newIdx = plman.DuplicatePlaylist(plman.ActivePlaylist, plman.GetPlaylistName(plman.ActivePlaylist).replace(pls.name, playlistName));
+		if (newIdx !== -1) {plman.ActivePlaylist = newIdx;}
+		else {console.log('Error duplicating playlist'); return false;}
+	} else if (idx && idx.length === 0) { // Not loaded? Load, duplicate it
+		list.loadPlaylist(z);
+		const newIdx = plman.DuplicatePlaylist(plman.ActivePlaylist, plman.GetPlaylistName(plman.ActivePlaylist).replace(pls.name, playlistName));
+		plman.RemovePlaylistSwitch(plman.ActivePlaylist);
+		if (newIdx !== -1) {plman.ActivePlaylist = newIdx - 1;}
+		else {console.log('Error duplicating playlist'); return false;}
+	} else {
+		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+		return false;
+	}
+	if (remDupl && remDupl.length && do_remove_duplicatesV2) {do_remove_duplicatesV2(null, null, remDupl);};
+	const objectPlaylist = list.add(false); // Create playlist from active playlist
+	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
+	if (bDone) {_explorer(objectPlaylist.path); console.log('Playlist Manager: done.');}
 	return bDone;
 }
 
