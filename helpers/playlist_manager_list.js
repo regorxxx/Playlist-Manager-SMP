@@ -283,7 +283,7 @@ function _list(x, y, w, h) {
 				default:
 				{
 					switch (true) {
-						case x > this.x && x < this.x + Math.min(this.data[this.index].width, this.text_width):
+						case (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)):
 						{
 							// Cursor
 							window.SetCursor(IDC_HAND);
@@ -400,7 +400,7 @@ function _list(x, y, w, h) {
 				default:
 				{
 					const z = this.index;
-					if (x > this.x && x < this.x + Math.min(this.data[z].width, this.text_width)) {
+					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (mask === MK_CONTROL) { // Pressing control
 							const duplicated = getPlaylistIndexArray(this.data[z].nameId);
 							if (duplicated.length === 0) {this.loadPlaylist(z);} 
@@ -809,10 +809,40 @@ function _list(x, y, w, h) {
 	
 	}
 	
+	this.exportJson = (idx, bFpl = false, path = '') => { // idx may be -1 (export all), int (single pls) or array (set of pls)
+		let name = '';
+		let bArray = false;
+		if (isArray(idx)) {name = this.playlistsPathDisk + '_' + this.playlistsPathDirName + '.json'; bArray = true;}
+		else if (idx === -1) {name = this.playlistsPathDisk + '_' + this.playlistsPathDirName + '.json';}
+		else if (isInt(idx)) {name = this.data[idx].name + '.json';}
+		else {console.log('exportJson: Invalid index argument ' + idx); return '';}
+		if (!bArray && idx !== -1 && !this.data[idx].isAutoplaylist && !bFpl && !this.data[idx].extension === '.fpl') {return '';} // Check if it's an autoplaylist or an .fpl playlist on single selection
+		if (!path || !path.length) {
+			try {path = utils.InputBox(window.ID, 'Path to save the json file:', window.Name, this.playlistsPath + 'Export\\' + name,true);}
+			catch (e) {return '';}
+		}
+		if (!path.length){return '';}
+		if (_isFile(path)) {
+			let bDone = _recycleFile(path);
+			if (!bDone) {console.log('exportJson: can\'t delete duplicate file ' + path); return '';}
+		}
+		let toSave = [];
+		if (bArray) {
+			idx.forEach((i) => {
+				if (this.data[i].extension === '.fpl' && bFpl) {toSave.push(this.data[i]);}
+				else if (this.data[i].isAutoplaylist) {toSave.push(this.data[i]);}
+			});
+		}
+		else if (idx === -1) {toSave = bFpl ? [...this.dataAutoPlaylists, ...this.dataFpl] : [...this.dataAutoPlaylists];}
+		else {toSave.push(this.data[idx])}
+		_save(path, JSON.stringify(toSave, this.replacer, '\t'), this.bBOM); // No BOM
+		return path;
+	}
+	
 	this.loadExternalJson = () => {
 		var test = new FbProfiler(window.Name + ': ' + 'Load json file');
 		let externalPath = '';
-		try {externalPath = utils.InputBox(window.ID, 'Put here the path of the json file', window.Name);}
+		try {externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', window.Name, '', true);}
 		catch (e) {return false;}
 		if (!externalPath.length){return false;}
 		if (!_isFile(externalPath)) {
@@ -1787,6 +1817,7 @@ function _list(x, y, w, h) {
 	this.bBOM = this.properties['bBOM'][1];
 	this.removeDuplicatesAutoPls = this.properties['removeDuplicatesAutoPls'][1];
 	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
+	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length

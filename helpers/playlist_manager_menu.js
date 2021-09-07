@@ -31,6 +31,11 @@ function createMenuLeft(forcedIndex = -1) {
 	const isAutoPls = () => {return pls.isAutoPlaylist;};
 	const isLockPls = () => {return pls.isLocked;};
 	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.fpl' || pls.isAutoPlaylist;};
+	// Header
+	if (list.bShowMenuHeader) {
+		menu.newEntry({entryText: '--- ' + (isAutoPls() ? 'AutoPlaylist' : pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
+		menu.newEntry({entryText: 'sep'});
+	}
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
@@ -189,7 +194,7 @@ function createMenuLeft(forcedIndex = -1) {
 						list.updatePlaylist(z);
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
-			}, flags: isPlsActive() ? MF_STRING : MF_GRAYED});
+			}, flags: isPlsActive()  && !isLockPls() && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -228,6 +233,10 @@ function createMenuLeft(forcedIndex = -1) {
 			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 				cloneAsStandardPls(list, z, list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
 			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+			menu.newEntry({entryText: 'Export as json file...', func: () => {
+				const path = list.exportJson(z);
+				if (_isFile(path)) {_explorer(path);}
+			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
 		}
 		else {
 			menu.newEntry({entryText: 'Force relative paths...', func: () => {
@@ -235,7 +244,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}, flags: writablePlaylistFormats.has(pls.extension) && !isLockPls() ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
 				exportPlaylistFile(list, z);
-			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			}, flags: readablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
 				exportPlaylistFileWithTracks(list, z);
 			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
@@ -324,10 +333,16 @@ function createMenuRight() {
 				});
 			}
 		}
+		menu.newEntry({entryText: 'sep'});
 		{	// Import json
 			menu.newEntry({entryText: 'Add playlists from json file...', func: () => {
 				list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
 				list.loadExternalJson();
+			}});
+			menu.newEntry({entryText: 'Export playlists as json file...', func: () => {
+				let answer = WshShell.Popup('Export only AutoPlaylists (yes) or both AutoPlaylists and .fpl playlists (no)?', 0, window.Name, popup.question + popup.yes_no);
+				const path = list.exportJson(-1, answer === popup.yes ? false : true); // All
+				if (_isFile(path)) {_explorer(path);}
 			}});
 		}
 	}
@@ -723,7 +738,7 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'Removes duplicates after loading:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Enable filtering', func: () => {
-				list.bRemoveDuplicatesAutoPls = bRemoveDuplicatesAutoPls;
+				list.bRemoveDuplicatesAutoPls = !list.bRemoveDuplicatesAutoPls;
 				list.properties['bRemoveDuplicatesAutoPls'][1] = list.bRemoveDuplicatesAutoPls;
 				overwriteProperties(list.properties);
 			}, flags: bEnabled ? MF_STRING : MF_GRAYED});
@@ -976,6 +991,21 @@ function createMenuRightTop() {
 				}});
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowTips ? 0 : 1);});
+		}
+		{	// Playlist header menu
+			const subMenuName = menu.newMenu('Show playlist header on menus...', menuName);
+			const options = ['Yes: Show playlist format and name','No: Only the contextual menu'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'On playlist contextual menu:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bShowMenuHeader = (i === 0) ? true : false;
+					list.properties['bShowMenuHeader'][1] = list.bShowMenuHeader;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowMenuHeader ? 0 : 1);});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Font size

@@ -63,7 +63,8 @@ var properties = {
 	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false],
 	bBOM					: ['Save files as UTF8 with BOM?', false],
 	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', 'artist,date,title'],
-	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true]
+	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true],
+	bShowMenuHeader			: ['Show header on playlist menus?', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
