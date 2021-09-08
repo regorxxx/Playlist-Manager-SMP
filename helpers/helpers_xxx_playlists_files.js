@@ -383,7 +383,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 	} else if (bOmitNotFound) {
 		console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').');
-		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
+		handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
 	} else {
 		console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').'); 
 		handlePlaylist = null;

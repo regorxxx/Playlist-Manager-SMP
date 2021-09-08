@@ -812,9 +812,9 @@ function _list(x, y, w, h) {
 	this.exportJson = (idx, bFpl = false, path = '') => { // idx may be -1 (export all), int (single pls) or array (set of pls)
 		let name = '';
 		let bArray = false;
-		if (isArray(idx)) {name = this.playlistsPathDisk + '_' + this.playlistsPathDirName + '.json'; bArray = true;}
-		else if (idx === -1) {name = this.playlistsPathDisk + '_' + this.playlistsPathDirName + '.json';}
-		else if (isInt(idx)) {name = this.data[idx].name + '.json';}
+		if (isArray(idx)) {name = sanitize(this.playlistsPathDisk + '_' + this.playlistsPathDirName) + '.json'; bArray = true;}
+		else if (idx === -1) {name = sanitize(this.playlistsPathDisk + '_' + this.playlistsPathDirName) + '.json';}
+		else if (isInt(idx)) {name = sanitize(this.data[idx].name) + '.json';}
 		else {console.log('exportJson: Invalid index argument ' + idx); return '';}
 		if (!bArray && idx !== -1 && !this.data[idx].isAutoplaylist && !bFpl && !this.data[idx].extension === '.fpl') {return '';} // Check if it's an autoplaylist or an .fpl playlist on single selection
 		if (!path || !path.length) {

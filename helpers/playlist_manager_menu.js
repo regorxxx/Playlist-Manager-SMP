@@ -900,9 +900,9 @@ function createMenuRightTop() {
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
 						let input = '';
-						try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Empty will use the current playlist path)', window.Name, preset.path, true);}
+						try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, preset.path, true);}
 						catch(e) {return;}
-						if (!input.endsWith('\\')) {input += '\\';}
+						if (input.length && !input.endsWith('\\')) {input += '\\';}
 						if (input !== preset.path) {
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);

@@ -87,6 +87,7 @@
 - Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'auto-save' one).
 - Checking if all items on a playlist are in the library now works as expected when some items -file paths- are duplicated.
 - Restore menu list not working when deleting playlists.
+- Fixed crash when trying to load a playlist with non present items and 'omit not found' was enabled (for ex. exporting features).
 - Multiple minor improvements and fixes on path handling for portable installations.
 - Multiple minor improvements and fixes when saving files on non existing folder.
 
