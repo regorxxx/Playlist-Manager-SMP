@@ -692,6 +692,31 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDeadCheckAutoSave ? 0 : 1);});
 		}
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Auto-Saving
+			menu.newEntry({menuName: menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + 'ms)', func: () => {
+				let input = 0;
+				try {input = utils.InputBox(window.ID, 'Save changes within foobar playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, list.properties['autoSave'][1], true);}
+				catch(e) {return;}
+				if (isNaN(input)) {return;}
+				if (!checkProperty(list.properties['autoSave'], input)) {return;}
+				list.properties['autoSave'][1] = input;
+				overwriteProperties(list.properties);
+			}});
+			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return (list.properties['autoSave'][1] ? 1 : 0);});
+		}
+		{	// Auto-Loading
+			menu.newEntry({menuName: menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + 'ms)', func: () => {
+				let input = 0;
+				try {input = utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, list.properties['autoUpdate'][1], true);}
+				catch(e) {return;}
+				if (isNaN(input)) {return;}
+				if (!checkProperty(list.properties['autoUpdate'], input)) {return;}
+				list.properties['autoUpdate'][1] = input;
+				overwriteProperties(list.properties);
+			}});
+			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return (list.properties['autoUpdate'][1] ? 1 : 0);});
+		}
 	}
 	{	// Playlists behavior
 		const menuName = menu.newMenu('Playlists behavior');

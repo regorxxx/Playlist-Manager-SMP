@@ -30,6 +30,7 @@
 - Categories: double clicking on the header cycles through the categories shown one by one.
 - Added tag filtering menu to only show playlists which contain selected tags. Tag filtering is always reset on startup, no matter what 'Save filtering between sessions' is set to. Use categories for 'virtual folders' or permanent playlist categorization, tags are meant only for informative purpose or auto-tag actions (thus not needing permanent filtering).
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
+- Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
 ### Changed
 - Relative Paths: Improved relative path support. Playlist folder may now be at a different level than the library folders as long as they share the same drive disk For ex. 'H:\_Playlists' and 'H:\Music\CDs'.
 - Relative Paths: Loading playlists, checking items on library and finding dead items now evaluates relative paths whether they start with .\ or not. Playlists created with the manager always use '.\', but this improves compatibility with playlists created with other software or manually.
