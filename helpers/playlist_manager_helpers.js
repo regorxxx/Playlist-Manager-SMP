@@ -1,4 +1,5 @@
 'use strict';
+include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
 include('helpers_xxx_file.js');
@@ -47,8 +48,11 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		var trackTags = [];
 		var size = null;
 		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
-			let text = utils.ReadTextFile(playlistPathArray[i], convertCharsetToCodepage('UTF-8')).split('\r\n');
+			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
 			if (typeof text !== 'undefined' && text.length >= 1) {
+				// Safe checks to ensure proper UTF-8 and codepage detection
+				const codePage = checkCodePage(text, playlistPathArray[i].split('.').pop());
+				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage).split('\r\n');}
 				let commentsText = text.filter(function(e) {return e.startsWith('#');});
 				if (typeof commentsText !== 'undefined' && commentsText.length >= 1) { // Use playlist info
 					let lines = commentsText.length;

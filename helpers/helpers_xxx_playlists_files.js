@@ -1,6 +1,7 @@
 ﻿'use strict';
 //01/06/21
 
+include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
 
@@ -121,6 +122,9 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		let trackText = [];
 		let size;
 		if (typeof originalText !== 'undefined' && originalText.length) { // We don't check if it's a playlist by its content! Can break things if used wrong...
+			// Safe checks to ensure proper encoding detection
+			const codePage = checkCodePage(originalText, extension);
+			if (codePage !== -1) {originalText = utils.ReadTextFile(playlistPath, codePage).split('\r\n');}
 			let lines = originalText.length;
 			if (extension === '.m3u8' || extension === '.m3u') {
 				bFound = true; // no check for m3u8 since it can be anything
@@ -229,6 +233,9 @@ function getFilePathsFromPlaylist(playlistPath) {
 		// Read original file
 		let originalText = utils.ReadTextFile(playlistPath).split('\r\n');
 		if (typeof originalText !== 'undefined' && originalText.length) {
+			// Safe checks to ensure proper encoding detection
+			const codePage = checkCodePage(originalText, extension);
+			if (codePage !== -1) {originalText = utils.ReadTextFile(playlistPath, codePage).split('\r\n');}
 			let lines = originalText.length;
 			if (extension === '.m3u8' || extension === '.m3u') {
 				for (let j = 0; j < lines; j++) {
@@ -376,7 +383,8 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		if (pathPool.has(filePaths[i])) {
 			handlePlaylist[i] = poolItems[pathPool.get(filePaths[i])];
 			count++;
-		}
+		// }
+		} else {console.log(filePaths[i]);}
 	}
 	if (count === filePaths.length) {
 		console.log(playlistPath.split('\\').pop() + ': Found all tracks on library.');
@@ -385,7 +393,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').');
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
 	} else {
-		console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').'); 
+		console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').');
 		handlePlaylist = null;
 	}
 	// test.Print();
@@ -435,4 +443,14 @@ function loadPlaylists(playlistArray) {
 		i++;
 	}
 	return i; // Number of playlists loaded
+}
+
+function checkCodePage(originalText, extension) {
+	let codepage = -1;
+	if (extension === '.m3u8') {codepage = convertCharsetToCodepage('UTF-8');}
+	else if (extension === '.m3u' && originalText.length >= 2 && originalText[1].startsWith('#EXTENC:')) {
+		const codepageName = originalText[1].split(':').pop();
+		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
+	}
+	return codepage ? codepage : -1;
 }

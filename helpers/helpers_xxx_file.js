@@ -1,6 +1,7 @@
 ﻿'use strict';
 //01/06/21
 
+include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx_foobar.js');
 include('helpers_xxx_prototypes.js');
 

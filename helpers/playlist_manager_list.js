@@ -179,15 +179,17 @@ function _list(x, y, w, h) {
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
-		const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
-		const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
-		if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
-			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-				// Icon
-				// gr.GdiDrawText(iconCharPlaylistSelected, gfontIconChar(), this.colours.selectedPlaylistColour, this.x + 5 + this.data[currSelIdx].width , this.y + yOffset + _scale(1) + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), this.text_width, panel.row_height, LEFT);
-				// Rectangle
-				const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
-				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colours.selectedPlaylistColour);
+		if (this.colours.selectedPlaylistColour !== panel.colours.background) {
+			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
+			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
+			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
+				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
+					// Icon
+					// gr.GdiDrawText(iconCharPlaylistSelected, gfontIconChar(), this.colours.selectedPlaylistColour, this.x + 5 + this.data[currSelIdx].width , this.y + yOffset + _scale(1) + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), this.text_width, panel.row_height, LEFT);
+					// Rectangle
+					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colours.selectedPlaylistColour);
+				}
 			}
 		}
 		// Up/down buttons
@@ -1111,12 +1113,15 @@ function _list(x, y, w, h) {
 				const data = _jsonParseFile(this.filename);
 				if (!data && utils.GetFileSize(this.filename)) {fb.ShowPopupMessage('Playlists json file is probably corrupt (try restoring a backup and then use manual refresh): ' + this.filename, window.Name); return;}
 				else if (!data) {return;}
+				let i = 0;
 				data.forEach((item) => {
 					if (item.isAutoPlaylist) {
+						i++;
 						if (this.bUpdateAutoplaylist && this.bShowSize) { // Updates size for Autoplaylists. Warning takes a lot of time! Only when required...
 							// Only re-checks query when forcing update of size for performance reasons
 							// Note the query is checked on user input, external json loading and just before loading the playlist
 							// So checking it every time the panel is painted is totally useless...
+							/*
 							if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
 							const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 							item.size = handleList.Count;
@@ -1124,7 +1129,20 @@ function _list(x, y, w, h) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
 									this.updateTags(handleList, item);
 								}
-							}
+							} 
+							*/
+							const cacheSize = item.size;
+							let bDone = false;
+							getAutoPlaylistSizeAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
+								if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
+									if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
+										this.updateTags(handleList, item);
+									}
+								}
+								if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
+								if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
+								if (i === this.itemsAutoplaylist && bDone) {this.save();} // Updates this.dataAutoPlaylists
+							});
 						} else { // Updates tags for Autoplaylists. Warning takes a lot of time! Only when required...
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
@@ -1825,4 +1843,20 @@ function _list(x, y, w, h) {
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel(1); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel(-1); });
 	this.init();
+}
+
+// Calculate paths in x steps to not freeze the UI
+function getAutoPlaylistSize(pls, i) {
+	return new Promise(resolve => {
+		setTimeout(() => {
+			if (!checkQuery(pls.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
+			const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query));
+			pls.size = handleList.Count;
+			resolve(handleList);
+		}, 500 * i);
+	});
+}
+
+async function getAutoPlaylistSizeAsync(pls, i) {
+	return await getAutoPlaylistSize(pls, i);
 }
