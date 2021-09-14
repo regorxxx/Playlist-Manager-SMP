@@ -32,6 +32,7 @@
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 - Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
 ### Changed
+- Workaround for SMP limits on automatic code-page detection for text files (playlists). If code-page is present in M3U files (#EXTENC:...), encoding is forced instead of using the detected code-page (which may be wrong). .m3u8 files are always considered as UTF-8 files. This should cover most UTF-8 problems (when BOM is not present) on M3U files. .pls format still relies on code-page detection.
 - Relative Paths: Improved relative path support. Playlist folder may now be at a different level than the library folders as long as they share the same drive disk For ex. 'H:\_Playlists' and 'H:\Music\CDs'.
 - Relative Paths: Loading playlists, checking items on library and finding dead items now evaluates relative paths whether they start with .\ or not. Playlists created with the manager always use '.\', but this improves compatibility with playlists created with other software or manually.
 - Playlist Manager Path: Playlists folder may now be set too using full relative paths. i.e. not only something like '.\profile\playlist_manager\' but also something like '..\..\_Playlists\', in any case relative to foobar exe path. This may be used to load a playlist folder on same drive but not necessarily within the foobar installation, specially useful when the drive letter changes. Previously you were forced to use only relative nested paths within foobar main folder for that use-case.
@@ -40,6 +41,7 @@
 - Installation: Installation path may now be changed by editing 'folders.xxxName' variable at '.\helpers\helpers_xxx.js'. This is a workaround for some SMP limitations when working with relative paths and text files, images or dynamic file loading.
 - Tooltip: Header tooltip now shows current filters applied and number of playlists / Autoplaylists. Note the header text always show the number of tracked playlists on the current folder, while the tooltip shows only those on the current view.
 - Categories: Current category view is now saved only when 'Save filtering between sessions' is enabled, otherwise it will be reset to show 'All' on startup.
+- AutoPlaylists: Autoplaylists size now gets updated asynchronously (if feature is enabled), thus not impacting loading time at startup.
 - UI: Tooltip shortcuts are updated as soon as the key modifiers are pressed, even if the the mouse has not been moved (tooltip is redrawn). That should make easier to see the action which would be applied without needing to move the mouse constantly to update the tooltip.
 - UI: Header tooltip (with current filter view) is updated after double clicking, even if the the mouse has not been moved  (tooltip is redrawn). That should make easier to see the current category applied while cycling without needing to move the mouse constantly to update the tooltip.
 - UI: current selection rectangle now has its width adjusted according to 'Show name/category separators', so it doesn't overlap with the letters at the right when enabled.
@@ -47,6 +49,7 @@
 - UI: entire panel is repaint when moving the mouse over it instead of currently selected playlist only to ensure selection is always properly drawn even with extreme movements.
 - UI: Auto-Playlists size now gets updated when loading them (since it's essentially performance free).
 - UI: contextual menu for selected playlist can now be invoked on the entire selection rectangle (not only over the name).
+- UI: selection rectangle drawing is skipped if color matches the background color.
 - Menus: Reordered menu entries into sub-menus for more logical access: panel behavior, playlist behavior, UI, ...
 - Menus: 'Copy playlist file to...' is now available for .fpl playlist too, since it's the only option which doesn't involve playlist editing.
 - Menus: 'Bind active playlist to this file...' is now disabled for locked playlists (must unlock them first) and .fpl playlists (in any case).
