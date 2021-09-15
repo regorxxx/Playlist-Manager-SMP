@@ -42,7 +42,7 @@
 - Installation: Installation path may now be changed by editing 'folders.xxxName' variable at '.\helpers\helpers_xxx.js'. This is a workaround for some SMP limitations when working with relative paths and text files, images or dynamic file loading.
 - Tooltip: Header tooltip now shows current filters applied and number of playlists / Autoplaylists. Note the header text always show the number of tracked playlists on the current folder, while the tooltip shows only those on the current view.
 - Categories: Current category view is now saved only when 'Save filtering between sessions' is enabled, otherwise it will be reset to show 'All' on startup.
-- AutoPlaylists: Autoplaylists size now gets updated asynchronously (if feature is enabled), thus not impacting loading time at startup.
+- AutoPlaylists: Autoplaylists size now gets updated asynchronously (if feature is enabled), thus having a minimum impact on loading time at startup..
 - UI: Tooltip shortcuts are updated as soon as the key modifiers are pressed, even if the the mouse has not been moved (tooltip is redrawn). That should make easier to see the action which would be applied without needing to move the mouse constantly to update the tooltip.
 - UI: Header tooltip (with current filter view) is updated after double clicking, even if the the mouse has not been moved  (tooltip is redrawn). That should make easier to see the current category applied while cycling without needing to move the mouse constantly to update the tooltip.
 - UI: current selection rectangle now has its width adjusted according to 'Show name/category separators', so it doesn't overlap with the letters at the right when enabled.
