@@ -356,21 +356,37 @@ function createMenuRight() {
 			menu.newEntry({menuName: subMenuName, entryText: 'Absolute/relative paths...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other enviroments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
-				let found = [];
+/* 				let found = [];
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
 					}
 				});
-				fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name); */
+				findMixedPathsAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
 			}});
+			function findMixedPaths() {
+				const found = [];
+				return new Promise(resolve => {
+					list.dataAll.forEach((playlist, i) => {
+						setTimeout(() => {
+							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								const filePaths = getFilePathsFromPlaylist(playlist.path);
+								if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
+							}
+							if (i === list.itemsAll - 1) {resolve(found);}
+						}, 10 * i);
+					});
+				});
+			}
+			async function findMixedPathsAsync() {return await findMixedPaths();}
 		}
 		{	// External items
 			menu.newEntry({menuName: subMenuName, entryText: 'External items...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
-				let found = [];
+/* 				let found = [];
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
@@ -396,15 +412,51 @@ function createMenuRight() {
 						}
 					}
 				});
-				fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name); */
+				findExternalAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
 			}});
+			function findExternal() {
+				const found = [];
+				return new Promise(resolve => {
+					list.dataAll.forEach((playlist, i) => {
+						setTimeout(() => {
+							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								const filePaths = getFilePathsFromPlaylist(playlist.path);
+								if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
+									const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
+									const bDead = filePaths.some((path) => {
+										// Skip streams & look for absolute and relative paths (with and without .\)
+										let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+										if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+										else {
+											let pathAbs = path;
+											if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+											else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+											bCheck = bCheck && !_isFile(pathAbs);
+										}
+										return bCheck;
+									});
+									if (bDead) {
+										found.push(playlist.path + '(contains dead items)');
+									} else {
+										found.push(playlist.path);
+									}
+								}
+							}
+							if (i === list.itemsAll - 1) {resolve(found);}
+						}, 50 * i);
+					});
+				});
+			}
+			async function findExternalAsync() {return await findExternal();}
 		}
 		{	// Dead items
 			menu.newEntry({menuName: subMenuName, entryText: 'Dead items...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for dead items (i.e. items that don\'t exist in their path).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
+				/* 	
 				let found = [];
-				list.dataAll.forEach((playlist) => {
+				list.dataAll.forEach((playlist, i) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
@@ -426,28 +478,77 @@ function createMenuRight() {
 						if (bDead) {found.push(playlist.path);}
 					}
 				});
-				fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name); 
+				*/
+				findDeadAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
 			}});
+			function findDead() {
+				const found = [];
+				return new Promise(resolve => {
+					list.dataAll.forEach((playlist, i) => {
+						setTimeout(() => {
+							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
+								const filePaths = getFilePathsFromPlaylist(playlist.path);
+								const bDead = filePaths.some((path) => {
+									// Skip streams & look for absolute and relative paths (with and without .\)
+									let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+									if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+									else {
+										let pathAbs = path;
+										if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+										else {
+											const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
+											pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath);
+										}
+										bCheck = bCheck && !_isFile(pathAbs);
+									}
+									return bCheck;
+								});
+								if (bDead) {found.push(playlist.path);}
+							}
+							if (i === list.itemsAll - 1) {resolve(found);}
+						}, 50 * i);
+					});
+				});
+			}
+			async function findDeadAsync() {return await findDead();}
 		}
 		{	// Duplicates
 			menu.newEntry({menuName: subMenuName, entryText: 'Duplicated items...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
-				let found = [];
+/* 				let found = [];
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
 						if (new Set(filePaths).size !== filePaths.length) {found.push(playlist.path);}
 					}
 				});
-				fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name); */
+				findDuplicatesAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
 			}});
+			function findDuplicates() {
+				const found = [];
+				return new Promise(resolve => {
+					list.dataAll.forEach((playlist, i) => {
+						setTimeout(() => {
+							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								const filePaths = getFilePathsFromPlaylist(playlist.path);
+								if (new Set(filePaths).size !== filePaths.length) {found.push(playlist.path);}
+							}
+							if (i === list.itemsAll - 1) {resolve(found);}
+						}, 10 * i);
+					});
+				});
+			}
+			async function findDuplicatesAsync() {return await findDuplicates();}
 		}
 		{	// Size mismatch
 			menu.newEntry({menuName: subMenuName, entryText: 'Playlist size mismatch...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
-				let found = [];
+/* 				let found = [];
 				list.dataAll.forEach((playlist) => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
@@ -475,8 +576,45 @@ function createMenuRight() {
 						else if (filePathsNum !== size) {found.push(playlist.path + '(tag: ' + size + ', paths: ' + filePathsNum + ')');}
 					}
 				});
-				fb.ShowPopupMessage('Found these playlists with size missmatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name); */
+				findSizeMismatchAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
 			}});
+			function findSizeMismatch() {
+				const found = [];
+				return new Promise(resolve => {
+					list.dataAll.forEach((playlist, i) => {
+						setTimeout(() => {
+							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
+								let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path).split('\r\n') : void(0);
+								let size;
+								if (typeof text !== 'undefined' && text.length) {
+									let lines = text.length;
+									if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+										let j = 0;
+										while (j < lines) { // Changes size Line
+											if (text[j].startsWith('#PLAYLISTSIZE:')) {
+												size = Number(text[j].split(':')[1]);
+												break;
+											}
+											j++;
+										}
+									} else if (playlist.extension === '.pls') {
+										let j = 0;
+										if (text[lines - 2].startsWith('NumberOfEntries=')) {
+											size = Number(text[lines - 2].split('=')[1]);
+										}
+									}
+								}
+								if (typeof size === 'undefined') {found.push(playlist.path + '(no size tag found)');}
+								else if (filePathsNum !== size) {found.push(playlist.path + '(tag: ' + size + ', paths: ' + filePathsNum + ')');}
+							}
+							if (i === list.itemsAll - 1) {resolve(found);}
+						}, 10 * i);
+					});
+				});
+			}
+			async function findSizeMismatchAsync() {return await findSizeMismatch();}
 		}
 	}
 	return menu;
@@ -750,7 +888,7 @@ function createMenuRightTop() {
 					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
 					overwriteProperties(list.properties);
 					if (list.properties['bUpdateAutoplaylist'][1]) {
-						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retriever their tag count.(*)(**)\n\nIt will take more time to load the script at startup as consequence.\n(*) Note enabling this option will not incur on an additional startup time penalty if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
+						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retriever their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
 						}
 				}});
 			});
@@ -837,13 +975,13 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
-					if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+					if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
 					list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
 					list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
-					if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\n	Enabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+					if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
 					list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
 					list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
 					overwriteProperties(list.properties);
@@ -855,7 +993,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar, although it will take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize loading time.\n(**) Note enabling this option will not incur on an additional startup time penalty if you already set AutoPlaylists size updating on startup too.\n(***) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
+					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
 					list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
 					list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
 					overwriteProperties(list.properties);

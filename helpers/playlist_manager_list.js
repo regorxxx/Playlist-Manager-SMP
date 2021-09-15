@@ -683,19 +683,19 @@ function _list(x, y, w, h) {
 	}
 	
 	this.updateTags = (handleList, pls) => {
-		if (!this.bAutoTrackTag) {return;}
+		if (!this.bAutoTrackTag) {return false;}
 		if (pls.isAutoPlaylist) {
 			if (this.bAutoTrackTagAutoPls) {
 				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
-				this.updateTrackTags(handleUpdate, tagsUpdate);
+				return this.updateTrackTags(handleUpdate, tagsUpdate);
 			}
 		} else {
 			if ((pls.isLocked && this.bAutoTrackTagLockPls) || (!pls.isLocked && this.bAutoTrackTagPls)) {
 				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
-				this.updateTrackTags(handleUpdate, tagsUpdate);
+				return this.updateTrackTags(handleUpdate, tagsUpdate);
 			}
 		}
-		return;
+		return false;
 	}
 	
 	this.updatePlaylistFpl = (playlistIndex) => { // Workaround for .fpl playlist limitations...
@@ -1133,23 +1133,35 @@ function _list(x, y, w, h) {
 							*/
 							const cacheSize = item.size;
 							let bDone = false;
-							getAutoPlaylistSizeAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
+							loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
 								if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 									if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
-										this.updateTags(handleList, item);
+										const bUpdated = this.updateTags(handleList, item);
+										if (bUpdated) {console.log('Playlist Manager: Auto-tagging playlist ' + item.name);}
 									}
 								}
 								if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
 								if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
-								if (i === this.itemsAutoplaylist && bDone) {this.save();} // Updates this.dataAutoPlaylists
+								if (i === this.itemsAutoplaylist && bDone) {this.save();} // Updates this.dataAutoPlaylists on last item
 							});
 						} else { // Updates tags for Autoplaylists. Warning takes a lot of time! Only when required...
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
-									if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
+									/*
+ 									if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
 									const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 									item.size = handleList.Count; // Update autopls size, even if it is not configured to do so, since it's essentially free here
-									if (handleList && item.size) {this.updateTags(handleList, item);}
+									if (handleList && item.size) {this.updateTags(handleList, item);} 
+									*/
+									loadAutoPlaylistAsync(item, i).then((handleList = null) => {
+										if (handleList && item.size) {
+											const bUpdated = this.updateTags(handleList, item);
+											if (bUpdated) {console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name);}
+										}
+										if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
+										if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
+										if (bDone) {this.save();} // Updates this.dataAutoPlaylists on every step
+									});
 								}
 							}
 						}
@@ -1845,8 +1857,8 @@ function _list(x, y, w, h) {
 	this.init();
 }
 
-// Calculate paths in x steps to not freeze the UI
-function getAutoPlaylistSize(pls, i) {
+// Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process
+function loadAutoPlaylist(pls, i) {
 	return new Promise(resolve => {
 		setTimeout(() => {
 			if (!checkQuery(pls.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
@@ -1857,6 +1869,6 @@ function getAutoPlaylistSize(pls, i) {
 	});
 }
 
-async function getAutoPlaylistSizeAsync(pls, i) {
-	return await getAutoPlaylistSize(pls, i);
+async function loadAutoPlaylistAsync(pls, i) {
+	return await loadAutoPlaylist(pls, i);
 }
