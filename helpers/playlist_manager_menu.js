@@ -246,7 +246,7 @@ function createMenuLeft(forcedIndex = -1) {
 				exportPlaylistFile(list, z);
 			}, flags: readablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
-				exportPlaylistFileWithTracks(list, z);
+				exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
 			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			// Convert
 			const presets = JSON.parse(list.properties.converterPreset[1]);
@@ -1038,7 +1038,17 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Export and Converter settings
-			{
+			{	//Export and copy
+				const subMenuName = menu.newMenu('Export and copy...', menuName);
+				menu.newEntry({menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Copy files asynchronously (on background)', func: () => {
+					list.properties['bCopyAsync'][1] = !list.properties['bCopyAsync'][1];
+					overwriteProperties(list.properties);
+				}});
+				menu.newCheckMenu(subMenuName, 'Copy files asynchronously (on background)', void(0),  () => {return list.properties['bCopyAsync'][1];});
+			}
+			{	//Export and convert
 				const subMenuName = menu.newMenu('Export and convert...', menuName);
 				menu.newEntry({menuName: subMenuName, entryText: 'Configuration of exporting presets:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});

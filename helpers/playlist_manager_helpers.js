@@ -250,8 +250,9 @@ function convertToRelPaths(list, z) {
 	const playlistPath = list.data[z].path;
 	const paths = getFilePathsFromPlaylist(playlistPath);
 	const relPaths = paths.map((path) => {return '.\\' + path.split('\\').pop();});
-	let file = _open(playlistPath);
-	paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});			
+	const codePage = checkCodePage(_open(playlistPath), list.data[z].extension); //TODO: Deprecated);
+	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
+	paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
 	let bDeleted = false;
 	if (_isFile(playlistPath)) {
 		bDeleted = _recycleFile(playlistPath);
@@ -335,7 +336,8 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	const paths = getFilePathsFromPlaylist(playlistPath);
 	let relPaths = paths.map((path) => {return '.\\' + path.split('\\').pop();});
 	if (ext.length) {relPaths = relPaths.map((path) => {return path.split('.').slice(0, -1).concat([ext]).join('.');});}
-	let file = _open(playlistPath);
+	const codePage = checkCodePage(_open(playlistPath), list.data[z].extension);
+	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 	paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
 	let bDeleted = false;
 	if (_isFile(newPath)) {
@@ -355,24 +357,36 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	return {bDone, newPath, paths};
 }
 
-function exportPlaylistFileWithTracks(list, z, defPath = '') {
+function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths(list, z, void(0), defPath);
 	if (!newPath.length) {return;}
 	if (bDone) {
 		const root = isCompatible('1.4.0') ? utils.SplitFilePath(newPath)[0] : utils.FileTest(newPath, 'split')[0]; //TODO: Deprecated
 		const report = [];
 		const plsRoot = isCompatible('1.4.0') ? utils.SplitFilePath(list.data[z].path)[0] : utils.FileTest(list.data[z].path, 'split')[0]; //TODO: Deprecated
-		paths.forEach((trackPath) => {
-			const fileName = isCompatible('1.4.0') ? utils.SplitFilePath(trackPath).slice(1).join('') : utils.FileTest(trackPath, 'split')[1]; //TODO: Deprecated
-			let bCopy = false;
-			if (trackPath.startsWith('.\\')) {bCopy = _copyFile(plsRoot + trackPath.replace('.\\',''), root + fileName);} // Relative with indicator at start
-			else if (_isFile(plsRoot + trackPath)) {bCopy = _copyFile(plsRoot + trackPath, root + fileName);} // Relative without indicator
-			else if (_isFile(trackPath)) {bCopy = _copyFile(trackPath, root + fileName);} // Absolute 
-			if (!bCopy && !_isFile(root + fileName)) {report.push(trackPath);} // Duplicates will fail on successive copying but present at output
+		new Promise(resolve => {
+			const total = paths.length - 1;
+			paths.forEach((trackPath, i) => {
+				const wait = bAsync ? 50 * i + (i % 4 === 0 ? 1000 : 0) : 0 // Give some time on Async processing between successive calls to not overload HDDs
+				setTimeout(() => {
+					const fileName = isCompatible('1.4.0') ? utils.SplitFilePath(trackPath).slice(1).join('') : utils.FileTest(trackPath, 'split')[1]; //TODO: Deprecated
+					const outputName = root + fileName;
+					let bCopy = false;
+					if (trackPath.startsWith('.\\') || trackPath.startsWith('..\\')) { // Relative with indicator at start
+						const absPath = findRelPathInAbsPath(trackPath, list.playlistsPath);
+						bCopy = _copyFile(absPath, outputName, bAsync);
+					} else if (_isFile(plsRoot + trackPath)) {bCopy = _copyFile(plsRoot + trackPath, outputName, bAsync);} // Relative without indicator
+					else if (_isFile(trackPath)) {bCopy = _copyFile(trackPath, outputName, bAsync);} // Absolute 
+					if (!bCopy && !_isFile(outputName)) {report.push(trackPath);} // Duplicates will fail on successive copying but present at output
+					if (i === total) {resolve(bDone);}
+				}, wait);
+			});
+		}).then(bDone => {
+			_explorer(newPath);
+			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
+			console.log('Playlist Manager: done.');
+			return bDone;
 		});
-		_explorer(newPath);
-		if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-		console.log('Playlist Manager: done.');
 	} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + newPath + '\'.', window.Name);}
 	return bDone;
 }
@@ -407,7 +421,8 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '%filename%.mp3', pre
 			return bDone;
 		}
 		let relPaths = paths.map((_, i) => {return '.\\' + fileNames[i];});
-		let file = _open(playlistPath);
+		const codePage = checkCodePage(_open(playlistPath), list.data[z].extension); //TODO: Deprecated);
+		let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
 		let bDeleted = false;
 		if (_isFile(newPath)) {

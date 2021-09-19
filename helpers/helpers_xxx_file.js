@@ -85,7 +85,7 @@ function _renameFile(oldFilePath, newFilePath) {
 }
 
 // Copy
-function _copyFile(oldFilePath, newFilePath) {
+function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 	if (!newFilePath.length) {return;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
@@ -94,11 +94,11 @@ function _copyFile(oldFilePath, newFilePath) {
 			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
 			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
-				fso.CopyFile(oldFilePath, newFilePath);
+				bAsync ? _runCmd('CMD /K COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
 			} catch (e) {
 				return false;
 			}
-			return _isFile(newFilePath) && _isFile(oldFilePath);
+			return (bAsync ? true : _isFile(newFilePath) && _isFile(oldFilePath)); // Must check afterwards for Async
 		}
 		return false;
 	}
