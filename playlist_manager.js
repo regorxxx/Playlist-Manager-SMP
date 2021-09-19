@@ -17,12 +17,20 @@ include('helpers\\playlist_manager_buttons.js');
 include('helpers\\playlist_manager_menu.js');
 include('helpers\\playlist_manager_helpers.js');
 
-let bCalcCacheLibraryPaths = false;
-precacheLibraryPathsAsync(100).then((x) => {
-	window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
-	bCalcCacheLibraryPaths = true;
-	console.log(x);
-});
+let precacheLibraryPathsIds = [window.ID];
+window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
+setTimeout(() => {
+	if (window.ID === precacheLibraryPathsIds[0]) { // Only execute once per Foobar2000 instance
+		precacheLibraryPathsAsync().then((result) => {
+			window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
+			console.log(result);
+		}, (error) => {
+			// Already using data from other instance. See on_notify_data
+		}).finally(() => {
+			if (list && list.bRelativePath && list.playlistsPath) {precacheLibraryRelPaths(list.playlistsPath);}
+		});
+	}
+},500)
 
 var properties = {
 	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
@@ -172,6 +180,25 @@ function on_notify_data(name, info) {
 	switch (name) {
 		case 'Playlist manager: playlistPath': {
 			if (!info) {window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath);} // Share paths
+			break;
+		}
+		case 'precacheLibraryPaths': {
+			libItemsAbsPaths = [...info];
+			console.log('precacheLibraryPaths: using paths from another instance.');
+			// Update rel paths if needed with new data
+			if (list.bRelativePath && list.playlistsPath.length) {
+				if (libItemsRelPaths.hasOwnProperty(list.playlistsPath) && libItemsRelPaths[list.playlistsPath].length !== libItemsAbsPaths.length) {
+					libItemsRelPaths[list.playlistsPath] = []; // Delete previous cache on library change
+				}
+				precacheLibraryRelPaths(list.playlistsPath);
+			}
+			break;
+		}
+		case 'precacheLibraryPaths instances': {
+			if (isArrayEqual(precacheLibraryPathsIds, info)) {return;}
+			precacheLibraryPathsIds = [...new Set(info)].sort();
+			window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
+			break;
 		}
 	}
 }

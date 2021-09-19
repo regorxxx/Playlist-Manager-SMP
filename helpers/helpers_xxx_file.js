@@ -147,6 +147,7 @@ function _restoreFile(file) {
 
 function _open(file, codePage = 0) {
 	if (_isFile(file)) {
+		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		return utils.ReadTextFile(file, codePage);
 	} else {
 		return '';
@@ -154,6 +155,7 @@ function _open(file, codePage = 0) {
 }
 
 function _save(file, value, bBOM = false) {
+	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
 	if (!_isFolder(filePath)) {_createFolder(filePath);}
 	if (_isFolder(filePath) && utils.WriteTextFile(file, value, bBOM)) {
@@ -172,8 +174,8 @@ function _jsonParse(value) {
 	}
 }
 
-function _jsonParseFile(file) {
-	return _jsonParse(_open(file));
+function _jsonParseFile(file, codePage = 0) {
+	return _jsonParse(_open(file, codePage));
 }
 
 // Opens explorer on file (and selects it) or folder

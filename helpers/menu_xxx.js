@@ -227,7 +227,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		return manualMenuArr;
 	}
 	
-	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0) => {
+	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0, bindArgs = null /*{pos: -1, args: null}*/) => {
 		// Recreate menu(s)
 		const manualMenuArr = this.initMenu(object);
 		// Find currently selected item
@@ -240,7 +240,12 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 					this.lastCall = forcedEntry.length ? forcedEntry : this.getEntry(currIdx);
 					console.log('Called: ' + this.lastCall);
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
-					if (bExecute) {func();}
+					if (bExecute) {
+						if (bindArgs !== null) {
+							if (bindArgs.pos >= 1) {func(...[...Array(bindArgs.pos)].map((_) => {return void(0);}), bindArgs.args)}
+							else {func(bindArgs.args);}
+						} else {func();}
+					}
 					else if (replaceFunc) {replaceFunc(this.lastCall);}
 					bDone = true;
 					return;

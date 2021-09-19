@@ -1768,14 +1768,6 @@ function _list(x, y, w, h) {
 		this.update(false, true, void(0), true); // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-		if (this.bRelativePath) {
-			// setTimeout(() => {precacheLibraryRelPaths(this.playlistsPath);}, 5000);
-			const repeatedFn = () => {
-				if (bCalcCacheLibraryPaths) {precacheLibraryRelPaths(this.playlistsPath);}
-				else {setTimeout(repeatedFn, 1000);}
-			}
-			repeatedFn(); //immediate first run 
-		} // Calc relative path cache
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js

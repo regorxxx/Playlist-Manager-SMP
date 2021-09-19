@@ -2,6 +2,7 @@
 //01/06/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
+include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
 
@@ -261,31 +262,35 @@ var libItemsAbsPaths = [];
 var libItemsRelPaths = {};
 
 // Calculate paths in x steps to not freeze the UI
-function precacheLibraryPaths(x) {
+function precacheLibraryPaths(iSteps, iDelay) {
 	return new Promise(resolve => {
 		const items = fb.GetLibraryItems().Convert();
 		const count = items.length;
-		const range = count / x;
+		const range = count / iSteps;
 		let libCopy = [...libItemsAbsPaths];
-		for (let i = 1; i <= x; i++) {
+		for (let i = 1; i <= iSteps; i++) {
 			setTimeout(() => {
 				if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
-					const items_i = new FbMetadbHandleList(items.slice((i - 1) * range, i === x ? count : i * range));
+					const items_i = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
 					libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(items_i));
-					if (i === x) {
+					const progress = i / iSteps * 100;
+					if (progress % 10 === 0) {console.log('Caching libary paths ' + Math.round(progress) + '%.');}
+					if (i === iSteps) {
 						if (libItemsAbsPaths.length !== count) {
 							libItemsAbsPaths = libCopy;
 							resolve('precacheLibraryPaths: got paths from ' + count + ' items.');
+						} else {
+							new Error('already cached');
 						}
 					}
 				}
-			}, 100 * i);
+			}, iDelay * i);
 		}
 	});
 }
 
-async function precacheLibraryPathsAsync(x) {
-	return await precacheLibraryPaths(x);
+async function precacheLibraryPathsAsync(iSteps = iStepsLibrary, iDelay = iDelayLibrary) {
+	return await precacheLibraryPaths(iSteps, iDelay);
 }
 
 function precacheLibraryRelPaths(relPath) {

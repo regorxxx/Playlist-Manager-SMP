@@ -37,7 +37,7 @@
 - Relative Paths: Improved relative path support. Playlist folder may now be at a different level than the library folders as long as they share the same drive disk For ex. 'H:\_Playlists' and 'H:\Music\CDs'.
 - Relative Paths: Loading playlists, checking items on library and finding dead items now evaluates relative paths whether they start with .\ or not. Playlists created with the manager always use '.\', but this improves compatibility with playlists created with other software or manually.
 - Playlist Manager Path: Playlists folder may now be set too using full relative paths. i.e. not only something like '.\profile\playlist_manager\' but also something like '..\..\_Playlists\', in any case relative to foobar exe path. This may be used to load a playlist folder on same drive but not necessarily within the foobar installation, specially useful when the drive letter changes. Previously you were forced to use only relative nested paths within foobar main folder for that use-case.
-- Cache: Paths from current library items are cached at script loading, it's done async and in iterative steps so it doesn't freeze the UI. It was done previously once, per panel, when loading the first playlist. The change should greatly speed up the loading of the first playlist since most of the work is already done at that step, thus being as fast as consecutive playlist loading before.
+- Cache: Paths from current library items are cached at script loading, it's done async and in iterative steps so it doesn't freeze the UI. It was done previously once, per panel, when loading the first playlist. The change should greatly speed up the loading of the first playlist since most of the work is already done at that step, thus being as fast as consecutive playlist loading before. The cache is shared between different panels, so it's only executed once even if there are multiple manager panels.
 - AutoPlaylists: use of 'SORT BY', 'SORT DESCENDING BY' or 'SORT ASCENDING BY' at the end of the query is now allowed. Validity of those sort patterns is also checked (along query's validity), to minimize input typos. They should cover now 100% functionality of native Autoplaylists. (Note marc2003's manager did not check their validity, so it simply crashed if something was wrong on the query or failed silently). 
 - Installation: Installation path may now be changed by editing 'folders.xxxName' variable at '.\helpers\helpers_xxx.js'. This is a workaround for some SMP limitations when working with relative paths and text files, images or dynamic file loading.
 - Tooltip: Header tooltip now shows current filters applied and number of playlists / Autoplaylists. Note the header text always show the number of tracked playlists on the current folder, while the tooltip shows only those on the current view.
@@ -61,6 +61,7 @@
 - General speed improvements loading playlists, checking items on library and finding dead items.
 - Added descriptions at top of most menus.
 - Minor code cleanup.
+- All json files are now saved as UTF-8 without BOM. All json files are now read as UTF-8 (forced).
 ### Removed
 ### Fixed
 - Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).

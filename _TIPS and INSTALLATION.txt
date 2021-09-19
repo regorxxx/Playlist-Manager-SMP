@@ -16,15 +16,26 @@ INSTALLATION:
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts
 Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg) (*)
 For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...
-For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\... 
+For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  (**)
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
 Then load any script into a SMP panel within foobar. See info for usage. 
 
-(*) To change the hardcoded installation path, go to .\helpers\helpers_xxx.js
+(*) To change the hardcoded installation part of the path, go to .\helpers\helpers_xxx.js
 and change the variable named 'folders.xxxName'. This is a workaround for some SMP limitations
 when working with relative paths. Its use is at your own responsibility but feel free to report
 any problem with it.
+
+(**) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile' folder does not exist.
+In such case you have to create it and move all the config folders/files to it, where they should reside (instead of the root of the 
+foobar2000 installation path). Some native folders and files which must be moved include: 
+	index-data, js_data, omponent-updates, configuration, crash reports, user-components, foo_spider_monkey_panel, library, playlists,
+	theme.fth, LargeFieldsConfig.txt, version.txt
+Some extra folders from other components which must be moved include (non extensive list): 
+	autobackup, dvda_metabase, foo_httpcontrol_data, foo_youtube, images, lastfm, python, sacd_metabase, vst-presets, yttm,
+	minibar.db, playlist-tree-0.pts, playlist-tree-1.pts,
+If you don't move all the config folders/files then on startup default values will be used for things not found, probably "losing"
+the theme or other config. You may "fix" it later moving the missing files which still reside in the root. May take some tries to do them all.
 
 PORTABLE TIP: 
 -------------

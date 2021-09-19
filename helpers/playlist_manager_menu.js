@@ -369,13 +369,16 @@ function createMenuRight() {
 			function findMixedPaths() {
 				const found = [];
 				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
 					list.dataAll.forEach((playlist, i) => {
 						setTimeout(() => {
 							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 								const filePaths = getFilePathsFromPlaylist(playlist.path);
 								if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
 							}
-							if (i === list.itemsAll - 1) {resolve(found);}
+							const progress = Math.round(i / total * 10) * 10;
+							if (progress % 10 === 0) {console.log('Checking tags ' + Math.round(progress) + '%.');}
+							if (i === total) {resolve(found);}
 						}, 10 * i);
 					});
 				});
@@ -418,6 +421,7 @@ function createMenuRight() {
 			function findExternal() {
 				const found = [];
 				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
 					list.dataAll.forEach((playlist, i) => {
 						setTimeout(() => {
 							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
@@ -443,8 +447,10 @@ function createMenuRight() {
 									}
 								}
 							}
-							if (i === list.itemsAll - 1) {resolve(found);}
-						}, 50 * i);
+							const progress = Math.round(i / total * 10) * 10;
+							if (progress % 10 === 0) {console.log('Checking tags ' + Math.round(progress) + '%.');}
+							if (i === total) {resolve(found);}
+						}, iDelayPlaylists * i);
 					});
 				});
 			}
@@ -485,6 +491,7 @@ function createMenuRight() {
 			function findDead() {
 				const found = [];
 				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
 					list.dataAll.forEach((playlist, i) => {
 						setTimeout(() => {
 							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
@@ -507,8 +514,10 @@ function createMenuRight() {
 								});
 								if (bDead) {found.push(playlist.path);}
 							}
-							if (i === list.itemsAll - 1) {resolve(found);}
-						}, 50 * i);
+							const progress = Math.round(i / total * 10) * 10;
+							if (progress % 10 === 0) {console.log('Checking tags ' + Math.round(progress) + '%.');}
+							if (i === total) {resolve(found);}
+						}, iDelayPlaylists * i);
 					});
 				});
 			}
@@ -531,14 +540,17 @@ function createMenuRight() {
 			function findDuplicates() {
 				const found = [];
 				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
 					list.dataAll.forEach((playlist, i) => {
 						setTimeout(() => {
 							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 								const filePaths = getFilePathsFromPlaylist(playlist.path);
 								if (new Set(filePaths).size !== filePaths.length) {found.push(playlist.path);}
 							}
-							if (i === list.itemsAll - 1) {resolve(found);}
-						}, 10 * i);
+							const progress = Math.round(i / total * 10) * 10;
+							if (progress % 10 === 0) {console.log('Checking tags ' + Math.round(progress) + '%.');}
+							if (i === total) {resolve(found);}
+						}, iDelayPlaylists / 5 * i);
 					});
 				});
 			}
@@ -582,6 +594,7 @@ function createMenuRight() {
 			function findSizeMismatch() {
 				const found = [];
 				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
 					list.dataAll.forEach((playlist, i) => {
 						setTimeout(() => {
 							if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
@@ -609,8 +622,10 @@ function createMenuRight() {
 								if (typeof size === 'undefined') {found.push(playlist.path + '(no size tag found)');}
 								else if (filePathsNum !== size) {found.push(playlist.path + '(tag: ' + size + ', paths: ' + filePathsNum + ')');}
 							}
-							if (i === list.itemsAll - 1) {resolve(found);}
-						}, 10 * i);
+							const progress = Math.round(i / total * 10) * 10;
+							if (progress % 10 === 0) {console.log('Checking tags ' + Math.round(progress) + '%.');}
+							if (i === total) {resolve(found);}
+						}, iDelayPlaylists / 5 * i);
 					});
 				});
 			}
