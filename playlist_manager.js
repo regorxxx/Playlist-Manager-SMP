@@ -5,7 +5,7 @@
 	See .\helpers\readme\playlist_manager.txt for list of features.
 */
 
-window.DefinePanel('Playlist Manager', { author: 'XXX' , version: '0.2', features: { drag_n_drop: false }});
+window.DefinePanel('Playlist Manager', { author: 'XXX' , version: '0.5.0', features: { drag_n_drop: false }});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
