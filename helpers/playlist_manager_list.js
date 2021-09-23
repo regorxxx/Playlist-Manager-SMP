@@ -12,15 +12,9 @@ include('playlist_manager_panel.js');
 
 function _list(x, y, w, h) {
 	
-	// Wingdings
-	// const gfontIconChar = () => {_gdiFont('wingdings 2', _scale(panel.fonts.size), 0);}
-	// const iconCharPlaylistLocked = String.fromCharCode(79);
-	// const iconCharPlaylist = String.fromCharCode(44);
-	// const iconCharPlaylistEmpty = String.fromCharCode(41);
-	
 	// Font Awesome
 	const gfontIconChar = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 5), 0);};
-	// const iconCharHeader = '\uf015';
+	const iconCharHeader = '\uf03a';
 	const iconCharPlaylistLocked = '\uf0f6';
 	const iconCharPlaylist = '\uf0f6';
 	const iconCharPlaylistEmpty = '\uf016';
@@ -28,8 +22,7 @@ function _list(x, y, w, h) {
 	
 	// Icons
 	var iconCharPlaylistLockedW = _gr.CalcTextWidth(iconCharPlaylistLocked, gfontIconChar());
-	var iconCharPlaylistW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar());
-	// var iconCharPlaylistEmptyW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar());
+	var iconCharPlaylistW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar()); // For empty too
 	
 	// UI offset
 	const yOffset = _scale(6);
@@ -59,8 +52,7 @@ function _list(x, y, w, h) {
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
 		this.headerTextUpdate();
 		iconCharPlaylistLockedW = _gr.CalcTextWidth(iconCharPlaylistLocked, gfontIconChar());
-		iconCharPlaylistW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar());
-		// iconCharPlaylistEmptyW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar());
+		iconCharPlaylistW = _gr.CalcTextWidth(iconCharPlaylist, gfontIconChar()); // For empty too
 	}
 	
 	this.headerText = window.Name;
@@ -75,15 +67,18 @@ function _list(x, y, w, h) {
 	
 	this.paint = (gr) => {
 		// HEADER
-		const gfontWd2 = _gdiFont('Wingdings 2', _scale((panel.fonts.size <= 14) ? panel.fonts.size + 2 : panel.fonts.size), 0);
+		const bCatIcon = this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]);
+		const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
+		const offsetHeader = 5;
+		const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
 		const iconColour = blendColours(panel.colours.highlight, panel.colours.background, 0.1);
-		const iconChar = String.fromCharCode(46);
-		const iconw = gr.CalcTextWidth(iconChar, gfontWd2);
-		const iconH = gr.CalcTextHeight(iconChar, gfontWd2);
-		// console.log(iconH % 2);
-		gr.GdiDrawText(iconChar, gfontWd2, blendColours(iconColour, panel.colours.background, 0.35), LM, -1, iconw, TM, LEFT);
+		const iconw = gr.CalcTextWidth(catIcon, gfontHeader);
+		const iconH = gr.CalcTextHeight(catIcon, gfontHeader);
+		const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.title);
+		gr.GdiDrawText(catIcon, gfontHeader, blendColours(iconColour, panel.colours.background, 0.35), LM, 0, iconw, TM, LEFT);
 		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colours.highlight, LM + iconw + 5, 0, panel.w - (LM * 2), TM, LEFT);
-		let lineY = (panel.fonts.size < 14 && iconH % 2) ? iconH + 2 : iconH + 1;
+		let lineY = (headerTextH > iconH) ? (headerTextH % 2 ? headerTextH + 2 : headerTextH + 1) : (iconH % 2 ? iconH + 2 : iconH + 1);
+		lineY += offsetHeader;
 		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colours.highlight);
 		headerW = LM + iconw + 5;
 		headerH = lineY;
@@ -857,7 +852,7 @@ function _list(x, y, w, h) {
 		}
 		let answer = WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n (no = json file by this playlist manager)', 0, window.Name, popup.question + popup.yes_no);
 		let dataExternalPlaylists = [];
-		const data = _jsonParseFile(externalPath);
+		const data = _jsonParseFile(externalPath, answer === popup.no ? convertCharsetToCodepage('UTF-8') : 0);
 		if (!data) {return false;}
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
@@ -1110,10 +1105,11 @@ function _list(x, y, w, h) {
 			this.dataFpl = [];
 			if (_isFile(this.filename)) {
 				if (this.bUpdateAutoplaylist && this.bShowSize) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
-				const data = _jsonParseFile(this.filename);
+				const data = _jsonParseFile(this.filename, convertCharsetToCodepage('UTF-8'));
 				if (!data && utils.GetFileSize(this.filename)) {fb.ShowPopupMessage('Playlists json file is probably corrupt (try restoring a backup and then use manual refresh): ' + this.filename, window.Name); return;}
 				else if (!data) {return;}
 				let i = 0;
+				const promises = [];
 				data.forEach((item) => {
 					if (item.isAutoPlaylist) {
 						i++;
@@ -1121,47 +1117,35 @@ function _list(x, y, w, h) {
 							// Only re-checks query when forcing update of size for performance reasons
 							// Note the query is checked on user input, external json loading and just before loading the playlist
 							// So checking it every time the panel is painted is totally useless...
-							/*
-							if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
-							const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
-							item.size = handleList.Count;
-							if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
-								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
-									this.updateTags(handleList, item);
-								}
-							} 
-							*/
 							const cacheSize = item.size;
 							let bDone = false;
-							loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
-								if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
-									if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
-										const bUpdated = this.updateTags(handleList, item);
-										if (bUpdated) {console.log('Playlist Manager: Auto-tagging playlist ' + item.name);}
+							promises.push(new Promise(resolve => {
+								loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
+									if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
+										if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
+											const bUpdated = this.updateTags(handleList, item);
+											if (bUpdated) {console.log('Playlist Manager: Auto-tagging playlist ' + item.name);}
+										}
 									}
-								}
-								if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
-								if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
-								if (i === this.itemsAutoplaylist && bDone) {this.save();} // Updates this.dataAutoPlaylists on last item
-							});
+									if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
+									if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
+									resolve('done');
+								});
+							}));
 						} else { // Updates tags for Autoplaylists. Warning takes a lot of time! Only when required...
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
-									/*
- 									if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
-									const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
-									item.size = handleList.Count; // Update autopls size, even if it is not configured to do so, since it's essentially free here
-									if (handleList && item.size) {this.updateTags(handleList, item);} 
-									*/
-									loadAutoPlaylistAsync(item, i).then((handleList = null) => {
-										if (handleList && item.size) {
-											const bUpdated = this.updateTags(handleList, item);
-											if (bUpdated) {console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name);}
-										}
-										if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
-										if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
-										if (bDone) {this.save();} // Updates this.dataAutoPlaylists on every step
-									});
+									promises.push(new Promise(resolve => {
+										loadAutoPlaylistAsync(item, i).then((handleList = null) => {
+											if (handleList && item.size) {
+												const bUpdated = this.updateTags(handleList, item);
+												if (bUpdated) {console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name);}
+											}
+											if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
+											if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
+											resolve('done');
+										});
+									}));
 								}
 							}
 						}
@@ -1175,7 +1159,7 @@ function _list(x, y, w, h) {
 						this.dataFpl.push(item);
 					}
 				});
-				if (this.bUpdateAutoplaylist && this.bShowSize) {test.Print();}
+				if (promises.length) {Promise.all(promises).then((_) => {test.Print(); this.save();});} // Updates this.dataAutoPlaylists when all are processed
 			}
 			this.itemsAutoplaylist = this.dataAutoPlaylists.length;
 			this.data = [];
@@ -1717,6 +1701,12 @@ function _list(x, y, w, h) {
 			if (bDone) {overwriteProperties(this.properties);}
 		}
 		
+		this.loadConfigFile = (file = this.filename.replace('.json','_config.json')) => {
+			if (!file.length) {this.configFile = null; return;}
+			if (_isFile(file)) {this.configFile = _jsonParseFile(file, convertCharsetToCodepage('UTF-8'));}
+			else {this.configFile = null;}
+		}
+		
 		this.reset = () => {
 			this.inRange = false;
 			this.items = 0;
@@ -1762,6 +1752,7 @@ function _list(x, y, w, h) {
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
 		_recycleFile(this.filename + '.old'); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
+		this.loadConfigFile(); // Extra json config available?
 		this.initProperties(); // This only set properties if they have no values...
 		this.reset();
 		let bDone = this.checkConfig();
@@ -1807,6 +1798,7 @@ function _list(x, y, w, h) {
 	this.bDoubleclick = false;
 	this.bSelMenu = false;
 	this.filename = '';
+	this.configFile = null;
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
 	this.properties = getPropertiesPairs(properties, prefix); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.') ? findRelPathInAbsPath(this.properties['playlistPath'][1]) : this.properties['playlistPath'][1];

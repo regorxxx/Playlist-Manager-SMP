@@ -268,24 +268,25 @@ function precacheLibraryPaths(iSteps, iDelay) {
 		const count = items.length;
 		const range = count / iSteps;
 		let libCopy = [...libItemsAbsPaths];
+		const promises = [];
 		for (let i = 1; i <= iSteps; i++) {
-			setTimeout(() => {
-				if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
-					const items_i = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
-					libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(items_i));
-					const progress = i / iSteps * 100;
-					if (progress % 10 === 0) {console.log('Caching libary paths ' + Math.round(progress) + '%.');}
-					if (i === iSteps) {
-						if (libItemsAbsPaths.length !== count) {
-							libItemsAbsPaths = libCopy;
-							resolve('precacheLibraryPaths: got paths from ' + count + ' items.');
-						} else {
-							new Error('already cached');
-						}
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
+						const items_i = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
+						libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(items_i));
+						const progress = i / iSteps * 100;
+						if (progress % 10 === 0) {console.log('Caching library paths ' + Math.round(progress) + '%.');}
+						if (libItemsAbsPaths.length === count) {new Error('already cached');}
+						else {resolve('done');}
 					}
-				}
-			}, iDelay * i);
+				}, iDelay * i);
+			}));
 		}
+		Promise.all(promises).then((done) => {
+			libItemsAbsPaths = libCopy;
+			resolve('precacheLibraryPaths: got paths from ' + count + ' items.');
+		}, (error) => {new Error(error);});
 	});
 }
 

@@ -9,11 +9,14 @@ include('helpers_xxx_file.js');
 */
 
 // Outputs indexes of all playlists with that name
-function playlistCountNoLocked() {
+function playlistCountNoLocked(type = []) {
 	const playlistsNum = plman.PlaylistCount;
+	const bAll = type.length ? true : false;
 	let count = 0;
 	for (let i = 0; i < playlistsNum; i++) {
-		if (!plman.IsPlaylistLocked(i)) {count++;}
+		const lockActions = plman.GetPlaylistLockedActions(i);
+		if (bAll && lockActions.length) {count++;}
+		else if (!bAll && new Set(lockActions).isSuperset(new Set(type))) {count++;}
 	}
 	return count;
 }

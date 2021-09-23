@@ -90,9 +90,6 @@ The '_images' folder shows screenshots to show how the scripts look in my pc:
 The root folder (the one you found this readme) contains these scripts which can be loaded in any panel directly:
 	+ playlist_manager.js (*)[+]
 		- Playlist manager requires some fonts.
-			- _resources\Wingdings 3.ttf
-			- _resources\Wingdings 2.ttf
-			- _resources\guifx_v2_transports.ttf
 			- _resources\fontawesome-webfont.ttf
 	+ world_map.js (*)[+]
 		- May be used along Biography 1.1.X or 1.2.X

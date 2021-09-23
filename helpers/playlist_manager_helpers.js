@@ -319,7 +319,7 @@ function exportPlaylistFile(list, z, defPath = '') {
 	if (path === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
 	bDone = _copyFile(playlistPath, path);
 	if (bDone) {_explorer(path); console.log('Playlist Manager: done.');}
-	else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked.', window.Name);}
+	else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name);}
 	return bDone;
 }
 
@@ -366,22 +366,28 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 		const plsRoot = isCompatible('1.4.0') ? utils.SplitFilePath(list.data[z].path)[0] : utils.FileTest(list.data[z].path, 'split')[0]; //TODO: Deprecated
 		new Promise(resolve => {
 			const total = paths.length - 1;
+			const promises = [];
 			paths.forEach((trackPath, i) => {
-				const wait = bAsync ? 50 * i + (i % 4 === 0 ? 1000 : 0) : 0 // Give some time on Async processing between successive calls to not overload HDDs
-				setTimeout(() => {
-					const fileName = isCompatible('1.4.0') ? utils.SplitFilePath(trackPath).slice(1).join('') : utils.FileTest(trackPath, 'split')[1]; //TODO: Deprecated
-					const outputName = root + fileName;
-					let bCopy = false;
-					if (trackPath.startsWith('.\\') || trackPath.startsWith('..\\')) { // Relative with indicator at start
-						const absPath = findRelPathInAbsPath(trackPath, list.playlistsPath);
-						bCopy = _copyFile(absPath, outputName, bAsync);
-					} else if (_isFile(plsRoot + trackPath)) {bCopy = _copyFile(plsRoot + trackPath, outputName, bAsync);} // Relative without indicator
-					else if (_isFile(trackPath)) {bCopy = _copyFile(trackPath, outputName, bAsync);} // Absolute 
-					if (!bCopy && !_isFile(outputName)) {report.push(trackPath);} // Duplicates will fail on successive copying but present at output
-					if (i === total) {resolve(bDone);}
-				}, wait);
+				promises.push(new Promise(resolve => {
+					const wait = bAsync ? 50 * i + (i % 4 === 0 ? 1000 : 0) : 0 // Give some time on Async processing between successive calls to not overload HDDs
+					setTimeout(() => {
+						const fileName = isCompatible('1.4.0') ? utils.SplitFilePath(trackPath).slice(1).join('') : utils.FileTest(trackPath, 'split')[1]; //TODO: Deprecated
+						const outputName = root + fileName;
+						let bCopy = false;
+						if (trackPath.startsWith('.\\') || trackPath.startsWith('..\\')) { // Relative with indicator at start
+							const absPath = findRelPathInAbsPath(trackPath, list.playlistsPath);
+							bCopy = _copyFile(absPath, outputName, bAsync);
+						} else if (_isFile(plsRoot + trackPath)) {bCopy = _copyFile(plsRoot + trackPath, outputName, bAsync);} // Relative without indicator
+						else if (_isFile(trackPath)) {bCopy = _copyFile(trackPath, outputName, bAsync);} // Absolute 
+						if (!bCopy && !_isFile(outputName)) {report.push(trackPath);} // Duplicates will fail on successive copying but present at output
+						resolve('done');
+					}, wait);
+				}));
 			});
-		}).then(bDone => {
+			Promise.all(promises).then((_) => {
+				resolve('done');
+			});
+		}).then(_ => {
 			_explorer(newPath);
 			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
 			console.log('Playlist Manager: done.');

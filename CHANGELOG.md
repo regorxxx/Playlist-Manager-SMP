@@ -14,6 +14,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: Header icon can now be customized according to category being shown with an extra json config file. Check readme for instructions ('Advanced tips').
 - UI: new option to enable/disable header on selected playlist contextual menu. The header shows the playlist format and name.
 - AutoPlaylists: new option on contextual menu to export selected AutoPlaylist as json file (ready to be imported by other instances of the manager). Not backwards compatible with marc2003's panel. 
 - AutoPlaylists: new option on list menu to export all AutoPlaylist (and optionally .fpl virtual files too) as json file at once (ready to be imported by other instances of the manager). Not backwards compatible with marc2003's panel.
@@ -43,6 +44,7 @@
 - Tooltip: Header tooltip now shows current filters applied and number of playlists / Autoplaylists. Note the header text always show the number of tracked playlists on the current folder, while the tooltip shows only those on the current view.
 - Categories: Current category view is now saved only when 'Save filtering between sessions' is enabled, otherwise it will be reset to show 'All' on startup.
 - AutoPlaylists: Autoplaylists size now gets updated asynchronously (if feature is enabled), thus having a minimum impact on loading time at startup..
+- UI: Minor UI adjustments to the header.
 - UI: Tooltip shortcuts are updated as soon as the key modifiers are pressed, even if the the mouse has not been moved (tooltip is redrawn). That should make easier to see the action which would be applied without needing to move the mouse constantly to update the tooltip.
 - UI: Header tooltip (with current filter view) is updated after double clicking, even if the the mouse has not been moved  (tooltip is redrawn). That should make easier to see the current category applied while cycling without needing to move the mouse constantly to update the tooltip.
 - UI: current selection rectangle now has its width adjusted according to 'Show name/category separators', so it doesn't overlap with the letters at the right when enabled.
@@ -63,6 +65,7 @@
 - Minor code cleanup.
 - All json files are now saved as UTF-8 without BOM. All json files are now read as UTF-8 (forced).
 ### Removed
+- UI: Removed Wingdings dependencies. Replaced with Font Awesome (already being in use at other places).
 ### Fixed
 - Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
 - Categories: adding or removing playlists updates the category filter accordingly. i.e. when adding a new playlist with a new category, it doesn't get filtered but added to the current view, no matter what the current filtering is. Previously the new playlist would be hidden by default, since the category filter did only showed currently selected categories. The same when removing the last playlist within a category.
