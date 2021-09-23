@@ -33,6 +33,7 @@
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 - Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
 ### Changed
+- Requisites: Script requires at minimum SMP 1.5.2. now.
 - Playlists consistency tools: all are now executed asynchronously: Absolute/relative paths..., external items, dead items, duplicated items and playlist size mismatch.
 - Workaround for SMP limits on automatic code-page detection for text files (playlists). If code-page is present in M3U files (#EXTENC:...), encoding is forced instead of using the detected code-page (which may be wrong). .m3u8 files are always considered as UTF-8 files. This should cover most UTF-8 problems (when BOM is not present) on M3U files. .pls format still relies on code-page detection.
 - Relative Paths: Improved relative path support. Playlist folder may now be at a different level than the library folders as long as they share the same drive disk For ex. 'H:\_Playlists' and 'H:\Music\CDs'.
