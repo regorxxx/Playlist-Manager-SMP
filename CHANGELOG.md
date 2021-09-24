@@ -14,6 +14,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: buttons' text color can now be customized via menus.
 - UI: Header icon can now be customized according to category being shown with an extra json config file. Check readme for instructions ('Advanced tips').
 - UI: new option to enable/disable header on selected playlist contextual menu. The header shows the playlist format and name.
 - AutoPlaylists: new option on contextual menu to export selected AutoPlaylist as json file (ready to be imported by other instances of the manager). Not backwards compatible with marc2003's panel. 
