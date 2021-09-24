@@ -1214,6 +1214,22 @@ function createMenuRightTop() {
 					window.Repaint();
 				}, flags: panel.colours.bCustomText ? MF_STRING : MF_GRAYED,});
 			}
+			{	// Buttons' Text color
+				const subMenuSecondName = menu.newMenu('Buttons\' Text...', subMenuName);
+				const options = ['Use default (black)', 'Custom'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+						panel.colours.buttonsTextColor = i ? utils.ColourPicker(window.ID, panel.colours.buttonsTextColor) : RGB(0,0,0);
+						panel.properties['buttonsTextColor'][1] = panel.colours.buttonsTextColor;
+						// Update property to save between reloads
+						overwriteProperties(panel.properties);
+						panel.colours_changed();
+						window.Repaint();
+					}});
+				});
+				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return (panel.colours.buttonsTextColor === RGB(0,0,0) ? 0 : 1);});
+			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			{	// Background color
 				const subMenuSecondName = menu.newMenu('Background...', subMenuName);
@@ -1249,6 +1265,7 @@ function createMenuRightTop() {
 				list.properties['listColours'][1] = coloursString;
 				panel.colours.bCustomText = false;
 				panel.properties['bCustomText'][1] = panel.colours.bCustomText;
+				panel.colours.buttonsTextColor = RGB(0,0,0);
 				panel.colours_changed();
 				overwriteProperties(list.properties);
 				list.checkConfig();

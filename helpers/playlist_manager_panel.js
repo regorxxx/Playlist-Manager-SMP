@@ -4,11 +4,12 @@ include('helpers_xxx_properties.js');
 include('helpers_xxx_UI.js');
 
 var panel_properties = {
-	fontSize : ['Font size', _scale(10)],
-	coloursMode : ['Background olour mode', 0],
-	customBackground : ['Custom background colour', RGB(0, 0, 0)],
-	bCustomText : ['Text custom colour mode', false],
-	customText : ['Custom text colour', RGB(0, 0, 0)],
+	fontSize 			: ['Font size', _scale(10)],
+	coloursMode			: ['Background olour mode', 0],
+	customBackground	: ['Custom background colour', RGB(0, 0, 0)],
+	bCustomText			: ['Text custom colour mode', false],
+	customText			: ['Custom text colour', RGB(0, 0, 0)],
+	buttonsTextColor	: ['Buttons\' text color', textColor]
 };
 
 setProperties(panel_properties, 'panel_');
@@ -27,6 +28,8 @@ function _panel(custom_background = false) {
 		}
 		if (this.custom_text) {this.colours.text = this.colours.custom_text;}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
+		textColor = this.colours.buttonsTextColor // buttons_xxx.js
+		console.log(textColor);
 	}
 	
 	this.font_changed = () => {
@@ -91,6 +94,7 @@ function _panel(custom_background = false) {
 	}
 	this.colours.bCustomText = this.properties.bCustomText[1];
 	this.colours.customText = this.properties.customText[1];
+	this.colours.buttonsTextColor = this.properties.buttonsTextColor[1];
 	this.list_objects = [];
 	this.text_objects = [];
 	this.font_changed();
