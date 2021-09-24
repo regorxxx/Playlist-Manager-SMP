@@ -1,12 +1,12 @@
 REQUISITES:
 -------------
-Spider Monkey Panel 1.5.2 or greater:
+Spider Monkey Panel 1.5.2 or greater (only stable releases supported):
 https://theqwertiest.github.io/foo_spider_monkey_panel/
 
 WINE USERS: 
 -------------
 All scripts try to use wine-friendly methods, focusing on config settings that can be changed via
-menus or the UI panel, instead of using HTML (which only works on windows), known working fonts, etc.
+menus or the UI panel, instead of using HTML (which only works on Windows), known working fonts, etc.
 
 Please read this page and feel free to report (me) any problems with these scripts:
 https://theqwertiest.github.io/foo_spider_monkey_panel/docs/wine/
