@@ -29,7 +29,6 @@ function _panel(custom_background = false) {
 		if (this.custom_text) {this.colours.text = this.colours.custom_text;}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
 		textColor = this.colours.buttonsTextColor // buttons_xxx.js
-		console.log(textColor);
 	}
 	
 	this.font_changed = () => {

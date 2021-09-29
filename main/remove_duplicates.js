@@ -21,48 +21,67 @@
 		- Add musicBraiz track ID and album as default: solves same track with different dates...
 */	
 
-function do_remove_duplicates(handleList = null, sortouput = null, checkfirst = "title", checksecond = "artist", checkthird = "date") {
-	if (!checkfirst && !checksecond && !checkthird) {
-		return;
+// Note number of final duplicates is always nAllowed + 1, since you allow n duplicates and the "main" copy.
+// "nAllowed = 0" removes all duplicates.
+function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = ["title","artist","date"], nAllowed = 0) {
+	// Check input
+	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+		console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] was null, empty or not an array");
+		return; //Array was null or not an array
+	} else {
+		let i = checkKeys.length;
+		while (i--){
+			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === "") {
+				console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] some keys are not String objects");
+				return; //Array was null or not an array
+			}
+		}
 	}
-	
-	let items; // Active playlist or input list?
+		
 	let bActivePlaylist = false;
 	if (handleList === null) {
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} 
-	items = handleList.Clone();
+	let items = [];
+	let copy = handleList.Clone();
 	
 	let sortInput; // Sorting
-	if (checkfirst) {sortInput = checkfirst.replace("%",) === checkfirst ? "%" + checkfirst + "%" : checkfirst;} // Using tags set
-	if (checksecond) {sortInput += checksecond.replace("%",) === checksecond ? " - %" + checksecond + "%" :  " - " + checksecond;}
-	if (checkthird) {sortInput += checkthird.replace("%",) === checkthird ? " - %" + checkthird + "%" : " - " + checkthird;}
-	let tfo = fb.TitleFormat(sortInput);
-	let strArray = tfo.EvalWithMetadbs(items); // We get all tf values at once
-	let i = 0;
-	let j = 0;
-	let set = new Set();
-	let itemsCount = items.Count;
-	while (i < itemsCount) {
-		// var str = tfo.EvalWithMetadb(items[i]);
-		let str = strArray[j]; // This instead of calling it for every track, means -100ms per 30k tracks
-		if (set.has(str)) {
-			items.RemoveById(i);
-			itemsCount--;
-		} else {
-			set.add(str);
-			i++;
-		}
-		j++;
+	let checklength = checkKeys.length;
+    let i = 0;
+	while (i < checklength) {
+		let check_i = checkKeys[i];
+		if (i === 0) {sortInput = (check_i.replace("%",) === check_i) ? "%" + check_i + "%" : check_i;}
+		else {sortInput += (check_i.replace("%",) === check_i) ? " - %" + check_i + "%" :  " - " + check_i;}
+		i++;
 	}
+	let tfo = fb.TitleFormat(sortInput);
+	const tfoCopy = tfo.EvalWithMetadbs(copy);
+	
+	i = 0;
+	let countMap = new Map([]);
+	const count = tfoCopy.length;
+	while (i < count) {
+		const str = tfoCopy[i];
+		if (countMap.has(str)) {
+			if (countMap.get(str).val <= nAllowed) {
+				countMap.get(str).val++;
+				items.push(copy[i]);
+			}
+		} else {
+			countMap.set(str, {val: 1});
+			items.push(copy[i]);
+		}
+		i++;
+	}
+	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
 	
 	if (sortouput !== null) { // Output Sorting?
 		if (sortouput.length && sortouput !== sortInput) {tfo = fb.TitleFormat(sortouput);}
 		else {tfo = fb.TitleFormat("$rand()");}
 		items.OrderByFormat(tfo, 1);
 	}
-
+	
 	if (bActivePlaylist) {
 		let removedCount = handleList.Count - items.Count;
 		if (removedCount) { // Send to active playlist if there was no input list and changes were made
@@ -77,7 +96,8 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkfirst = 
 	return items;
 }
 
-// V2: Equal to V1 but can check an arbitrary number of tags
+
+// V2: Equal to V1 but without n checks (faster)
 function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys = ["title","artist","date"]) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
@@ -93,13 +113,14 @@ function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys =
 		}
 	}
 		
-	let items; // Active playlist or input list?
+	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} 
-	items = handleList.Clone();
+	let items = [];
+	let copy = handleList.Clone();
 	
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
@@ -111,94 +132,20 @@ function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys =
 		i++;
 	}
 	let tfo = fb.TitleFormat(sortInput);
+	const tfoCopy = tfo.EvalWithMetadbs(copy);
 	
 	i = 0;
 	let set = new Set();
-	while (i < items.Count) {
-		var str = tfo.EvalWithMetadb(items[i]);
-		if (set.has(str)) {
-			items.RemoveById(i);
-		} else {
+	const count = tfoCopy.length;
+	while (i < count) {
+		const str = tfoCopy[i];
+		if (!set.has(str)) {
 			set.add(str);
-			i++;
+			items.push(copy[i]);
 		}
-	}
-	
-	if (sortouput !== null) { // Output Sorting?
-		if (sortouput.length && sortouput !== sortInput) {tfo = fb.TitleFormat(sortouput);}
-		else {tfo = fb.TitleFormat("$rand()");}
-		items.OrderByFormat(tfo, 1);
-	}
-	
-	if (bActivePlaylist) {
-		let removedCount = handleList.Count - items.Count;
-		if (removedCount) { // Send to active playlist if there was no input list and changes were made
-			plman.UndoBackup(plman.ActivePlaylist);
-			plman.ClearPlaylist(plman.ActivePlaylist);
-			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, items);
-			console.log('Removed ' + removedCount + ' duplicates from active playlist by: ' + sortInput);
-		} else {
-			console.log('No duplicates found by: ' + sortInput);
-		}
-	}
-	return items;
-}
-
-// V3: Equal to V2 but allows a configurable number of duplicates (useful for playlist filtering)
-// Note number of final duplicates is always nAllowed + 1, since you allow n duplicates and the "main" copy.
-// "nAllowed = 0" match behaviour of V2.
-function do_remove_duplicatesV3(handleList = null, sortouput = null, checkKeys = ["title","artist","date"], nAllowed = 0) {
-	// Check input
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] was null, empty or not an array");
-		return; //Array was null or not an array
-	} else {
-		let i = checkKeys.length;
-		while (i--){
-			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === "") {
-				console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] some keys are not String objects");
-				return; //Array was null or not an array
-			}
-		}
-	}
-		
-	let items; // Active playlist or input list?
-	let bActivePlaylist = false;
-	if (handleList === null) {
-		bActivePlaylist = true;
-		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
-	} 
-	items = handleList.Clone();
-	
-	let sortInput; // Sorting
-	let checklength = checkKeys.length;
-    let i = 0;
-	while (i < checklength) {
-		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace("%",) === check_i) ? "%" + check_i + "%" : check_i;}
-		else {sortInput += (check_i.replace("%",) === check_i) ? " - %" + check_i + "%" :  " - " + check_i;}
 		i++;
 	}
-	let tfo = fb.TitleFormat(sortInput);
-	
-	i = 0;
-	let set = new Set();
-	let countMap = new Map([]);
-	while (i < items.Count) {
-		var str = tfo.EvalWithMetadb(items[i]);
-		if (set.has(str)) {
-			if (countMap.get(tfo).val <= nAllowed) {
-				countMap.get(tfo).val++;
-				i++;
-			} else {
-				items.RemoveById(i);
-			}
-		} else {
-			countMap.set(tfo, {val: 1});
-			set.add(str);
-			i++;
-		}
-	}
+	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
 	
 	if (sortouput !== null) { // Output Sorting?
 		if (sortouput.length && sortouput !== sortInput) {tfo = fb.TitleFormat(sortouput);}

@@ -44,6 +44,11 @@ const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR 
 	Query and tag manipulation 
 */
 
+// Quote special chars according to https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Titleformat_Reference#Syntax
+function sanitizeTagTfo(tag) {
+	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/$/g,'\'$\'').replace(/[/g,'\'[\'').replace(/]/g,'\']\''); 
+}
+
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
 function queryReplaceWithCurrent(query, handle) {
@@ -97,14 +102,14 @@ function queryReplaceWithCurrent(query, handle) {
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 function query_join(queryArray, setLogic) {
 		if (logicDic.indexOf(setLogic) === -1) {
-			console.log('query_join(): setLogic (' + setLogic + ') is wrong');
+			console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
 			return;
 		}
 		let arrayLength = queryArray.length;
 		// Wrong array
 		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
 		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array');
+			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
 			return; //Array was null or not an array
 		}
 		
@@ -130,11 +135,11 @@ function query_join(queryArray, setLogic) {
 function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLogic) {
 		// Wrong tagsArray
 		if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
-			console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array');
+			console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
 			return; //Array was null or not an array
 		}
 		if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
-			console.log('query_combinations(): queryKey not set');
+			console.log('query_combinations(): queryKey not set. tagsArray = ' + tagsArray);
 			return;
 		}
 		if (isArrayStrings(queryKey)) {
@@ -287,7 +292,7 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	return outputArray;
 }
 
-function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false) {
+function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ') {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
 	
@@ -304,8 +309,14 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false) 
 		let tagString = ((tagsArray[i].indexOf('$') === -1) ? (bEmptyVal ? '%' + tagsArray[i] + '%' : '[%' + tagsArray[i] + '%]') : (bEmptyVal ? tagsArray[i]: '[' + tagsArray[i] + ']')); // Tagname or TF expression, with or without empty values
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
-		for (let j = 0; j < outputArrayi_length; j++) {
-			outputArray[i][j] = outputArray[i][j].split(', ');
+		if (splitBy && splitBy.length) {
+			for (let j = 0; j < outputArrayi_length; j++) {
+				outputArray[i][j] = outputArray[i][j].split(splitBy);
+			}
+		} else {
+			for (let j = 0; j < outputArrayi_length; j++) {
+				outputArray[i][j] = [outputArray[i][j]];
+			}
 		}
 		i++;
 	}
