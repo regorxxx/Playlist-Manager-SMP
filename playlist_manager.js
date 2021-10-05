@@ -76,9 +76,9 @@ var properties = {
 	bCopyAsync				: ['Copy tracks asynchronously on export?', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
-properties['autoSave'].push({range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
+properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
 properties['extension'].push({func: (val) => {return writablePlaylistFormats.has(val);}}, properties['extension'][1]);
-properties['autoUpdate'].push({range: [[0,0],[200, Infinity]]}, properties['autoUpdate'][1]); // Safety limit 0 or > 200
+properties['autoUpdate'].push({func: isInt, range: [[0,0],[200, Infinity]]}, properties['autoUpdate'][1]); // Safety limit 0 or > 200
 var prefix = 'plm_';
 setProperties(properties, prefix);
 
@@ -99,8 +99,8 @@ setProperties(properties, prefix);
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 
-const autoSaveTimer =  getPropertyByKey(properties, 'autoSave', prefix); 
-const autoUpdateTimer =  getPropertyByKey(properties, 'autoUpdate', prefix);
+const autoSaveTimer =  Number(getPropertyByKey(properties, 'autoSave', prefix)); 
+const autoUpdateTimer =  Number(getPropertyByKey(properties, 'autoUpdate', prefix));
 
 function on_colours_changed() {
 	panel.colours_changed();
@@ -222,7 +222,7 @@ function on_notify_data(name, info) {
 // Autosave
 // Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
 // if Autosave === 0, then it does nothing...
-var debouncedUpdate = (autoSaveTimer) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
+var debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
 function on_playlist_items_reordered(playlistIndex) {
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
@@ -237,7 +237,7 @@ function on_playlist_items_added(playlistIndex) {
 		if (list.bAutoTrackTagAlways) {list.updatePlaylistOnlyTracks(playlistIndex);}
 		else if (plman.IsAutoPlaylist(playlistIndex)) {
 			if (list.bAutoTrackTagAutoPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
-		} else if (list.bAutoTrackTagPls || bAutoTrackTagLockPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
+		} else if (list.bAutoTrackTagPls || list.bAutoTrackTagLockPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
 	}
 }
 
@@ -251,7 +251,7 @@ var debouncedAutoUpdate = (autoUpdateTimer) ? debounce(autoUpdate, autoUpdateTim
 const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
 function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 function autoUpdate() {
-	const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', prefix), readablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
+	const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', prefix), loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	if (playlistPathArrayLength !== (list.dataAll.length - list.itemsAutoplaylist)) { // Most times that's good enough. Count total items minus virtual playlists
 		list.update(false, true, list.lastIndex);

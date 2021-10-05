@@ -210,7 +210,7 @@ function checkProperty(property, withValue) {
 		// TODO warn about using relative paths?
 	}
 	if (!bPass) {
-		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\nWrong value: ' + valToCheck + '\nReplaced with: ' + property[3] + '\n' + report);
+		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\n\nWrong value: ' + valToCheck + '\n\nReplaced with: ' + property[3] + '\n\n' + report);
 	}
 	return bPass;
 }

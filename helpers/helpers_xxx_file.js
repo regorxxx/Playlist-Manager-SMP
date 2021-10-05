@@ -94,7 +94,7 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
 			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
-				bAsync ? _runCmd('CMD /K COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
+				bAsync ? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
 			} catch (e) {
 				return false;
 			}

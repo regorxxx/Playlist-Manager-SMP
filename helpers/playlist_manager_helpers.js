@@ -33,7 +33,7 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 }
 
 function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
-	const playlistPathArray = getFiles(folderPath, readablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
+	const playlistPathArray = getFiles(folderPath, loadablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
 	const playlistPathArray_length = playlistPathArray.length;
 	let playlistArray = [];
 	let i = 0;
@@ -114,6 +114,13 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				let fileText = text.filter(function(e) {return e.startsWith('File');});
 				size = fileText.length;
 			}	
+		} else if (playlistPathArray[i].endsWith('.strm')) {
+			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
+			if (typeof text !== 'undefined') {
+				if (text.length === 1) {size = 1;}
+				else {fb.ShowPopupMessage('.strm playlist can\'t contain multiple items: ' + playlistPathArray[i], window.Name);}
+				bLocked = true;
+			}
 		}
 		let fileSize = isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
 		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0));
@@ -218,7 +225,7 @@ function setCategory(category, list, z) {
 function switchLock(list, z) {
 	let bDone = false;
 	const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
-	if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl') {
+	if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl' || list.data[z].extension === '.strm') {
 		list.editData(list.data[z], {isLocked: !list.data[z].isLocked});
 		list.update(true, true);
 		list.filter();
@@ -418,7 +425,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '%filename%.mp3', pre
 	const handleList = getHandlesFromPlaylist(playlistPath, list.playlistsPath, true); // Omit not found
 	if (handleList && handleList.Count) {
 		// Convert tracks
-		fb.RunContextCommandWithMetadb("Convert/" + preset, handleList, 8);
+		fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
 		if (handleList.Count !== paths.length) {fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
 		// Copy playlist file
 		const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);

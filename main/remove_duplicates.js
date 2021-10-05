@@ -8,10 +8,10 @@
 	Any 'sort...' variable follows titleformat conventions
 		i.e. "%title%|%artist%|%date%"
 	Any 'check...' variable can follow both tag name or titleformat conventions (functions too) 
-		i.e. "title" or "%title%"
+		i.e. 'title' or '%title%'
 	You can add multiple entries to the same variable but then it must follow titleformat conventions.
-		i.e. "checkfirst = %title% - %artist%"
-	The multiple 'check...' variables are joined using " - "
+		i.e. 'checkfirst = %title% - %artist%'
+	The multiple 'check...' variables are joined using ' - '
 	
 	CAVEAT: Note you can use these functions to filter lists! i.e. if you only check by artist/date, then any track with same artist/date is considered duplicated
 	That means this could be used both to find duplicates or for custom post-playlist creation filtering (1 track per artist, 1 track per date, etc.)
@@ -21,18 +21,18 @@
 		- Add musicBraiz track ID and album as default: solves same track with different dates...
 */	
 
-// Note number of final duplicates is always nAllowed + 1, since you allow n duplicates and the "main" copy.
-// "nAllowed = 0" removes all duplicates.
-function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = ["title","artist","date"], nAllowed = 0) {
+// Note number of final duplicates is always nAllowed + 1, since you allow n duplicates and the 'main' copy.
+// 'nAllowed = 0' removes all duplicates.
+function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = ['title','artist','date'], nAllowed = 0) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] was null, empty or not an array");
+		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
 		return; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
 		while (i--){
-			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === "") {
-				console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] some keys are not String objects");
+			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
+				console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] some keys are not String objects');
 				return; //Array was null or not an array
 			}
 		}
@@ -51,8 +51,8 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = [
     let i = 0;
 	while (i < checklength) {
 		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace("%",) === check_i) ? "%" + check_i + "%" : check_i;}
-		else {sortInput += (check_i.replace("%",) === check_i) ? " - %" + check_i + "%" :  " - " + check_i;}
+		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
+		else {sortInput += (check_i.replace('%',) === check_i) ? ' - %' + check_i + '%' :  ' - ' + check_i;}
 		i++;
 	}
 	let tfo = fb.TitleFormat(sortInput);
@@ -78,7 +78,7 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = [
 	
 	if (sortouput !== null) { // Output Sorting?
 		if (sortouput.length && sortouput !== sortInput) {tfo = fb.TitleFormat(sortouput);}
-		else {tfo = fb.TitleFormat("$rand()");}
+		else {tfo = fb.TitleFormat('$rand()');}
 		items.OrderByFormat(tfo, 1);
 	}
 	
@@ -98,16 +98,16 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = [
 
 
 // V2: Equal to V1 but without n checks (faster)
-function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys = ["title","artist","date"]) {
+function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys = ['title','artist','date']) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] was null, empty or not an array");
+		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
 		return; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
 		while (i--){
-			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === "") {
-				console.log("do_remove_duplicatesV2: checkKeys [" + checkKeys + "] some keys are not String objects");
+			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
+				console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] some keys are not String objects');
 				return; //Array was null or not an array
 			}
 		}
@@ -127,8 +127,8 @@ function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys =
     let i = 0;
 	while (i < checklength) {
 		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace("%",) === check_i) ? "%" + check_i + "%" : check_i;}
-		else {sortInput += (check_i.replace("%",) === check_i) ? " - %" + check_i + "%" :  " - " + check_i;}
+		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
+		else {sortInput += (check_i.replace('%',) === check_i) ? ' - %' + check_i + '%' :  ' - ' + check_i;}
 		i++;
 	}
 	let tfo = fb.TitleFormat(sortInput);
@@ -149,7 +149,7 @@ function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys =
 	
 	if (sortouput !== null) { // Output Sorting?
 		if (sortouput.length && sortouput !== sortInput) {tfo = fb.TitleFormat(sortouput);}
-		else {tfo = fb.TitleFormat("$rand()");}
+		else {tfo = fb.TitleFormat('$rand()');}
 		items.OrderByFormat(tfo, 1);
 	}
 	

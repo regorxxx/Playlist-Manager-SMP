@@ -31,6 +31,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const isAutoPls = () => {return pls.isAutoPlaylist;};
 	const isLockPls = () => {return pls.isLocked;};
 	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.fpl' || pls.isAutoPlaylist;};
+	const isPlsLockable = () => {return isPlsEditable() || pls.extension === '.strm';};
 	// Header
 	if (list.bShowMenuHeader) {
 		menu.newEntry({entryText: '--- ' + (isAutoPls() ? 'AutoPlaylist' : pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
@@ -244,7 +245,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}, flags: writablePlaylistFormats.has(pls.extension) && !isLockPls() ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
 				exportPlaylistFile(list, z);
-			}, flags: readablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
 				exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
 			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
@@ -274,10 +275,10 @@ function createMenuLeft(forcedIndex = -1) {
 		// Locks playlist file
 		menu.newEntry({entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
 			switchLock(list, z);
-		}, flags: isPlsEditable() ? MF_STRING : MF_GRAYED});
+		}, flags: isPlsLockable() ? MF_STRING : MF_GRAYED});
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
-		menu.newEntry({entryText: 'Open playlist folder', func: () => {
+		menu.newEntry({entryText: 'Open file on explorer', func: () => {
 			if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
 			else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
 		}});
@@ -787,26 +788,28 @@ function createMenuRightTop() {
 		{	// Auto-Saving
 			menu.newEntry({menuName: menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + 'ms)', func: () => {
 				let input = 0;
-				try {input = utils.InputBox(window.ID, 'Save changes within foobar playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, list.properties['autoSave'][1], true);}
+				try {input = Number(utils.InputBox(window.ID, 'Save changes within foobar playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoSave'][1]), true));}
 				catch(e) {return;}
 				if (isNaN(input)) {return;}
 				if (!checkProperty(list.properties['autoSave'], input)) {return;}
 				list.properties['autoSave'][1] = input;
 				overwriteProperties(list.properties);
+				window.Reload();
 			}});
-			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return (list.properties['autoSave'][1] ? 1 : 0);});
+			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return (Number(list.properties['autoSave'][1]) !== 0 ? 1 : 0);});
 		}
 		{	// Auto-Loading
 			menu.newEntry({menuName: menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + 'ms)', func: () => {
 				let input = 0;
-				try {input = utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, list.properties['autoUpdate'][1], true);}
+				try {input = Number(utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoUpdate'][1]), true));}
 				catch(e) {return;}
 				if (isNaN(input)) {return;}
 				if (!checkProperty(list.properties['autoUpdate'], input)) {return;}
 				list.properties['autoUpdate'][1] = input;
 				overwriteProperties(list.properties);
+				window.Reload();
 			}});
-			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return (list.properties['autoUpdate'][1] ? 1 : 0);});
+			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return (Number(list.properties['autoUpdate'][1]) !== 0 ? 1 : 0);});
 		}
 	}
 	{	// Playlists behavior

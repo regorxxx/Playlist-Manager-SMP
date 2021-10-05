@@ -46,7 +46,7 @@ const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR 
 
 // Quote special chars according to https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Titleformat_Reference#Syntax
 function sanitizeTagTfo(tag) {
-	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[]]/g,'\']\''); 
+	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\''); 
 }
 
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle

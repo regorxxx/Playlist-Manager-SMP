@@ -90,7 +90,7 @@ function _list(x, y, w, h) {
 			if (this.itemsAll !== 0) {
 				emptyText = 'No matches for the current filters.';
 			} else {
-				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them from json (right button).' + '\n\nReadable playlist formats:\n\'' + Array.from(readablePlaylistFormats).join('\', \'') + '\'\nWritable formats:\n\'' + Array.from(writablePlaylistFormats).join('\', \'') + '\'';
+				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them from json (right button).' + '\n\nReadable playlist formats:\n\'' + Array.from(loadablePlaylistFormats).join('\', \'') + '\'\nWritable formats:\n\'' + Array.from(writablePlaylistFormats).join('\', \'') + '\'';
 			}
 			const cache = this.rows;
 			this.rows = (emptyText.match(/\n/g) || []).length; // # lines of previous text = # \n
@@ -701,7 +701,7 @@ function _list(x, y, w, h) {
 			const dataIndex = i;
 			const fbPlaylistIndex = playlistIndex;
 			if (playlistNameId === i_pnameId) {
-				console.log('Playlist Manager: Updating playlist...');
+				console.log('Playlist Manager: Updating fpl playlist...');
 				this.editData(this.data[dataIndex], {
 					size: plman.PlaylistItemCount(fbPlaylistIndex),
 				});
@@ -1518,7 +1518,7 @@ function _list(x, y, w, h) {
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
 						// But it will fail as soon as any track is not found on library
 						// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-						let bDone = this.data[idx].extension !== '.fpl' ? loadTracksFromPlaylist(this.data[idx].path, plman.ActivePlaylist, this.playlistsPath) : false;
+						let bDone = loadTracksFromPlaylist(this.data[idx].path, plman.ActivePlaylist, this.playlistsPath);
 						if (!bDone) {plman.AddLocations(fbPlaylistIndex, [this.data[idx].path], true);}
 						if (this.data[idx].extension === '.fpl') { // Workaround for fpl playlist limitations...
 							setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
@@ -1835,7 +1835,7 @@ function _list(x, y, w, h) {
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.uuiidLength = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : 0; // previous UUID before initialization is just the length
-	this.autoUpdateDelayTimer = this.properties.autoUpdate[1] / 100; // Timer should be at least 1/100 autoupdate timer to work reliably
+	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel(1); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel(-1); });
 	this.init();

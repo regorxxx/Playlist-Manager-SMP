@@ -12,7 +12,10 @@ include('helpers_xxx_file.js');
 
 // Playlists descriptors
 const writablePlaylistFormats = new Set(['.m3u','.m3u8','.pls']); // These are playlist formats which are writable
-const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl']); // These are playlist formats which are writable
+const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.strm']); // These are playlist formats which are writable
+const loadablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl','.strm']); // These are playlist formats which are readable
+_runCmd('CMD /C CHCP > ' + folders.data + 'systemCodePage.txt', true)
+const systemCodePage = _isFile(folders.data + '\\systemCodePage.txt') ? utils.ReadTextFile(folders.data + '\\systemCodePage.txt').split(': ').pop() : -1;
 
 /* 
 	Playlist file manipulation 
@@ -226,8 +229,8 @@ function getFilePathsFromPlaylist(playlistPath) {
 		return paths;
 	}
 	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
-	if (!writablePlaylistFormats.has(extension)){
-		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
+	if (!readablePlaylistFormats.has(extension)){
+		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(readablePlaylistFormats).join(', '));
 		return paths;
 	}
 	if (_isFile(playlistPath)) { // TODO: skip blank lines ?
@@ -236,9 +239,9 @@ function getFilePathsFromPlaylist(playlistPath) {
 		if (typeof originalText !== 'undefined' && originalText.length) {
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
-			if (codePage !== -1) {originalText = utils.ReadTextFile(playlistPath, codePage).split('\r\n');}
+			if (codePage !== -1) {originalText = utils.ReadTextFile(playlistPath, codePage, true).split('\r\n');}
 			let lines = originalText.length;
-			if (extension === '.m3u8' || extension === '.m3u') {
+			if (extension === '.m3u8' || extension === '.m3u' || extension === '.strm') {
 				for (let j = 0; j < lines; j++) {
 					if (!originalText[j].startsWith('#')) {paths.push(originalText[j]);}
 				}
@@ -330,10 +333,29 @@ function getRelPath(itemPath, relPathSplit) {
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '') {
 	let bDone = false;
-	let handlePlaylist = getHandlesFromPlaylist(playlistPath, relPath);
-	if (handlePlaylist) {
-		plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
+	let paths = [];
+	if (!playlistPath || !playlistPath.length) {
+		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
+		return bDone;
+	}
+	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
+	if (!readablePlaylistFormats.has(extension)){
+		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(readablePlaylistFormats).join(', '));
+		return bDone;
+	}
+	if (extension === '.strm') {
+		const stream = getFilePathsFromPlaylist(playlistPath);
+		plman.AddLocations(playlistIndex, stream, true);
 		bDone = true;
+	} else if (extension === '.fpl') {
+		plman.AddLocations(playlistIndex, playlistPath, true);
+		bDone = true;
+	} else {
+		let handlePlaylist = getHandlesFromPlaylist(playlistPath, relPath);
+		if (handlePlaylist) {
+			plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
+			bDone = true;
+		}
 	}
 	return bDone;
 }
@@ -392,7 +414,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		// }
 		} else {console.log(filePaths[i]);}
 	}
-	if (count === filePaths.length) {
+	if (count === filePaths.length && filePaths.length) {
 		console.log(playlistPath.split('\\').pop() + ': Found all tracks on library.');
 		handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 	} else if (bOmitNotFound) {
@@ -451,12 +473,24 @@ function loadPlaylists(playlistArray) {
 	return i; // Number of playlists loaded
 }
 
-function checkCodePage(originalText, extension) {
+function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	let codepage = -1;
 	if (extension === '.m3u8') {codepage = convertCharsetToCodepage('UTF-8');}
 	else if (extension === '.m3u' && originalText.length >= 2 && originalText[1].startsWith('#EXTENC:')) {
 		const codepageName = originalText[1].split(':').pop();
 		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
+	} else if ((extension === '.xspf' || extension === '.asx') && originalText.length >= 2 && originalText[0].indexOf('encoding=') !== -1) {
+		const codepageName = originalText[0].match(/"[\S]*"/g).pop();
+		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
+	} else if (bAdvancedCheck) {
+		if (originalText.length && originalText.some((line) => {
+			line = line.toLowerCase();
+			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1) ;
+			})) {
+			codepage = convertCharsetToCodepage('UTF-8');
+		} else if (originalText.length && originalText.some((line) => {line = line.toLowerCase(); return (line.indexOf('�') !== -1);})) {
+			codepage = systemCodePage;
+		}
 	}
 	return codepage ? codepage : -1;
 }

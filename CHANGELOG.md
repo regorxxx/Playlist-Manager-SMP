@@ -14,6 +14,7 @@
 
 ## [Unreleased][]
 ### Added
+- Playlist formats: added read-only support for .strm format. Since format only allows one URL per playlist, M3U formats are preferred to create new playlists for the same purpose (which can also be read by streaming players).
 - UI: buttons' text color can now be customized via menus.
 - UI: Header icon can now be customized according to category being shown with an extra json config file. Check readme for instructions ('Advanced tips').
 - UI: new option to enable/disable header on selected playlist contextual menu. The header shows the playlist format and name.
@@ -34,6 +35,8 @@
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 - Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
 ### Changed
+- Selected playlist menu: Renamed 'Open playlist folder' to 'Show playlist file' on explorer.
+- Properties: added extensive checks to most properties.
 - Remove duplicates: optimized the code, now runs at least x2 times faster. Updated all instances where the functions were being used to call the new version (currently on AutoPlaylist cloning).
 - Requisites: Script requires at minimum SMP 1.5.2. now.
 - Playlists consistency tools: all are now executed asynchronously: Absolute/relative paths..., external items, dead items, duplicated items and playlist size mismatch.
@@ -70,6 +73,7 @@
 ### Removed
 - UI: Removed Wingdings dependencies. Replaced with Font Awesome (already being in use at other places).
 ### Fixed
+- Autosave & Autoupdate: changing the properties via menus or properties panel could lead to values being formatted as strings instead of numbers, now disallowed at input (menus) and loading (value checking).
 - Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
 - Categories: adding or removing playlists updates the category filter accordingly. i.e. when adding a new playlist with a new category, it doesn't get filtered but added to the current view, no matter what the current filtering is. Previously the new playlist would be hidden by default, since the category filter did only showed currently selected categories. The same when removing the last playlist within a category.
 - Categories: due to a copy/paste typo, the menu to filter categories only worked when using custom background colors on the panel.
