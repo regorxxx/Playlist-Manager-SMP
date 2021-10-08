@@ -34,6 +34,7 @@
 - Added tag filtering menu to only show playlists which contain selected tags. Tag filtering is always reset on startup, no matter what 'Save filtering between sessions' is set to. Use categories for 'virtual folders' or permanent playlist categorization, tags are meant only for informative purpose or auto-tag actions (thus not needing permanent filtering).
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 - Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
+- Helpers: added full script console logging to file at foobar profile folder ('console.log'). File is reset when reaching 5 MB. Logging is also sent to foobar2000's console (along other components logging)
 ### Changed
 - Selected playlist menu: Renamed 'Open playlist folder' to 'Show playlist file' on explorer.
 - Properties: added extensive checks to most properties.

@@ -1,11 +1,11 @@
 ﻿'use strict';
 
-/* 	Playlist Manager v 0.4 12/07/21
+/* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
-	See .\helpers\readme\playlist_manager.txt for list of features.
+	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefinePanel('Playlist Manager', { author: 'XXX' , version: '0.5.0', features: { drag_n_drop: false }});
+window.DefineScript('Playlist Manager', { author: 'XXX' , version: '0.5.0', features: {drag_n_drop: false}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');

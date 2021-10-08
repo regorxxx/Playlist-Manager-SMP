@@ -1,9 +1,7 @@
 'use strict';
+//07/10/21
 
 include('helpers_xxx_playlists_files.js');
-
-
-
 
 let doc = new ActiveXObject('Microsoft.XMLDOM');
 doc.async = 'false';

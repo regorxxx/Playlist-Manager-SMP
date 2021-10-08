@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/21
+//07/10/21
 
 include('helpers_xxx_file.js');
 
@@ -181,7 +181,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 function checkProperty(property, withValue) {
 	let bPass = true;
 	let report = '';
-	if (property.length !== 4) {return true;}  // No checks needed (?)
+	if (property.length < 4) {return true;}  // No checks needed (?)
 	const valToCheck = (typeof withValue !== 'undefined' ? withValue : property[1]);
 	const checks = property[2];
 	if (checks.hasOwnProperty('lower') && valToCheck >= checks['lower']) {

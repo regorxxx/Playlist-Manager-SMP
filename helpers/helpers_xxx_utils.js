@@ -1,3 +1,6 @@
+'use strict'
+//07/10/21
+
 /*
   Meant to be called by name on json files or other external tools to limit eval usage.
 */

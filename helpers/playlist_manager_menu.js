@@ -1,4 +1,6 @@
 'use strict';
+//07/10/21
+
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
 include('helpers_xxx_prototypes.js');
@@ -365,7 +367,7 @@ function createMenuRight() {
 				return new Promise(resolve => {
 					const total = list.itemsAll - 1;
 					const promises = [];
-					let prevProgress = 0;
+					let prevProgress = -1;
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
@@ -397,7 +399,7 @@ function createMenuRight() {
 				return new Promise(resolve => {
 					const total = list.itemsAll - 1;
 					const promises = [];
-					let prevProgress = 0;
+					let prevProgress = -1;
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
@@ -448,7 +450,7 @@ function createMenuRight() {
 				return new Promise(resolve => {
 					const total = list.itemsAll - 1;
 					const promises = [];
-					let prevProgress = 0;
+					let prevProgress = -1;
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
@@ -496,7 +498,7 @@ function createMenuRight() {
 				return new Promise(resolve => {
 					const total = list.itemsAll - 1;
 					const promises = [];
-					let prevProgress = 0;
+					let prevProgress = -1;
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
@@ -528,7 +530,7 @@ function createMenuRight() {
 				return new Promise(resolve => {
 					const total = list.itemsAll - 1;
 					const promises = [];
-					let prevProgress = 0;
+					let prevProgress = -1;
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {

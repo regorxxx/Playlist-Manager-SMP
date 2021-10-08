@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/21
+//07/10/21
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_UI_chars.js');
@@ -213,7 +213,9 @@ function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 600) {
 */
 
 function RGBA(r, g, b, a) {
-	return ((a << 24) | (r << 16) | (g << 8) | (b));
+	let res = 0xff000000 | (r << 16) | (g << 8) | (b);
+	if (a !== undefined) res = (res & 0x00ffffff) | (a << 24);
+	return res;
 }
 
 function RGB(r, g, b) {

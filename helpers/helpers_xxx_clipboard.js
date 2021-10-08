@@ -1,4 +1,5 @@
 ﻿'use strict';
+//07/10/21
 
 const doc = new ActiveXObject('htmlfile');
 
