@@ -59,6 +59,6 @@ if (conLog && conLog.length && conLogMaxSize && console.log) {
 	};
 	if (utils.IsFile(conLog) && utils.GetFileSize(conLog) > conLogMaxSize) {
 		utils.WriteTextFile(conLog, '', false);
-		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 10000000) + ' Mb, creating new file: ' + conLog);
+		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 10000000) + ' MB, creating new file: ' + conLog);
 	}
 }

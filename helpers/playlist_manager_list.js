@@ -1,5 +1,5 @@
 'use strict';
-//07/10/21
+//13/10/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -11,6 +11,7 @@ include('helpers_xxx_tags.js');
 include('helpers_xxx_file.js');
 include('helpers_xxx_utils.js');
 include('playlist_manager_panel.js');
+include('playlist_manager_helpers.js');
 
 function _list(x, y, w, h) {
 	
@@ -854,7 +855,7 @@ function _list(x, y, w, h) {
 		}
 		let answer = WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n (no = json file by this playlist manager)', 0, window.Name, popup.question + popup.yes_no);
 		let dataExternalPlaylists = [];
-		const data = _jsonParseFile(externalPath, answer === popup.no ? convertCharsetToCodepage('UTF-8') : 0);
+		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? convertCharsetToCodepage('UTF-8') : 0);
 		if (!data) {return false;}
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
@@ -1107,8 +1108,8 @@ function _list(x, y, w, h) {
 			this.dataFpl = [];
 			if (_isFile(this.filename)) {
 				if (this.bUpdateAutoplaylist && this.bShowSize) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
-				const data = _jsonParseFile(this.filename, convertCharsetToCodepage('UTF-8'));
-				if (!data && utils.GetFileSize(this.filename)) {fb.ShowPopupMessage('Playlists json file is probably corrupt (try restoring a backup and then use manual refresh): ' + this.filename, window.Name); return;}
+				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, convertCharsetToCodepage('UTF-8'));
+				if (!data) {return;}
 				else if (!data) {return;}
 				let i = 0;
 				const promises = [];
@@ -1406,20 +1407,30 @@ function _list(x, y, w, h) {
 			return key === 'width' ? void(0) : value;
 		}
 		
-		this.addAutoplaylist = () => {
-			let newName = '';
-			try {newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name', window.Name);}
-			catch (e) {return;}
-			if (!newName.length) {return;}
-			let newQuery = '';
-			try {newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query', window.Name);}
-			catch (e) {return;}
-			if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return;}
-			const new_sort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name);
+		this.addAutoplaylist = (pls = null, bEdit = true) => {
+			// Check if there are initial values
+			const bPls = pls ? true : false;
+			const hasName = bPls && pls.hasOwnProperty('name'), hasQuery = bPls && pls.hasOwnProperty('query'), hasSort = bPls && pls.hasOwnProperty('sort');
+			const hasSize = bPls && pls.hasOwnProperty('size') && pls.size !== '?', hasCategory = bPls && pls.hasOwnProperty('category');
+			const hasTags = bPls && pls.hasOwnProperty('tags') && pls.tags.length, hasTrackTags = bPls && pls.hasOwnProperty('trackTags') && pls.trackTags.length;
+			// Create oPlaylist
+			let newName = hasName ? pls.name : '';
+			if (!newName.length || bEdit) {
+				try {newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name', window.Name, newName);}
+				catch (e) {return false;}
+				if (!newName.length) {return false;}
+			}
+			let newQuery = hasQuery ? pls.query : '';
+			if (!newQuery.length || bEdit) {
+				try {newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query', window.Name, newQuery, true);}
+				catch (e) {return false;}
+			}
+			if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
+			const new_sort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');;
 			const new_forced = (new_sort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
 			const new_queryObj = {query: newQuery, sort: new_sort, bSortForced: new_forced};
-			const queryCount = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count;
-			const objectPlaylist = new oPlaylist('', '', newName, '', queryCount, 0, false, true, new_queryObj);
+			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count;
+			const objectPlaylist = new oPlaylist('', '', newName, '', queryCount, 0, false, true, new_queryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : []);
 			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
@@ -1427,6 +1438,7 @@ function _list(x, y, w, h) {
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
+			return objectPlaylist;
 		}
 		
 		this.add = (bEmpty) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
@@ -1705,7 +1717,7 @@ function _list(x, y, w, h) {
 		
 		this.loadConfigFile = (file = this.filename.replace('.json','_config.json')) => {
 			if (!file.length) {this.configFile = null; return;}
-			if (_isFile(file)) {this.configFile = _jsonParseFile(file, convertCharsetToCodepage('UTF-8'));}
+			if (_isFile(file)) {this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, convertCharsetToCodepage('UTF-8'));}
 			else {this.configFile = null;}
 		}
 		

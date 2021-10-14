@@ -34,6 +34,7 @@
 - Added tag filtering menu to only show playlists which contain selected tags. Tag filtering is always reset on startup, no matter what 'Save filtering between sessions' is set to. Use categories for 'virtual folders' or permanent playlist categorization, tags are meant only for informative purpose or auto-tag actions (thus not needing permanent filtering).
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 - Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
+- Menus: new entry to 'Clone AutoPlaylist and edit query'. Creates a clone of the selected AutoPlaylist and allows to edit the query afterwards; for easy AutoPlaylist creation using a generic query as base (instead of copying/pasting queries).
 - Helpers: added full script console logging to file at foobar profile folder ('console.log'). File is reset when reaching 5 MB. Logging is also sent to foobar2000's console (along other components logging)
 ### Changed
 - Selected playlist menu: Renamed 'Open playlist folder' to 'Show playlist file' on explorer.
@@ -65,6 +66,7 @@
 - Menus: 'Bind active playlist to this file...' is now disabled for locked playlists (must unlock them first) and .fpl playlists (in any case).
 - Helpers: Split 'helpers_xxx_playlists.js' into 2 files (new one is 'helpers_xxx_playlists_files.js').
 - Helpers: updated. Whenever a folder needs to be created to save a new file, the entire tree is now created if needed. Previously it would fail as soon as any folder did not exist. This greatly speeds up setting panels since now the final folder does not need to exists at all to work, since it will be created on the fly.
+- Helpers: additional checks at json loading on all scripts. Warnings via popup when a corrupted file is found.
 - Tooltip: Pressing shit, control or both will show on the tooltip the action which will be performed on playlists. If usage info is enabled on tooltips, then only the current action associated to the keys will be shown while pressing them (so it becomes obvious which one is from the list); otherwise -disabled- nothing will be shown until a key is pressed.
 - Tooltip: Adjusted max width to 600 px before splitting lines.
 - General speed improvements loading playlists, checking items on library and finding dead items.

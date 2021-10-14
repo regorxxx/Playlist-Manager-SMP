@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//14/10/21
 
 /* 
 	Contextual Menu helper v 1.2 19/05/21
@@ -62,8 +62,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	var entryArr = [];
 	
 	var checkMenuArr = [];
-	var checkMenuMap = new Map();
+	var checkMenuArrTemp = [];
 	
+	var checkMenuMap = new Map();
 	var entryMap = new Map();
 	var entryMapInverted = new Map();
 	var idxMap = new Map();
@@ -168,6 +169,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	this.initMenu = (object) => {
 		entryArrTemp = [...entryArr]; // Create backup to restore later
 		menuArrTemp = [...menuArr];
+		checkMenuArrTemp = [...checkMenuArr];
 		// Add conditional entries/menus
 		// Call other object's menu creation. It allows multiple instances of this framework, either manually appending items
 		// or an entire new instance. Separators may be added too.
@@ -281,6 +283,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 		if (menuArrTemp.length) {menuArr = [...menuArrTemp];}
 		else if (bForce) {menuArr = []; this.newMenu();}
 		menuArrTemp = [];
+		if (checkMenuArrTemp.length) {checkMenuArr = [...checkMenuArrTemp];}
+		if (bForce) {checkMenuArr = [];}
+		checkMenuArrTemp = [];
 		idx = 0;
 	}
 }

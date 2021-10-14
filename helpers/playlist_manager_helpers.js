@@ -1,5 +1,5 @@
 'use strict';
-//07/10/21
+//14/10/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -31,7 +31,6 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.tags = isArrayStrings(tags) ? tags : [];
 	this.trackTags = isArray(trackTags) ? trackTags : [];
 	// this.bShow = true; // TODO:
-	
 }
 
 function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
@@ -287,10 +286,21 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
+function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
+	let bDone = false;
+	const pls = list.data[z];
+	const playlistName = pls.name + ' (copy ' + list.data.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0)+ ')';
+	const objectPlaylist = clone(pls);
+	objectPlaylist.name = playlistName;
+	bDone = list.addAutoplaylist(objectPlaylist) ? true : false;
+	if (bDone) {console.log('Playlist Manager: done.');} else {console.log('Error duplicating playlist'); return false;}
+	return bDone;
+}
+
 function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
-	const playlistName = pls.name + ' (std)';
+	const playlistName = pls.name + ' (std copy ' + list.data.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (std copy ')) {count++}; return count;}, 0)+ ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
 	const idx = getPlaylistIndexArray(list.data[z].nameId);
 	if (idx && idx.length === 1) { // Already loaded? Duplicate it
@@ -406,15 +416,17 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert(list, z, tf = '%filename%.mp3', preset = '...', defPath = '') {
+function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', extension = '') {
 	fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);
 	let bDone = false;
 	const playlistPath = list.data[z].path;
 	const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split'); //TODO: Deprecated
-	const playlistName = arr[1].endsWith(arr[2]) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+	const playlistName = arr[1].endsWith(arr[2]) ? arr[1].replace(arr[2],'') : arr[1]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+	const playlistExt = arr[2];
+	const playlistNameExt = playlistName + (extension.length ? extension : playlistExt);
 	// Set output
 	let newPath = '';
-	try {newPath = utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true);} 
+	try {newPath = utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true);} 
 	catch(e) {return bDone;}
 	if (!newPath.length) {return bDone;}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
@@ -429,25 +441,31 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '%filename%.mp3', pre
 		// Convert tracks
 		fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
 		if (handleList.Count !== paths.length) {fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-		// Copy playlist file
+		// Retrieve new paths
 		const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 		if (!isArrayStrings(fileNames)) {
 			fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
 			return bDone;
 		}
-		let relPaths = paths.map((_, i) => {return '.\\' + fileNames[i];});
-		const codePage = checkCodePage(_open(playlistPath), list.data[z].extension); //TODO: Deprecated);
-		let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
-		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
-		let bDeleted = false;
-		if (_isFile(newPath)) {
-			bDeleted = _recycleFile(newPath);
-		} else {bDeleted = true;}
-		if (bDeleted) {
-			bDone = _save(newPath, file, list.bBOM); // No BOM
+		// Copy playlist file when original extension and output extension are the same or both share same format (M3U)
+		let file = '';
+		if (!extension.length || playlistExt.startsWith(extension) || extension.startsWith(playlistExt)) {
+			const codePage = checkCodePage(_open(playlistPath), list.data[z].extension);
+			file = _open(playlistPath, codePage !== -1 ? codePage : 0);
+			paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
+		} else { // Or create new playlist file when translating between different formats
+			savePlaylist(-1, newPath, extension, list.data[z].name, null, list.data[z].isLocked, list.data[z].category, list.data[z].tags, '', list.data[z].trackTags, list.bBOM);
+			addHandleToPlaylist(handleList, newPath, '', list.bBOM);
+			file = _open(newPath, convertCharsetToCodepage('UTF-8'));
+			paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
+		}
+		let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
+		if (_isFile(newPath)) {bDeleted = _recycleFile(newPath);}
+		if (bDeleted !== false) {
+			bDone = file && file.length ? _save(newPath, file, list.bBOM) : false; // No BOM
 			if (!bDone) {
 				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
-				_restoreFile(newPath); // Since it failed we need to restore the original playlist back to the folder!
+				if (bDeleted) {_restoreFile(newPath);} // Since it failed, may need to restore the original playlist back to the folder!
 			}
 		} else {
 			fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);

@@ -1,5 +1,5 @@
 'use strict';
-//07/10/21
+//14/10/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -231,17 +231,20 @@ function createMenuLeft(forcedIndex = -1) {
 		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
-	{ // Export and Rel. Paths handling
+	{	//	AutoPlaylists clone
 		if (isAutoPls()) {
 			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 				cloneAsStandardPls(list, z, list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
+			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => {
+				cloneAsAutoPls(list, z);
 			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export as json file...', func: () => {
 				const path = list.exportJson(z);
 				if (_isFile(path)) {_explorer(path);}
 			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
 		}
-		else {
+		else {	// Export and Rel. Paths handling
 			menu.newEntry({entryText: 'Force relative paths...', func: () => {
 				convertToRelPaths(list, z);
 			}, flags: writablePlaylistFormats.has(pls.extension) && !isLockPls() ? MF_STRING : MF_GRAYED});
@@ -262,12 +265,14 @@ function createMenuLeft(forcedIndex = -1) {
 				const dsp = preset.dsp;
 				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 				const tf = preset.tf;
-				let tfName = preset.tf;
-				if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
-				if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
-				if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
-				menu.newEntry({menuName: subMenuName, entryText: pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-					exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path);
+				let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+				const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+				const extensionName = extension.length ? '[' + extension + ']' : '';
+				if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
+				if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
+				if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
+				menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+					exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension);
 				}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			});
 		}
@@ -1002,11 +1007,38 @@ function createMenuRightTop() {
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 					const tf = preset.tf;
-					let tfName = preset.tf;
-					if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
-					if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
-					if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
-					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
+					let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+					const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+					const extensionName = extension.length ? '[' + extension + ']' : '';
+					if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
+					if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
+					if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
+					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName +': ' + dspName + ' ---> ' + tfName, subMenuName);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
+						let input = '';
+						try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, preset.path, true);}
+						catch(e) {return;}
+						if (input.length && !input.endsWith('\\')) {input += '\\';}
+						if (input !== preset.path) {
+							preset.path = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+						}
+					}});
+					{
+						const subMenuNameThree = menu.newMenu('Set playlist format...' + nextId('invisible', true, false), subMenuNameTwo);
+						const options = ['', ...writablePlaylistFormats]
+						options.forEach((extension) => {
+							menu.newEntry({menuName: subMenuNameThree, entryText: extension.length ? extension : '(original)', func: () => {
+								if (extension !== preset.extension) {
+									preset.extension = extension;
+									list.properties['converterPreset'][1] = JSON.stringify(presets);
+									overwriteProperties(list.properties);
+								}
+							}});
+						});
+						menu.newCheckMenu(subMenuNameThree, '(original)', options[options.length - 1],  () => {return options.indexOf(preset.extension || '');});
+					}
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
 						let input = '';
 						try {input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, preset.dsp, true);}
@@ -1029,13 +1061,15 @@ function createMenuRightTop() {
 							overwriteProperties(list.properties);
 						}
 					}});
-					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set name...', func: () => {
+						const hasName = preset.hasOwnProperty('name') ? true : false;
 						let input = '';
-						try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, preset.path, true);}
+						try {input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, preset.hasOwnProperty('name') ? preset.name : '', true);}
 						catch(e) {return;}
-						if (input.length && !input.endsWith('\\')) {input += '\\';}
-						if (input !== preset.path) {
-							preset.path = input;
+						if (!input.length) {return;}
+						if (!hasName  || hasName && input !== preset.name) {
+							preset.name = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
 						}
@@ -1043,7 +1077,7 @@ function createMenuRightTop() {
 				});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuName, entryText: 'Add new preset', func: () => {
-					presets.push({dsp: '...', tf: '%filename%.mp3', path: ''});
+					presets.push({dsp: '...', tf: '.\\%filename%.mp3', path: ''});
 					list.properties['converterPreset'][1] = JSON.stringify(presets);
 					overwriteProperties(list.properties);
 				}});
@@ -1054,10 +1088,10 @@ function createMenuRightTop() {
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 					const tf = preset.tf;
-					let tfName = preset.tf;
-					if (pathName.length > 20) {pathName = pathName.substr(0, 20);}
-					if (dspName.length > 20) {dspName = dspName.substr(0, 20);}
-					if (tfName.length > 20) {tfName = tfName.substr(0, 20);}
+					let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+					if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
+					if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
+					if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						presets.splice(i, 1);
 						list.properties['converterPreset'][1] = JSON.stringify(presets);
@@ -1066,8 +1100,7 @@ function createMenuRightTop() {
 				});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'})
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
-					const defPresets = [{dsp: '...', tf: '%filename%.mp3', path: ''}];
-					list.properties['converterPreset'][1] = JSON.stringify(defPresets);
+					list.properties['converterPreset'][1] = properties.converterPreset[1];
 					overwriteProperties(list.properties);
 				}});
 			}

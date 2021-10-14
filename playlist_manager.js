@@ -1,11 +1,12 @@
 ﻿'use strict';
+//14/10/21
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', { author: 'XXX' , version: '0.5.0', features: {drag_n_drop: false}});
+window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0', features: {drag_n_drop: false}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -66,7 +67,15 @@ var properties = {
 	bAutoTrackTagLockPls	: ['Auto-tagging for locked playlists', false],
 	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false],
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
-	converterPreset			: ['Converter Preset list', JSON.stringify([{dsp: '...', tf: '%filename%.mp3', path: ''}])],
+	converterPreset			: ['Converter Preset list', JSON.stringify([
+		{name: '', dsp: '...', tf: '.\\%filename%.mp3', path: '', extension: ''}, // Export all at same folder
+		{name: '', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: ''}, // Transfer library
+		{name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '\\media\\<your_disk_name>\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u'}, // Kodi-like library
+		{name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u'}, // Kodi-like library
+		{name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on different folder than music
+		{name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on same root than music (without a folder)
+		{name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'} // Foobar2000 mobile, playlists on same folder than music
+	])],
 	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true],
 	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false],
 	bBOM					: ['Save files as UTF8 with BOM?', false],

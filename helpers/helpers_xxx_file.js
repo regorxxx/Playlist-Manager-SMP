@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//13/10/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx_foobar.js');
@@ -176,6 +176,21 @@ function _jsonParse(value) {
 
 function _jsonParseFile(file, codePage = 0) {
 	return _jsonParse(_open(file, codePage));
+}
+
+function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name, codePage = 0) {
+	let data = null;
+	if (_isFile(file)) {
+		data = _jsonParseFile(file, codePage);
+		if (!data && utils.GetFileSize(file)) {
+			console.log(fileName + ' file is corrupt:\n', file);
+			fb.ShowPopupMessage(fileName + ' file is corrupt:\n' + file, popupName);
+		}
+	} else {
+		console.log(fileName + ' file not found:\n', file);
+		fb.ShowPopupMessage(fileName + ' file not found:\n' + file, popupName);
+	}
+	return data;
 }
 
 // Opens explorer on file (and selects it) or folder

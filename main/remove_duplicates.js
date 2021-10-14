@@ -1,7 +1,8 @@
 ﻿'use strict';
+//13/10/21
 
 /*
-	Remove duplicates 0.1 28/01/20
+	Remove duplicates
 	Remove tracks with same tags (also duplicated files) from active playlist.
 	if 'handleList = null' then it will work directly on current active playlist.
 	If 'sortouput = ""', then final order will be randomized. It follows 'plman.SortByFormat' conventions.
