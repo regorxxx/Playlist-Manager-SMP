@@ -1,5 +1,5 @@
 'use strict';
-//13/10/21
+//18/10/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -225,6 +225,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.simulateWheelToIndex = (toIndex, currentItemIndex = this.lastIndex, originalOffset = this.lastOffset) => {
+		if (this.items < this.rows) {this.offset = 0; return;} // Safecheck
 		this.index = toIndex;
 		let iDifference = currentItemIndex - originalOffset;
 		this.offset = 0;
@@ -1202,11 +1203,24 @@ function _list(x, y, w, h) {
 				if (this.bAutoLockTag && item.tags.indexOf('bAutoLock') === -1) {item.tags.push('bAutoLock'); bSave = true;}
 				if (this.bAutoCustomTag) {
 					this.autoCustomTag.forEach( (tag) => {
-						if (! new Set(item.tags).has(tag)) {item.tags.push(tag); bSave = true;}
+						if (!(new Set(item.tags).has(tag))) {item.tags.push(tag); bSave = true;}
 					});
 				}
-				if (bSave && !item.isAutoPlaylist && item.extension !== '.fpl' && item.extension !== '.pls') {
-					let bDone = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM); // No BOM
+				if (bSave) {
+					let bDone, reason;
+					if (item.extension === '.m3u' || item.extension === '.m3u8') {
+						[bDone, reason] = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM); // No BOM
+						if (!bDone && reason === 1) { // Retry with new header
+							bDone = rewriteHeader(this, z); 
+							if (bDone) {bDone = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM);} // No BOM
+						}
+					} else if (item.extension === '.xspf') {
+						[bDone, reason] = editTextFile(item.path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM); // No BOM
+						if (!bDone && reason === 1) { // Retry with new header
+							bDone = rewriteHeader(this, z); 
+							if (bDone) {bDone = editTextFile(item.path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM);} // No BOM
+						}
+					} else {bDone = true;} // Another format? Skip
 					if (!bDone) {console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + item.path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar and force and update to save it with the required format.');}
 				}
 				// Perform Auto-Tags actions
@@ -1283,7 +1297,11 @@ function _list(x, y, w, h) {
 							if (!playlistObj.isLocked) {
 								let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
 								let newStrings = ['#PLAYLIST:' + old_name, '#UUID:' + new_id];
-								let bDone = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM); // No BOM
+								let [bDone, reason] = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM); // No BOM
+								if (!bDone && reason === 1) { // Retry with new header
+									bDone = rewriteHeader(this, z); 
+									if (bDone) {bDone = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM);} // No BOM
+								}
 								if (!bDone) {
 									fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + old_name + '\nPath: ' + playlistObj.path, window.Name);
 								} else {

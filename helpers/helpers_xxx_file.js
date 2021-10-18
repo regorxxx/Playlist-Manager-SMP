@@ -233,8 +233,12 @@ function _runCmd(command, wait) {
 // Replace once originalString from a file
 function editTextFile(filePath, originalString, newString, bBOM = false) {
 	let bDone = false;
+	let reason = -1;
 	if (_isFile(filePath)){
 		let fileText = utils.ReadTextFile(filePath);
+		const extension = isCompatible('1.4.0') ? utils.SplitFilePath(filePath)[2] : utils.FileTest(filePath, 'split')[2]; //TODO: Deprecated
+		const codePage = checkCodePage(fileText, extension);
+		if (codePage !== -1) {fileText = utils.ReadTextFile(filePath, codePage);}
 		if (typeof fileText !== 'undefined' && fileText.length >= 1) {
 			let fileTextNew = fileText;
 			if (isArray(originalString) && isArray(newString) && originalString.length === newString.length) {
@@ -254,11 +258,34 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 				if (_isFile(filePath) && bDone) {
 					let check = utils.ReadTextFile(filePath, convertCharsetToCodepage('UTF-8'));
 					bDone = (check === fileTextNew);
-				}
-			}
+				} else {reason = -1;}
+			} else {reason = 1}
+		} else {reason = 0;}
+	} else {reason = -1;}
+	return [bDone, reason];
+}
+
+function checkCodePage(originalText, extension, bAdvancedCheck = false) {
+	let codepage = -1;
+	const plsText = isArray(originalText) ? originalText : originalText.split(/\r\n|\n\r|\n|\r/);
+	if (extension === '.m3u8') {codepage = convertCharsetToCodepage('UTF-8');}
+	else if (extension === '.m3u' && plsText.length >= 2 && plsText[1].startsWith('#EXTENC:')) {
+		const codepageName = plsText[1].split(':').pop();
+		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
+	} else if ((extension === '.xspf' || extension === '.asx') && plsText.length >= 2 && plsText[0].indexOf('encoding=') !== -1) {
+		const codepageName = plsText[0].match(/"[\S]*"/g).pop().replace(/"/g,'');
+		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
+	} else if (bAdvancedCheck) {
+		if (plsText.length && plsText.some((line) => {
+			line = line.toLowerCase();
+			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1) ;
+			})) {
+			codepage = convertCharsetToCodepage('UTF-8');
+		} else if (plsText.length && plsText.some((line) => {line = line.toLowerCase(); return (line.indexOf('�') !== -1);})) {
+			codepage = systemCodePage;
 		}
 	}
-	return bDone;
+	return codepage ? codepage : -1;
 }
 
 function findRecursivePaths(path = fb.ProfilePath){

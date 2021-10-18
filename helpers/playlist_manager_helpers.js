@@ -1,5 +1,5 @@
 'use strict';
-//14/10/21
+//18/10/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -7,7 +7,8 @@ include('helpers_xxx_properties.js');
 include('helpers_xxx_file.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_clipboard.js');
-if (_isFile(folders.xxx + 'main\\remove_duplicates.js')) {include('..\\main\\remove_duplicates.js');}
+include('helpers_xxx_playlists_files_xspf.js');
+include('..\\main\\remove_duplicates.js');
 
 function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = []) {
 	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
@@ -49,11 +50,11 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		var trackTags = [];
 		var size = null;
 		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
-			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
+			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				// Safe checks to ensure proper UTF-8 and codepage detection
 				const codePage = checkCodePage(text, playlistPathArray[i].split('.').pop());
-				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage).split('\r\n');}
+				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage).split(/\r\n|\n\r|\n|\r/);}
 				let commentsText = text.filter(function(e) {return e.startsWith('#');});
 				if (typeof commentsText !== 'undefined' && commentsText.length >= 1) { // Use playlist info
 					let lines = commentsText.length;
@@ -103,32 +104,55 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 			}
 		} else if (playlistPathArray[i].endsWith('.fpl')) { // AddLocations is async so it doesn't work...
 			// Nothing
+			// Locked according to manager config
 		} else if (playlistPathArray[i].endsWith('.pls')) {
-			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
+			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				let sizeText = text.filter(function(e) {return e.startsWith('NumberOfEntries');});
 				if (typeof sizeText !== 'undefined' && sizeText.length >= 1) { // Use playlist info
 					size = Number(sizeText[0].split('=')[1]);
 				}
-			}			
+			}
 			if (size === null) { // Or count tracks
 				let fileText = text.filter(function(e) {return e.startsWith('File');});
 				size = fileText.length;
 			}	
 		} else if (playlistPathArray[i].endsWith('.strm')) {
-			let text = utils.ReadTextFile(playlistPathArray[i]).split('\r\n');
+			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined') {
-				if (text.length === 1) {size = 1;}
-				else {fb.ShowPopupMessage('.strm playlist can\'t contain multiple items: ' + playlistPathArray[i], window.Name);}
-				bLocked = true;
+				size = text.filter(Boolean).length;
+				if (size > 1) {fb.ShowPopupMessage('.strm playlist can\'t contain multiple items: ' + playlistPathArray[i], window.Name);}
+				bLocked = true; // Always locked by default
+			}
+		} else if (playlistPathArray[i].endsWith('.xspf')) {
+			let text = utils.ReadTextFile(playlistPathArray[i]);
+			if (typeof text !== 'undefined') {
+				const xmldom = XSPF.XMLfromString(text);
+				const jspf = XSPF.toJSPF(xmldom, false);
+				if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
+					const jPls = jspf.playlist;
+					name = jPls.hasOwnProperty('title') && jPls.title ? jPls.title : '';
+					if (jPls.hasOwnProperty('meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+						let bLockedFound = false;
+						for (let metaData of jPls.meta) {
+							if (metaData.hasOwnProperty('uuid')) {uuid = metaData.uuid ? metaData.uuid : '';}
+							if (metaData.hasOwnProperty('locked')) {bLocked = metaData.locked && metaData.locked.length ? metaData.locked === 'true' : true; bLockedFound = true;}
+							if (metaData.hasOwnProperty('category')) {category = metaData.category ? metaData.category : '';}
+							if (metaData.hasOwnProperty('tags')) {tags = metaData.tags ? metaData.tags.split(';') : [];}
+							if (metaData.hasOwnProperty('trackTags')) {trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : [];}
+							if (metaData.hasOwnProperty('playlistSize')) {size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null;}
+						}
+						if (!bLockedFound) {bLocked = true;} // Locked by default if meta not present
+					}
+					if (size === null) {size = jPls.hasOwnProperty('track') && jPls.track ? jPls.track.length : null;} // Prefer playlist info over track count
+					else if (jPls.hasOwnProperty('track') && jPls.track && size !== jPls.track.length) {fb.ShowPopupMessage('.xspf playlist size mismatch. Reported size (' + size +') is not equal to track count (' + jPls.track.length +')', window.Name);}
+				}
 			}
 		}
 		let fileSize = isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
 		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0));
 		i++;
 	}
-	// if (bCreated) {plman.RemovePlaylist(newFplIndex);}
-	
 	return playlistArray;
 }
 
@@ -146,7 +170,13 @@ function setTrackTags(trackTags, list, z) {
 			const old_name = list.data[z].name;
 			if (_isFile(list.data[z].path)) {
 				delayAutoUpdate();
-				bDone = editTextFile(list.data[z].path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM); // No BOM
+				let reason = -1;
+				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM);}
+				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="tags">' + oldTags,'<meta rel="tags">' + newTags, list.bBOM);}
+				if (!bDone && reason === 1) {
+					bDone = rewriteHeader(list, z);
+					if (bDone) {setTag(trackTags, list, z); return;}
+				}
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing track tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + trackTags);
 				} else {
@@ -175,7 +205,13 @@ function setTag(tags, list, z) {
 			const old_name = list.data[z].name;
 			if (_isFile(list.data[z].path)) {
 				delayAutoUpdate();
-				bDone = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM); // No BOM
+				let reason = -1;
+				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
+				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="tags">' + list.data[z].tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
+				if (!bDone && reason === 1) {
+					bDone = rewriteHeader(list, z);
+					if (bDone) {setTag(tags, list, z); return;}
+				}
 				if (!bDone) {
 					fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
 				} else {
@@ -207,7 +243,13 @@ function setCategory(category, list, z) {
 		} else {
 			const old_name = list.data[z].name;
 			delayAutoUpdate();
-			bDone = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM); // No BOM
+			let reason = -1;
+			if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM);}
+			else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="category">' + list.data[z].category,'<meta rel="category">' + category, list.bBOM);}
+			if (!bDone && reason === 1) {
+				bDone = rewriteHeader(list, z); 
+				if (bDone) {setCategory(category, list, z); return;}
+			}
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
 			} else {
@@ -235,7 +277,13 @@ function switchLock(list, z) {
 		const old_name = list.data[z].name;
 		if (_isFile(list.data[z].path)) {
 			delayAutoUpdate();
-			bDone = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM); // No BOM
+			let reason = -1;
+			if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM);}
+			else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="locked">' + boolText[0],'<meta rel="locked">' + boolText[1], list.bBOM);}
+			if (!bDone && reason === 1) {
+				bDone = rewriteHeader(list, z);
+				if (bDone) {switchLock(list, z); return;}
+			}
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
 			} else {
@@ -245,6 +293,52 @@ function switchLock(list, z) {
 			}
 		} else {
 			fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+		}
+	}
+	return bDone;
+}
+
+function rewriteHeader(list, z) {
+	let bDone = false;
+	if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {
+		let fileText = utils.ReadTextFile(list.data[z].path);
+		const codePage = checkCodePage(fileText, list.data[z].extension);
+		if (codePage !== -1) {fileText = utils.ReadTextFile(list.data[z].path, codePage);}
+		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
+		const idx = fileText.findIndex((line) => {return line.startsWith('#EXTINF:') || !line.startsWith('#');});
+		if (idx !== -1) {
+			const newHeader = [
+				'#EXTM3U',
+				'#EXTENC:UTF-8',
+				'#PLAYLIST:' + list.data[z].name,
+				'#UUID:' + list.data[z].id,
+				'#LOCKED:' + list.data[z].isLocked,
+				'#CATEGORY:' + list.data[z].category,
+				'#TAGS:' + (isArrayStrings(list.data[z].tags) ? list.data[z].tags.join(';') : ''),
+				'#TRACKTAGS:' + (isArray(list.data[z].trackTags) ? JSON.stringify(list.data[z].trackTags) : ''),
+				'#PLAYLISTSIZE:' + list.data[z].size,
+			];
+			fileText.splice(0, idx, ...newHeader);
+			bDone = _save(list.data[z].path, fileText.join('\r\n'));
+		}
+	} else if (list.data[z].extension === '.xspf') {
+		let fileText = utils.ReadTextFile(list.data[z].path);
+		const codePage = checkCodePage(fileText, list.data[z].extension);
+		if (codePage !== -1) {fileText = utils.ReadTextFile(list.data[z].path, codePage);}
+		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
+		const idx = fileText.findIndex((line) => {return line.indexOf('<trackList>') !== -1;});
+			if (idx >= 2) {
+			const newHeader = [
+				'	<title>' + list.data[z].name + '</title>',
+				'	<meta rel="uuid">' + list.data[z].id + '</meta>',
+				'	<meta rel="locked">' + list.data[z].isLocked + '</meta>',
+				'	<meta rel="category">' + list.data[z].category + '</meta>',
+				'	<meta rel="tags">' + (isArrayStrings(list.data[z].tags) ? list.data[z].tags.join(';') : '') + '</meta>',
+				'	<meta rel="trackTags">' + (isArray(list.data[z].trackTags) ? JSON.stringify(list.data[z].trackTags) : '') + '</meta>',
+				'	<meta rel="playlistSize">' + list.data[z].size + '</meta>',
+			];
+			fileText.splice(2, idx - 2, ...newHeader);
+			bDone = _save(list.data[z].path, fileText.join('\r\n'));
 		}
 	}
 	return bDone;

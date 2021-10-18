@@ -1,0 +1,13 @@
+{
+	"ui": {
+		"icons": {
+			"category": {
+				"Favorites": "\uf004",
+				"Tagging": "\uf02c",
+				"Pools": "\uf0e8",
+				"Party": "\uf000",
+				"Share": "\uf045"
+			}
+		}
+	}
+}

@@ -14,6 +14,8 @@
 
 ## [Unreleased][]
 ### Added
+- Playlist formats: [.xspf format](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format) full compatibility (read, edit and create). Follows [the complete specification](https://www.xspf.org/xspf-v1.html): items not found don't break playlist loading (it continues with next item). If  an item is not found at the set the path, it also tries to find matches on library by query using fuzzy matching according to the playlist metadata (Title + Artist + Album + Track number or a combination of those). By default, if lock flag is not set on file, it's loaded as a locked file.
+
 - Playlist formats: added read-only support for .strm format. Since format only allows one URL per playlist, M3U formats are preferred to create new playlists for the same purpose (which can also be read by streaming players).
 - UI: buttons' text color can now be customized via menus.
 - UI: Header icon can now be customized according to category being shown with an extra json config file. Check readme for instructions ('Advanced tips').
@@ -27,6 +29,7 @@
 - Track Auto-tagging: option to automatically add tag values to newly added tracks to a playlist. TF expressions (or %tags%), JavaScript functions (defined at 'helpers_xxx_utils.js') and strings/numbers can be assigned to tag(s). For ex, this would be an easy method to automatically tag as genre 'Rock' any track added to a 'Rock Playlist'. Obviously the use cases can be much more complex as soon as TF expressions or JavaScript is used. Values are appended to any existing tag value, it will not replace previous ones and will not add duplicates. It will also skip auto-tagging as soon as the same track was already at the playlist (thus not running multiple times for same tracks). Track Auto-tagging can be applied whether auto-save is enabled or not, as soon as a track is added. As result, it may be possible to apply it to native playlists by disabling auto-saving and creating a virtual copy of the playlist on the Playlist Manager (changes will never be saved to the physical file, but tracks will be auto-tagged anyway). Can be configured to apply it on standard playlists, locked ones and/or AutoPlaylists. Autoplaylists automatic track tagging is done asynchronously (if feature is enabled), thus having a minimum impact on loading time at startup.
 - Relative Paths: new menu entry for playlists which allows to convert (force) all paths to relative paths, stripping all but filenames. i.e. the tracks are expected at the same Dir the playlist resides in. Meant to be used after tracks conversion, exporting, etc.
 - Exporting Playlists: new menu entries for playlist exporting, allowing to just copy the playlist file, the playlist file along its tracks (thus converting the paths to relative paths too) or the playlist file plus the tracks converted using DSP presets. The latter option is configurable on the header menu at top 'Export and convert...'. Meant to be used for exporting playlists in one step, not having to edit playlists manually after converting files to match the new files... Can also be used as a 'one way sync' utility at servers, portable players, etc. Export and copy tracks can be configured to be executed asynchronously copy files, not blocking the UI (default behavior).
+- Blank lines: new entry to check for blank lines on playlists, although they may be allowed in some formats, some players may behave incorrectly with such playlists (for ex. with .strm files)
 - Duplicates: New tool to find duplicated items on playlists without loading them (R. Click, 'Check playlists consistency...' menu).
 - Tooltip & Duplicates: While pressing shift over a playlist, apart from the tooltip hint, a warning will be given if the current selection is already present on the destination playlist (to avoid adding duplicates). Note Shift + L.Click is the action associated to sending current selection to a playlist file.
 - Skip duplicates: new option to skip duplicates when adding selected items to a playlist. Checks both, if any of the new items is already on the playlist file and if the current selection contains duplicates. Console log shows when this happen without additional warnings or functionality changes (they are simply skipped). Configuration can be toggled at header menu. Only applies when sending selection directly to a playlist file (does not prevent adding duplicates via auto-save).
@@ -69,6 +72,8 @@
 - Helpers: additional checks at json loading on all scripts. Warnings via popup when a corrupted file is found.
 - Tooltip: Pressing shit, control or both will show on the tooltip the action which will be performed on playlists. If usage info is enabled on tooltips, then only the current action associated to the keys will be shown while pressing them (so it becomes obvious which one is from the list); otherwise -disabled- nothing will be shown until a key is pressed.
 - Tooltip: Adjusted max width to 600 px before splitting lines.
+- When retrieving paths from M3U files, lines are trimmed (blank spaces). In other words, blank lines are simply skipped for any purpose. Other formats don't allow these "errors".
+- Editing metadata on playlists not created by the manager no longer fails neither warns about requiring loading/saving to update the format; now the playlist header is automatically rewritten and then the new metadata added. This change allows to edit metadata for almost any format while not having to rewrite playlists to the currently default format (i.e. allowing .xspf playlists to remain in their format even if the default one is .m3u8).
 - General speed improvements loading playlists, checking items on library and finding dead items.
 - Added descriptions at top of most menus.
 - Minor code cleanup.
@@ -98,6 +103,7 @@
 - UI: crash when setting custom font size.
 - UI: When a playlist of current view had no category, next category letter was not being shown on the letter separators. i.e. Jumping from none (-) to B, skipping A, when there were playlists with categories starting with A, B and some without categories. Long time UI only bug since first releases. Only happened for the category sorting view; when sorting by name, playlist always have a name by design, so first item header was never 'empty' and thus the next one was always shown fine.
 - UI: bug with uppercase playlist names not being correctly identified when mixed along lowercase names (spanning of the same separator multiple times).
+- While reading Playlist files, they are now split by lines using any of the possible [escape sequence combinations](https://en.wikipedia.org/wiki/Newline) and not only windows ones (\r\n). This should allow to correctly read any playlist file created in any SO (no longer limited to Windows ecosystem).
 - Playlist with special characters did not properly update the playlist path at some instances (the chars were not being stripped until manual refresh).
 - Crash when deleting an AutoPlaylist right after loading it if Track Tagging was enabled due to callback delays.
 - Bug on first playlist not being properly updated at some points (at least on manual update) due to a bad coded check for index !== 0.
@@ -107,6 +113,7 @@
 - Checking if all items on a playlist are in the library now works as expected when some items -file paths- are duplicated.
 - Restore menu list not working when deleting playlists.
 - Fixed crash when trying to load a playlist with non present items and 'omit not found' was enabled (for ex. exporting features).
+- Crash after manual refreshing a playlist with less items than the number of rows.
 - Multiple minor improvements and fixes on path handling for portable installations.
 - Multiple minor improvements and fixes when saving files on non existing folder.
 

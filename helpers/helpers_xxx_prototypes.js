@@ -71,7 +71,7 @@ function capitalizeAll(s, sep = ' ') {
 */
 
 function isArray(checkKeys) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
+	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
 		return false; //Array was null or not an array
 	}
 	return true;

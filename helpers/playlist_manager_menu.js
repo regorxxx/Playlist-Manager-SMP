@@ -1,5 +1,5 @@
 'use strict';
-//14/10/21
+//18/10/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -32,7 +32,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
 	const isAutoPls = () => {return pls.isAutoPlaylist;};
 	const isLockPls = () => {return pls.isLocked;};
-	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.fpl' || pls.isAutoPlaylist;};
+	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl' || pls.isAutoPlaylist;};
 	const isPlsLockable = () => {return isPlsEditable() || pls.extension === '.strm';};
 	// Header
 	if (list.bShowMenuHeader) {
@@ -94,10 +94,23 @@ function createMenuLeft(forcedIndex = -1) {
 								});
 								if (!pls.isLocked) {
 									let bDone = false;
+									let reason = -1;
 									if (pls.extension === '.m3u' || pls.extension === '.m3u8') {
 										let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
 										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
-										bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+										[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+										if (!bDone && reason === 1) { // Retry with new header
+											bDone = rewriteHeader(list, z); 
+											if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
+										}
+									} else if (pls.extension === '.xspf') {
+										let originalStrings = ['<title>' + old_name, '<meta rel="uuid">' + old_id];
+										let newStrings = ['<title>' + new_name, '<meta rel="uuid">' + (list.bUseUUID ? new_id : '')];
+										[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+										if (!bDone && reason === 1) { // Retry with new header
+											bDone = rewriteHeader(list, z); 
+											if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
+										}
 									} else {bDone = true;}
 									if (!bDone) {
 										fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + pls.path, window.Name);
@@ -310,7 +323,7 @@ function createMenuRight() {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.loadConfigFile();
 				const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
-				list.bUpdateAutoplaylist = true; 
+				list.bUpdateAutoplaylist = true;
 				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 				list.filter();
 				test.Print();
@@ -541,11 +554,15 @@ function createMenuRight() {
 							setTimeout(() => {
 								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 									const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
-									let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path).split('\r\n') : void(0);
+									let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
 									let size;
 									if (typeof text !== 'undefined' && text.length) {
-										let lines = text.length;
+										const codePage = checkCodePage(text, playlist.extension);
+										if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+										
 										if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+											text = text.split(/\r\n|\n\r|\n|\r/);
+											const lines = text.length;
 											let j = 0;
 											while (j < lines) { // Changes size Line
 												if (text[j].startsWith('#PLAYLISTSIZE:')) {
@@ -555,14 +572,35 @@ function createMenuRight() {
 												j++;
 											}
 										} else if (playlist.extension === '.pls') {
+											text = text.split(/\r\n|\n\r|\n|\r/);
+											const lines = text.length;
 											let j = 0;
 											if (text[lines - 2].startsWith('NumberOfEntries=')) {
 												size = Number(text[lines - 2].split('=')[1]);
 											}
+										} else if (playlist.extension === '.strm') {
+											text = text.split(/\r\n|\n\r|\n|\r/);
+											size = 0;
+											for (let line of text) {
+												if (line.trim().length) {size++;}
+											}
+										} else if (playlist.extension === '.xspf') {
+											const xmldom = XSPF.XMLfromString(text);
+											const jspf = XSPF.toJSPF(xmldom, false);
+											if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
+												const jPls = jspf.playlist;
+												if (jPls.hasOwnProperty('meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+													for (let metaData of jPls.meta) {
+														if (metaData.hasOwnProperty('playlistSize')) {size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null;}
+													}
+												}
+											}
 										}
-									}
-									if (typeof size === 'undefined') {found.push(playlist.path + '(no size tag found)');}
-									else if (filePathsNum !== size) {found.push(playlist.path + '(tag: ' + size + ', paths: ' + filePathsNum + ')');}
+									} 
+									if (typeof text === 'undefined' || !text.length) {found.push(playlist.path + ' (blank)');}
+									else if (typeof size === 'undefined') {found.push(playlist.path + ' (no size tag found)');}
+									else if (filePathsNum !== size) {found.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')');}
+									else if (playlist.extension === '.strm' && size > 1) {found.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)')}
 								}
 								const progress = Math.round(i / total * 10) * 10;
 								if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + Math.round(progress) + '%.');}
@@ -576,6 +614,47 @@ function createMenuRight() {
 				});
 			}
 			async function findSizeMismatchAsync() {return await findSizeMismatch();}
+		}
+		{	// Blank Lines
+			menu.newEntry({menuName: subMenuName, entryText: 'Blank lines...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for blank lines (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				findBlankAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with blank lines:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
+			}});
+			function findBlank() {
+				const found = [];
+				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
+					const promises = [];
+					let prevProgress = -1;
+					list.dataAll.forEach((playlist, i) => {
+						promises.push(new Promise(resolve => {
+							setTimeout(() => {
+								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+									let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+									let size, lines;
+									if (typeof text !== 'undefined' && text.length) {
+										const codePage = checkCodePage(text, playlist.extension);
+										if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+										lines = text.split(/\r\n|\n\r|\n|\r/);
+										size = lines.filter(Boolean).length;
+										lines = lines.length;
+									} 
+									if (typeof text === 'undefined' || typeof size === 'undefined') {found.push(playlist.path + ' (blank)');}
+									else if (size !== lines) {found.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')');}
+								}
+								const progress = Math.round(i / total * 10) * 10;
+								if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + Math.round(progress) + '%.');}
+								resolve('done');
+							}, iDelayPlaylists / 5 * i);
+						}));
+					});
+					Promise.all(promises).then((_) => {
+						resolve(found);
+					});
+				});
+			}
+			async function findBlankAsync() {return await findBlank();}
 		}
 	}
 	return menu;
@@ -719,7 +798,7 @@ function createMenuRightTop() {
 							list.playlistsExtension = item;
 							list.properties['extension'][1] = list.playlistsExtension;
 							overwriteProperties(list.properties);
-						}});
+						}, flags: item === '.xspf' ? MF_GRAYED : MF_STRING}); // TODO: enable
 					});
 				}
 				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
