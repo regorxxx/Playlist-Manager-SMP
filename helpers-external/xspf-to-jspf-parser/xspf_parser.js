@@ -22,7 +22,7 @@ const XSPF = {
 		return {playlist:pl};
 	},
 	emptyJSPF : function() {
-		const pl =  this.parse_playlist(this.XMLfromString(''));
+		const pl =  this.parse_playlist(this.XMLfromString(''), false);
 		return {playlist:pl};
 	},
 	parse_playlist : function(xspf, bParseTracks = true) {
@@ -42,18 +42,18 @@ const XSPF = {
 		playlist.date = this.strWh(playlist.date[0]);
 		
 		const [attrs, linknodes, metanodes, extnodes] = this.getDirectChildrenByTagName(xspf_playlist,['attribution','link','meta','extension']);
-		if (attrs && attrs[0]) {playlist.attribution = this.getKeyValuePairs(attrs[0],['location','identifier']).flat();}
-		if (linknodes && linknodes[0]) {playlist.link = this.getRelValuePairs(linknodes[0]);}
-		if (metanodes && metanodes[0]) {playlist.meta = this.getRelValuePairs(metanodes[0],true);}
+		if (attrs && attrs.length) {playlist.attribution = this.getKeyValuePairs(attrs,['location','identifier']).flat();}
+		if (linknodes && linknodes.length) {playlist.link = this.getRelValuePairs(linknodes);}
+		if (metanodes && metanodes.length) {playlist.meta = this.getRelValuePairs(metanodes, true);}
 		 
 		playlist.license = this.strWh(license[0]);
 		
 		playlist.extension = {};
-		if (extnodes && extnodes[0]) {
-			const length = extnodes[0].length;
+		if (extnodes) {
+			const length = extnodes.length;
 			for (var i=0; i < length; i++) {
-				const node = extnodes[0][i];
-				const app = node.getAttribute('application');
+				const node = extnodes[i];
+				const app = node ? node.getAttribute('application') : null;
 				if (app) {
 					playlist.extension[app] = playlist.extension[app] || [];
 					const extension = this.getExtensionReader(app,'playlist')(node);
@@ -90,7 +90,7 @@ const XSPF = {
 		return result;
 	},
 	getKeyValuePairs: function(node,filter,nowrap) {
-		const length = node.childNodes.length;
+		const length = node.childNodes ? node.childNodes.length : 0;
 		let result = filter ? [...Array(filter.length)].map((_) => {return [];}) : [];
 		for (let y = 0; y < length; y++) {
 			let value = {};
@@ -115,7 +115,7 @@ const XSPF = {
 		let result = [];
 		for (let y=0; y < length; y++) {
 			const ln = nodes[y];
-			const rel = ln.getAttribute('rel');
+			const rel = ln ? ln.getAttribute('rel') : null;
 			if (rel) {
 				let link = {};
 				link[rel] = preserve_whitespace ? this.node_text(ln) : this.strWh(this.node_text(ln));
@@ -159,20 +159,20 @@ const XSPF = {
 				t.trackNum = this.strWh(t.trackNum)/1;
 				
 				[t.location, t.identifier] = this.getKeyValuePairs(xspf_track,['location','identifier'],true);
-				t.duration = this.strWh(t.duration)/1;
+				t.duration = this.strWh(t.duration[0])/1;
 				t.location = this.strWh(t.location);
 				t.identifier = this.strWh(t.identifier);
 				
 				t.extension = new Object;
 				const [linknodes, metanodes, extnodes] = this.getDirectChildrenByTagName(xspf_track,['link','meta','extension']);
-				if (linknodes && linknodes[0]) {t.link = this.getRelValuePairs(linknodes[0]);}
-				if (metanodes && metanodes[0]) {t.meta = this.getRelValuePairs(metanodes[0]);}
-				if (extnodes && extnodes[0]) {
-					const length = extnodes[0].length;
+				if (linknodes && linknodes.length) {t.link = this.getRelValuePairs(linknodes);}
+				if (metanodes && metanodes.length) {t.meta = this.getRelValuePairs(metanodes);}
+				if (extnodes) {
+					const length = extnodes.length;
 					if (length > 0) {
 						for (let j=0; j < length; j++) {
-							const node = extnodes[0][j];
-							const app = node.getAttribute('application');
+							const node = extnodes[j];
+							const app = node ? node.getAttribute('application') : null;
 							if (app) {
 								t.extension[app] = t.extension[app] || [];
 								const extension = this.getExtensionReader(app,'track')(node);
