@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<smartplaylist type="songs">
+    <name>Pool of playlists</name>
+    <match>all</match>
+    <rule field="playlist" operator="is">
+        <value>70s Rock and Folk</value>
+        <value>One Playlist</value>
+        <value>Another Playlist</value>
+    </rule>
+</smartplaylist>

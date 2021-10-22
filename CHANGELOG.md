@@ -14,8 +14,8 @@
 
 ## [Unreleased][]
 ### Added
+- Playlist formats: [.xsp format](https://kodi.wiki/view/Smart_playlists) full compatibility (read, edit and create). They are Smart Playlists which work on Kodi-like/XBMC systems, pretty similar to AutoPlaylists. Has been added a full layer of translations between XBMC-queries and Foobar-queries which allows conversion on the fly between both formats whenever it's possible. Some exceptions may apply, like most foobar TF functions not being available on .xsp format (check readme for more info). For all purposes Smart Playlists are treated like AutoPlaylists, being locked by default, having a query and sort, can be cloned as standard playlist or AutoPlaylist, etc. Metadata is also saved on the panel .json file, along AutoPlaylists and .fpl playlists metadata. Note queries checking for other playlists by name are also allowed (so it can use as source any playlist format read by the manager, even AutoPlaylists); this can be easily used as a way to merge different playlists as pools (the same it works on Kodi).
 - Playlist formats: [.xspf format](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format) full compatibility (read, edit and create). Follows [the complete specification](https://www.xspf.org/xspf-v1.html): items not found don't break playlist loading (it continues with next item). If  an item is not found at the set the path, it also tries to find matches on library by query using fuzzy matching according to the playlist metadata (Title + Artist + Album + Track number or a combination of those). By default, if lock flag is not set on file, it's loaded as a locked file.
-
 - Playlist formats: added read-only support for .strm format. Since format only allows one URL per playlist, M3U formats are preferred to create new playlists for the same purpose (which can also be read by streaming players).
 - UI: buttons' text color can now be customized via menus.
 - UI: Header icon can now be customized according to category being shown with an extra json config file. Check readme for instructions ('Advanced tips').
@@ -38,8 +38,12 @@
 - Popup warnings when finding dead items sending selection to playlist (Shift + L. Click), creating a new playlist from active playlist, manually saving a playlist or auto-saving (configurable). Note checking on auto-saving is disabled by default since it may affect performance and also result on popups being thrown multiple times until dead items are fixed.
 - Menus: new option on header menu to set intervals for auto-loading and auto-saving files (previously done only via properties).
 - Menus: new entry to 'Clone AutoPlaylist and edit query'. Creates a clone of the selected AutoPlaylist and allows to edit the query afterwards; for easy AutoPlaylist creation using a generic query as base (instead of copying/pasting queries).
+- Menus: new menu entry on selected playlist menu to clone current playlist as another format. Shortcut to easily convert playlists between different formats without using the exporting tools. Checks the paths on the process, so dead items are reported and skipped.
+- Menus: new menu entry to edit limit of tracks output when loading playlist's query (currently only available for .xsp format).
 - Helpers: added full script console logging to file at foobar profile folder ('console.log'). File is reset when reaching 5 MB. Logging is also sent to foobar2000's console (along other components logging)
+- Tooltip: limit is shown for AutoPlaylists (infinite) and .xsp playlists (set by playlist file).
 ### Changed
+- Edit query (.xsp only): query is now translated into an XBMC query after user input. Structure may change during the process (specially parenthesis and how things are grouped) and non recognized tags/expressions are skipped (those which have no XBMC counterpart). Please recheck query after edition on the tooltip to ensure it has been recognized properly. See readme for more usage info.
 - Selected playlist menu: Renamed 'Open playlist folder' to 'Show playlist file' on explorer.
 - Properties: added extensive checks to most properties.
 - Remove duplicates: optimized the code, now runs at least x2 times faster. Updated all instances where the functions were being used to call the new version (currently on AutoPlaylist cloning).
@@ -54,7 +58,10 @@
 - Installation: Installation path may now be changed by editing 'folders.xxxName' variable at '.\helpers\helpers_xxx.js'. This is a workaround for some SMP limitations when working with relative paths and text files, images or dynamic file loading.
 - Tooltip: Header tooltip now shows current filters applied and number of playlists / Autoplaylists. Note the header text always show the number of tracked playlists on the current folder, while the tooltip shows only those on the current view.
 - Categories: Current category view is now saved only when 'Save filtering between sessions' is enabled, otherwise it will be reset to show 'All' on startup.
-- AutoPlaylists: Autoplaylists size now gets updated asynchronously (if feature is enabled), thus having a minimum impact on loading time at startup..
+- AutoPlaylists: Autoplaylists size now gets updated asynchronously (if feature is enabled), thus having a minimum impact on loading time at startup.
+- UI: Tweaked a bit the default colors to differentiate better every type of playlist, should look better by default now when changing the background to black too.
+- UI: .xsp playlists can be set to have their own color.
+- UI: popup warning if saving a playlist will involve changing the playlist format. This should avoid accidental changes. Configurable on header menu.
 - UI: Minor UI adjustments to the header.
 - UI: Tooltip shortcuts are updated as soon as the key modifiers are pressed, even if the the mouse has not been moved (tooltip is redrawn). That should make easier to see the action which would be applied without needing to move the mouse constantly to update the tooltip.
 - UI: Header tooltip (with current filter view) is updated after double clicking, even if the the mouse has not been moved  (tooltip is redrawn). That should make easier to see the current category applied while cycling without needing to move the mouse constantly to update the tooltip.
@@ -114,6 +121,8 @@
 - Restore menu list not working when deleting playlists.
 - Fixed crash when trying to load a playlist with non present items and 'omit not found' was enabled (for ex. exporting features).
 - Crash after manual refreshing a playlist with less items than the number of rows.
+- Rare crash when using manual refresh while the mouse was over a playlist file deleted outside the panel.
+- Rare error when trying to create a playlist without a name, the name used was the filename + extension instead of only the filename. Only happened when trying to clone a playlist without UUID but UUIDs were enabled.
 - Multiple minor improvements and fixes on path handling for portable installations.
 - Multiple minor improvements and fixes when saving files on non existing folder.
 

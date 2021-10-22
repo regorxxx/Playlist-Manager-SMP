@@ -1833,15 +1833,15 @@ function _list(x, y, w, h) {
 			if (!this.colours || !Object.keys(this.colours).length) { // Sets default colours
 				this.colours = {};
 				this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C));
-				this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF9932CC)), 0.6);
-				this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF9932CC)), 0.6);
+				this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFFFF629B)), 0.6);
+				this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF65CC32)), 0.6);
 				this.colours['selectedPlaylistColour'] = blendColours(panel.colours.highlight, RGB(...toRGB(0xFFDC143C)), 0.8);
 				bDone = true;
 			}
 			if (this.colours && Object.keys(this.colours).length !== 4) { // Fills missing colours
 				if (!this.colours['lockedPlaylistColour']) {this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C));}
-				if (!this.colours['autoPlaylistColour']) {this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF9932CC)), 0.6);}
-				if (!this.colours['smartPlaylistColour']) {this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF9932CC)), 0.6);}
+				if (!this.colours['autoPlaylistColour']) {this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFFFF629B)), 0.6);}
+				if (!this.colours['smartPlaylistColour']) {this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF65CC32)), 0.6);}
 				if (!this.colours['selectedPlaylistColour']) {this.colours['selectedPlaylistColour'] = blendColours(panel.colours.highlight, RGB(...toRGB(0xFFDC143C)), 0.8);}
 				bDone = true;
 			}
