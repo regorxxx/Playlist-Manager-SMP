@@ -24,8 +24,8 @@ const XSP = {
 		const pl =  this.parse_playlist(xml_dom);
 		return {playlist:pl};
 	},
-	emptyJSP : function() {
-		const pl =  this.parse_playlist(this.XMLfromString(''));
+	emptyJSP : function(type = 'songs') {
+		const pl =  this.parse_playlist(this.XMLfromString(''), type);
 		return {playlist:pl};
 	},
 	toXSP : function (jsp) {
@@ -33,7 +33,7 @@ const XSP = {
 		let code = [];
 		// XML Header
 		code.push('<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>');
-		code.push('<smartplaylist type=\"songs\">');
+		code.push('<smartplaylist type=\"' + jsp.playlist.type + '\">');
 		// Playlist Header [required]
 		const headerKeys = ['name', 'match'];
 		headerKeys.forEach((key) => {
@@ -73,19 +73,20 @@ const XSP = {
 		code.push('</smartplaylist>');
 		return code;
 	},
-	parse_playlist : function(xsp) {
+	parse_playlist : function(xsp, defType = '') {
 		const playlist = new Object;
 		const xsp_playlist = xsp.getElementsByTagName('smartplaylist')[0] || new ActiveXObject("Microsoft.XMLDOM");
-		playlist.type = xsp_playlist.getAttribute('type');
+		playlist.type = xsp_playlist.getAttribute ? xsp_playlist.getAttribute('type') : defType;
 		
 		[playlist.name, playlist.match, playlist.group, playlist.limit] = this.get_contents(xsp_playlist, ['name','match','group','limit'], 1);
 		playlist.name = playlist.name[0];
 		playlist.match = playlist.match[0];
 		playlist.group = playlist.group[0];
-		playlist.limit = this.strWh(playlist.limit[0])/1;
+		playlist.limit = playlist.limit[0] ? this.strWh(playlist.limit[0])/1 : void(0);
 		
 		const order = this.getDirectChildrenByTagName(xsp_playlist,['order']);
 		if (order && order[0]) {playlist.order = this.getRelValuePairs(order[0],true,'direction');}
+		if (!playlist.order || !playlist.order.length) {playlist.order = [{}];}
 		
 		playlist.rules = this.parse_rules(xsp_playlist);
 		
@@ -141,7 +142,7 @@ const XSP = {
 		let result = [];
 		for (let y=0; y < length; y++) {
 			const ln = nodes[y];
-			const rel = ln.getAttribute(attr);
+			const rel = ln ? ln.getAttribute(attr) : null;
 			if (rel) {
 				let link = {};
 				link[rel] = preserve_whitespace ? this.node_text(ln) : this.strWh(this.node_text(ln));
@@ -173,13 +174,13 @@ const XSP = {
 		for (let i=0; i < xsp_rules_length; i++) {
 			let t = new Object;
 			const xsp_rule = xsp_rules[i];
-			
-			t.field = xsp_rule.getAttribute('field');
-			t.operator = xsp_rule.getAttribute('operator');
-			t.value = this.getKeyValuePairs(xsp_rule,['value'],true);
-			t.value = this.strWh(t.value[0]);
-			
-			rules[i] = t;
+			if (xsp_rule) {
+				t.field = xsp_rule.getAttribute('field');
+				t.operator = xsp_rule.getAttribute('operator');
+				t.value = this.getKeyValuePairs(xsp_rule,['value'],true);
+				t.value = this.strWh(t.value[0]);
+				rules[i] = t;
+			}
 		}
 		return rules; 
 	},

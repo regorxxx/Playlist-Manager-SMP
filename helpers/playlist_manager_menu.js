@@ -171,7 +171,7 @@ function createMenuLeft(forcedIndex = -1) {
 				let newQuery = '';
 				try {newQuery = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, pls.query);}
 				catch(e) {return;}
-				let bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
+				const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
 				if (!bPlaylist && !checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return;}
 				if (newQuery !== pls.query) {
 					const bDone = pls.extension === '.xsp' ? rewriteXSPQuery(pls, newQuery) : true;
@@ -358,6 +358,7 @@ function createMenuRight() {
 		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add(true);}});
 		menu.newEntry({entryText: 'Create new playlist file from active playlist...', func: () => {list.add(false);}});
 		menu.newEntry({entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
+		menu.newEntry({entryText: 'Add new Smart Playlist...', func: () => {list.addSmartplaylist();}});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management

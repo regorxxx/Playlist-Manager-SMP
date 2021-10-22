@@ -242,6 +242,7 @@ function getSortObj(queryOrSort) {
 		if (sortObj.direction === 'SORT' || sortObj.direction == 'SORT ASCENDING') {sortObj.direction = 1;}
 		else if (sortObj.direction === 'SORT DESCENDING') {sortObj.direction = -1;}
 		else {console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null;}
+		if (sortObj.tf.indexOf('%') === -1 && sortObj.tf.indexOf('$') === -1) {sortObj = null;}
 	}
 	if (sortObj) {sortObj.tf = fb.TitleFormat(sortObj.tf);}
 	return sortObj;

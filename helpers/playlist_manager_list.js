@@ -1458,7 +1458,7 @@ function _list(x, y, w, h) {
 			// Create oPlaylist
 			let newName = hasName ? pls.name : '';
 			if (!newName.length || bEdit) {
-				try {newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name', window.Name, newName);}
+				try {newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name', window.Name, newName, true);}
 				catch (e) {return false;}
 				if (!newName.length) {return false;}
 			}
@@ -1468,14 +1468,71 @@ function _list(x, y, w, h) {
 				catch (e) {return false;}
 			}
 			if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
-			const new_sort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');;
-			const new_forced = (new_sort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
-			const new_queryObj = {query: newQuery, sort: new_sort, bSortForced: new_forced};
+			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');;
+			const newForced = (newSort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
+			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
 			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count;
-			const objectPlaylist = new oPlaylist('', '', newName, '', queryCount, 0, false, true, new_queryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : []);
+			const objectPlaylist = new oPlaylist('', '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : []);
 			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			// Save
+			this.addToData(objectPlaylist);
+			this.update(true, true); // We have already updated data before only for the variables changed
+			this.filter();
+			return objectPlaylist;
+		}
+		
+		this.addSmartplaylist = (pls = null, bEdit = true) => {
+			// Check if there are initial values
+			const bPls = pls ? true : false;
+			const hasName = bPls && pls.hasOwnProperty('name'), hasQuery = bPls && pls.hasOwnProperty('query'), hasSort = bPls && pls.hasOwnProperty('sort');
+			const hasSize = bPls && pls.hasOwnProperty('size') && pls.size !== '?', hasCategory = bPls && pls.hasOwnProperty('category');
+			const hasTags = bPls && pls.hasOwnProperty('tags') && pls.tags.length, hasTrackTags = bPls && pls.hasOwnProperty('trackTags') && pls.trackTags.length;
+			const hasLimit = bPls && pls.hasOwnProperty('limit') && pls.limit;
+			// Create oPlaylist
+			let newName = hasName ? pls.name : '';
+			if (!newName.length || bEdit) {
+				try {newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', window.Name, newName, true);}
+				catch (e) {return false;}
+				if (!newName.length) {return false;}
+			}
+			let newQuery = hasQuery ? pls.query : '';
+			if (!newQuery.length || bEdit) {
+				try {newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', window.Name, newQuery, true);}
+				catch (e) {return false;}
+			}
+			const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
+			if (bPlaylist && !checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
+			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
+			const newForced = false;
+			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
+			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count : '?');
+			let newLimit = 0;
+			if (hasLimit) {
+				if (isFinite(pls.limit)) {newLimit = pls.limit;}
+			} else if (bEdit) {
+				try {newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true));}
+				catch (e) {return false;}
+				if (isNaN(newLimit)) {return false;}
+				if (!Number.isFinite(newLimit)) {newLimit = 0;}
+			}
+			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
+			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit);
+			// Auto-Tags (skip bAutoLock since SmartPlaylists are already locked)
+			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			const {rules, match} = XSP.getRules(newQuery);
+			if (rules.length) {
+				const jspPls = XSP.emptyJSP();
+				jspPls.playlist.name = newName;
+				jspPls.playlist.rules = rules;
+				jspPls.playlist.match = match;
+				jspPls.playlist.limit = newLimit;
+				jspPls.playlist.sort = XSP.getOrder(newSort);
+				const xspText = XSP.toXSP(jspPls);
+				if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
+			} else {return false;}
 			// Save
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed

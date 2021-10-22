@@ -158,7 +158,7 @@ XSP.getSort = function(jsp) {
 		}
 		if (sort.length) {
 			let fbTag = this.getFbTag(tag);
-			if (fbTag.length) {sort += ' ' + fbTag;}
+			if (fbTag.length) {sort += ' ' + (!fbTag.match(/[%$]/g) ? '%' + fbTag + '%' : fbTag);}
 		}
 	}
 	return sort;
