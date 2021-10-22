@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/10/21
+//22/10/21
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -82,7 +82,9 @@ var properties = {
 	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', 'artist,date,title'],
 	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true],
 	bShowMenuHeader			: ['Show header on playlist menus?', true],
-	bCopyAsync				: ['Copy tracks asynchronously on export?', true]
+	bCopyAsync				: ['Copy tracks asynchronously on export?', true],
+	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true],
+	bSavingWarnings			: ['Warnings when saving to another format', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

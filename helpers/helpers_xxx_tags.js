@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//22/10/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_foobar.js');
@@ -227,8 +227,24 @@ function stripSort(query) {
 		if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0];}
 		else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0];}
 		else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0];}
+		else {queryNoSort = '';}
 	}
 	return queryNoSort;
+}
+
+function getSortObj(queryOrSort) {
+	const query = stripSort(queryOrSort);
+	const sort = queryOrSort.replace(query, '');
+	let sortObj = null;
+	if (sort.length) {
+		sortObj = {};
+		[sortObj.direction, sortObj.tf] = sort.split(' BY ');
+		if (sortObj.direction === 'SORT' || sortObj.direction == 'SORT ASCENDING') {sortObj.direction = 1;}
+		else if (sortObj.direction === 'SORT DESCENDING') {sortObj.direction = -1;}
+		else {console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null;}
+	}
+	if (sortObj) {sortObj.tf = fb.TitleFormat(sortObj.tf);}
+	return sortObj;
 }
 
 function getTagsValues(handle, tagsArray, bMerged = false) {

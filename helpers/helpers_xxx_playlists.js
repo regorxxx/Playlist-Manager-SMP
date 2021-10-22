@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//22/10/21
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
@@ -34,6 +34,13 @@ function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
 		const selection = range(start, start + sign * (Math.abs(nTracks) - 1), sign);
         plman.SetPlaylistSelection(playlistIndex, selection, true);
         plman.RemovePlaylistSelection(playlistIndex, true);
+}
+
+// Outputs indexes of all playlists with that name
+function getPlaylistNames() {
+	let names = [];
+	for (let i = 0; i < plman.PlaylistCount; i++) {names.push({name: plman.GetPlaylistName(i), idx: i});}
+	return names;
 }
 
 // Outputs indexes of all playlists with that name
@@ -124,4 +131,13 @@ function sendToPlaylist(handleList, playlistName) {
 	console.log('Final selection: ' +  handleList.Count  + ' tracks');
 	plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
 	return handleList;
+}
+
+function getHandleFromUIPlaylists(names = []) {
+	let playlists = new Set();
+	names.forEach((name) => {playlists = playlists.union(new Set(getPlaylistIndexArray(name)));});
+	let output = new FbMetadbHandleList();
+	playlists.forEach((idx) => {output.AddRange(plman.GetPlaylistItems(idx));});
+	output.Sort();
+	return output;
 }
