@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<smartplaylist type="songs">
+    <name>70s Rock and Folk</name>
+    <match>all</match>
+    <rule field="genre" operator="is">
+        <value>Rock</value>
+        <value>Folk</value>
+    </rule>
+    <rule field="year" operator="greaterthan">
+        <value>1969</value>
+    </rule>
+    <rule field="year" operator="lessthan">
+        <value>1980</value>
+    </rule>
+    <order direction="descending">playcount</order>
+    <limit>100</limit>
+</smartplaylist>
