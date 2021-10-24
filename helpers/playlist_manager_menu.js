@@ -993,7 +993,7 @@ function createMenuRightTop() {
 					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
 					overwriteProperties(list.properties);
 					if (list.properties['bUpdateAutoplaylist'][1]) {
-						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retriever their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
+						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retriever their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
 						}
 				}});
 			});
@@ -1103,7 +1103,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, Autoplaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
+					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
 					list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
 					list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
 					overwriteProperties(list.properties);

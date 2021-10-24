@@ -298,13 +298,13 @@ function _list(x, y, w, h) {
 							const pls = this.data[this.index];
 							if (pls) {
 								const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath,'')  + ')' : '';
-								let playlistDataText = (pls.isAutoPlaylist) ? 'Autoplaylist: ' : 'Playlist: ';
+								let playlistDataText = pls.isAutoPlaylist ? 'AutoPlaylist: ' : (pls.extension === '.xsp' ? 'Smart Playlist: ' : 'Playlist: ');
 								playlistDataText += pls.nameId + ' - ' +  pls.size + ' Tracks ' + path;
 								playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
 								playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
 								playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
 								playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0];}).join(', ') : '-');
-								// Text for Autoplaylists
+								// Text for AutoPlaylists
 								if (pls.isAutoPlaylist || pls.query) { // TODO: xsp ?
 									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
 									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : ''): '-');
@@ -314,7 +314,7 @@ function _list(x, y, w, h) {
 								if (mask === MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + L. Click to load / show playlist)';}
 								else if (mask === MK_SHIFT) {
 									playlistDataText += '\n\n' + '(Shift + L. Click to send selection to playlist)';
-									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(AutoPlaylists are non editable, convert it first)';}  // TODO: xsp ?
+									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}  // TODO: xsp ?
 									else if (pls.extension === '.fpl') {playlistDataText += '\n' + '(.fpl playlists are non editable, convert it first)';}
 									else if (pls.isLocked) {playlistDataText += '\n' + '(Locked playlists are non editable, unlock it first)';}
 									else {
@@ -915,7 +915,7 @@ function _list(x, y, w, h) {
 	this.tagState = [];
 	this.constShowStates = () => {return ['All','Not locked','Locked'];}; // These are constant	this.categoryState = [];
 	this.constShowStates = () => {return ['All','Not locked','Locked'];}; // These are constant
-	this.constAutoPlaylistStates = () => {return ['All','Autoplaylists','No Autoplaylists'];};
+	this.constAutoPlaylistStates = () => {return ['All','AutoPlaylists','No AutoPlaylists'];};
 	this.showStates = this.constShowStates(); // These rotate over time
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
 	this.isFilterActive = () => {return (this.constShowStates()[0] !== this.showStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0]);};
@@ -1129,7 +1129,7 @@ function _list(x, y, w, h) {
 				data.forEach((item) => {
 					if (item.isAutoPlaylist || item.query) {
 						i++;
-						if (this.bUpdateAutoplaylist && this.bShowSize) { // Updates size for Autoplaylists. Warning takes a lot of time! Only when required...
+						if (this.bUpdateAutoplaylist && this.bShowSize) { // Updates size for AutoPlaylists. Warning takes a lot of time! Only when required...
 							// Only re-checks query when forcing update of size for performance reasons
 							// Note the query is checked on user input, external json loading and just before loading the playlist
 							// So checking it every time the panel is painted is totally useless...
@@ -1144,11 +1144,11 @@ function _list(x, y, w, h) {
 										}
 									}
 									if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
-									if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
+									if (cacheSize !== item.size) {console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name); bDone = true; window.Repaint();}
 									resolve('done');
 								});
 							}));
-						} else { // Updates tags for Autoplaylists. Warning takes a lot of time! Only when required...
+						} else { // Updates tags for AutoPlaylists. Warning takes a lot of time! Only when required...
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
 									promises.push(new Promise(resolve => {
@@ -1158,7 +1158,7 @@ function _list(x, y, w, h) {
 												if (bUpdated) {console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name);}
 											}
 											if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
-											if (cacheSize !== item.size) {console.log('Updating AutoPlaylist size: ' + item.name); bDone = true; window.Repaint();}
+											if (cacheSize !== item.size) {console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name); bDone = true; window.Repaint();}
 											resolve('done');
 										});
 									}));
@@ -1190,17 +1190,11 @@ function _list(x, y, w, h) {
 							item.tags = fplPlaylist.tags;
 							item.size = fplPlaylist.size;
 						}
-						if (!this.properties['bFirstPopupFpl'][1]) {
-							this.properties['bFirstPopupFpl'][1] = true;
-							overwriteProperties(this.properties); // Updates panel
-							fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
-						}
+						this.fplPopup();
 					} else if (item.extension === '.pls') {
-						if (!this.properties['bFirstPopupPls'][1]) {
-							this.properties['bFirstPopupPls'][1] = true;
-							overwriteProperties(this.properties); // Updates panel
-							fb.ShowPopupMessage('Playlist manager has loaded a .pls playlist for the first time. This is an informative popup.\n\n-.pls playlists format doesn\'t allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.\n-The related menu entries to set that data (or lock status) are disabled (greyed).\n-If you are using another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format.', 'Playlist Manager');
-						}
+						this.plsPopup();
+					} else if (item.extension === '.xspf') {
+						this.xspfPopup();
 					} else if (item.extension === '.xsp') {
 						let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
 						if (xspPlaylist) {
@@ -1209,7 +1203,7 @@ function _list(x, y, w, h) {
 							item.size = xspPlaylist.size;
 							item.isLocked = xspPlaylist.isLocked;
 						}
-						// TODO Popup
+						this.xspPopup();
 					}
 					if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;} 
 					else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + iconCharPlaylistW;}
@@ -1484,6 +1478,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.addSmartplaylist = (pls = null, bEdit = true) => {
+			this.xspPopup();
 			// Check if there are initial values
 			const bPls = pls ? true : false;
 			const hasName = bPls && pls.hasOwnProperty('name'), hasQuery = bPls && pls.hasOwnProperty('query'), hasSort = bPls && pls.hasOwnProperty('sort');
@@ -1754,6 +1749,39 @@ function _list(x, y, w, h) {
 			}
 		}
 		
+		this.xspPopup = (bForce = false) => {
+			if (!this.properties['bFirstPopupXsp'][1] || bForce) {
+				this.properties['bFirstPopupXsp'][1] = true;
+				overwriteProperties(this.properties); // Updates panel
+				fb.ShowPopupMessage('Playlist manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager');
+			}
+			return;
+		}
+		this.xspfPopup = (bForce = false) => {
+			if (!this.properties['bFirstPopupXspf'][1] || bForce) {
+				this.properties['bFirstPopupXspf'][1] = true;
+				overwriteProperties(this.properties); // Updates panel
+				fb.ShowPopupMessage('Playlist manager has loaded a .xspf playlist for the first time. This is an informative popup.\n\n-.pls playlists format allow all extra data like UUID, category, lock status or tags, ... on file (like M3U format).\n-Items on these playlists are matched against the library by path like any other format.\n-In case files are not found by path, then it will try to match by tags using queries. Therefore .xspf playlists are shareable between different users/libraries, since they will work no matter the media structure.\n-Note query matching involves much more processing time, so it\'s much faster to use them as an \'standard\' playlist.\n-If you are using default another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
+			}
+			return;
+		}
+		this.plsPopup = (bForce = false) => {
+			if (!this.properties['bFirstPopupPls'][1] || bForce) {
+				this.properties['bFirstPopupPls'][1] = true;
+				overwriteProperties(this.properties); // Updates panel
+				fb.ShowPopupMessage('Playlist manager has loaded a .pls playlist for the first time. This is an informative popup.\n\n-.pls playlists format doesn\'t allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.\n-The related menu entries to set that data (or lock status) are disabled (greyed).\n-If you are using another default format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format  (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
+			}
+			return;
+		}
+		this.fplPopup = (bForce = false) => {
+			if (!this.properties['bFirstPopupFpl'][1]) {
+				this.properties['bFirstPopupFpl'][1] = true;
+				overwriteProperties(this.properties); // Updates panel
+				fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
+			}
+			return;
+		}
+		
 		this.initProperties = () => { // Some properties require code fired after setting them...
 			let bDone = false;
 			let removeProperties = {};
@@ -2014,10 +2042,14 @@ function _list(x, y, w, h) {
 function loadAutoPlaylist(pls, i) {
 	return new Promise(resolve => {
 		setTimeout(() => {
-			if (!checkQuery(pls.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
-			const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query));
-			pls.size = handleList.Count;
-			resolve(handleList);
+			if (pls.query.indexOf('#PLAYLIST# IS') === -1 && !checkQuery(pls.query, false, true)) {
+				fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);
+				resolve(null);
+			} else {
+				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query));
+				pls.size = handleList.Count;
+				resolve(handleList);
+			}
 		}, 500 * i);
 	});
 }

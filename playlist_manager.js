@@ -84,7 +84,9 @@ var properties = {
 	bShowMenuHeader			: ['Show header on playlist menus?', true],
 	bCopyAsync				: ['Copy tracks asynchronously on export?', true],
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true],
-	bSavingWarnings			: ['Warnings when saving to another format', true]
+	bSavingWarnings			: ['Warnings when saving to another format', true],
+	bFirstPopupXsp			: ['Playlist Manager xsp: Fired once', false],
+	bFirstPopupXspf			: ['Playlist Manager xspf: Fired once', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
