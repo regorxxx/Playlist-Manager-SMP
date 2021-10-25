@@ -1,5 +1,5 @@
 'use strict';
-//22/10/21
+//25/10/21
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -225,6 +225,7 @@ XSP.getTag = function(fbTag) {
 		case 'last_played': {tag = 'lastplayed'; break;} // Requires foo playcount
 		// Special tags
 		case '#playlist#': {tag = 'playlist'; break;} // Does not work in foobar queries
+		case '$rand()': {tag = 'random'; break;} // Does not work in foobar queries
 		default: {
 			console.log('Tag not recognized: ' + fbTag);
 		}
@@ -268,20 +269,38 @@ XSP.getRules = function(querySort) {
 	let match = '';
 	let query = stripSort(querySort); // Ensure there is no sort clause
 	if (query.length) {
+		// const searches = [
+			// {regexp: /\) AND /g, split: [')','AND']},
+			// {regexp: /AND \(/g, split: ['AND', '(']},
+			// {regexp: /\) AND \(/g, split: [')','AND', '(']},
+			// {regexp: /\) AND NOT /g, split: [')','AND NOT']},
+			// {regexp: / AND NOT \(/g, split: ['AND NOT','(']},
+			// {regexp: /\) AND NOT \(/g, split: [')','AND NOT','(']},
+			// {regexp: / AND NOT /g, split: 'AND NOT'},
+			// {regexp: / AND /g, split: 'AND'},
+			// {regexp: / OR NOT /g, split: 'OR NOT'},
+			// {regexp: / OR /g, split: 'OR'},
+			// {regexp: / NOT /g, split: 'NOT'},
+			// {regexp: /^\(/g, split: '('},
+			// {regexp: /\)$/g, split: ')'}
+		// ];
 		const searches = [
 			{regexp: /\) AND /g, split: [')','AND']},
 			{regexp: /AND \(/g, split: ['AND', '(']},
 			{regexp: /\) AND \(/g, split: [')','AND', '(']},
-			{regexp: /\) AND NOT /g, split: [')','AND NOT']},
-			{regexp: / AND NOT \(/g, split: ['AND NOT','(']},
-			{regexp: /\) AND NOT \(/g, split: [')','AND NOT','(']},
-			{regexp: / AND NOT /g, split: 'AND NOT'},
+			// {regexp: /\) AND NOT /g, split: [')','AND NOT']},
+			// {regexp: / AND NOT \(/g, split: ['AND NOT','(']},
+			// {regexp: /\) AND NOT \(/g, split: [')','AND NOT','(']},
+			// {regexp: / AND NOT /g, split: 'AND NOT'},
 			{regexp: / AND /g, split: 'AND'},
-			{regexp: / NOT /g, split: 'NOT'},
+			// {regexp: / OR NOT /g, split: 'OR NOT'},
 			{regexp: / OR /g, split: 'OR'},
+			// {regexp: / NOT /g, split: 'NOT'},
+			{regexp: / *NOT \(/g, split: ['NOT','(']},
 			{regexp: /^\(/g, split: '('},
 			{regexp: /\)$/g, split: ')'}
 		];
+		const opposites = new Map([['is','isnot'],['contains','doesnotcontain'],['inthelast','notinthelast']]);
 		let querySplit = [query];
 		for (let search of searches) {
 			querySplit = recursiveSplit(querySplit, search.regexp, search.split).flat(Infinity);
@@ -307,6 +326,7 @@ XSP.getRules = function(querySort) {
 			});
 		} else {querySplitCopy = querySplit;}
 		match = rules.length === 1 || querySplitCopy.every((item) => {return item !== 'OR' && item !== 'OR NOT';}) ? 'all' : 'one'
+		let prevOp = '';
 		rules = querySplitCopy.map((query) => {return this.getRule(query);});
 		let rulesV2 = rules.map((rule) => {
 			if (Array.isArray(rule)) {
@@ -315,30 +335,39 @@ XSP.getRules = function(querySort) {
 		});
 		let rulesV3 = [];
 		const opSet = new Set(['is','contains','startswith','endswith','lessthan','greaterthan','inthelast']);
-		let prevOp = '';
 		rules.forEach((rule, i) => {
 			if (Array.isArray(rule)) {
 				let field = '';
 				let operator = '';
-				if (rule.every((q) => {
-					if (!field.length && q.field) {field = q.field;}
-					if (!operator.length && q.operator) {operator = q.operator;}
-					if (typeof q === 'object') {return q.field === field && q.operator === operator && opSet.has(operator);}
-					else {return q === 'OR';}
-				})) {rulesV3.push(operator);}
-				else if (i === 0 && rule.every((q) => {
-					if (typeof q === 'object') {return opSet.has(q.operator);}
-					else {return q === 'AND';}
-				})) {rulesV3 = rulesV3.concat(rule.filter((q) => {return q !== 'AND';}).map((q) => {return q.operator;}));}
-				else if (prevOp === 'AND' && rule.every((q) => {
-					if (typeof q === 'object') {return opSet.has(q.operator);}
-					else {return q === 'AND';}
-				})) {rulesV3 = rulesV3.concat(rule.filter((q) => {return q !== 'AND';}).map((q) => {return q.operator;}));}
+				if (prevOp === 'NOT') { // Then also i !== 0
+					if (rule.every((q) => {
+						if (!field.length && q.field) {field = q.field;}
+						if (!operator.length && q.operator) {operator = q.operator;}
+						if (typeof q === 'object') {return q.field === field && q.operator === operator && opSet.has(operator);}
+						else {return q === 'AND';}
+					})) {if (opposites.has(operator)) {rulesV3.push(opposites.get(operator));}}
+				} else {
+					if (rule.every((q) => {
+						if (!field.length && q.field) {field = q.field;}
+						if (!operator.length && q.operator) {operator = q.operator;}
+						if (typeof q === 'object') {return q.field === field && q.operator === operator && opSet.has(operator);}
+						else {return q === 'OR';}
+					})) {rulesV3.push(operator);}
+					else if (i === 0 && rule.every((q) => {
+						if (typeof q === 'object') {return opSet.has(q.operator);}
+						else {return q === 'AND';}
+					})) {rulesV3 = rulesV3.concat(rule.filter((q) => {return q !== 'AND';}).map((q) => {return q.operator;}));}
+					else if (prevOp === 'AND' && rule.every((q) => {
+						if (typeof q === 'object') {return opSet.has(q.operator);}
+						else {return q === 'AND';}
+					})) {rulesV3 = rulesV3.concat(rule.filter((q) => {return q !== 'AND';}).map((q) => {return q.operator;}));}
+				}
 				prevOp = '';
 			} else {
 				prevOp = '';
 				if (opSet.has(rule.operator)) {rulesV3.push(rule.operator);}
 				else if (rule === 'AND') {prevOp = 'AND';}
+				else if (rule === 'NOT') {prevOp = 'NOT';}
 				else {rulesV3.push(rule);}
 			}
 		});
@@ -349,26 +378,37 @@ XSP.getRules = function(querySort) {
 				let field = '';
 				let operator = '';
 				let value = [];
-				if (rule.every((q) => {
-					if (!field.length && q.field) {field = q.field;}
-					if (!operator.length && q.operator) {operator = q.operator;}
-					if (q.value && q.value.length) {value = value.concat(...q.value);}
-					if (typeof q === 'object') {return q.field === field && q.operator === operator && opSet.has(operator);}
-					else {return q === 'OR';}
-				})) {rulesV4.push({operator, field, value});}
-				else if (i === 0 && rule.every((q) => {
-					if (typeof q === 'object') {return opSet.has(q.operator);}
-					else {return q === 'AND';}
-				})) {rulesV4 = rulesV4.concat(rule.filter((q) => {return q !== 'AND';}));}
-				else if (prevOp === 'AND' && rule.every((q) => {
-					if (typeof q === 'object') {return opSet.has(q.operator);}
-					else {return q === 'AND';}
-				})) {rulesV4 = rulesV4.concat(rule.filter((q) => {return q !== 'AND';}));}
+				if (prevOp === 'NOT') { // Then also i !== 0
+					if (rule.every((q) => {
+						if (!field.length && q.field) {field = q.field;}
+						if (!operator.length && q.operator) {operator = q.operator;}
+						if (q.value && q.value.length) {value = value.concat(...q.value);}
+						if (typeof q === 'object') {return q.field === field && q.operator === operator && opSet.has(operator);}
+						else {return q === 'AND';}
+					})) {if (opposites.has(operator)) {rulesV4.push({operator: opposites.get(operator), field, value});}}
+				} else {
+					if (rule.every((q) => {
+						if (!field.length && q.field) {field = q.field;}
+						if (!operator.length && q.operator) {operator = q.operator;}
+						if (q.value && q.value.length) {value = value.concat(...q.value);}
+						if (typeof q === 'object') {return q.field === field && q.operator === operator && opSet.has(operator);}
+						else {return q === 'OR';}
+					})) {rulesV4.push({operator, field, value});}
+					else if (i === 0 && rule.every((q) => {
+						if (typeof q === 'object') {return opSet.has(q.operator);}
+						else {return q === 'AND';}
+					})) {rulesV4 = rulesV4.concat(rule.filter((q) => {return q !== 'AND';}));}
+					else if (prevOp === 'AND' && rule.every((q) => {
+						if (typeof q === 'object') {return opSet.has(q.operator);}
+						else {return q === 'AND';}
+					})) {rulesV4 = rulesV4.concat(rule.filter((q) => {return q !== 'AND';}));}
+				}
 				prevOp = '';
 			} else {
 				prevOp = '';
 				if (opSet.has(rule.operator)) {rulesV4.push(rule);}
 				else if (rule === 'AND') {prevOp = 'AND';}
+				else if (rule === 'NOT') {prevOp = 'NOT';}
 				else {rulesV4.push(rule);}
 			}
 		});
@@ -387,27 +427,29 @@ XSP.getRule = function(query) {
 	let rule = {operator: '', field: '', value: []};
 	if (Array.isArray(query)) {rule = query.map((q) => {return this.getRule(q);});}
 	else {
-		if (new Set(['AND','AND NOT','OR']).has(query)) {rule = query;}
+		if (new Set(['AND','AND NOT','OR','NOT']).has(query)) {rule = query;}
 		else {
 			switch (true) {
+				case query.match(/NOT [ #"%.-\w]* IS [ #,"%.-\w]*/g) !== null: {
+					rule.operator = 'isnot';
+					[ , rule.field, rule.value] = query.match(/NOT ([ #"%.-\w]*) IS ([ #",%.-\w]*)/);
+					break;
+				}
 				case query.match(/[ #"%.-\w]* IS [ #,"%.-\w]*/g) !== null: {
 					rule.operator = 'is';
 					[ , rule.field, rule.value] = query.match(/([ #"%.-\w]*) IS ([ #",%.-\w]*)/);
 					break;
 				}
-				// case 'isnot': {
-					// operator = 'NOT (' + valueArr.map((field) => {return fbTag + ' IS ' + field;}).join(' OR ') +')';
-					// break;
-				// }
+				case query.match(/NOT [ #"%.-\w]* HAS [ #"%.-\w]*/g) !== null: {
+					rule.operator = 'doesnotcontain';
+					[ , rule.field, rule.value] = query.match(/NOT ([ #"%.-\w]*) HAS ([ #",%.-\w]*)/);
+					break;
+				}
 				case query.match(/[ #"%.-\w]* HAS [ #"%.-\w]*/g) !== null: {
 					rule.operator = 'contains';
 					[ , rule.field, rule.value] = query.match(/([ #"%.-\w]*) HAS ([ #",%.-\w]*)/);
 					break;
 				}
-				// case 'doesnotcontain': {
-					// rule.operator = 'NOT (' + valueArr.map((field) => {return fbTag + ' HAS ' + field;}).join(' OR ') +')';
-					// break;
-				// }
 				case query.match(/\$strstr\([ ",%.-\w]*\) EQUAL 1/g) !== null: { // $strstr(%artist%,Wilco) EQUAL 1
 					rule.operator = 'startswith';
 					[ , rule.field, rule.value] = query.match(/\$strstr\(([ "%.-\w]*),([ ,#"%.-\w]*)/);
@@ -428,20 +470,31 @@ XSP.getRule = function(query) {
 					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) GREATER ([ ",%.-\w]*)/);
 					break;
 				}
+				case query.match(/[ "%.-\w]* AFTER [ "%.-\w]*/g) !== null: {
+					rule.operator = 'after';
+					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) AFTER ([ ",%.-\w]*)/);
+					break;
+				}
+				case query.match(/[ "%.-\w]* BEFORE [ "%.-\w]*/g) !== null: {
+					rule.operator = 'before';
+					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) BEFORE ([ ",%.-\w]*)/);
+					break;
+				}
+				case query.match(/NOT [ "%.-\w]* DURING LAST [ "%.-\w]*/g) !== null: {
+					rule.operator = 'notinthelast';
+					[ , rule.field, rule.value] = query.match(/NOT ([ ",%.-\w]*) DURING LAST ([ ",%.-\w]*)/);
+					break;
+				}
 				case query.match(/[ "%.-\w]* DURING LAST [ "%.-\w]*/g) !== null: {
 					rule.operator = 'inthelast';
 					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) DURING LAST ([ ",%.-\w]*)/);
 					break;
 				}
-				// case query.match(/[ ",%.-\w]* HAS [ ",%.-\w]*/g): {
-					// rule.operator = 'NOT (' + valueArr.map((field) => {return fbTag + ' DURING LAST ' + field;}).join(' OR ') +')';
-					// break;
-				// }
 				default: {
 					console.log('Operator not recognized: ' + query);
 				}
 			}
-			if (rule.value.length) {rule.value = [rule.value];}
+			if (rule.value.length) {rule.value = [rule.value.trim()];}
 			if (rule.field.length) {rule.field = this.getTag(rule.field);}
 		}
 	}
