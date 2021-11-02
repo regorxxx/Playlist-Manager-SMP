@@ -1,5 +1,5 @@
 'use strict';
-//22/10/21
+//02/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -35,6 +35,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const isLockPls = () => {return pls.isLocked;};
 	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist;};
 	const isPlsLockable = () => {return isPlsEditable() || pls.extension === '.strm';};
+	const isPlsUI = () => {return pls.extension === '.ui';};
 	// Header
 	if (list.bShowMenuHeader) {
 		menu.newEntry({entryText: '--- ' + (isAutoPls() ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
@@ -43,18 +44,16 @@ function createMenuLeft(forcedIndex = -1) {
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
-		menu.newEntry({entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}});
+		menu.newEntry({entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}, flags: isPlsUI() ? MF_GRAYED : MF_STRING});
 		// Show binded playlist
 		menu.newEntry({entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 		menu.newEntry({entryText: 'Send selection to playlist', func: () => {
 			if (selItems && selItems.Count) {
-				list.addTracksToPlaylist(z, selItems);
-				const index = plman.FindPlaylist(pls.nameId);
-				if (index !== -1) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
+				list.sendSelectionToPlaylist(z, true);
 			}
-		}, flags: !isAutoPls() && !isLockPls() && writablePlaylistFormats.has(pls.extension) && selItems.Count ? MF_STRING : MF_GRAYED});
+		}, flags: !isAutoPls() && !isLockPls() && (writablePlaylistFormats.has(pls.extension) || isPlsUI()) && selItems.Count ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
 		menu.newEntry({entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls() ? 'Rename...' : 'Rename... (only filename)'), func: () => {
@@ -75,12 +74,13 @@ function createMenuLeft(forcedIndex = -1) {
 			} else {
 				delayAutoUpdate();
 				if (new_name.length && new_name !== old_name) {
-					if (pls.isAutoPlaylist) {
+					if (pls.isAutoPlaylist || pls.extension === '.ui') {
 						list.editData(pls, {
 							name: new_name,
 							id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
-							nameId: list.bUseUUID ? new_name + new_id : new_name,
+							nameId: list.bUseUUID && pls.extension !== '.ui' ? new_name + new_id : new_name,
 						});
+						list.update_plman(pls.nameId, old_nameId); // Update with new id
 						list.update(true, true);
 						list.filter();
 					} else {
@@ -221,7 +221,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (answer === popup.yes) {list.updatePlaylist(z);}
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
-			}, flags: isPlsLoaded() ? MF_STRING : MF_GRAYED});
+			}, flags: isPlsLoaded() && !isPlsUI() ? MF_STRING : MF_GRAYED});
 			// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
 			menu.newEntry({entryText: isPlsActive() ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
 				if (_isFile(pls.path)) {
@@ -282,6 +282,12 @@ function createMenuLeft(forcedIndex = -1) {
 				const path = list.exportJson(z);
 				if (_isFile(path)) {_explorer(path);}
 			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+			if (pls.extension === '.xsp') {
+				// Copy
+				menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
+					exportPlaylistFile(list, z);
+				}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			}
 		}
 		else {	// Export and Rel. Paths handling
 			// Rel Paths
@@ -344,7 +350,7 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: 'Open file on explorer', func: () => {
 			if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
 			else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
-		}});
+		}, flags: !isPlsUI() ? MF_STRING : MF_GRAYED});
 	}
 	return menu;
 }
@@ -385,6 +391,17 @@ function createMenuRight() {
 						// Easy way: intersect current view + new one with refreshed list
 						const categoryState = [...new Set(list.categoryState.concat(list.deletedItems[i].category)).intersection(new Set(list.categories()))];
 						if (list.deletedItems[i].isAutoPlaylist) {
+							list.update(true, true); // Only paint and save to json
+						} else if(list.deletedItems[i].extension === '.ui') {
+							for (let j = 0; j < plman.PlaylistRecycler.Count; j++) { // First pls is the last one deleted
+								if (plman.PlaylistRecycler.GetName(j) === list.deletedItems[i].nameId) {
+									const size = plman.PlaylistRecycler.GetContent(j).Count;
+									if (size === list.deletedItems[i].size) { // Must match on size and name to avoid restoring another pls with same name
+										plman.PlaylistRecycler.Restore(j);
+										break;
+									}
+								}
+							}
 							list.update(true, true); // Only paint and save to json
 						} else {
 							_restoreFile(list.deletedItems[i].path);
@@ -828,7 +845,7 @@ function createMenuRightTop() {
 				}
 			}
 			{	// Playlist extension
-				const subMenuName = menu.newMenu('Change playlist extension (saving)...', menuName);
+				const subMenuName = menu.newMenu('Default playlist extension (saving)...', menuName);
 				const options = Array.from(writablePlaylistFormats);
 				const optionsLength = options.length;
 				menu.newEntry({menuName: subMenuName, entryText: 'Writable formats:', flags: MF_GRAYED});
@@ -883,6 +900,24 @@ function createMenuRightTop() {
 				}
 				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bSavingWarnings ? 0 : 1;});
 			}
+			{	// Smart Playlist saving
+				const subMenuName = menu.newMenu('Skip Smart Playlists on Auto-saving...', menuName);
+				const options = ['Yes: format will never be changed.', 'No: format will change on Auto-saving.'];
+				const optionsLength = options.length;
+				menu.newEntry({menuName: subMenuName, entryText: 'Treat Smart Playlists as AutoPlaylists:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				if (optionsLength) {
+					options.forEach((item, i) => {
+						menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+							list.bSavingXsp = (i === 1);
+							list.properties['bSavingXsp'][1] = list.bSavingXsp;
+							overwriteProperties(list.properties);
+							if (list.bSavingXsp) {fb.ShowPopupMessage('Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes agains their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.', window.Name);}
+						}});
+					});
+				}
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bSavingXsp ? 1 : 0;});
+			}
 		}
 	}
 	{	// Panel behavior
@@ -902,12 +937,46 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bSaveFilterStates ? 0 : 1);});
 		}
+		{	// Filtering
+			const subMenuName = menu.newMenu('Track UI-only playlists...', menuName);
+			const options = ['Yes: also show UI-only playlists','No: Only playlist files on tracked folder'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Use manager as native organizer:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bAllPls = (i === 0) ? true : false;
+					list.properties['bAllPls'][1] = list.bAllPls;
+					overwriteProperties(list.properties);
+					if (list.bAllPls) {
+						fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom color to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name);
+					}
+					createMenuRight().btn_up(-1,-1, null, 'Manual refresh');
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bAllPls ? 0 : 1);});
+		}
 		menu.newEntry({menuName, entryText: 'sep'});
-		{	// Duplicates handling
-			const subMenuName = menu.newMenu('Duplicates handling...', menuName);
+		{	// Duplicated pls handling
+			const subMenuName = menu.newMenu('Duplicated playlists handling...', menuName);
+			const options = ['Warn about playlists with duplicated names', 'Ignore it'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Only for tracked playlists within the manager:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bCheckDuplWarnings = (i === 0) ? true : false;
+					list.properties['bCheckDuplWarnings'][1] = list.bCheckDuplWarnings;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bCheckDuplWarnings ? 0 : 1);});
+		}
+		{	// Duplicated tracks handling
+			const subMenuName = menu.newMenu('Duplicated tracks handling...', menuName);
 			const options = ['Skip duplicates when adding new tracks', 'Only warn about it on tooltip'];
 			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'When using Shift + L. Click on a playlist:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'When sending selection to a playlist:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/21
+//02/11/21
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -86,7 +86,10 @@ var properties = {
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true],
 	bSavingWarnings			: ['Warnings when saving to another format', true],
 	bFirstPopupXsp			: ['Playlist Manager xsp: Fired once', false],
-	bFirstPopupXspf			: ['Playlist Manager xspf: Fired once', false]
+	bFirstPopupXspf			: ['Playlist Manager xspf: Fired once', false],
+	bCheckDuplWarnings		: ['Warnings when loading duplicated playlists', true],
+	bSavingXsp				: ['Auto-save .xsp playlists?', false],
+	bAllPls					: ['Track UI-only playlists?', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -239,7 +242,7 @@ var debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, auto
 function on_playlist_items_reordered(playlistIndex) {
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
- 
+
 function on_playlist_items_removed(playlistIndex) {
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
@@ -251,6 +254,14 @@ function on_playlist_items_added(playlistIndex) {
 		else if (plman.IsAutoPlaylist(playlistIndex)) {
 			if (list.bAutoTrackTagAutoPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
 		} else if (list.bAutoTrackTagPls || list.bAutoTrackTagLockPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
+	}
+}
+
+function on_playlists_changed() { // For UI only playlists
+	if (list.bAllPls) {
+		list.update(true, true);
+		const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
+		list.filter({categoryState});
 	}
 }
 

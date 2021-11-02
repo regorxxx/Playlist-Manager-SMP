@@ -1,5 +1,5 @@
 'use strict';
-//25/10/21
+//02/11/21
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -265,6 +265,7 @@ XSP.getOrder = function(queryOrSort) {
 }
 
 XSP.getRules = function(querySort) {
+	const bDebug = false;
 	let rules = [];
 	let match = '';
 	let query = stripSort(querySort); // Ensure there is no sort clause
@@ -412,12 +413,36 @@ XSP.getRules = function(querySort) {
 				else {rulesV4.push(rule);}
 			}
 		});
-		// console.log(match);
-		console.log('Split query in groups:\n', querySplitCopy);
-		console.log('Retrieved rules:\n', rules);
-		console.log('Tags:\n', rulesV2);
-		console.log('Values:\n', rulesV3);
-		console.log('Final rules after discarding and grouping:\n', rulesV4);
+		// let rulesV5 = [];
+		// const v4len = rulesV4.length;
+		// if (v4len === 1) {rulesV5.push(rule);}
+		// rulesV4.forEach((rule, i) => {
+			// let bDone = false;
+			// let j = i - 1;
+			// if (j >= 0) {
+				// const prevRule = rulesV4[j];
+				// if (prevRule.field == rule.field && prevRule.operator == rule.operator) {
+					// const newRule = rulesV4[i];
+					// newRule.value = [...new Set(newRule.value.concat(prevRule.value))];
+					// rulesV5.push(newRule);
+					// bDone = true;
+				// } else {
+					// if (j === 0) {rulesV5.push(prevRule);}
+					// rulesV5.push(rule);
+				// }
+			// }
+		// });
+		// match = rulesV5.length === 1 || rulesV5.every((item) => {return item !== 'OR' && item !== 'OR NOT';}) ? 'all' : 'one';
+		// rulesV5 = rulesV5.filter((rule) => {return typeof rule === 'object';});
+		if (bDebug) {
+			console.log(match);
+			console.log('Split query in groups:\n', querySplitCopy);
+			console.log('Retrieved rules:\n', rules);
+			console.log('Tags:\n', rulesV2);
+			console.log('Values:\n', rulesV3);
+			console.log('Final rules after discarding and grouping:\n', rulesV4);
+			// console.log('Rules V5:\n', rulesV5);
+		}
 		rules = rulesV4;
 	}
 	return {rules, match};

@@ -17,8 +17,6 @@
 	CAVEAT: Note you can use these functions to filter lists! i.e. if you only check by artist/date, then any track with same artist/date is considered duplicated
 	That means this could be used both to find duplicates or for custom post-playlist creation filtering (1 track per artist, 1 track per date, etc.)
 	TODO:
-		- Clean unused things
-		- Update v2 & V3
 		- Add musicBraiz track ID and album as default: solves same track with different dates...
 */	
 

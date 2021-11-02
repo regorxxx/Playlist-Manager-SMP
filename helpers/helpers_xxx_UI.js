@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//02/11/21
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_UI_chars.js');
@@ -73,6 +73,19 @@ function nextId(method, bNext = true, bCharsForced = true) {
 			return nextIdLetters(bNext, bCharsForced);
 		case method === 'indicator':
 			return nextIdIndicator(bNext);
+		default:
+			return null;
+	}
+}
+
+function getIdRegEx(method, bNext = true, bCharsForced = true) {
+	switch (true) {
+		case method === 'invisible':
+			return / \(\*[\u200b\u200c\u200d\u200e]{5}\)$/g;
+		case method === 'letters':
+			return / \([abcdf]{5}\)$/g;
+		case method === 'indicator':
+			return / \(\*\)$/g;
 		default:
 			return null;
 	}
@@ -155,6 +168,14 @@ const nextIdIndicator = (function() { // Same structure to ease compatibility
 			return ' (*)';
 		};
 }());
+
+function removeIdFromStr(nameId) {
+	let name = nameId;
+	['invisible','letters','indicator'].forEach((method) => {
+		name = name.replace(getIdRegEx(method), '');
+	});
+	return name;
+}
 
 /* 
 	Tooltip

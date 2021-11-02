@@ -1,11 +1,12 @@
+'use strict';
+//27/10/21
+
 // Copyright Regorxxx 2021
 // Based on works by J. Chris Anderson 2007 
 // https://github.com/jchris/xspf-to-jspf-parser
 // Retain this notice. 
 // Released under the AGPLv3
 // https://www.gnu.org/licenses/agpl-3.0.html
-
-'use strict';
 
 const XSP = {
 	XMLfromString: function(string) {
