@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/11/21
+//04/11/21
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -199,6 +199,15 @@ function on_notify_data(name, info) {
 			if (!info) {window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath);} // Share paths
 			break;
 		}
+		case 'Playlist manager: get handleList': {
+			if (info && info.length) {
+				const plsName = info;
+				if (list.hasPlaylists([plsName])) {
+					window.NotifyOthers('Playlist manager: handleList', new Promise((resolve, reject) => {resolve(list.getHandleFromPlaylists([plsName], false));}));
+				}
+			} // Share paths
+			break;
+		}
 		case 'precacheLibraryPaths': {
 			libItemsAbsPaths = [...info];
 			console.log('precacheLibraryPaths: using paths from another instance.');
@@ -287,7 +296,7 @@ function autoUpdate() {
 			totalFileSize += isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
 		}
 		if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar executed
-			list.update(false, true);
+			list.update(false, true, list.lastIndex);
 			list.filter(); // Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
 			return true;
 		}

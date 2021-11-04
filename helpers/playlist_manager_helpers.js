@@ -1,5 +1,5 @@
 'use strict';
-//22/10/21
+//04/11/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -438,20 +438,19 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 function clonePlaylistFile(list, z, ext) {
 	let bDone = false;
 	const pls = list.data[z];
+	const bUI = pls.extension === '.ui';
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0)+ ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
-	const paths = getFilePathsFromPlaylist(pls.path);
+	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[0] : utils.FileTest(playlistPath, 'split')[0]; //TODO: Deprecated
 	const report = [];
-	paths.forEach((trackPath) => {if (!_isFile(trackPath)) {report.push(trackPath);}});
-	const handleList = getHandlesFromPlaylist(pls.path, list.playlistsPath, true); // Omit not found
+	paths.forEach((trackPath, i) => {if (!_isFile(trackPath)) {report.push(trackPath);}});
 	if (handleList) {
-		const count = handleList.Count;
-		if (count !== paths.length) {fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-		if (count) {
+		if (report.length) {fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
+		if (handleList.Count) {
 			// Retrieve new paths
-			const paths = getFilePathsFromPlaylist(pls.path);
 			bDone = savePlaylist(-1, playlistPath, ext, playlistName, null, list.data[z].isLocked, list.data[z].category, list.data[z].tags, '', list.data[z].trackTags, list.bBOM);
 			bDone = bDone && addHandleToPlaylist(handleList, playlistPath, '', list.bBOM);
 		}
@@ -561,10 +560,13 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', extension = '') {
 	fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);
 	let bDone = false;
-	const playlistPath = list.data[z].path;
-	const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split'); //TODO: Deprecated
-	const playlistName = arr[1].endsWith(arr[2]) ? arr[1].replace(arr[2],'') : arr[1]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
-	const playlistExt = arr[2];
+	const pls = list.data[z];
+	const playlistPath = pls.path;
+	const bUI = pls.extension === '.ui';
+	const arr = bUI ? null : (isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split')); //TODO: Deprecated
+	const playlistName = bUI ? pls.name : (arr[1].endsWith(arr[2]) ? arr[1].replace(arr[2],'') : arr[1]); // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+	const playlistExt = bUI ? '' : arr[2];
+	if (!playlistExt.length) {extension = list.playlistsExtension;} // Use default extension for UI playlists
 	const playlistNameExt = playlistName + (extension.length ? extension : playlistExt);
 	// Set output
 	let newPath = '';
@@ -573,16 +575,27 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	if (!newPath.length) {return bDone;}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
 	// Get tracks
-	const paths = getFilePathsFromPlaylist(playlistPath);
+	// const paths = getFilePathsFromPlaylist(playlistPath);
+	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	const paths = !bUI ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = isCompatible('1.4.0') ? utils.SplitFilePath(newPath)[0] : utils.FileTest(newPath, 'split')[0]; //TODO: Deprecated
 	_setClipboardData(root);
 	const report = [];
-	paths.forEach((trackPath) => {if (!_isFile(trackPath)) {report.push(trackPath);}});
-	const handleList = getHandlesFromPlaylist(playlistPath, list.playlistsPath, true); // Omit not found
+	if (bUI) {
+		const newHandleList = new FbMetadbHandleList();
+		paths.forEach((trackPath, i) => {if (!_isFile(trackPath)) {report.push(trackPath);} else {newHandleList.Add(handleList[i]);}});
+		if (report.length) { // Omit not found
+			handleList.RemoveAll();
+			handleList.AddRange(newHandleList);
+		}
+	} else {
+		paths.forEach((trackPath, i) => {if (!_isFile(trackPath)) {report.push(trackPath);}});
+	}
 	if (handleList) {
-		const count = handleList.Count;
-		if (count !== paths.length) {fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-		if (count) {
+		if (report.length) {
+			fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
+		}
+		if (handleList.Count) {
 			// Convert tracks
 			fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
 			// Retrieve new paths
@@ -593,12 +606,12 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 			}
 			// Copy playlist file when original extension and output extension are the same or both share same format (M3U)
 			let file = '';
-			if (!extension.length || playlistExt.startsWith(extension) || extension.startsWith(playlistExt)) {
-				const codePage = checkCodePage(_open(playlistPath), list.data[z].extension);
+			if (!extension.length || playlistExt.length && (playlistExt.startsWith(extension) || extension.startsWith(playlistExt))) {
+				const codePage = checkCodePage(_open(playlistPath), pls.extension);
 				file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 				paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 			} else { // Or create new playlist file when translating between different formats
-				savePlaylist(-1, newPath, extension, list.data[z].name, null, list.data[z].isLocked, list.data[z].category, list.data[z].tags, '', list.data[z].trackTags, list.bBOM);
+				savePlaylist(-1, newPath, extension, pls.name, null, pls.isLocked, pls.category, pls.tags, '', pls.trackTags, list.bBOM);
 				addHandleToPlaylist(handleList, newPath, '', list.bBOM);
 				file = _open(newPath, convertCharsetToCodepage('UTF-8'));
 				paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});

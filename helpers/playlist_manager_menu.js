@@ -1,5 +1,5 @@
 'use strict';
-//02/11/21
+//04/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -317,7 +317,7 @@ function createMenuLeft(forcedIndex = -1) {
 			// Export and Convert
 			{
 				const presets = JSON.parse(list.properties.converterPreset[1]);
-				const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED);
+				const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length && writablePlaylistFormats.has(pls.extension) || isPlsUI() ? MF_STRING : MF_GRAYED);
 				menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				presets.forEach((preset) => {
@@ -334,7 +334,7 @@ function createMenuLeft(forcedIndex = -1) {
 					if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
 					menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension);
-					}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+					}, flags: writablePlaylistFormats.has(pls.extension) || isPlsUI() ? MF_STRING : MF_GRAYED});
 				});
 			}
 		}
@@ -452,7 +452,7 @@ function createMenuRight() {
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
-								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 									const filePaths = getFilePathsFromPlaylist(playlist.path);
 									if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
 								}
@@ -485,12 +485,13 @@ function createMenuRight() {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
 								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
-									const filePaths = getFilePathsFromPlaylist(playlist.path);
+									const bUI = playlist.extension === '.ui';
+									const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))
 									if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
 										const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 										const bDead = filePaths.some((path) => {
 											// Skip streams & look for absolute and relative paths (with and without .\)
-											let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+											let bCheck = !path.startsWith('http://') && !path.startsWith('https://');
 											if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 											else {
 												let pathAbs = path;
@@ -501,9 +502,9 @@ function createMenuRight() {
 											return bCheck;
 										});
 										if (bDead) {
-											found.push(playlist.path + '(contains dead items)');
+											found.push((bUI ? playlist.nameId : playlist.path) + '(contains dead items)');
 										} else {
-											found.push(playlist.path);
+											found.push(bUI ? playlist.nameId : playlist.path);
 										}
 									}
 								}
@@ -536,11 +537,12 @@ function createMenuRight() {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
 								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+									const bUI = playlist.extension === '.ui';
 									const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
-									const filePaths = getFilePathsFromPlaylist(playlist.path);
+									const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
 									const bDead = filePaths.some((path) => {
 										// Skip streams & look for absolute and relative paths (with and without .\)
-										let bCheck = !path.startsWith('http://') && !path.startsWith('http://');
+										let bCheck = !path.startsWith('http://') && !path.startsWith('https://');
 										if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 										else {
 											let pathAbs = path;
@@ -553,7 +555,7 @@ function createMenuRight() {
 										}
 										return bCheck;
 									});
-									if (bDead) {found.push(playlist.path);}
+									if (bDead) {found.push(bUI ? playlist.nameId : playlist.path);}
 								}
 								const progress = Math.round(i / total * 10) * 10;
 								if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking dead items ' + Math.round(progress) + '%.');}
@@ -584,8 +586,9 @@ function createMenuRight() {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
 								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
-									const filePaths = getFilePathsFromPlaylist(playlist.path);
-									if (new Set(filePaths).size !== filePaths.length) {found.push(playlist.path);}
+									const bUI = playlist.extension === '.ui';
+									const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+									if (new Set(filePaths).size !== filePaths.length) {found.push(bUI ? playlist.nameId : playlist.path);}
 								}
 								const progress = Math.round(i / total * 10) * 10;
 								if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking duplicates ' + Math.round(progress) + '%.');}
@@ -615,7 +618,7 @@ function createMenuRight() {
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
-								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 									const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
 									let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
 									let size;
@@ -693,7 +696,7 @@ function createMenuRight() {
 					list.dataAll.forEach((playlist, i) => {
 						promises.push(new Promise(resolve => {
 							setTimeout(() => {
-								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 									let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
 									let size, lines;
 									if (typeof text !== 'undefined' && text.length) {

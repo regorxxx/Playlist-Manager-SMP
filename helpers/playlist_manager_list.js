@@ -1,5 +1,5 @@
 'use strict';
-//02/11/21
+//04/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -107,8 +107,8 @@ function _list(x, y, w, h) {
 			return;
 		}
 		// List
-		const playing_char = String.fromCharCode(9654);
-		const loaded_char = String.fromCharCode(9644);
+		const playingChar = String.fromCharCode(9654);
+		const loadedChar = String.fromCharCode(9644);
 		const lockedPlaylistIconColour = blendColours(iconColour, this.colours.lockedPlaylistColour, 0.8);
 		const autoPlaylistIconColour = blendColours(RGB(...toRGB(0xFFFFFFFF)), this.colours.autoPlaylistColour, 0.8);
 		const smartPlaylistIconColour = blendColours(RGB(...toRGB(0xFFFFFFFF)), this.colours.smartPlaylistColour, 0.8);
@@ -176,15 +176,15 @@ function _list(x, y, w, h) {
 			}
 			// Add playing now indicator
 			let playlistDataTextRight = '';
-			if (plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[i + this.offset].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playing_char;}
+			if (fb.IsPlaying && plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[i + this.offset].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
 			// Add loaded indicator
-			else if (plman.FindPlaylist(this.data[i + this.offset].nameId) !== -1) {playlistDataTextRight += loaded_char;}
+			else if (plman.FindPlaylist(this.data[i + this.offset].nameId) !== -1) {playlistDataTextRight += loadedChar;}
 			// Draw
 			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
-		if (this.colours.selectedPlaylistColour !== panel.colours.background) {
+		if (this.colours.selectedPlaylistColour !== panel.colours.background && this.bMouseOver) {
 			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
@@ -211,7 +211,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.wheel = (s, bPaint = true) => {
-		if (this.trace(this.mx, this.my)) {
+		if (this.trace(this.mx, this.my) || !bPaint) {
 			if (this.items > this.rows) {
 				let offset = this.offset - (s * 3); // Offset changes by 3 on every step
 				if (offset < 0) {
@@ -236,8 +236,9 @@ function _list(x, y, w, h) {
 		this.index = toIndex;
 		let iDifference = currentItemIndex - originalOffset;
 		this.offset = 0;
-		let cache = 0;
 		if (iDifference >= 0 && iDifference < currentItemIndex) {
+			if (iDifference === 0 && this.index) {this.offset = originalOffset;}
+			let cache = 0;
 			while (this.index - this.offset > iDifference) {
 				this.wheel(-1, false);
 				if (cache === this.offset) {break;}
@@ -249,11 +250,13 @@ function _list(x, y, w, h) {
 	this.onMouseLeaveList = () => {  // Removes selection indicator
 		this.cacheLastPosition(); // When pressing right button, the index gets cleared too... but we may want to use it on the menus
 		this.index = -1;
+		this.bMouseOver = false;
 		// this.offset = 0;
 		window.Repaint();
 	}
 	
 	this.move = (x, y, mask) => {
+		this.bMouseOver = true;
 		this.mx = x;
 		this.my = y;
 		window.SetCursor(IDC_ARROW);
@@ -373,6 +376,7 @@ function _list(x, y, w, h) {
 	
 	this.lbtn_up = (x, y, mask) => {
 		if (this.trace(x, y)) {
+			this.cacheLastPosition();
 			switch (true) {
 				case this.up_btn.lbtn_up(x, y):
 				case this.down_btn.lbtn_up(x, y):
@@ -411,6 +415,7 @@ function _list(x, y, w, h) {
 	
 	this.lbtn_dblclk = (x, y) => {
 		if (this.trace(x, y)) {
+			this.cacheLastPosition();
 			switch (true) {
 				case !this.inRange:
 					break;
@@ -1694,7 +1699,17 @@ function _list(x, y, w, h) {
 			return true;
 		}
 		
-		this.getHandleFromPlaylists = (names = []) => {
+		this.hasPlaylists = (names = []) => {
+			let playlistsManager = new Set();
+			const namesSet = new Set(names);
+			this.dataAll.forEach((pls, idx) => {
+				if (!namesSet.size) {return;}
+				if (namesSet.has(pls.name)) {playlistsManager.add(idx); namesSet.delete(pls.name);}
+			});
+			return !namesSet.size;
+		}
+		
+		this.getHandleFromPlaylists = (names = [], bSort = true) => {
 			let playlistsManager = new Set();
 			let playlistsUI = new Set();
 			const namesSet = new Set(names);
@@ -1709,7 +1724,7 @@ function _list(x, y, w, h) {
 			let output = new FbMetadbHandleList();
 			playlistsManager.forEach((idx) => {output.AddRange(this.getHandleFrom(idx));});
 			playlistsUI.forEach((idx) => {output.AddRange(plman.GetPlaylistItems(idx));});
-			output.Sort();
+			if (bSort) {output.Sort();}
 			return output;
 		}
 		
@@ -2045,6 +2060,7 @@ function _list(x, y, w, h) {
 	this.h = h;
 	this.mx = 0;
 	this.my = 0;
+	this.bMouseOver = false;
 	this.index = -1;
 	this.lastIndex = -1;
 	this.offset = 0;

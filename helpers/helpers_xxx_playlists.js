@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/21
+//04/11/21
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
@@ -133,11 +133,11 @@ function sendToPlaylist(handleList, playlistName) {
 	return handleList;
 }
 
-function getHandleFromUIPlaylists(names = []) {
+function getHandleFromUIPlaylists(names = [], bSort = true) {
 	let playlists = new Set();
 	names.forEach((name) => {playlists = playlists.union(new Set(getPlaylistIndexArray(name)));});
 	let output = new FbMetadbHandleList();
 	playlists.forEach((idx) => {output.AddRange(plman.GetPlaylistItems(idx));});
-	output.Sort();
+	if (bSort) {output.Sort();}
 	return output;
 }
