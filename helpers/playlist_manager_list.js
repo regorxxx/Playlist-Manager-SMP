@@ -1,5 +1,5 @@
 'use strict';
-//04/11/21
+//05/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -41,6 +41,7 @@ function _list(x, y, w, h) {
 	var currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
 	var currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
+	var idxHighlight = -1;
 	
 	// Global tooltip
 	this.tooltip = new _tt(null, void(0), void(0), 600);  
@@ -117,6 +118,18 @@ function _list(x, y, w, h) {
 		const categoryHeaderLineColour = blendColours(panel.colours.background, categoryHeaderColour, 0.5);
 		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // We compare to the next one or the previous one according to sort order
 		const rows = Math.min(this.items, this.rows);
+		// Highlight
+		if (idxHighlight !== -1) {
+			const currSelIdx = idxHighlight;
+			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
+			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
+				// Rectangle
+				const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
+			}
+			idxHighlight = -1;
+		}
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -247,6 +260,20 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.showCurrPls = () => {
+		const name = plman.GetPlaylistName(plman.ActivePlaylist);
+		const idx = this.data.findIndex((pls, idx) => {return pls.nameId === name;});
+		if (idxHighlight === idx) {
+			window.RepaintRect(this.x, this.y, this.w, this.h);
+		} else if (idx !== -1) {
+			idxHighlight = idx;
+			this.simulateWheelToIndex(idx, currentItemIndex > 0 ? currentItemIndex : 1, this.lastOffset ? this.lastOffset : 1);
+			currentItemIndex = idx;
+			return true;
+		}
+		return false;
+	}
+	
 	this.onMouseLeaveList = () => {  // Removes selection indicator
 		this.cacheLastPosition(); // When pressing right button, the index gets cleared too... but we may want to use it on the menus
 		this.index = -1;
@@ -268,6 +295,7 @@ function _list(x, y, w, h) {
 			// Tips
 			if (this.bShowTips) {
 				headerText += '\n\n' + '(R. Click for config menus)';
+				headerText += '\n' + '(L. Click to highlight active playlist)';
 				headerText += '\n' + '(Double Click to cycle categories)';
 			}
 			this.tooltip.SetValue(headerText, true);
@@ -407,6 +435,10 @@ function _list(x, y, w, h) {
 					break;
 				}
 			}
+			return true;
+		} else if (this.traceHeader(x, y)) {
+			this.showCurrPls();
+			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
 			return false;
