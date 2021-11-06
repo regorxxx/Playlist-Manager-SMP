@@ -300,7 +300,7 @@ function tintColor(color, percent) {
 }
 
 function opaqueColor(color, percent) {
-	return RGBA(...toRGB(color), 255 * percent / 100);
+	return RGBA(...toRGB(color), Math.min(255, 255 * (percent / 100)));
 }
 
 /* 

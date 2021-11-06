@@ -12,6 +12,7 @@ include('helpers_xxx_file.js');
 include('helpers_xxx_utils.js');
 include('playlist_manager_panel.js');
 include('playlist_manager_helpers.js');
+include('..\\helpers-external\\keycode-2.2.0\\index.js');
 
 function _list(x, y, w, h) {
 	
@@ -263,6 +264,10 @@ function _list(x, y, w, h) {
 	this.showCurrPls = () => {
 		const name = plman.GetPlaylistName(plman.ActivePlaylist);
 		const idx = this.data.findIndex((pls, idx) => {return pls.nameId === name;});
+		return this.showPlsByIdx(idx);
+	}
+	
+	this.showPlsByIdx = (idx) => {
 		if (idxHighlight === idx) {
 			window.RepaintRect(this.x, this.y, this.w, this.h);
 		} else if (idx !== -1) {
@@ -493,9 +498,16 @@ function _list(x, y, w, h) {
 				else {this.move(this.mx, this.my, MK_SHIFT);}
 				return true;
 				break;
-			default:
-				return false;
+			default: {
+				const keyChar = keyCode(k);
+				if (/[_A-z0-9]/.test(keyChar)) {
+					const idx = this.data.findIndex((pls, idx) => {return pls.nameId && pls.nameId.length ? pls.nameId[0].toLowerCase() === keyChar : false;});
+					this.showPlsByIdx(idx);
+				} else {
+					return false;
+				}
 				break;
+			}
 		}
 	}
 	

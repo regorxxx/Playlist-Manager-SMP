@@ -44,6 +44,7 @@
 - Menus: new menu entry to edit limit of tracks output when loading playlist's query (currently only available for .xsp format).
 - Helpers: added full script console logging to file at foobar profile folder ('console.log'). File is reset when reaching 5 MB. Logging is also sent to foobar2000's console (along other components logging)
 - Tooltip: limit is shown for AutoPlaylists (infinite) and .xsp playlists (set by playlist file).
+- Shortcut: L. Click on header highlights active playlist on manager if possible (an associated file exists).
 ### Changed
 - UI: Smart Playlists are now identified as such in any text instance where they behave as AutoPlaylists, instead of using the generic 'AutoPlaylist' term for all. For ex. on tooltips warning the playlist can not be edited when trying to add a track. This is just a cosmetic change.
 - Edit query (.xsp only): query is now translated into an XBMC query after user input. Structure may change during the process (specially parenthesis and how things are grouped) and non recognized tags/expressions are skipped (those which have no XBMC counterpart). Please recheck query after edition on the tooltip to ensure it has been recognized properly. See readme for more usage info.
@@ -116,6 +117,9 @@
 - UI: When a playlist of current view had no category, next category letter was not being shown on the letter separators. i.e. Jumping from none (-) to B, skipping A, when there were playlists with categories starting with A, B and some without categories. Long time UI only bug since first releases. Only happened for the category sorting view; when sorting by name, playlist always have a name by design, so first item header was never 'empty' and thus the next one was always shown fine.
 - UI: bug with uppercase playlist names not being correctly identified when mixed along lowercase names (spanning of the same separator multiple times).
 - UI: cosmetic fix. Fixed 'AutoPlaylists' being written as 'Autoplaylists' on some instances.
+- UI: fixed some instances where the current position on the list view got reset after updating a playlist file.
+- UI: selection indicator is now only displayed if the mouse is over the panel. It was shown on some instances when updating the current view, while trying to remember the last selected item to maintain the current index.
+- UI: fixed some instances where the currently playlist playlist was incorrectly displayed (with playback stopped).
 - While reading Playlist files, they are now split by lines using any of the possible [escape sequence combinations](https://en.wikipedia.org/wiki/Newline) and not only windows ones (\r\n). This should allow to correctly read any playlist file created in any SO (no longer limited to Windows ecosystem).
 - Playlist with special characters did not properly update the playlist path at some instances (the chars were not being stripped until manual refresh).
 - Crash when deleting an AutoPlaylist right after loading it if Track Tagging was enabled due to callback delays.

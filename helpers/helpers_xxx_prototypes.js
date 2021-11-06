@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/21
+//06/11/21
 
 /* 
 	Objects
@@ -251,4 +251,4 @@ function isBoolean(obj) {
 	Maps
 */
 // Allows forward and backward iteration
-include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js');
+try {include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js');} catch (e) {}
