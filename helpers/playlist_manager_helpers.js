@@ -1,5 +1,5 @@
 'use strict';
-//04/11/21
+//08/11/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -720,4 +720,16 @@ function rewriteXSPLimit(pls, newLimit) {
 		if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
 	}
 	return bDone;
+}
+
+function backup(n = 50) {
+	let test = new FbProfiler('Playlist manager Backup');
+	if (n && n !== -1) {
+		const files = getFiles(list.playlistsPath + '_backup\\', new Set(['.zip'])).reverse();
+		while (files.length >= n) {
+			_recycleFile(files.pop());
+		}
+	}
+	_zip(list.playlistsPath + '*.*', list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip');
+	test.Print();
 }

@@ -1,5 +1,5 @@
 'use strict';
-//05/11/21
+//08/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -611,9 +611,9 @@ function _list(x, y, w, h) {
 			}
 			if (selItems && selItems.Count) {
 				// Warn about dead items
-				selItems.Convert().some((handle) => {
+				selItems.Convert().some((handle, i) => {
 					if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
-						fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks on current selection, there may be more.\n\n' + handle.RawPath, window.Name); 
+						fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name); 
 						return true;
 					}
 					return false;
@@ -866,9 +866,9 @@ function _list(x, y, w, h) {
 						if (!bCallback || (!bCallback && this.bDeadCheckAutoSave)) {
 							const selItems = plman.GetPlaylistItems(fbPlaylistIndex).Convert();
 							if (selItems && selItems.length) {
-								selItems.some((handle) => {
+								selItems.some((handle, i) => {
 									if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
-										fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n' + handle.RawPath, window.Name); 
+										fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n(' + i + ') '+ handle.RawPath, window.Name); 
 										return true;
 									}
 									return false;
@@ -1689,9 +1689,9 @@ function _list(x, y, w, h) {
 					// Warn about dead items
 					const selItems = plman.GetPlaylistItems(plman.ActivePlaylist).Convert();
 					if (selItems && selItems.length) {
-						selItems.some((handle) => {
+						selItems.some((handle, i) => {
 							if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
-								fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n' + handle.RawPath, window.Name); 
+								fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name); 
 								return true;
 							}
 							return false;
@@ -1740,6 +1740,7 @@ function _list(x, y, w, h) {
 					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false;}
 				}
 			}
+			if (autoBackTimer && debouncedUpdate) {backup(list.properties.autoBackN[1]);} // Backup before autosaving
 			return true;
 		}
 		

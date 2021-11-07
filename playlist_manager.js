@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/11/21
+//08/11/21
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -17,10 +17,10 @@ include('helpers\\playlist_manager_panel.js');
 include('helpers\\playlist_manager_buttons.js');
 include('helpers\\playlist_manager_menu.js');
 include('helpers\\playlist_manager_helpers.js');
+include('helpers\\helpers_xxx_file_zip.js');
 
 let precacheLibraryPathsIds = [window.ID];
-window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
-setTimeout(() => {
+const cacheLib = () => {
 	if (window.ID === precacheLibraryPathsIds[0]) { // Only execute once per Foobar2000 instance
 		precacheLibraryPathsAsync().then((result) => {
 			window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
@@ -31,7 +31,10 @@ setTimeout(() => {
 			if (list && list.bRelativePath && list.playlistsPath) {precacheLibraryRelPaths(list.playlistsPath);}
 		});
 	}
-},500)
+};
+window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
+setTimeout(cacheLib, 500)
+
 
 var properties = {
 	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
@@ -89,12 +92,16 @@ var properties = {
 	bFirstPopupXspf			: ['Playlist Manager xspf: Fired once', false],
 	bCheckDuplWarnings		: ['Warnings when loading duplicated playlists', true],
 	bSavingXsp				: ['Auto-save .xsp playlists?', false],
-	bAllPls					: ['Track UI-only playlists?', false]
+	bAllPls					: ['Track UI-only playlists?', false],
+	autoBack				: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity],
+	autoBackN				: ['Auto-backup files allowed.', 50]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
 properties['extension'].push({func: (val) => {return writablePlaylistFormats.has(val);}}, properties['extension'][1]);
 properties['autoUpdate'].push({func: isInt, range: [[0,0],[200, Infinity]]}, properties['autoUpdate'][1]); // Safety limit 0 or > 200
+properties['autoBack'].push({func: !isNaN, range: [[0,0],[1000, Infinity]]}, properties['autoBack'][1]); // Safety limit 0 or > 1000
+properties['autoBackN'].push({func: isInt}, properties['autoBackN'][1]);
 var prefix = 'plm_';
 setProperties(properties, prefix);
 
@@ -115,8 +122,9 @@ setProperties(properties, prefix);
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 
-const autoSaveTimer =  Number(getPropertyByKey(properties, 'autoSave', prefix)); 
-const autoUpdateTimer =  Number(getPropertyByKey(properties, 'autoUpdate', prefix));
+const autoSaveTimer = Number(list.properties.autoSave[1]); 
+const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
+const autoBackTimer = Number(list.properties.autoBack[1]);
 
 function on_colours_changed() {
 	panel.colours_changed();
@@ -302,4 +310,27 @@ function autoUpdate() {
 		}
 	}
 	return false;
+}
+
+// Backup
+function on_script_unload() { // For UI only playlists
+	if (autoBackTimer && list.playlistsPath.length && list.itemsAll) {
+		backup(list.properties.autoBackN[1]);
+	}
+}
+const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
+
+// Update cache on changes!
+function  on_library_items_added() {
+	window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
+	libItemsAbsPaths = [];
+	libItemsRelPaths = {};
+	setTimeout(cacheLib, 500)
+}
+
+function  on_library_items_removed() {
+	window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
+	libItemsAbsPaths = [];
+	libItemsRelPaths = {};
+	setTimeout(cacheLib, 500)
 }

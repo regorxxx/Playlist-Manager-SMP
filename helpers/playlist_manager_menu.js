@@ -1,5 +1,5 @@
 'use strict';
-//04/11/21
+//08/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1007,7 +1007,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Auto-Saving
-			menu.newEntry({menuName: menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + 'ms)', func: () => {
+			menu.newEntry({menuName: menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Save changes within foobar playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoSave'][1]), true));}
 				catch(e) {return;}
@@ -1020,7 +1020,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return (Number(list.properties['autoSave'][1]) !== 0 ? 1 : 0);});
 		}
 		{	// Auto-Loading
-			menu.newEntry({menuName: menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + 'ms)', func: () => {
+			menu.newEntry({menuName: menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoUpdate'][1]), true));}
 				catch(e) {return;}
@@ -1031,6 +1031,19 @@ function createMenuRightTop() {
 				window.Reload();
 			}});
 			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return (Number(list.properties['autoUpdate'][1]) !== 0 ? 1 : 0);});
+		}
+		{	// Auto-Backup
+			menu.newEntry({menuName: menuName, entryText: 'Auto-backup interval...\t(' + (isInt(list.properties['autoBack'][1]) ? list.properties['autoBack'][1] : '\u221E') + ' ms)', func: () => {
+				let input = 0;
+				try {input = Number(utils.InputBox(window.ID, 'Backup to zip periodically the tracked folder.\nEnter integer number > ' + list.properties['autoBack'][2].range[1][0] + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)', window.Name, Number(list.properties['autoBack'][1]), true));}
+				catch(e) {return;}
+				if (isNaN(input)) {return;}
+				if (!checkProperty(list.properties['autoBack'], input)) {return;}
+				list.properties['autoBack'][1] = input;
+				overwriteProperties(list.properties);
+				window.Reload();
+			}});
+			menu.newCheckMenu(menuName, 'Auto-backup interval...', void(0),  () => {return (Number(list.properties['autoBack'][1]) !== 0 ? 1 : 0);});
 		}
 	}
 	{	// Playlists behavior

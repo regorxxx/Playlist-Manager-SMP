@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/21
+//08/11/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -60,7 +60,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 			playlistText.push('#CATEGORY:' + category);
 			playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
 			playlistText.push('#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''));
-			playlistText.push('#PLAYLISTSIZE:' + '0');
+			playlistText.push('#PLAYLISTSIZE:');
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
@@ -76,10 +76,10 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 						return trackInfo + '\n' + trackPath;
 					});
 				}
-				playlistText[8] += items.Count; // Add number of tracks to size
+				playlistText[8] += items.Count.toString(); // Add number of tracks to size
 				playlistText = playlistText.concat(trackText);
 			} else { //  Else empty playlist
-				playlistText[8] += 0; // Add number of tracks to size
+				playlistText[8] += '0'; // Add number of tracks to size
 			} 
 		// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
@@ -537,6 +537,11 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		for (let i = 0; i < playlistLength; i++) {
 			if (pathPool.has(filePaths[i])) {
 				handlePlaylist[i] = poolItems[pathPool.get(filePaths[i])];
+				if (handlePlaylist[i].Path.toLowerCase() !== filePaths[i]) { // Ensure the cache is up to date
+					handlePlaylist = null;
+					fb.ShowPopupMessage('The library cache is not up to date and is being rebuilt; the playlist will be loaded using the native Foobar2000 method if trying to load the playlist into the UI. You may abort it and try loading the playlist afterwards or wait.\n\n In any other case, wait for the cache to be rebuilt and execute the action again.', window.Name);
+					break;
+				}
 				count++;
 			} else if (bXSPF) {notFound.add(i);}
 			else {console.log(filePaths[i]);}
@@ -588,15 +593,17 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		if (count === filePaths.length && filePaths.length) {
 			console.log(playlistPath.split('\\').pop() + ': Found all tracks on library.');
 			handlePlaylist = new FbMetadbHandleList(handlePlaylist);
-		} else if (bOmitNotFound) {
+		} else if (bOmitNotFound && handlePlaylist !== null) {
 			console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').');
 			handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
 		} else {
 			console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').');
 			handlePlaylist = null;
 		}
-		if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
-		if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
+		if (handlePlaylist !== null) {
+			if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
+			if (relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
+		}
 	}
 	test.Print();
 	return handlePlaylist;

@@ -208,7 +208,7 @@ function _explorer(fileOrFolder) {
 
 // Workaround for bug on win 7 on utils.Glob(), matching extensions with same chars: utils.Glob(*.m3u) returns *.m3u8 files too
 function getFiles(folderPath, extensionSet) {
-	return utils.Glob(folderPath +'*.*').filter((item) => {
+	return utils.Glob(folderPath + '*.*').filter((item) => {
 		return extensionSet.has('.' + item.split('.').pop().toLowerCase());
 	});
 }
