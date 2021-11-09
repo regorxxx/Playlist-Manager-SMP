@@ -1,5 +1,5 @@
 'use strict';
-//08/11/21
+//09/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -233,7 +233,8 @@ function createMenuLeft(forcedIndex = -1) {
 						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 					} else {
 						list.update_plman(new_nameId, old_nameId);
-						list.updatePlaylist(z);
+						const bDone = list.updatePlaylist(z);
+						if (!bDone) {list.update_plman(old_nameId, new_nameId);} // Reset change
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: isPlsActive()  && !isLockPls() && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
@@ -376,8 +377,9 @@ function createMenuRight() {
 				list.bUpdateAutoplaylist = true;
 				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 				list.filter();
-				if (typeof xspCache !== 'undefinded') {xspCache.clear();} // Discard old cache to load new changes
-				if (typeof xspfCache !== 'undefinded') {xspfCache.clear();}
+				list.lastPlsLoaded = [];
+				if (typeof xspCache !== 'undefined') {xspCache.clear();} // Discard old cache to load new changes
+				if (typeof xspfCache !== 'undefined') {xspfCache.clear();}
 				test.Print();
 			}});
 		}

@@ -1,5 +1,5 @@
 'use strict';
-//08/11/21
+//09/11/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -365,12 +365,17 @@ function convertToRelPaths(list, z) {
 	let answer = WshShell.Popup('Force relative paths to the playlist path, stripping all but the filenames.\nCan be manually undone (look at recycle bin). Are you sure?', 0, window.Name, popup.question + popup.yes_no);
 	if (answer === popup.no) {return bDone;}
 	const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-	const playlistPath = list.data[z].path;
+	const pls = list.data[z];
+	const playlistPath = pls.path;
 	const paths = getFilePathsFromPlaylist(playlistPath);
 	const relPaths = paths.map((path) => {return '.\\' + path.split('\\').pop();});
-	const codePage = checkCodePage(_open(playlistPath), list.data[z].extension); //TODO: Deprecated);
+	const codePage = checkCodePage(_open(playlistPath), pls.extension); //TODO: Deprecated);
 	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
-	paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
+	if (pls.extension === '.xspf') { // Paths must be URI encoded...
+		paths.forEach((path, i) => {file = file.replace(encodeURI(path.replace(/\\/g,'/')), encodeURI(relPaths[i].replace(/\\/g,'/')));});
+	} else {
+		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
+	}
 	let bDeleted = false;
 	if (_isFile(playlistPath)) {
 		bDeleted = _recycleFile(playlistPath);
@@ -382,7 +387,7 @@ function convertToRelPaths(list, z) {
 			_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
 			return bDone;
 		}
-		list.editData(list.data[z], {
+		list.editData(pls, {
 			fileSize: isCompatible('1.4.0') ? utils.GetFileSize(playlistPath) : utils.FileTest(playlistPath, 's'), //TODO: Deprecated
 		});
 		console.log('Playlist Manager: done.');

@@ -1,5 +1,5 @@
 'use strict';
-//08/11/21
+//09/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -659,6 +659,7 @@ function _list(x, y, w, h) {
 		});
 		if (this.bAutoTrackTag) {this.updateTrackTags(handleUpdate, tagsUpdate);} // Apply tags from before
 		console.log('Playlist Manager: drag n drop done.');
+		this.lastPlsLoaded.push(pls);
 		this.update(true, true); // We have already updated data before only for the variables changed
 		this.filter();
 		return true;
@@ -796,6 +797,16 @@ function _list(x, y, w, h) {
 		if (bCallback) {
 			if (playlistIndex >= plman.PlaylistCount) {return false;} //May have deleted a playlist before delaying the update... so there is nothing to update
 			if (plman.IsAutoPlaylist(playlistIndex)) {return false;} // Always skip updates for AutoPlaylists
+			if (this.lastPlsLoaded.length) { // skip auto-update for the last loaded playlists
+				const nameId = plman.GetPlaylistName(playlistIndex);
+				const idx = this.lastPlsLoaded.findIndex((pls) => {return nameId === pls.nameId});
+				if (idx !== -1) {
+					const pls = this.lastPlsLoaded.splice(idx, 1)[0]; // Remove from list
+					if (pls.isAutoPlaylist || pls.query) {return false;} // Always skip updates for AutoPlaylists
+					else if (pls.extension === '.ui') {return false;} // Always skip updates for ui only playlists
+					else if (pls.size === plman.PlaylistItemCount(playlistIndex)) {return false;} // And skip update if no change was made (omits reordering before autosave fires!)
+				}
+			}
 			if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar playlists when auto-saving...	
 				const plmanDuplicates = findPlaylistNamesDuplicated();
 				let duplicates = [];
@@ -885,8 +896,8 @@ function _list(x, y, w, h) {
 				console.log('Playlist Manager: done.');
 				this.update(true, true); // We have already updated data before only for the variables changed
 				this.filter();
-				break;
 				return true;
+				break;
 			}
 		}
 		return false;
@@ -1741,6 +1752,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			if (autoBackTimer && debouncedUpdate) {backup(list.properties.autoBackN[1]);} // Backup before autosaving
+			this.lastPlsLoaded.push(pls);
 			return true;
 		}
 		
@@ -2035,6 +2047,7 @@ function _list(x, y, w, h) {
 			this.dataXsp = []; // Only xsp playlists to save to json
 			this.dataFoobar = []; // Only foobar playlists on UI
 			this.deletedItems = [];
+			this.lastPlsLoaded = [];
 			this.selPaths = {pls: new Set(), sel: []};
 			this.showStates = this.constShowStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
@@ -2122,6 +2135,7 @@ function _list(x, y, w, h) {
 	this.filename = '';
 	this.configFile = null;
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
+	this.lastPlsLoaded = [];
 	// Properties
 	this.properties = getPropertiesPairs(properties, prefix); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.') ? findRelPathInAbsPath(this.properties['playlistPath'][1]) : this.properties['playlistPath'][1];
