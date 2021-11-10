@@ -1,5 +1,5 @@
 'use strict';
-//09/11/21
+//10/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -270,10 +270,12 @@ function _list(x, y, w, h) {
 	this.showPlsByIdx = (idx) => {
 		if (idxHighlight === idx) {
 			window.RepaintRect(this.x, this.y, this.w, this.h);
+			return true;
 		} else if (idx !== -1) {
 			idxHighlight = idx;
 			this.simulateWheelToIndex(idx, currentItemIndex > 0 ? currentItemIndex : 1, this.lastOffset ? this.lastOffset : 1);
 			currentItemIndex = idx;
+			window.RepaintRect(this.x, this.y, this.w, this.h);
 			return true;
 		}
 		return false;
@@ -493,15 +495,24 @@ function _list(x, y, w, h) {
 				else {this.move(this.mx, this.my, MK_CONTROL);}
 				return true;
 				break;
-			case VK_SHIFT:
+			case VK_SHIFT: // Updates tooltip even when mouse hasn't moved
 				if (utils.IsKeyPressed(VK_CONTROL)) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
 				else {this.move(this.mx, this.my, MK_SHIFT);}
 				return true;
 				break;
-			default: {
+			default: { // Search by key according to the current sort method
 				const keyChar = keyCode(k);
 				if (/[_A-z0-9]/.test(keyChar)) {
-					const idx = this.data.findIndex((pls, idx) => {return pls.nameId && pls.nameId.length ? pls.nameId[0].toLowerCase() === keyChar : false;});
+					let method = this.getMethodState().replace('By ', '');
+					if (method === 'name') {method = 'nameId';}
+					const idx = this.data.findIndex((pls, idx) => {
+						if (pls.hasOwnProperty(method) && pls[method] !== null && pls[method] !== void(0)) {
+							const val = pls[method];
+							if (typeof val === 'string' && val.length) {return val[0].toLowerCase() === keyChar;}
+							if (typeof val === 'number') {return val.toString()[0] === keyChar;}
+							else {return false;}
+						} else {return false;}
+					});
 					this.showPlsByIdx(idx);
 				} else {
 					return false;
@@ -1090,7 +1101,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	
-	this.sortMethods = () => { // These are constant. We expect the first sorting order of every method is the natural one...
+	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]'
 		return {'By name': 
 					{
 					'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
@@ -1389,7 +1400,7 @@ function _list(x, y, w, h) {
 		const dataNames = new Set();
 		const reportDup = new Set();
 		this.dataAll.forEach((pls) => {
-			if (dataNames.has(pls.name)) {reportDup.add(pls.name + ': ' + pls.path);} 
+			if (dataNames.has(pls.name)) {reportDup.add(pls.name + ': ' + (pls.path ? pls.path : '-AutoPlaylist-'));} 
 			else {dataNames.add(pls.name);}
 		});
 		if (reportDup.size) {
