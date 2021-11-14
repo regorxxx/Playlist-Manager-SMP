@@ -128,6 +128,7 @@ const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
 const autoBackTimer = Number(list.properties.autoBack[1]);
 buttons.filterOneButton.method = list.properties.filterMethod[1].split(',')[0];
 buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
+recalcWidth();
 
 function on_colours_changed() {
 	panel.colours_changed();

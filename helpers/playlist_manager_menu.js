@@ -1578,6 +1578,8 @@ function createMenuRightFilter(buttonKey) {
 					if (idx !== -1) {buttons[buttonsArr[idx][0]].method = buttons[buttonKey].method;}
 					// Set new one
 					buttons[buttonKey].method = item;
+					// Resize buttons
+					recalcWidth();
 					// Save properties
 					list.properties['filterMethod'][1] = Object.values(buttons).map((button) => {return (button.hasOwnProperty('method') ? button.method : '');}).filter(Boolean).join(',');
 					overwriteProperties(list.properties);

@@ -56,6 +56,38 @@ for (var buttonName in newButtons) {
 // Adds to current buttons
 buttons = {...buttons, ...newButtons};
 
+// Defaults
+buttons.filterOneButton.method = 'Playlist type';
+buttons.filterOneButton.coord = buttonCoordinatesTwo;
+buttons.filterTwoButton.method = 'Lock state';
+buttons.filterTwoButton.coord = buttonCoordinatesThree;
+recalcWidth();
+
+/* 
+	Helpers 
+*/
+// Recalc size
+function recalcWidth () {
+	let bResize = false;
+	for (const key in buttons) {
+		if (buttons.hasOwnProperty(key) && buttons[key].hasOwnProperty('method') && buttons[key].method === 'Lock state') {bResize = true;}
+	}
+	for (const key in buttons) {
+		if (buttons.hasOwnProperty(key)) {
+			const button = buttons[key];
+			if (button.hasOwnProperty('method')) {
+				if (button.method === 'Lock state') {
+					button.coord.w = button.w = () => {return window.Width / 7 * 3;};
+				} else if (!bResize) {
+					button.coord.w = button.w = () => {return window.Width / 7 * 2.5;};
+				} else {
+					button.coord.w = button.w = () => {return window.Width / 7 * 2;};
+				}
+			}
+		}
+	}
+}
+
 // Helpers
 function filterName() {
 	switch (this.method) {
@@ -159,7 +191,3 @@ function sortTooltip() {
 	}
 	return ttText;
 }
-
-// Defaults
-buttons.filterOneButton.method = 'Playlist type';
-buttons.filterTwoButton.method = 'Lock state';
