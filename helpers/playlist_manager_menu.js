@@ -1,5 +1,5 @@
 'use strict';
-//09/11/21
+//14/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -11,6 +11,7 @@ include('menu_xxx.js');
 const menuRbtn = new _menu();
 const menuLbtn = new _menu();
 const menuRbtnTop = new _menu();
+const menuRbtnSort = new _menu();
 
 // on callbacks
 function createMenuLeft(forcedIndex = -1) {
@@ -799,33 +800,6 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.tagState.indexOf(item) !== -1;});
 		});
 	}
-	{	// Sorting
-		const subMenuName = menu.newMenu('Change sorting method...');
-		const options = Object.keys(list.sortMethods());
-		const optionsLength = options.length;
-		menu.newEntry({menuName: subMenuName, entryText: 'Playlist list sorting:', flags: MF_GRAYED});
-		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-		if (optionsLength) {
-			options.forEach((item) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					const previousMethodState = list.methodState;
-					list.methodState = item;
-					list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
-					// Update properties to save between reloads, but property descriptions change according to list.methodState
-					list.properties['methodState'][1] = list.methodState;
-					const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
-					list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
-					list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
-					list.properties['sortState'][1] = list.sortState; // and change value
-					// And set properties
-					deleteProperties(removeProperties); // Deletes old properties used as placeholders
-					overwriteProperties(list.properties);
-					list.sort(void(0), true); // uses current sort state and repaint
-				}});
-			});
-		}
-		menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
-	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Playlist saving
 		const menuName = menu.newMenu('Playlist saving');
@@ -1545,6 +1519,72 @@ function createMenuRightTop() {
 				window.Repaint();
 			}});
 		}
+	}
+	return menu;
+}
+
+function createMenuRightSort() {
+	// Constants
+	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
+	const menu = menuRbtnSort;
+	menu.clear(true); // Reset one every call
+	// Entries
+	{	// Sorting
+		const options = Object.keys(list.sortMethods());
+		const optionsLength = options.length;
+		menu.newEntry({entryText: 'Change sorting method:', flags: MF_GRAYED});
+		menu.newEntry({entryText: 'sep'});
+		if (optionsLength) {
+			options.forEach((item) => {
+				menu.newEntry({entryText: item, func: () => {
+					const previousMethodState = list.methodState;
+					list.methodState = item;
+					list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
+					// Update properties to save between reloads, but property descriptions change according to list.methodState
+					list.properties['methodState'][1] = list.methodState;
+					const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
+					list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
+					list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
+					list.properties['sortState'][1] = list.sortState; // and change value
+					// And set properties
+					deleteProperties(removeProperties); // Deletes old properties used as placeholders
+					overwriteProperties(list.properties);
+					list.sort(void(0), true); // uses current sort state and repaint
+				}});
+			});
+		}
+		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
+	}
+	return menu;
+}
+
+function createMenuRightFilter(buttonKey) {
+	// Constants
+	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
+	const menu = menuRbtnSort;
+	menu.clear(true); // Reset one every call
+	// Entries
+	{	// Sorting
+		const options = ['Lock state', 'Extension', 'Playlist type', 'Tag', 'Category'];
+		const optionsLength = options.length;
+		menu.newEntry({entryText: 'Change filtering method:', flags: MF_GRAYED});
+		menu.newEntry({entryText: 'sep'});
+		if (optionsLength) {
+			options.forEach((item) => {
+				menu.newEntry({entryText: item, func: () => {
+					buttons[buttonKey].method = item;
+					list.properties['filterMethod'][1] = buttons.TwoButton.method + ',' + buttons.ThreeButton.method;
+					overwriteProperties(list.properties);
+				}});
+			});
+		}
+		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1],  () => {return options.indexOf(buttons[buttonKey].method);});
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Restore
+		menu.newEntry({entryText: 'Restore all filters', func: () => {
+			list.filter({autoPlaylistState: list.constAutoPlaylistStates()[0], lockState: list.constLockStates()[0], extState: list.constExtStates()[0], tagState: list.tags(), categoryState: list.categories()});
+		}});
 	}
 	return menu;
 }

@@ -1,5 +1,5 @@
 'use strict';
-//10/11/21
+//14/11/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -297,7 +297,7 @@ function _list(x, y, w, h) {
 		if (this.traceHeader(x,y)) { // Tooltip for header
 			let headerText = this.playlistsPath;
 			headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
-			headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.showStates[0] !== this.constShowStates()[0] ?  this.showStates[0] : '(All)');
+			headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
 			headerText += '\n' + 'Current view: '+ this.itemsAll + ' Playlists (' + (this.itemsAutoplaylist + this.itemsXsp) + ' AutoPlaylists)';
 			// Tips
 			if (this.bShowTips) {
@@ -993,7 +993,7 @@ function _list(x, y, w, h) {
 		test.Print();
 		return true;
 	}
-	
+	// Categories and tags
 	this.categories = () => {
 		let categ = new Set();
 		this.dataAll.forEach( (playlist) => {if (playlist.category.length) {categ.add(playlist.category);}});
@@ -1006,14 +1006,17 @@ function _list(x, y, w, h) {
 		return ['(None)', ...[...tags].sort()];
 	}
 	this.tagState = [];
-	this.constShowStates = () => {return ['All','Not locked','Locked'];}; // These are constant	this.categoryState = [];
-	this.constShowStates = () => {return ['All','Not locked','Locked'];}; // These are constant
-	this.constAutoPlaylistStates = () => {return ['All','AutoPlaylists','No AutoPlaylists'];};
-	this.showStates = this.constShowStates(); // These rotate over time
+	// These are constant
+	this.constLockStates = () => {return ['All','Not locked','Locked'];};
+	this.constAutoPlaylistStates = () => {return ['All','AutoPlaylists & Smart Playlists','Standard Playlists'];};
+	this.constExtStates = () => {return ['All', ...loadablePlaylistFormats];};
+	// These rotate over time
+	this.lockStates = this.constLockStates();
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
-	this.isFilterActive = () => {return (this.constShowStates()[0] !== this.showStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0]);};
+	this.extStates = this.constExtStates();
 	
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], showState = this.showStates[0], categoryState = this.categoryState, nameState = '', tagState = this.tagState} = {}) => {
+	this.isFilterActive = () => {return (this.constLockStates()[0] !== this.lockStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0] || this.constExtStates()[0] !== this.extStates[0]);};
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, nameState = '', tagState = this.tagState} = {}) => {
 		// On first filter we use this.dataAll as origin
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			this.data = [...this.dataAll]; // Copy of objects
@@ -1022,13 +1025,19 @@ function _list(x, y, w, h) {
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
 			this.data = this.dataAll.filter((item) => {return !item.isAutoPlaylist && !item.query;});
 		}
-		// And then... we use this.data to filter again
-		if (showState === this.constShowStates()[0]) {
+		// And then... we use this.data to filter again by lock state
+		if (lockState === this.constLockStates()[0]) {
 			// this.data = this.data;
-		} else if (showState === this.constShowStates()[1]) {
+		} else if (lockState === this.constLockStates()[1]) {
 			this.data = this.data.filter((item) => {return !item.isLocked;});
-		} else if (showState === this.constShowStates()[2]) {
+		} else if (lockState === this.constLockStates()[2]) {
 			this.data = this.data.filter((item) => {return item.isLocked;});
+		}
+		// And again with extension
+		if (extState === this.constExtStates()[0]) {
+			// this.data = this.data;
+		} else {
+			this.data = this.data.filter((item) => {return item.extension === extState;});
 		}
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
@@ -1067,32 +1076,46 @@ function _list(x, y, w, h) {
 				}
 			}
 		}
-		// Save current view filters
+		// Update filters with current values
+		// Lock, playlist type, extension
+		// Rotate original matrix until it matches the current one
+		let rotations = [0,0,0];
+		for (let i = 0; i < this.constAutoPlaylistStates().length; i++) {
+			const newState = this.constAutoPlaylistStates().rotate(i);
+			if (autoPlaylistState === newState[0]) {
+				this.autoPlaylistStates = newState;
+				rotations[0] = i;
+				break;
+			}
+		}
+		for (let i = 0; i < this.constLockStates().length; i++) {
+			const newState = this.constLockStates().rotate(i);
+			if (lockState === newState[0]) {
+				this.lockStates = newState;
+				rotations[1] = i;
+				break;
+			}
+		}
+		for (let i = 0; i < this.constExtStates().length; i++) {
+			const newState = this.constExtStates().rotate(i);
+			if (extState === newState[0]) {
+				this.extStates = newState;
+				rotations[2] = i;
+				break;
+			}
+		}
+		// Categories
+		if (!isArrayEqual(categoryState, this.categoryState)) {
+			this.categoryState = categoryState;
+		}
+		// Tags
+		if (!isArrayEqual(tagState, this.tagState)) {
+			this.tagState = tagState;
+		}
+		// Save current view filters on properties
 		if (this.bSaveFilterStates) {
-			// Pls Filters: rotate original matrix until it matches the current one
-			let rotations = [0,0];
-			for (let i = 0; i < this.constAutoPlaylistStates().length; i++) {
-				if (this.autoPlaylistStates[0] === this.constAutoPlaylistStates().rotate(i)[0]) {
-					rotations[0] = i;
-					break;
-				}
-			}
-			for (let i = 0; i < this.constShowStates().length; i++) {
-				if (this.showStates[0] === this.constShowStates().rotate(i)[0]) {
-					rotations[1] = i;
-					break;
-				}
-			}
-			this.properties['filterStates'][1] = rotations[0] + ',' + rotations[1];
-			// Categories
-			if (!isArrayEqual(categoryState, this.categoryState)) {
-				this.categoryState = categoryState;
-			}
+			this.properties['filterStates'][1] = rotations.join(',');
 			this.properties['categoryState'][1] = JSON.stringify(this.categoryState);
-			// Tags
-			if (!isArrayEqual(tagState, this.tagState)) {
-				this.tagState = tagState;
-			}
 			// Save
 			overwriteProperties(this.properties);
 		}
@@ -2000,7 +2023,8 @@ function _list(x, y, w, h) {
 			if (this.bSaveFilterStates) { // Rotate current filters until it matches the saved ones
 				const rotations = this.properties['filterStates'][1].split(',');
 				this.autoPlaylistStates = this.constAutoPlaylistStates().rotate(rotations[0]);
-				this.showStates = this.constShowStates().rotate(rotations[1]);
+				this.lockStates = this.constLockStates().rotate(rotations[1]);
+				this.extStates = this.constExtStates().rotate(rotations[2]);
 			}
 			if (!this.colours || !Object.keys(this.colours).length) { // Sets default colours
 				this.colours = {};
@@ -2060,7 +2084,7 @@ function _list(x, y, w, h) {
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
 			this.selPaths = {pls: new Set(), sel: []};
-			this.showStates = this.constShowStates();
+			this.lockStates = this.constLockStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
 			this.categoryState = JSON.parse(this.properties['categoryState'][1]);
 			this.methodState = this.properties['methodState'][1];

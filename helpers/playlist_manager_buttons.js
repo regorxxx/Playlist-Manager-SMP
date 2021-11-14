@@ -1,5 +1,5 @@
 'use strict';
-//07/10/21
+//14/10/21
 
 var prefix = 'EDIT';
  
@@ -33,28 +33,16 @@ var newButtons = {
 		list.sort(void(0), true); // Uses current state
 		t1 = Date.now();
 		console.log('Call to Sort took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';} , prefix, newButtonsProperties, () => {return !list.getIndexSortState() ? chars.downLongArrow : chars.upLongArrow;}, _gdiFont('FontAwesome', 12)),
+	}, null, g_font, sortTooltip, _gdiFont('FontAwesome', 12)),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
 	// TODO: '\uf15d' : '\uf15e' for letters. '\uf162' : '\uf163' for numbers. '\uf160' : '\uf161' for attributes.
-	TwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesTwo, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesTwo, buttonOrientation,false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, plsFilterName, function () {
-		let t0 = Date.now();
-		let t1 = 0;
-		list.autoPlaylistStates.rotate(1);
-		list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
-		list.filter(); // Current filter states
-		t1 = Date.now();
-		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constAutoPlaylistStates()[0] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[0] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[1] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[1] ?  '  <--\n' : '\n') + list.constAutoPlaylistStates()[2] + (list.autoPlaylistStates[0] === list.constAutoPlaylistStates()[2] ?  '  <--' : '');} , prefix, newButtonsProperties, chars.filter, _gdiFont('FontAwesome', 12)),
+	TwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesTwo, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesTwo, buttonOrientation,false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
+		doFilter(this);
+	}, null, g_font, filterTooltip, prefix, newButtonsProperties, chars.filter, _gdiFont('FontAwesome', 12)),
 	// Cycle filtering between playlist lock states: all, not locked, locked
-	ThreeButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation,false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, () => {return list.showStates[0];}, function () {
-		let t0 = Date.now();
-		let t1 = 0;
-		list.showStates.rotate(1);
-		list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
-		list.filter(); // Current filter states
-		t1 = Date.now();
-		console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, () => {return 'Cycle through the different filters.\n' + list.constShowStates()[0] + (list.showStates[0] === list.constShowStates()[0] ?  '  <--\n' : '\n') + list.constShowStates()[1] + (list.showStates[0] === list.constShowStates()[1] ?  '  <--\n' : '\n') + list.constShowStates()[2] + (list.showStates[0] === list.constShowStates()[2] ?  '  <--' : '');}, prefix, newButtonsProperties, chars.filter, _gdiFont('FontAwesome', 12)),
+	ThreeButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonOrientation,false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
+		doFilter(this);
+	}, null, g_font, filterTooltip, prefix, newButtonsProperties, chars.filter, _gdiFont('FontAwesome', 12)),
 };
 // Check if the button list already has the same button ID
 for (var buttonName in newButtons) {
@@ -69,10 +57,109 @@ for (var buttonName in newButtons) {
 buttons = {...buttons, ...newButtons};
 
 // Helpers
-function plsFilterName() {
-	switch (list.autoPlaylistStates[0]) {
-		case list.constAutoPlaylistStates()[0]: {return list.autoPlaylistStates[0];}
-		case list.constAutoPlaylistStates()[1]: {return 'Ap';}
-		case list.constAutoPlaylistStates()[2]: {return 'Pls';}
+function filterName() {
+	switch (this.method) {
+		case 'Lock state': {
+			return list.lockStates[0];
+			break;
+		}
+		case 'Extension': {
+			return list.extStates[0];
+			break;
+		}
+		case 'Playlist type': {
+			switch (list.autoPlaylistStates[0]) {
+				case list.constAutoPlaylistStates()[0]: {return list.autoPlaylistStates[0];}
+				case list.constAutoPlaylistStates()[1]: {return 'Ap';}
+				case list.constAutoPlaylistStates()[2]: {return 'Pls';}
+			}
+		}
+		case 'Tag': {
+			const options = ['All', ...list.tags()];
+			const idx = list.tagState.length === 1 ? options.indexOf(list.tagState[0]) : -1;
+			return idx !== -1 ? options[idx] : options[0];
+		}
+		case 'Category': {
+			const options = ['All', ...list.categories()];
+			const idx = list.categoryState.length === 1 ? options.indexOf(list.categoryState[0]) : -1;
+			return idx !== -1 ? options[idx] : options[0];
+		}
 	}
 }
+function doFilter(parent) {
+	let t0 = Date.now();
+	let t1 = 0;
+	switch (parent.method) {
+		case 'Playlist type': {
+			list.autoPlaylistStates.rotate(1);
+			list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
+			list.filter(); // Current filter states
+			break;
+		}
+		case 'Lock state': {
+			list.lockStates.rotate(1);
+			list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
+			list.filter(); // Current filter states
+			break;
+		}
+		case 'Extension': {
+			list.extStates.rotate(1);
+			list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
+			list.filter(); // Current filter states
+			break;
+		}
+		case 'Tag': {
+			cycleTags();
+			break;
+		}
+		case 'Category': {
+			cycleCategories();
+			break;
+		}
+	}
+	t1 = Date.now();
+	console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
+}
+function filterTooltip() {
+	let ttText = '';
+	switch (this.method) {
+		case 'Lock state': {
+			ttText = 'Cycle through the different filters:\n' + list.constLockStates().map((item) => {return item + (list.lockStates[0] === item ? '  <--' : '');}).join('\n');
+			break;
+		}
+		case 'Extension': {
+			ttText = 'Cycle through the different filters:\n' + list.constExtStates().map((item) => {return item + (list.extStates[0] === item ? '  <--' : '');}).join('\n');
+			break;
+		}
+		case 'Playlist type': {
+			ttText = 'Cycle through the different filters:\n' + list.constAutoPlaylistStates().map((item) => {return item + (list.autoPlaylistStates[0] === item ? '  <--' : '');}).join('\n');
+			break;
+		}
+		case 'Tag': {
+			ttText = 'Cycle through the different tags:\n' + list.tags().map((item) => {return item + (list.tagState.indexOf(item) !== -1? '  <--' : '');}).join('\n');
+			break;
+		}
+		case 'Category': {
+			ttText = 'Cycle through the different categories:\n' + list.categories().map((item) => {return item + (list.categoryState.indexOf(item) !== -1 ? '  <--' : '');}).join('\n');
+			break;
+		}
+	}
+	if (list.bShowTips) {
+		ttText += '\n\n' + '(L. Click to cycle current filter)';
+		ttText += '\n' + '(R. Click to configure filters)';
+	}
+	return ttText;
+}
+function sortTooltip() {
+	let ttText = '';
+	ttText = !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';
+	if (list.bShowTips) {
+		ttText += '\n\n' + '(L. Click to invert sorting)';
+		ttText += '\n' + '(R. Click to configure sorting)';
+	}
+	return ttText;
+}
+
+// Defaults
+buttons.TwoButton.method = 'Playlist type';
+buttons.ThreeButton.method = 'Lock state';

@@ -94,7 +94,8 @@ var properties = {
 	bSavingXsp				: ['Auto-save .xsp playlists?', false],
 	bAllPls					: ['Track UI-only playlists?', false],
 	autoBack				: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity],
-	autoBackN				: ['Auto-backup files allowed.', 50]
+	autoBackN				: ['Auto-backup files allowed.', 50],
+	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state']
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -125,6 +126,8 @@ let list = new _list(LM, TM, 0, 0);
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
 const autoBackTimer = Number(list.properties.autoBack[1]);
+buttons.TwoButton.method = list.properties.filterMethod[1].split(',')[0];
+buttons.ThreeButton.method = list.properties.filterMethod[1].split(',')[1];
 
 function on_colours_changed() {
 	panel.colours_changed();
@@ -170,9 +173,18 @@ function on_mouse_leave() {
 }
 
 function on_mouse_rbtn_up(x, y) {
-	// Must return true, if you want to suppress the default context menu.
-	// Note: left shift + left windows key will bypass this callback and will open default context menu.
-	return (list.traceHeader(x, y) ? createMenuRightTop().btn_up(x, y) : createMenuRight().btn_up(x, y));
+	if (list.traceHeader(x, y)) { // Header menu
+		return createMenuRightTop().btn_up(x, y);
+	} else if (cur_btn === null) { // List menu
+		return createMenuRight().btn_up(x, y);
+	} else if (cur_btn === buttons.SortButton) { // Sort button menu
+		return createMenuRightSort().btn_up(x, y);
+	} else if (cur_btn === buttons.TwoButton) { // Filter button menus
+		return createMenuRightFilter('TwoButton').btn_up(x, y);
+	} else if (cur_btn === buttons.ThreeButton) {
+		return createMenuRightFilter('ThreeButton').btn_up(x, y);
+	}
+	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 }
 
 function on_mouse_wheel(s) {
@@ -193,11 +205,11 @@ function on_size() {
 	on_size_buttn();
 }
 
-function on_playback_new_track() { // To show playing now indicators...
+function on_playback_new_track() { // To show playing now playlist indicator...
 	window.Repaint();
 }
 
-function on_playlists_changed() { // To show/hide loaded indicators...
+function on_playlists_changed() { // To show/hide loaded playlist indicators...
 	window.Repaint();
 }
 

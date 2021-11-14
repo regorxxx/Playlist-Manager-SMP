@@ -1,5 +1,5 @@
 'use strict';
-//09/11/21
+//14/11/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -651,6 +651,19 @@ function cycleCategories() {
 	if (idx >= options.length) {idx = 0;} // And cycle
 	const categoryState = idx ? [options[idx]] : options.slice(1);
 	list.filter({categoryState});
+}
+
+function cycleTags() {
+	const options = ['All', ...list.tags()];
+	let idx = 0; // All is the default
+	if (list.tagState.length === 1) { // If there is currently only one category selected then use the next one
+		idx = options.indexOf(list.tagState[0]);
+		idx++;
+	}
+	else if (isArrayEqual(list.tagState,list.tags())) {idx++;} // If it's already showing all categories, then use the first one
+	if (idx >= options.length) {idx = 0;} // And cycle
+	const tagState = idx ? [options[idx]] : options.slice(1);
+	list.filter({tagState});
 }
 
 function rewriteXSPQuery(pls, newQuery) {
