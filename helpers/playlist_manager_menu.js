@@ -1572,8 +1572,14 @@ function createMenuRightFilter(buttonKey) {
 		if (optionsLength) {
 			options.forEach((item) => {
 				menu.newEntry({entryText: item, func: () => {
+					// Switch buttons if they are duplicated
+					const buttonsArr = Object.entries(buttons);
+					const idx = buttonsArr.findIndex((pair) => {return pair[0] !== buttonKey && pair[1].method === item;})
+					if (idx !== -1) {buttons[buttonsArr[idx][0]].method = buttons[buttonKey].method;}
+					// Set new one
 					buttons[buttonKey].method = item;
-					list.properties['filterMethod'][1] = buttons.TwoButton.method + ',' + buttons.ThreeButton.method;
+					// Save properties
+					list.properties['filterMethod'][1] = Object.values(buttons).map((button) => {return (button.hasOwnProperty('method') ? button.method : '');}).filter(Boolean).join(',');
 					overwriteProperties(list.properties);
 				}});
 			});

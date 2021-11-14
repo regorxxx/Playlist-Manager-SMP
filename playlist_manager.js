@@ -126,8 +126,8 @@ let list = new _list(LM, TM, 0, 0);
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
 const autoBackTimer = Number(list.properties.autoBack[1]);
-buttons.TwoButton.method = list.properties.filterMethod[1].split(',')[0];
-buttons.ThreeButton.method = list.properties.filterMethod[1].split(',')[1];
+buttons.filterOneButton.method = list.properties.filterMethod[1].split(',')[0];
+buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
 
 function on_colours_changed() {
 	panel.colours_changed();
@@ -177,12 +177,12 @@ function on_mouse_rbtn_up(x, y) {
 		return createMenuRightTop().btn_up(x, y);
 	} else if (cur_btn === null) { // List menu
 		return createMenuRight().btn_up(x, y);
-	} else if (cur_btn === buttons.SortButton) { // Sort button menu
+	} else if (cur_btn === buttons.sortButton) { // Sort button menu
 		return createMenuRightSort().btn_up(x, y);
-	} else if (cur_btn === buttons.TwoButton) { // Filter button menus
-		return createMenuRightFilter('TwoButton').btn_up(x, y);
-	} else if (cur_btn === buttons.ThreeButton) {
-		return createMenuRightFilter('ThreeButton').btn_up(x, y);
+	} else if (cur_btn === buttons.filterOneButton) { // Filter button menus
+		return createMenuRightFilter('filterOneButton').btn_up(x, y);
+	} else if (cur_btn === buttons.filterTwoButton) {
+		return createMenuRightFilter('filterTwoButton').btn_up(x, y);
 	}
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 }
