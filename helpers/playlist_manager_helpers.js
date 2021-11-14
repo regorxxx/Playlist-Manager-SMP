@@ -56,7 +56,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				// Safe checks to ensure proper UTF-8 and codepage detection
-				const codePage = checkCodePage(text, playlistPathArray[i].split('.').pop());
+				const codePage = checkCodePage(text, '.' + playlistPathArray[i].split('.').pop());
 				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage).split(/\r\n|\n\r|\n|\r/);}
 				let commentsText = text.filter(function(e) {return e.startsWith('#');});
 				if (typeof commentsText !== 'undefined' && commentsText.length >= 1) { // Use playlist info
