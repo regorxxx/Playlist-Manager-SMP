@@ -129,7 +129,7 @@ function _list(x, y, w, h) {
 				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
 				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
 			}
-			idxHighlight = -1;
+			if (!this.lastCharsPressed.length) {idxHighlight = -1;}
 		}
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
@@ -210,6 +210,36 @@ function _list(x, y, w, h) {
 					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colours.selectedPlaylistColour);
 				}
 			}
+		}
+		// Char popup as animation
+		if (this.lastCharsPressed.length) {
+			const popupCol = opaqueColor(tintColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+			const borderCol = opaqueColor(invert(popupCol), 50);
+			const textCol = panel.colours.text;
+			const size = 1 / 2;
+			const popX = this.x + this.w / 2 - size * this.w / 4;
+			const popY = this.y + this.h / 2 - size * this.h / 4;
+			// Draw the box
+			gr.FillRoundRect(popX, popY, size * this.w / 2, size * this.h / 2, 20, 25, popupCol);
+			gr.DrawRoundRect(popX, popY, size * this.w / 2, size * this.h / 2, 20, 25, 1, borderCol);
+			// Draw the letter
+			if (idxHighlight === -1) { // Striked out when not found
+				gr.GdiDrawText(this.lastCharsPressed.toUpperCase(), panel.fonts.title, blendColours(textCol, this.colours.selectedPlaylistColour, 0.5), popX, popY, size * this.w / 2, size * this.h / 2, CENTRE);
+				const textW = gr.CalcTextWidth(this.lastCharsPressed.toUpperCase(), panel.fonts.title) + 10;
+				gr.DrawLine(popX + size * this.w / 4 - textW / 2 - 1, popY + size * this.h / 4, popX + size * this.w / 4 + textW / 2 - 1, popY + size * this.h / 4, 1, opaqueColor(this.colours.selectedPlaylistColour, 70))
+			} else { // when found
+				gr.GdiDrawText(this.lastCharsPressed.toUpperCase(), panel.fonts.title, textCol, popX, popY, size * this.w / 2, size * this.h / 2, CENTRE);
+				// And highlight a few ms the found playlist
+				const currSelIdx = idxHighlight;
+				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
+				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
+					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 80));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 50));
+				}
+			}
+			this.lastCharsPressed = '';
+			setTimeout(() => {window.RepaintRect(this.x, this.y, this.w, this.h);}, 300); 
 		}
 		// Up/down buttons
 		this.up_btn.paint(gr, panel.colours.text);
@@ -502,7 +532,7 @@ function _list(x, y, w, h) {
 				break;
 			default: { // Search by key according to the current sort method
 				const keyChar = keyCode(k);
-				if (/[_A-z0-9]/.test(keyChar)) {
+				if (keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
 					let method = this.getMethodState().replace('By ', '');
 					if (method === 'name') {method = 'nameId';}
 					const idx = this.data.findIndex((pls, idx) => {
@@ -513,8 +543,10 @@ function _list(x, y, w, h) {
 							else {return false;}
 						} else {return false;}
 					});
+					this.lastCharsPressed += keyChar;
 					this.showPlsByIdx(idx);
 				} else {
+					this.lastCharsPressed = '';
 					return false;
 				}
 				break;
@@ -2084,6 +2116,7 @@ function _list(x, y, w, h) {
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
 			this.selPaths = {pls: new Set(), sel: []};
+			this.lastCharsPressed = '';
 			this.lockStates = this.constLockStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
 			this.categoryState = JSON.parse(this.properties['categoryState'][1]);
@@ -2210,6 +2243,7 @@ function _list(x, y, w, h) {
 	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.bAllPls = this.properties['bAllPls'][1];
 	// Other
+	this.lastCharsPressed = '';
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably

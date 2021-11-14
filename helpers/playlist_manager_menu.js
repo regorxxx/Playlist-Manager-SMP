@@ -1489,6 +1489,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							panel.properties['coloursMode'][1] = panel.colours.mode;
 							overwriteProperties(panel.properties);
+							panel.colours_changed();
 							window.Repaint();
 						}});
 					});
@@ -1499,6 +1500,7 @@ function createMenuRightTop() {
 						// Update property to save between reloads
 						panel.properties['customBackground'][1] = panel.colours.custom_background;
 						overwriteProperties(panel.properties);
+						panel.colours_changed();
 						window.Repaint();
 					}, flags: panel.colours.mode === 2 ? MF_STRING : MF_GRAYED,});
 				}

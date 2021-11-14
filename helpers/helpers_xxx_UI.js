@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/11/21
+//14/11/21
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_UI_chars.js');
@@ -292,15 +292,19 @@ function lightenColorVal(color, percent) {
 	return Math.min(val, 255);
 }
 
-function tintColor(color, percent) {
-	const red = getRed(color);
-	const green = getGreen(color);
-	const blue = getBlue(color);
-	return RGBA(lightenColorVal(red, percent), lightenColorVal(green, percent), lightenColorVal(blue, percent), getAlpha(color));
-}
-
 function opaqueColor(color, percent) {
 	return RGBA(...toRGB(color), Math.min(255, 255 * (percent / 100)));
+}
+
+function invert(color, bBW = false) {
+	let r = getRed(color);
+	let g = getGreen(color);
+	let b = getBlue(color);
+	if (bBW) {
+		return (r * 0.299 + g * 0.587 + b * 0.114) > 186 ? RGB(0, 0, 0) : RGB(255, 255, 255);
+	} else {
+		return RGB(255 - r, 255 - g, 255 - b);
+	}
 }
 
 /* 

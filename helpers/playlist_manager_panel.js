@@ -28,7 +28,11 @@ function _panel(custom_background = false) {
 			this.colours.text = this.colours.bCustomText ? this.colours.customText : window.GetColourCUI(0);
 			this.colours.highlight = blendColours(this.colours.text, this.colours.background, 0.4);
 		}
-		if (this.custom_text) {this.colours.text = this.colours.custom_text;}
+		// Change default text color to the inverse of the background
+		if (!this.colours.bCustomText && invert(this.getColorBackground(), true) === invert(this.colours.text, true)) {
+			this.colours.text = invert(this.getColorBackground(), true);
+			this.colours.highlight = blendColours(this.colours.text, this.colours.background, 0.4);
+		}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
 		textColor = this.colours.buttonsTextColor // buttons_xxx.js
 	}
@@ -57,25 +61,30 @@ function _panel(custom_background = false) {
 		this.h = window.Height;
 	}
 	
-	this.paint = (gr) => {
+	this.getColorBackground = () => {
 		let col;
 		switch (true) {
-		case window.IsTransparent:
-			return;
-		case !this.custom_background:
-		case this.colours.mode === 0:
-			col = this.colours.background;
-			break;
-		case this.colours.mode === 1:
-			// col = utils.GetSysColour(15);
-			col = window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
-			break;
-		case this.colours.mode === 2:
-			col = this.colours.custom_background;
-			break;
+			case window.IsTransparent:
+				return;
+			case !this.custom_background:
+			case this.colours.mode === 0:
+				col = this.colours.background;
+				break;
+			case this.colours.mode === 1:
+				// col = utils.GetSysColour(15);
+				col = window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
+				break;
+			case this.colours.mode === 2:
+				col = this.colours.custom_background;
+				break;
 		}
-
-		gr.FillSolidRect(1, 1, this.w - 1, this.h - 1, col);
+		return col;
+	}
+	this.paint = (gr) => {
+		const col = this.getColorBackground();
+		if (typeof col !== 'undefined') {
+			gr.FillSolidRect(1, 1, this.w - 1, this.h - 1, col);
+		}
 	}
 	
 	window.DlgCode = DLGC_WANTALLKEYS;
