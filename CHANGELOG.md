@@ -2,8 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.6.0-beta.1](#060-beta1---2021-07-25)
-- [0.5.0](#050---2021-07-25)
+- [0.5.0-beta.1](#050-beta1---2021-12-23)
 - [0.4.1](#041---2021-06-15)
 - [0.4.0](#040---2021-06-07)
 - [0.3.1](#031---2021-05-28)
@@ -19,7 +18,7 @@
 ### Removed
 ### Fixed
 
-## [0.6.0-beta.1] - 2021-12-23
+## [0.5.0-beta.1] - 2021-12-23
 ### Added
 - Playlist formats: new option to also show UI-only playlists on the manager panel, to use it as a simple playlist organizer. UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to playlist is also allowed. They have its own custom color too. To be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use 'Create new playlist from Active playlist...' to save UI-only playlists as a tracked file.
 - Playlist formats: [.xsp format](https://kodi.wiki/view/Smart_playlists) full compatibility (read, edit and create). They are Smart Playlists which work on Kodi-like/XBMC systems, pretty similar to AutoPlaylists. Has been added a full layer of translations between XBMC-queries and Foobar-queries which allows conversion on the fly between both formats whenever it's possible. Some exceptions may apply, like most foobar TF functions not being available on .xsp format (check readme for more info). For all purposes Smart Playlists are treated like AutoPlaylists, being locked by default, having a query and sort, can be cloned as standard playlist or AutoPlaylist, etc. Metadata is also saved on the panel .json file, along AutoPlaylists and .fpl playlists metadata. Note queries checking for other playlists by name are also allowed (so it can use as source any playlist format read by the manager, even AutoPlaylists); this can be easily used as a way to merge different playlists as pools (the same it works on Kodi).
@@ -271,8 +270,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...v0.5.0
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...HEAD
+[0.5.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...0.5.0-beta.1
 [0.4.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.0...v0.3.1
