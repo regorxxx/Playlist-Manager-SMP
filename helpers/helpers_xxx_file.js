@@ -1,8 +1,8 @@
 ﻿'use strict';
-//13/10/21
+//21/12/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
-include('helpers_xxx_foobar.js');
+include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 
 /* 
@@ -128,8 +128,11 @@ function _restoreFile(file) {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(file) : utils.FileTest(file, 'split'); //TODO: Deprecated
 		const OriginalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
-		const items = app.NameSpace(10).Items();
-		const numItems = items.Count;
+		let numItems, items;
+		try {
+			items = app.NameSpace(10).Items();
+			numItems = items.Count;
+		} catch (e) {return false;}
 		for (let i = 0; i < numItems; i++) {
 			if (items.Item(i).Name === OriginalFileName) {
 				_renameFile(items.Item(i).Path, file);
@@ -165,6 +168,26 @@ function _save(file, value, bBOM = false) {
 	return false;
 }
 
+function _saveSplitJson(file, value, replacer = void(0), space = void(0), splitBy = 50000, bBOM = false) {
+	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
+	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
+	if (!_isFolder(filePath)) {_createFolder(filePath);}
+	if (_isFolder(filePath)) {
+		const fileName = utils.SplitFilePath(file)[1];
+		const len = value.length;
+		const add = len > splitBy ? splitBy : len;
+		const count = Math.ceil(len / splitBy);
+		let bDone = true;
+		for (let i = 0; i < count; i++) {
+			const newFilename = file.replace(fileName, fileName + i);
+			bDone = bDone && _save(newFilename, JSON.stringify(value.slice(i * add, ((i + 1) * add < len ? (i + 1) * add : len)), replacer, space), bBOM);
+		}
+		return bDone;
+	}
+	console.log('Error saving to ' + file);
+	return false;
+}
+
 function _jsonParse(value) {
 	try {
 		let data = JSON.parse(value);
@@ -178,12 +201,24 @@ function _jsonParseFile(file, codePage = 0) {
 	return _jsonParse(_open(file, codePage));
 }
 
+function _jsonParseFileSplit(filePath, reportName = 'Json', popupName = window.Name, codePage = 0) {
+	const [path, fileName, extension] = utils.SplitFilePath(filePath);
+	const files = utils.Glob(path + '\\' + fileName + '*' + extension);
+	let result = [];
+	for (let file of files) {
+		const data = _jsonParseFile(file, codePage);
+		if (data) {result = result.concat(data);}
+		else {return null;}
+	}
+	return result;
+}
+
 function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name, codePage = 0) {
 	let data = null;
 	if (_isFile(file)) {
 		data = _jsonParseFile(file, codePage);
 		if (!data && utils.GetFileSize(file)) {
-			console.log(fileName + ' file is corrupt:\n', file);
+			console.log(fileName + ' file is corrupt:', file);
 			fb.ShowPopupMessage(fileName + ' file is corrupt:\n' + file, popupName);
 		}
 	} else {
@@ -222,11 +257,20 @@ function _run() {
 	}
 }
 
+function _runHidden() {
+	try {
+		WshShell.Run([...arguments].map((arg) => {return _q(arg);}).join(' '), 0, true);
+		return true;
+	} catch (e) {
+		return false;
+	}
+}
+
 function _runCmd(command, wait) {
 	try {
 		WshShell.Run(command, 0, wait);
 	} catch (e) {
-		console.log('_runCmd(): failed to run command ' + command);
+		console.log('_runCmd(): failed to run command ' + command + '(' + e + ')');
 	}
 }
 
@@ -272,8 +316,8 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	else if (extension === '.m3u' && plsText.length >= 2 && plsText[1].startsWith('#EXTENC:')) {
 		const codepageName = plsText[1].split(':').pop();
 		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
-	} else if ((extension === '.xspf' || extension === '.asx') && plsText.length >= 2 && plsText[0].indexOf('encoding=') !== -1) {
-		const codepageName = plsText[0].match(/"[\S]*"/g).pop().replace(/"/g,'');
+	} else if ((extension === '.xspf' || extension === '.asx' || extension === '.xsp') && plsText.length >= 2 && plsText[0].indexOf('encoding=') !== -1) {
+		const codepageName = plsText[0].match(/encoding="([\S]*)"/).pop();
 		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
 	} else if (bAdvancedCheck) {
 		if (plsText.length && plsText.some((line) => {
@@ -351,4 +395,9 @@ function UUID() {
 		const rnd = Math.random() * 16 | 0, v = c === 'x' ? rnd : (rnd&0x3|0x8) ;
 		return v.toString(16);
 	});
+}
+
+function lastModified(file, bParse = false) {
+	if (!_isFile(file)) {return -1;}
+	return bParse ? Date.parse(fso.GetFile(file).DateLastModified) : fso.GetFile(file).DateLastModified;
 }

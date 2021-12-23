@@ -141,7 +141,7 @@ const XSPF = {
 		return matches;
 	},
 	parse_tracks : function(xml, bParseTracks = true) {
-		const xspf_tracks = this.getDirectChildrenByTagName(xml,'track')[0];
+		const xspf_tracks = this.getDirectChildrenByTagName(xml,'track')[0].filter(Boolean);
 		const xspf_playlist_length = xspf_tracks.length;
 		let tracks = new Array(xspf_playlist_length);
 		if (bParseTracks) { // This is the slowest part of the code, ~3 secs per 800 tracks

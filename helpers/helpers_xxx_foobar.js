@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//21/12/21
 
 include('helpers_xxx_file.js');
 
@@ -8,19 +8,19 @@ include('helpers_xxx_file.js');
 */
 
 function isCompatible(requiredVersionStr = '1.4.0') {
-    let requiredVersion = requiredVersionStr.split('.');
-    let currentVersion = utils.Version.split('.'); // e.g. 0.1.0-alpha.2
-    if (currentVersion.length > 3) {
-        currentVersion.length = 3; // We need only numbers
-    }
+	let requiredVersion = requiredVersionStr.split('.');
+	let currentVersion = utils.Version.split('.'); // e.g. 0.1.0-alpha.2
+	if (currentVersion.length > 3) {
+		curraentVersion.length = 3; // We need only numbers
+	}
 
-    for(let i = 0; i< currentVersion.length; ++i) {
-      if (currentVersion[i] !== requiredVersion[i]) {
-          return currentVersion[i] > requiredVersion[i];
-      }
-    }
+	for(let i = 0; i< currentVersion.length; ++i) {
+		if (currentVersion[i] !== requiredVersion[i]) {
+			return currentVersion[i] > requiredVersion[i];
+		}
+	}
 
-    return true;
+	return true;
 }
 
 function checkCompatible(requiredVersionStr = '1.4.0') {
@@ -31,9 +31,10 @@ function checkCompatible(requiredVersionStr = '1.4.0') {
 
 function memoryUsed(bConsole = false) { // In Mbs
 	let memUsage = -1;
-	if (isCompatible('1.4.0')) {memUsage = round(window.JsMemoryStats.memory_usage/1000000, 2);} 
-	else {memUsage = round(window.PanelMemoryUsage/1000000, 2);} //TODO: Deprecated
-	if (bConsole) {console.log(window.Name + ' mem usage: ' + memUsage + 'Mb');}
+	console.log(window.JsMemoryStats);
+	if (isCompatible('1.4.0')) {memUsage = round(window.JsMemoryStats.MemoryUsage / 1000000, 2);} 
+	else {memUsage = round(window.PanelMemoryUsage / 1000000, 2);} //TODO: Deprecated
+	if (bConsole) {console.log(window.Name + ' mem usage: ' + memUsage + ' Mb');}
 	return memUsage;
 }
 
@@ -44,4 +45,8 @@ function isPortable(propertyText, bWarn = true) {
 		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n' + propertyText, window.Name);
 	}
 	return bPort;
+}
+
+function lastStartup() {
+	return lastModified(fb.ProfilePath + 'running');
 }

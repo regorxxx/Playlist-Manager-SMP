@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/11/21
+//16/12/21
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_UI_chars.js');
@@ -9,16 +9,16 @@ include('helpers_xxx_UI_chars.js');
 */
 
 // Callbacks: append to any previously existing callback
-function onScriptUnload() {
+function onScriptUnloadUI() {
 	window.Tooltip.Deactivate();
 }
 if (on_script_unload) {
 	const oldFunc = on_script_unload;
 	on_script_unload = function() {
 		oldFunc();
-		onScriptUnload();
+		onScriptUnloadUI();
 	};
-} else {var on_script_unload = onScriptUnload;}
+} else {var on_script_unload = onScriptUnloadUI;}
 
 const WshShellUI = new ActiveXObject('WScript.Shell');
 const _bmp = gdi.CreateImage(1, 1);
@@ -187,8 +187,9 @@ function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 600) {
 	this.tooltip.SetFont(font, fontsize);
 	this.width = width;
 	this.tooltip.SetMaxWidth(width);
-	this.text = this.tooltip.text = value;
+	this.text = this.tooltip.Text = value;
 	this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
+	this.bActive = false;
 	
 	this.SetValue = function (value,  bForceActivate = false) {
 		if (value === null) {
@@ -213,10 +214,12 @@ function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 600) {
 	
 	this.Activate = function () {
 		this.tooltip.Activate();
+		this.bActive = true;
 	};
 	
 	this.Deactivate = function () {
 		this.tooltip.Deactivate();
+		this.bActive = false;
 	};
 	
 	this.SetDelayTime = function (type, time) {

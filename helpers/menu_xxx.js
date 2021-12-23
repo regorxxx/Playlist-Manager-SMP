@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/10/21
+//13/12/21
 
 /* 
 	Contextual Menu helper v 1.2 19/05/21
@@ -53,7 +53,7 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} = {}) {
+function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, iMaxMenuLen = 57} = {}) {
 	var menuArrTemp = [];
 	var menuArr = [];
 	var menuMap = new Map();
@@ -109,7 +109,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 	this.getEntriesAll = (object) => {this.initMenu(object); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
 	this.getMenus = () => {return [...menuArr];};
 	this.getMainMenuName = () => {return menuArr[0].menuName;};
-	this.hasMenu = (menuName) => {return (menuArr.indexOf(menuName) !== -1);};
+	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true)}) !== -1);};
 	
 	// Internal
 	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);};
@@ -131,7 +131,8 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null} =
 			if (_isFunction(menuName)) {menuName = menuName();}
 			if (_isFunction(flags)) {flags = flags();}
 			if (_isFunction(entryText)) {entryText = entryText();}
-			menuMap.get(menuName).AppendMenuItem(flags, idx, entryText);
+			const entryTextSanitized = entryText.length > iMaxMenuLen ? entryText.substring(0, iMaxMenuLen) + '...' + (entryText.slice(-1) === ':' ? ':' : '') : entryText;
+			menuMap.get(menuName).AppendMenuItem(flags, idx, entryTextSanitized);
 			const entryName = menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText;
 			entryMap.set(entryName, idx);
 			if (entryName.indexOf('\t') !== -1) {

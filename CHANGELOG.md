@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.6.0-beta.1](#060-beta1---2021-07-25)
 - [0.5.0](#050---2021-07-25)
 - [0.4.1](#041---2021-06-15)
 - [0.4.0](#040---2021-06-07)
@@ -14,16 +15,25 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.6.0-beta.1] - 2021-12-23
+### Added
 - Playlist formats: new option to also show UI-only playlists on the manager panel, to use it as a simple playlist organizer. UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to playlist is also allowed. They have its own custom color too. To be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use 'Create new playlist from Active playlist...' to save UI-only playlists as a tracked file.
 - Playlist formats: [.xsp format](https://kodi.wiki/view/Smart_playlists) full compatibility (read, edit and create). They are Smart Playlists which work on Kodi-like/XBMC systems, pretty similar to AutoPlaylists. Has been added a full layer of translations between XBMC-queries and Foobar-queries which allows conversion on the fly between both formats whenever it's possible. Some exceptions may apply, like most foobar TF functions not being available on .xsp format (check readme for more info). For all purposes Smart Playlists are treated like AutoPlaylists, being locked by default, having a query and sort, can be cloned as standard playlist or AutoPlaylist, etc. Metadata is also saved on the panel .json file, along AutoPlaylists and .fpl playlists metadata. Note queries checking for other playlists by name are also allowed (so it can use as source any playlist format read by the manager, even AutoPlaylists); this can be easily used as a way to merge different playlists as pools (the same it works on Kodi).
 - Playlist formats: [.xspf format](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format) full compatibility (read, edit and create). Follows [the complete specification](https://www.xspf.org/xspf-v1.html): items not found don't break playlist loading (it continues with next item). If  an item is not found at the set the path, it also tries to find matches on library by query using fuzzy matching according to the playlist metadata (Title + Artist + Album + Track number or a combination of those). By default, if lock flag is not set on file, it's loaded as a locked file.
 - Playlist formats: added read-only support for .strm format. Since format only allows one URL per playlist, M3U formats are preferred to create new playlists for the same purpose (which can also be read by streaming players).
 - Backup: new option to automatically backup the playlist files by interval, when unloading the script and just after loading a playlist file on UI (if auto-saving is enabled). Setting the interval to zero completely disables the feature on any case; to only backup on script unloading/playlist loading, set it to 'Infinity'.
-- UI: pressing any key while focus is on panel will scroll the list to the first playlist whose first name's letter matches the key (sorting by name), first category's letter (sorting by category) or first size's number (sorting by size).
+- Quick-search: pressing any key while focus is on panel will scroll the list to the first playlist whose name matches the string typed (sorting by name), category (sorting by category), tag (sorting by tag) or size (sorting by size).
 - UI: added warnings when multiple playlist share the same name on the tracked folder (configurable).
 - UI: buttons' text color can now be customized via menus.
 - UI: Header icon can now be customized according to category being shown with an extra json config file. Check readme for instructions ('Advanced tips').
 - UI: new option to enable/disable header on selected playlist contextual menu. The header shows the playlist format and name.
+- UI: popup within the panel while caching library paths. Interaction with the panel is disabled during the process. This is done to ensure the manager is blocked until it's ready to be used.
+- UI: new sorting option by last modified date. Playlists without physical files associated are considered as 'more recent'.
+- UI: new sorting option by first tag. Playlists without tags are considered as 'first'. Note it uses only the first tag of all the available tags for a given playlist, so order is relevant.
 - AutoPlaylists: new option on contextual menu to export selected AutoPlaylist as json file (ready to be imported by other instances of the manager). Not backwards compatible with marc2003's panel. 
 - AutoPlaylists: new option on list menu to export all AutoPlaylist (and optionally .fpl virtual files too) as json file at once (ready to be imported by other instances of the manager). Not backwards compatible with marc2003's panel.
 - AutoPlaylists: new option on contextual menu to clone the selected AutoPlaylists as a standard playlist. i.e. automatizes the process of loading it, copying the track, pasting them into a new playlist and creating a new playlist file from it. At that point, the new exporting tools may be used.
@@ -50,12 +60,11 @@
 ### Changed
 - Auto-saving: playlists are not immediately auto-saved after loading them, but only after a change is made. This is done caching the last playlists loaded until auto-saves fires for the first time later. This change makes unwanted format changing a bit more difficult, requiring explicit user interaction with the playlist to change it.
 - Send selection: loaded playlists are not immediately auto-saved after sending selected tracks to it (menu or shortcut actions). This behavior follows previous comments about not needing to rewrite the playlist. Note sending the selection already edits the playlist file, so this skips the auto-saving step (since its also loaded in the UI) which could involve changing the playlist format.
-- UI: sorting method configuration is now opened by R. Clicking directly on the sort button, following the same behavior thane the [new] filter configuration menus.
-- UI: Smart Playlists are now identified as such in any text instance where they behave as AutoPlaylists, instead of using the generic 'AutoPlaylist' term for all. For ex. on tooltips warning the playlist can not be edited when trying to add a track. This is just a cosmetic change.
 - Edit query (.xsp only): query is now translated into an XBMC query after user input. Structure may change during the process (specially parenthesis and how things are grouped) and non recognized tags/expressions are skipped (those which have no XBMC counterpart). Please recheck query after edition on the tooltip to ensure it has been recognized properly. See readme for more usage info.
 - Selected playlist menu: Renamed 'Open playlist folder' to 'Show playlist file' on explorer.
 - Properties: added extensive checks to most properties.
 - Remove duplicates: optimized the code, now runs at least x2 times faster. Updated all instances where the functions were being used to call the new version (currently on AutoPlaylist cloning).
+- Playlist formats: new configuration to maintain original format on playlist saving. Disabled by default (i.e. it always tries to use the default format even if it means changing it), following previous behavior.
 - Requisites: Script requires at minimum SMP 1.5.2. now.
 - Playlists consistency tools: all are now executed asynchronously: Absolute/relative paths..., external items, dead items, duplicated items and playlist size mismatch.
 - Workaround for SMP limits on automatic code-page detection for text files (playlists). If code-page is present in M3U files (#EXTENC:...), encoding is forced instead of using the detected code-page (which may be wrong). .m3u8 files are always considered as UTF-8 files. This should cover most UTF-8 problems (when BOM is not present) on M3U files. .pls format still relies on code-page detection.
@@ -80,12 +89,18 @@
 - UI: Auto-Playlists size now gets updated when loading them (since it's essentially performance free).
 - UI: contextual menu for selected playlist can now be invoked on the entire selection rectangle (not only over the name).
 - UI: selection rectangle drawing is skipped if color matches the background color.
+- UI: sorting method configuration is now opened by R. Clicking directly on the sort button, following the same behavior thane the [new] filter configuration menus.
+- UI: Smart Playlists are now identified as such in any text instance where they behave as AutoPlaylists, instead of using the generic 'AutoPlaylist' term for all. For ex. on tooltips warning the playlist can not be edited when trying to add a track. This is just a cosmetic change.
+- UI: default text color is now set to black or white automatically according to background color, set to the inverse (once converted to B&W).
+- UI: new playlists will now inherit category/tags of the current filtering state. i.e. if the current view is set to display a single category or group of tags, created playlists will also have them by default. Note playlist can only have one category so it only applies when the view is filtered by a single one, this limit does not apply to tags though (the view still requires to be filtered and excluding 'no tags').
+- Instances manager: internal change, tracking of other Playlist Manager panels is now done with this new helper. Used to ensure proper cache sharing and forcing only one calculation per foobar instance (previous approach was not working as expected in all use-cases).
 - Menus: Reordered menu entries into sub-menus for more logical access: panel behavior, playlist behavior, UI, ...
 - Menus: 'Copy playlist file to...' is now available for .fpl playlist too, since it's the only option which doesn't involve playlist editing.
 - Menus: 'Bind active playlist to this file...' is now disabled for locked playlists (must unlock them first) and .fpl playlists (in any case).
 - Helpers: Split 'helpers_xxx_playlists.js' into 2 files (new one is 'helpers_xxx_playlists_files.js').
 - Helpers: updated. Whenever a folder needs to be created to save a new file, the entire tree is now created if needed. Previously it would fail as soon as any folder did not exist. This greatly speeds up setting panels since now the final folder does not need to exists at all to work, since it will be created on the fly.
 - Helpers: additional checks at json loading on all scripts. Warnings via popup when a corrupted file is found.
+- Helpers: improved query checks for compatibility with .xsp format.
 - Tooltip: Pressing shit, control or both will show on the tooltip the action which will be performed on playlists. If usage info is enabled on tooltips, then only the current action associated to the keys will be shown while pressing them (so it becomes obvious which one is from the list); otherwise -disabled- nothing will be shown until a key is pressed.
 - Tooltip: Adjusted max width to 600 px before splitting lines.
 - When retrieving paths from M3U files, lines are trimmed (blank spaces). In other words, blank lines are simply skipped for any purpose. Other formats don't allow these "errors".
@@ -98,7 +113,7 @@
 - UI: Removed Wingdings dependencies. Replaced with Font Awesome (already being in use at other places).
 ### Fixed
 - Cache: added safechecks to library cache to ensure loaded item is the one pointed at the playlist. At some instances, after adding/removing library items without reloading the panel cache, some tracks could have been mixed up due to different index.
-- Cache: now gets rebuilt whenever an item is added/removed to the library, not only at startup. This is in addition to the previous check (to automatically solve it).
+- Cache: now gets rebuilt whenever an item is added/removed to the library, not only at startup. This is in addition to the previous check (to automatically solve it). Cache is shared between multiple panels (so it's only calculated once per Foobar2000 instance).
 - Bind active playlist to file: when canceling the popup that appears trying to bind the active playlist to a playlist file with a non-default format, playlist file binding was properly aborted (no file changes) but the active playlist was already renamed. Now aborting also reverts the renaming, renaming it again back to the original name. This 'fix' also applies in any case where the playlist saving fails or is aborted.
 - Autosave & Autoupdate: changing the properties via menus or properties panel could lead to values being formatted as strings instead of numbers, now disallowed at input (menus) and loading (value checking).
 - Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
@@ -120,6 +135,9 @@
 - Shortcut: send selection (Shift + L. Click) is disabled when it's an Autoplaylist, the playlist is locked or it's an .fpl playlist; instead of simply failing.
 - UUID: UUID was not assigned properly on AutoPlaylist creation if option was enabled (thus not allowing multiple playlists with same name).
 - UUID: solved all instances where full name was not properly retrieved from Name + UUID strings, no matter if the option was enabled or not by using Regex to replace any possible UUID. This happened when UUID was enabled and trying to create new playlist from active playlist, i.e. the suggested name was not the full name.
+- UI: fixed some instances where the list was not properly painted when filtering if current view position was not at the beginning of the list.
+- UI: fixed some inconsistencies on menu entry names.
+- UI: header tooltip wrongly showed statistics of all tracked playlist instead of the current view (after filtering).
 - UI: names on playlist list now are truncated a few px before the category letters separators and playing/loaded indicators so they don't overlap anymore.
 - UI: crash when setting custom font size.
 - UI: When a playlist of current view had no category, next category letter was not being shown on the letter separators. i.e. Jumping from none (-) to B, skipping A, when there were playlists with categories starting with A, B and some without categories. Long time UI only bug since first releases. Only happened for the category sorting view; when sorting by name, playlist always have a name by design, so first item header was never 'empty' and thus the next one was always shown fine.
@@ -128,11 +146,13 @@
 - UI: fixed some instances where the current position on the list view got reset after updating a playlist file.
 - UI: selection indicator is now only displayed if the mouse is over the panel. It was shown on some instances when updating the current view, while trying to remember the last selected item to maintain the current index.
 - UI: fixed some instances where the currently playlist playlist was incorrectly displayed (with playback stopped).
+- Cache: fixed report about cache not being up to date on panels set to use relative paths.
+- Code-page: improved code-page detection for any XML-based format, in particular for .xsp and .xspf, no matter how encoding is set on the header.
+- Dead items: the menu entry to find dead items on playlists now skips streams (http or https).
 - While reading Playlist files, they are now split by lines using any of the possible [escape sequence combinations](https://en.wikipedia.org/wiki/Newline) and not only windows ones (\r\n). This should allow to correctly read any playlist file created in any SO (no longer limited to Windows ecosystem).
 - Playlist with special characters did not properly update the playlist path at some instances (the chars were not being stripped until manual refresh).
 - Crash when deleting an AutoPlaylist right after loading it if Track Tagging was enabled due to callback delays.
 - Bug on first playlist not being properly updated at some points (at least on manual update) due to a bad coded check for index !== 0.
-- Dead items: the menu entry to find dead items on playlists now skips streams (http or https).
 - Adding current selection to a playlist file when it's loaded and it's also the current playlist no longer reinserts tracks, thus duplicating them.
 - Adding a new playlist while current filter view doesn't show it will now update the playlist file right (similar bug to the 'auto-save' one).
 - Checking if all items on a playlist are in the library now works as expected when some items -file paths- are duplicated.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/10/21
+//02/12/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -61,4 +61,12 @@ if (conLog && conLog.length && conLogMaxSize && console.log) {
 		utils.WriteTextFile(conLog, '', false);
 		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 10000000) + ' MB, creating new file: ' + conLog);
 	}
+}
+
+// Send to popup and console
+console.popup = (arg, popupName) => {
+	fb.ShowPopupMessage(arg, popupName);
+	arg.split('\n').forEach((line) => {
+		if (line && line.length) {console.log(line);}
+	;});
 }

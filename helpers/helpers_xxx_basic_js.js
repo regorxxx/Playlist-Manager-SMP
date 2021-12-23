@@ -1,5 +1,5 @@
 'use strict';
-//07/10/21
+//13/12/21
 
 // https://github.com/angus-c/just
 /*
@@ -172,4 +172,23 @@ function convertObjectToString(object, separator = ',') {
 		}
 		return output;
 	}
+}
+
+function SetReplacer(key, value) {
+	if (typeof value === 'object' && value instanceof Set) {return [...value];}
+	return value;
+}
+
+/*
+	Script including
+*/
+let module = {}, exports = {};
+module.exports = null;
+
+function require(script) {
+	let newScript = script;
+	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => {newScript.replace(new RegExp('^\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\');});
+	['helpers'].forEach((folder) => {newScript.replace(new RegExp('^\.\\\\' + folder + '\\\\', 'i'), '');});
+	include(newScript + '.js') ;
+	return module.exports;
 }

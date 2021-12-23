@@ -1,5 +1,5 @@
 'use strict';
-//14/11/21
+//23/12/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -43,6 +43,7 @@ function _list(x, y, w, h) {
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
 	var currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 	var idxHighlight = -1;
+	var animation = {bHighlight: false};
 	
 	// Global tooltip
 	this.tooltip = new _tt(null, void(0), void(0), 600);  
@@ -129,31 +130,47 @@ function _list(x, y, w, h) {
 				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
 				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
 			}
-			if (!this.lastCharsPressed.length) {idxHighlight = -1;}
-		}
+			if (this.lastCharsPressed.bDraw) {animation.bHighlight = false;}
+			if (animation.bHighlight) {
+				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
+					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
+				}
+				animation.bHighlight = false;
+				setTimeout(() => {window.RepaintRect(this.x, this.y, this.w, this.h);}, 300); 
+			} else if (!this.lastCharsPressed.bDraw) {
+				idxHighlight = -1;
+			}
+		} else {animation.bHighlight = false;}
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
 				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
 				break;
 			}
+			const currIdx = i + this.offset;
 			// Add category sep
 			if (this.bShowSep) {
-				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to both use-cases 
-				if (this.methodState === 'By category'){dataKey = 'category';}
-				else if (this.methodState === 'By name'){dataKey = 'name';}
+				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to all use-cases
+				if (this.methodState.split('\t')[0] === 'By category'){dataKey = 'category';}
+				else if (this.methodState.split('\t')[0] === 'By name'){dataKey = 'name';}
+				else if (this.methodState.split('\t')[0] === 'By tags'){dataKey = 'tags';}
 				if (dataKey.length){
+					const data = isArray(this.data[currIdx][dataKey]) ? this.data[currIdx][dataKey][0] : this.data[currIdx][dataKey]; // If it's an array get first value
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
-						let sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
+						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
-						const sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
-						const nextsepLetter = (this.data[i + indexSortStateOffset + this.offset][dataKey].length) ? this.data[i + indexSortStateOffset + this.offset][dataKey][0].toUpperCase() : '-';
+						const sepLetter = data.length ? data[0].toUpperCase() : '-';
+						const nextIdx = currIdx + indexSortStateOffset;
+						const nextData = isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
+						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
 						if (sepLetter !== nextsepLetter && isNaN(sepLetter)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
@@ -163,7 +180,7 @@ function _list(x, y, w, h) {
 					// Show always current letter at bottom. Also shows number
 					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
 						let sepIndex = i + indexSortStateOffset;
-						let sepLetter = (this.data[i + this.offset][dataKey].length) ? this.data[i + this.offset][dataKey][0].toUpperCase() : '-';
+						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
@@ -171,28 +188,28 @@ function _list(x, y, w, h) {
 				}
 			}
 			// Playlists
-			let playlistDataText =  this.data[i + this.offset].name + (this.bShowSize ? ' (' + this.data[i + this.offset].size + ')' : '');
-			if (this.data[i + this.offset].isLocked) { // Highlight read only playlists
+			let playlistDataText =  this.data[currIdx].name + (this.bShowSize ? ' (' + this.data[currIdx].size + ')' : '');
+			if (this.data[currIdx].isLocked) { // Highlight read only playlists
 				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), lockedPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.lockedPlaylistColour,  this.x + 5 + iconCharPlaylistLockedW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
-			} else if (this.data[i + this.offset].isAutoPlaylist) { // Highlight autoplaylists
+			} else if (this.data[currIdx].isAutoPlaylist) { // Highlight autoplaylists
 				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), autoPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.autoPlaylistColour,  this.x + 5 + iconCharPlaylistLockedW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
-			} else if (this.data[i + this.offset].extension === '.xsp') { // Highlight smart playlists
+			} else if (this.data[currIdx].extension === '.xsp') { // Highlight smart playlists
 				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), smartPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.smartPlaylistColour,  this.x + 5 + iconCharPlaylistLockedW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
-			} else if (this.data[i + this.offset].extension === '.ui') { // Highlight smart playlists
+			} else if (this.data[currIdx].extension === '.ui') { // Highlight smart playlists
 				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), smartPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.uiPlaylistColour,  this.x + 5 + iconCharPlaylistLockedW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			} else { // Standard playlists
-				gr.GdiDrawText((this.data[i + this.offset].size) ? iconCharPlaylist : iconCharPlaylistEmpty, gfontIconChar(), iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+				gr.GdiDrawText((this.data[currIdx].size) ? iconCharPlaylist : iconCharPlaylistEmpty, gfontIconChar(), iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colours.text, this.x + 5 + iconCharPlaylistW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			}
 			// Add playing now indicator
 			let playlistDataTextRight = '';
-			if (fb.IsPlaying && plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[i + this.offset].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
+			if (fb.IsPlaying && plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[currIdx].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
 			// Add loaded indicator
-			else if (plman.FindPlaylist(this.data[i + this.offset].nameId) !== -1) {playlistDataTextRight += loadedChar;}
+			else if (plman.FindPlaylist(this.data[currIdx].nameId) !== -1) {playlistDataTextRight += loadedChar;}
 			// Draw
 			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 		}
@@ -212,23 +229,29 @@ function _list(x, y, w, h) {
 			}
 		}
 		// Char popup as animation
-		if (this.lastCharsPressed.length) {
+		if (this.lastCharsPressed.bDraw) {
 			const popupCol = opaqueColor(tintColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
 			const borderCol = opaqueColor(invert(popupCol), 50);
 			const textCol = panel.colours.text;
-			const size = 1 / 2;
-			const popX = this.x + this.w / 2 - size * this.w / 4;
-			const popY = this.y + this.h / 2 - size * this.h / 4;
+			const scaleX = 0.75;
+			const scaleY = 1 / 2;
+			const sizeX = Math.round(scaleX * this.w / 2);
+			const sizeY = Math.round(scaleY * this.h / 3);
+			const textOffset = scaleX * this.w * 1 / 20;
+			const popX = this.x + this.w / 2 - sizeX / 2;
+			const popY = this.y + this.h / 2 - sizeY / 2;
 			// Draw the box
-			gr.FillRoundRect(popX, popY, size * this.w / 2, size * this.h / 2, 20, 25, popupCol);
-			gr.DrawRoundRect(popX, popY, size * this.w / 2, size * this.h / 2, 20, 25, 1, borderCol);
+			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
+			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
 			// Draw the letter
 			if (idxHighlight === -1) { // Striked out when not found
-				gr.GdiDrawText(this.lastCharsPressed.toUpperCase(), panel.fonts.title, blendColours(textCol, this.colours.selectedPlaylistColour, 0.5), popX, popY, size * this.w / 2, size * this.h / 2, CENTRE);
-				const textW = gr.CalcTextWidth(this.lastCharsPressed.toUpperCase(), panel.fonts.title) + 10;
-				gr.DrawLine(popX + size * this.w / 4 - textW / 2 - 1, popY + size * this.h / 4, popX + size * this.w / 4 + textW / 2 - 1, popY + size * this.h / 4, 1, opaqueColor(this.colours.selectedPlaylistColour, 70))
+				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, blendColours(textCol, this.colours.selectedPlaylistColour, 0.5), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
+				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2 );
+				const lineW = Math.min(popX + sizeX / 2 + textW / 2 - 1, popX + sizeX - textOffset / 2);
+				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, opaqueColor(this.colours.selectedPlaylistColour, 70))
 			} else { // when found
-				gr.GdiDrawText(this.lastCharsPressed.toUpperCase(), panel.fonts.title, textCol, popX, popY, size * this.w / 2, size * this.h / 2, CENTRE);
+				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				// And highlight a few ms the found playlist
 				const currSelIdx = idxHighlight;
 				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
@@ -238,7 +261,7 @@ function _list(x, y, w, h) {
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 50));
 				}
 			}
-			this.lastCharsPressed = '';
+			this.lastCharsPressed.bDraw = false;
 			setTimeout(() => {window.RepaintRect(this.x, this.y, this.w, this.h);}, 300); 
 		}
 		// Up/down buttons
@@ -299,15 +322,18 @@ function _list(x, y, w, h) {
 	
 	this.showPlsByIdx = (idx) => {
 		if (idxHighlight === idx) {
+			animation.bHighlight = true;
 			window.RepaintRect(this.x, this.y, this.w, this.h);
 			return true;
 		} else if (idx !== -1) {
 			idxHighlight = idx;
 			this.simulateWheelToIndex(idx, currentItemIndex > 0 ? currentItemIndex : 1, this.lastOffset ? this.lastOffset : 1);
 			currentItemIndex = idx;
+			animation.bHighlight = true;
 			window.RepaintRect(this.x, this.y, this.w, this.h);
 			return true;
 		}
+		animation.bHighlight = false;
 		return false;
 	}
 	
@@ -321,14 +347,16 @@ function _list(x, y, w, h) {
 	
 	this.move = (x, y, mask) => {
 		this.bMouseOver = true;
+		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
 		this.my = y;
-		window.SetCursor(IDC_ARROW);
+		if (bMoved) {window.SetCursor(IDC_ARROW);}
 		if (this.traceHeader(x,y)) { // Tooltip for header
 			let headerText = this.playlistsPath;
 			headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
 			headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
-			headerText += '\n' + 'Current view: '+ this.itemsAll + ' Playlists (' + (this.itemsAutoplaylist + this.itemsXsp) + ' AutoPlaylists)';
+			const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum)}, 0); // Counts autoplaylists and smart playlists
+			headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
 			// Tips
 			if (this.bShowTips) {
 				headerText += '\n\n' + '(R. Click for config menus)';
@@ -375,8 +403,9 @@ function _list(x, y, w, h) {
 								playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
 								playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
 								playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0];}).join(', ') : '-');
+								playlistDataText += '\n' + 'Duration: ' +  (pls.duration !== -1 ? utils.FormatDuration(pls.duration) : '?');
 								// Text for AutoPlaylists
-								if (pls.isAutoPlaylist || pls.query) { // TODO: xsp ?
+								if (pls.isAutoPlaylist || pls.query) {
 									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
 									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : ''): '-');
 									playlistDataText += '\n' + 'Limit: ' +  (pls.limit ? pls.limit : '\u221E') + ' tracks';
@@ -385,7 +414,7 @@ function _list(x, y, w, h) {
 								if (mask === MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + L. Click to load / show playlist)';}
 								else if (mask === MK_SHIFT) {
 									playlistDataText += '\n\n' + '(Shift + L. Click to send selection to playlist)';
-									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}  // TODO: xsp ?
+									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}
 									else if (pls.extension === '.fpl') {playlistDataText += '\n' + '(.fpl playlists are non editable, convert it first)';}
 									else if (pls.isLocked) {playlistDataText += '\n' + '(Locked playlists are non editable, unlock it first)';}
 									else {
@@ -437,6 +466,20 @@ function _list(x, y, w, h) {
 		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
 		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
 		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
+	}
+	
+	this.clearLastPosition = () => { // Clears position
+		if (this.inRange && this.index !== -1) {
+			this.lastIndex = this.index;
+			this.lastOffset = this.offset;
+		}
+		currentItemIndex = -1;
+		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
+		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
+		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
+		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
+		this.index = -1;
+		this.offset = 0;
 	}
 	
 	this.lbtn_up = (x, y, mask) => {
@@ -530,23 +573,28 @@ function _list(x, y, w, h) {
 				else {this.move(this.mx, this.my, MK_SHIFT);}
 				return true;
 				break;
-			default: { // Search by key according to the current sort method
+			default: { // Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				const keyChar = keyCode(k);
 				if (keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
-					let method = this.getMethodState().replace('By ', '');
-					if (method === 'name') {method = 'nameId';}
+					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
+					let method = this.methodState.split('\t')[0].replace('By ', '');
+					if (method === 'name' || !(new oPlaylist('', '')).hasOwnProperty(method)) {method = 'nameId';} // Fallback to name for sorting methods associated to non tracked variables
+					this.lastCharsPressed.str += keyChar;
+					this.lastCharsPressed.bDraw = true;
 					const idx = this.data.findIndex((pls, idx) => {
 						if (pls.hasOwnProperty(method) && pls[method] !== null && pls[method] !== void(0)) {
-							const val = pls[method];
-							if (typeof val === 'string' && val.length) {return val[0].toLowerCase() === keyChar;}
-							if (typeof val === 'number') {return val.toString()[0] === keyChar;}
+							const bArray = isArray(pls[method]);
+							if (bArray && !pls[method].length) {return false;}
+							const val = bArray ? pls[method][0] : pls[method];
+							if (typeof val === 'string' && val.length) {return val.toLowerCase().startsWith(this.lastCharsPressed.str);} // Fuzzy search?
+							if (typeof val === 'number') {return val.toString().startsWith(this.lastCharsPressed.str);}
 							else {return false;}
 						} else {return false;}
 					});
-					this.lastCharsPressed += keyChar;
 					this.showPlsByIdx(idx);
+					this.lastCharsPressed.ms = Date.now();
 				} else {
-					this.lastCharsPressed = '';
+					this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 					return false;
 				}
 				break;
@@ -595,7 +643,7 @@ function _list(x, y, w, h) {
 	this.checkSelectionDuplicatesPlaylist = (playlistIndex) => {
 		const pls = this.data[playlistIndex];
 		let bDup = false;
-		if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && pls.size) {  // TODO: xsp ?
+		if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && pls.size) {
 			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 			if (selItems && selItems.Count) {
 				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([pls.nameId])));
@@ -629,7 +677,7 @@ function _list(x, y, w, h) {
 	
 	this.sendSelectionToPlaylist = (playlistIndex, bCheckDup) => {
 		const pls = this.data[playlistIndex];
-		if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) {return false;} // Skip non writable playlists  // TODO: xsp ?
+		if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) {return false;} // Skip non writable playlists
 		let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 		if (selItems && selItems.Count) {
 			if (bCheckDup) {this.checkSelectionDuplicatesPlaylist(playlistIndex);}
@@ -686,7 +734,7 @@ function _list(x, y, w, h) {
 			console.log('Playlist Manager: Skipping save on locked playlist.');
 			return false;
 		}
-		console.log('Playlist Manager: Updating playlist...');
+		console.log('Playlist Manager: Updating playlist... ' + pls.name);
 		const [handleUpdate, tagsUpdate] = this.bAutoTrackTag ? this.getUpdateTrackTags(handleList, pls) : [null, null]; // Done at 2 steps, first get tags
 		const playlistPath = pls.path;
 		const bUI = pls.extension === '.ui';
@@ -697,7 +745,8 @@ function _list(x, y, w, h) {
 		}
 		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 		this.editData(pls, {
-			size: pls.size + handleList.Count, 
+			size: pls.size + handleList.Count,
+			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
 			fileSize: bUI ? 0 : (isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s')), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
 		});
 		if (this.bAutoTrackTag) {this.updateTrackTags(handleUpdate, tagsUpdate);} // Apply tags from before
@@ -887,19 +936,20 @@ function _list(x, y, w, h) {
 				const [handleUpdate, tagsUpdate] = this.bAutoTrackTag && this.bAutoTrackTagPls && (debouncedUpdate || !bCallback)? this.getUpdateTrackTags(plman.GetPlaylistItems(fbPlaylistIndex), plsData) : [null, null]; // Done at 2 steps, first get tags
 				if (bCallback && !this.bSavingXsp && plsData.extension === '.xsp') {return false;}
 				if (plsData.extension !== '.ui') {
-					if (this.bSavingWarnings && plsData.extension !== this.playlistsExtension) {
+					if (this.bSavingWarnings && this.bSavingDefExtension && plsData.extension !== this.playlistsExtension) {
 						let answer = WshShell.Popup(playlistNameId + ':\n' + plsData.path + '\nUpdating the playlist will change the format from ' + plsData.extension + ' to ' + this.playlistsExtension + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 						if (answer === popup.no) {return false;}
 					}
 					const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-					console.log('Playlist Manager: Updating playlist...');
+					console.log('Playlist Manager: Updating playlist... ' + plsData.name);
 					const playlistPath = plsData.path;
 					let bDeleted = false;
 					if (_isFile(playlistPath)) {
 						bDeleted = _recycleFile(playlistPath);
 					} else {bDeleted = true;}
 					if (bDeleted) {
-						let done = savePlaylist(fbPlaylistIndex, playlistPath, this.playlistsExtension, playlistName, this.optionsUUIDTranslate(), plsData.isLocked, plsData.category, plsData.tags, (this.bRelativePath ? this.playlistsPath : ''), plsData.trackTags, this.bBOM);
+						const extension = this.bSavingDefExtension || plsData.extension === '.fpl' ? this.playlistsExtension : plsData.extension;
+						let done = savePlaylist(fbPlaylistIndex, playlistPath, extension, playlistName, this.optionsUUIDTranslate(), plsData.isLocked, plsData.category, plsData.tags, (this.bRelativePath ? this.playlistsPath : ''), plsData.trackTags, this.bBOM);
 						if (!done) {
 							fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 							_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -911,9 +961,10 @@ function _list(x, y, w, h) {
 							size: plman.PlaylistItemCount(fbPlaylistIndex), 
 							nameId: plsData.name + UUID, 
 							id: UUID, 
-							extension: this.playlistsExtension,  // We may have forced saving on a fpl playlist
-							path: this.playlistsPath + sanitize(plsData.name) + this.playlistsExtension,
+							extension,  // May have forced saving on a fpl playlist
+							path: this.playlistsPath + sanitize(plsData.name) + extension,
 							fileSize: isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
+							duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
 						});
 						plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);
 						// Warn about dead items
@@ -1000,8 +1051,10 @@ function _list(x, y, w, h) {
 			// Need to fill all the other values
 			data.forEach((item) => {
 				if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;}
-				let size = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query)).Count;
-				let oAutoPlaylistItem = new oPlaylist('', '', item.name, '', size, 0, false, true, {query: item.query, sort: item.sort, bSortForced: item.forced}, '', [], []);
+				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+				const size = handleList.Count;
+				const duration = handleList.CalcTotalDuration();
+				const oAutoPlaylistItem = new oPlaylist('', '', item.name, '', size, 0, false, true, {query: item.query, sort: item.sort, bSortForced: item.forced}, '', [], [], 0, duration);
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
@@ -1009,7 +1062,9 @@ function _list(x, y, w, h) {
 			data.forEach((item) => { // TODO: .fpl importing?
 				if (!item.hasOwnProperty('query') || !item.hasOwnProperty('isAutoPlaylist') || !item.isAutoPlaylist) {return;} // May be a non AutoPlaylist item
 				if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;} // Don't allow empty but allow sort
-				item.size = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query)).Count;
+				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+				item.size = handleList.Count;
+				item.duration = handleList.CalcTotalDuration();
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(item);
 			});
@@ -1026,16 +1081,20 @@ function _list(x, y, w, h) {
 		return true;
 	}
 	// Categories and tags
-	this.categories = () => {
+	this.categories = (idx = null) => {
+		const defCateg = '(None)';
+		if (idx === 0) {return defCateg;}
 		let categ = new Set();
 		this.dataAll.forEach( (playlist) => {if (playlist.category.length) {categ.add(playlist.category);}});
-		return ['(None)', ...[...categ].sort()];
+		return idx ? [defCateg, ...[...categ].sort()][idx] : [defCateg, ...[...categ].sort()];
 	}
 	this.categoryState = [];
-	this.tags = () => {
+	this.tags = (idx = null) => {
+		const defTag = '(None)';
+		if (idx === 0) {return defTag;}
 		let tags = new Set();
 		this.dataAll.forEach( (playlist) => {if (playlist.tags.length) {playlist.tags.forEach((tag) => {tags.add(tag);});}});
-		return ['(None)', ...[...tags].sort()];
+		return idx ? [defTag, ...[...tags].sort()][idx] : [defTag, ...[...tags].sort()];
 	}
 	this.tagState = [];
 	// These are constant
@@ -1094,18 +1153,22 @@ function _list(x, y, w, h) {
 		// Focus
 		this.items = this.data.length;
 		if (bMaintainFocus) {
-			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
-				// Get current index of the previously selected item to not move the list focus when updating...
-				// Offset is calculated simulating the wheel, so it moves to the previous location
-				if (currentItemIsAutoPlaylist) { // AutoPlaylists
-					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
+			if (currentItemIndex < this.items) {
+				for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
+					// Get current index of the previously selected item to not move the list focus when updating...
+					// Offset is calculated simulating the wheel, so it moves to the previous location
+					if (currentItemIsAutoPlaylist) { // AutoPlaylists
+						if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
+							this.simulateWheelToIndex(i, currentItemIndex, this.lastOffset);
+							break;
+						}
+					} else if (this.data[i].path === currentItemPath) { // Standard Playlists
 						this.simulateWheelToIndex(i, currentItemIndex, this.lastOffset);
 						break;
 					}
-				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.simulateWheelToIndex(i, currentItemIndex, this.lastOffset);
-					break;
 				}
+			} else {
+				this.clearLastPosition();
 			}
 		}
 		// Update filters with current values
@@ -1156,22 +1219,32 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	
-	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]'
+	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
 		return {'By name': 
 					{
-					'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
-					'Za': (a, b) => {return 0 - a.name.localeCompare(b.name);},
+						'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
+						'Za': (a, b) => {return 0 - a.name.localeCompare(b.name);}
 					},
 				'By size': 
 					{
-					'(S) Asc.': (a, b) => {return a.size - b.size;},
-					'(S) Des.': (a, b) => {return b.size - a.size;}
+						'(S) Asc.': (a, b) => {return a.size - b.size;},
+						'(S) Des.': (a, b) => {return b.size - a.size;}
 					},
 				'By category': 
 					{
-					'(C) Az': (a, b) => {return a.category.localeCompare(b.category);}, 
-					'(C) Za': (a, b) => {return 0 - a.category.localeCompare(b.category);}
-					}			
+						'(C) Az': (a, b) => {return a.category.localeCompare(b.category);}, 
+						'(C) Za': (a, b) => {return 0 - a.category.localeCompare(b.category);}
+					},
+				'By tags\t-first one-': 
+					{
+						'(T) Az': (a, b) => {return (a.tags[0] || '').localeCompare((b.tags[0] || ''));}, 
+						'(T) Za': (a, b) => {return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''));}
+					},
+				'By date': 
+					{
+						'(D) Asc.': (a, b) => {return lastModified(a.path, true) - lastModified(b.path, true);}, // lastModified returns -1 when file does not exist
+						'(D) Des.': (a, b) => {return lastModified(b.path, true) - lastModified(a.path, true);}
+					}
 		};
 	}
 	this.getOppositeSortState = (sortState, methodState = this.methodState) => { // first or second key
@@ -1276,12 +1349,14 @@ function _list(x, y, w, h) {
 				const promises = [];
 				data.forEach((item) => {
 					if (item.isAutoPlaylist || item.query) {
+						if (!item.hasOwnProperty('duration')) {item.duration = -1;}
 						i++;
 						if (this.bUpdateAutoplaylist && this.bShowSize) { // Updates size for AutoPlaylists. Warning takes a lot of time! Only when required...
 							// Only re-checks query when forcing update of size for performance reasons
 							// Note the query is checked on user input, external json loading and just before loading the playlist
 							// So checking it every time the panel is painted is totally useless...
 							const cacheSize = item.size;
+							const cacheDuration = item.duration;
 							let bDone = false;
 							promises.push(new Promise(resolve => {
 								loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
@@ -1292,7 +1367,17 @@ function _list(x, y, w, h) {
 										}
 									}
 									if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
-									if (cacheSize !== item.size) {console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name); bDone = true; window.Repaint();}
+									if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
+										console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
+										if (item.extension === '.xsp') {
+											let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
+											if (xspPlaylist) {
+												xspPlaylist.size = item.size;
+												xspPlaylist.duration = item.duration;
+											}
+										}
+										window.Repaint();
+									}
 									resolve('done');
 								});
 							}));
@@ -1306,7 +1391,17 @@ function _list(x, y, w, h) {
 												if (bUpdated) {console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name);}
 											}
 											if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + iconCharPlaylistW;}
-											if (cacheSize !== item.size) {console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name); bDone = true; window.Repaint();}
+											if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
+												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
+												if (item.extension === '.xsp') {
+													let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
+													if (xspPlaylist) {
+														xspPlaylist.size = item.size;
+														xspPlaylist.duration = item.duration;
+													}
+												}
+												window.Repaint();
+											}
 											resolve('done');
 										});
 									}));
@@ -1337,6 +1432,7 @@ function _list(x, y, w, h) {
 							item.category = fplPlaylist.category;
 							item.tags = fplPlaylist.tags;
 							item.size = fplPlaylist.size;
+							item.duration = fplPlaylist.duration;
 						}
 						this.fplPopup();
 					} else if (item.extension === '.pls') {
@@ -1349,6 +1445,7 @@ function _list(x, y, w, h) {
 							item.category = xspPlaylist.category;
 							item.tags = xspPlaylist.tags;
 							item.size = xspPlaylist.size;
+							item.duration = xspPlaylist.duration;
 							item.isLocked = xspPlaylist.isLocked;
 						}
 						this.xspPopup();
@@ -1405,7 +1502,7 @@ function _list(x, y, w, h) {
 			const fooPls = getPlaylistNames();
 			fooPls.forEach((pls) => {
 				if (!this.dataAll.some((dataPls) => {return dataPls.nameId === pls.name;})) {
-					this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls'));
+					this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls', void(0), void(0), void(0), plman.GetPlaylistItems(pls.idx).CalcTotalDuration()));
 				}
 			});
 			if (this.dataFoobar.length) {
@@ -1644,9 +1741,11 @@ function _list(x, y, w, h) {
 			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');;
 			const newForced = (newSort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
 			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
-			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count;
+			const handleList = hasSize && hasQuery && pls.query === newQuery ? null: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
+			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : handleList.Count;
+			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : handleList.CalcTotalDuration();
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-			const objectPlaylist = new oPlaylist(UUID, '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : []);
+			const objectPlaylist = new oPlaylist(UUID, '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], 0, duration);
 			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
@@ -1678,11 +1777,13 @@ function _list(x, y, w, h) {
 				catch (e) {return false;}
 			}
 			const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
-			if (bPlaylist && !checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
+			if (!checkQuery(newQuery, false, true, bPlaylist)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
 			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 			const newForced = false;
 			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
-			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count : '?');
+			const handleList = hasSize && hasQuery && pls.query === newQuery ? null: (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);
+			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (!bPlaylist ? handleList.Count : '?');
+			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (!bPlaylist ? handleList.CalcTotalDuration() : -1);
 			let newLimit = 0;
 			if (hasLimit) {
 				if (isFinite(pls.limit)) {newLimit = pls.limit;}
@@ -1693,7 +1794,7 @@ function _list(x, y, w, h) {
 				if (!Number.isFinite(newLimit)) {newLimit = 0;}
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
-			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit);
+			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit, duration);
 			// Auto-Tags (skip bAutoLock since SmartPlaylists are already locked)
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
@@ -1730,7 +1831,13 @@ function _list(x, y, w, h) {
 			let objectPlaylist = null;
 			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
-			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
+			// Add tags of current view
+			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
+			// Categories
+			// Add Category of current view
+			let oPlaylistCategory = void(0);
+			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) {oPlaylistCategory = this.categoryState[0];} 
 			// Save file
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
@@ -1738,7 +1845,7 @@ function _list(x, y, w, h) {
 				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), void(0), oPlaylistTags); //TODO: Deprecated
+					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags); //TODO: Deprecated
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
@@ -1799,7 +1906,10 @@ function _list(x, y, w, h) {
 					if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
 					plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 					plman.ActivePlaylist = fbPlaylistIndex;
-					this.editData(pls, {size: plman.PlaylistItemCount(fbPlaylistIndex)}, true); // Update size on load
+					this.editData(pls, {
+						size: plman.PlaylistItemCount(fbPlaylistIndex),
+						duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
+					}, true); // Update size on load
 				} else { // Or file
 					if (_isFile(pls.path)) {
 						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
@@ -1810,7 +1920,12 @@ function _list(x, y, w, h) {
 						const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
 						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl);
 						if (!bDone) {plman.AddLocations(fbPlaylistIndex, [pls.path], true);}
-						else if (pls.query) {this.editData(pls, {size: plman.PlaylistItemCount(fbPlaylistIndex)}, true);}  // Update size on load for smart playlists
+						else if (pls.query) { // Update size on load for smart playlists
+							this.editData(pls, {
+								size: plman.PlaylistItemCount(fbPlaylistIndex), 
+								duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
+							}, true);
+						}
 						if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
 							setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
 						}
@@ -1857,7 +1972,7 @@ function _list(x, y, w, h) {
 			if (pls.isAutoPlaylist) { // AutoPlaylist
 				if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
 				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
-				this.editData(pls, {size: plman.PlaylistItemCount(fbPlaylistIndex)}, true); // Update size on load
+				this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true); // Update size on load
 			} else { // Or file
 				if (_isFile(pls.path)) {
 					// Try to load handles from library first, greatly speeds up non fpl large playlists
@@ -1865,7 +1980,7 @@ function _list(x, y, w, h) {
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 					const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
 					handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void(0), remDupl);
-					if (handleList) {this.editData(pls, {size: handleList.Count}, true);}  // Update size on load for smart playlists
+					if (handleList) {this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true);}  // Update size on load for smart playlists
 					else {handleList = new FbMetadbHandleList();}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false;}
 			}
@@ -2116,7 +2231,7 @@ function _list(x, y, w, h) {
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
 			this.selPaths = {pls: new Set(), sel: []};
-			this.lastCharsPressed = '';
+			this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 			this.lockStates = this.constLockStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
 			this.categoryState = JSON.parse(this.properties['categoryState'][1]);
@@ -2238,12 +2353,13 @@ function _list(x, y, w, h) {
 	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 	this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
 	this.bSavingWarnings = this.properties['bSavingWarnings'][1];
+	this.bSavingDefExtension = this.properties['bSavingDefExtension'][1];
 	this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
 	this.bSavingXsp = this.properties['bSavingXsp'][1];
 	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.bAllPls = this.properties['bAllPls'][1];
 	// Other
-	this.lastCharsPressed = '';
+	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
@@ -2256,12 +2372,13 @@ function _list(x, y, w, h) {
 function loadAutoPlaylist(pls, i) {
 	return new Promise(resolve => {
 		setTimeout(() => {
-			if (pls.query.indexOf('#PLAYLIST# IS') === -1 && !checkQuery(pls.query, false, true)) {
-				fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);
-				resolve(null);
+			if (!checkQuery(pls.query, false, true)) {
+				if (pls.query.indexOf('#PLAYLIST# IS') === -1) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); resolve(null);}
+				else {resolve(null);}
 			} else {
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query));
 				pls.size = handleList.Count;
+				pls.duration = handleList.CalcTotalDuration();
 				resolve(handleList);
 			}
 		}, 500 * i);

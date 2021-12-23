@@ -18,23 +18,40 @@ include('helpers\\playlist_manager_buttons.js');
 include('helpers\\playlist_manager_menu.js');
 include('helpers\\playlist_manager_helpers.js');
 include('helpers\\helpers_xxx_file_zip.js');
+include('helpers\\popup_xxx.js');
+include('helpers\\helpers_xxx_instances.js');
 
-let precacheLibraryPathsIds = [window.ID];
-const cacheLib = () => {
-	if (window.ID === precacheLibraryPathsIds[0]) { // Only execute once per Foobar2000 instance
+// Cache
+let plmInit = {};
+const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.') => {
+	const plmInstances = [...getInstancesByKey('Playlist Manager')]; // First look if there are other panels already loaded
+	if (plmInstances[0] === window.ID) { // Only execute once per Foobar2000 instance
+		if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
+		else if (bInit) {return;} // Ensure it only runs once on startup
+		if (!pop.isEnabled()) {pop.enable(true, message, tt);}
+		libItemsAbsPaths = [];
+		libItemsRelPaths = {};
 		precacheLibraryPathsAsync().then((result) => {
 			window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
 			console.log(result);
+			pop.disable(true);
 		}, (error) => {
 			// Already using data from other instance. See on_notify_data
+			pop.disable(true);
 		}).finally(() => {
-			if (list && list.bRelativePath && list.playlistsPath) {precacheLibraryRelPaths(list.playlistsPath);}
+			if (list && list.bRelativePath && list.playlistsPath) {
+				if (!pop.isEnabled()) {pop.enable(true, message, tt);}
+				precacheLibraryRelPaths(list.playlistsPath);
+				pop.disable(true);
+			}
 		});
+	} else {
+		if (!pop.isEnabled()) {pop.enable(true, message, tt);} // Disabled on notify
+		if (bInit) {window.NotifyOthers('precacheLibraryPaths ask', null);}
 	}
 };
-window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
-setTimeout(cacheLib, 500)
-
+addInstance('Playlist Manager');
+plmInit.interval = setInterval(cacheLib, 500, true);
 
 var properties = {
 	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
@@ -95,7 +112,8 @@ var properties = {
 	bAllPls					: ['Track UI-only playlists?', false],
 	autoBack				: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity],
 	autoBackN				: ['Auto-backup files allowed.', 50],
-	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state']
+	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state'],
+	bSavingDefExtension		: ['Try to save playlists always as default format?', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -120,8 +138,16 @@ setProperties(properties, prefix);
 	}
 }
 
+// Panel and list
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
+// Popups
+const pop = new _popup({x: LM, y: TM, w: 0, h: 0});
+pop.panelColor = opaqueColor(0xFF4354AF, 30); // Blue overlay
+pop.textColor = invert(panel.getColorBackground(), true);
+pop.border.enabled = false; // Just overlay without a popup
+pop.icon.enabled = true; // Enable animation
+if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
 
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
@@ -141,10 +167,12 @@ function on_font_changed() {
 }
 
 function on_key_down(k) {
+	if (pop.isEnabled()) {return;}
 	list.key_down(k);
 }
 
 function on_mouse_lbtn_up(x, y, mask) {
+	if (pop.isEnabled()) {return;}
 	if (cur_btn === null) {
 		list.lbtn_up(x, y, mask);
 	}
@@ -152,16 +180,19 @@ function on_mouse_lbtn_up(x, y, mask) {
 }
 
 function on_mouse_lbtn_down(x, y) {
+	if (pop.isEnabled()) {return;}
 	on_mouse_lbtn_down_buttn(x, y);
 }
 
 function on_mouse_lbtn_dblclk(x, y) {
+	if (pop.isEnabled()) {return;}
 	if (cur_btn === null) {
 		list.lbtn_dblclk(x, y);
 	}
 }
 
 function on_mouse_move(x, y, mask) {
+	if (pop.isEnabled()) {pop.move(x, y, mask); return;}
 	on_mouse_move_buttn(x, y, mask);
 	if (cur_btn === null) {
 		list.move(x, y, mask);
@@ -169,11 +200,13 @@ function on_mouse_move(x, y, mask) {
 }
 
 function on_mouse_leave() {
+	if (pop.isEnabled()) {return;}
 	on_mouse_leave_buttn();
 	list.onMouseLeaveList(); // Clears index selector
 }
 
 function on_mouse_rbtn_up(x, y) {
+	if (pop.isEnabled()) {return;}
 	if (list.traceHeader(x, y)) { // Header menu
 		return createMenuRightTop().btn_up(x, y);
 	} else if (cur_btn === null) { // List menu
@@ -189,6 +222,7 @@ function on_mouse_rbtn_up(x, y) {
 }
 
 function on_mouse_wheel(s) {
+	if (pop.isEnabled()) {return;}
 	list.wheel(s);
 }
 
@@ -196,6 +230,7 @@ function on_paint(gr) {
 	panel.paint(gr);
 	list.paint(gr);
 	on_paint_buttn(gr);
+	pop.paint(gr);
 }
 
 function on_size() {
@@ -204,6 +239,7 @@ function on_size() {
 	list.h = panel.h - TM;
 	list.size();
 	on_size_buttn();
+	pop.resize();
 }
 
 function on_playback_new_track() { // To show playing now playlist indicator...
@@ -231,6 +267,7 @@ function on_notify_data(name, info) {
 		}
 		case 'precacheLibraryPaths': {
 			libItemsAbsPaths = [...info];
+			if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
 			console.log('precacheLibraryPaths: using paths from another instance.');
 			// Update rel paths if needed with new data
 			if (list.bRelativePath && list.playlistsPath.length) {
@@ -239,12 +276,13 @@ function on_notify_data(name, info) {
 				}
 				precacheLibraryRelPaths(list.playlistsPath);
 			}
+			pop.disable(true);
 			break;
 		}
-		case 'precacheLibraryPaths instances': {
-			if (isArrayEqual(precacheLibraryPathsIds, info)) {return;}
-			precacheLibraryPathsIds = [...new Set(info)].sort();
-			window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
+		case 'precacheLibraryPaths ask': {
+			if (libItemsAbsPaths && libItemsAbsPaths.length) {
+				window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
+			}
 			break;
 		}
 	}
@@ -325,25 +363,52 @@ function autoUpdate() {
 	return false;
 }
 
-// Backup
-function on_script_unload() { // For UI only playlists
+function onScriptUnloadPLM() {
+	// Instance manager
+	removeInstance('Playlist Manager');
+	// Backup
 	if (autoBackTimer && list.playlistsPath.length && list.itemsAll) {
 		backup(list.properties.autoBackN[1]);
 	}
+	// Clear timeouts
+	clearInterval(keyListener.fn);
+	if (autoBackRepeat) {clearInterval(autoBackRepeat);}
+	if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
+	if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
 }
+if (on_script_unload) {
+	const oldFunc = on_script_unload;
+	on_script_unload = function() {
+		oldFunc();
+		onScriptUnloadPLM();
+	};
+} else {var on_script_unload = onScriptUnloadPLM;}
 const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
 
 // Update cache on changes!
+const debouncedCacheLib = debounce(cacheLib, 5000);
 function  on_library_items_added() {
-	window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
-	libItemsAbsPaths = [];
-	libItemsRelPaths = {};
-	setTimeout(cacheLib, 500)
+	debouncedCacheLib(false, 'Updating...');
 }
 
 function  on_library_items_removed() {
-	window.NotifyOthers('precacheLibraryPaths instances', precacheLibraryPathsIds);
-	libItemsAbsPaths = [];
-	libItemsRelPaths = {};
-	setTimeout(cacheLib, 500)
+	debouncedCacheLib(false, 'Updating...');
 }
+
+// key listener (workaround for keys not working when focus is not on panel)
+const keyListener = {};
+keyListener.bShift = false;
+keyListener.bCtrol = false;
+keyListener.fn = repeatFn(() => {
+	if (list.tooltip.bActive) {
+		const bShift = utils.IsKeyPressed(VK_SHIFT);
+		const bCtrol = utils.IsKeyPressed(VK_CONTROL);
+		if (bShift === keyListener.bShift && bCtrol === keyListener.bCtrol) {return;}
+		else if (bShift && bCtrol) {list.move(list.mx, list.my, MK_SHIFT + MK_CONTROL);}
+		else if (bShift) {list.move(list.mx, list.my, MK_SHIFT);}
+		else if (bCtrol) {list.move(list.mx, list.my, MK_CONTROL);}
+		else {list.move(list.mx, list.my, null);}
+		keyListener.bShift = bShift;
+		keyListener.bCtrol = bCtrol;
+	}
+}, 500)();

@@ -1,5 +1,5 @@
 'use strict';
-//22/10/21
+//22/12/21
 
 // https://wiki.xiph.org/XSPF_v1_Notes_and_Errata
 // https://wiki.xiph.org/XSPF_Examples_in_the_wild
@@ -100,7 +100,7 @@ XSPF.toXSPF = function(jspf) {
 						break;
 				}
 				if (bWrite) {
-					code.push('			<' + key + '>' + htmlentities(value, typeVal) + '</' + key + '>');
+					code.push('			<' + key + '>' + htmlEntities(value, typeVal) + '</' + key + '>');
 				}
 			}
 			code.push('		</track>');
@@ -124,7 +124,7 @@ XSPF.toXSPF = function(jspf) {
 	return code;
 }
 
-function htmlentities(str, typeVal) {
+function htmlEntities(str, typeVal) {
 	if (typeVal === 'string') {
 		str = str.replace(/&/g, "&amp;");
 		str = str.replace(/"/g, "&quot;");

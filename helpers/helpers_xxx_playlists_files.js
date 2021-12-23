@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/21
+//22/12/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -61,6 +61,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 			playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
 			playlistText.push('#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''));
 			playlistText.push('#PLAYLISTSIZE:');
+			playlistText.push('#DURATION:');
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
@@ -77,9 +78,11 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 					});
 				}
 				playlistText[8] += items.Count.toString(); // Add number of tracks to size
+				playlistText[9] += items.CalcTotalDuration(); // Add number of tracks to size
 				playlistText = playlistText.concat(trackText);
 			} else { //  Else empty playlist
 				playlistText[8] += '0'; // Add number of tracks to size
+				playlistText[9] += '0'; // Add number of tracks to size
 			} 
 		// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
@@ -118,10 +121,10 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		} else if (extension === '.xspf') {
 			const jspf = XSPF.emptyJSPF();
 			const playlist = jspf.playlist;
+			// Header text
+			let totalDuration = 0; // In s
 			playlist.title = playlistName;
 			playlist.creator = 'Playlist-Manager-SMP';
-			playlist.date = new Date().toISOString();
-			playlist.date = new Date().toISOString();
 			playlist.date = new Date().toISOString();
 			playlist.meta = [
 				{uuid: (useUUID ? nextId(useUUID) : '')},
@@ -129,8 +132,43 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 				{category: category},
 				{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
 				{trackTags: (isArray(trackTags) ? JSON.stringify(trackTags) : '')},
-				{playlistSize: 0}
+				{playlistSize: 0},
+				{duration: totalDuration}
 			];
+			// Tracks text
+			if (playlistIndex !== -1) { // Tracks from playlist
+				let trackText = [];
+				const items = plman.GetPlaylistItems(playlistIndex);
+				const itemsCount = items.Count;
+				const tags = getTagsValuesV4(items, ['title', 'artist', 'album', 'track', 'length_seconds_fp', 'path']);
+				for (let i = 0; i < itemsCount; i++) {
+					const title = tags[0][i][0];
+					const creator = tags[1][i].join(', ');
+					const album = tags[2][i][0];
+					const trackNum = Number(tags[3][i][0]);
+					const duration = Math.round(Number(tags[4][i][0] * 1000)); // In ms
+					totalDuration += Math.round(Number(tags[4][i][0])); // In s
+					const location = [relPath.length ? getRelPath(tags[5][i][0], relPathSplit) : tags[5][i][0]].map((path) => {return 'file:///' + encodeURI(path.replace(/\\/g,'/'));});
+					playlist.track.push({
+						location,
+						annotation: void(0),
+						title,
+						creator,
+						info: void(0),
+						image: void(0),
+						album,
+						duration,
+						trackNum,
+						identifier: [],
+						extension: {},
+						link: [],
+						meta: []
+					});
+				}
+				// Update total duration of playlist
+				playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
+				playlist.meta.find((obj) => {return obj.hasOwnProperty('playlistSize');}).playlistSize = itemsCount;
+			}
 			playlistText = XSPF.toXSPF(jspf);
 		}
 		// Write to file
@@ -156,10 +194,12 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		// Read original file
 		let originalText = utils.ReadTextFile(playlistPath);
 		let bFound = false;
-		let addSize = handleList.Count;
+		const addSize = handleList.Count;
 		if (!addSize) {return false;}
+		const addDuration = handleList.CalcTotalDuration();
 		let trackText = [];
 		let size;
+		let duration;
 		if (typeof originalText !== 'undefined' && originalText.length) { // We don't check if it's a playlist by its content! Can break things if used wrong...
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
@@ -175,6 +215,15 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 						size = Number(originalText[j].split(':')[1]);
 						const newSize = size + addSize;
 						originalText[j] = '#PLAYLISTSIZE:' + newSize;
+						break;
+					}
+					j++;
+				}
+				while (j < lines) { // Changes duration Line
+					if (originalText[j].startsWith('#DURATION:')) {
+						duration = Number(originalText[j].split(':')[1]);
+						const newDuration = duration + addDuration;
+						originalText[j] = '#DURATION:' + newDuration;
 						break;
 					}
 					j++;
@@ -252,7 +301,8 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			}
 		// ---------------- XSPF
 		} else if (extension === '.xspf') {
-			const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>%path%</location>$crlf()$tab(3)<title>%title%</title>$crlf()$tab(3)<creator>%artist%</creator>$crlf()$tab(3)<album>%album%</album>$crlf()$tab(3)<duration>$mul(%length_seconds%,1000)</duration>$crlf()$tab(3)<trackNum>%track%</trackNum>$crlf()$tab(2)</track>');
+			const durationTF = '$puts(l,%length_seconds_fp%)$puts(d,$strchr($get(l),.))$puts(i,$substr($get(l),0,$sub($get(d),1)))$puts(f,$substr($get(l),$add($get(d),1),$add($get(d),3)))$add($mul($get(i),1000),$get(f))';
+			const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>%path%</location>$crlf()$tab(3)<title>%title%</title>$crlf()$tab(3)<creator>%artist%</creator>$crlf()$tab(3)<album>%album%</album>$crlf()$tab(3)<duration>' + durationTF + '</duration>$crlf()$tab(3)<trackNum>%track%</trackNum>$crlf()$tab(2)</track>');
 			let newTrackText = tfo.EvalWithMetadbs(handleList);
 			const bRel = relPath.length ? true : false;
 			let trackPath = '';
@@ -264,10 +314,16 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			});
 			trackText = [...newTrackText, ...trackText];
 			// Update size
-			const idx = originalText.findIndex((line) => {return line.indexOf('<meta rel="playlistSize">') !== -1;});
+			let idx = originalText.findIndex((line) => {return line.indexOf('<meta rel="playlistSize">') !== -1;});
 			if (idx !== -1) {
-				const size = Number(originalText[idx].replace('<meta rel="playlistSize">','').replace('</meta>','').trim()) + handleList.Count;
+				const size = Number(originalText[idx].replace('<meta rel="playlistSize">','').replace('</meta>','').trim()) + addSize;
 				originalText[idx] = '	<meta rel="playlistSize">' + size + '</meta>';
+			}
+			// Update duration
+			idx = originalText.findIndex((line) => {return line.indexOf('<meta rel="duration">') !== -1;});
+			if (idx !== -1) {
+				const size = Number(originalText[idx].replace('<meta rel="duration">','').replace('</meta>','').trim()) + Math.round(addDuration);
+				originalText[idx] = '	<meta rel="duration">' + size + '</meta>';
 			}
 		}
 		// Write to file
@@ -361,7 +417,7 @@ function precacheLibraryPaths(iSteps, iDelay) {
 					if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
 						const items_i = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
 						libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(items_i));
-						const progress = i / iSteps * 100;
+						const progress = Math.round(i / iSteps * 100);
 						if (progress % 10 === 0) {console.log('Caching library paths ' + Math.round(progress) + '%.');}
 						if (libItemsAbsPaths.length === count) {new Error('already cached');}
 						else {resolve('done');}
@@ -536,8 +592,9 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		let bXSPF= extension === '.xspf' ? true : false;
 		for (let i = 0; i < playlistLength; i++) {
 			if (pathPool.has(filePaths[i])) {
-				handlePlaylist[i] = poolItems[pathPool.get(filePaths[i])];
-				if (handlePlaylist[i].Path.toLowerCase() !== filePaths[i]) { // Ensure the cache is up to date
+				const idx = pathPool.get(filePaths[i]);
+				handlePlaylist[i] = poolItems[idx];
+				if (newLibItemsAbsPaths[idx].toLowerCase() !== filePaths[i] && newLibItemsRelPaths[idx].toLowerCase() !== filePaths[i]) { // Ensure the cache is up to date
 					handlePlaylist = null;
 					fb.ShowPopupMessage('The library cache is not up to date and is being rebuilt; the playlist will be loaded using the native Foobar2000 method if trying to load the playlist into the UI. You may abort it and try loading the playlist afterwards or wait.\n\n In any other case, wait for the cache to be rebuilt and execute the action again.', window.Name);
 					break;

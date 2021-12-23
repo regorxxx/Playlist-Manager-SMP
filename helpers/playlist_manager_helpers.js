@@ -1,5 +1,5 @@
 'use strict';
-//14/11/21
+//28/11/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -10,7 +10,7 @@ include('helpers_xxx_clipboard.js');
 include('helpers_xxx_playlists_files.js');
 include('..\\main\\remove_duplicates.js');
 
-function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0) {
+function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1) {
 	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
 	if (typeof name === 'undefined') {
 		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
@@ -32,6 +32,7 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.tags = isArrayStrings(tags) ? tags : [];
 	this.trackTags = isArray(trackTags) ? trackTags : [];
 	this.limit = Number.isFinite(limit) ? limit : 0;
+	this.duration = Number.isFinite(duration) ? duration : -1;
 	// this.bShow = true; // TODO:
 }
 
@@ -51,7 +52,8 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		let trackTags = [];
 		let size = null;
 		let queryObj = null;
-		let limit = 0;
+		let limit = null;
+		let duration = null;
 		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
 			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
@@ -96,7 +98,11 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 							iFound++;
 							size = Number(lineText.split(':')[1]);
 						}
-						if (iFound === 7) {break;}
+						if (lineText.startsWith('#DURATION:')) {
+							iFound++;
+							duration = Number(lineText.split(':')[1]);
+						}
+						if (iFound === 8) {break;}
 						j++;
 					}
 				}
@@ -130,6 +136,8 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		} else if (playlistPathArray[i].endsWith('.xspf')) {
 			let text = utils.ReadTextFile(playlistPathArray[i]);
 			if (typeof text !== 'undefined') {
+				const codePage = checkCodePage(text, '.' + playlistPathArray[i].split('.').pop());
+				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage);}
 				const xmldom = XSPF.XMLfromString(text);
 				const jspf = XSPF.toJSPF(xmldom, false);
 				if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
@@ -144,6 +152,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 							if (metaData.hasOwnProperty('tags')) {tags = metaData.tags ? metaData.tags.split(';') : [];}
 							if (metaData.hasOwnProperty('trackTags')) {trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : [];}
 							if (metaData.hasOwnProperty('playlistSize')) {size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null;}
+							if (metaData.hasOwnProperty('duration')) {duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null;}
 						}
 						if (!bLockedFound) {bLocked = true;} // Locked by default if meta not present
 					}
@@ -154,6 +163,8 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		} else if (playlistPathArray[i].endsWith('.xsp')) {
 			let text = utils.ReadTextFile(playlistPathArray[i]);
 			if (typeof text !== 'undefined') {
+				const codePage = checkCodePage(text, '.' + playlistPathArray[i].split('.').pop());
+				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage);}
 				const xmldom = XSP.XMLfromString(text);
 				const jsp = XSP.toJSP(xmldom, false);
 				if (jsp.hasOwnProperty('playlist') && jsp.playlist) {
@@ -166,7 +177,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 			}
 		}
 		let fileSize = isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
-		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0));
+		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0), Number.isFinite(duration) ? duration : void(0));
 		i++;
 	}
 	return playlistArray;

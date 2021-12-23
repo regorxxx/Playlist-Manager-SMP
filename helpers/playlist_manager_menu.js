@@ -1,5 +1,5 @@
 'use strict';
-//14/11/21
+//22/12/21
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -494,7 +494,7 @@ function createMenuRight() {
 										const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 										const bDead = filePaths.some((path) => {
 											// Skip streams & look for absolute and relative paths (with and without .\)
-											let bCheck = !path.startsWith('http://') && !path.startsWith('https://');
+											let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
 											if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 											else {
 												let pathAbs = path;
@@ -545,7 +545,7 @@ function createMenuRight() {
 									const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
 									const bDead = filePaths.some((path) => {
 										// Skip streams & look for absolute and relative paths (with and without .\)
-										let bCheck = !path.startsWith('http://') && !path.startsWith('https://');
+										let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
 										if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 										else {
 											let pathAbs = path;
@@ -628,7 +628,6 @@ function createMenuRight() {
 									if (typeof text !== 'undefined' && text.length) {
 										const codePage = checkCodePage(text, playlist.extension);
 										if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
-										
 										if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
 											text = text.split(/\r\n|\n\r|\n|\r/);
 											const lines = text.length;
@@ -683,6 +682,71 @@ function createMenuRight() {
 				});
 			}
 			async function findSizeMismatchAsync() {return await findSizeMismatch();}
+		}
+		{	// Duration mismatch
+			menu.newEntry({menuName: subMenuName, entryText: 'Playlist duration mismatch...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for reported playlist duration not matching duration of tracks.', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				findDurationMismatchAsync().then((found) => {fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);});
+			}});
+			function findDurationMismatch() {
+				const found = [];
+				return new Promise(resolve => {
+					const total = list.itemsAll - 1;
+					const promises = [];
+					let prevProgress = -1;
+					list.dataAll.forEach((playlist, i) => {
+						promises.push(new Promise(resolve => {
+							setTimeout(() => {
+								if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+									const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
+									if (handleList) {
+										const calcDuration = handleList.CalcTotalDuration();
+										let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+										let duration;
+										if (typeof text !== 'undefined' && text.length) {
+											const codePage = checkCodePage(text, playlist.extension);
+											if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+											if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+												text = text.split(/\r\n|\n\r|\n|\r/);
+												const lines = text.length;
+												let j = 0;
+												while (j < lines) { // Changes duration Line
+													if (text[j].startsWith('#DURATION:')) {
+														duration = Number(text[j].split(':')[1]);
+														break;
+													}
+													j++;
+												}
+											} else if (playlist.extension === '.xspf') {
+												const xmldom = XSPF.XMLfromString(text);
+												const jspf = XSPF.toJSPF(xmldom, false);
+												if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
+													const jPls = jspf.playlist;
+													if (jPls.hasOwnProperty('meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+														for (let metaData of jPls.meta) {
+															if (metaData.hasOwnProperty('duration')) {duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null;}
+														}
+													}
+												}
+											}
+										}
+										if (typeof duration === 'undefined') {found.push(playlist.path + ' (no duration tag found)');}
+										else if (calcDuration !== duration) {found.push(playlist.path + ' (tag: ' + duration + ', calculated: ' + calcDuration + ')');}
+									}
+								}
+								const progress = Math.round(i / total * 10) * 10;
+								if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking duration ' + Math.round(progress) + '%.');}
+								resolve('done');
+							}, iDelayPlaylists / 5 * i);
+						}));
+					});
+					Promise.all(promises).then((_) => {
+						resolve(found);
+					});
+				});
+			}
+			async function findDurationMismatchAsync() {return await findDurationMismatch();}
 		}
 		{	// Blank Lines
 			menu.newEntry({menuName: subMenuName, entryText: 'Blank lines...', func: () => {
@@ -806,7 +870,7 @@ function createMenuRightTop() {
 		{
 			{	// Relative folder
 				const subMenuName = menu.newMenu('Save paths relative to folder...', menuName);
-				const options = ['Yes, relative to playlists folder', 'No, use absolute paths (default)'];
+				const options = ['Yes: Relative to playlists folder', 'No: Use absolute paths (default)'];
 				const optionsLength = options.length;
 				menu.newEntry({menuName: subMenuName, entryText: 'How track\'s paths are written:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -824,7 +888,7 @@ function createMenuRightTop() {
 				}
 			}
 			{	// Playlist extension
-				const subMenuName = menu.newMenu('Default playlist extension (saving)...', menuName);
+				const subMenuName = menu.newMenu('Default playlist extension...', menuName);
 				const options = Array.from(writablePlaylistFormats);
 				const optionsLength = options.length;
 				menu.newEntry({menuName: subMenuName, entryText: 'Writable formats:', flags: MF_GRAYED});
@@ -840,10 +904,20 @@ function createMenuRightTop() {
 							list.playlistsExtension = item;
 							list.properties['extension'][1] = list.playlistsExtension;
 							overwriteProperties(list.properties);
-						}, flags: item === '.xspf' ? MF_GRAYED : MF_STRING}); // TODO: enable
+						}});
 					});
+					menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
 				}
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.playlistsExtension);});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Force on (auto)saving', func: () => {
+					const answer = WshShell.Popup('Apply default format in any case, not only to new playlists created.\n\nFormat of existing playlists will be changed to the default format whenever they are saved: Manually or on Auto-saving.\n\nOther saving related configuration may apply (like Smart Playlists being skipped or warning popups whenever format will be changed).', 0, window.Name, popup.question + popup.yes_no);
+					list.bSavingDefExtension = (answer === popup.yes);
+					if (list.properties['bSavingDefExtension'][1] !== list.bSavingDefExtension) {
+						list.properties['bSavingDefExtension'][1] = list.bSavingDefExtension;
+						overwriteProperties(list.properties);
+					}
+				}});
+				menu.newCheckMenu(subMenuName, 'Force on (auto)saving', null,  () => {return list.bSavingDefExtension;});
 			}
 			{	// BOM
 				const subMenuName = menu.newMenu('Save files with BOM...', menuName);
@@ -863,8 +937,8 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bBOM ? 0 : 1;});
 			}
 			{	// Saving warnings
-				const subMenuName = menu.newMenu('Warnings about format...', menuName);
-				const options = ['Yes: If format will be changed.', 'No: never.'];
+				const subMenuName = menu.newMenu('Warnings about format change...', menuName);
+				const options = ['Yes: If format will be changed', 'No: Never'];
 				const optionsLength = options.length;
 				menu.newEntry({menuName: subMenuName, entryText: 'Warns when updating a file:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -881,7 +955,7 @@ function createMenuRightTop() {
 			}
 			{	// Smart Playlist saving
 				const subMenuName = menu.newMenu('Skip Smart Playlists on Auto-saving...', menuName);
-				const options = ['Yes: format will never be changed.', 'No: format will change on Auto-saving.'];
+				const options = ['Yes: Original format will be maintained', 'No: Format will change on Auto-saving'];
 				const optionsLength = options.length;
 				menu.newEntry({menuName: subMenuName, entryText: 'Treat Smart Playlists as AutoPlaylists:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -1125,7 +1199,7 @@ function createMenuRightTop() {
 			}
 			{
 				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
-				const options = ['Yes: when loading playlists', 'No: ignore them'];
+				const options = ['Yes: At playlist loading', 'No: Ignore them'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
 					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {

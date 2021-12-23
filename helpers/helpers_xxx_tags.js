@@ -1,8 +1,7 @@
 ﻿'use strict';
-//22/10/21
+//22/12/21
 
 include('helpers_xxx.js');
-include('helpers_xxx_foobar.js');
 
 /* 
 	Global Variables 
@@ -196,10 +195,10 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 		return query;
 }
 
-function checkQuery(query, bAllowEmpty, bAllowSort = false) {
+function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
 	if (!bAllowEmpty && !query.length) {return false;}
-	let queryNoSort = query;
+	let queryNoSort = query.toUpperCase();
 	if (bAllowSort) {
 		const fromIndex = query.indexOf('SORT');
 		if (query.indexOf('SORT') !== -1) {
@@ -217,6 +216,7 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false) {
 	}
 	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}
 	catch (e) {bPass = false;}
+	if (!bAllowPlaylist && queryNoSort.indexOf('#PLAYLIST# IS') !== -1) {bPass = false;}
 	return bPass;
 }
 
@@ -309,7 +309,7 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	return outputArray;
 }
 
-function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ') {
+function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
 	
@@ -328,7 +328,7 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
 		if (splitBy && splitBy.length) {
 			for (let j = 0; j < outputArrayi_length; j++) {
-				outputArray[i][j] = outputArray[i][j].split(splitBy);
+				outputArray[i][j] = outputArray[i][j].split(splitBy, iLimit);
 			}
 		} else {
 			for (let j = 0; j < outputArrayi_length; j++) {
@@ -340,7 +340,6 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 	if (bMerged) {outputArray = outputArray.flat();}
 	return outputArray;
 }
-
 
 function compareTagsValues(handle, tagsArray, bMerged = false) {
 	

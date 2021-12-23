@@ -29,13 +29,18 @@ any problem with it.
 (**) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile' folder does not exist.
 In such case you have to create it and move all the config folders/files to it, where they should reside (instead of the root of the 
 foobar2000 installation path). Some native folders and files which must be moved include: 
-	index-data, js_data, omponent-updates, configuration, crash reports, user-components, foo_spider_monkey_panel, library, playlists,
+	index-data, js_data, component-updates, configuration, crash reports, user-components, foo_spider_monkey_panel, library, playlists,
 	theme.fth, LargeFieldsConfig.txt, version.txt
 Some extra folders from other components which must be moved include (non extensive list): 
 	autobackup, dvda_metabase, foo_httpcontrol_data, foo_youtube, images, lastfm, python, sacd_metabase, vst-presets, yttm,
 	minibar.db, playlist-tree-0.pts, playlist-tree-1.pts,
 If you don't move all the config folders/files then on startup default values will be used for things not found, probably "losing"
 the theme or other config. You may "fix" it later moving the missing files which still reside in the root. May take some tries to do them all.
+
+SMP 1.5.2 BUG: 
+-------------
+After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files', check '_switchPaths.zip'.
+Follow its instructions to fix it. Then report it at https://hydrogenaud.io/index.php?topic=116669.0 and hopefully it will be fixed.
 
 PORTABLE TIP: 
 -------------
