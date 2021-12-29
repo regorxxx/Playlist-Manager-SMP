@@ -564,12 +564,12 @@ function _list(x, y, w, h) {
 				return true;
 				break;
 			case VK_CONTROL: // Updates tooltip even when mouse hasn't moved
-				if (utils.IsKeyPressed(VK_SHIFT)) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
+				if (getKeyboardMask() === kMask.ctrlShift) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
 				else {this.move(this.mx, this.my, MK_CONTROL);}
 				return true;
 				break;
 			case VK_SHIFT: // Updates tooltip even when mouse hasn't moved
-				if (utils.IsKeyPressed(VK_CONTROL)) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
+				if (getKeyboardMask() === kMask.ctrlShift) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
 				else {this.move(this.mx, this.my, MK_SHIFT);}
 				return true;
 				break;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//27/12/21
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -65,7 +65,7 @@ function calcNextButtonCoordinates(buttonCoordinates,  buttonOrientation = 'x' ,
 }
 
 function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, g_font_icon = _gdiFont('FontAwesome', 12)) {
-	this.state = state ? state : ButtonStates.normal;
+	this.state = state ? state : buttonStates.normal;
 	this.x = x;
 	this.y = y;
 	this.w = w;
@@ -102,25 +102,25 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 		const w_calc = _isFunction(this.w) ? this.w() : this.w;
 		const h_calc = _isFunction(this.h) ? this.h() : this.h;
 		if (w_calc <= 0 || h_calc <= 0) {return;}
-		if (this.state === ButtonStates.hide) {
+		if (this.state === buttonStates.hide) {
 			return;
 		}
 
 		switch (this.state) {
-			case ButtonStates.normal:
+			case buttonStates.normal:
 				this.g_theme.SetPartAndStateID(1, 1);
 				break;
 
-			case ButtonStates.hover:
+			case buttonStates.hover:
 				tooltipButton.SetValue( (bShowID ? (_isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (_isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
 				this.g_theme.SetPartAndStateID(1, 2);
 				break;
 
-			case ButtonStates.down:
+			case buttonStates.down:
 				this.g_theme.SetPartAndStateID(1, 3);
 				break;
 
-			case ButtonStates.hide:
+			case buttonStates.hide:
 				return;
 		}
 		
@@ -162,7 +162,7 @@ function drawAllButtons(gr) {
 function chooseButton(x, y) {
 	for (let key in buttons) {
 		if (Object.prototype.hasOwnProperty.call(buttons, key)) {
-			if (buttons[key].containXY(x, y) && buttons[key].state !== ButtonStates.hide) {
+			if (buttons[key].containXY(x, y) && buttons[key].state !== buttonStates.hide) {
 				return buttons[key];
 			}
 		}
@@ -186,8 +186,8 @@ function on_mouse_move_buttn(x, y) {
 		if (g_down) {
 			return;
 		}
-	} else if (g_down && cur_btn && cur_btn.state !== ButtonStates.down) {
-		cur_btn.changeState(ButtonStates.down);
+	} else if (g_down && cur_btn && cur_btn.state !== buttonStates.down) {
+		cur_btn.changeState(buttonStates.down);
 		window.Repaint();
 		return;
 	} 
@@ -201,8 +201,8 @@ function on_mouse_move_buttn(x, y) {
 			tooltipButton.SetDelayTime(3, 0); //TTDT_INITIAL
 		} else {tooltipButton.SetDelayTime(3, tooltipButton.oldDelay);} 
 	}
-	old && old.changeState(ButtonStates.normal);
-	cur_btn && cur_btn.changeState(ButtonStates.hover);
+	old && old.changeState(buttonStates.normal);
+	cur_btn && cur_btn.changeState(buttonStates.hover);
 	window.Repaint();
 }
 
@@ -210,7 +210,7 @@ function on_mouse_leave_buttn() {
 	g_down = false;
 
 	if (cur_btn) {
-		cur_btn.changeState(ButtonStates.normal);
+		cur_btn.changeState(buttonStates.normal);
 		window.Repaint();
 	}
 }
@@ -219,7 +219,7 @@ function on_mouse_lbtn_down_buttn(x, y) {
 	g_down = true;
 
 	if (cur_btn) {
-		cur_btn.changeState(ButtonStates.down);
+		cur_btn.changeState(buttonStates.down);
 		window.Repaint();
 	}
 }
@@ -230,7 +230,7 @@ function on_mouse_lbtn_up_buttn(x, y) {
 	if (cur_btn) {
 		cur_btn.onClick();
 		if (cur_btn) { // Solves error if you create a new Whsell Popup (cur_btn becomes null) after pressing the button and firing cur_btn.onClick()
-			cur_btn.changeState(ButtonStates.hover);
+			cur_btn.changeState(buttonStates.hover);
 			window.Repaint();
 		}
 	}

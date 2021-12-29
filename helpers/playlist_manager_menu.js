@@ -835,14 +835,16 @@ function createMenuRightTop() {
 	{	// Category Filter
 		const subMenuName = menu.newMenu('Categories shown...');
 		const options = list.categories();
+		const defOpt = options[0];
 		const optionsLength = options.length;
 		menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
 			list.filter({categoryState: options});
 		}});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
 		options.forEach((item, i) => {
-			menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-				const categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => {return categ !== item;}) : (item === '(None)' ? ['(None)', ...list.categoryState] : list.categoryState.concat([item]).sort());
+			menu.newEntry({menuName: subMenuName, entryText: item + (i === iInherit ? '\t-inherit-' : ''), func: () => {
+				const categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => {return categ !== item;}) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
 				list.filter({categoryState});
 			}});
 			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.categoryState.indexOf(item) !== -1;});
@@ -851,14 +853,16 @@ function createMenuRightTop() {
 	{	// Tag Filter
 		const subMenuName = menu.newMenu('Tags shown...');
 		const options = list.tags();
+		const defOpt = options[0];
 		const optionsLength = options.length;
 		menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
 			list.filter({tagState: options});
 		}});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		const bInherit = list.tagState.indexOf(defOpt) === -1;
 		options.forEach((item, i) => {
-			menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-				const tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => {return tag !== item;}) : (item === '(None)' ? ['(None)', ...list.tagState] : list.tagState.concat([item]).sort());
+			menu.newEntry({menuName: subMenuName, entryText: item + (bInherit && i !== 0 ? '\t-inherit-' : ''), func: () => {
+				const tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => {return tag !== item;}) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
 				list.filter({tagState});
 			}});
 			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.tagState.indexOf(item) !== -1;});

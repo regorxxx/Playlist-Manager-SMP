@@ -168,11 +168,17 @@ function filterTooltip() {
 			break;
 		}
 		case 'Tag': {
-			ttText = 'Cycle through the different tags:\n' + list.tags().map((item) => {return item + (list.tagState.indexOf(item) !== -1? '  <--' : '');}).join('\n');
+			const options = list.categories();
+			const defOpt = options[0];
+			const bInherit = list.tagState.indexOf(defOpt) === -1;
+			ttText = 'Cycle through the different tags:\n' + list.tags().map((item, i) => {return item + (list.tagState.indexOf(item) !== -1? '  <--' + (bInherit && i !== 0 ? '\t-inherit-' : '') : '');}).join('\n');
 			break;
 		}
 		case 'Category': {
-			ttText = 'Cycle through the different categories:\n' + list.categories().map((item) => {return item + (list.categoryState.indexOf(item) !== -1 ? '  <--' : '');}).join('\n');
+			const options = list.categories();
+			const defOpt = options[0];
+			const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
+			ttText = 'Cycle through the different categories:\n' + options.map((item, i) => {return item + (list.categoryState.indexOf(item) !== -1 ? '  <--' + (i === iInherit ? '\t-inherit-' : '') : '');}).join('\n');
 			break;
 		}
 	}

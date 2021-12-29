@@ -53,7 +53,7 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, iMaxMenuLen = 57} = {}) {
+function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity} = {}) {
 	var menuArrTemp = [];
 	var menuArr = [];
 	var menuMap = new Map();
@@ -73,37 +73,52 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 	this.properties = properties; // To simplify usage along other scripts
 	this.lastCall = '';
 	
+	const eTypeToStr = ['number', 'boolean', 'object']; // Variable types converted to string for menu and entry names
+	
 	// To create new elements
 	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
+		const mType = typeof menuName, smType = typeof subMenuFrom;
+		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
+		if (eTypeToStr.indexOf(smType) !== -1) {subMenuFrom = subMenuFrom.toString();}
 		if (menuName === subMenuFrom) {subMenuFrom = '';}
 		// Replace & with && to display it right on window, but check for && first to not duplicate!
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
-		if (typeof subMenuFrom === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (mType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (smType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
 	}
 	this.newMenu(); // Default menu
 	
-	this.newEntry = ({entryText = null, func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
-		if (typeof entryText === 'string' && entryText.indexOf('&') !== - 1) {entryText = entryText.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
+		const eType = typeof entryText, mType = typeof menuName;
+		if (eTypeToStr.indexOf(eType) !== -1) {entryText = entryText.toString();}
+		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
+		if (eType === 'string' && entryText.indexOf('&') !== - 1) {entryText = entryText.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		entryArr.push({entryText, func, menuName, flags, bIsMenu: false});
 		return entryArr[entryArr.length -1];
 	}
 	
-	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA, entryTextB, idxFun) => {
-		if (typeof entryTextA === 'string' && entryTextA.indexOf('&') !== - 1) {entryTextA = entryTextA.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (typeof menuName === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFun) => {
+		const mType = typeof menuName, eAType = typeof entryTextA, eBType = typeof entryTextB;
+		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
+		if (eTypeToStr.indexOf(eAType) !== -1) {entryTextA = entryTextA.toString();}
+		if (entryTextB !== null && eBType !== 'undefined' && eTypeToStr.indexOf(eBType) !== -1) {entryTextB = entryTextB.toString();}
+		if (eAType === 'string' && entryTextA.indexOf('&') !== - 1) {entryTextA = entryTextA.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (eBType === 'string' && entryTextB.indexOf('&') !== - 1) {entryTextB = entryTextB.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
 	}
 	
 	this.newCondEntry = ({entryText = '', condFunc}) => {
+		if (eTypeToStr.indexOf(typeof entryText) !== -1) {entryText = entryText.toString();}
 		entryArr.push({entryText, condFunc});
 		return entryArr[entryArr.length -1];
 	}
-
+	
+	// To retrieve elements
 	this.getNumEntries = () => {return entryArr.length;};
 	this.getEntries = () => {return [...entryArr];}; // To get all menu entries, but those created by conditional menus are not set yet!
 	this.getEntriesAll = (object) => {this.initMenu(object); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
@@ -111,7 +126,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 	this.getMainMenuName = () => {return menuArr[0].menuName;};
 	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true)}) !== -1);};
 	
-	// Internal
+	// <-- Internal
 	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);};
 	this.getIdx = (menuNameEntryText) => {return (!menuNameEntryText) ? entryMap : entryMap.get(menuNameEntryText);};
 	this.getEntry = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);};
@@ -131,9 +146,34 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 			if (_isFunction(menuName)) {menuName = menuName();}
 			if (_isFunction(flags)) {flags = flags();}
 			if (_isFunction(entryText)) {entryText = entryText();}
-			const entryTextSanitized = entryText.length > iMaxMenuLen ? entryText.substring(0, iMaxMenuLen) + '...' + (entryText.slice(-1) === ':' ? ':' : '') : entryText;
+			// Safe-checks
+			const eType = typeof entryText, mType = typeof menuName;
+			if (mType === 'undefined') {menuError({menuName, entryText, flags}); throw 'menuName is not defined';}
+			else if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
+			else if (mType === 'function') {menuName = menuName.name;}
+			else if (mType !== 'string') {menuError({menuName, entryText, flags}); throw 'menuName type is not recognized';}
+			if (eType === 'undefined') {menuError({menuName, entryText, flags}); throw 'entryText is not defined!';}
+			else if (eTypeToStr.indexOf(eType) !== -1) {entryText = entryText.toString();}
+			else if (eType === 'function') {menuName = menuName.name;}
+			else if (eType !== 'string') {menuError({menuName, entryText, flags}); throw 'entryText type is not recognized';}
+			// Cut len
+			let [entryTextName, entryTextTab] = entryText.split('\t');
+			let entryTextSanitized = entryTextName;
+			const chars = [')', ']', '}', ':'];
+			if (entryTextName.length > iMaxEntryLen) {
+				const bHasChar = chars.map((c) => {return entryTextName.slice(-1) === c});
+				entryTextSanitized = entryTextName.substring(0, iMaxEntryLen) + '...' + bHasChar.map((b, i) => {return b ? chars[i] : '';}).filter(Boolean).join('');
+			}
+			if (entryTextTab) {
+				if (entryTextTab.length > iMaxTabLen) {
+					const bHasChar = chars.map((c) => {return entryTextTab.slice(-1) === c});
+					entryTextSanitized += '\t' + entryTextTab.substring(0, iMaxTabLen) + '...' + bHasChar.map((b, i) => {return b ? chars[i] : '';}).filter(Boolean).join('');
+				} else {entryTextSanitized += '\t' + entryTextTab;}
+			}
+			// Create FB menu entry
 			menuMap.get(menuName).AppendMenuItem(flags, idx, entryTextSanitized);
-			const entryName = menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText;
+			// Add to index
+			const entryName = (menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText);
 			entryMap.set(entryName, idx);
 			if (entryName.indexOf('\t') !== -1) {
 				const entryNameNoTabs = entryName.split('\t')[0];
@@ -230,7 +270,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 		}
 		return manualMenuArr;
 	}
+	// -->
 	
+	// Used to call the menus on callbacks, etc.
 	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0, bindArgs = null /*{pos: -1, args: null}*/) => {
 		// Recreate menu(s)
 		const manualMenuArr = this.initMenu(object);
@@ -307,4 +349,9 @@ function isArray(checkKeys) {
 		return false; //Array was null or not an array
 	}
 	return true;
+}
+
+function menuError({} = {}) {
+	if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu')} 
+	else {Object.entries(...arguments).map((_) => {return _.join(': ');}).forEach((arg) => {console.log(arg);});}
 }
