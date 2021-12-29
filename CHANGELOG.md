@@ -15,6 +15,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Tooltip: added metadata inheritance notice on filter button tooltips (category and tag filtering).
+- Header menu: added metadata inheritance notice on header filtering submenus (category and tag filtering).
 ### Removed
 ### Fixed
 
