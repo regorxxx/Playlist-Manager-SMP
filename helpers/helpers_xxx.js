@@ -20,7 +20,7 @@ folders.data = fb.ProfilePath + folders.dataName;
 // Async processing
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.
 const iDelayLibrary = 100; // ms per step for whole handle processing
-const iDelayPlaylists = 85; // ms per step for playlist processing: playlist manager
+const iDelayPlaylists = 120; // ms per step for playlist processing: playlist manager
 const iDelaySBDCache = 15; // ms per step for style/genre node processing: search by distance
 
 // Console log file

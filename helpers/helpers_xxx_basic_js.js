@@ -1,28 +1,61 @@
 'use strict';
-//13/12/21
+//05/01/22
 
 // https://github.com/angus-c/just
 /*
   Deep clones all properties except functions
 */
 function clone(obj) {
-	if (typeof obj === 'function') {
-		return obj;
-	}
-	let result = Array.isArray(obj) ? [] : {};
-	for (let key in obj) {
-		// include prototype properties
-		let value = obj[key];
-		let type = {}.toString.call(value).slice(8, -1);
-		if (type === 'Array' || type === 'Object') {
-			result[key] = clone(value);
-		} else if (type === 'Date') {
-			result[key] = new Date(value.getTime());
-		} else if (type === 'RegExp') {
-			result[key] = RegExp(value.source, getRegExpFlags(value));
-		} else {
-			result[key] = value;
-	}
+	if (typeof obj === 'function') {return obj;}
+	let result;
+	if (obj instanceof Set) {
+		result = new Set();
+		for (let value of obj) {
+			// include prototype properties
+			let type = {}.toString.call(value).slice(8, -1);
+			if (type === 'Array' || type === 'Object') {
+				result.add(clone(value));
+			} else if (type === 'Date') {
+				result.add(new Date(value.getTime()));
+			} else if (type === 'RegExp') {
+				result.add(RegExp(value.source, getRegExpFlags(value)));
+			} else {
+				result.add(value);
+			}
+		}
+		return result;
+	} else if (obj instanceof Map) {
+		result = new Map();
+		for (let [key, value] of obj) {
+			// include prototype properties
+			let type = {}.toString.call(value).slice(8, -1);
+			if (type === 'Array' || type === 'Object') {
+				result.set(key, clone(value));
+			} else if (type === 'Date') {
+				result.set(key, new Date(value.getTime()));
+			} else if (type === 'RegExp') {
+				result.set(key, RegExp(value.source, getRegExpFlags(value)));
+			} else {
+				result.set(key, value);
+			}
+		}
+		return result;
+	} else {
+	   result = Array.isArray(obj) ? [] : {};
+		for (let key in obj) {
+			// include prototype properties
+			let value = obj[key];
+			let type = {}.toString.call(value).slice(8, -1);
+			if (type === 'Array' || type === 'Object') {
+				result[key] = clone(value);
+			} else if (type === 'Date') {
+				result[key] = new Date(value.getTime());
+			} else if (type === 'RegExp') {
+				result[key] = RegExp(value.source, getRegExpFlags(value));
+			} else {
+				result[key] = value;
+			}
+		}
 	}
 	return result;
 }
