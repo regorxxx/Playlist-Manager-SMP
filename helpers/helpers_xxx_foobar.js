@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/21
+//03/02/22
 
 include('helpers_xxx_file.js');
 
@@ -32,8 +32,7 @@ function checkCompatible(requiredVersionStr = '1.4.0') {
 function memoryUsed(bConsole = false) { // In Mbs
 	let memUsage = -1;
 	console.log(window.JsMemoryStats);
-	if (isCompatible('1.4.0')) {memUsage = round(window.JsMemoryStats.MemoryUsage / 1000000, 2);} 
-	else {memUsage = round(window.PanelMemoryUsage / 1000000, 2);} //TODO: Deprecated
+	memUsage = round(window.JsMemoryStats.MemoryUsage / 1000000, 2);
 	if (bConsole) {console.log(window.Name + ' mem usage: ' + memUsage + ' Mb');}
 	return memUsage;
 }
@@ -50,3 +49,14 @@ function isPortable(propertyText, bWarn = true) {
 function lastStartup() {
 	return lastModified(fb.ProfilePath + 'running');
 }
+
+/* function on_key_upCrash(vkey) {
+	if (vkey === VK_BACK && (utils.IsKeyPressed(0x5B) || utils.IsKeyPressed(0x5C))) {crashThisInstance;}
+}
+if (on_key_up) {
+	const oldFunc = on_key_up;
+	on_key_up = function(vkey) {
+		oldFunc(vkey);
+		on_key_upCrash(vkey);
+	};
+} else {var on_key_up = on_key_upCrash;} */

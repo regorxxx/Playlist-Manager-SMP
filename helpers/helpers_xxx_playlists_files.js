@@ -43,7 +43,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
-		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split'); //TODO: Deprecated
+		const arr = utils.SplitFilePath(playlistPath);
 		playlistPath = playlistPath.replaceLast(arr[2], extension);
 		if (!playlistName.length) {playlistName = (arr[1].endsWith(arr[2])) ? arr[1].replace(arr[2],'') : arr[1];} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let playlistText = [];
@@ -185,7 +185,7 @@ function savePlaylist(playlistIndex, playlistPath, extension = '.m3u8', playlist
 }
 
 function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = false) {
-	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
+	const extension = utils.SplitFilePath(playlistPath)[2];
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('addHandleToPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
 		return false;
@@ -347,7 +347,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
 		return paths;
 	}
-	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
+	const extension = utils.SplitFilePath(playlistPath)[2];
 	if (!readablePlaylistFormats.has(extension)){
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(readablePlaylistFormats).join(', '));
 		return paths;
@@ -477,7 +477,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
 		return bDone;
 	}
-	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
+	const extension = utils.SplitFilePath(playlistPath)[2];
 	if (!readablePlaylistFormats.has(extension)){
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(readablePlaylistFormats).join(', '));
 		return bDone;
@@ -503,7 +503,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['title','artist','date']*/) {
 	let test = new FbProfiler('getHandlesFromPlaylist');
-	const extension = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[2] : utils.FileTest(playlistPath, 'split')[2]; //TODO: Deprecated
+	const extension = utils.SplitFilePath(playlistPath)[2];
 	let handlePlaylist = null;
 	if (extension === '.xsp') {
 		const bCache = xspCache.has(playlistPath);

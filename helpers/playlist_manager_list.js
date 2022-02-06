@@ -1,5 +1,5 @@
 'use strict';
-//23/12/21
+//04/02/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -623,7 +623,7 @@ function _list(x, y, w, h) {
 					console.log('Playlist Manager: Error adding items to tracked folder. Path not found.\n' + filePath[i]);
 					return false;
 				} else {
-					const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
+					const arr = utils.SplitFilePath(path);
 					const fileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 					bDone = _renameFile(filePath[i], playlistsPathDirName + fileName);
 				}
@@ -747,7 +747,7 @@ function _list(x, y, w, h) {
 		this.editData(pls, {
 			size: pls.size + handleList.Count,
 			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
-			fileSize: bUI ? 0 : (isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s')), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
+			fileSize: bUI ? 0 : utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
 		});
 		if (this.bAutoTrackTag) {this.updateTrackTags(handleUpdate, tagsUpdate);} // Apply tags from before
 		console.log('Playlist Manager: drag n drop done.');
@@ -963,7 +963,7 @@ function _list(x, y, w, h) {
 							id: UUID, 
 							extension,  // May have forced saving on a fpl playlist
 							path: this.playlistsPath + sanitize(plsData.name) + extension,
-							fileSize: isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), //TODO: Deprecated // done points to new path, note playlist extension is not always = 'playlistPath
+							fileSize: utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
 							duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
 						});
 						plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);
@@ -1845,7 +1845,7 @@ function _list(x, y, w, h) {
 				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), isCompatible('1.4.0') ? utils.GetFileSize(done) : utils.FileTest(done,'s'), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags); //TODO: Deprecated
+					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags); //TODO: Deprecated
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
@@ -2017,7 +2017,7 @@ function _list(x, y, w, h) {
 							}
 						}, this.autoUpdateDelayTimer);
 						debouncedRecycle();
-					} else {_recycleFile(newPath);}
+					} else {_recycleFile(newPath); console.log('Delete done');}
 					this.editData(this.data[idx], {
 						path: newPath,
 					});

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/12/21
+//04/02/22
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_basic_js.js');
@@ -29,7 +29,8 @@ conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null disable
 
 // Linux features
 const soFeat = getSoFeatures();
-// CheckSoFeatures(soFeat);
+const soFeatFile = folders.data + 'soFeatures.json';
+initCheckFeatures(soFeat);
 
 function getSoFeatures() {
 	const soFeat = {gecko: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true}
@@ -45,7 +46,9 @@ function getSoFeatures() {
 	} else {soFeat.clipboard = false;}
 	// File system
 	if (typeof app !== 'undefined') {
-		try {app.NameSpace(10).MoveHere(null);} catch (e) {soFeat.recycle = false;}
+		try {app.NameSpace(10).MoveHere(null);} catch (e) {
+			try {app.NameSpace(0).ParseName(null).InvokeVerb('delete');} catch (e) {soFeat.recycle = false;}
+		}
 	} else {soFeat.recycle = false;}
 	// Scripting
 	if (utils.IsFile && utils.IsFile(fb.ProfilePath + 'yttm\\foo_lastfm_img.vbs')) {
@@ -68,14 +71,14 @@ function getSoFeatures() {
 	return soFeat;
 }
 
-function CheckSoFeatures(soFeat) {
+function checkSoFeatures(soFeat) {
 	let bPass = true;
 	// Internals
 	if (!soFeat.gecko) {
 		fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');
 		bPass = false;
 	} else  if (!soFeat.clipboard) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nclipboardData failed.\n\nFix: Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING:\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
+		fb.ShowPopupMessage('Found an issue on current installation:\nclipboardData failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
 		bPass = false;
 	}
 	// File system
@@ -101,4 +104,26 @@ function CheckSoFeatures(soFeat) {
 		bPass = false;
 	}
 	return bPass;
+}
+
+function initCheckFeatures(soFeat) {
+	let data = null;
+	const bPrevFile = utils.IsFile(soFeatFile);
+	let bCheck = false;
+	if (bPrevFile) {
+		data = utils.ReadTextFile(soFeatFile, 65001);
+		data = data ? JSON.parse(data) : null;
+	}
+	if (!bPrevFile || !data) {
+		data = soFeat;
+		bCheck = true;
+	} else {
+		for (let key in data) {
+			if (!soFeat.hasOwnProperty(key) || data[key] !== soFeat[key]) {bCheck = true; break;}
+		}
+	}
+	if (bCheck) {
+		checkSoFeatures(soFeat); 
+		utils.WriteTextFile(soFeatFile, JSON.stringify(soFeat), false);
+	}
 }

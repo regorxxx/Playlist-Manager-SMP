@@ -1,5 +1,5 @@
 'use strict';
-//28/11/21
+//04/02/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -11,11 +11,8 @@ include('helpers_xxx_playlists_files.js');
 include('..\\main\\remove_duplicates.js');
 
 function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1) {
-	if (typeof extension === 'undefined') {extension = isCompatible('1.4.0') ? utils.SplitFilePath(path)[2] : utils.FileTest(path, 'split')[2];}  //TODO: Deprecated
-	if (typeof name === 'undefined') {
-		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(path) : utils.FileTest(path, 'split'); //TODO: Deprecated
-		name = arr[1].endsWith(arr[2]) ? arr[1].replaceLast(arr[2],'') : arr[1]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
-	}
+	if (typeof extension === 'undefined') {extension = utils.SplitFilePath(path)[2];}
+	if (typeof name === 'undefined') {name = utils.SplitFilePath(path)[1];} // TODO bug
 	this.id = id;
 	this.name = name;
 	this.nameId = (id) ? name + id : name;
@@ -176,7 +173,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				}
 			}
 		}
-		let fileSize = isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
+		let fileSize = utils.GetFileSize(playlistPathArray[i]);
 		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0), Number.isFinite(duration) ? duration : void(0));
 		i++;
 	}
@@ -399,7 +396,7 @@ function convertToRelPaths(list, z) {
 			return bDone;
 		}
 		list.editData(pls, {
-			fileSize: isCompatible('1.4.0') ? utils.GetFileSize(playlistPath) : utils.FileTest(playlistPath, 's'), //TODO: Deprecated
+			fileSize: utils.GetFileSize(playlistPath),
 		});
 		console.log('Playlist Manager: done.');
 		list.update(true, true); // We have already updated data before only for the variables changed
@@ -460,7 +457,7 @@ function clonePlaylistFile(list, z, ext) {
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
-	const root = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath)[0] : utils.FileTest(playlistPath, 'split')[0]; //TODO: Deprecated
+	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
 	paths.forEach((trackPath, i) => {if (!_isFile(trackPath)) {report.push(trackPath);}});
 	if (handleList) {
@@ -485,7 +482,7 @@ function clonePlaylistFile(list, z, ext) {
 function exportPlaylistFile(list, z, defPath = '') {
 	let bDone = false;
 	const playlistPath = list.data[z].path;
-	const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split'); //TODO: Deprecated
+	const arr = utils.SplitFilePath(playlistPath);
 	const playlistName = arr[1].endsWith(arr[2]) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 	let path = '';
 	try {path = sanitize(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
@@ -501,7 +498,7 @@ function exportPlaylistFile(list, z, defPath = '') {
 function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	let bDone = false;
 	const playlistPath = list.data[z].path;
-	const arr = isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split'); //TODO: Deprecated
+	const arr = utils.SplitFilePath(playlistPath);
 	const playlistName = arr[1].endsWith(arr[2]) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 	let newPath = '';
 	try {newPath = sanitize(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
@@ -537,9 +534,9 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	newPath = sanitize(newPath);
 	if (!newPath.length) {return;}
 	if (bDone) {
-		const root = isCompatible('1.4.0') ? utils.SplitFilePath(newPath)[0] : utils.FileTest(newPath, 'split')[0]; //TODO: Deprecated
+		const root = utils.SplitFilePath(newPath)[0];
 		const report = [];
-		const plsRoot = isCompatible('1.4.0') ? utils.SplitFilePath(list.data[z].path)[0] : utils.FileTest(list.data[z].path, 'split')[0]; //TODO: Deprecated
+		const plsRoot = utils.SplitFilePath(list.data[z].path)[0];
 		new Promise(resolve => {
 			const total = paths.length - 1;
 			const promises = [];
@@ -547,7 +544,7 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 				promises.push(new Promise(resolve => {
 					const wait = bAsync ? 50 * i + (i % 4 === 0 ? 1000 : 0) : 0 // Give some time on Async processing between successive calls to not overload HDDs
 					setTimeout(() => {
-						const fileName = isCompatible('1.4.0') ? utils.SplitFilePath(trackPath).slice(1).join('') : utils.FileTest(trackPath, 'split')[1]; //TODO: Deprecated
+						const fileName = utils.SplitFilePath(trackPath).slice(1).join('');
 						const outputName = root + fileName;
 						let bCopy = false;
 						if (trackPath.startsWith('.\\') || trackPath.startsWith('..\\')) { // Relative with indicator at start
@@ -579,7 +576,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	const pls = list.data[z];
 	const playlistPath = pls.path;
 	const bUI = pls.extension === '.ui';
-	const arr = bUI ? null : (isCompatible('1.4.0') ? utils.SplitFilePath(playlistPath) : utils.FileTest(playlistPath, 'split')); //TODO: Deprecated
+	const arr = bUI ? null : utils.SplitFilePath(playlistPath);
 	const playlistName = bUI ? pls.name : (arr[1].endsWith(arr[2]) ? arr[1].replace(arr[2],'') : arr[1]); // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 	const playlistExt = bUI ? '' : arr[2];
 	if (!playlistExt.length) {extension = list.playlistsExtension;} // Use default extension for UI playlists
@@ -594,7 +591,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	// const paths = getFilePathsFromPlaylist(playlistPath);
 	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
-	const root = isCompatible('1.4.0') ? utils.SplitFilePath(newPath)[0] : utils.FileTest(newPath, 'split')[0]; //TODO: Deprecated
+	const root = utils.SplitFilePath(newPath)[0];
 	_setClipboardData(root);
 	const report = [];
 	if (bUI) {
@@ -751,7 +748,7 @@ function rewriteXSPLimit(pls, newLimit) {
 	return bDone;
 }
 
-function backup(n = 50) {
+function backup(n = 50) { // Backup playlist and json file
 	let test = new FbProfiler('Playlist manager Backup');
 	if (n && n !== -1) {
 		const files = getFiles(list.playlistsPath + '_backup\\', new Set(['.zip'])).reverse();
@@ -759,6 +756,315 @@ function backup(n = 50) {
 			_recycleFile(files.pop());
 		}
 	}
-	_zip(list.playlistsPath + '*.*', list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip');
+	_zip([list.playlistsPath + '*.*', list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip');
 	test.Print();
 }
+
+function findMixedPaths() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		list.dataAll.forEach((playlist, i) => {
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+						const filePaths = getFilePathsFromPlaylist(playlist.path);
+						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking paths ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, 10 * i);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findMixedPathsAsync() {return await findMixedPaths();}
+
+function findExternal() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		list.dataAll.forEach((playlist, i) => {
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const bUI = playlist.extension === '.ui';
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))
+						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
+							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
+							const bDead = filePaths.some((path) => {
+								// Skip streams & look for absolute and relative paths (with and without .\)
+								let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
+								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+								else {
+									let pathAbs = path;
+									if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+									else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+									bCheck = bCheck && !_isFile(pathAbs);
+								}
+								return bCheck;
+							});
+							if (bDead) {
+								found.push((bUI ? playlist.nameId : playlist.path) + '(contains dead items)');
+							} else {
+								found.push(bUI ? playlist.nameId : playlist.path);
+							}
+						}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking external items ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, iDelayPlaylists * i);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findExternalAsync() {return await findExternal();}
+
+function findDead() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		let iDelay = 0;
+		list.dataAll.forEach((playlist, i) => {
+			iDelay = isNaN(playlist.size) ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const bUI = playlist.extension === '.ui';
+						const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+						const bDead = filePaths.some((path) => {
+							// Skip streams & look for absolute and relative paths (with and without .\)
+							let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
+							if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+							else {
+								let pathAbs = path;
+								if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
+								else {
+									const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
+									pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath);
+								}
+								bCheck = bCheck && !_isFile(pathAbs);
+							}
+							return bCheck;
+						});
+						if (bDead) {found.push(bUI ? playlist.nameId : playlist.path);}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking dead items ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, iDelay);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findDeadAsync() {return await findDead();}
+
+function findDuplicates() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		list.dataAll.forEach((playlist, i) => {
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
+						const bUI = playlist.extension === '.ui';
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+						if (new Set(filePaths).size !== filePaths.length) {found.push(bUI ? playlist.nameId : playlist.path);}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking duplicates ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, iDelayPlaylists / 5 * i);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findDuplicatesAsync() {return await findDuplicates();}
+
+function findSizeMismatch() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		list.dataAll.forEach((playlist, i) => {
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+						const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
+						let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+						let size;
+						if (typeof text !== 'undefined' && text.length) {
+							const codePage = checkCodePage(text, playlist.extension);
+							if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+							if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+								text = text.split(/\r\n|\n\r|\n|\r/);
+								const lines = text.length;
+								let j = 0;
+								while (j < lines) { // Changes size Line
+									if (text[j].startsWith('#PLAYLISTSIZE:')) {
+										size = Number(text[j].split(':')[1]);
+										break;
+									}
+									j++;
+								}
+							} else if (playlist.extension === '.pls') {
+								text = text.split(/\r\n|\n\r|\n|\r/);
+								const lines = text.length;
+								let j = 0;
+								if (text[lines - 2].startsWith('NumberOfEntries=')) {
+									size = Number(text[lines - 2].split('=')[1]);
+								}
+							} else if (playlist.extension === '.strm') {
+								text = text.split(/\r\n|\n\r|\n|\r/);
+								size = 0;
+								for (let line of text) {
+									if (line.trim().length) {size++;}
+								}
+							} else if (playlist.extension === '.xspf') {
+								const xmldom = XSPF.XMLfromString(text);
+								const jspf = XSPF.toJSPF(xmldom, false);
+								if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
+									const jPls = jspf.playlist;
+									if (jPls.hasOwnProperty('meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+										for (let metaData of jPls.meta) {
+											if (metaData.hasOwnProperty('playlistSize')) {size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null;}
+										}
+									}
+								}
+							}
+						} 
+						if (typeof text === 'undefined' || !text.length) {found.push(playlist.path + ' (blank)');}
+						else if (typeof size === 'undefined') {found.push(playlist.path + ' (no size tag found)');}
+						else if (filePathsNum !== size) {found.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')');}
+						else if (playlist.extension === '.strm' && size > 1) {found.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)')}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, iDelayPlaylists / 5 * i);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findSizeMismatchAsync() {return await findSizeMismatch();}
+
+function findDurationMismatch() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		list.dataAll.forEach((playlist, i) => {
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+						const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
+						if (handleList) {
+							const calcDuration = handleList.CalcTotalDuration();
+							let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+							let duration;
+							if (typeof text !== 'undefined' && text.length) {
+								const codePage = checkCodePage(text, playlist.extension);
+								if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+								if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+									text = text.split(/\r\n|\n\r|\n|\r/);
+									const lines = text.length;
+									let j = 0;
+									while (j < lines) { // Changes duration Line
+										if (text[j].startsWith('#DURATION:')) {
+											duration = Number(text[j].split(':')[1]);
+											break;
+										}
+										j++;
+									}
+								} else if (playlist.extension === '.xspf') {
+									const xmldom = XSPF.XMLfromString(text);
+									const jspf = XSPF.toJSPF(xmldom, false);
+									if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
+										const jPls = jspf.playlist;
+										if (jPls.hasOwnProperty('meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+											for (let metaData of jPls.meta) {
+												if (metaData.hasOwnProperty('duration')) {duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null;}
+											}
+										}
+									}
+								}
+							}
+							if (typeof duration === 'undefined') {found.push(playlist.path + ' (no duration tag found)');}
+							else if (calcDuration !== duration) {found.push(playlist.path + ' (tag: ' + duration + ', calculated: ' + calcDuration + ')');}
+						}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking duration ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, iDelayPlaylists * i);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findDurationMismatchAsync() {return await findDurationMismatch();}
+
+function findBlank() {
+	const found = [];
+	return new Promise(resolve => {
+		const total = list.itemsAll - 1;
+		const promises = [];
+		let prevProgress = -1;
+		list.dataAll.forEach((playlist, i) => {
+			promises.push(new Promise(resolve => {
+				setTimeout(() => {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+						let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+						let size, lines;
+						if (typeof text !== 'undefined' && text.length) {
+							const codePage = checkCodePage(text, playlist.extension);
+							if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+							lines = text.split(/\r\n|\n\r|\n|\r/);
+							size = lines.filter(Boolean).length;
+							lines = lines.length;
+						} 
+						if (typeof text === 'undefined' || typeof size === 'undefined') {found.push(playlist.path + ' (blank)');}
+						else if (size !== lines) {found.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')');}
+					}
+					const progress = Math.round(i / total * 10) * 10;
+					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + Math.round(progress) + '%.');}
+					resolve('done');
+				}, iDelayPlaylists / 5 * i);
+			}));
+		});
+		Promise.all(promises).then((_) => {
+			resolve(found);
+		});
+	});
+}
+async function findBlankAsync() {return await findBlank();}

@@ -1,5 +1,5 @@
 'use strict';
-//14/11/21
+//04/02/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -7,11 +7,11 @@ include('helpers_xxx_UI.js');
 
 var panel_properties = {
 	fontSize 			: ['Font size', _scale(10)],
-	coloursMode			: ['Background olour mode', 0],
-	customBackground	: ['Custom background colour', RGB(0, 0, 0)],
+	coloursMode			: ['Background colour mode', 0],
+	customBackground	: ['Custom background colour', RGB(30, 30, 30)], // Black
 	bCustomText			: ['Text custom colour mode', false],
-	customText			: ['Custom text colour', RGB(0, 0, 0)],
-	buttonsTextColor	: ['Buttons\' text color', textColor]
+	customText			: ['Custom text colour', RGB(157, 158, 163)], // Gray
+	buttonsTextColor	: ['Buttons\' text color', buttonsPanel.config.textColor]
 };
 
 setProperties(panel_properties, 'panel_');
@@ -34,7 +34,7 @@ function _panel(custom_background = false) {
 			this.colours.highlight = blendColours(this.colours.text, this.colours.background, 0.4);
 		}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
-		textColor = this.colours.buttonsTextColor // buttons_xxx.js
+		buttonsPanel.config.textColor = this.colours.buttonsTextColor // buttons_xxx.js
 	}
 	
 	this.font_changed = () => {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/21
+//04/02/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -131,7 +131,7 @@ setProperties(properties, prefix);
 		overwriteProperties(prop); // Updates panel
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
-		if ((isCompatible('1.4.0') ? utils.IsFile(readmePath) : utils.FileTest(readmePath, 'e'))) {
+		if (_isFile(readmePath)) {
 			const readme = utils.ReadTextFile(readmePath, convertCharsetToCodepage('UTF-8'));
 			if (readme.length) {fb.ShowPopupMessage(readme, window.Name);}
 		}
@@ -173,7 +173,7 @@ function on_key_down(k) {
 
 function on_mouse_lbtn_up(x, y, mask) {
 	if (pop.isEnabled()) {return;}
-	if (cur_btn === null) {
+	if (curBtn === null) {
 		list.lbtn_up(x, y, mask);
 	}
 	on_mouse_lbtn_up_buttn(x, y);
@@ -186,7 +186,7 @@ function on_mouse_lbtn_down(x, y) {
 
 function on_mouse_lbtn_dblclk(x, y) {
 	if (pop.isEnabled()) {return;}
-	if (cur_btn === null) {
+	if (curBtn === null) {
 		list.lbtn_dblclk(x, y);
 	}
 }
@@ -194,7 +194,7 @@ function on_mouse_lbtn_dblclk(x, y) {
 function on_mouse_move(x, y, mask) {
 	if (pop.isEnabled()) {pop.move(x, y, mask); return;}
 	on_mouse_move_buttn(x, y, mask);
-	if (cur_btn === null) {
+	if (curBtn === null) {
 		list.move(x, y, mask);
 	}
 }
@@ -209,13 +209,13 @@ function on_mouse_rbtn_up(x, y) {
 	if (pop.isEnabled()) {return;}
 	if (list.traceHeader(x, y)) { // Header menu
 		return createMenuRightTop().btn_up(x, y);
-	} else if (cur_btn === null) { // List menu
+	} else if (curBtn === null) { // List menu
 		return createMenuRight().btn_up(x, y);
-	} else if (cur_btn === buttons.sortButton) { // Sort button menu
+	} else if (curBtn === buttons.sortButton) { // Sort button menu
 		return createMenuRightSort().btn_up(x, y);
-	} else if (cur_btn === buttons.filterOneButton) { // Filter button menus
+	} else if (curBtn === buttons.filterOneButton) { // Filter button menus
 		return createMenuRightFilter('filterOneButton').btn_up(x, y);
-	} else if (cur_btn === buttons.filterTwoButton) {
+	} else if (curBtn === buttons.filterTwoButton) {
 		return createMenuRightFilter('filterTwoButton').btn_up(x, y);
 	}
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
@@ -289,7 +289,7 @@ function on_notify_data(name, info) {
 }
 
 // function on_drag_over(action, x, y, mask) { // Tracks movement for index selecting inside the panel
-	// if (cur_btn === null) {
+	// if (curBtn === null) {
 		// list.move(x, y);
 	// }
 // }
@@ -352,7 +352,7 @@ function autoUpdate() {
 	} else { // Otherwise check size
 		let totalFileSize = 0;
 		for (let i = 0; i < playlistPathArrayLength; i++) {
-			totalFileSize += isCompatible('1.4.0') ? utils.GetFileSize(playlistPathArray[i]) : utils.FileTest(playlistPathArray[i],'s'); //TODO: Deprecated
+			totalFileSize += utils.GetFileSize(playlistPathArray[i]);
 		}
 		if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar executed
 			list.update(false, true, list.lastIndex);
@@ -387,11 +387,11 @@ const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup
 
 // Update cache on changes!
 const debouncedCacheLib = debounce(cacheLib, 5000);
-function  on_library_items_added() {
+function on_library_items_added() {
 	debouncedCacheLib(false, 'Updating...');
 }
 
-function  on_library_items_removed() {
+function on_library_items_removed() {
 	debouncedCacheLib(false, 'Updating...');
 }
 

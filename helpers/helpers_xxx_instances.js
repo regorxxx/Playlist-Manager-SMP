@@ -19,12 +19,12 @@ instances.id = window.ID; // Could be changed to an arbitrary Id per panel
 if (_isFile(folders.data + 'xxsInstances.json')) {_deleteFile(folders.data + 'xxsInstances.json');} // TODO remove on future versions
 
 // Create file the first time and ensure the file is up to date (avoids old Ids on file from previously crashed instances)
-if (!_isFile(folders.xxxInstances)) {_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, 3));}
+if (!_isFile(folders.xxxInstances)) {_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, '\t'));}
 else {
 	const newInstances = getInstances();
 	if (!newInstances || !newInstances.hasOwnProperty('date') || instances.date !== newInstances.date) {
 		_deleteFile(folders.xxxInstances);
-		_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, 3));
+		_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, '\t'));
 	}
 }
 
@@ -35,7 +35,7 @@ function addInstance(newKey = window.Name) {
 		if (newInstances.hasOwnProperty(newKey)) {newInstances[newKey].add(instances.id); bDone = true;}
 		else {newInstances[newKey] =  new Set([instances.id]); bDone = true;}
 	}
-	if (bDone) {_save(folders.xxxInstances, JSON.stringify(newInstances, (k, v) => {return SetReplacer(null, v);}, 3));}
+	if (bDone) {_save(folders.xxxInstances, JSON.stringify(newInstances, (k, v) => {return SetReplacer(null, v);}, '\t'));}
 	return bDone;
 }
 
@@ -59,6 +59,6 @@ function removeInstance(key = window.Name) {
 		if (newInstances[key].size === 0) {delete newInstances[key];}
 		bDone = true;
 	}
-	if (bDone) {_save(folders.xxxInstances, JSON.stringify(newInstances, (k, v) => {return SetReplacer(null, v);}, 3));}
+	if (bDone) {_save(folders.xxxInstances, JSON.stringify(newInstances, (k, v) => {return SetReplacer(null, v);}, '\t'));}
 	return bDone;
 }

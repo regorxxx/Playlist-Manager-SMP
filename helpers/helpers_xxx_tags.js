@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/12/21
+//04/02/22
 
 include('helpers_xxx.js');
 
@@ -28,7 +28,7 @@ if (bLoadTags) {
 
 	for (let i = 0; i < externalPath.length; i++) {
 		const path = externalPath[i];
-		if ((isCompatible('1.4.0') ? utils.IsFile(path) : utils.FileTest(path, 'e'))) { //TODO: Deprecated
+		if (_isFile(path)) {
 			console.log('cyclicTagsDescriptor - File loaded: ' + path);
 			include(path, {always_evaluate: false});
 		} else {

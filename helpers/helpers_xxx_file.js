@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/21
+//03/02/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -15,21 +15,33 @@ include('helpers_xxx_prototypes.js');
 const fso = new ActiveXObject('Scripting.FileSystemObject');
 const WshShell = new ActiveXObject('WScript.Shell');
 const app = new ActiveXObject('Shell.Application');
+const spaces = {desktop: 0, bin: 10, userdesktop: 16, fonts: 19};
+
+function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which is only usable on _explorer()
+	const folder = app.NameSpace(spaces.hasOwnProperty(name.toLowerCase()) ? spaces[name.toLowerCase()] : name);
+	if (folder) {
+		const selfObj = folder.Self;
+		if (selfObj) {
+			return selfObj.Path;
+		}
+	}
+	return '';
+}
 
 function _isFile(file) {
 	if (isCompatible('1.4.0')) {return utils.IsFile(file);} 
-	else {
+	else { //TODO: Deprecated
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		return isString(file) ? fso.FileExists(file) : false;
-	} //TODO: Deprecated
+	}
 }
 
 function _isFolder(folder) {
 	if (isCompatible('1.4.0')) {return utils.IsDirectory(folder);} 
-	else {
+	else { //TODO: Deprecated
 		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
 		return isString(folder) ? fso.FolderExists(folder) : false;
-	} //TODO: Deprecated
+	}
 }
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
@@ -50,11 +62,11 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 }
 
 // Delete. Can not be undone.
-function _deleteFile(file) {
+function _deleteFile(file, bForce = true) {
 	if (_isFile(file)) {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		try {
-			fso.DeleteFile(file);
+			fso.DeleteFile(file, bForce);
 		} catch (e) {
 			return false;
 		}
@@ -70,7 +82,7 @@ function _renameFile(oldFilePath, newFilePath) {
 		if (_isFile(oldFilePath)) {
 			if (oldFilePath.startsWith('.\\')) {oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\','');}
 			if (newFilePath.startsWith('.\\')) {newFilePath = fb.FoobarPath + newFilePath.replace('.\\','');}
-			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
+			const filePath = utils.SplitFilePath(newFilePath)[0];
 			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
 				fso.MoveFile(oldFilePath, newFilePath);
@@ -91,7 +103,7 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 		if (_isFile(oldFilePath)) {
 			if (oldFilePath.startsWith('.\\')) {oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\','');}
 			if (newFilePath.startsWith('.\\')) {newFilePath = fb.FoobarPath + newFilePath.replace('.\\','');}
-			const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(newFilePath)[0] : utils.FileTest(newFilePath, 'split')[0]; //TODO: Deprecated
+			const filePath = utils.SplitFilePath(newFilePath)[0];
 			if (!_isFolder(filePath)) {_createFolder(filePath);}
 			try {
 				bAsync ? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
@@ -106,15 +118,23 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 }
 
 // Sends file to recycle bin, can be undone
-// Beware of calling this while pressing shift. File will be removed without sending to recycle bin!
-// Use utils.IsKeyPressed(VK_SHIFT) and debouncing as workaround
+// Works even pressing shift thanks to an external utility
+// Otherwise file would be removed without sending to recycle bin!
+// Use utils.IsKeyPressed(VK_SHIFT) and debouncing as workaround when external exe must not be run
 function _recycleFile(file) {
 	if (_isFile(file)) {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		try {
-			app.NameSpace(10).MoveHere(file);
+			if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
+			app.NameSpace(spaces.bin).MoveHere(file); // First nameSpace method (may not work on Unix systems)
 		} catch (e) {
-			return false;
+			try {
+				if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
+				app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
+			} catch (e) {
+				try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true);} // cmdUtils as fallback
+				catch (e) {return false;}
+			}
 		}
 		return !(_isFile(file));
 	}
@@ -126,7 +146,7 @@ function _recycleFile(file) {
 function _restoreFile(file) {
 	if (!_isFile(file)) {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
-		const arr = isCompatible('1.4.0') ? utils.SplitFilePath(file) : utils.FileTest(file, 'split'); //TODO: Deprecated
+		const arr = utils.SplitFilePath(file);
 		const OriginalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let numItems, items;
 		try {
@@ -159,7 +179,7 @@ function _open(file, codePage = 0) {
 
 function _save(file, value, bBOM = false) {
 	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
-	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
+	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) {_createFolder(filePath);}
 	if (_isFolder(filePath) && utils.WriteTextFile(file, value, bBOM)) {
 		return true;
@@ -170,7 +190,7 @@ function _save(file, value, bBOM = false) {
 
 function _saveSplitJson(file, value, replacer = void(0), space = void(0), splitBy = 50000, bBOM = false) {
 	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
-	const filePath = isCompatible('1.4.0') ? utils.SplitFilePath(file)[0] : utils.FileTest(file, 'split')[0]; //TODO: Deprecated
+	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) {_createFolder(filePath);}
 	if (_isFolder(filePath)) {
 		const fileName = utils.SplitFilePath(file)[1];
@@ -231,12 +251,15 @@ function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name, c
 // Opens explorer on file (and selects it) or folder
 function _explorer(fileOrFolder) {
 	if (fileOrFolder.startsWith('.\\')) {fileOrFolder = fb.FoobarPath + fileOrFolder.replace('.\\','');}
-	if (_isFile(fileOrFolder)) {
+	if (fileOrFolder.startsWith('::{')) { // Virtual folder
+		WshShell.Run('explorer /e, ' + fileOrFolder);
+		return true; // There is no way to know if the explorer window got opened at the right path...
+	} else if (_isFile(fileOrFolder)) { // File
 		WshShell.Run('explorer /select,' + _q(fileOrFolder));
-		return true; // There is no way to know if the explorer window got opened at the right path...
-	} else if (_isFolder(fileOrFolder)) {
+		return true;
+	} else if (_isFolder(fileOrFolder)) { // Folder
 		WshShell.Run('explorer /e,' + _q(fileOrFolder));
-		return true; // There is no way to know if the explorer window got opened at the right path...
+		return true;
 	}
 	return false;
 }
@@ -266,9 +289,9 @@ function _runHidden() {
 	}
 }
 
-function _runCmd(command, wait) {
+function _runCmd(command, bWait) {
 	try {
-		WshShell.Run(command, 0, wait);
+		WshShell.Run(command, 0, bWait);
 	} catch (e) {
 		console.log('_runCmd(): failed to run command ' + command + '(' + e + ')');
 	}
@@ -280,7 +303,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 	let reason = -1;
 	if (_isFile(filePath)){
 		let fileText = utils.ReadTextFile(filePath);
-		const extension = isCompatible('1.4.0') ? utils.SplitFilePath(filePath)[2] : utils.FileTest(filePath, 'split')[2]; //TODO: Deprecated
+		const extension = utils.SplitFilePath(filePath)[2];
 		const codePage = checkCodePage(fileText, extension);
 		if (codePage !== -1) {fileText = utils.ReadTextFile(filePath, codePage);}
 		if (typeof fileText !== 'undefined' && fileText.length >= 1) {
