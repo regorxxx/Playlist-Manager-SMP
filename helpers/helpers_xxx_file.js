@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/02/21
+//08/02/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -16,6 +16,7 @@ const fso = new ActiveXObject('Scripting.FileSystemObject');
 const WshShell = new ActiveXObject('WScript.Shell');
 const app = new ActiveXObject('Shell.Application');
 const spaces = {desktop: 0, bin: 10, userdesktop: 16, fonts: 19};
+const fileAttr = {Normal: 0, ReadOnly: 1, Hidden: 2, Syestem: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048};
 
 function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which is only usable on _explorer()
 	const folder = app.NameSpace(spaces.hasOwnProperty(name.toLowerCase()) ? spaces[name.toLowerCase()] : name);
@@ -166,6 +167,22 @@ function _restoreFile(file) {
 		console.log('_restoreFile(): Can not restore file to \'' + file + '\' since there is already another file at the same path.');
 		return false;
 	}
+}
+
+function _getAttrFile(file) {
+	if (!_isFile(file)) {return null;}
+	const fileObj = fso.GetFile(file);
+	if (!fileObj) {return null;}
+	return fileObj.Attributes;
+}
+
+function _parseAttrFile(file) {
+	let attr = _getAttrFile(file);
+	if (!attr) {return null;}
+	const attrObj = Object.fromEntries(Object.keys(fileAttr).map((_) => {return [_, false];}));
+	if (attr === fileAttr.Normal) {attrObj.Normal = true;}
+	else {Object.keys(fileAttr).reverse().forEach((key) => {if (attr && attr >= fileAttr[key]) {attr -= fileAttr[key]; attrObj[key] = true;}});}
+	return attrObj;
 }
 
 function _open(file, codePage = 0) {
