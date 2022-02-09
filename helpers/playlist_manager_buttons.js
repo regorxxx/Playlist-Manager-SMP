@@ -1,5 +1,5 @@
 'use strict';
-//04/02/22
+//09/02/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -12,7 +12,7 @@ buttonsPanel.config.buttonOrientation = 'x';
 var newButtons = {
 	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed. 
 	// Since the opposite sort state (Az -> Za) is expected to be on even indexes, we use that to toggle icon and tooltip for any method.
-	sortButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesOne, buttonsPanel.config.buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesOne, buttonsPanel.config.buttonOrientation, false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
+	sortButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
 		let t0 = Date.now();
 		let t1 = 0;
 		let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
@@ -23,11 +23,11 @@ var newButtons = {
 	}, null, g_font, sortTooltip, _gdiFont('FontAwesome', 12)),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
 	// TODO: '\uf15d' : '\uf15e' for letters. '\uf162' : '\uf163' for numbers. '\uf160' : '\uf161' for attributes.
-	filterOneButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesTwo, buttonsPanel.config.buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesTwo, buttonsPanel.config.buttonOrientation, false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
+	filterOneButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
 		doFilter(this);
 	}, null, g_font, filterTooltip, prefix, void(0), chars.filter, _gdiFont('FontAwesome', 12)),
 	// Cycle filtering between playlist lock states: all, not locked, locked
-	filterTwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree, buttonsPanel.config.buttonOrientation).x, calcNextButtonCoordinates(buttonCoordinatesThree, buttonsPanel.config.buttonOrientation, false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
+	filterTwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
 	}, null, g_font, filterTooltip, prefix, void(0), chars.filter, _gdiFont('FontAwesome', 12)),
 };

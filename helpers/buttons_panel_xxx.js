@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/22
+//09/02/22
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -50,26 +50,26 @@ const tooltipButton = new _tt(null, 'Segoe UI', _scale(10), 1200);  // Global to
 let g_down = false;
 let curBtn = null;
 
-function calcNextButtonCoordinates(buttonCoordinates,  buttonOrientation = buttonsPanel.config.buttonOrientation , recalc = true) {
+function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.config.buttonOrientation , recalc = true) {
 	let newCoordinates;
+	const orientation = buttonOrientation.toLowerCase();
+	const old = oldButtonCoordinates;
 	// This requires a panel reload after resizing
 	// if (buttonOrientation === 'x') {
-		// newCoordinates = {x: oldButtonCoordinates.x + buttonCoordinates.x , y: buttonCoordinates.y, w: buttonCoordinates.w, h: buttonCoordinates.h};
-		// if (recalc) {oldButtonCoordinates.x += buttonCoordinates.x + buttonCoordinates.w;}
+		// newCoordinates = {x: old.x + coord.x , y: coord.y, w: coord.w, h: coord.h};
+		// if (recalc) {old.x += coord.x + coord.w;}
 	// } else if (buttonOrientation === 'y') {
-		// newCoordinates = {x: buttonCoordinates.x, y: oldButtonCoordinates.y + buttonCoordinates.y, w: buttonCoordinates.w, h: buttonCoordinates.h};
-		// if (recalc) {oldButtonCoordinates.y += buttonCoordinates.y  + buttonCoordinates.h;}
+		// newCoordinates = {x: coord.x, y: old.y + coord.y, w: coord.w, h: coord.h};
+		// if (recalc) {old.y += coord.y  + coord.h;}
 	// }
-	// This requires on_size_buttn() within on_size callback. Is equivalent to calculate the coordinates directly with inlined functions... but maintained here for compatibility purporse
-	const x = _isFunction(buttonCoordinates.x) ? buttonCoordinates.x() : buttonCoordinates.x;
-	const y = _isFunction(buttonCoordinates.y) ? buttonCoordinates.y() : buttonCoordinates.y;
-	const w = _isFunction(buttonCoordinates.w) ? buttonCoordinates.w() : buttonCoordinates.w;
-	const h = _isFunction(buttonCoordinates.h) ? buttonCoordinates.h() : buttonCoordinates.h;
-	newCoordinates = {x: oldButtonCoordinates.x + x , y: oldButtonCoordinates.y + y, w, h};
-	if (buttonOrientation.toLowerCase() === 'x') {
-		if (recalc) {oldButtonCoordinates.x += x + w; oldButtonCoordinates.h = Math.max(oldButtonCoordinates.h, h);}
-	} else if (buttonOrientation.toLowerCase() === 'y') {
-		if (recalc) {oldButtonCoordinates.y += y + h; oldButtonCoordinates.w = Math.max(oldButtonCoordinates.w, w);}
+	// This requires on_size_buttn() within on_size callback. Is equivalent to calculate the coordinates directly with inlined functions... but maintained here for compatibility purpose
+	const keys = ['x','y','w','h'];
+	const bFuncCoord = Object.fromEntries(keys.map((c) => {return [c, _isFunction(coord[c])];}));
+	const iCoord = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? coord[c]() : coord[c]];}));
+	newCoordinates = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? () => {return old[c] + coord[c]()} : old[c] + iCoord[c]];}));
+	if (recalc) {
+		if (orientation === 'x') {old.x += iCoord.x + iCoord.w; old.h = Math.max(old.h, iCoord.h);}
+		else if (orientation === 'y') {old.y += iCoord.y + iCoord.h; old.w = Math.max(old.w, iCoord.w);}
 	}
 	return newCoordinates;
 }
@@ -247,8 +247,9 @@ function on_mouse_lbtn_up_buttn(x, y) {
 }
 
 function on_size_buttn() {
-	if (buttonsPanel.config.buttonOrientation.toLowerCase() === 'x') {oldButtonCoordinates.x = 0;}
-	else if (buttonsPanel.config.buttonOrientation.toLowerCase() === 'y') {oldButtonCoordinates.y = 0;}
+	const orientation = buttonsPanel.config.buttonOrientation.toLowerCase();
+	if (orientation === 'x') {oldButtonCoordinates.x = 0;}
+	else if (orientation === 'y') {oldButtonCoordinates.y = 0;}
 }
 
 
