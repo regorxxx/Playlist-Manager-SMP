@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/12/21
+//14/02/21
 
 /* 
 	Contextual Menu helper v 1.2 19/05/21
@@ -121,7 +121,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 	// To retrieve elements
 	this.getNumEntries = () => {return entryArr.length;};
 	this.getEntries = () => {return [...entryArr];}; // To get all menu entries, but those created by conditional menus are not set yet!
-	this.getEntriesAll = (object) => {this.initMenu(object); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
+	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => {this.initMenu(object, bindArgs); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
 	this.getMenus = () => {return [...menuArr];};
 	this.getMainMenuName = () => {return menuArr[0].menuName;};
 	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true)}) !== -1);};
@@ -207,7 +207,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 		entryArr = entryArr.concat(menuObj.getEntries());
 	}
 	
-	this.initMenu = (object) => {
+	this.initMenu = (object, bindArgs = null /*{pos: -1, args: null}*/) => {
 		entryArrTemp = [...entryArr]; // Create backup to restore later
 		menuArrTemp = [...menuArr];
 		checkMenuArrTemp = [...checkMenuArr];
@@ -233,7 +233,10 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 		}
 		entryArr.forEach( (entry) => {
 			if (entry.hasOwnProperty('condFunc') && entry.condFunc) { // Create menu
-				entry.condFunc();
+				if (bindArgs !== null) {
+					if (bindArgs.pos >= 1) {entry.condFunc(...[...Array(bindArgs.pos)].map((_) => {return void(0);}), bindArgs.args)}
+					else {entry.condFunc(bindArgs.args);}
+				} else {entry.condFunc();}
 			}
 		});
 		// Init menus

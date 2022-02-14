@@ -41,7 +41,7 @@ function clone(obj) {
 		}
 		return result;
 	} else {
-	   result = Array.isArray(obj) ? [] : {};
+		result = Array.isArray(obj) ? [] : {};
 		for (let key in obj) {
 			// include prototype properties
 			let value = obj[key];

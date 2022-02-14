@@ -1,5 +1,5 @@
 'use strict';
-//04/02/22
+//14/02/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -756,7 +756,8 @@ function backup(n = 50) { // Backup playlist and json file
 			_recycleFile(files.pop());
 		}
 	}
-	_zip([list.playlistsPath + '*.*', list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip');
+	const playlistFilesMask = [...loadablePlaylistFormats].map((ext) => {return list.playlistsPath + '*' + ext;}); // Ext already has a .
+	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip');
 	test.Print();
 }
 
