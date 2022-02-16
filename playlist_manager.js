@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/22
+//15/02/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -152,8 +152,8 @@ if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
 const autoBackTimer = Number(list.properties.autoBack[1]);
-buttons.filterOneButton.method = list.properties.filterMethod[1].split(',')[0];
-buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
+buttonsPanel.buttons.filterOneButton.method = list.properties.filterMethod[1].split(',')[0];
+buttonsPanel.buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
 recalcWidth();
 
 function on_colours_changed() {
@@ -173,7 +173,7 @@ function on_key_down(k) {
 
 function on_mouse_lbtn_up(x, y, mask) {
 	if (pop.isEnabled()) {return;}
-	if (curBtn === null) {
+	if (buttonsPanel.curBtn === null) {
 		list.lbtn_up(x, y, mask);
 	}
 	on_mouse_lbtn_up_buttn(x, y);
@@ -186,7 +186,7 @@ function on_mouse_lbtn_down(x, y) {
 
 function on_mouse_lbtn_dblclk(x, y) {
 	if (pop.isEnabled()) {return;}
-	if (curBtn === null) {
+	if (buttonsPanel.curBtn === null) {
 		list.lbtn_dblclk(x, y);
 	}
 }
@@ -194,7 +194,7 @@ function on_mouse_lbtn_dblclk(x, y) {
 function on_mouse_move(x, y, mask) {
 	if (pop.isEnabled()) {pop.move(x, y, mask); return;}
 	on_mouse_move_buttn(x, y, mask);
-	if (curBtn === null) {
+	if (buttonsPanel.curBtn === null) {
 		list.move(x, y, mask);
 	}
 }
@@ -209,13 +209,13 @@ function on_mouse_rbtn_up(x, y) {
 	if (pop.isEnabled()) {return;}
 	if (list.traceHeader(x, y)) { // Header menu
 		return createMenuRightTop().btn_up(x, y);
-	} else if (curBtn === null) { // List menu
+	} else if (buttonsPanel.curBtn === null) { // List menu
 		return createMenuRight().btn_up(x, y);
-	} else if (curBtn === buttons.sortButton) { // Sort button menu
+	} else if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
 		return createMenuRightSort().btn_up(x, y);
-	} else if (curBtn === buttons.filterOneButton) { // Filter button menus
+	} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterOneButton) { // Filter button menus
 		return createMenuRightFilter('filterOneButton').btn_up(x, y);
-	} else if (curBtn === buttons.filterTwoButton) {
+	} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterTwoButton) {
 		return createMenuRightFilter('filterTwoButton').btn_up(x, y);
 	}
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
@@ -289,7 +289,7 @@ function on_notify_data(name, info) {
 }
 
 // function on_drag_over(action, x, y, mask) { // Tracks movement for index selecting inside the panel
-	// if (curBtn === null) {
+	// if (buttonsPanel.curBtn === null) {
 		// list.move(x, y);
 	// }
 // }

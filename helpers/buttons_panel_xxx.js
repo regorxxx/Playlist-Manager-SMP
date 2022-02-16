@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/02/22
+//15/02/22
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -41,19 +41,17 @@ buttonsPanel.config = {
 };
 // Button objs
 buttonsPanel.propertiesPrefixes = new Set(); // Global properties names prefixes
-var buttons = {}; // Global list
-
-const oldButtonCoordinates = {x: 0, y: 0, w: 0, h: 0}; // To store coordinates of previous buttons when drawing
-const tooltipButton = new _tt(null, 'Segoe UI', _scale(10), 1200);  // Global tooltip
-
-
-let g_down = false;
-let curBtn = null;
+buttonsPanel.buttons = {}; // Global list
+// Others (internal use)
+buttonsPanel.oldButtonCoordinates = {x: 0, y: 0, w: 0, h: 0}; // To store coordinates of previous buttons when drawing
+buttonsPanel.tooltipButton = new _tt(null, 'Segoe UI', _scale(10), 1200);  // Global tooltip
+buttonsPanel.g_down = false;
+buttonsPanel.curBtn = null;
 
 function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.config.buttonOrientation , recalc = true) {
 	let newCoordinates;
 	const orientation = buttonOrientation.toLowerCase();
-	const old = oldButtonCoordinates;
+	const old = buttonsPanel.oldButtonCoordinates;
 	// This requires a panel reload after resizing
 	// if (buttonOrientation === 'x') {
 		// newCoordinates = {x: old.x + coord.x , y: coord.y, w: coord.w, h: coord.h};
@@ -122,7 +120,7 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 				break;
 
 			case buttonStates.hover:
-				tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (_isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (_isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
+				buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (_isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (_isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
 				this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 2);
 				break;
 
@@ -162,18 +160,18 @@ function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 }
 
 function drawAllButtons(gr) {
-	for (let key in buttons) {
-		if (Object.prototype.hasOwnProperty.call(buttons, key)) {
-			buttons[key].draw(gr);
+	for (let key in buttonsPanel.buttons) {
+		if (Object.prototype.hasOwnProperty.call(buttonsPanel.buttons, key)) {
+			buttonsPanel.buttons[key].draw(gr);
 		}
 	}
 }
 
 function chooseButton(x, y) {
-	for (let key in buttons) {
-		if (Object.prototype.hasOwnProperty.call(buttons, key)) {
-			if (buttons[key].containXY(x, y) && buttons[key].state !== buttonStates.hide) {
-				return buttons[key];
+	for (let key in buttonsPanel.buttons) {
+		if (Object.prototype.hasOwnProperty.call(buttonsPanel.buttons, key)) {
+			if (buttonsPanel.buttons[key].containXY(x, y) && buttonsPanel.buttons[key].state !== buttonStates.hide) {
+				return buttonsPanel.buttons[key];
 			}
 		}
 	}
@@ -182,65 +180,65 @@ function chooseButton(x, y) {
 
 function on_paint_buttn(gr) {
 	if (buttonsPanel.config.bToolbar){ // When not merged with panels
-		if (oldButtonCoordinates.x < window.Width) {gr.FillSolidRect(0, 0, window.Width, window.Height, buttonsPanel.config.toolbarColor);} // Toolbar color fix
+		if (buttonsPanel.oldButtonCoordinates.x < window.Width) {gr.FillSolidRect(0, 0, window.Width, window.Height, buttonsPanel.config.toolbarColor);} // Toolbar color fix
 		else {gr.FillSolidRect(0, 0, window.Width, window.Height, utils.GetSysColour(15));} // Default
 	}
 	drawAllButtons(gr);
 }
 
 function on_mouse_move_buttn(x, y) {
-	let old = curBtn;
-	curBtn = chooseButton(x, y);
+	let old = buttonsPanel.curBtn;
+	buttonsPanel.curBtn = chooseButton(x, y);
 
-	if (old === curBtn) {
-		if (g_down) {
+	if (old === buttonsPanel.curBtn) {
+		if (buttonsPanel.g_down) {
 			return;
 		}
-	} else if (g_down && curBtn && curBtn.state !== buttonStates.down) {
-		curBtn.changeState(buttonStates.down);
+	} else if (buttonsPanel.g_down && buttonsPanel.curBtn && buttonsPanel.curBtn.state !== buttonStates.down) {
+		buttonsPanel.curBtn.changeState(buttonStates.down);
 		window.Repaint();
 		return;
 	} 
 	
 	//Tooltip fix
 	if (old !== null) {
-		if (curBtn === null) {tooltipButton.Deactivate();} // Needed because tooltip is only activated/deactivated on redrawing... 
+		if (buttonsPanel.curBtn === null) {buttonsPanel.tooltipButton.Deactivate();} // Needed because tooltip is only activated/deactivated on redrawing... 
 															// otherwise it shows on empty spaces after leaving a button.
-		else if (old !== curBtn && old.description === curBtn.description) { 	// This forces redraw even if buttons have the same text!
-			tooltipButton.Deactivate();											// Updates position but tooltip becomes slower since it sets delay time to initial... 
-			tooltipButton.SetDelayTime(3, 0); //TTDT_INITIAL
-		} else {tooltipButton.SetDelayTime(3, tooltipButton.oldDelay);} 
+		else if (old !== buttonsPanel.curBtn && old.description === buttonsPanel.curBtn.description) { 	// This forces redraw even if buttons have the same text!
+			buttonsPanel.tooltipButton.Deactivate();											// Updates position but tooltip becomes slower since it sets delay time to initial... 
+			buttonsPanel.tooltipButton.SetDelayTime(3, 0); //TTDT_INITIAL
+		} else {buttonsPanel.tooltipButton.SetDelayTime(3, buttonsPanel.tooltipButton.oldDelay);} 
 	}
 	old && old.changeState(buttonStates.normal);
-	curBtn && curBtn.changeState(buttonStates.hover);
+	buttonsPanel.curBtn && buttonsPanel.curBtn.changeState(buttonStates.hover);
 	window.Repaint();
 }
 
 function on_mouse_leave_buttn() {
-	g_down = false;
+	buttonsPanel.g_down = false;
 
-	if (curBtn) {
-		curBtn.changeState(buttonStates.normal);
+	if (buttonsPanel.curBtn) {
+		buttonsPanel.curBtn.changeState(buttonStates.normal);
 		window.Repaint();
 	}
 }
 
 function on_mouse_lbtn_down_buttn(x, y) {
-	g_down = true;
+	buttonsPanel.g_down = true;
 
-	if (curBtn) {
-		curBtn.changeState(buttonStates.down);
+	if (buttonsPanel.curBtn) {
+		buttonsPanel.curBtn.changeState(buttonStates.down);
 		window.Repaint();
 	}
 }
 
 function on_mouse_lbtn_up_buttn(x, y) {
-	g_down = false;
+	buttonsPanel.g_down = false;
 
-	if (curBtn) {
-		curBtn.onClick();
-		if (curBtn) { // Solves error if you create a new Whsell Popup (curBtn becomes null) after pressing the button and firing curBtn.onClick()
-			curBtn.changeState(buttonStates.hover);
+	if (buttonsPanel.curBtn) {
+		buttonsPanel.curBtn.onClick();
+		if (buttonsPanel.curBtn) { // Solves error if you create a new Whsell Popup (buttonsPanel.curBtn becomes null) after pressing the button and firing buttonsPanel.curBtn.onClick()
+			buttonsPanel.curBtn.changeState(buttonStates.hover);
 			window.Repaint();
 		}
 	}
@@ -248,8 +246,8 @@ function on_mouse_lbtn_up_buttn(x, y) {
 
 function on_size_buttn() {
 	const orientation = buttonsPanel.config.buttonOrientation.toLowerCase();
-	if (orientation === 'x') {oldButtonCoordinates.x = 0;}
-	else if (orientation === 'y') {oldButtonCoordinates.y = 0;}
+	if (orientation === 'x') {buttonsPanel.oldButtonCoordinates.x = 0;}
+	else if (orientation === 'y') {buttonsPanel.oldButtonCoordinates.y = 0;}
 }
 
 
@@ -264,4 +262,15 @@ function getUniquePrefix(string, sep = '_'){
 	buttonsPanel.propertiesPrefixes.add(newPrefix);
 	newPrefix = newPrefix + sep;
 	return newPrefix;
+}
+
+function addButton(newButtons) {
+	// Check if the button list already has the same button ID
+	for (let buttonName in newButtons) {
+		if (buttonsPanel.buttons.hasOwnProperty(buttonName)) {
+			Object.defineProperty(newButtons, buttonName + Object.keys(buttonsPanel.buttons).length, Object.getOwnPropertyDescriptor(newButtons, buttonName));
+			delete newButtons[buttonName];
+		}
+	}
+	buttonsPanel.buttons = {...buttonsPanel.buttons, ...newButtons};
 }

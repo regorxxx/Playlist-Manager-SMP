@@ -1,5 +1,5 @@
 'use strict';
-//04/02/22
+//15/02/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -832,7 +832,7 @@ function createMenuRightTop() {
 					list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
 					overwriteProperties(list.properties);
 					if (list.properties['bUpdateAutoplaylist'][1]) {
-						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retriever their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
+						fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
 						}
 				}});
 			});
@@ -1353,20 +1353,20 @@ function createMenuRightFilter(buttonKey) {
 			options.forEach((item) => {
 				menu.newEntry({entryText: item, func: () => {
 					// Switch buttons if they are duplicated
-					const buttonsArr = Object.entries(buttons);
+					const buttonsArr = Object.entries(buttonsPanel.buttons);
 					const idx = buttonsArr.findIndex((pair) => {return pair[0] !== buttonKey && pair[1].method === item;})
-					if (idx !== -1) {buttons[buttonsArr[idx][0]].method = buttons[buttonKey].method;}
+					if (idx !== -1) {buttonsPanel.buttons[buttonsArr[idx][0]].method = buttonsPanel.buttons[buttonKey].method;}
 					// Set new one
-					buttons[buttonKey].method = item;
+					buttonsPanel.buttons[buttonKey].method = item;
 					// Resize buttons
 					recalcWidth();
 					// Save properties
-					list.properties['filterMethod'][1] = Object.values(buttons).map((button) => {return (button.hasOwnProperty('method') ? button.method : '');}).filter(Boolean).join(',');
+					list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => {return (button.hasOwnProperty('method') ? button.method : '');}).filter(Boolean).join(',');
 					overwriteProperties(list.properties);
 				}});
 			});
 		}
-		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1],  () => {return options.indexOf(buttons[buttonKey].method);});
+		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1],  () => {return options.indexOf(buttonsPanel.buttons[buttonKey].method);});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Restore

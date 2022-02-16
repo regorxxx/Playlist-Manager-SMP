@@ -1,5 +1,5 @@
 'use strict';
-//09/02/22
+//15/02/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -9,7 +9,7 @@ var buttonCoordinatesTwo = {x: () => {return buttonCoordinatesOne.x + buttonCoor
 var buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + buttonCoordinatesTwo.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 3 - 1;}, h: 22};
 buttonsPanel.config.buttonOrientation = 'x';
 
-var newButtons = {
+addButton({
 	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed. 
 	// Since the opposite sort state (Az -> Za) is expected to be on even indexes, we use that to toggle icon and tooltip for any method.
 	sortButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
@@ -30,24 +30,13 @@ var newButtons = {
 	filterTwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
 	}, null, g_font, filterTooltip, prefix, void(0), chars.filter, _gdiFont('FontAwesome', 12)),
-};
-// Check if the button list already has the same button ID
-for (var buttonName in newButtons) {
-	if (buttons.hasOwnProperty(buttonName)) {
-		// fb.ShowPopupMessage('Duplicated button ID (' + buttonName + ') on ' + window.Name);
-		console.log('Duplicated button ID (' + buttonName + ') on ' + window.Name);
-		Object.defineProperty(newButtons, buttonName + Object.keys(buttons).length, Object.getOwnPropertyDescriptor(newButtons, buttonName));
-		delete newButtons[buttonName];
-	}
-}
-// Adds to current buttons
-buttons = {...buttons, ...newButtons};
+});
 
 // Defaults
-buttons.filterOneButton.method = 'Playlist type';
-buttons.filterOneButton.coord = buttonCoordinatesTwo;
-buttons.filterTwoButton.method = 'Lock state';
-buttons.filterTwoButton.coord = buttonCoordinatesThree;
+buttonsPanel.buttons.filterOneButton.method = 'Playlist type';
+buttonsPanel.buttons.filterOneButton.coord = buttonCoordinatesTwo;
+buttonsPanel.buttons.filterTwoButton.method = 'Lock state';
+buttonsPanel.buttons.filterTwoButton.coord = buttonCoordinatesThree;
 recalcWidth();
 
 /* 
@@ -56,12 +45,12 @@ recalcWidth();
 // Recalc size
 function recalcWidth () {
 	let bResize = false;
-	for (const key in buttons) {
-		if (buttons.hasOwnProperty(key) && buttons[key].hasOwnProperty('method') && buttons[key].method === 'Lock state') {bResize = true;}
+	for (const key in buttonsPanel.buttons) {
+		if (buttonsPanel.buttons.hasOwnProperty(key) && buttonsPanel.buttons[key].hasOwnProperty('method') && buttonsPanel.buttons[key].method === 'Lock state') {bResize = true;}
 	}
-	for (const key in buttons) {
-		if (buttons.hasOwnProperty(key)) {
-			const button = buttons[key];
+	for (const key in buttonsPanel.buttons) {
+		if (buttonsPanel.buttons.hasOwnProperty(key)) {
+			const button = buttonsPanel.buttons[key];
 			if (button.hasOwnProperty('method')) {
 				if (button.method === 'Lock state') {
 					button.coord.w = button.w = () => {return window.Width / 7 * 3;};
