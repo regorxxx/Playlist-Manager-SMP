@@ -127,7 +127,7 @@ function _popup({w = window.Width , h = window.Height, UI = 'MATERIAL', properti
 	}
 
 	this.resize = (w = window.Width, h = window.Height) => {
-		this.x = x * this.w/ w;
+		this.x = x * this.w / w;
 		this.y = y * this.h / h;
 		this.w = w;
 		this.h = h;

@@ -1,18 +1,17 @@
 'use strict';
-//15/02/22
+//17/02/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
-var g_font = _gdiFont('Segoe UI', 12);
 var buttonCoordinatesOne = {x: 1, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
 var buttonCoordinatesTwo = {x: () => {return buttonCoordinatesOne.x + buttonCoordinatesOne.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
 var buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + buttonCoordinatesTwo.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 3 - 1;}, h: 22};
-buttonsPanel.config.buttonOrientation = 'x';
+buttonsPanel.config.orientation = 'x';
 
 addButton({
 	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed. 
 	// Since the opposite sort state (Az -> Za) is expected to be on even indexes, we use that to toggle icon and tooltip for any method.
-	sortButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
+	sortButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
 		let t0 = Date.now();
 		let t1 = 0;
 		let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
@@ -20,16 +19,15 @@ addButton({
 		list.sort(void(0), true); // Uses current state
 		t1 = Date.now();
 		console.log('Call to Sort took ' + (t1 - t0) + ' milliseconds.');
-	}, null, g_font, sortTooltip, _gdiFont('FontAwesome', 12)),
+	}, null, void(0), sortTooltip, prefix, void(0), sortIcon),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
-	// TODO: '\uf15d' : '\uf15e' for letters. '\uf162' : '\uf163' for numbers. '\uf160' : '\uf161' for attributes.
-	filterOneButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
+	filterOneButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
 		doFilter(this);
-	}, null, g_font, filterTooltip, prefix, void(0), chars.filter, _gdiFont('FontAwesome', 12)),
+	}, null, void(0), filterTooltip, prefix, void(0), chars.filter),
 	// Cycle filtering between playlist lock states: all, not locked, locked
-	filterTwoButton: new SimpleButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
+	filterTwoButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
-	}, null, g_font, filterTooltip, prefix, void(0), chars.filter, _gdiFont('FontAwesome', 12)),
+	}, null, void(0), filterTooltip, prefix, void(0), chars.filter),
 });
 
 // Defaults
@@ -172,4 +170,19 @@ function sortTooltip() {
 		ttText += '\n' + '(R. Click to configure sorting)';
 	}
 	return ttText;
+}
+function sortIcon() {
+	const bDir = !list.getIndexSortState(); // Natural or inverted order
+	const varType = (list.methodState.match(/tag|name|category/gi) ? 'str' : (list.methodState.match(/date|size/gi) ? 'num' : 'other'));
+	switch (varType) {
+		case 'str': {
+			return bDir ? '\uf15d' : '\uf15e';
+		}
+		case 'num': {
+			return bDir ? '\uf162' : '\uf163';
+		}
+		default: {
+			return bDir ? '\uf160' : '\uf161';
+		}
+	}
 }

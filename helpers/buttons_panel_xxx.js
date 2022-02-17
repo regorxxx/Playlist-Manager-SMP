@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/02/22
+//17/02/22
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -36,7 +36,7 @@ buttonsPanel.config = {
 	toolbarColor: RGB(211,218,237), // Toolbar color
 	bToolbar: false, // Change this on buttons bars files to set the background color
 	textColor: RGB(0,0,0),
-	buttonOrientation: 'x',
+	orientation: 'x',
 	partAndStateID: 1 // 1 standard button, 6 no bg/border button (+hover)
 };
 // Button objs
@@ -48,7 +48,7 @@ buttonsPanel.tooltipButton = new _tt(null, 'Segoe UI', _scale(10), 1200);  // Gl
 buttonsPanel.g_down = false;
 buttonsPanel.curBtn = null;
 
-function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.config.buttonOrientation , recalc = true) {
+function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.config.orientation , recalc = true) {
 	let newCoordinates;
 	const orientation = buttonOrientation.toLowerCase();
 	const old = buttonsPanel.oldButtonCoordinates;
@@ -72,7 +72,7 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	return newCoordinates;
 }
 
-function SimpleButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, g_font_icon = _gdiFont('FontAwesome', 12)) {
+function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, g_font_icon = _gdiFont('FontAwesome', 12)) {
 	this.state = state ? state : buttonStates.normal;
 	this.x = x;
 	this.y = y;
@@ -245,7 +245,7 @@ function on_mouse_lbtn_up_buttn(x, y) {
 }
 
 function on_size_buttn() {
-	const orientation = buttonsPanel.config.buttonOrientation.toLowerCase();
+	const orientation = buttonsPanel.config.orientation.toLowerCase();
 	if (orientation === 'x') {buttonsPanel.oldButtonCoordinates.x = 0;}
 	else if (orientation === 'y') {buttonsPanel.oldButtonCoordinates.y = 0;}
 }
