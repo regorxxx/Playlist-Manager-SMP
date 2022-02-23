@@ -20,6 +20,7 @@ include('helpers\\playlist_manager_helpers.js');
 include('helpers\\helpers_xxx_file_zip.js');
 include('helpers\\popup_xxx.js');
 include('helpers\\helpers_xxx_instances.js');
+include('helpers\\playlist_history.js')
 
 // Cache
 let plmInit = {};
@@ -61,7 +62,7 @@ var properties = {
 	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000],
 	bShowSize				: ['Show playlist size' , true],
 	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output', true],
-	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).', true],
+	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).', false],
 	optionUUID				: ['UUID current method', ''],
 	methodState				: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
 	sortState				: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
@@ -325,11 +326,24 @@ function on_playlist_items_added(playlistIndex) {
 	}
 }
 
-function on_playlists_changed() { // For UI only playlists
-	if (list.bAllPls) {
+if (plman.ActivePlaylist !== -1) {initplsHistory();}
+function on_playlists_changed() {
+	if (list.bAllPls) { // For UI only playlists
 		list.update(true, true);
 		const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
 		list.filter({categoryState});
+	}
+	if (!list.bUseUUID && plsHistory[0] && plman.ActivePlaylist !== -1) {  // To rename bound playlist when UUIDS are not used
+		const oldName = plsHistory[0].name;
+		if (plsHistory[0].idx === plman.ActivePlaylist && !getPlaylistIndexArray(oldName).length) {
+			const idx = list.getPlaylistsIdxByName([oldName]);
+			if (idx.length === 1) {
+				const newName = plman.GetPlaylistName(plman.ActivePlaylist);
+				let bDone = renamePlaylist(list, idx[0], plman.GetPlaylistName(plman.ActivePlaylist), false);
+				if (bDone) {console.log('Playlist manager: renamed playlist ' + oldName + ' --> ' + newName);}
+				else {console.log('Playlist manager: failed renaming playlist ' + oldName + ' -\-> ' + newName);}
+			}
+		}
 	}
 }
 

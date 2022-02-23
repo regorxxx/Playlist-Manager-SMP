@@ -638,6 +638,90 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	return bDone;
 }
 
+function renamePlaylist(list, z, newName, bUpdatePlman = true) {
+	const pls = list.data[z];
+	const oldName = pls.name;
+	const oldNameId = pls.nameId;
+	const oldId = pls.id;
+	const newNameId = newName + ((list.bUseUUID && pls.id.length) ? pls.id : ''); // May have enabled/disabled UUIDs just before renamin
+	const newId = (list.bUseUUID && oldId.length) ? oldId : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
+	var duplicated = plman.FindPlaylist(newNameId);
+	let bRenamedSucessfully = false;
+	if (bUpdatePlman && duplicated !== -1 || !bUpdatePlman && duplicated !== plman.ActivePlaylist) { // Playlist already exists on foobar...
+		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name);
+	} else {
+		delayAutoUpdate();
+		if (newName.length && newName !== oldName) {
+			if (pls.isAutoPlaylist || pls.extension === '.ui') {
+				list.editData(pls, {
+					name: newName,
+					id: list.bUseUUID ? newId : '', // May have enabled/disabled UUIDs just before renaming
+					nameId: list.bUseUUID && pls.extension !== '.ui' ? newName + newId : newName,
+				});
+				if (bUpdatePlman) {list.updatePlman(pls.nameId, oldNameId);} // Update with new id
+				list.update(true, true);
+				list.filter();
+				bRenamedSucessfully = true;
+			} else {
+				if (_isFile(pls.path)) {
+					// Locked files have the name variable as read only, so we only change the filename. We can not replace oldName with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
+					let newPath = pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([newName]).join('\\') + pls.extension;
+					// let newPath = pls.path.replace(oldName + pls.extension, newName + pls.extension);
+					bRenamedSucessfully = _renameFile(pls.path, newPath);
+					if (bRenamedSucessfully) {
+						list.editData(pls, {
+							path: newPath,
+						});
+						if (!pls.isLocked) {
+							let bDone = false;
+							let reason = -1;
+							if (pls.extension === '.m3u' || pls.extension === '.m3u8') {
+								let originalStrings = ['#PLAYLIST:' + oldName, '#UUID:' + oldId];
+								let newStrings = ['#PLAYLIST:' + newName, '#UUID:' + (list.bUseUUID ? newId : '')];
+								[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+								if (!bDone && reason === 1) { // Retry with new header
+									bDone = rewriteHeader(list, z); 
+									if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
+								}
+							} else if (pls.extension === '.xspf') {
+								let originalStrings = ['<title>' + oldName, '<meta rel="uuid">' + oldId];
+								let newStrings = ['<title>' + newName, '<meta rel="uuid">' + (list.bUseUUID ? newId : '')];
+								[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+								if (!bDone && reason === 1) { // Retry with new header
+									bDone = rewriteHeader(list, z); 
+									if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
+								}
+							} else if (pls.extension === '.xsp') {
+								let originalStrings = ['<name>' + oldName];
+								let newStrings = ['<name>' + newName];
+								[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+							} else {bDone = true;}
+							if (!bDone) {
+								fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\nPath: ' + pls.path, window.Name);
+							} else {
+								list.editData(pls, {
+									name: newName,
+									id: list.bUseUUID ? newId : '', // May have enabled/disabled UUIDs just before renaming
+									nameId: list.bUseUUID ? newName + newId : newName,
+								});
+								if (bUpdatePlman) {list.updatePlman(pls.nameId, oldNameId);} // Update with new id
+								list.update(true, true);
+								list.filter();
+								bRenamedSucessfully = true;
+							}
+						} else {
+							list.update(true, true);
+							list.filter();
+							bRenamedSucessfully = true;
+						}
+					} else {fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\nPath: ' + pls.path, window.Name);}
+				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
+			}
+		}
+	}
+	return bRenamedSucessfully;
+}
+
 function cycleCategories() {
 	const options = ['All', ...list.categories()];
 	let idx = 0; // All is the default

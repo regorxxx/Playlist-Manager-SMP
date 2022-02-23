@@ -1586,7 +1586,7 @@ function _list(x, y, w, h) {
 				const plsIdx = plman.FindPlaylist(old_nameId);
 				if (plsIdx !== -1) {
 					if (playlistObj.isAutoPlaylist || playlistObj.extension === '.fpl' || playlistObj.extension === '.xsp' || playlistObj.extension === '.ui') {
-						this.update_plman(new_nameId, old_nameId); // Update with new id
+						this.updatePlman(new_nameId, old_nameId); // Update with new id
 					} else {
 						if (_isFile(playlistObj.path)) {
 							if (!playlistObj.isLocked) {
@@ -1611,7 +1611,7 @@ function _list(x, y, w, h) {
 								if (!bDone) {
 									fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + old_name + '\nPath: ' + playlistObj.path, window.Name);
 								} else {
-									this.update_plman(new_nameId, old_nameId); // Update with new id
+									this.updatePlman(new_nameId, old_nameId); // Update with new id
 								}
 							}
 						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + playlistObj.path, window.Name);}
@@ -1944,13 +1944,22 @@ function _list(x, y, w, h) {
 		}
 		
 		this.hasPlaylists = (names = []) => {
-			let playlistsManager = new Set();
 			const namesSet = new Set(names);
 			this.dataAll.forEach((pls, idx) => {
 				if (!namesSet.size) {return;}
-				if (namesSet.has(pls.name)) {playlistsManager.add(idx); namesSet.delete(pls.name);}
+				if (namesSet.has(pls.name)) {namesSet.delete(pls.name);}
 			});
 			return !namesSet.size;
+		}
+		
+		this.getPlaylistsIdxByName = (names = []) => {
+			let plsArr = [];
+			const namesSet = new Set(names);
+			this.dataAll.forEach((pls, idx) => {
+				if (!namesSet.size) {return;}
+				if (namesSet.has(pls.name)) {plsArr.push(idx); namesSet.delete(pls.name);}
+			});
+			return plsArr;
 		}
 		
 		this.getHandleFromPlaylists = (names = [], bSort = true) => {
@@ -2059,7 +2068,7 @@ function _list(x, y, w, h) {
 			} // Needed after removing the playlist on UI
 		}
 		
-		this.update_plman = (name, oldName) => {
+		this.updatePlman = (name, oldName) => {
 			let i = 0;
 			while (i < plman.PlaylistCount) {
 				if (plman.GetPlaylistName(i) === oldName) {

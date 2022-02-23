@@ -58,87 +58,11 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
 		menu.newEntry({entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls() ? 'Rename...' : 'Rename... (only filename)'), func: () => {
-			let new_name = '';
-			try {new_name = utils.InputBox(window.ID, 'Rename playlist', window.Name, pls.name, true);} 
+			let newName = '';
+			try {newName = utils.InputBox(window.ID, 'Rename playlist', window.Name, pls.name, true);} 
 			catch(e) {return;}
-			if (!new_name.length) {return;}
-			const new_nameId = new_name + ((list.bUseUUID && pls.id.length) ? pls.id : ''); // May have enabled/disabled UUIDs just before renaming
-			const old_name = pls.name;
-			const old_nameId = pls.nameId;
-			const old_id = pls.id;
-			const new_id = (list.bUseUUID && old_id.length) ? old_id : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
-			var duplicated = plman.FindPlaylist(new_nameId);
-			if (duplicated !== -1) { // Playlist already exists on foobar...
-				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
-			// } else if (_isFile(pls.path.replace(old_name,new_name))){ // File already exists on the folder..
-				// fb.ShowPopupMessage('You can not have duplicated playlist files on the same folder: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
-			} else {
-				delayAutoUpdate();
-				if (new_name.length && new_name !== old_name) {
-					if (pls.isAutoPlaylist || pls.extension === '.ui') {
-						list.editData(pls, {
-							name: new_name,
-							id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
-							nameId: list.bUseUUID && pls.extension !== '.ui' ? new_name + new_id : new_name,
-						});
-						list.update_plman(pls.nameId, old_nameId); // Update with new id
-						list.update(true, true);
-						list.filter();
-					} else {
-						if (_isFile(pls.path)) {
-							// Locked files have the name variable as read only, so we only change the filename. We can not replace old_name with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
-							let newPath = pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([new_name]).join('\\') + pls.extension;
-							// let newPath = pls.path.replace(old_name + pls.extension, new_name + pls.extension);
-							let bRenamedSucessfully = _renameFile(pls.path, newPath);
-							if (bRenamedSucessfully) {
-								list.editData(pls, {
-									path: newPath,
-								});
-								if (!pls.isLocked) {
-									let bDone = false;
-									let reason = -1;
-									if (pls.extension === '.m3u' || pls.extension === '.m3u8') {
-										let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
-										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + (list.bUseUUID ? new_id : '')];
-										[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
-										if (!bDone && reason === 1) { // Retry with new header
-											bDone = rewriteHeader(list, z); 
-											if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
-										}
-									} else if (pls.extension === '.xspf') {
-										let originalStrings = ['<title>' + old_name, '<meta rel="uuid">' + old_id];
-										let newStrings = ['<title>' + new_name, '<meta rel="uuid">' + (list.bUseUUID ? new_id : '')];
-										[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
-										if (!bDone && reason === 1) { // Retry with new header
-											bDone = rewriteHeader(list, z); 
-											if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
-										}
-									} else if (pls.extension === '.xsp') {
-										let originalStrings = ['<name>' + old_name];
-										let newStrings = ['<name>' + new_name];
-										[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
-									} else {bDone = true;}
-									if (!bDone) {
-										fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + pls.path, window.Name);
-									} else {
-										list.editData(pls, {
-											name: new_name,
-											id: list.bUseUUID ? new_id : '', // May have enabled/disabled UUIDs just before renaming
-											nameId: list.bUseUUID ? new_name + new_id : new_name,
-										});
-										list.update_plman(pls.nameId, old_nameId); // Update with new id
-										list.update(true, true);
-										list.filter();
-									}
-								} else {
-									list.update(true, true);
-									list.filter();
-								}
-							} else {fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + new_name + '\nPath: ' + pls.path, window.Name);}
-						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
-					}
-				}
-			}
+			if (!newName.length) {return;}
+			renamePlaylist(list, z, newName);
 		}});
 	}
 	{	// Edit and update
@@ -233,9 +157,9 @@ function createMenuLeft(forcedIndex = -1) {
 					if (duplicated !== -1) {
 						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 					} else {
-						list.update_plman(new_nameId, old_nameId);
+						list.updatePlman(new_nameId, old_nameId);
 						const bDone = list.updatePlaylist(z);
-						if (!bDone) {list.update_plman(old_nameId, new_nameId);} // Reset change
+						if (!bDone) {list.updatePlman(old_nameId, new_nameId);} // Reset change
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: isPlsActive()  && !isLockPls() && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
