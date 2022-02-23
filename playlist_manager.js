@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/02/22
+//23/02/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -90,7 +90,7 @@ var properties = {
 	converterPreset			: ['Converter Preset list', JSON.stringify([
 		{name: '', dsp: '...', tf: '.\\%filename%.mp3', path: '', extension: ''}, // Export all at same folder
 		{name: '', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: ''}, // Transfer library
-		{name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '\\media\\<your_disk_name>\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u'}, // Kodi-like library
+		{name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$meta(artist,0)/%album%/%filename%.lossy.flac', path: '', extension: '.m3u'}, // Kodi-like library
 		{name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u'}, // Kodi-like library
 		{name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on different folder than music
 		{name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on same root than music (without a folder)
@@ -345,7 +345,7 @@ function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debo
 function autoUpdate() {
 	const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', prefix), loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
-	if (playlistPathArrayLength !== (list.dataAll.length - list.itemsAutoplaylist)) { // Most times that's good enough. Count total items minus virtual playlists
+	if (playlistPathArrayLength !== (list.getPlaylistNum())) { // Most times that's good enough. Count total items minus virtual playlists
 		list.update(false, true, list.lastIndex);
 		list.filter(); // Maintains focus on last selected item
 		return true;
