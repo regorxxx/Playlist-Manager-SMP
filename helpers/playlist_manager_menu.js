@@ -502,7 +502,7 @@ function createMenuRightTop() {
 	{	// Playlist folder
 		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
 			let input = '';
-			try {input = utils.InputBox(window.ID, 'Enter path', window.Name, list.properties['playlistPath'][1], true);}
+			try {input = sanitizePath(utils.InputBox(window.ID, 'Enter path', window.Name, list.properties['playlistPath'][1], true));}
 			catch (e) {return;}
 			if (!input.length) {return;}
 			if (input === list.playlistsPath) {return;}
@@ -1002,7 +1002,7 @@ function createMenuRightTop() {
 					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName +': ' + dspName + ' ---> ' + tfName, subMenuName);
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
 						let input = '';
-						try {input = utils.InputBox(window.ID, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, preset.path, true);}
+						try {input = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, preset.path, true));}
 						catch(e) {return;}
 						if (input.length && !input.endsWith('\\')) {input += '\\';}
 						if (input !== preset.path) {

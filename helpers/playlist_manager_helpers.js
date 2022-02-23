@@ -12,7 +12,7 @@ include('..\\main\\remove_duplicates.js');
 
 function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1) {
 	if (typeof extension === 'undefined') {extension = utils.SplitFilePath(path)[2];}
-	if (typeof name === 'undefined') {name = utils.SplitFilePath(path)[1];} // TODO bug
+	if (typeof name === 'undefined') {name = utils.SplitFilePath(path)[1];}
 	this.id = id;
 	this.name = name;
 	this.nameId = (id) ? name + id : name;
@@ -30,17 +30,14 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.trackTags = isArray(trackTags) ? trackTags : [];
 	this.limit = Number.isFinite(limit) ? limit : 0;
 	this.duration = Number.isFinite(duration) ? duration : -1;
-	// this.bShow = true; // TODO:
 }
 
 function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
 	const playlistPathArray = getFiles(folderPath, loadablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
-	const playlistPathArray_length = playlistPathArray.length;
+	const playlistPathArrayLength = playlistPathArray.length;
 	let playlistArray = [];
-	let i = 0;
-	// let bCreated = false;
-	// let newFplIndex = -1;
-	while (i < playlistPathArray_length) {
+	for (let i = 0; i < playlistPathArrayLength; i++) {
+		if (!_isFile(playlistPathArray[i])) {continue;} // In some rare cases a file may have been deleted while updating the others leading to a crash otherwise...
 		let name = '';
 		let uuid = '';
 		let bLocked = false;
@@ -51,6 +48,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		let queryObj = null;
 		let limit = null;
 		let duration = null;
+		const fileSize = utils.GetFileSize(playlistPathArray[i]);
 		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
 			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
@@ -173,9 +171,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				}
 			}
 		}
-		let fileSize = utils.GetFileSize(playlistPathArray[i]);
 		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0), Number.isFinite(duration) ? duration : void(0));
-		i++;
 	}
 	return playlistArray;
 }
@@ -243,7 +239,6 @@ function setTag(tags, list, z) {
 					list.update(true , true);
 					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 					list.filter({tagState});
-					console.log(tagState)
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
@@ -377,7 +372,7 @@ function convertToRelPaths(list, z) {
 	const playlistPath = pls.path;
 	const paths = getFilePathsFromPlaylist(playlistPath);
 	const relPaths = paths.map((path) => {return '.\\' + path.split('\\').pop();});
-	const codePage = checkCodePage(_open(playlistPath), pls.extension); //TODO: Deprecated);
+	const codePage = checkCodePage(_open(playlistPath), pls.extension);
 	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 	if (pls.extension === '.xspf') { // Paths must be URI encoded...
 		paths.forEach((path, i) => {file = file.replace(encodeURI(path.replace(/\\/g,'/')), encodeURI(relPaths[i].replace(/\\/g,'/')));});
@@ -482,10 +477,9 @@ function clonePlaylistFile(list, z, ext) {
 function exportPlaylistFile(list, z, defPath = '') {
 	let bDone = false;
 	const playlistPath = list.data[z].path;
-	const arr = utils.SplitFilePath(playlistPath);
-	const playlistName = arr[1].endsWith(arr[2]) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let path = '';
-	try {path = sanitize(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
+	try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
 	catch(e) {return bDone;}
 	if (!path.length) {return bDone;}
 	if (path === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
@@ -498,10 +492,9 @@ function exportPlaylistFile(list, z, defPath = '') {
 function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	let bDone = false;
 	const playlistPath = list.data[z].path;
-	const arr = utils.SplitFilePath(playlistPath);
-	const playlistName = arr[1].endsWith(arr[2]) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let newPath = '';
-	try {newPath = sanitize(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
+	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
 	catch(e) {return {bDone, newPath};}
 	if (!newPath.length) {return {bDone, newPath};}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return {bDone, newPath};}
@@ -531,7 +524,6 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 
 function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths(list, z, void(0), defPath);
-	newPath = sanitize(newPath);
 	if (!newPath.length) {return;}
 	if (bDone) {
 		const root = utils.SplitFilePath(newPath)[0];
@@ -576,14 +568,12 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	const pls = list.data[z];
 	const playlistPath = pls.path;
 	const bUI = pls.extension === '.ui';
-	const arr = bUI ? null : utils.SplitFilePath(playlistPath);
-	const playlistName = bUI ? pls.name : (arr[1].endsWith(arr[2]) ? arr[1].replace(arr[2],'') : arr[1]); // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
-	const playlistExt = bUI ? '' : arr[2];
+	const [playlistName, playlistExt] = bUI ? [pls.name, ''] : utils.SplitFilePath(playlistPath).slice(1);
 	if (!playlistExt.length) {extension = list.playlistsExtension;} // Use default extension for UI playlists
 	const playlistNameExt = playlistName + (extension.length ? extension : playlistExt);
 	// Set output
 	let newPath = '';
-	try {sanitize(newPath = utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true));} 
+	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true));} 
 	catch(e) {return bDone;}
 	if (!newPath.length) {return bDone;}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}

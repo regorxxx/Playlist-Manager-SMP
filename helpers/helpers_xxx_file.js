@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/02/21
+//23/02/21
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -427,7 +427,11 @@ function _q(value) {
 }
 
 function sanitize(value) {
-	return value.replace(/[\/\\|:]/g, '-').replace(/\*/g, 'x').replace(/"/g, "''").replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '');
+	return value && value.length ? value.replace(/[\/\\|:]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '') : '';
+}
+
+function sanitizePath(value) {
+	return value && value.length ? value.replace(/[\/]/g, '\\').replace(/[|]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '') : '';
 }
 
 function UUID() {
