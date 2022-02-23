@@ -1,5 +1,5 @@
 'use strict';
-//04/02/22
+//23/02/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -1006,7 +1006,7 @@ function _list(x, y, w, h) {
 		else {console.log('exportJson: Invalid index argument ' + idx); return '';}
 		if (!bArray && idx !== -1 && !this.data[idx].isAutoplaylist && !bAll && !this.data[idx].extension === '.fpl' && !this.data[idx].extension === '.xsp') {return '';} // Safety check
 		if (!path || !path.length) {
-			try {path = utils.InputBox(window.ID, 'Path to save the json file:', window.Name, this.playlistsPath + 'Export\\' + name,true);}
+			try {path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', window.Name, this.playlistsPath + 'Export\\' + name, true));}
 			catch (e) {return '';}
 		}
 		if (!path.length){return '';}
@@ -1099,8 +1099,8 @@ function _list(x, y, w, h) {
 	this.tagState = [];
 	// These are constant
 	this.constLockStates = () => {return ['All','Not locked','Locked'];};
-	this.constAutoPlaylistStates = () => {return ['All','AutoPlaylists & Smart Playlists','Standard Playlists'];};
-	this.constExtStates = () => {return ['All', ...loadablePlaylistFormats];};
+	this.constAutoPlaylistStates = (bUI = this.bAllPls) => {return bUI ? this.constAutoPlaylistStates(false).concat(['UI-only Playlists']): ['All','AutoPlaylists & Smart Playlists','Standard Playlists'];};
+	this.constExtStates = (bUI = this.bAllPls) => {return bUI ? this.constExtStates(false).concat(['.ui']) : ['All', ...loadablePlaylistFormats];};
 	// These rotate over time
 	this.lockStates = this.constLockStates();
 	this.autoPlaylistStates = this.constAutoPlaylistStates();
@@ -1114,7 +1114,9 @@ function _list(x, y, w, h) {
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
 			this.data = this.dataAll.filter((item) => {return item.isAutoPlaylist || item.query;});
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
-			this.data = this.dataAll.filter((item) => {return !item.isAutoPlaylist && !item.query;});
+			this.data = this.dataAll.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
+		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
+			this.data = this.dataAll.filter((item) => {return item.extension === '.ui'});
 		}
 		// And then... we use this.data to filter again by lock state
 		if (lockState === this.constLockStates()[0]) {
@@ -1509,7 +1511,8 @@ function _list(x, y, w, h) {
 				this.dataAll = this.dataAll.concat(this.dataFoobar);
 				this.data = this.data.concat(this.dataFoobar);
 			}
-		}
+			this.itemsFoobar = this.dataFoobar.length;
+		} else {this.itemsFoobar = 0;}
 		// Always
 		this.items = this.data.length;
 		this.itemsAll = this.dataAll.length;
@@ -1617,6 +1620,10 @@ function _list(x, y, w, h) {
 			}
 		}
 		clearInterval(delay);
+	}
+	
+	this.getPlaylistNum = (bAll = false) => {
+		return (bAll ? list.itemsAll : list.itemsAll - list.itemsAutoplaylist - list.itemsFoobar);
 	}
 	
 	this.init = () => {
@@ -1845,7 +1852,7 @@ function _list(x, y, w, h) {
 				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags); //TODO: Deprecated
+					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags);
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
@@ -1859,10 +1866,9 @@ function _list(x, y, w, h) {
 								plman.ActivePlaylist = indexFound;
 								plman.RenamePlaylist(indexFound, new_name + UUID);
 								this.updatePlaylist(plman.ActivePlaylist , true); // This updates size too. Must replicate callback call since the playlist may not be visible on the current filter view!
-								// TODO: items
 							}
 						}
-					} else {	// If we changed the name of the playlist but created it using the active playlist, then clone with new name
+					} else { // If we changed the name of the playlist but created it using the active playlist, then clone with new name
 						if (new_name !== oldName) {
 							let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, new_name + UUID);
 							plman.ActivePlaylist = new_playlist;
@@ -1886,7 +1892,7 @@ function _list(x, y, w, h) {
 					return false;
 				}
 			} else {fb.ShowPopupMessage('Playlist \'' + new_name + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name); return false;}
-			this.update(true, true); // We have already updated data // TODO: true,true when split this.data from this.dataPaint... 
+			this.update(true, true); // We have already updated data
 			this.filter();
 			return objectPlaylist;
         }
@@ -2311,6 +2317,7 @@ function _list(x, y, w, h) {
 	this.itemsAutoplaylist = 0;
 	this.itemsFpl = 0;
 	this.itemsXsp = 0;
+	this.itemsFoobar = 0;
 	this.text_x = 0;
 	this.timeOut = null;
 	this.bDoubleclick = false;
