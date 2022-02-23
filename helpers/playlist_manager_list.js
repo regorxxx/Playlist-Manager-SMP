@@ -359,9 +359,10 @@ function _list(x, y, w, h) {
 			headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
 			// Tips
 			if (this.bShowTips) {
-				headerText += '\n\n' + '(R. Click for config menus)';
-				headerText += '\n' + '(L. Click to highlight active playlist)';
-				headerText += '\n' + '(Double Click to cycle categories)';
+				headerText += '\n----------------------------------------------';
+				headerText += '\n(R. Click for config menus)';
+				headerText += '\n(L. Click to highlight active playlist)';
+				headerText += '\n(Double Click to cycle categories)';
 			}
 			this.tooltip.SetValue(headerText, true);
 			this.index = -1;
@@ -411,28 +412,29 @@ function _list(x, y, w, h) {
 									playlistDataText += '\n' + 'Limit: ' +  (pls.limit ? pls.limit : '\u221E') + ' tracks';
 								}
 								// Show current action
-								if (mask === MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + L. Click to load / show playlist)';}
+								if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n---------------------------------------------------';}
+								if (mask === MK_CONTROL) {playlistDataText += '\n(Ctrl + L. Click to load / show playlist)';}
 								else if (mask === MK_SHIFT) {
-									playlistDataText += '\n\n' + '(Shift + L. Click to send selection to playlist)';
+									playlistDataText += '\n(Shift + L. Click to send selection to playlist)';
 									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}
-									else if (pls.extension === '.fpl') {playlistDataText += '\n' + '(.fpl playlists are non editable, convert it first)';}
-									else if (pls.isLocked) {playlistDataText += '\n' + '(Locked playlists are non editable, unlock it first)';}
+									else if (pls.extension === '.fpl') {playlistDataText += '\n(.fpl playlists are non editable, convert it first)';}
+									else if (pls.isLocked) {playlistDataText += '\n(Locked playlists are non editable, unlock it first)';}
 									else {
 										const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-										if (!selItems || !selItems.Count) {playlistDataText += '\n' + '(No items on active playlist current selection)';}
+										if (!selItems || !selItems.Count) {playlistDataText += '\n(No items on active playlist current selection)';}
 									}
-								} else if (mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n\n' + '(Ctrl + Shift + L. Click to recycle playlist)';}
+								} else if (mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n(Ctrl + Shift + L. Click to recycle playlist)';}
 								// Tips
 								else if (this.bShowTips) {
-									playlistDataText += '\n\n' + '(L. Click to manage playlist)';
-									playlistDataText += '\n' + '(R. Click for other tools / new playlists)';
-									playlistDataText += '\n' + '(Ctrl + L. Click to load / show playlist)';
-									playlistDataText += '\n' + '(Shift + L. Click to send selection to playlist)';
-									playlistDataText += '\n' + '(Ctrl + Shift + L. Click to recycle playlist)';
+									playlistDataText += '\n(L. Click to manage playlist)';
+									playlistDataText += '\n(R. Click for other tools / new playlists)';
+									playlistDataText += '\n(Ctrl + L. Click to load / show playlist)';
+									playlistDataText += '\n(Shift + L. Click to send selection to playlist)';
+									playlistDataText += '\n(Ctrl + Shift + L. Click to recycle playlist)';
 								}
 								// Adding Duplicates on selection hint
 								if (mask === MK_SHIFT) {
-									if (this.checkSelectionDuplicatesPlaylist(this.index)) {playlistDataText += '\n' + 'Warning! Some track(s) already present...';}
+									if (this.checkSelectionDuplicatesPlaylist(this.index)) {playlistDataText += '\nWarning! Some track(s) already present...';}
 								}
 								this.tooltip.SetValue(playlistDataText, true);
 							}

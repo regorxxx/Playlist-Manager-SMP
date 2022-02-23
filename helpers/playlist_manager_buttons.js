@@ -157,8 +157,9 @@ function filterTooltip() {
 		}
 	}
 	if (list.bShowTips) {
-		ttText += '\n\n' + '(L. Click to cycle current filter)';
-		ttText += '\n' + '(R. Click to configure filters)';
+		ttText += '\n-----------------------------------------';
+		ttText += '\n(L. Click to cycle current filter)';
+		ttText += '\n(R. Click to configure filters)';
 	}
 	return ttText;
 }
@@ -166,8 +167,9 @@ function sortTooltip() {
 	let ttText = '';
 	ttText = !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';
 	if (list.bShowTips) {
-		ttText += '\n\n' + '(L. Click to invert sorting)';
-		ttText += '\n' + '(R. Click to configure sorting)';
+		ttText += '\n-----------------------------------------';
+		ttText += '\n(L. Click to invert sorting)';
+		ttText += '\n(R. Click to configure sorting)';
 	}
 	return ttText;
 }
