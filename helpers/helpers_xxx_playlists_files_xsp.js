@@ -1,5 +1,5 @@
 'use strict';
-//02/11/21
+//23/02/21
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -154,7 +154,7 @@ XSP.getSort = function(jsp) {
 		switch (direction) {
 			case 'ascending': {sort = 'SORT ASCENDING BY'; break;}
 			case 'descending': {sort = 'SORT DESCENDING BY'; break;}
-			default: {console.log('Direction not recognized: ' + direction); break;}
+			default: {console.log('Direction not recognized: ' + direction + (jsp.playlist.hasOwnProperty('name') && jsp.playlist.name.length ? ' (playlist \'' + jsp.playlist.name + '\')' : '')); break;}
 		}
 		if (sort.length) {
 			let fbTag = this.getFbTag(tag);

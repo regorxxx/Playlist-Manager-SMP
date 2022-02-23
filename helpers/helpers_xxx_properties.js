@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//23/02/22
 
 include('helpers_xxx_file.js');
 
@@ -164,7 +164,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
-			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0])); // TODO: toString();
+			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]));
 			output += (output === '') ? value : sep + value ;
 			if (bNumber) {count++;}
 		}
@@ -207,7 +207,6 @@ function checkProperty(property, withValue) {
 	}
 	if (checks.hasOwnProperty('portable') && checks['portable'] && valToCheck !== property[3] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
 		console.log(window.Name + ' - Portable installation: property \'' + property[0] + '\'\nReplacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
-		// TODO warn about using relative paths?
 	}
 	if (!bPass) {
 		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\n\nWrong value: ' + valToCheck + '\n\nReplaced with: ' + property[3] + '\n\n' + report);

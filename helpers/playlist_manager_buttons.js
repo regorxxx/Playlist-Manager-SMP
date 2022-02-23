@@ -1,5 +1,5 @@
 'use strict';
-//17/02/22
+//23/02/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -98,19 +98,19 @@ function doFilter(parent) {
 	switch (parent.method) {
 		case 'Playlist type': {
 			list.autoPlaylistStates.rotate(1);
-			list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
+			list.update(true, true);
 			list.filter(); // Current filter states
 			break;
 		}
 		case 'Lock state': {
 			list.lockStates.rotate(1);
-			list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
+			list.update(true, true);
 			list.filter(); // Current filter states
 			break;
 		}
 		case 'Extension': {
 			list.extStates.rotate(1);
-			list.update(true, true); // TODO: true,true Change when we split this.data from this.dataPaint
+			list.update(true, true);
 			list.filter(); // Current filter states
 			break;
 		}
