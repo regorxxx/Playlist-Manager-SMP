@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/12/21
+//22/02/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_UI_chars.js');
@@ -50,15 +50,14 @@ const popup = {
 // Combinations of invisible chars may be used on UI elements to assign IDs...
 const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 
-
-function _scale(size) {
+function _scale(size, bRound = true) {
 	if (!scaleDPI[size]) {
 		let DPI;
 		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI');}
 		catch (e) {DPI = 96;} // Fix for linux
-		scaleDPI[size] = Math.round(size * DPI / 72);
+		scaleDPI[size] = size * DPI / 72;
 	}
-	return scaleDPI[size];
+	return (bRound ? Math.round(scaleDPI[size]) : scaleDPI[size]);
 }
 
 /* 
