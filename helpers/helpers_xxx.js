@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/22
+//22/02/22
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_basic_js.js');
@@ -40,8 +40,13 @@ function getSoFeatures() {
 	// Internals
 	try {doc = new ActiveXObject('htmlfile');} catch (e) {soFeat.gecko = false;}
 	if (typeof doc !== 'undefined' && soFeat.gecko) {
-		let clText = 'test';
-		try {doc.parentWindow.clipboardData.setData('Text', clText); clText = doc.parentWindow.clipboardData.getData('Text');} catch (e) {soFeat.clipboard = false;}
+		let clText = 'test', cache = null;
+		try {
+			cache = doc.parentWindow.clipboardData.getData('Text'); 
+			doc.parentWindow.clipboardData.setData('Text', clText); 
+			clText = doc.parentWindow.clipboardData.getData('Text');
+			if (cache !== null) {doc.parentWindow.clipboardData.setData('Text', cache);} // Just in case previous clipboard data is needed
+		} catch (e) {soFeat.clipboard = false;}
 		if (clText !== 'test') {soFeat.clipboard = false;}
 	} else {soFeat.clipboard = false;}
 	// File system
