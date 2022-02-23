@@ -333,15 +333,18 @@ function on_playlists_changed() {
 		const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
 		list.filter({categoryState});
 	}
-	if (!list.bUseUUID && plsHistory[0] && plman.ActivePlaylist !== -1) {  // To rename bound playlist when UUIDS are not used
-		const oldName = plsHistory[0].name;
-		if (plsHistory[0].idx === plman.ActivePlaylist && !getPlaylistIndexArray(oldName).length) {
-			const idx = list.getPlaylistsIdxByName([oldName]);
-			if (idx.length === 1) {
-				const newName = plman.GetPlaylistName(plman.ActivePlaylist);
-				let bDone = renamePlaylist(list, idx[0], plman.GetPlaylistName(plman.ActivePlaylist), false);
-				if (bDone) {console.log('Playlist manager: renamed playlist ' + oldName + ' --> ' + newName);}
-				else {console.log('Playlist manager: failed renaming playlist ' + oldName + ' -\-> ' + newName);}
+	if (!list.bUseUUID && plman.ActivePlaylist !== -1) {
+		const lastPls = plsHistory[0];
+		if (lastPls) {  // To rename bound playlist when UUIDs are not used
+			const oldName = lastPls.name;
+			if (lastPls.idx === plman.ActivePlaylist && !getPlaylistIndexArray(oldName).length) {
+				const idx = list.getPlaylistsIdxByName([oldName]);
+				if (idx.length === 1) {
+					const newName = plman.GetPlaylistName(plman.ActivePlaylist);
+					let bDone = renamePlaylist(list, idx[0], newName, false);
+					if (bDone) {console.log('Playlist manager: renamed playlist ' + oldName + ' --> ' + newName);}
+					else {console.log('Playlist manager: failed renaming playlist ' + oldName + ' -\-> ' + newName);}
+				}
 			}
 		}
 	}
