@@ -1,5 +1,5 @@
 'use strict';
-//14/02/22
+//01/03/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -16,7 +16,7 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.id = id;
 	this.name = name;
 	this.nameId = (id) ? name + id : name;
-	this.extension = extension;
+	this.extension = extension.toLowerCase();
 	this.path = path;
 	this.size = size;
 	this.fileSize = fileSize;
@@ -37,7 +37,9 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 	const playlistPathArrayLength = playlistPathArray.length;
 	let playlistArray = [];
 	for (let i = 0; i < playlistPathArrayLength; i++) {
-		if (!_isFile(playlistPathArray[i])) {continue;} // In some rare cases a file may have been deleted while updating the others leading to a crash otherwise...
+		const file = playlistPathArray[i];
+		if (!_isFile(file)) {continue;} // In some rare cases a file may have been deleted while updating the others leading to a crash otherwise...
+		const extension = '.' + file.split('.').pop().toLowerCase();
 		let name = '';
 		let uuid = '';
 		let bLocked = false;
@@ -48,13 +50,13 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		let queryObj = null;
 		let limit = null;
 		let duration = null;
-		const fileSize = utils.GetFileSize(playlistPathArray[i]);
-		if (playlistPathArray[i].endsWith('.m3u8') || playlistPathArray[i].endsWith('.m3u')) { // Schema does not apply for foobar native playlist format
-			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
+		const fileSize = utils.GetFileSize(file);
+		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar native playlist format
+			let text = utils.ReadTextFile(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				// Safe checks to ensure proper UTF-8 and codepage detection
-				const codePage = checkCodePage(text, '.' + playlistPathArray[i].split('.').pop());
-				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage).split(/\r\n|\n\r|\n|\r/);}
+				const codePage = checkCodePage(text, extension);
+				if (codePage !== -1) {text = utils.ReadTextFile(file, codePage).split(/\r\n|\n\r|\n|\r/);}
 				let commentsText = text.filter(function(e) {return e.startsWith('#');});
 				if (typeof commentsText !== 'undefined' && commentsText.length >= 1) { // Use playlist info
 					let lines = commentsText.length;
@@ -106,11 +108,11 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				const filteredText = text.filter(function(e) {return !e.startsWith('#');});
 				size = filteredText.length;
 			}
-		} else if (playlistPathArray[i].endsWith('.fpl')) { // AddLocations is async so it doesn't work...
+		} else if (extension === '.fpl') { // AddLocations is async so it doesn't work...
 			// Nothing
 			// Locked according to manager config
-		} else if (playlistPathArray[i].endsWith('.pls')) {
-			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
+		} else if (extension === '.pls') {
+			let text = utils.ReadTextFile(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				let sizeText = text.filter(function(e) {return e.startsWith('NumberOfEntries');});
 				if (typeof sizeText !== 'undefined' && sizeText.length >= 1) { // Use playlist info
@@ -121,18 +123,18 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				let fileText = text.filter(function(e) {return e.startsWith('File');});
 				size = fileText.length;
 			}	
-		} else if (playlistPathArray[i].endsWith('.strm')) {
-			let text = utils.ReadTextFile(playlistPathArray[i]).split(/\r\n|\n\r|\n|\r/);
+		} else if (extension === '.strm') {
+			let text = utils.ReadTextFile(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined') {
 				size = text.filter(Boolean).length;
-				if (size > 1) {fb.ShowPopupMessage('.strm playlist can\'t contain multiple items: ' + playlistPathArray[i], window.Name);}
+				if (size > 1) {fb.ShowPopupMessage('.strm playlist can\'t contain multiple items: ' + file, window.Name);}
 				bLocked = true; // Always locked by default
 			}
-		} else if (playlistPathArray[i].endsWith('.xspf')) {
-			let text = utils.ReadTextFile(playlistPathArray[i]);
+		} else if (extension === '.xspf') {
+			let text = utils.ReadTextFile(file);
 			if (typeof text !== 'undefined') {
-				const codePage = checkCodePage(text, '.' + playlistPathArray[i].split('.').pop());
-				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage);}
+				const codePage = checkCodePage(text, extension);
+				if (codePage !== -1) {text = utils.ReadTextFile(file, codePage);}
 				const xmldom = XSPF.XMLfromString(text);
 				const jspf = XSPF.toJSPF(xmldom, false);
 				if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
@@ -152,14 +154,14 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 						if (!bLockedFound) {bLocked = true;} // Locked by default if meta not present
 					}
 					if (size === null) {size = jPls.hasOwnProperty('track') && jPls.track ? jPls.track.length : null;} // Prefer playlist info over track count
-					else if (jPls.hasOwnProperty('track') && jPls.track && size !== jPls.track.length) {fb.ShowPopupMessage('.xspf playlist size mismatch: ' + playlistPathArray[i] + '\nReported size (' + size +') is not equal to track count (' + jPls.track.length +')', window.Name);}
+					else if (jPls.hasOwnProperty('track') && jPls.track && size !== jPls.track.length) {fb.ShowPopupMessage('.xspf playlist size mismatch: ' + file + '\nReported size (' + size +') is not equal to track count (' + jPls.track.length +')', window.Name);}
 				}
 			}
-		} else if (playlistPathArray[i].endsWith('.xsp')) {
-			let text = utils.ReadTextFile(playlistPathArray[i]);
+		} else if (extension === '.xsp') {
+			let text = utils.ReadTextFile(file);
 			if (typeof text !== 'undefined') {
-				const codePage = checkCodePage(text, '.' + playlistPathArray[i].split('.').pop());
-				if (codePage !== -1) {text = utils.ReadTextFile(playlistPathArray[i], codePage);}
+				const codePage = checkCodePage(text, extension);
+				if (codePage !== -1) {text = utils.ReadTextFile(file, codePage);}
 				const xmldom = XSP.XMLfromString(text);
 				const jsp = XSP.toJSP(xmldom, false);
 				if (jsp.hasOwnProperty('playlist') && jsp.playlist) {
@@ -171,7 +173,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				}
 			}
 		}
-		playlistArray[i] = new oPlaylist(uuid, playlistPathArray[i], name.length ? name : void(0), void(0), size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0), Number.isFinite(duration) ? duration : void(0));
+		playlistArray[i] = new oPlaylist(uuid, file, name.length ? name : void(0), extension, size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0), Number.isFinite(duration) ? duration : void(0));
 	}
 	return playlistArray;
 }
@@ -562,13 +564,15 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', extension = '') {
+function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '') {
 	fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);
 	let bDone = false;
 	const pls = list.data[z];
 	const playlistPath = pls.path;
 	const bUI = pls.extension === '.ui';
-	const [playlistName, playlistExt] = bUI ? [pls.name, ''] : utils.SplitFilePath(playlistPath).slice(1);
+	const arr = utils.SplitFilePath(playlistPath);
+	const [playlistName, playlistExt] = bUI ? [pls.name, ''] : [arr[1], arr[2].toLowerCase()];
+	let extension = ext.toLowerCase();
 	if (!playlistExt.length) {extension = list.playlistsExtension;} // Use default extension for UI playlists
 	const playlistNameExt = playlistName + (extension.length ? extension : playlistExt);
 	// Set output

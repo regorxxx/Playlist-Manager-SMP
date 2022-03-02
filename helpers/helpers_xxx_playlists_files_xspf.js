@@ -1,5 +1,5 @@
 'use strict';
-//22/12/21
+//25/02/22
 
 // https://wiki.xiph.org/XSPF_v1_Notes_and_Errata
 // https://wiki.xiph.org/XSPF_Examples_in_the_wild
@@ -30,7 +30,7 @@ XSPF.toXSPF = function(jspf) {
 						const subKey = Object.keys(subValObj)[0];
 						const subVal = subValObj[subKey];
 						const typeSubVal = typeof subVal;
-						if (typeSubVal !== 'undefined') {code.push('	<' + key + ' rel="' + subKey + '">' + subVal + '</' + key + '>');}
+						if (typeSubVal !== 'undefined') {code.push('	<' + key + ' rel="' + subKey + '">' + htmlEntities(subVal, typeSubVal) + '</' + key + '>');}
 					});
 				} else { // extension={http://www.videolan.org/vlc/playlist/0=[{vlc:id="0"}]}
 					const nameSpaces = Object.keys(val);
@@ -44,7 +44,7 @@ XSPF.toXSPF = function(jspf) {
 								const typeSubVal = typeof subVal;
 								if (typeSubVal !== 'undefined') {
 									if (!bNodeDone) {nameSpacesHeader.set(subKey.split(':')[0], space); bNodeDone = true; code.push('	<' + key + ' application="' + space + '">');}
-									code.push('		<' + subKey + '>' + subVal + '</' + subKey + '>');
+									code.push('		<' + subKey + '>' + htmlEntities(subVal, typeSubVal) + '</' + subKey + '>');
 								}
 							});
 							if (bNodeDone) {code.push('	</' + key + '>');}
@@ -97,6 +97,14 @@ XSPF.toXSPF = function(jspf) {
 						break;
 					case 'duration':
 						bWrite = (typeVal === 'number' && Number.isInteger(value) && value > 0);
+						break;
+					case 'meta':
+						value.forEach((subValObj) => {
+							const subKey = Object.keys(subValObj)[0];
+							const subVal = subValObj[subKey];
+							const typeSubVal = typeof subVal;
+							if (typeSubVal !== 'undefined') {code.push('			<' + key + ' rel="' + subKey + '">' + htmlEntities(subVal, typeSubVal) + '</' + key + '>');}
+						});
 						break;
 				}
 				if (bWrite) {

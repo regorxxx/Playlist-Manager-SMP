@@ -217,7 +217,7 @@ const XSPF = {
 			arr = [arr];
 			scalar = true;
 		} else {
-			scalar = false;	   
+			scalar = false;
 		}
 		let result = [];
 		const length = arr.length;
