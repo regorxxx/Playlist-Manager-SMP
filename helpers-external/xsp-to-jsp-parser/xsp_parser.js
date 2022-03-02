@@ -1,7 +1,6 @@
 'use strict';
-//27/10/21
-
-// Copyright Regorxxx 2021
+// 02/03/22
+// Copyright Regorxxx 2022
 // Based on works by J. Chris Anderson 2007 
 // https://github.com/jchris/xspf-to-jspf-parser
 // Retain this notice. 
@@ -22,11 +21,11 @@ const XSP = {
 		return doc;
 	},
 	toJSP : function(xml_dom) {
-		const pl =  this.parse_playlist(xml_dom);
+		const pl =  this.parsePlaylist(xml_dom);
 		return {playlist:pl};
 	},
 	emptyJSP : function(type = 'songs') {
-		const pl =  this.parse_playlist(this.XMLfromString(''), type);
+		const pl =  this.parsePlaylist(this.XMLfromString(''), type);
 		return {playlist:pl};
 	},
 	toXSP : function (jsp) {
@@ -74,12 +73,12 @@ const XSP = {
 		code.push('</smartplaylist>');
 		return code;
 	},
-	parse_playlist : function(xsp, defType = '') {
+	parsePlaylist : function(xsp, defType = '') {
 		const playlist = new Object;
 		const xsp_playlist = xsp.getElementsByTagName('smartplaylist')[0] || new ActiveXObject("Microsoft.XMLDOM");
 		playlist.type = xsp_playlist.getAttribute ? xsp_playlist.getAttribute('type') : defType;
 		
-		[playlist.name, playlist.match, playlist.group, playlist.limit] = this.get_contents(xsp_playlist, ['name','match','group','limit'], 1);
+		[playlist.name, playlist.match, playlist.group, playlist.limit] = this.getContents(xsp_playlist, ['name','match','group','limit'], 1);
 		playlist.name = playlist.name[0];
 		playlist.match = playlist.match[0];
 		playlist.group = playlist.group[0];
@@ -111,7 +110,7 @@ const XSP = {
 			const attr = node.childNodes[y];
 			if (attr.tagName) {
 				if (!filter || (filter && (filter.indexOf(attr.tagName) != -1))) {
-					result[attr.tagName] = this.node_text(attr);
+					result[attr.tagName] = this.nodeText(attr);
 				}
 			} 
 		}
@@ -125,13 +124,13 @@ const XSP = {
 			const attr = node.childNodes[y];
 			if (attr.tagName) {
 				if (!filter) {
-					value[attr.tagName] = this.node_text(attr);
-					result.push(nowrap ? this.node_text(attr) : value);
+					value[attr.tagName] = this.nodeText(attr);
+					result.push(nowrap ? this.nodeText(attr) : value);
 				} else {
 					const pos = filter.indexOf(attr.tagName);
 					if (pos !== -1) {
-						value[attr.tagName] = this.node_text(attr);
-						result[pos].push(nowrap ? this.node_text(attr) : value);
+						value[attr.tagName] = this.nodeText(attr);
+						result[pos].push(nowrap ? this.nodeText(attr) : value);
 					}
 				}
 			} 
@@ -146,7 +145,7 @@ const XSP = {
 			const rel = ln ? ln.getAttribute(attr) : null;
 			if (rel) {
 				let link = {};
-				link[rel] = preserve_whitespace ? this.node_text(ln) : this.strWh(this.node_text(ln));
+				link[rel] = preserve_whitespace ? this.nodeText(ln) : this.strWh(this.nodeText(ln));
 				result.push(link);
 			}
 		}
@@ -186,7 +185,7 @@ const XSP = {
 		return rules; 
 	},
 	
-	get_contents : function(xml_node, tag, val = Infinity) {
+	getContents : function(xml_node, tag, val = Infinity) {
 		const xml_contents = xml_node.childNodes;
 		const xml_contentsLength = xml_contents.length;
 		const length = xml_contentsLength >= val ? val : xml_contentsLength;
@@ -197,13 +196,13 @@ const XSP = {
 			const pos = tag.indexOf(xml_content.tagName);
 			if (j[pos] >= length) {continue;}
 			if (pos !== -1) {
-				contents[pos][j[pos]] = this.node_text(xml_content);
+				contents[pos][j[pos]] = this.nodeText(xml_content);
 				j[pos]++;
 			}
 		}
 		return contents;
 	},
-	node_text : function(node) {
+	nodeText : function(node) {
 		if (node.childNodes && node.childNodes.length > 1) {
 			return node.childNodes[1].nodeValue;
 		} else if (node.firstChild) {

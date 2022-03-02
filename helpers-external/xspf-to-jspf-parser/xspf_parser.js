@@ -1,8 +1,11 @@
-// Copyright J. Chris Anderson 2007 
-// Retain this notice. 
-// Released under the LGPL 3
-// http://www.gnu.org/licenses/lgpl.html
 'use strict';
+// 02/03/22
+// Copyright Regorxxx 2022
+// Based on works by J. Chris Anderson 2007 
+// https://github.com/jchris/xspf-to-jspf-parser
+// Retain this notice. 
+// Released under the AGPLv3
+// https://www.gnu.org/licenses/agpl-3.0.html
 
 const XSPF = {
 	XMLfromString: function(string) {
@@ -18,20 +21,20 @@ const XSPF = {
 		return doc;
 	},
 	toJSPF : function(xml_dom, bParseTracks = true) {
-		const pl =  this.parse_playlist(xml_dom, bParseTracks);
+		const pl =  this.parsePlaylist(xml_dom, bParseTracks);
 		return {playlist:pl};
 	},
 	emptyJSPF : function() {
-		const pl =  this.parse_playlist(this.XMLfromString(''), false);
+		const pl =  this.parsePlaylist(this.XMLfromString(''), false);
 		return {playlist:pl};
 	},
-	parse_playlist : function(xspf, bParseTracks = true) {
+	parsePlaylist : function(xspf, bParseTracks = true) {
 		const playlist = new Object;
 		const xspf_playlist = xspf.getElementsByTagName('playlist')[0] || new ActiveXObject("Microsoft.XMLDOM");
 		const trackList = xspf_playlist.getElementsByTagName('trackList')[0] || new ActiveXObject("Microsoft.XMLDOM");
 		
 		let license;
-		[playlist.title, playlist.creator, playlist.annotation, playlist.info, playlist.location, playlist.identifier, playlist.image, playlist.date, license] = this.get_contents(xspf_playlist, ['title','creator','annotation','info','location','identifier','image','date','license'], 1);
+		[playlist.title, playlist.creator, playlist.annotation, playlist.info, playlist.location, playlist.identifier, playlist.image, playlist.date, license] = this.getContents(xspf_playlist, ['title','creator','annotation','info','location','identifier','image','date','license'], 1);
 		playlist.title = playlist.title[0];
 		playlist.creator = playlist.creator[0];
 		playlist.annotation = playlist.annotation[0];
@@ -61,7 +64,7 @@ const XSPF = {
 				}
 			}
 		}
-		playlist.track = this.parse_tracks(trackList, bParseTracks);
+		playlist.track = this.parseTracks(trackList, bParseTracks);
 		
 		return playlist;
 	},
@@ -83,7 +86,7 @@ const XSPF = {
 			const attr = node.childNodes[y];
 			if (attr.tagName) {
 				if (!filter || (filter && (filter.indexOf(attr.tagName) != -1))) {
-					result[attr.tagName] = this.node_text(attr);
+					result[attr.tagName] = this.nodeText(attr);
 				}
 			} 
 		}
@@ -97,13 +100,13 @@ const XSPF = {
 			const attr = node.childNodes[y];
 			if (attr.tagName) {
 				if (!filter) {
-					value[attr.tagName] = this.node_text(attr);
-					result.push(nowrap ? this.node_text(attr) : value);
+					value[attr.tagName] = this.nodeText(attr);
+					result.push(nowrap ? this.nodeText(attr) : value);
 				} else {
 					const pos = filter.indexOf(attr.tagName);
 					if (pos !== -1) {
-						value[attr.tagName] = this.node_text(attr);
-						result[pos].push(nowrap ? this.node_text(attr) : value);
+						value[attr.tagName] = this.nodeText(attr);
+						result[pos].push(nowrap ? this.nodeText(attr) : value);
 					}
 				}
 			} 
@@ -118,7 +121,7 @@ const XSPF = {
 			const rel = ln ? ln.getAttribute('rel') : null;
 			if (rel) {
 				let link = {};
-				link[rel] = preserve_whitespace ? this.node_text(ln) : this.strWh(this.node_text(ln));
+				link[rel] = preserve_whitespace ? this.nodeText(ln) : this.strWh(this.nodeText(ln));
 				result.push(link);
 			}
 		}
@@ -140,7 +143,7 @@ const XSPF = {
 		}
 		return matches;
 	},
-	parse_tracks : function(xml, bParseTracks = true) {
+	parseTracks : function(xml, bParseTracks = true) {
 		const xspf_tracks = this.getDirectChildrenByTagName(xml,'track')[0].filter(Boolean);
 		const xspf_playlist_length = xspf_tracks.length;
 		let tracks = new Array(xspf_playlist_length);
@@ -149,7 +152,7 @@ const XSPF = {
 				let t = new Object;
 				const xspf_track = xspf_tracks[i];
 				
-				[t.annotation, t.title, t.creator, t.info, t.image, t.album, t.trackNum, t.duration] = this.get_contents(xspf_track, ['annotation','title','creator','info','image','album','trackNum','duration'], 1);
+				[t.annotation, t.title, t.creator, t.info, t.image, t.album, t.trackNum, t.duration] = this.getContents(xspf_track, ['annotation','title','creator','info','image','album','trackNum','duration'], 1);
 				t.annotation = t.annotation[0];
 				t.title = t.title[0];
 				t.creator = t.creator[0];
@@ -186,7 +189,7 @@ const XSPF = {
 		}
 		return tracks; 
 	},
-	get_contents : function(xml_node, tag, val = Infinity) {
+	getContents : function(xml_node, tag, val = Infinity) {
 		const xml_contents = xml_node.childNodes;
 		const xml_contentsLength = xml_contents.length;
 		const length = xml_contentsLength >= val ? val : xml_contentsLength;
@@ -197,13 +200,13 @@ const XSPF = {
 			const pos = tag.indexOf(xml_content.tagName);
 			if (j[pos] >= length) {continue;}
 			if (pos !== -1) {
-				contents[pos][j[pos]] = this.node_text(xml_content);
+				contents[pos][j[pos]] = this.nodeText(xml_content);
 				j[pos]++;
 			}
 		}
 		return contents;
 	},
-	node_text : function(node) {
+	nodeText : function(node) {
 		if (node.childNodes && node.childNodes.length > 1) {
 			return node.childNodes[1].nodeValue;
 		} else if (node.firstChild) {
