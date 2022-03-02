@@ -1,6 +1,6 @@
 REQUISITES:
 -------------
-Spider Monkey Panel 1.5.2 or greater (only stable releases supported):
+Spider Monkey Panel 1.6.1 or greater (only stable releases supported):
 https://theqwertiest.github.io/foo_spider_monkey_panel/
 
 WINE USERS: 
@@ -38,7 +38,7 @@ Some extra folders from other components which must be moved include (non extens
 If you don't move all the config folders/files then on startup default values will be used for things not found, probably "losing"
 the theme or other config. You may "fix" it later moving the missing files which still reside in the root. May take some tries to do them all.
 
-SMP 1.5.2 BUG: 
+SMP 1.5.2+ BUG: 
 -------------
 After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files', check '_switchPaths.zip'.
 Follow its instructions to fix it. Then report it at https://hydrogenaud.io/index.php?topic=116669.0 and hopefully it will be fixed.

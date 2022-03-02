@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.2](#050-beta2---2022-03-02)
 - [0.5.0-beta.1](#050-beta1---2021-12-23)
 - [0.4.1](#041---2021-06-15)
 - [0.4.0](#040---2021-06-07)
@@ -15,10 +16,35 @@
 ## [Unreleased][]
 ### Added
 ### Changed
-- Tooltip: added metadata inheritance notice on filter button tooltips (category and tag filtering).
-- Header menu: added metadata inheritance notice on header filtering submenus (category and tag filtering).
+### Removed
+### Fixed##
+
+## [0.5.0-beta.2] - 2021-03-02
+### Added
+- UI: added UI-only playlists to Playlist type and Extension filters. i.e. manager can be set to only show those playlists now using the filters.
+- UI: playlist files are now automatically renamed when using foobar UI to rename a loaded playlist (only with no UUID option). This is an alternate method to using the manager itself to rename the playlist.
+- Subsongs: subsongs are now allowed in M3U and XSPF playlist formats. i.e. tracks from an ISO file may be referenced within a playlist; when loaded it will load only the selected track instead of the entire ISO file (bypassing Foobar2000's playlist limitations). Obviously, these tracks will not load in other players (but they did fail previously anyway). XSPF is an exception to this rule, since compliant players should be able to use fuzzy matching. Playlist referencing ISO files must be re-saved after updating the scripts.
+### Changed
+- Backup: json playlist file is also included in the zip backup now (current one and .old file), to ensure not only physical playlists have a backup but also the virtual ones along their metadata (Autoplaylists, .fpl, etc.)
+- UI: default custom background colour is now dark grey instead of pure black. Default custom text colour is now light grey instead of pure white (the non-custom version still uses the inverted b&w version of the background colour).
+- UI: icons for the sorting button now change according to the sorting method (category, date, etc.).
+- Tooltip: minor changes to shortcuts display.
+- Helpers: updated helpers.
+- General cleanup of code and json file formatting.
+- Removed all code and compatibility checks for SMP <1.4.0.
+- Added missing sanitizing path checks at presets path input and playlist folder input.
 ### Removed
 ### Fixed
+- Backup: backup now only stores playlist files recognized by the manager. i.e. it omits any other file found on the tracked folder not matching the known formats. Previously, it would try to zip anything in that folder, which could lead to high processing times if the user had other files there not related at all with the manager.
+- UI: 'Background colour mode' property had a spelling error. The fix will reset the panel background colour mode, reconfigure it to the desired mode via menus if needed.
+- Helpers: file deletion failed when file was read-only.
+- Helpers: file recycling has been overhauled to bypass Unix errors and shift pressing limitation (file was being deleted permanently). Now it tries 3 different methods, the last one requires an external executable and permissions may be asked by the SO.
+- XSPF: track paths with '&' were not properly URI encoded and broke playlists, now manually replaced.
+- XSPF: playlist metadata containing illegal characters like '&' broke playlists, now replaced with the proper HTML entities
+- Playlist files whose extension was not in lowercase were not being recognized properly.
+- Some exporting tools were not writing the playlist files to the right paths due to an error on path sanitizing logic.
+- Manager kept reloading playlist files (auto-load) even if it was not needed when UI-only playlists were enabled. Now it works as intended, only re-loading them when there were file changes.
+- Fixed rare crash when a playlist file was deleted while the panel was loading all playlists info. Only happened in extreme tests, probably not relevant on real world usage.
 
 ## [0.5.0-beta.1] - 2021-12-23
 ### Added
@@ -272,7 +298,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.2...HEAD
+[0.5.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...0.5.0-beta.2
 [0.5.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...0.5.0-beta.1
 [0.4.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.1...v0.4.0
