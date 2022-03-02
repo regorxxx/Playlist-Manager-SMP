@@ -2147,18 +2147,24 @@ function _list(x, y, w, h) {
 		
 		this.checkConfig = () => { // Forces right settings
 			let bDone = false;
-			// Check playlist extension
+			// Check playlists path
 			if (!this.playlistsPath.endsWith('\\')) {
 				this.playlistsPath += '\\';
 				this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 				this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
+				this.properties['playlistPath'][1] += '\\';
 				bDone = true;
 			}
 			// Check playlist extension
 			if (!writablePlaylistFormats.has(this.playlistsExtension)){
-				fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + Array.from(writablePlaylistFormats).join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
-				window.ShowProperties();
-				this.playlistsExtension = '.m3u8';
+				if (writablePlaylistFormats.has(this.playlistsExtension.toLowerCase())){
+					this.playlistsExtension = this.playlistsExtension.toLowerCase();
+				} else {
+					fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + Array.from(writablePlaylistFormats).join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
+					this.playlistsExtension = '.m3u8';
+				}
+				this.properties['extension'][1] = this.playlistsExtension;
+				bDone = true;
 			}
 			// Check UUID option
 			if (this.optionsUUID().indexOf(this.optionUUID) !== -1) {
@@ -2176,13 +2182,15 @@ function _list(x, y, w, h) {
 			// Check sorting is valid
 			if (!this.sortMethods().hasOwnProperty(this.methodState)) {
 				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods()).join('\n') + '\n\nUsing default method as fallback', window.Name);
-				window.ShowProperties();
 				this.methodState = this.getMethodState(); // On first call first state of that method will be default
+				this.properties['methodState'][1] = this.methodState;
+				bDone = true;
 			}
 			if (!this.sortMethods()[this.methodState].hasOwnProperty(this.sortState)) {
 				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods()[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
-				window.ShowProperties();
 				this.sortState = this.getSortState(); // On first call first state of that method will be default
+				this.properties['sortState'][1] = this.sortState;
+				bDone = true;
 			}
 			if (this.bSaveFilterStates) { // Rotate current filters until it matches the saved ones
 				const rotations = this.properties['filterStates'][1].split(',');
@@ -2342,7 +2350,7 @@ function _list(x, y, w, h) {
 	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.') ? findRelPathInAbsPath(this.properties['playlistPath'][1]) : this.properties['playlistPath'][1];
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
-	this.playlistsExtension = this.properties['extension'][1];
+	this.playlistsExtension = this.properties['extension'][1].toLowerCase();
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
 	this.bUseUUID = this.properties['bUseUUID'][1];
