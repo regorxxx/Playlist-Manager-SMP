@@ -188,7 +188,7 @@ function _parseAttrFile(file) {
 function _open(file, codePage = 0) {
 	if (_isFile(file)) {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
-		return utils.ReadTextFile(file, codePage);
+		return tryMethod('ReadTextFile', utils)(file, codePage) || '';  // Bypasses crash on file locked by other process
 	} else {
 		return '';
 	}
@@ -319,10 +319,10 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 	let bDone = false;
 	let reason = -1;
 	if (_isFile(filePath)){
-		let fileText = utils.ReadTextFile(filePath);
+		let fileText = _open(filePath);
 		const extension = utils.SplitFilePath(filePath)[2];
 		const codePage = checkCodePage(fileText, extension);
-		if (codePage !== -1) {fileText = utils.ReadTextFile(filePath, codePage);}
+		if (codePage !== -1) {fileText = _open(filePath, codePage);}
 		if (typeof fileText !== 'undefined' && fileText.length >= 1) {
 			let fileTextNew = fileText;
 			if (isArray(originalString) && isArray(newString) && originalString.length === newString.length) {
@@ -340,7 +340,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 				bDone = utils.WriteTextFile(filePath, fileTextNew, bBOM);
 				// Check
 				if (_isFile(filePath) && bDone) {
-					let check = utils.ReadTextFile(filePath, convertCharsetToCodepage('UTF-8'));
+					let check = _open(filePath, convertCharsetToCodepage('UTF-8'));
 					bDone = (check === fileTextNew);
 				} else {reason = -1;}
 			} else {reason = 1}

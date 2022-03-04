@@ -87,24 +87,24 @@ function randomString(len, charSet) {
 // Repeat execution indefinitely according to interval (ms). Ex:
 // const repeatedFunction = repeatFn(function, ms);
 // repeatedFunction(arguments);
-const repeatFn = (func, ms) => {
-	return (...args) => {return setInterval(func.bind(this, ...args), ms);};
+const repeatFn = (fn, ms) => {
+	return (...args) => {return setInterval(fn.bind(this, ...args), ms);};
 };
 
 // Delay execution according to interval (ms). Ex:
 // const delayedFunction = delayFn(function, ms);
 // delayedFunction(arguments);
-const delayFn = (func, ms) => {
-	return (...args) => {return setTimeout(func.bind(this, ...args), ms);};
+const delayFn = (fn, ms) => {
+	return (...args) => {return setTimeout(fn.bind(this, ...args), ms);};
 };
 
 // Halt execution if trigger rate is greater than delay (ms), so it fires only once after successive calls. Ex:
 // const debouncedFunction = debounce(function, delay[, immediate]);
 // debouncedFunction(arguments);
-const debounce = (func, delay, immediate) => {
+const debounce = (fn, delay, immediate) => {
 	let timerId;
 	return (...args) => {
-		const boundFunc = func.bind(this, ...args);
+		const boundFunc = fn.bind(this, ...args);
 		clearTimeout(timerId);
 		if (immediate && !timerId) {
 			boundFunc();
@@ -117,10 +117,10 @@ const debounce = (func, delay, immediate) => {
 // Limit the rate at which a function can fire to delay (ms).
 // var throttledFunction = throttle(function, delay[, immediate]);
 // throttledFunction(arguments);
-const throttle = (func, delay, immediate) => {
+const throttle = (fn, delay, immediate) => {
 	let timerId;
 	return (...args) => {
-		const boundFunc = func.bind(this, ...args);
+		const boundFunc = fn.bind(this, ...args);
 		if (timerId) {
 			return;
 		}
@@ -146,6 +146,22 @@ const doOnce = (task, fn) => {
 		}
 	};
 };
+
+function tryFunc(fn) {
+	return (...args) => {
+		let cache;
+		try {cache = fn(...args);} catch(e) {}
+		return cache;
+	}
+}
+
+function tryMethod(fn, parent) {
+	return (...args) => {
+		let cache;
+		try {cache = parent[fn](...args);} catch(e) {}
+		return cache;
+	}
+}
 
 /* 
 	Array and objects manipulation 

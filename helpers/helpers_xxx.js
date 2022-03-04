@@ -116,7 +116,7 @@ function initCheckFeatures(soFeat) {
 	const bPrevFile = utils.IsFile(soFeatFile);
 	let bCheck = false;
 	if (bPrevFile) {
-		data = utils.ReadTextFile(soFeatFile, 65001);
+		try {data = utils.ReadTextFile(soFeatFile, 65001);} catch (e) {}
 		data = data ? JSON.parse(data) : null;
 	}
 	if (!bPrevFile || !data) {

@@ -19,7 +19,7 @@ const writablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.xspf']); // The
 const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.strm','.xspf','.xsp']); // These are playlist formats which are readable to retrieve paths
 const loadablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl','.strm','.xspf','.xsp']); // These are playlist formats which are loadable into the manager (shown as files)
 _runCmd('CMD /C CHCP > ' + folders.data + 'systemCodePage.txt', true)
-const systemCodePage = _isFile(folders.data + '\\systemCodePage.txt') ? utils.ReadTextFile(folders.data + '\\systemCodePage.txt').split(': ').pop() : -1;
+const systemCodePage = _isFile(folders.data + '\\systemCodePage.txt') ? _open(folders.data + '\\systemCodePage.txt').split(': ').pop() : -1;
 
 // XSPF cache
 // Parser is too slow when retrieving tracks... so the object is cached for consecutive uses
@@ -183,7 +183,7 @@ function savePlaylist(playlistIndex, playlistPath, ext = '.m3u8', playlistName =
 		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
-			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));
+			let check = _open(playlistPath, convertCharsetToCodepage('UTF-8'));
 			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
@@ -199,7 +199,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 	}
 	if (_isFile(playlistPath)) {
 		// Read original file
-		let originalText = utils.ReadTextFile(playlistPath);
+		let originalText = _open(playlistPath);
 		let bFound = false;
 		const addSize = handleList.Count;
 		if (!addSize) {return false;}
@@ -210,7 +210,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		if (typeof originalText !== 'undefined' && originalText.length) { // We don't check if it's a playlist by its content! Can break things if used wrong...
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
-			if (codePage !== -1) {originalText = utils.ReadTextFile(playlistPath, codePage);}
+			if (codePage !== -1) {originalText = _open(playlistPath, codePage);}
 			// ---------------- M3U
 			if (extension === '.m3u8' || extension === '.m3u') {
 				bFound = true; // no check for m3u8 since it can be anything
@@ -341,7 +341,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
-			let check = utils.ReadTextFile(playlistPath, convertCharsetToCodepage('UTF-8'));
+			let check = _open(playlistPath, convertCharsetToCodepage('UTF-8'));
 			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
@@ -362,11 +362,11 @@ function getFilePathsFromPlaylist(playlistPath) {
 	}
 	if (_isFile(playlistPath)) { // TODO: skip blank lines ?
 		// Read original file
-		let originalText = utils.ReadTextFile(playlistPath);
+		let originalText = _open(playlistPath);
 		if (typeof originalText !== 'undefined' && originalText.length) {
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
-			if (codePage !== -1) {originalText = utils.ReadTextFile(playlistPath, codePage, true);}
+			if (codePage !== -1) {originalText = _open(playlistPath, codePage, true);}
 			if (extension === '.m3u8' || extension === '.m3u' || extension === '.strm') {
 				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
 				const lines = originalText.length;
@@ -521,11 +521,11 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 	if (extension === '.xsp') {
 		const bCache = xspCache.has(playlistPath);
 		if (!bCache) {
-			var playlistText = utils.ReadTextFile(playlistPath);
+			var playlistText = _open(playlistPath);
 			if (typeof playlistText !== 'undefined' && playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, extension);
-				if (codePage !== -1) {playlistText = utils.ReadTextFile(playlistPath, codePage);}
+				if (codePage !== -1) {playlistText = _open(playlistPath, codePage);}
 			} else {return;}
 		}
 		const xmldom = bCache ? null : XSP.XMLfromString(playlistText);
@@ -620,11 +620,11 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		
 		if (bXSPF && count !== filePaths.length) {
 			bOmitNotFound = true; // Omit not found for xspf playlists, forced by specification
-			let playlistText = utils.ReadTextFile(playlistPath);
+			let playlistText = _open(playlistPath);
 			if (typeof playlistText !== 'undefined' && playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, extension);
-				if (codePage !== -1) {playlistText = utils.ReadTextFile(playlistPath, codePage, true);}
+				if (codePage !== -1) {playlistText = _open(playlistPath, codePage, true);}
 				const bCache = xspfCache.has(playlistPath);
 				const xmldom = bCache ? null : XSPF.XMLfromString(playlistText);
 				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom);

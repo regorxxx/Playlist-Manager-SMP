@@ -132,10 +132,8 @@ setProperties(properties, prefix);
 		overwriteProperties(prop); // Updates panel
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
-		if (_isFile(readmePath)) {
-			const readme = utils.ReadTextFile(readmePath, convertCharsetToCodepage('UTF-8'));
-			if (readme.length) {fb.ShowPopupMessage(readme, window.Name);}
-		}
+		const readme = _open(readmePath, convertCharsetToCodepage('UTF-8'));
+		if (readme.length) {fb.ShowPopupMessage(readme, window.Name);}
 	}
 }
 

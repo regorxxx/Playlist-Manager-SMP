@@ -52,11 +52,11 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 		let duration = null;
 		const fileSize = utils.GetFileSize(file);
 		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar native playlist format
-			let text = utils.ReadTextFile(file).split(/\r\n|\n\r|\n|\r/);
+			let text = _open(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				// Safe checks to ensure proper UTF-8 and codepage detection
 				const codePage = checkCodePage(text, extension);
-				if (codePage !== -1) {text = utils.ReadTextFile(file, codePage).split(/\r\n|\n\r|\n|\r/);}
+				if (codePage !== -1) {text = _open(file, codePage).split(/\r\n|\n\r|\n|\r/);}
 				let commentsText = text.filter(function(e) {return e.startsWith('#');});
 				if (typeof commentsText !== 'undefined' && commentsText.length >= 1) { // Use playlist info
 					let lines = commentsText.length;
@@ -112,7 +112,7 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 			// Nothing
 			// Locked according to manager config
 		} else if (extension === '.pls') {
-			let text = utils.ReadTextFile(file).split(/\r\n|\n\r|\n|\r/);
+			let text = _open(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				let sizeText = text.filter(function(e) {return e.startsWith('NumberOfEntries');});
 				if (typeof sizeText !== 'undefined' && sizeText.length >= 1) { // Use playlist info
@@ -124,17 +124,17 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				size = fileText.length;
 			}	
 		} else if (extension === '.strm') {
-			let text = utils.ReadTextFile(file).split(/\r\n|\n\r|\n|\r/);
+			let text = _open(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined') {
 				size = text.filter(Boolean).length;
 				if (size > 1) {fb.ShowPopupMessage('.strm playlist can\'t contain multiple items: ' + file, window.Name);}
 				bLocked = true; // Always locked by default
 			}
 		} else if (extension === '.xspf') {
-			let text = utils.ReadTextFile(file);
+			let text = _open(file);
 			if (typeof text !== 'undefined') {
 				const codePage = checkCodePage(text, extension);
-				if (codePage !== -1) {text = utils.ReadTextFile(file, codePage);}
+				if (codePage !== -1) {text = _open(file, codePage);}
 				const xmldom = XSPF.XMLfromString(text);
 				const jspf = XSPF.toJSPF(xmldom, false);
 				if (jspf.hasOwnProperty('playlist') && jspf.playlist) {
@@ -158,10 +158,10 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 				}
 			}
 		} else if (extension === '.xsp') {
-			let text = utils.ReadTextFile(file);
+			let text = _open(file);
 			if (typeof text !== 'undefined') {
 				const codePage = checkCodePage(text, extension);
-				if (codePage !== -1) {text = utils.ReadTextFile(file, codePage);}
+				if (codePage !== -1) {text = _open(file, codePage);}
 				const xmldom = XSP.XMLfromString(text);
 				const jsp = XSP.toJSP(xmldom, false);
 				if (jsp.hasOwnProperty('playlist') && jsp.playlist) {
@@ -322,9 +322,9 @@ function switchLock(list, z) {
 function rewriteHeader(list, z) {
 	let bDone = false;
 	if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {
-		let fileText = utils.ReadTextFile(list.data[z].path);
+		let fileText = _open(list.data[z].path);
 		const codePage = checkCodePage(fileText, list.data[z].extension);
-		if (codePage !== -1) {fileText = utils.ReadTextFile(list.data[z].path, codePage);}
+		if (codePage !== -1) {fileText = _open(list.data[z].path, codePage); if (!fileText.length) {return false;}}
 		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
 		const idx = fileText.findIndex((line) => {return line.startsWith('#EXTINF:') || !line.startsWith('#');});
 		if (idx !== -1) {
@@ -343,9 +343,9 @@ function rewriteHeader(list, z) {
 			bDone = _save(list.data[z].path, fileText.join('\r\n'));
 		}
 	} else if (list.data[z].extension === '.xspf') {
-		let fileText = utils.ReadTextFile(list.data[z].path);
+		let fileText = _open(list.data[z].path);
 		const codePage = checkCodePage(fileText, list.data[z].extension);
-		if (codePage !== -1) {fileText = utils.ReadTextFile(list.data[z].path, codePage);}
+		if (codePage !== -1) {fileText = _open(list.data[z].path, codePage); if (!fileText.length) {return false;}}
 		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
 		const idx = fileText.findIndex((line) => {return line.indexOf('<trackList>') !== -1;});
 			if (idx >= 2) {
@@ -376,31 +376,33 @@ function convertToRelPaths(list, z) {
 	const relPaths = paths.map((path) => {return '.\\' + path.split('\\').pop();});
 	const codePage = checkCodePage(_open(playlistPath), pls.extension);
 	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
-	if (pls.extension === '.xspf') { // Paths must be URI encoded...
-		paths.forEach((path, i) => {file = file.replace(encodeURI(path.replace(/\\/g,'/')), encodeURI(relPaths[i].replace(/\\/g,'/')));});
-	} else {
-		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
-	}
-	let bDeleted = false;
-	if (_isFile(playlistPath)) {
-		bDeleted = _recycleFile(playlistPath);
-	} else {bDeleted = true;}
-	if (bDeleted) {
-		bDone = _save(playlistPath, file, list.bBOM); // No BOM
-		if (!bDone) {
-			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
-			_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
+	if (file.length) {
+		if (pls.extension === '.xspf') { // Paths must be URI encoded...
+			paths.forEach((path, i) => {file = file.replace(encodeURI(path.replace(/\\/g,'/')), encodeURI(relPaths[i].replace(/\\/g,'/')));});
+		} else {
+			paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
+		}
+		let bDeleted = false;
+		if (_isFile(playlistPath)) {
+			bDeleted = _recycleFile(playlistPath);
+		} else {bDeleted = true;}
+		if (bDeleted) {
+			bDone = _save(playlistPath, file, list.bBOM); // No BOM
+			if (!bDone) {
+				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
+				_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
+				return bDone;
+			}
+			list.editData(pls, {
+				fileSize: utils.GetFileSize(playlistPath),
+			});
+			console.log('Playlist Manager: done.');
+			list.update(true, true); // We have already updated data before only for the variables changed
+			list.filter();
+		} else {
+			fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
 			return bDone;
 		}
-		list.editData(pls, {
-			fileSize: utils.GetFileSize(playlistPath),
-		});
-		console.log('Playlist Manager: done.');
-		list.update(true, true); // We have already updated data before only for the variables changed
-		list.filter();
-	} else {
-		fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
-		return bDone;
 	}
 	clearInterval(delay);
 	return bDone;
@@ -505,21 +507,23 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	if (ext.length) {relPaths = relPaths.map((path) => {return path.split('.').slice(0, -1).concat([ext]).join('.');});}
 	const codePage = checkCodePage(_open(playlistPath), list.data[z].extension);
 	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
-	paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
-	let bDeleted = false;
-	if (_isFile(newPath)) {
-		bDeleted = _recycleFile(newPath);
-	} else {bDeleted = true;}
-	if (bDeleted) {
-		bDone = _save(newPath, file, list.bBOM); // No BOM
-		if (!bDone) {
-			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
-			_restoreFile(newPath); // Since it failed we need to restore the original playlist back to the folder!
+	if (file.length) {
+		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
+		let bDeleted = false;
+		if (_isFile(newPath)) {
+			bDeleted = _recycleFile(newPath);
+		} else {bDeleted = true;}
+		if (bDeleted) {
+			bDone = _save(newPath, file, list.bBOM); // No BOM
+			if (!bDone) {
+				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
+				_restoreFile(newPath); // Since it failed we need to restore the original playlist back to the folder!
+				return {bDone, newPath, paths};
+			}
+		} else {
+			fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
 			return {bDone, newPath, paths};
 		}
-	} else {
-		fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-		return {bDone, newPath, paths};
 	}
 	return {bDone, newPath, paths};
 }
@@ -760,12 +764,12 @@ function rewriteXSPQuery(pls, newQuery) {
 			const playlistPath = pls.path;
 			const bCache = xspCache.has(playlistPath);
 			if (!bCache) {
-				var playlistText = utils.ReadTextFile(playlistPath);
-				if (typeof playlistText !== 'undefined' && playlistText.length) {
+				var playlistText = _open(playlistPath);
+				if (playlistText.length) {
 					// Safe checks to ensure proper encoding detection
 					const codePage = checkCodePage(playlistText, '.xsp');
-					if (codePage !== -1) {playlistText = utils.ReadTextFile(playlistPath, codePage);}
-				} else {return;}
+					if (codePage !== -1) {playlistText = _open(playlistPath, codePage); if (!playlistText.length) {return bDone;}}
+				} else {return bDone;}
 			}
 			const xmldom = bCache ? null : XSP.XMLfromString(playlistText);
 			const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
@@ -786,12 +790,12 @@ function rewriteXSPSort(pls, newSort) {
 		const playlistPath = pls.path;
 		const bCache = xspCache.has(playlistPath);
 		if (!bCache) {
-			var playlistText = utils.ReadTextFile(playlistPath);
-			if (typeof playlistText !== 'undefined' && playlistText.length) {
+			var playlistText = _open(playlistPath);
+			if (playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, '.xsp');
-				if (codePage !== -1) {playlistText = utils.ReadTextFile(playlistPath, codePage);}
-			} else {return;}
+				if (codePage !== -1) {playlistText = _open(playlistPath, codePage); if (!playlistText.length) {return bDone;}}
+			} else {return bDone;}
 		}
 		const xmldom = bCache ? null : XSP.XMLfromString(playlistText);
 		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
@@ -809,12 +813,12 @@ function rewriteXSPLimit(pls, newLimit) {
 		const playlistPath = pls.path;
 		const bCache = xspCache.has(playlistPath);
 		if (!bCache) {
-			var playlistText = utils.ReadTextFile(playlistPath);
-			if (typeof playlistText !== 'undefined' && playlistText.length) {
+			var playlistText = _open(playlistPath);
+			if (playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, '.xsp');
-				if (codePage !== -1) {playlistText = utils.ReadTextFile(playlistPath, codePage);}
-			} else {return;}
+				if (codePage !== -1) {playlistText = _open(playlistPath, codePage); if (!playlistText.length) {return bDone;}}
+			} else {return bDone;}
 		}
 		const xmldom = bCache ? null : XSP.XMLfromString(playlistText);
 		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
@@ -994,11 +998,11 @@ function findSizeMismatch() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
-						let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+						let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 						let size;
-						if (typeof text !== 'undefined' && text.length) {
+						if (text.length) {
 							const codePage = checkCodePage(text, playlist.extension);
-							if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+							if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 							if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
 								text = text.split(/\r\n|\n\r|\n|\r/);
 								const lines = text.length;
@@ -1067,11 +1071,11 @@ function findDurationMismatch() {
 						const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
 						if (handleList) {
 							const calcDuration = handleList.CalcTotalDuration();
-							let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+							let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 							let duration;
 							if (typeof text !== 'undefined' && text.length) {
 								const codePage = checkCodePage(text, playlist.extension);
-								if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+								if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 								if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
 									text = text.split(/\r\n|\n\r|\n|\r/);
 									const lines = text.length;
@@ -1123,11 +1127,11 @@ function findBlank() {
 			promises.push(new Promise(resolve => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
-						let text = _isFile(playlist.path) ? utils.ReadTextFile(playlist.path) : void(0);
+						let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 						let size, lines;
 						if (typeof text !== 'undefined' && text.length) {
 							const codePage = checkCodePage(text, playlist.extension);
-							if (codePage !== -1) {text = utils.ReadTextFile(playlist.path, codePage, true);}
+							if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 							lines = text.split(/\r\n|\n\r|\n|\r/);
 							size = lines.filter(Boolean).length;
 							lines = lines.length;
