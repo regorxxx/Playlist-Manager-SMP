@@ -1,5 +1,5 @@
 'use strict';
-//23/02/22
+//01/03/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -314,8 +314,8 @@ function _list(x, y, w, h) {
 		}
 	}
 	
-	this.showCurrPls = () => {
-		const name = plman.GetPlaylistName(plman.ActivePlaylist);
+	this.showCurrPls = (bPlayingPls = false) => {
+		const name = plman.GetPlaylistName(bPlayingPls ? plman.PlayingPlaylist : plman.ActivePlaylist);
 		const idx = this.data.findIndex((pls, idx) => {return pls.nameId === name;});
 		return this.showPlsByIdx(idx);
 	}
@@ -361,7 +361,7 @@ function _list(x, y, w, h) {
 			if (this.bShowTips) {
 				headerText += '\n----------------------------------------------';
 				headerText += '\n(R. Click for config menus)';
-				headerText += '\n(L. Click to highlight active playlist)';
+				headerText += '\n(L. Click to highlight active\\playing playlist)';
 				headerText += '\n(Double Click to cycle categories)';
 			}
 			this.tooltip.SetValue(headerText, true);
@@ -518,8 +518,8 @@ function _list(x, y, w, h) {
 				}
 			}
 			return true;
-		} else if (this.traceHeader(x, y)) {
-			this.showCurrPls();
+		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
+			this.showCurrPls() || this.showCurrPls(true);
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {

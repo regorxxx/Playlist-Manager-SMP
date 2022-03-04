@@ -16,6 +16,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: L. Click on header now also tries to highlight the playing playlist, if the active playlist is not present. It does nothing in any case if neither are not tracked by the manager.
 ### Removed
 ### Fixed
 - Helpers: avoid file reading crashing in any case (even if it's locked by another process).
