@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/02/22
+//04/03/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -11,6 +11,7 @@ let conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null dis
 function consoleLog() {
 	let log = '';
 	// Load previous log
+	console.checkSize();
 	if (utils.IsFile(conLog)) {try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {}}
 	// Add HH:MM:SS
 	const stamp = '[' + new Date().toLocaleTimeString() + ']';
@@ -49,18 +50,17 @@ function consoleLog() {
 		log += ' ' + val;
 	});
 	// Write
-	utils.WriteTextFile(conLog, log, false);
+	try {utils.WriteTextFile(conLog, log, false);} catch (e) {}
 }
-if (conLog && conLog.length && conLogMaxSize && console.log) {
-	console.logUI = console.log;
-	console.log = function() {
-		console.logUI(...arguments);
-		consoleLog(...arguments);
-	};
+
+// Check file size doesn't exceed threshold or reset it
+console.checkSize = () => {
 	if (utils.IsFile(conLog) && utils.GetFileSize(conLog) > conLogMaxSize) {
-		utils.WriteTextFile(conLog, '', false);
+		try {utils.WriteTextFile(conLog, '', false);} catch (e) {}
 		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 10000000) + ' MB, creating new file: ' + conLog);
+		return true;
 	}
+	return false;
 }
 
 // Send to popup and console
@@ -69,4 +69,13 @@ console.popup = (arg, popupName) => {
 	arg.split('\n').forEach((line) => {
 		if (line && line.length) {console.log(line);}
 	;});
+}
+
+if (conLog && conLog.length && conLogMaxSize && console.log) {
+	console.logUI = console.log;
+	console.log = function() {
+		console.logUI(...arguments);
+		consoleLog(...arguments);
+	};
+	console.checkSize();
 }
