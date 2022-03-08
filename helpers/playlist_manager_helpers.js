@@ -1,5 +1,5 @@
 'use strict';
-//01/03/22
+//08/03/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -447,11 +447,31 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 	return bDone;
 }
 
-function clonePlaylistFile(list, z, ext) {
+function clonePlaylistInUI(list, z) {
 	let bDone = false;
 	const pls = list.data[z];
 	const bUI = pls.extension === '.ui';
-	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0)+ ')';
+	// Create new playlist and check paths
+	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	if (handleList && handleList.Count) {
+		const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0) + ')';
+		const idx = plman.CreatePlaylist(plman.PlaylistCount, playlistName);
+		if (idx !== -1) {
+			plman.ActivePlaylist = idx;
+			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+			bDone = true;
+		}
+	}
+	if (bDone) {console.log('Playlist Manager: done.');}
+	return bDone;
+}
+
+function clonePlaylistFile(list, z, ext) {
+	if (ext === '.ui') {return clonePlaylistInUI(list, z);}
+	let bDone = false;
+	const pls = list.data[z];
+	const bUI = pls.extension === '.ui';
+	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0) + ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found

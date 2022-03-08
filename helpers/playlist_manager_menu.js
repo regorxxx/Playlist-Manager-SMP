@@ -1,5 +1,5 @@
 'use strict';
-//17/02/22
+//08/03/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -222,11 +222,12 @@ function createMenuLeft(forcedIndex = -1) {
 			}, flags: writablePlaylistFormats.has(pls.extension) && !isLockPls() ? MF_STRING : MF_GRAYED});
 			// Clone as
 			{
-				const presets = [...writablePlaylistFormats];
+				const presets = [...writablePlaylistFormats, 'sep', '.ui'];
 				const subMenuName = menu.newMenu('Clone as...');
 				menu.newEntry({menuName: subMenuName, entryText: 'Select a format:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				presets.forEach((ext) => {
+					if (ext === 'sep') {menu.newEntry({menuName: subMenuName, entryText: ext, flags: MF_GRAYED}); return;}
 					menu.newEntry({menuName: subMenuName, entryText: ext, func: () => {
 						clonePlaylistFile(list, z, ext);
 					}});
