@@ -608,7 +608,8 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	// Get tracks
 	// const paths = getFilePathsFromPlaylist(playlistPath);
 	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
-	const paths = !bUI ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
+	const subsongRegex = /,\d*$/g;
+	const paths = (!bUI ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => {return path.replace(subsongRegex,'');});
 	const root = utils.SplitFilePath(newPath)[0];
 	_setClipboardData(root);
 	const report = [];
@@ -895,12 +896,13 @@ function findExternal() {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
+		const subsongRegex = /,\d*$/g;
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise(resolve => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
-						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))
+						const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => {return path.replace(subsongRegex,'');});
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
 							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 							const bDead = filePaths.some((path) => {
@@ -942,6 +944,7 @@ function findDead() {
 		const promises = [];
 		let prevProgress = -1;
 		let iDelay = 0;
+		const subsongRegex = /,\d*$/g;
 		list.dataAll.forEach((playlist, i) => {
 			iDelay = isNaN(playlist.size) ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise(resolve => {
@@ -949,7 +952,7 @@ function findDead() {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
 						const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
-						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+						const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => {return path.replace(subsongRegex,'');});
 						const bDead = filePaths.some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
 							let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
