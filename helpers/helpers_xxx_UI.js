@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/22
+//17/03/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_UI_chars.js');
@@ -180,10 +180,10 @@ function removeIdFromStr(nameId) {
 	Tooltip
 */
 
-function _tt(value, font = 'Segoe UI', fontsize = _scale(10), width = 600) {
+function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
 	this.tooltip = window.Tooltip;
-	this.font = {font, fontsize};
-	this.tooltip.SetFont(font, fontsize);
+	this.font = {name: font, size: fontSize};
+	this.tooltip.SetFont(font, fontSize);
 	this.width = width;
 	this.tooltip.SetMaxWidth(width);
 	this.text = this.tooltip.Text = value;

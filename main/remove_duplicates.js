@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/10/21
+//16/03/22
 
 /*
 	Remove duplicates
@@ -22,7 +22,7 @@
 
 // Note number of final duplicates is always nAllowed + 1, since you allow n duplicates and the 'main' copy.
 // 'nAllowed = 0' removes all duplicates.
-function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = ['title','artist','date'], nAllowed = 0) {
+function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = ['title','artist','date'], nAllowed = 0, bProfile = false) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
@@ -36,6 +36,7 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = [
 			}
 		}
 	}
+	if (bProfile) {var test = new FbProfiler('do_remove_duplicates');}
 		
 	let bActivePlaylist = false;
 	if (handleList === null) {
@@ -92,6 +93,7 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = [
 			console.log('No duplicates found by: ' + sortInput);
 		}
 	}
+	if (bProfile) {test.Print(nAllowed ? 'Task #1: Filter playlist' : 'Task #1: Remove duplicates', false);}
 	return items;
 }
 
@@ -111,6 +113,7 @@ function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys =
 			}
 		}
 	}
+	if (bProfile) {var test = new FbProfiler('do_remove_duplicates');}
 		
 	// Active playlist or input list?
 	let bActivePlaylist = false;
@@ -163,5 +166,6 @@ function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys =
 			console.log('No duplicates found by: ' + sortInput);
 		}
 	}
+	if (bProfile) {test.Print('Task #1: Remove duplicates', false);}
 	return items;
 }

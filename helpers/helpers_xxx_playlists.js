@@ -1,8 +1,7 @@
 ﻿'use strict';
-//04/11/21
+//17/03/22
 
 include('helpers_xxx_prototypes.js');
-include('helpers_xxx_file.js');
 
 /* 
 	Playlist manipulation 
@@ -122,10 +121,12 @@ function sendToPlaylist(handleList, playlistName) {
 	if (i === plc) { //if no playlist was found before
 		plman.CreatePlaylist(plc, playlistName);
 		plman.ActivePlaylist = plc;
+		console.log('Playlist created: ' + playlistName);
 	}
 	if (plman.PlaylistItemCount(plman.ActivePlaylist)) {
 		plman.UndoBackup(plman.ActivePlaylist);
 		plman.ClearPlaylist(plman.ActivePlaylist);
+		console.log('Playlist used: ' + playlistName);
 	}
 	// Create playlist
 	console.log('Final selection: ' +  handleList.Count  + ' tracks');
