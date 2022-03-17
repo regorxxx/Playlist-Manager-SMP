@@ -227,8 +227,9 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({menuName: subMenuName, entryText: 'Select a format:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				presets.forEach((ext) => {
-					if (ext === 'sep') {menu.newEntry({menuName: subMenuName, entryText: ext, flags: MF_GRAYED}); return;}
-					menu.newEntry({menuName: subMenuName, entryText: ext, func: () => {
+					const entryText = ext === '.ui' ? 'Clone in UI' : ext;
+					if (ext === 'sep') {menu.newEntry({menuName: subMenuName, entryText, flags: MF_GRAYED}); return;}
+					menu.newEntry({menuName: subMenuName, entryText, func: () => {
 						clonePlaylistFile(list, z, ext);
 					}});
 				});
