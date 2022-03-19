@@ -1,5 +1,5 @@
 'use strict';
-//23/02/21
+//18/03/22
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -150,15 +150,17 @@ XSP.getSort = function(jsp) {
 		const order = playlist.order[0];
 		const keys = Object.keys(order);
 		const direction = keys && keys.length ? keys[0] : null;
-		const tag = order[direction];
-		switch (direction) {
-			case 'ascending': {sort = 'SORT ASCENDING BY'; break;}
-			case 'descending': {sort = 'SORT DESCENDING BY'; break;}
-			default: {console.log('Direction not recognized: ' + direction + (jsp.playlist.hasOwnProperty('name') && jsp.playlist.name.length ? ' (playlist \'' + jsp.playlist.name + '\')' : '')); break;}
-		}
-		if (sort.length) {
-			let fbTag = this.getFbTag(tag);
-			if (fbTag.length) {sort += ' ' + (!fbTag.match(/[%$]/g) ? '%' + fbTag + '%' : fbTag);}
+		if (direction) {
+			const tag = order[direction];
+			switch (direction) {
+				case 'ascending': {sort = 'SORT ASCENDING BY'; break;}
+				case 'descending': {sort = 'SORT DESCENDING BY'; break;}
+				default: {console.log('Direction not recognized: ' + direction + (jsp.playlist.hasOwnProperty('name') && jsp.playlist.name.length ? ' (playlist \'' + jsp.playlist.name + '\')' : '')); break;}
+			}
+			if (sort.length) {
+				let fbTag = this.getFbTag(tag);
+				if (fbTag.length) {sort += ' ' + (!fbTag.match(/[%$]/g) ? '%' + fbTag + '%' : fbTag);}
+			}
 		}
 	}
 	return sort;
