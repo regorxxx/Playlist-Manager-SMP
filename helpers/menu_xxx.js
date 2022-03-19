@@ -1,8 +1,8 @@
 ﻿'use strict';
-//14/02/21
+//14/02/22
 
 /* 
-	Contextual Menu helper v 1.2 19/05/21
+	Contextual Menu helper v2.1.0
 	Helper to create contextual menus on demand on panels without needing to create specific methods for
 	every script, calculate IDs, etc. Menus are pushed to a list and created automatically, linking the entries
 	to their idx without needing a 'switch' block or leaving holes to ensure idx get enough numbers to expand the script.
