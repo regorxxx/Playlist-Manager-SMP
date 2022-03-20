@@ -1,5 +1,5 @@
 'use strict';
-//08/03/22
+//20/03/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -878,7 +878,7 @@ function findMixedPaths() {
 						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking paths ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking paths ' + progress + '%.');}
 					resolve('done');
 				}, 10 * i);
 			}));
@@ -925,7 +925,7 @@ function findExternal() {
 						}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking external items ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking external items ' + progress + '%.');}
 					resolve('done');
 				}, iDelayPlaylists * i);
 			}));
@@ -971,7 +971,7 @@ function findDead() {
 						if (bDead) {found.push(bUI ? playlist.nameId : playlist.path);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking dead items ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking dead items ' + progress + '%.');}
 					resolve('done');
 				}, iDelay);
 			}));
@@ -998,7 +998,7 @@ function findDuplicates() {
 						if (new Set(filePaths).size !== filePaths.length) {found.push(bUI ? playlist.nameId : playlist.path);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking duplicates ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking duplicates ' + progress + '%.');}
 					resolve('done');
 				}, iDelayPlaylists / 5 * i);
 			}));
@@ -1069,7 +1069,7 @@ function findSizeMismatch() {
 						else if (playlist.extension === '.strm' && size > 1) {found.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)')}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + progress + '%.');}
 					resolve('done');
 				}, iDelayPlaylists / 5 * i);
 			}));
@@ -1128,7 +1128,7 @@ function findDurationMismatch() {
 						}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking duration ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking duration ' + progress + '%.');}
 					resolve('done');
 				}, iDelayPlaylists * i);
 			}));
@@ -1163,7 +1163,7 @@ function findBlank() {
 						else if (size !== lines) {found.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')');}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + Math.round(progress) + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + progress + '%.');}
 					resolve('done');
 				}, iDelayPlaylists / 5 * i);
 			}));
