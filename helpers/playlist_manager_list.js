@@ -1,5 +1,5 @@
 'use strict';
-//01/03/22
+//20/03/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -962,8 +962,8 @@ function _list(x, y, w, h) {
 						this.editData(plsData, {
 							size: plman.PlaylistItemCount(fbPlaylistIndex), 
 							nameId: plsData.name + UUID, 
-							id: UUID, 
-							extension,  // May have forced saving on a fpl playlist
+							id: UUID,
+							extension, // May have forced saving on a fpl playlist
 							path: this.playlistsPath + sanitize(plsData.name) + extension,
 							fileSize: utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
 							duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
@@ -1755,9 +1755,15 @@ function _list(x, y, w, h) {
 			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : handleList.CalcTotalDuration();
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
 			const objectPlaylist = new oPlaylist(UUID, '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], 0, duration);
-			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
+			// Auto-Tags
+			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
-			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			// Add tags of current view
+			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			// Categories
+			// Add Category of current view if none was forced
+			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) {objectPlaylist.category = this.categoryState[0];} 
 			// Save
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
@@ -1804,9 +1810,15 @@ function _list(x, y, w, h) {
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
 			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit, duration);
-			// Auto-Tags (skip bAutoLock since SmartPlaylists are already locked)
+			// Auto-Tags
+			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
-			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			// Add tags of current view
+			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
+			// Categories
+			// Add Category of current view if none was forced
+			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) {objectPlaylist.category = this.categoryState[0];} 
 			const {rules, match} = XSP.getRules(newQuery);
 			if (rules.length) {
 				const jspPls = XSP.emptyJSP();

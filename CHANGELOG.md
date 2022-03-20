@@ -16,15 +16,22 @@
 ## [Unreleased][]
 ### Added
 - Clone: new clone option as UI-only playlist, meant to load a playlist into the UI without bounding it to the original file. It's equivalent to previously locking a playlist file and then loading it, but this method skips setting the metadata first and ensures no changes are made in any case.
+- UI: added new option to create an AutoPlaylist from currently active playlist (when it's also an AutoPlaylist). AutoPlaylist popup is automatically opened to make it easier to copy/paste the query and sort expressions.
 ### Changed
 - UI: L. Click on header now also tries to highlight the playing playlist, if the active playlist is not present. It does nothing in any case if neither are not tracked by the manager.
 - UI: filter buttons now cut the text if it's longer than the button width (for categories or tags).
+- UI: minor menu changes.
 - Export: modified the default export presets to use track's artist, album and title instead of filenames. Only the first artist is used for the folder name and now it also forces ASCII chars in the path to ensure max. compatibility. This change is made having in mind that now subsongs on playlists are allowed, so the converted tracks use sensible filename instead of repeating the filename of the original .iso file everytime ('my iso (1).flac', 'my iso (2).flac', ...). If updating from a previous release, restoring defaults in the appropriate submenu is required to see the changes.
 ### Removed
 - Logging: non needed profiler logs for sorting/filtering.
 ### Fixed
 - Helpers: avoid file reading crashing in any case (even if it's locked by another process).
 - Dead items: playlists with tracks pointing to subsongs (iso files) were incorrectly reported as dead items. Happened in multiple playlist consistency tools and exporting.
+- Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
+- Auto-Functions: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.
+- .xsp: removed non needed log warning about sorting direction not being available when playlist had no sort tag (since it's optional).
+- Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
+
 
 ## [0.5.0-beta.2] - 2021-03-02
 ### Added
