@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/02/22
+//22/03/22
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -62,7 +62,7 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	// }
 	// This requires on_size_buttn() within on_size callback. Is equivalent to calculate the coordinates directly with inlined functions... but maintained here for compatibility purpose
 	const keys = ['x','y','w','h'];
-	const bFuncCoord = Object.fromEntries(keys.map((c) => {return [c, _isFunction(coord[c])];}));
+	const bFuncCoord = Object.fromEntries(keys.map((c) => {return [c, isFunction(coord[c])];}));
 	const iCoord = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? coord[c]() : coord[c]];}));
 	newCoordinates = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? () => {return old[c] + coord[c]()} : old[c] + iCoord[c]];}));
 	if (recalc) {
@@ -84,19 +84,19 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 	this.g_font_icon = g_font_icon;
 	this.description = description;
 	this.text = text;
-	this.textWidth  = _isFunction(this.text) ? () => {return _gr.CalcTextWidth(this.text(), g_font);} : _gr.CalcTextWidth(this.text, g_font);
+	this.textWidth  = isFunction(this.text) ? () => {return _gr.CalcTextWidth(this.text(), g_font);} : _gr.CalcTextWidth(this.text, g_font);
 	this.icon = this.g_font_icon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
-	this.iconWidth = _isFunction(this.icon) ? () => {return _gr.CalcTextWidth(this.icon(), g_font_icon);} : _gr.CalcTextWidth(this.icon, g_font_icon);
+	this.iconWidth = isFunction(this.icon) ? () => {return _gr.CalcTextWidth(this.icon(), g_font_icon);} : _gr.CalcTextWidth(this.icon, g_font_icon);
 	this.fonClick = fonClick;
 	this.prefix = prefix; // This let us identify properties later for different instances of the same button, like an unique ID
-	this.descriptionWithID = _isFunction(this.description) ? () => {return this.prefix ? this.prefix.replace('_','') + ': ' + this.description() : this.description();}: (this.prefix ? this.prefix.replace('_','') + ': ' + this.description : this.description); // Adds prefix to description, whether it's a func or a string
+	this.descriptionWithID = isFunction(this.description) ? () => {return this.prefix ? this.prefix.replace('_','') + ': ' + this.description() : this.description();}: (this.prefix ? this.prefix.replace('_','') + ': ' + this.description : this.description); // Adds prefix to description, whether it's a func or a string
 	this.buttonsProperties = Object.assign({}, buttonsProperties); // Clone properties for later use
 
 	this.containXY = function (x, y) {
-		const x_calc = _isFunction(this.x) ? this.x() : this.x;
-		const y_calc = _isFunction(this.y) ? this.y() : this.y;
-		const w_calc = _isFunction(this.w) ? this.w() : this.w;
-		const h_calc = _isFunction(this.h) ? this.h() : this.h;
+		const x_calc = isFunction(this.x) ? this.x() : this.x;
+		const y_calc = isFunction(this.y) ? this.y() : this.y;
+		const w_calc = isFunction(this.w) ? this.w() : this.w;
+		const h_calc = isFunction(this.h) ? this.h() : this.h;
 		return (x_calc <= x) && (x <= x_calc + w_calc) && (y_calc <= y) && (y <= y_calc + h_calc );
 	};
 
@@ -107,8 +107,8 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 	};
 
 	this.draw = function (gr) {
-		const w_calc = _isFunction(this.w) ? this.w() : this.w;
-		const h_calc = _isFunction(this.h) ? this.h() : this.h;
+		const w_calc = isFunction(this.w) ? this.w() : this.w;
+		const h_calc = isFunction(this.h) ? this.h() : this.h;
 		if (w_calc <= 0 || h_calc <= 0) {return;}
 		if (this.state === buttonStates.hide) {
 			return;
@@ -120,7 +120,7 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 				break;
 
 			case buttonStates.hover:
-				buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (_isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (_isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
+				buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
 				this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 2);
 				break;
 
@@ -132,16 +132,16 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 				return;
 		}
 		
-		const x_calc = _isFunction(this.x) ? this.x() : this.x;
-		const y_calc = _isFunction(this.y) ? this.y() : this.y;
+		const x_calc = isFunction(this.x) ? this.x() : this.x;
+		const y_calc = isFunction(this.y) ? this.y() : this.y;
 		
 		this.g_theme.DrawThemeBackground(gr, x_calc, y_calc, w_calc, h_calc);
 		const offset = 10;
 		if (this.icon !== null) {
-			let iconWidthCalculated = _isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
+			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
 			let textWidthCalculated = w_calc - iconWidthCalculated - offset;
-			let iconCalculated = _isFunction(this.icon) ? this.icon() : this.icon;
-			let textCalculated = _isFunction(this.text) ? this.text() : this.text;
+			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
 			gr.GdiDrawText(iconCalculated, this.g_font_icon, buttonsPanel.config.textColor, x_calc + offset, y_calc, w_calc - iconWidthCalculated - offset, h_calc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
 			if (w_calc > iconWidthCalculated * 4 + offset * 4) {
 				gr.GdiDrawText(textCalculated, this.g_font, buttonsPanel.config.textColor, x_calc + iconWidthCalculated, y_calc, w_calc - offset, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
@@ -149,7 +149,7 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 				gr.GdiDrawText(textCalculated, this.g_font, buttonsPanel.config.textColor, x_calc + offset * 2 + iconWidthCalculated , y_calc, w_calc - offset * 3 - iconWidthCalculated, h_calc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			}
 		} else {
-			let textCalculated = _isFunction(this.text) ? this.text() : this.text;
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
 			gr.GdiDrawText(textCalculated, this.g_font, buttonsPanel.config.textColor, x_calc, y_calc, w_calc, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 		}
 	};

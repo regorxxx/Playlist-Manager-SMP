@@ -1,5 +1,5 @@
 'use strict';
-//08/03/22
+//22/03/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -289,6 +289,10 @@ function createMenuRight() {
 	menu.clear(true); // Reset one every call
 	// Entries
 	{ // New Playlists
+		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add(true);}});
+		menu.newEntry({entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
+		menu.newEntry({entryText: 'Add new Smart Playlist...', func: () => {list.addSmartplaylist();}});
+		menu.newEntry({entryText: 'sep'});
 		menu.newEntry({entryText: 'Create new playlist file from active playlist...', func: () => {list.add(false);}});
 		if (plman.IsAutoPlaylist(plman.ActivePlaylist)) {
 			menu.newEntry({entryText: 'Create new AutoPlaylist from active playlist...', func: () => {
@@ -297,10 +301,6 @@ function createMenuRight() {
 				list.addAutoplaylist(pls, true);
 			}});
 		}
-		menu.newEntry({entryText: 'sep'});
-		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add(true);}});
-		menu.newEntry({entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
-		menu.newEntry({entryText: 'Add new Smart Playlist...', func: () => {list.addSmartplaylist();}});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management

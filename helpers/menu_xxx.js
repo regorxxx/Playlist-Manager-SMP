@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/02/22
+//22/03/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -134,7 +134,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 	this.getCheckMenu = (menuName) => {return (!menuName) ? checkMenuMap : checkMenuMap.get(menuName);};
 	
 	this.createMenu = (menuName = menuArr[0].menuName) => {
-		if (_isFunction(menuName)) {menuName = menuName();}
+		if (isFunction(menuName)) {menuName = menuName();}
 		menuMap.set(menuName, window.CreatePopupMenu());
 		return menuMap.get(menuName);
 	}
@@ -143,9 +143,9 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 		if (entryText === 'sep' || entryText === 'separator') {menuMap.get(menuName).AppendMenuSeparator();}
 		else {
 			idx++;
-			if (_isFunction(menuName)) {menuName = menuName();}
-			if (_isFunction(flags)) {flags = flags();}
-			if (_isFunction(entryText)) {entryText = entryText();}
+			if (isFunction(menuName)) {menuName = menuName();}
+			if (isFunction(flags)) {flags = flags();}
+			if (isFunction(entryText)) {entryText = entryText();}
 			// Safe-checks
 			const eType = typeof entryText, mType = typeof menuName;
 			if (mType === 'undefined') {menuError({menuName, entryText, flags}); throw 'menuName is not defined';}
@@ -187,11 +187,11 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 	}
 	
 	this.checkMenu = (menuName, entryTextA, entryTextB, idxFunc) => {
-		if (_isFunction(menuName)) {menuName = menuName();}
-		if (_isFunction(entryTextA)) {entryTextA = entryTextA();}
+		if (isFunction(menuName)) {menuName = menuName();}
+		if (isFunction(entryTextA)) {entryTextA = entryTextA();}
 		const entryNameA = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextA : entryTextA;
 		if (entryTextB) { // Radio check
-			if (_isFunction(entryTextB)) {entryTextB = entryTextB();}
+			if (isFunction(entryTextB)) {entryTextB = entryTextB();}
 			const entryNameB = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextB : entryTextB;
 			checkMenuMap.set(menuName, () => {
 				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(entryNameA), this.getIdx(entryNameB), this.getIdx(entryNameA) + idxFunc());
@@ -249,10 +249,10 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 			if (!entry.bIsMenu) { // To main menu
 				this.addToMenu({entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags});
 			} else { // Append sub-menus
-				const subMenuName = _isFunction(entry.menuName) ? entry.menuName() : entry.menuName;
+				const subMenuName = isFunction(entry.menuName) ? entry.menuName() : entry.menuName;
 				if (subMenuName !== menuArr[0].menuName) {
-					const flags = _isFunction(entry.flags) ? entry.flags() : entry.flags;
-					const subMenuFrom = _isFunction(entry.subMenuFrom) ? entry.subMenuFrom() : entry.subMenuFrom;
+					const flags = isFunction(entry.flags) ? entry.flags() : entry.flags;
+					const subMenuFrom = isFunction(entry.subMenuFrom) ? entry.subMenuFrom() : entry.subMenuFrom;
 					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuName);
 				}
 			}
@@ -337,7 +337,7 @@ function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, i
 }
 
 // Helpers
-function _isFunction(obj) {
+function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 

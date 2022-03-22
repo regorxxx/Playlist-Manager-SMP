@@ -29,8 +29,8 @@
 - Dead items: playlists with tracks pointing to subsongs (iso files) were incorrectly reported as dead items. Happened in multiple playlist consistency tools and exporting.
 - Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
 - Auto-Functions: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.
-- .xsp: removed non needed log warning about sorting direction not being available when playlist had no sort tag (since it's optional).
-- Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
+- Logging: removed non needed log warning about sorting direction not being available when a Smart Playlist (.xsp) playlist had no sort tag (since it's optional).
+- Logging: Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
 
 
 ## [0.5.0-beta.2] - 2021-03-02

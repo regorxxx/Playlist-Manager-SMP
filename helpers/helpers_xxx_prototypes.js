@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/12/21
+//22/03/22
 
 /* 
 	Objects
@@ -45,8 +45,16 @@ function roughSizeOfObject(object) {
 	Functions
 */
 
-function _isFunction(obj) {
+function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
+}
+
+/* 
+	Promises
+*/
+
+function isPromise(prom) {
+  return prom && Object.prototype.toString.call(prom) === '[object Promise]';
 }
 
 /* 
