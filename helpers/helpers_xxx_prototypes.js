@@ -97,6 +97,23 @@ function capitalizeAll(s, sep = ' ') {
 	return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1);}).join(sep); // Split, capitalize each subString and join
 }
 
+function _p(value) {
+	return '(' + value + ')';
+}
+
+function _q(value) {
+	return '"' + value + '"';
+}
+
+function _b(value) {
+	return '[' + value + ']';
+}
+
+function _bt(tag) {
+	return '[%' + tag + '%]';
+}
+
+
 /* 
 	Arrays
 */

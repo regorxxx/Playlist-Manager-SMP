@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/02/22
+//23/03/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -420,10 +420,6 @@ function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 	}
 	if (finalPath.length && relPath.endsWith('\\') && !finalPath.endsWith('\\')) {finalPath += '\\';}
 	return finalPath;
-}
-
-function _q(value) {
-	return '"' + value + '"';
 }
 
 function sanitize(value) {

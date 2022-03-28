@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/22
+//22/03/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -141,7 +141,7 @@ setProperties(properties, prefix);
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 // Popups
-const pop = new _popup({x: LM, y: TM, w: 0, h: 0});
+const pop = new _popup({x: 0, y: 0, w: 0, h: 0});
 pop.panelColor = opaqueColor(0xFF4354AF, 30); // Blue overlay
 pop.textColor = invert(panel.getColorBackground(), true);
 pop.border.enabled = false; // Just overlay without a popup
@@ -307,14 +307,17 @@ function on_notify_data(name, info) {
 // if Autosave === 0, then it does nothing...
 var debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
 function on_playlist_items_reordered(playlistIndex) {
+	if (pop.isEnabled()) {return;}
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
 
 function on_playlist_items_removed(playlistIndex) {
+	if (pop.isEnabled()) {return;}
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
   
 function on_playlist_items_added(playlistIndex) {
+	if (pop.isEnabled()) {return;}
 	if (debouncedUpdate) {debouncedUpdate(playlistIndex, true);}
 	else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
 		if (list.bAutoTrackTagAlways) {list.updatePlaylistOnlyTracks(playlistIndex);}
