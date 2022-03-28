@@ -55,6 +55,8 @@
 - Helpers: file recycling has been overhauled to bypass Unix errors and shift pressing limitation (file was being deleted permanently). Now it tries 3 different methods, the last one requires an external executable and permissions may be asked by the SO.
 - XSPF: track paths with '&' were not properly URI encoded and broke playlists, now manually replaced.
 - XSPF: playlist metadata containing illegal characters like '&' broke playlists, now replaced with the proper HTML entities
+- Auto-save: is now disabled while library paths cache is being refreshed. Tries to auto-save after that and ensures the playlist matches the one that needed to be updated.
+- Popup: fixed position within panel.
 - Playlist files whose extension was not in lowercase were not being recognized properly.
 - Some exporting tools were not writing the playlist files to the right paths due to an error on path sanitizing logic.
 - Manager kept reloading playlist files (auto-load) even if it was not needed when UI-only playlists were enabled. Now it works as intended, only re-loading them when there were file changes.

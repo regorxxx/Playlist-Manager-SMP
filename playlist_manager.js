@@ -306,18 +306,27 @@ function on_notify_data(name, info) {
 // Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
 // if Autosave === 0, then it does nothing...
 var debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
-function on_playlist_items_reordered(playlistIndex) {
-	if (pop.isEnabled()) {return;}
+function on_playlist_items_reordered(playlistIndex, oldName = null) {
+	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
+	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_reordered, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
+	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
+	// Update
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
 
-function on_playlist_items_removed(playlistIndex) {
-	if (pop.isEnabled()) {return;}
+function on_playlist_items_removed(playlistIndex, oldName = null) {
+	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
+	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
+	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
+	// Update
 	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
 }
   
-function on_playlist_items_added(playlistIndex) {
-	if (pop.isEnabled()) {return;}
+function on_playlist_items_added(playlistIndex, oldName = null) {
+	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
+	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
+	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
+	// Update
 	if (debouncedUpdate) {debouncedUpdate(playlistIndex, true);}
 	else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
 		if (list.bAutoTrackTagAlways) {list.updatePlaylistOnlyTracks(playlistIndex);}
