@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/22
+//29/03/22
 
 include('helpers_xxx.js');
 
@@ -198,13 +198,13 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
 	if (!bAllowEmpty && !query.length) {return false;}
-	let queryNoSort = query.toUpperCase();
+	let queryNoSort = query;
 	if (bAllowSort) {
-		const fromIndex = query.indexOf('SORT');
-		if (query.indexOf('SORT') !== -1) {
-			if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0];}
-			else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0];}
-			else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0];}
+		const fromIndex = query.search(/ SORT.*$/i);
+		if (fromIndex !== -1) {
+			if (query.match(/ SORT BY.*$/i)) {queryNoSort = query.split(/( SORT BY ).*$/i)[0];}
+			else if (query.match(/ SORT DESCENDING BY.*$/i)) {queryNoSort = query.split(/( SORT DESCENDING BY ).*$/i)[0];}
+			else if (query.match(/ SORT ASCENDING BY.*$/i)) {queryNoSort = query.split(/( SORT ASCENDING BY ).*$/i)[0];}
 			else {return false;} // Has a typo on sort
 			if (query.indexOf('$', fromIndex) !== -1) { // Functions require quotes around them
 				const firstQuote = query.indexOf('"', fromIndex);
@@ -216,7 +216,7 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	}
 	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}
 	catch (e) {bPass = false;}
-	if (!bAllowPlaylist && queryNoSort.indexOf('#PLAYLIST# IS') !== -1) {bPass = false;}
+	if (!bAllowPlaylist && queryNoSort.match(/.*#PLAYLIST# IS.*/i)) {bPass = false;}
 	return bPass;
 }
 
