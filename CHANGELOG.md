@@ -22,11 +22,13 @@
 - UI: filter buttons now cut the text if it's longer than the button width (for categories or tags).
 - UI: minor menu changes.
 - Export: modified the default export presets to use track's artist, album and title instead of filenames. Only the first artist is used for the folder name and now it also forces ASCII chars in the path to ensure max. compatibility. This change is made having in mind that now subsongs on playlists are allowed, so the converted tracks use sensible filename instead of repeating the filename of the original .iso file everytime ('my iso (1).flac', 'my iso (2).flac', ...). If updating from a previous release, restoring defaults in the appropriate submenu is required to see the changes.
+- Helpers: improved sort and query expressions validity checks.
 ### Removed
 - Logging: non needed profiler logs for sorting/filtering.
 ### Fixed
 - Helpers: avoid file reading crashing in any case (even if it's locked by another process).
 - Helpers: fixed query checking not working due to upper/lower case mixing in some cases, should now be pretty robust with RegEx.
+- XSP: fixed sorting recognition in some cases, should now be pretty robust with RegEx.
 - Dead items: playlists with tracks pointing to subsongs (iso files) were incorrectly reported as dead items. Happened in multiple playlist consistency tools and exporting.
 - Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
 - Auto-Functions: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.

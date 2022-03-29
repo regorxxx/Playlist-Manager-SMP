@@ -1,5 +1,5 @@
 'use strict';
-//18/03/22
+//29/03/22
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -250,13 +250,10 @@ XSP.getOrder = function(queryOrSort) {
 	let order = [{}]; // TODO [] ?
 	let direction = '';
 	let fbTag = '';
-	if (queryOrSort.indexOf('SORT') !== -1) {
-		if (queryOrSort.indexOf(' SORT BY ') !== -1) {direction = 'ascending'; fbTag = queryOrSort.split(' SORT BY ')[1];}
-		else if (queryOrSort.indexOf(' SORT ASCENDING BY ') !== -1) {direction = 'ascending'; fbTag = queryOrSort.split(' SORT ASCENDING BY ')[1];}
-		else if (queryOrSort.indexOf(' SORT DESCENDING BY ') !== -1) {direction = 'descending'; fbTag = queryOrSort.split(' SORT DESCENDING BY ')[1];}
-		else if (queryOrSort.startsWith('SORT BY' )) {direction = 'ascending'; fbTag = queryOrSort.split('SORT BY ')[1];}
-		else if (queryOrSort.startsWith('SORT ASCENDING BY ')) {direction = 'ascending'; fbTag = queryOrSort.split('SORT ASCENDING BY ')[1];}
-		else if (queryOrSort.startsWith('SORT DESCENDING BY ')) {direction = 'descending'; fbTag = queryOrSort.split('SORT DESCENDING BY ')[1];}
+	if (queryOrSort.match(/ *SORT.*$/)) {	
+		if (queryOrSort.match(/ *SORT BY .*$/)) {direction = 'ascending'; fbTag = queryOrSort.match(/(?: *SORT BY )(.*$)/)[1];}
+		else if (queryOrSort.match(/ *SORT DESCENDING BY .*$/)) {direction = 'descending'; fbTag = queryOrSort.match(/(?: *SORT DESCENDING BY )(.*$)/)[1];}
+		else if (queryOrSort.match(/ *SORT ASCENDING BY .*$/)) {direction = 'ascending'; fbTag = queryOrSort.match(/(?: *SORT ASCENDING BY )(.*$)/)[1];}
 		else {console.log('Sorting not recognized: ' + queryOrSort);}
 	}
 	if (direction.length && fbTag.length) {

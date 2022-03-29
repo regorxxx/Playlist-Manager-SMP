@@ -200,33 +200,29 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	if (!bAllowEmpty && !query.length) {return false;}
 	let queryNoSort = query;
 	if (bAllowSort) {
-		const fromIndex = query.search(/ SORT.*$/i);
-		if (fromIndex !== -1) {
-			if (query.match(/ SORT BY.*$/i)) {queryNoSort = query.split(/( SORT BY ).*$/i)[0];}
-			else if (query.match(/ SORT DESCENDING BY.*$/i)) {queryNoSort = query.split(/( SORT DESCENDING BY ).*$/i)[0];}
-			else if (query.match(/ SORT ASCENDING BY.*$/i)) {queryNoSort = query.split(/( SORT ASCENDING BY ).*$/i)[0];}
-			else {return false;} // Has a typo on sort
-			if (query.indexOf('$', fromIndex) !== -1) { // Functions require quotes around them
-				const firstQuote = query.indexOf('"', fromIndex);
-				if (firstQuote === -1)  {return false;} 
-				else if (firstQuote === query.lastIndexOf('"')) {return false;}
-				else if (query.slice(fromIndex).match(/"/g).length % 2 !== 0) {return false;}
-			}
-		}
+		queryNoSort = stripSort(query);
+		if (!queryNoSort.length || queryNoSort !== query && !checkSort(query.replace(queryNoSort, ''))) {return false;}
 	}
 	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}
 	catch (e) {bPass = false;}
-	if (!bAllowPlaylist && queryNoSort.match(/.*#PLAYLIST# IS.*/i)) {bPass = false;}
+	if (!bAllowPlaylist && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
 	return bPass;
 }
 
-// Must check query first to be sure it's a valid query!
+function checkSort(queryOrSort) {
+	let bPass = true;
+	const sortObj = getSortObj(queryOrSort);
+	if (!sortObj || !sortObj.tf) {bPass = false;}
+	return bPass;
+}
+
+// Must check query too to be sure it's a valid query!
 function stripSort(query) {
 	let queryNoSort = query;
-	if (query.indexOf('SORT') !== -1) {
-		if (query.indexOf(' SORT BY ') !== -1) {queryNoSort = query.split(' SORT BY ')[0];}
-		else if (query.indexOf(' SORT DESCENDING BY ') !== -1) {queryNoSort = query.split(' SORT DESCENDING BY ')[0];}
-		else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0];}
+	if (query.match(/ *SORT.*$/)) {
+		if (query.match(/ *SORT BY .*$/)) {queryNoSort = query.split(/( *SORT BY ).*$/)[0];}
+		else if (query.match(/ *SORT DESCENDING BY .*$/)) {queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0];}
+		else if (query.match(/ *SORT ASCENDING BY .*$/)) {queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0];}
 		else {queryNoSort = '';}
 	}
 	return queryNoSort;
@@ -238,13 +234,13 @@ function getSortObj(queryOrSort) {
 	let sortObj = null;
 	if (sort.length) {
 		sortObj = {};
-		[sortObj.direction, sortObj.tf] = sort.split(' BY ');
-		if (sortObj.direction === 'SORT' || sortObj.direction == 'SORT ASCENDING') {sortObj.direction = 1;}
-		else if (sortObj.direction === 'SORT DESCENDING') {sortObj.direction = -1;}
+		[sortObj.direction, sortObj.tag] = sort.split(/(?: BY )(.*$)/i);
+		if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) {sortObj.direction = 1;}
+		else if (sortObj.direction.match(/SORT DESCENDING$/)) {sortObj.direction = -1;}
 		else {console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null;}
-		if (sortObj.tf.indexOf('%') === -1 && sortObj.tf.indexOf('$') === -1) {sortObj = null;}
+		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"\$.+\(.*\)"$|%.+%$/)) {sortObj = null;}
 	}
-	if (sortObj) {sortObj.tf = fb.TitleFormat(sortObj.tf);}
+	if (sortObj) {sortObj.tf = fb.TitleFormat(sortObj.tag);}
 	return sortObj;
 }
 

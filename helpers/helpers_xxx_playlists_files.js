@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/22
+//29/03/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -556,7 +556,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			}
 			const limit = XSP.getLimit(jsp);
 			if (isFinite(limit)) {handlePlaylist.RemoveRange(limit, handlePlaylist.Count);}
-			console.log('Loaded successfully XSP Playlist: ' + XSP.getQuery(jsp));
+			console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort);
 		}
 	} else {
 		const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});

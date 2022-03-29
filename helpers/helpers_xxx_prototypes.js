@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/22
+//29/03/22
 
 /* 
 	Objects
@@ -33,7 +33,7 @@ function roughSizeOfObject(object) {
 		else if (typeof value === 'number') {
 			bytes += 8;
 		}
-		else if (typeof value === 'object' && objectList.indexOf( value ) === -1) {
+		else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
 			objectList.push( value );
 			for(var i in value) {stack.push( value[ i ]);}
 		}
