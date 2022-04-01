@@ -1,7 +1,8 @@
 ﻿'use strict';
-//17/03/22
+//31/03/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
+include('helpers_xxx.js');
 include('helpers_xxx_UI_chars.js');
 
 /* 
@@ -26,7 +27,7 @@ const _gr = _bmp.GetGraphics();
 
 // Cache
 const scaleDPI = {}; // Caches _scale() values;
-const fonts = {}; // Caches _gdifont() values;
+const fonts = {notFound: []}; // Caches _gdifont() values;
 
 // Flags
 const LEFT = DT_VCENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -318,7 +319,11 @@ function _gdiFont(name, size, style) {
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}
-	if (fonts[id].Name !== name) {console.log('Missing font: ' + name);}
+	if (fonts[id].Name !== name && fonts.notFound.indexOf(name) === -1) { // Display once per session, otherwise it floods the console with the same message...
+		fonts.notFound.push(name);
+		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install dependency found at:\n' + folders.xxx + '_resources', window.Name);
+		console.log('Missing font: ' + name);
+	}
 	return fonts[id];
 }
 
@@ -337,11 +342,9 @@ function _sb(t, x, y, w, h, v, fn) {
 			gr.DrawString(this.t, this.font, colour, this.x, this.y, this.w, this.h, SF_CENTRE);
 		}
 	}
-	
 	this.trace = (x, y) => {
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h && this.v();
 	}
-	
 	this.move = (x, y) => {
 		if (this.trace(x, y)) {
 			window.SetCursor(IDC_HAND);
@@ -351,7 +354,6 @@ function _sb(t, x, y, w, h, v, fn) {
 			return false;
 		}
 	}
-	
 	this.lbtn_up = (x, y) => {
 		if (this.trace(x, y)) {
 			if (this.fn) {
@@ -362,7 +364,6 @@ function _sb(t, x, y, w, h, v, fn) {
 			return false;
 		}
 	}
-	
 	this.t = t;
 	this.x = x;
 	this.y = y;

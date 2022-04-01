@@ -22,6 +22,9 @@ For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
 Then load any script into a SMP panel within foobar. See info for usage.
 
+Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section 
+for more details, the github page or the related pdf documentation at 'readmes' folder (if available).
+
 (*) To change the hardcoded installation part of the path, go to .\helpers\helpers_xxx.js
 and change the variable named 'folders.xxxName'. This is a workaround for some SMP limitations
 when working with relative paths. Its use is at your own responsibility but feel free to report
