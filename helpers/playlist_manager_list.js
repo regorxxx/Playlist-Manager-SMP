@@ -1,5 +1,5 @@
 'use strict';
-//20/03/22
+//03/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -342,6 +342,7 @@ function _list(x, y, w, h) {
 		this.index = -1;
 		this.bMouseOver = false;
 		// this.offset = 0;
+		this.clearSelPlaylistCache();
 		window.Repaint();
 	}
 	
@@ -442,7 +443,7 @@ function _list(x, y, w, h) {
 						}
 						default:
 						{
-							this.selPaths = {pls: new Set(), sel: []};
+							this.clearSelPlaylistCache();
 							this.tooltip.SetValue(null); // Removes tt when not over a list element
 							window.Repaint(); // Removes selection indicator
 							break;
@@ -671,7 +672,7 @@ function _list(x, y, w, h) {
 				}
 				if (bDup) {
 					if (this.bForbidDuplicates) {this.selPaths.pls = filePaths;}
-				} else {this.selPaths = {pls: new Set(), sel: []};}
+				} else {this.clearSelPlaylistCache();}
 			}
 		}
 		return bDup;
@@ -720,6 +721,10 @@ function _list(x, y, w, h) {
 			}
 		}
 		return false;
+	}
+	
+	this.clearSelPlaylistCache = () => {
+		this.selPaths = {pls: new Set(), sel: []};
 	}
 	
 	this.addTracksToPlaylist = (playlistIndex, handleList) => { // Sends tracks to playlist file directly
@@ -2267,7 +2272,7 @@ function _list(x, y, w, h) {
 			this.dataFoobar = []; // Only foobar playlists on UI
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
-			this.selPaths = {pls: new Set(), sel: []};
+			this.clearSelPlaylistCache();
 			this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 			this.lockStates = this.constLockStates();
 			this.autoPlaylistStates = this.constAutoPlaylistStates();
