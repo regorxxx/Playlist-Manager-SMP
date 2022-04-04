@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/22
+//03/04/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -40,7 +40,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 			// Already using data from other instance. See on_notify_data
 			pop.disable(true);
 		}).finally(() => {
-			if (list && list.bRelativePath && list.playlistsPath) {
+			if (typeof list !== 'undefined' && list && list.bRelativePath && list.playlistsPath) {
 				if (!pop.isEnabled()) {pop.enable(true, message, tt);}
 				precacheLibraryRelPaths(list.playlistsPath);
 				pop.disable(true);
@@ -416,10 +416,12 @@ const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup
 const debouncedCacheLib = debounce(cacheLib, 5000);
 function on_library_items_added() {
 	debouncedCacheLib(false, 'Updating...');
+	typeof list !== 'undefined' && list.clearSelPlaylistCache();
 }
 
 function on_library_items_removed() {
 	debouncedCacheLib(false, 'Updating...');
+	typeof list !== 'undefined' && list.clearSelPlaylistCache();
 }
 
 // key listener (workaround for keys not working when focus is not on panel)

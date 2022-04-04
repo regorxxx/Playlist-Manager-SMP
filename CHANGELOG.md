@@ -26,15 +26,16 @@
 ### Removed
 - Logging: non needed profiler logs for sorting/filtering.
 ### Fixed
-- Helpers: avoid file reading crashing in any case (even if it's locked by another process).
-- Helpers: fixed query checking not working due to upper/lower case mixing in some cases, should now be pretty robust with RegEx.
-- Helpers: fixed UI slowdowns when required font is not found (due to excessive console logging). Now a warning popup is shown and logging is only done once per session.
+- Skip duplicates: rare error when trying to add a non-duplicated track, marked as duplicated, needed a second try to actually add the track successfully.
 - XSP: fixed sorting recognition in some cases, should now be pretty robust with RegEx.
 - Dead items: playlists with tracks pointing to subsongs (iso files) were incorrectly reported as dead items. Happened in multiple playlist consistency tools and exporting.
 - Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
 - Auto-Functions: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.
 - Logging: removed non needed log warning about sorting direction not being available when a Smart Playlist (.xsp) playlist had no sort tag (since it's optional).
 - Logging: Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
+- Helpers: avoid file reading crashing in any case (even if it's locked by another process).
+- Helpers: fixed query checking not working due to upper/lower case mixing in some cases, should now be pretty robust with RegEx.
+- Helpers: fixed UI slowdowns when required font is not found (due to excessive console logging). Now a warning popup is shown and logging is only done once per session.
 
 
 ## [0.5.0-beta.2] - 2021-03-02
