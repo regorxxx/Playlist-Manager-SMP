@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/03/22
+//04/04/22
 
 /* 
 	Objects
@@ -109,11 +109,22 @@ function _b(value) {
 	return '[' + value + ']';
 }
 
+function _t(tag) {
+	return '%' + tag + '%';
+}
+
 function _bt(tag) {
-	return '[%' + tag + '%]';
+	return _b(_t(tag));
 }
 
 
+function _ascii(tag) { // Don't miss quotes on queries!
+	return '$ascii(' + tag + ')';
+}
+
+function _asciify(value) { // Mimics $ascii() Title Format function
+	return (isStringWeak(value) ? value : String(value)).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0142/g, 'l');
+}
 /* 
 	Arrays
 */
