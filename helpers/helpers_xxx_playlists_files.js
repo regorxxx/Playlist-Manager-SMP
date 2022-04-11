@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/03/22
+//08/04/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -15,10 +15,14 @@ include('helpers_xxx_playlists_files_xsp.js');
 */
 
 // Playlists descriptors
-const writablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.xspf']); // These are playlist formats which are writable
-const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.strm','.xspf','.xsp']); // These are playlist formats which are readable to retrieve paths
-const loadablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl','.strm','.xspf','.xsp']); // These are playlist formats which are loadable into the manager (shown as files)
-_runCmd('CMD /C CHCP > ' + folders.data + 'systemCodePage.txt', true)
+const writablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.xspf']); // Playlist formats which are writable
+const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.strm','.xspf','.xsp']); // Playlist formats which are readable to retrieve paths
+const loadablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl','.strm','.xspf','.xsp']); // ^laylist formats which are loadable into the manager (shown as files)
+
+// Retrieve system codepage
+if (!_isFile(folders.data + '\\systemCodePage.txt') || lastStartup() > lastModified(folders.data + '\\systemCodePage.txt')) {
+	_runCmd('CMD /C CHCP > ' + _q(folders.data + 'systemCodePage.txt'), true)
+}
 const systemCodePage = _isFile(folders.data + '\\systemCodePage.txt') ? _open(folders.data + '\\systemCodePage.txt').split(': ').pop() : -1;
 
 // XSPF cache

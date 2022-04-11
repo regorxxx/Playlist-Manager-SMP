@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/22
+//05/04/22
 
 /* 
 	Objects
@@ -84,17 +84,17 @@ String.prototype.replaceAll = function replaceAll(word, newWord) {
 
 function capitalize(s) {
 	if (!isString(s)) {return '';}
-	return s.charAt(0).toUpperCase() + s.slice(1);
+	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-function capitalizeAll(s, sep = ' ') {
+function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
 	if (typeof s !== 'string') {return '';}
 	if (isArray(sep)) {
 		let copy = s;
-		for (const sep_i of sep) {copy = capitalizeAll(copy, sep_i);}
+		for (const sep_i of sep) {copy = capitalizeAll(copy, sep_i, bJoinSep);}
 		return copy;
 	}
-	return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1);}).join(sep); // Split, capitalize each subString and join
+	return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1).toLowerCase();}).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
 }
 
 function _p(value) {
