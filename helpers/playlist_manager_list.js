@@ -1,5 +1,5 @@
 'use strict';
-//03/04/22
+//11/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -578,7 +578,7 @@ function _list(x, y, w, h) {
 				break;
 			default: { // Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				const keyChar = keyCode(k);
-				if (keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
+				if (keyChar && keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
 					let method = this.methodState.split('\t')[0].replace('By ', '');
 					if (method === 'name' || !(new oPlaylist('', '')).hasOwnProperty(method)) {method = 'nameId';} // Fallback to name for sorting methods associated to non tracked variables
@@ -952,7 +952,7 @@ function _list(x, y, w, h) {
 					const playlistPath = plsData.path;
 					let bDeleted = false;
 					if (_isFile(playlistPath)) {
-						bDeleted = _recycleFile(playlistPath);
+						bDeleted = _recycleFile(playlistPath, true);
 					} else {bDeleted = true;}
 					if (bDeleted) {
 						const extension = this.bSavingDefExtension || plsData.extension === '.fpl' ? this.playlistsExtension : plsData.extension;
@@ -1018,7 +1018,7 @@ function _list(x, y, w, h) {
 		}
 		if (!path.length){return '';}
 		if (_isFile(path)) {
-			let bDone = _recycleFile(path);
+			let bDone = _recycleFile(path, true);
 			if (!bDone) {console.log('exportJson: can\'t delete duplicate file ' + path); return '';}
 		}
 		let toSave = [];
@@ -1345,7 +1345,7 @@ function _list(x, y, w, h) {
 				});
 		} else { // Recalculates from files
 			// AutoPlaylist and FPL From json
-			console.log('Playlist manager: reading from files');
+			console.log('Playlist manager: reading files from ' + _q(this.playlistsPath));
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
@@ -2046,12 +2046,12 @@ function _list(x, y, w, h) {
 								debouncedRecycle(newPath);
 								return;
 							} else {
-								_recycleFile(newPath);
+								_recycleFile(newPath, true);
 								console.log('Delete done');
 							}
 						}, this.autoUpdateDelayTimer);
 						debouncedRecycle();
-					} else {_recycleFile(newPath); console.log('Delete done');}
+					} else {_recycleFile(newPath, true); console.log('Delete done');}
 					this.editData(this.data[idx], {
 						path: newPath,
 					});
@@ -2308,7 +2308,7 @@ function _list(x, y, w, h) {
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
-		_recycleFile(this.filename + '.old'); // recycle old backup
+		_recycleFile(this.filename + '.old', true); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
 		this.loadConfigFile(); // Extra json config available?
 		this.initProperties(); // This only set properties if they have no values...
