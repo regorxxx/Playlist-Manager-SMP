@@ -1,22 +1,45 @@
 ﻿'use strict';
-//23/03/22
+//11/04/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 
-/* 
-	Global Variables 
-*/
 
 /* 
-	File manipulation 
+	Global Variables 
 */
 const fso = new ActiveXObject('Scripting.FileSystemObject');
 const WshShell = new ActiveXObject('WScript.Shell');
 const app = new ActiveXObject('Shell.Application');
 const spaces = {desktop: 0, bin: 10, userdesktop: 16, fonts: 19};
 const fileAttr = {Normal: 0, ReadOnly: 1, Hidden: 2, Syestem: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048};
+
+// Additional code to check for network drives: these don't have recycle bin so _recycleFile would always fail or show a prompt
+const mappedDrivesFile = folders.data + 'mappedDrives.txt';
+const mappedDrives = [];
+if (!_isFile(mappedDrivesFile) || lastStartup() !== lastModified(mappedDrivesFile)) {
+	_runCmd('CMD /C wmic path Win32_LogicalDisk Where DriveType="4" get DeviceID, ProviderName > ' + _q(mappedDrivesFile), true);
+}
+{
+	const file = _open(mappedDrivesFile);
+	if (file && file.length) {
+		const lines = file.split(/\r\n|\n\r|\n|\r/);
+		lines.forEach((line, i) => {
+			if (i === 0  || !line.length) {return;}
+			const drive = line.match(/(.+?:)/g)[0];
+			if (drive && drive.length) {mappedDrives.push(drive.toLowerCase());}
+		});
+	}
+}
+
+/* 
+	File manipulation 
+*/
+
+function _hasRecycleBin(drive) {
+	return mappedDrives.indexOf(drive.toLowerCase()) === -1 || _isFolder(drive + '\\$RECYCLE.BIN');
+}
 
 function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which is only usable on _explorer()
 	const folder = app.NameSpace(spaces.hasOwnProperty(name.toLowerCase()) ? spaces[name.toLowerCase()] : name);
@@ -122,21 +145,26 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 // Works even pressing shift thanks to an external utility
 // Otherwise file would be removed without sending to recycle bin!
 // Use utils.IsKeyPressed(VK_SHIFT) and debouncing as workaround when external exe must not be run
-function _recycleFile(file) {
+function _recycleFile(file, bCheckBin = false) {
 	if (_isFile(file)) {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
-		try {
-			if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
-			app.NameSpace(spaces.bin).MoveHere(file); // First nameSpace method (may not work on Unix systems)
-		} catch (e) {
+		let bIsBin = true;
+		if (bCheckBin && !_hasRecycleBin(file.match(/^(.+?:)/g)[0])) {bIsBin = false;}
+		if (bIsBin) {
 			try {
 				if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
-				app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
+				app.NameSpace(spaces.bin).MoveHere(file); // First nameSpace method (may not work on Unix systems)
 			} catch (e) {
-				try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true);} // cmdUtils as fallback
-				catch (e) {return false;}
+				try {
+					if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
+						app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
+						// fso.GetFile(file).Delete(true);
+				} catch (e) {
+					try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true); console.log('hola')} // cmdUtils as fallback
+					catch (e) {return false;}
+				}
 			}
-		}
+		} else {return _deleteFile(file, true);}
 		return !(_isFile(file));
 	}
 	return false;

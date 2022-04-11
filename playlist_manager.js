@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/04/22
+//08/04/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -114,7 +114,8 @@ var properties = {
 	autoBack				: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity],
 	autoBackN				: ['Auto-backup files allowed.', 50],
 	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state'],
-	bSavingDefExtension		: ['Try to save playlists always as default format?', true]
+	bSavingDefExtension		: ['Try to save playlists always as default format?', true],
+	bNetworkPopup			: ['Playlist Manager on network drive: Fired once', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -147,6 +148,21 @@ pop.textColor = invert(panel.getColorBackground(), true);
 pop.border.enabled = false; // Just overlay without a popup
 pop.icon.enabled = true; // Enable animation
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
+
+// Tracking a network drive?
+if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
+	console.log('Playlist manager: tracked folder is on a network drive.')
+	if (!list.properties['bNetworkPopup'][1]) {
+		list.properties['bNetworkPopup'][1] = true;
+		overwriteProperties(list.properties); // Updates panel
+		const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
+		const readme = _open(file, convertCharsetToCodepage('UTF-8'));
+		fb.ShowPopupMessage(readme, window.Name);
+	}
+} else if (list.properties['bNetworkPopup'][1]) {
+	list.properties['bNetworkPopup'][1] = false;
+	overwriteProperties(list.properties); // Updates panel
+}
 
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);

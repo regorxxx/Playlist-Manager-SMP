@@ -1,5 +1,5 @@
 'use strict';
-//22/03/22
+//08/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -319,8 +319,9 @@ function createMenuRight() {
 			}});
 		}
 		{	// Restore
-			const subMenuName = menu.newMenu('Restore...', void(0), list.deletedItems.length ? MF_STRING : MF_GRAYED);
-			if (list.deletedItems.length) {
+			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
+			const subMenuName = menu.newMenu('Restore...' + (!bBin ? ' [missing recycle bin]' : ''), void(0), list.deletedItems.length ? MF_STRING : MF_GRAYED);
+			if (list.deletedItems.length && bBin) {
 				list.deletedItems.slice(0, 8).forEach((item, i) => {
 					menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
 						list.addToData(list.deletedItems[i]);
@@ -452,6 +453,12 @@ function createMenuRightTop() {
 			list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
 			list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
 			list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
+			if (mappedDrives.indexOf(list.playlistsPath.match(/^(.+?:)/g)[0]) !== -1) {
+				if (!list.properties['bNetworkPopup'][1]) {list.properties['bNetworkPopup'][1] = true;}
+				const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
+				const readme = _open(file, convertCharsetToCodepage('UTF-8'));
+				fb.ShowPopupMessage(readme, window.Name);
+			} else {list.properties['bNetworkPopup'][1] = false;}
 			overwriteProperties(list.properties);
 			list.checkConfig();
 			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
@@ -460,6 +467,7 @@ function createMenuRightTop() {
 			list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 			list.filter();
 			test.Print();
+			// Tracking network drive?
 			window.Repaint();
 			window.Reload();
 		}});
