@@ -384,7 +384,7 @@ function convertToRelPaths(list, z) {
 		}
 		let bDeleted = false;
 		if (_isFile(playlistPath)) {
-			bDeleted = _recycleFile(playlistPath);
+			bDeleted = _recycleFile(playlistPath, true);
 		} else {bDeleted = true;}
 		if (bDeleted) {
 			bDone = _save(playlistPath, file, list.bBOM); // No BOM
@@ -531,7 +531,7 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
 		let bDeleted = false;
 		if (_isFile(newPath)) {
-			bDeleted = _recycleFile(newPath);
+			bDeleted = _recycleFile(newPath, true);
 		} else {bDeleted = true;}
 		if (bDeleted) {
 			bDone = _save(newPath, file, list.bBOM); // No BOM
@@ -649,7 +649,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 				paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 			}
 			let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
-			if (_isFile(newPath)) {bDeleted = _recycleFile(newPath);}
+			if (_isFile(newPath)) {bDeleted = _recycleFile(newPath, true);}
 			if (bDeleted !== false) {
 				bDone = file && file.length ? _save(newPath, file, list.bBOM) : false; // No BOM
 				if (!bDone) {
@@ -694,7 +694,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 			} else {
 				if (_isFile(pls.path)) {
 					// Locked files have the name variable as read only, so we only change the filename. We can not replace oldName with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
-					let newPath = pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([newName]).join('\\') + pls.extension;
+					let newPath = sanitizePath(pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([newName]).join('\\') + pls.extension);
 					// let newPath = pls.path.replace(oldName + pls.extension, newName + pls.extension);
 					bRenamedSucessfully = _renameFile(pls.path, newPath);
 					if (bRenamedSucessfully) {
@@ -856,7 +856,7 @@ function backup(n = 50) { // Backup playlist and json file
 	if (n && n !== -1) {
 		const files = getFiles(list.playlistsPath + '_backup\\', new Set(['.zip'])).reverse();
 		while (files.length >= n) {
-			_recycleFile(files.pop());
+			_recycleFile(files.pop(), true);
 		}
 	}
 	const playlistFilesMask = [...loadablePlaylistFormats].map((ext) => {return list.playlistsPath + '*' + ext;}); // Ext already has a .
