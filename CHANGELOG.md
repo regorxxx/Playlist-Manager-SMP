@@ -18,6 +18,7 @@
 - Clone: new clone option as UI-only playlist, meant to load a playlist into the UI without bounding it to the original file. It's equivalent to previously locking a playlist file and then loading it, but this method skips setting the metadata first and ensures no changes are made in any case.
 - UI: added new option to create an AutoPlaylist from currently active playlist (when it's also an AutoPlaylist). AutoPlaylist popup is automatically opened to make it easier to copy/paste the query and sort expressions.
 ### Changed
+- Network: changed behavior of file recycling logic to check for network drives. Previously, when trying to delete a file on a network drive, a popup would appear asking to permanently delete the file. This is due to network drives not having a Recycle Bin by default on windows. In such case, now the file will be automatically deleted without popups. Deleted playlists list will also be disabled on the menus. As a warning, whenever the tracked playlist folder is set within a network drive, a popup will be shown with this info along hints to enable the Recycle Bin via a registry hack.
 - UI: L. Click on header now also tries to highlight the playing playlist, if the active playlist is not present. It does nothing in any case if neither are not tracked by the manager.
 - UI: filter buttons now cut the text if it's longer than the button width (for categories or tags).
 - UI: minor menu changes.
@@ -26,16 +27,20 @@
 ### Removed
 - Logging: non needed profiler logs for sorting/filtering.
 ### Fixed
+- Renaming: error on playlist renaming when trying to rename a file with exotic chars. Now path is sanitized before renaming (so filename and playlist name may not match 100%).
 - Skip duplicates: rare error when trying to add a non-duplicated track, marked as duplicated, needed a second try to actually add the track successfully.
 - XSP: fixed sorting recognition in some cases, should now be pretty robust with RegEx.
+- XSP: rewritten query analysis (foobar query to XSP query) to fix some problems with extra spaces, quotes, etc.
 - Dead items: playlists with tracks pointing to subsongs (iso files) were incorrectly reported as dead items. Happened in multiple playlist consistency tools and exporting.
 - Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
 - Auto-Functions: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.
 - Logging: removed non needed log warning about sorting direction not being available when a Smart Playlist (.xsp) playlist had no sort tag (since it's optional).
 - Logging: Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
+- Helpers: rewritten sorting analysis to account for quotes not being needed at sorting for functions.
 - Helpers: avoid file reading crashing in any case (even if it's locked by another process).
 - Helpers: fixed query checking not working due to upper/lower case mixing in some cases, should now be pretty robust with RegEx.
 - Helpers: fixed UI slowdowns when required font is not found (due to excessive console logging). Now a warning popup is shown and logging is only done once per session.
+- Crash due to unknown key pressed while quick-searching.
 
 
 ## [0.5.0-beta.2] - 2021-03-02
