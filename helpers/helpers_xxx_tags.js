@@ -230,7 +230,7 @@ function stripSort(query) {
 
 function getSortObj(queryOrSort) {
 	const query = stripSort(queryOrSort);
-	const sort = queryOrSort.replace(query, '');
+	const sort = query && query.length ? queryOrSort.replace(query, '') : queryOrSort;
 	let sortObj = null;
 	if (sort.length) {
 		sortObj = {};
@@ -238,7 +238,7 @@ function getSortObj(queryOrSort) {
 		if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) {sortObj.direction = 1;}
 		else if (sortObj.direction.match(/SORT DESCENDING$/)) {sortObj.direction = -1;}
 		else {console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null;}
-		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"\$.+\(.*\)"$|%.+%$/)) {sortObj = null;}
+		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"*\$.+\(.*\)"*$|%.+%$/)) {sortObj = null;}
 	}
 	if (sortObj) {sortObj.tf = fb.TitleFormat(sortObj.tag);}
 	return sortObj;
