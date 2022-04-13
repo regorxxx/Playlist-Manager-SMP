@@ -12,6 +12,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 
 * Manages Playlist files and AutoPlaylists.  
   * Playlist files are linked to physical files (.m3u8, .m3u, .pls, .xspf, .xsp or .fpl).
+  * UI-only playlists can also be managed without a physical file.
   * AutoPlaylists are saved into json format.
   * Works with shareable playlists (.xspf) and Kodi-like smart playlists (.xsp).
   * All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
@@ -22,6 +23,12 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Adds tooltip info, UI features, filters, etc.
   * Number of tracks output is updated at foobar startup. (and/or 'at manual refresh')
   * Queries and sort patterns are checked for validity before using them, instead of crashing.
+* Smart Playlists: contains all functionality found on XBMC or Kodi:
+  * Use XBMC or Kodi playlists within foobar seamlessly.
+  * Multiple exporting options.
+  * Allow to limit the number of tracks output by a query.
+  * Allows to use other playlists as source (even AutoPlaylists) via queries.
+  * Have the same advanced UI features than AutoPlaylists.
 * Complete documentation, FAQ and step by step guide (see 'readmes\playlist_manager.pdf').
 * Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar (if all items are on library). i.e. "As fast as the native format".
 * Auto-saves changes within foobar to bound playlists files. (configurable)
@@ -72,14 +79,19 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
     * Category / Tag(s).
     * Track Tag(s).
     * Status (lock).
-    * Query. Sort Pattern. (AutoPlaylists)
+    * Query. Sort Pattern. (AutoPlaylists) Output limit. (Smart Playlists)
 * Cyclic filters:
-  * Show All | Only Autoplaylists | Only Playlists
+  * Show All | Only Autoplaylists % Smart Playlists | Only standard Playlists
   * Show All | Not locked | Only locked
+  * By extension
+  * By tag
+  * By category
 * Cyclic Sorting:
   * Name: Az | Za
   * Size: Ascd. | Desc.
   * Category: Az | Za
+  * Tags (first one): Az | Za
+  * Date: Az | Za
 * UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
   * Invisible Unicode chars plus (*)
   * (a-f)
@@ -130,6 +142,8 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 .fpl playlists (native format) are read only and can not be auto-saved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).  
 Whenever that changes, I will add full support for .fpl, and end pre-release state.
 
+Tracking playlists within a network drive requires additional steps to make use of the Recycle Bin. See Readme (pdf).
+
 ## Also integrates
  1. [Menu-Framework-SMP](https://github.com/regorxxx/Menu-Framework-SMP): Helper which allows to easily create customizable and dynamic menus.
  
@@ -137,12 +151,8 @@ Whenever that changes, I will add full support for .fpl, and end pre-release sta
  1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon.
  
 ## Installation
-Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts  
-Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg)  
-For ex: mine is c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...  
-For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  
-For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...  
-Then load 'playlist_manager.js' into a SMP panel within foobar. Also read file '_TIPS and INSTALLATION.txt for additional comments about foobar portable installations, not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
+See Readme (pdf) and _TIPS and INSTALLATION (txt).
+Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg?include_prereleases

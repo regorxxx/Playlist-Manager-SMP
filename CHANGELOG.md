@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.3](#050-beta2---2022-04-13)
 - [0.5.0-beta.2](#050-beta2---2022-03-02)
 - [0.5.0-beta.1](#050-beta1---2021-12-23)
 - [0.4.1](#041---2021-06-15)
@@ -14,6 +15,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.3] - 2022-04-13
 ### Added
 - Clone: new clone option as UI-only playlist, meant to load a playlist into the UI without bounding it to the original file. It's equivalent to previously locking a playlist file and then loading it, but this method skips setting the metadata first and ensures no changes are made in any case.
 - UI: added new option to create an AutoPlaylist from currently active playlist (when it's also an AutoPlaylist). AutoPlaylist popup is automatically opened to make it easier to copy/paste the query and sort expressions.
@@ -43,8 +50,7 @@
 - Helpers: fixed UI slowdowns when required font is not found (due to excessive console logging). Now a warning popup is shown and logging is only done once per session.
 - Crash due to unknown key pressed while quick-searching.
 
-
-## [0.5.0-beta.2] - 2021-03-02
+## [0.5.0-beta.2] - 2022-03-02
 ### Added
 - UI: added UI-only playlists to Playlist type and Extension filters. i.e. manager can be set to only show those playlists now using the filters.
 - UI: playlist files are now automatically renamed when using foobar UI to rename a loaded playlist (only with no UUID option). This is an alternate method to using the manager itself to rename the playlist.
@@ -325,7 +331,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.2...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.3...HEAD
+[0.5.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.2...0.5.0-beta.3
 [0.5.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...0.5.0-beta.2
 [0.5.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...0.5.0-beta.1
 [0.4.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.0...v0.4.1
