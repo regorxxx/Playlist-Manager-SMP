@@ -1,5 +1,5 @@
 'use strict';
-//23/02/22
+//13/04/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -113,9 +113,19 @@ function doFilter(parent) {
 			break;
 		}
 		case 'Extension': {
+			const initial = list.extStates[0];
 			list.extStates.rotate(1);
-			list.update(true, true);
-			list.filter(); // Current filter states
+			// Filter non present extensions
+			if (list.extStates[0] !== list.constExtStates()[0]) { 
+				while (!list.dataAll.some((pls) => {return pls.extension === list.extStates[0];})) {
+					list.extStates.rotate(1);
+				}
+			}
+			// Only update UI when there is a change
+			if (list.extStates[0] !== initial) {
+				list.update(true, true);
+				list.filter(); // Current filter states
+			}
 			break;
 		}
 		case 'Tag': {
@@ -138,7 +148,10 @@ function filterTooltip() {
 			break;
 		}
 		case 'Extension': {
-			ttText = 'Cycle through the different filters:\n' + list.constExtStates().map((item) => {return item + (list.extStates[0] === item ? '  <--' : '');}).join('\n');
+			ttText = 'Cycle through the different filters:\n' + list.constExtStates().map((item) => {
+				// Add a cross to those extensions not being used
+				return item + (list.extStates[0] === item ? '\t<--' : (list.dataAll.some((pls) => {return pls.extension === item;}) || item === list.constExtStates()[0] ? '' : '\t[x]'));
+			}).join('\n');
 			break;
 		}
 		case 'Playlist type': {
