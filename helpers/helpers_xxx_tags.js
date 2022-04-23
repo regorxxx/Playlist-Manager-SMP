@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/03/22
+//24/04/22
 
 include('helpers_xxx.js');
 
@@ -45,7 +45,7 @@ const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR 
 
 // Quote special chars according to https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Titleformat_Reference#Syntax
 function sanitizeTagTfo(tag) {
-	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\''); 
+	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[\]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\''); 
 }
 
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
@@ -72,9 +72,11 @@ function queryReplaceWithCurrent(query, handle) {
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
 				// tfo = tfo.indexOf('$') === -1 ? '[%' + tfo + '%]' : '[' + tfo + ']';
-				tfo = tfo.indexOf('$') === -1 ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
+				const bIsFunc = tfo.indexOf('$') !== -1;
+				const bIsWithinFunc = query[idx[i] - 1] === '(' && query[idx[i + 1] + 1] === ')';
+				tfo = !bIsFunc ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
 				tfo = fb.TitleFormat(tfo);
-				tfoVal = tfo.EvalWithMetadb(handle);
+				tfoVal = bIsFunc || bIsWithinFunc ? sanitizeTagTfo(tfo.EvalWithMetadb(handle)) : tfo.EvalWithMetadb(handle);
 				if (tfoVal.indexOf('#') !== -1) { // Split multivalue tags if possible!
 					// tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
