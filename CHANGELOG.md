@@ -17,8 +17,13 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: disabled warnings about having duplicated names on UI-only playlists.
+- UI: only one entry is shown for UI-only playlists with duplicated names (instead of multiple entries). The entry is linked to the first found playlist (by index) for all purposes (adding tracks, size, etc.). Double clicking on a UI-only playlist which has a name shared by multiple playlists now cycles through them.
+- Logging: removed non needed instances of logging related to UI-only playlists (like refreshing size).
+- Existence of tracked folder drive is now checked on startup. A popup is shown if it is not found (for ex. a missing network drive).
 ### Removed
 ### Fixed
+- UI: duplicated playlist popup now outputs the playlist names instead of the indexes.
 
 ## [0.5.0-beta.3] - 2022-04-13
 ### Added

@@ -1,5 +1,5 @@
 'use strict';
-//11/04/22
+//23/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -412,8 +412,13 @@ function _list(x, y, w, h) {
 									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : ''): '-');
 									playlistDataText += '\n' + 'Limit: ' +  (pls.limit ? pls.limit : '\u221E') + ' tracks';
 								}
+								// Show UI playlist duplicate warning
+								let iDup = 0;
+								if (pls.extension === '.ui') {
+									iDup = getPlaylistIndexArray(pls.nameId).length;
+								}
 								// Show current action
-								if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {playlistDataText += '\n---------------------------------------------------';}
+								if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {playlistDataText += '\n---------------------------------------------------';}
 								if (mask === MK_CONTROL) {playlistDataText += '\n(Ctrl + L. Click to load / show playlist)';}
 								else if (mask === MK_SHIFT) {
 									playlistDataText += '\n(Shift + L. Click to send selection to playlist)';
@@ -437,6 +442,7 @@ function _list(x, y, w, h) {
 								if (mask === MK_SHIFT) {
 									if (this.checkSelectionDuplicatesPlaylist(this.index)) {playlistDataText += '\nWarning! Some track(s) already present...';}
 								}
+								if (iDup > 1) {playlistDataText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.';}
 								this.tooltip.SetValue(playlistDataText, true);
 							}
 							break;
@@ -543,6 +549,12 @@ function _list(x, y, w, h) {
 					const duplicated = getPlaylistIndexArray(this.data[z].nameId);
 					if (duplicated.length === 0) {this.loadPlaylist(z);} 
 					else if (duplicated.length === 1) {this.showBindedPlaylist(z);}
+					else if (duplicated.length > 1 && this.data[z].extension === '.ui') { // Cycle through all playlist with same name
+						let i = 0;
+						const ap = plman.ActivePlaylist;
+						if (duplicated[duplicated.length - 1] !== ap) {while (duplicated[i] <= ap) {i++;}}
+						plman.ActivePlaylist = duplicated[i];
+					}
 					break;
 				}
 			}
@@ -832,10 +844,10 @@ function _list(x, y, w, h) {
 			let duplicates = [];
 			this.dataAll.forEach((item) => { // But only if those names are being used by playlist at the manager
 				const idx = plmanDuplicates.indexOf(item.nameId);
-				if (idx !== -1) {duplicates.push(idx);}
+				if (idx !== -1 && item.extension !== '.ui') {duplicates.push(item.nameId);}
 			});
 			if (duplicates.length) {
-				fb.ShowPopupMessage('Check playlist loaded, there are duplicated names. You can not have duplicates if using auto-tagging. Names:\n' + duplicates.join(', '), window.Name);
+				fb.ShowPopupMessage('Check playlists loaded, duplicated names are not allowed when using auto-saving:\n\n' + duplicates.join(', '), window.Name);
 				return;
 			}
 		}
@@ -912,11 +924,11 @@ function _list(x, y, w, h) {
 				this.dataAll.forEach((item) => { // But only if those names are being used by playlist at the manager
 					if (!item.isAutoPlaylist && !item.query) {
 						const idx = plmanDuplicates.indexOf(item.nameId);
-						if (idx !== -1) {duplicates.push(idx);}
+						if (idx !== -1 && item.extension !== '.ui') {duplicates.push(item.nameId);}
 					}
 				});
 				if (duplicates.length) {
-					fb.ShowPopupMessage('Check playlist loaded, there are duplicated names. You can not have duplicates if using autosave. Names:\n' + duplicates.join(', '), window.Name);
+					fb.ShowPopupMessage('Check playlists loaded, duplicated names are not allowed when using auto-saving:\n\n' + duplicates.join(', '), window.Name);
 					return false;
 				}
 			}
@@ -993,8 +1005,8 @@ function _list(x, y, w, h) {
 						return false;
 					}
 					clearInterval(delay);
+					console.log('Playlist Manager: done.');
 				}
-				console.log('Playlist Manager: done.');
 				this.update(true, true); // We have already updated data before only for the variables changed
 				this.filter();
 				return true;
@@ -1511,7 +1523,9 @@ function _list(x, y, w, h) {
 			const fooPls = getPlaylistNames();
 			fooPls.forEach((pls) => {
 				if (!this.dataAll.some((dataPls) => {return dataPls.nameId === pls.name;})) {
-					this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls', void(0), void(0), void(0), plman.GetPlaylistItems(pls.idx).CalcTotalDuration()));
+					if (!this.dataFoobar.some((dataPls) => {return dataPls.nameId === pls.name;})) { // Remove duplicates
+						this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls', void(0), void(0), void(0), plman.GetPlaylistItems(pls.idx).CalcTotalDuration()));
+					}
 				}
 			});
 			if (this.dataFoobar.length) {
@@ -1558,11 +1572,12 @@ function _list(x, y, w, h) {
 		clearInterval(delay);
 	}
 	
-	this.checkDuplicates = () => {
+	this.checkDuplicates = (bSkipUI = true) => {
 		const dataNames = new Set();
 		const reportDup = new Set();
 		this.dataAll.forEach((pls) => {
-			if (dataNames.has(pls.name)) {reportDup.add(pls.name + ': ' + (pls.path ? pls.path : '-AutoPlaylist-'));} 
+			if (bSkipUI && pls.extension === '.ui') {return;}
+			if (dataNames.has(pls.name)) {reportDup.add(pls.name + ': ' + (pls.path ? pls.path : pls.isAutoPlaylist ? '-AutoPlaylist-' : pls.extension === '.ui' ? '- UI playlist-' : ''));} 
 			else {dataNames.add(pls.name);}
 		});
 		if (reportDup.size) {
@@ -2172,6 +2187,7 @@ function _list(x, y, w, h) {
 				this.properties['playlistPath'][1] += '\\';
 				bDone = true;
 			}
+			if (!_isFolder(this.playlistsPathDisk + ':\\')) {fb.ShowPopupMessage('Disk associated to tracked folder doesn\'t exist:\nTracked folder:\t' + this.playlistsPath +'\nDrive letter:\t' + this.playlistsPathDisk + ':\\\n\nReconfigure it at the header menu if needed.', window.Name);}
 			// Check playlist extension
 			if (!writablePlaylistFormats.has(this.playlistsExtension)){
 				if (writablePlaylistFormats.has(this.playlistsExtension.toLowerCase())){
