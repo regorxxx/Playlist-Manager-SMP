@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/04/22
+//27/04/22
 
 // Folders
 const folders = {};
@@ -99,7 +99,7 @@ function checkSoFeatures(soFeat) {
 	}
 	// UI
 	if (!soFeat.dpi) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nRegistry entry not found:\nHKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI\n\nFix: add entry to registry.\n' + 'HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI          --->     96\n\nCMD command:\n' + 'reg.exe ADD "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics" /v AppliedDPI /t REG_DWORD /d 96', 'SO features');
+		fb.ShowPopupMessage('Found an issue on current installation:\nRegistry entry not found:\nHKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI\n\nFix: add entry to registry.\n' + 'HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI          --->     96\n\nCMD command:\n' + 'reg.exe ADD "HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics" /v AppliedDPI /t REG_DWORD /d 96', 'SO features');
 		bPass = false;
 	}
 	if (!soFeat.gdiplus) {

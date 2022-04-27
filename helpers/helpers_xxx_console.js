@@ -68,7 +68,7 @@ console.popup = (arg, popupName) => {
 	fb.ShowPopupMessage(arg, popupName);
 	arg.split('\n').forEach((line) => {
 		if (line && line.length) {console.log(line);}
-	;});
+	});
 }
 
 if (conLog && conLog.length && conLogMaxSize && console.log) {

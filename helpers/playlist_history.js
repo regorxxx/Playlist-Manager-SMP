@@ -1,5 +1,5 @@
 'use strict';
-//07/10/21
+//27/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_playlists.js');
@@ -66,7 +66,7 @@ function onPlaylistSwitch() {
 	if (plsHistory.length) {
 		if (plsHistory.length >= plsHistoryMax) {plsHistory.pop();}
 		plsHistory.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
-	} else {initplsHistory()};
+	} else {initplsHistory();}
 }
 if (on_playlist_switch) {
 	const oldFunc = on_playlist_switch;
@@ -88,7 +88,7 @@ function onPlaylistsChanged() {
 			if (plsHistory.length >= plsHistoryMax) {plsHistory.pop();}
 			plsHistory.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
 		}
-	} else {initplsHistory()};
+	} else {initplsHistory();}
 }
 if (on_playlists_changed) {
 	const oldFunc = on_playlists_changed;

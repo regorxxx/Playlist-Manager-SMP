@@ -1,5 +1,5 @@
 'use strict';
-// 02/03/22
+// 27/04/22
 // Copyright Regorxxx 2022
 // Based on works by J. Chris Anderson 2007 
 // https://github.com/jchris/xspf-to-jspf-parser
@@ -190,7 +190,7 @@ const XSP = {
 		const xml_contentsLength = xml_contents.length;
 		const length = xml_contentsLength >= val ? val : xml_contentsLength;
 		let contents = [...Array(tag.length)].map((_) => {return new Array(val);});
-		let j = [...Array(tag.length)].map((_) => {return 0;});;
+		let j = [...Array(tag.length)].map((_) => {return 0;});
 		for (let i = 0; i < xml_contentsLength; i++) {
 			const xml_content = xml_contents[i];
 			const pos = tag.indexOf(xml_content.tagName);

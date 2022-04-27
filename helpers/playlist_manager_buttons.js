@@ -1,5 +1,5 @@
 'use strict';
-//13/04/22
+//27/04/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -67,11 +67,9 @@ function filterName() {
 	switch (this.method) {
 		case 'Lock state': {
 			return list.lockStates[0];
-			break;
 		}
 		case 'Extension': {
 			return list.extStates[0];
-			break;
 		}
 		case 'Playlist type': {
 			switch (list.autoPlaylistStates[0]) {

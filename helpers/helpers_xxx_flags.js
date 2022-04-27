@@ -30,4 +30,4 @@ function getKeyboardMask() {
 	if (c && a && s) {ret = kMask.ctrlAltShift;}
 	if (!c && a && !s) {ret = kMask.alt;}
 	return ret;
-};
+}
