@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/22
+//27/04/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -53,7 +53,7 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, idxInitial = 0, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity} = {}) {
+function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity} = {}) {
 	var menuArrTemp = [];
 	var menuArr = [];
 	var menuMap = new Map();
