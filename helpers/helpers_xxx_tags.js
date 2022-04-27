@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/22
+//27/04/22
 
 include('helpers_xxx.js');
 
@@ -230,7 +230,7 @@ function stripSort(query) {
 	return queryNoSort;
 }
 
-function getSortObj(queryOrSort) {
+function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIST'}
 	const query = stripSort(queryOrSort);
 	const sort = query && query.length ? queryOrSort.replace(query, '') : queryOrSort;
 	let sortObj = null;
