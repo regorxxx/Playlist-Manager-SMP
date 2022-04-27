@@ -1,5 +1,5 @@
 'use strict';
-//08/04/22
+//27/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -37,27 +37,36 @@ function createMenuLeft(forcedIndex = -1) {
 	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist;};
 	const isPlsLockable = () => {return isPlsEditable() || pls.extension === '.strm';};
 	const isPlsUI = () => {return pls.extension === '.ui';};
+	// Evaluate
+	const bIsPlsLoaded = isPlsLoaded();
+	const bIsPlsActive = isPlsActive();
+	const bIsAutoPls = isAutoPls();
+	const bIsLockPls = isLockPls();
+	const bIsPlsEditable = isPlsEditable();
+	const bIsPlsLockable = isPlsLockable();
+	const bIsPlsUI = isPlsUI();
+	const bWritableFormat = writablePlaylistFormats.has(pls.extension);
 	// Header
 	if (list.bShowMenuHeader) {
-		menu.newEntry({entryText: '--- ' + (isAutoPls() ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
+		menu.newEntry({entryText: '--- ' + (bIsAutoPls ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 	}
 	// Entries
 	{	// Load
 		// Load playlist within foobar. Only 1 instance allowed
-		menu.newEntry({entryText: isPlsLoaded() ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}, flags: isPlsUI() ? MF_GRAYED : MF_STRING});
+		menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING});
 		// Show binded playlist
-		menu.newEntry({entryText: (isPlsLoaded() && isPlsActive()) ? 'Show binded playlist' : (isPlsLoaded() ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: isPlsLoaded() && isPlsActive() ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 		menu.newEntry({entryText: 'Send selection to playlist', func: () => {
 			if (selItems && selItems.Count) {
 				list.sendSelectionToPlaylist(z, true);
 			}
-		}, flags: !isAutoPls() && !isLockPls() && (writablePlaylistFormats.has(pls.extension) || isPlsUI()) && selItems.Count ? MF_STRING : MF_GRAYED});
+		}, flags: !bIsAutoPls && !bIsLockPls && (bWritableFormat || bIsPlsUI) && selItems.Count ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
-		menu.newEntry({entryText: (!isLockPls()) ? 'Rename...' : (isAutoPls() ? 'Rename...' : 'Rename... (only filename)'), func: () => {
+		menu.newEntry({entryText: (!bIsLockPls) ? 'Rename...' : (bIsAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
 			let newName = '';
 			try {newName = utils.InputBox(window.ID, 'Rename playlist', window.Name, pls.name, true);} 
 			catch(e) {return;}
@@ -90,7 +99,7 @@ function createMenuLeft(forcedIndex = -1) {
 					list.update(true, true);
 					list.filter();
 				}
-			}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+			}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
 			// Change AutoPlaylist query
 			menu.newEntry({entryText: 'Edit query...', func: () => {
 				let newQuery = '';
@@ -109,7 +118,7 @@ function createMenuLeft(forcedIndex = -1) {
 						list.filter();
 					}
 				}
-			}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+			}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
 			if (pls.extension === '.xsp') {
 				menu.newEntry({entryText: 'Edit limit...', func: () => {
 					let input = '';
@@ -127,11 +136,11 @@ function createMenuLeft(forcedIndex = -1) {
 							list.filter();
 						}
 					}
-				}, flags: !isLockPls() ? MF_STRING : MF_GRAYED});
+				}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
 			}
 		} else {
 			// Updates playlist file with any new changes on the playlist binded within foobar
-			menu.newEntry({entryText: !isLockPls() ? 'Update playlist file' : 'Force playlist file update', func: () => {
+			menu.newEntry({entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
 				if (_isFile(pls.path)) {
 					const old_nameId = pls.nameId;
 					const old_name = pls.name;
@@ -146,9 +155,9 @@ function createMenuLeft(forcedIndex = -1) {
 						if (answer === popup.yes) {list.updatePlaylist(z);}
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
-			}, flags: isPlsLoaded() && !isPlsUI() ? MF_STRING : MF_GRAYED});
+			}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED});
 			// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
-			menu.newEntry({entryText: isPlsActive() ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
+			menu.newEntry({entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
 				if (_isFile(pls.path)) {
 					const old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
 					const new_nameId = pls.nameId;
@@ -162,7 +171,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (!bDone) {list.updatePlman(old_nameId, new_nameId);} // Reset change
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
-			}, flags: isPlsActive()  && !isLockPls() && writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			}, flags: bIsPlsActive  && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -173,7 +182,7 @@ function createMenuLeft(forcedIndex = -1) {
 			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, pls.category !== null ? pls.category : '', true);} 
 			catch(e) {return;}
 			setCategory(category, list, z);
-		}, flags: !isLockPls() &&  isPlsEditable() ? MF_STRING : MF_GRAYED});
+		}, flags: !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED});
 		// Set tag(s)
 		menu.newEntry({entryText: 'Set playlist tag(s)...', func: () => {
 			let tags = '';
@@ -181,7 +190,7 @@ function createMenuLeft(forcedIndex = -1) {
 			catch(e) {return;}
 			tags = tags.split(';').filter(Boolean); // This filters blank values
 			setTag(tags, list, z);
-		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
+		}, flags: !bIsLockPls && bIsPlsEditable ? MF_STRING : MF_GRAYED});
 		// Adds track tag(s)
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
@@ -193,33 +202,32 @@ function createMenuLeft(forcedIndex = -1) {
 				try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
 			}
 			setTrackTags(tags, list, z);
-		}, flags: !isLockPls() && isPlsEditable() ? MF_STRING : MF_GRAYED});
+		}, flags: !bIsLockPls && bIsPlsEditable ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	//	AutoPlaylists clone
-		if (isAutoPls()) { // For XSP playlists works the same as being an AutoPlaylist!
+		if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
 			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
-				cloneAsStandardPls(list, z, (list.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
-			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+				cloneAsStandardPls(list, z, (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
+			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => { // Here creates a foobar autoplaylist no matter the original format
 				cloneAsAutoPls(list, z);
-			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export as json file...', func: () => {
 				const path = list.exportJson(z);
 				if (_isFile(path)) {_explorer(path);}
-			}, flags: isAutoPls() ? MF_STRING : MF_GRAYED});
+			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			if (pls.extension === '.xsp') {
 				// Copy
 				menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
 					exportPlaylistFile(list, z);
 				}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			}
-		}
-		else {	// Export and Rel. Paths handling
+		} else {	// Export and Rel. Paths handling
 			// Rel Paths
 			menu.newEntry({entryText: 'Force relative paths...', func: () => {
 				convertToRelPaths(list, z);
-			}, flags: writablePlaylistFormats.has(pls.extension) && !isLockPls() ? MF_STRING : MF_GRAYED});
+			}, flags: bWritableFormat && !bIsLockPls ? MF_STRING : MF_GRAYED});
 			// Clone as
 			{
 				const presets = [...writablePlaylistFormats, 'sep', '.ui'];
@@ -241,44 +249,49 @@ function createMenuLeft(forcedIndex = -1) {
 			// Export and copy
 			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
 				exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
-			}, flags: writablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
-			// Export and Convert
-			{
-				const presets = JSON.parse(list.properties.converterPreset[1]);
-				const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length && writablePlaylistFormats.has(pls.extension) || isPlsUI() ? MF_STRING : MF_GRAYED);
-				menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-				presets.forEach((preset) => {
-					const path = preset.path;
-					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
-					const dsp = preset.dsp;
-					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-					const tf = preset.tf;
-					let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
-					const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
-					const extensionName = extension.length ? '[' + extension + ']' : '';
-					if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
-					if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
-					if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
-					menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-						exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension);
-					}, flags: writablePlaylistFormats.has(pls.extension) || isPlsUI() ? MF_STRING : MF_GRAYED});
-				});
-			}
+			}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
+		}
+		{ // Export and Convert
+			const presets = JSON.parse(list.properties.converterPreset[1]);
+			const flags = bWritableFormat || bIsPlsUI || bIsAutoPls? MF_STRING : MF_GRAYED;
+			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
+			menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			presets.forEach((preset) => {
+				const path = preset.path;
+				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+				const dsp = preset.dsp;
+				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+				const tf = preset.tf;
+				let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+				const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+				const extensionName = extension.length ? '[' + extension + ']' : '';
+				if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
+				if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
+				if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
+				menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+					const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+					if (!pls.isAutoPlaylist) {
+						exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);
+					} else {
+						exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);
+					}
+				}, flags});
+			});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
 		// Locks playlist file
-		menu.newEntry({entryText: !isLockPls() ? 'Lock Playlist (read only)' : 'Unlock Playlist (writeable)', func: () => {
+		menu.newEntry({entryText: !bIsLockPls ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
 			switchLock(list, z);
-		}, flags: isPlsLockable() ? MF_STRING : MF_GRAYED});
+		}, flags: bIsPlsLockable ? MF_STRING : MF_GRAYED});
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
 		menu.newEntry({entryText: 'Open file on explorer', func: () => {
 			if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
 			else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
-		}, flags: !isPlsUI() ? MF_STRING : MF_GRAYED});
+		}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED});
 	}
 	return menu;
 }
