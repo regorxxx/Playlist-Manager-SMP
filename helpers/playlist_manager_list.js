@@ -1,5 +1,5 @@
 'use strict';
-//23/04/22
+//27/04/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2016,7 +2016,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.getHandleFrom = (idx) => {
-			const pls = this.data[idx];
+			const pls = this.dataAll[idx];
 			let handleList = new FbMetadbHandleList();
 			if (pls.isAutoPlaylist) { // AutoPlaylist
 				if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}

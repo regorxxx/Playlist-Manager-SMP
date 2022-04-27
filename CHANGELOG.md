@@ -17,6 +17,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- AutoPlaylists: can now be exported and tracks converted directly without having to clone them as standard playlists first. It's equivalent to using 'Clone as standard playlist...' and then 'Export and Convert tracks to' on the copy -duplicates removal is also done if enabled-, although this method maintains the original name.
+- XSP: can now be exported and tracks converted directly without having to clone them as standard playlists first. See previous comment.
 - UI: disabled warnings about having duplicated names on UI-only playlists.
 - UI: only one entry is shown for UI-only playlists with duplicated names (instead of multiple entries). The entry is linked to the first found playlist (by index) for all purposes (adding tracks, size, etc.). Double clicking on a UI-only playlist which has a name shared by multiple playlists now cycles through them.
 - Logging: removed non needed instances of logging related to UI-only playlists (like refreshing size).
@@ -24,6 +26,9 @@
 ### Removed
 ### Fixed
 - UI: duplicated playlist popup now outputs the playlist names instead of the indexes.
+- AutoPlaylists: duplicates removal was not being applied on cloning due to a typo on the code.
+- XSP: fixed crash on playlist loading when there was a filter active on the manager.
+- Exporting Playlists: fixed error in some cases where playlist file was not being written properly if there was already a file present with same name. I.e. exporting multiple times the same playlist -without deleting the file afterwards- did not overwrite the file properly leading in some cases to tracks being added multiple times. Bug has only been reproduced after the changes on AutoPlaylists and XSP playlists exporting though.
 
 ## [0.5.0-beta.3] - 2022-04-13
 ### Added
