@@ -2,7 +2,8 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.5.0-beta.3](#050-beta2---2022-04-13)
+- [0.5.0-beta.4](#050-beta4---2022-04-27)
+- [0.5.0-beta.3](#050-beta3---2022-04-13)
 - [0.5.0-beta.2](#050-beta2---2022-03-02)
 - [0.5.0-beta.1](#050-beta1---2021-12-23)
 - [0.4.1](#041---2021-06-15)
@@ -15,6 +16,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.4] - 2022-04-27
 ### Added
 ### Changed
 - AutoPlaylists: can now be exported and tracks converted directly without having to clone them as standard playlists first. It's equivalent to using 'Clone as standard playlist...' and then 'Export and Convert tracks to' on the copy -duplicates removal is also done if enabled-, although this method maintains the original name.
@@ -341,7 +348,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.3...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.4...HEAD
+[0.5.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.3...0.5.0-beta.4
 [0.5.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.2...0.5.0-beta.3
 [0.5.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...0.5.0-beta.2
 [0.5.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...0.5.0-beta.1
