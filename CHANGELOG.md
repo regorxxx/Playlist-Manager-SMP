@@ -20,6 +20,11 @@
 ### Changed
 ### Removed
 ### Fixed
+- Renaming: error while renaming with : and – chars.
+- Renaming: error while renaming when name was different but sanitized path matched original one (for example when renaming "Playlist A xxx" to "Playlist A: xxx").
+- Playlists consistency tools: error while checking for external items for tracks with subsong idx on the path.
+- Playlists consistency tools: wrong logging text on blank lines checking.
+- Playlists consistency tools: .xsp playlists not being correctly checked for duration or size mismatch.
 
 ## [0.5.0-beta.4] - 2022-04-27
 ### Added

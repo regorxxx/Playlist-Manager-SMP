@@ -1,5 +1,5 @@
 'use strict';
-//20/03/22
+//01/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -756,8 +756,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 				if (_isFile(pls.path)) {
 					// Locked files have the name variable as read only, so we only change the filename. We can not replace oldName with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
 					let newPath = sanitizePath(pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([newName]).join('\\') + pls.extension);
-					// let newPath = pls.path.replace(oldName + pls.extension, newName + pls.extension);
-					bRenamedSucessfully = _renameFile(pls.path, newPath);
+					bRenamedSucessfully = pls.path !== newPath ? _renameFile(pls.path, newPath) : true;
 					if (bRenamedSucessfully) {
 						list.editData(pls, {
 							path: newPath,
@@ -963,10 +962,10 @@ function findExternal() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
-						const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => {return path.replace(subsongRegex,'');});
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
 							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
-							const bDead = filePaths.some((path) => {
+							const bDead = filePaths.map((path) => {return path.replace(subsongRegex,'');}).some((path) => {
 								// Skip streams & look for absolute and relative paths (with and without .\)
 								let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
 								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
@@ -1080,7 +1079,7 @@ function findSizeMismatch() {
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise(resolve => {
 				setTimeout(() => {
-					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.xsp' && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
 						let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 						let size;
@@ -1151,7 +1150,7 @@ function findDurationMismatch() {
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise(resolve => {
 				setTimeout(() => {
-					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
+					if (!playlist.isAutoPlaylist && playlist.extension !== '.xsp' && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
 						if (handleList) {
 							const calcDuration = handleList.CalcTotalDuration();
@@ -1224,7 +1223,7 @@ function findBlank() {
 						else if (size !== lines) {found.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')');}
 					}
 					const progress = Math.round(i / total * 10) * 10;
-					if (progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + progress + '%.');}
+					if (progress > prevProgress) {prevProgress = progress; console.log('Checking blank lines ' + progress + '%.');}
 					resolve('done');
 				}, iDelayPlaylists / 5 * i);
 			}));
