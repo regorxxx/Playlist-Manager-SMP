@@ -1,5 +1,5 @@
 'use strict';
-//27/04/22
+//02/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -570,24 +570,53 @@ function _list(x, y, w, h) {
 	
 	this.key_down = (k) => {
 		switch (k) {
-			case VK_UP:
+			// Scroll wheel
+			case VK_UP: {
 				this.wheel(1);
 				return true;
-				break;
-			case VK_DOWN:
+			}
+			case VK_DOWN: {
 				this.wheel(-1);
 				return true;
-				break;
-			case VK_CONTROL: // Updates tooltip even when mouse hasn't moved
+			}
+			// Scroll entire pages
+			case VK_PGUP: {
+				this.wheel(this.rows / 3);
+				return true;
+			}
+			case VK_PGDN: {
+				this.wheel(-this.rows / 3);
+				return true;
+			}
+			// Go to top/bottom
+			case VK_HOME: {
+				let offset = 0;
+				while (true) {
+					this.wheel(1, false);
+					if (offset === this.offset) {window.Repaint(); break;} else {offset = this.offset;}
+				}
+				return true;
+			}
+			case VK_END: {
+				let offset = 0;
+				while (true) {
+					this.wheel(-1, false);
+					if (offset === this.offset) {window.Repaint(); break;} else {offset = this.offset;}
+				}
+				return true;
+			}
+			// Updates tooltip even when mouse hasn't moved
+			case VK_CONTROL: {
 				if (getKeyboardMask() === kMask.ctrlShift) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
 				else {this.move(this.mx, this.my, MK_CONTROL);}
 				return true;
-				break;
-			case VK_SHIFT: // Updates tooltip even when mouse hasn't moved
+			}
+			case VK_SHIFT: {
 				if (getKeyboardMask() === kMask.ctrlShift) {this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL);}
 				else {this.move(this.mx, this.my, MK_SHIFT);}
 				return true;
-				break;
+			}
+			// Quick-search
 			default: { // Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				const keyChar = keyCode(k);
 				if (keyChar && keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
@@ -612,7 +641,6 @@ function _list(x, y, w, h) {
 					this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 					return false;
 				}
-				break;
 			}
 		}
 	}
@@ -1489,21 +1517,30 @@ function _list(x, y, w, h) {
 					});
 				}
 				if (bSave) {
+					// Backup
+					const path = item.path || '';
+					const backPath = path && path.length? path + '.back' : '';
+					if (item.extension === '.m3u' || item.extension === '.m3u8' || item.extension === '.xspf') {_copyFile(path, backPath);}
+					// Edit
 					let bDone, reason;
 					if (item.extension === '.m3u' || item.extension === '.m3u8') {
-						[bDone, reason] = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM); // No BOM
+						[bDone, reason] = editTextFile(path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM); // No BOM
 						if (!bDone && reason === 1) { // Retry with new header
 							bDone = rewriteHeader(this, z); 
-							if (bDone) {bDone = editTextFile(item.path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM);} // No BOM
+							if (bDone) {bDone = editTextFile(path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM);} // No BOM
 						}
 					} else if (item.extension === '.xspf') {
-						[bDone, reason] = editTextFile(item.path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM); // No BOM
+						[bDone, reason] = editTextFile(path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM); // No BOM
 						if (!bDone && reason === 1) { // Retry with new header
 							bDone = rewriteHeader(this, z); 
-							if (bDone) {bDone = editTextFile(item.path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM);} // No BOM
+							if (bDone) {bDone = editTextFile(path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM);} // No BOM
 						}
 					} else {bDone = true;} // Another format? Skip
-					if (!bDone) {console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + item.path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar and force and update to save it with the required format.');}
+					if (!bDone) {
+						_renameFile(backPath, path); // Restore backup in case something goes wrong
+						console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar and force and update to save it with the required format.');
+						console.log('Playlist manager: Restoring backup...');
+					} else if (backPath.length && _isFile(backPath)) {_deleteFile(backPath);}
 				}
 				// Perform Auto-Tags actions
 				if (this.bApplyAutoTags) {
@@ -1610,33 +1647,39 @@ function _list(x, y, w, h) {
 					if (playlistObj.isAutoPlaylist || playlistObj.extension === '.fpl' || playlistObj.extension === '.xsp' || playlistObj.extension === '.ui') {
 						this.updatePlman(new_nameId, old_nameId); // Update with new id
 					} else {
-						if (_isFile(playlistObj.path)) {
+						const path = playlistObj.path;
+						if (_isFile(path)) {
 							if (!playlistObj.isLocked) {
+								const backPath = path + '.back';
+								_copyFile(path, backPath);
 								let bDone, reason;
 								if (playlistObj.extension === '.m3u' || playlistObj.extension === '.m3u8') {
 										let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
 										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + new_id];
-										[bDone, reason] = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM); // No BOM
+										[bDone, reason] = editTextFile(path, originalStrings, newStrings, this.bBOM); // No BOM
 										if (!bDone && reason === 1) { // Retry with new header
 											bDone = rewriteHeader(this, z); 
-											if (bDone) {bDone = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM);}
+											if (bDone) {bDone = editTextFile(path, originalStrings, newStrings, this.bBOM);}
 										}
 								} else if (playlistObj.extension === '.xspf') {
 									let originalStrings = ['<title>' + old_name, '<meta rel="uuid">' + old_id];
 									let newStrings = ['<title>' + new_name, '<meta rel="uuid">' + new_id];
-									[bDone, reason] = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM); // No BOM
+									[bDone, reason] = editTextFile(path, originalStrings, newStrings, this.bBOM); // No BOM
 									if (!bDone && reason === 1) { // Retry with new header
 										bDone = rewriteHeader(this, z); 
-										if (bDone) {bDone = editTextFile(playlistObj.path, originalStrings, newStrings, this.bBOM);}
+										if (bDone) {bDone = editTextFile(path, originalStrings, newStrings, this.bBOM);}
 									}
 								} else {bDone = true;}
 								if (!bDone) {
-									fb.ShowPopupMessage('Error renaming playlist file: ' + old_name + ' --> ' + old_name + '\nPath: ' + playlistObj.path, window.Name);
+									fb.ShowPopupMessage('Error renaming playlist file: ' + old_nameId + ' --> ' + new_nameId + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);
+									_renameFile(backPath, path); // Restore backup in case something goes wrong
+									console.log('Playlist manager: Restoring backup...');
 								} else {
+									if (_isFile(backPath)) {_deleteFile(backPath);}
 									this.updatePlman(new_nameId, old_nameId); // Update with new id
 								}
 							}
-						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + playlistObj.path, window.Name);}
+						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + path, window.Name);}
 					}
 				}
 			}

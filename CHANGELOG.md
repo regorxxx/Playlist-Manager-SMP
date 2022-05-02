@@ -17,7 +17,10 @@
 
 ## [Unreleased][]
 ### Added
+- UI: pressing End or Home keys on the panel scrolls direclty to the bottom or top.
+- UI: pressing Av Pag or Re Pag keys on the panel scrolls entire pages down or up (instead of a few rows like using the wheel).
 ### Changed
+- Backup: in case there is an error while setting tags, category, lock status, renaming, ... a backup of the original playlist before editing is restored to ensure no data is lost. (This is in addition to the regular backups)
 ### Removed
 ### Fixed
 - Renaming: error while renaming with : and – chars.

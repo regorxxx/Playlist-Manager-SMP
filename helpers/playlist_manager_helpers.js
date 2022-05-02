@@ -1,5 +1,5 @@
 'use strict';
-//01/05/22
+//02/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -189,25 +189,32 @@ function setTrackTags(trackTags, list, z) {
 			list.filter();
 			bDone = true;
 		} else {
-			const old_name = list.data[z].name;
-			if (_isFile(list.data[z].path)) {
+			const name = list.data[z].name;
+			const path = list.data[z].path;
+			if (_isFile(path)) {
+				// Backup
+				const backPath = path + '.back';
+				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM);}
-				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="tags">' + oldTags,'<meta rel="tags">' + newTags, list.bBOM);}
+				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM);}
+				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + oldTags,'<meta rel="tags">' + newTags, list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z);
 					if (bDone) {setTag(trackTags, list, z); return;}
 				}
 				if (!bDone) {
-					fb.ShowPopupMessage('Error changing track tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + trackTags);
+					fb.ShowPopupMessage('Error changing track tag(s) on playlist file: ' + name + '\nTag(s): ' + trackTags + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
+					_renameFile(backPath, path); // Restore backup in case something goes wrong
+					console.log('Playlist manager: Restoring backup...');
 				} else {
+					if (_isFile(backPath)) {_deleteFile(backPath);}
 					list.editData(list.data[z], {trackTags});
 					list.update(true , true);
 					list.filter();
 				}
 			} else {
-				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + path, window.Name);
 			}
 		}
 	}
@@ -224,26 +231,33 @@ function setTag(tags, list, z) {
 			list.filter({tagState});
 			bDone = true;
 		} else {
-			const old_name = list.data[z].name;
-			if (_isFile(list.data[z].path)) {
+			const name = list.data[z].name;
+			const path = list.data[z].path;
+			if (_isFile(path)) {
+				// Backup
+				const backPath = path + '.back';
+				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
-				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="tags">' + list.data[z].tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
+				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
+				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + list.data[z].tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z);
 					if (bDone) {setTag(tags, list, z); return;}
 				}
 				if (!bDone) {
-					fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nTag(s): ' + tags);
+					fb.ShowPopupMessage('Error changing tag(s) on playlist file: ' + name + '\nTag(s): ' + tags + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
+					_renameFile(backPath, path); // Restore backup in case something goes wrong
+					console.log('Playlist manager: Restoring backup...');
 				} else {
+					if (_isFile(backPath)) {_deleteFile(backPath);}
 					list.editData(list.data[z], {tags});
 					list.update(true , true);
 					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 					list.filter({tagState});
 				}
 			} else {
-				fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+				fb.ShowPopupMessage('Playlist file does not exist: ' + name + '\nPath: ' + path, window.Name);
 			}
 		}
 	}
@@ -262,24 +276,35 @@ function setCategory(category, list, z) {
 			list.filter({categoryState});
 			bDone = true;
 		} else {
-			const old_name = list.data[z].name;
-			delayAutoUpdate();
-			let reason = -1;
-			if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM);}
-			else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="category">' + list.data[z].category,'<meta rel="category">' + category, list.bBOM);}
-			if (!bDone && reason === 1) {
-				bDone = rewriteHeader(list, z); 
-				if (bDone) {setCategory(category, list, z); return;}
-			}
-			if (!bDone) {
-				fb.ShowPopupMessage('Error changing category on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name + '\nCategory: ' + category);
+			const name = list.data[z].name;
+			const path = list.data[z].path;
+			if (_isFile(path)) {
+				// Backup
+				const backPath = path + '.back';
+				_copyFile(path, backPath);
+				delayAutoUpdate();
+				let reason = -1;
+				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM);}
+				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="category">' + list.data[z].category,'<meta rel="category">' + category, list.bBOM);}
+				if (!bDone && reason === 1) {
+					bDone = rewriteHeader(list, z); 
+					if (bDone) {setCategory(category, list, z); return;}
+				}
+				if (!bDone) {
+					fb.ShowPopupMessage('Error changing category on playlist file: ' + name + '\nCategory: ' + category + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
+					_renameFile(backPath, path); // Restore backup in case something goes wrong
+					console.log('Playlist manager: Restoring backup...');
+				} else {
+					if (_isFile(backPath)) {_deleteFile(backPath);}
+					list.editData(list.data[z], {category});
+					list.update(true, true);
+					// Add new category to current view! (otherwise it gets filtered)
+					// Easy way: intersect current view + new one with refreshed list
+					const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
+					list.filter({categoryState});
+				}
 			} else {
-				list.editData(list.data[z], {category});
-				list.update(true, true);
-				// Add new category to current view! (otherwise it gets filtered)
-				// Easy way: intersect current view + new one with refreshed list
-				const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
-				list.filter({categoryState});
+				fb.ShowPopupMessage('Playlist file does not exist: ' + name + '\nPath: ' + path, window.Name);
 			}
 		}
 	}
@@ -295,25 +320,32 @@ function switchLock(list, z) {
 		list.filter();
 		bDone = true;
 	} else {
-		const old_name = list.data[z].name;
-		if (_isFile(list.data[z].path)) {
+		const name = list.data[z].name;
+		const path = list.data[z].path;
+		if (_isFile(path)) {
+			// Backup
+			const backPath = path + '.back';
+			_copyFile(path, backPath);
 			delayAutoUpdate();
 			let reason = -1;
-			if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(list.data[z].path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM);}
-			else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(list.data[z].path,'<meta rel="locked">' + boolText[0],'<meta rel="locked">' + boolText[1], list.bBOM);}
+			if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM);}
+			else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="locked">' + boolText[0],'<meta rel="locked">' + boolText[1], list.bBOM);}
 			if (!bDone && reason === 1) {
 				bDone = rewriteHeader(list, z);
 				if (bDone) {switchLock(list, z); return;}
 			}
 			if (!bDone) {
-				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + name + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
+				_renameFile(backPath, path); // Restore backup in case something goes wrong
+				console.log('Playlist manager: Restoring backup...');
 			} else {
+				if (_isFile(backPath)) {_deleteFile(backPath);}
 				list.editData(list.data[z], {isLocked: !list.data[z].isLocked});
 				list.update(true, true);
 				list.filter();
 			}
 		} else {
-			fb.ShowPopupMessage('Playlist file does not exist: ' + old_name + '\nPath: ' + list.data[z].path, window.Name);
+			fb.ShowPopupMessage('Playlist file does not exist: ' + name + '\nPath: ' + path, window.Name);
 		}
 	}
 	return bDone;
@@ -754,9 +786,13 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 				bRenamedSucessfully = true;
 			} else {
 				if (_isFile(pls.path)) {
+					// Backup
+					const oldPath = pls.path;
+					const backPath = pls.path + '.back';
+					_copyFile(oldPath, backPath);
 					// Locked files have the name variable as read only, so we only change the filename. We can not replace oldName with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
 					let newPath = sanitizePath(pls.path.split('.').slice(0,-1).join('.').split('\\').slice(0,-1).concat([newName]).join('\\') + pls.extension);
-					bRenamedSucessfully = pls.path !== newPath ? _renameFile(pls.path, newPath) : true;
+					bRenamedSucessfully = oldPath !== newPath ? _renameFile(oldPath, newPath) : true;
 					if (bRenamedSucessfully) {
 						list.editData(pls, {
 							path: newPath,
@@ -767,26 +803,28 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 							if (pls.extension === '.m3u' || pls.extension === '.m3u8') {
 								let originalStrings = ['#PLAYLIST:' + oldName, '#UUID:' + oldId];
 								let newStrings = ['#PLAYLIST:' + newName, '#UUID:' + (list.bUseUUID ? newId : '')];
-								[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+								[bDone, reason] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
 								if (!bDone && reason === 1) { // Retry with new header
 									bDone = rewriteHeader(list, z); 
-									if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
+									if (bDone) {bDone = editTextFile(newPath, originalStrings, newStrings, list.bBOM);}
 								}
 							} else if (pls.extension === '.xspf') {
 								let originalStrings = ['<title>' + oldName, '<meta rel="uuid">' + oldId];
 								let newStrings = ['<title>' + newName, '<meta rel="uuid">' + (list.bUseUUID ? newId : '')];
-								[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+								[bDone, reason] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
 								if (!bDone && reason === 1) { // Retry with new header
 									bDone = rewriteHeader(list, z); 
-									if (bDone) {bDone = editTextFile(pls.path, originalStrings, newStrings, list.bBOM);}
+									if (bDone) {bDone = editTextFile(newPath, originalStrings, newStrings, list.bBOM);}
 								}
 							} else if (pls.extension === '.xsp') {
 								let originalStrings = ['<name>' + oldName];
 								let newStrings = ['<name>' + newName];
-								[bDone, reason] = editTextFile(pls.path, originalStrings, newStrings, list.bBOM); // No BOM
+								[bDone, reason] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
 							} else {bDone = true;}
 							if (!bDone) {
-								fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\nPath: ' + pls.path, window.Name);
+								fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);
+								_renameFile(backPath, oldPath); // Restore backup in case something goes wrong
+								console.log('Playlist manager: Restoring backup...');
 							} else {
 								list.editData(pls, {
 									name: newName,
@@ -803,7 +841,9 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 							list.filter();
 							bRenamedSucessfully = true;
 						}
-					} else {fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\nPath: ' + pls.path, window.Name);}
+					} else {fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);}
+					if (!_isFile(oldPath) && !_isFile(newPath)) {_renameFile(backPath, oldPath); console.log('Playlist manager: Restoring backup...');} // Restore backup in case something goes wrong
+					else {_deleteFile(backPath);}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}
 		}
@@ -858,7 +898,16 @@ function rewriteXSPQuery(pls, newQuery) {
 			jsp.playlist.rules = rules;
 			jsp.playlist.match = match;
 			const xspText = XSP.toXSP(jsp);
-			if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
+			if (xspText && xspText.length) {
+				// Backup
+				const backPath = playlistPath + '.back';
+				_copyFile(playlistPath, backPath);
+				bDone = _save(playlistPath, xspText.join('\r\n'));
+				if (!bDone) {
+					_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+					console.log('Playlist manager: Restoring backup...');
+				} else if (_isFile(backPath)) {_deleteFile(backPath);}
+			}
 		}
 	}
 	return bDone;
@@ -883,7 +932,16 @@ function rewriteXSPSort(pls, newSort) {
 		if (!bCache) {xspCache.set(playlistPath, jsp);}
 		jsp.playlist.order = order;
 		const xspText = XSP.toXSP(jsp);
-		if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
+		if (xspText && xspText.length) {
+			// Backup
+			const backPath = playlistPath + '.back';
+			_copyFile(playlistPath, backPath);
+			bDone = _save(playlistPath, xspText.join('\r\n'));
+			if (!bDone) {
+				_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+				console.log('Playlist manager: Restoring backup...');
+			} else if (_isFile(backPath)) {_deleteFile(backPath);}
+		}
 	}
 	return bDone;
 }
@@ -906,7 +964,16 @@ function rewriteXSPLimit(pls, newLimit) {
 		if (!bCache) {xspCache.set(playlistPath, jsp);}
 		jsp.playlist.limit = Number.isFinite(newLimit) ? newLimit : 0;
 		const xspText = XSP.toXSP(jsp);
-		if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
+		if (xspText && xspText.length) {
+			// Backup
+			const backPath = playlistPath + '.back';
+			_copyFile(playlistPath, backPath);
+			bDone = _save(playlistPath, xspText.join('\r\n'));
+			if (!bDone) {
+				_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+				console.log('Playlist manager: Restoring backup...');
+			} else if (_isFile(backPath)) {_deleteFile(backPath);}
+		}
 	}
 	return bDone;
 }
