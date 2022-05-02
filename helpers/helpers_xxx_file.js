@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/05/22
+//02/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -102,6 +102,7 @@ function _deleteFile(file, bForce = true) {
 // Rename/move
 function _renameFile(oldFilePath, newFilePath) {
 	if (!newFilePath.length) {return;}
+	if (oldFilePath === newFilePath) {return true;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
 			if (oldFilePath.startsWith('.\\')) {oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\','');}
@@ -116,13 +117,14 @@ function _renameFile(oldFilePath, newFilePath) {
 			return _isFile(newFilePath);
 		}
 		return false;
-	} else if (oldFilePath === newFilePath) {return true;}
+	}
 	return false;
 }
 
 // Copy
 function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 	if (!newFilePath.length) {return;}
+	if (oldFilePath === newFilePath) {return true;}
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
 			if (oldFilePath.startsWith('.\\')) {oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\','');}
