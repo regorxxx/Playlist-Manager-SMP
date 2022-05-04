@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.5](#050-beta5---2022-05-04)
 - [0.5.0-beta.4](#050-beta4---2022-04-27)
 - [0.5.0-beta.3](#050-beta3---2022-04-13)
 - [0.5.0-beta.2](#050-beta2---2022-03-02)
@@ -17,7 +18,13 @@
 
 ## [Unreleased][]
 ### Added
-- UI: pressing End or Home keys on the panel scrolls direclty to the bottom or top.
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.5] - 2022-05-04
+### Added
+- UI: pressing End or Home keys on the panel scrolls directly to the bottom or top.
 - UI: pressing Av Pag or Re Pag keys on the panel scrolls entire pages down or up (instead of a few rows like using the wheel).
 ### Changed
 - Backup: in case there is an error while setting tags, category, lock status, renaming, ... a backup of the original playlist before editing is restored to ensure no data is lost. (This is in addition to the regular backups)
@@ -356,7 +363,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.4...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.5...HEAD
+[0.5.0-beta.5]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.4...0.5.0-beta.5
 [0.5.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.3...0.5.0-beta.4
 [0.5.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.2...0.5.0-beta.3
 [0.5.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...0.5.0-beta.2
