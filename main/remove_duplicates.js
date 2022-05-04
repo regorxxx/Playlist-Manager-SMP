@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/22
+//03/05/22
 
 /*
 	Remove duplicates
@@ -11,7 +11,7 @@
 	Any 'check...' variable can follow both tag name or titleformat conventions (functions too) 
 		i.e. 'title' or '%title%'
 	You can add multiple entries to the same variable but then it must follow titleformat conventions.
-		i.e. 'checkfirst = %title% - %artist%'
+		i.e. 'checkKeys = [%title% - %artist%]'
 	The multiple 'check...' variables are joined using ' - '
 	
 	CAVEAT: Note you can use these functions to filter lists! i.e. if you only check by artist/date, then any track with same artist/date is considered duplicated
@@ -20,7 +20,7 @@
 		- Add musicBraiz track ID and album as default: solves same track with different dates...
 */	
 
-// Note number of final duplicates is always nAllowed + 1, since you allow n duplicates and the 'main' copy.
+// Note number of final duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
 // 'nAllowed = 0' removes all duplicates.
 function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = ['title','artist','date'], nAllowed = 0, bProfile = false) {
 	// Check input
