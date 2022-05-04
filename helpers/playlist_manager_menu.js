@@ -1,5 +1,5 @@
 'use strict';
-//27/04/22
+//04/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1152,14 +1152,15 @@ function createMenuRightTop() {
 		}
 		{	// List colors
 			const subMenuName = menu.newMenu('Set custom color...', menuName);
-			const options = ['AutoPlaylists...','Smart playlists...','Locked Playlists...','Selection rectangle...'];
+			const options = ['AutoPlaylists...','Smart playlists...','UI-only playlists...','Locked Playlists...','Selection rectangle...'];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					if (i === 0) {list.colours.autoPlaylistColour = utils.ColourPicker(window.ID, list.colours.autoPlaylistColour);}
 					if (i === 1) {list.colours.smartPlaylistColour = utils.ColourPicker(window.ID, list.colours.smartPlaylistColour);}
-					if (i === 2) {list.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, list.colours.lockedPlaylistColour);}
-					if (i === 3) {list.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, list.colours.selectedPlaylistColour);}
+					if (i === 2) {list.colours.uiPlaylistColour = utils.ColourPicker(window.ID, list.colours.uiPlaylistColour);}
+					if (i === 3) {list.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, list.colours.lockedPlaylistColour);}
+					if (i === 4) {list.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, list.colours.selectedPlaylistColour);}
 					// Update property to save between reloads
 					let coloursString = convertObjectToString(list.colours);
 					list.properties['listColours'][1] = coloursString;
@@ -1237,6 +1238,15 @@ function createMenuRightTop() {
 						window.Repaint();
 					}, flags: panel.colours.mode === 2 ? MF_STRING : MF_GRAYED,});
 				}
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'Alternate rows background color', func: () => {
+					panel.colours.bAltRowsColor = !panel.colours.bAltRowsColor;
+					panel.properties['bAltRowsColor'][1] = panel.colours.bAltRowsColor;
+					overwriteProperties(panel.properties);
+					panel.colours_changed();
+					window.Repaint();
+				}});
+				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background color', void(0), () => {return panel.colours.bAltRowsColor;});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Reset all to default', func: () => {

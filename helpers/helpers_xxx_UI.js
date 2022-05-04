@@ -348,9 +348,11 @@ function _sb(t, x, y, w, h, v, fn) {
 	this.move = (x, y) => {
 		if (this.trace(x, y)) {
 			window.SetCursor(IDC_HAND);
+			this.hover = true;
 			return true;
 		} else {
 			//window.SetCursor(IDC_ARROW);
+			this.hover = false;
 			return false;
 		}
 	}
@@ -364,6 +366,7 @@ function _sb(t, x, y, w, h, v, fn) {
 			return false;
 		}
 	}
+	this.hover = false;
 	this.t = t;
 	this.x = x;
 	this.y = y;

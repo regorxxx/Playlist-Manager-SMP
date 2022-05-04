@@ -1,5 +1,5 @@
 'use strict';
-//02/05/22
+//04/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -149,6 +149,12 @@ function _list(x, y, w, h) {
 				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
 				break;
 			}
+			// Alternate row colors
+			if (panel.colours.bAltRowsColor && (i + this.offset) % 2) {
+				const selWidth =  this.x + this.w; // Ignore separator UI config
+				const altColor = RGBA(...toRGB(invert(panel.colours.background, true)), 7);
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColor);
+			}
 			const currIdx = i + this.offset;
 			// Add category sep
 			if (this.bShowSep) {
@@ -265,8 +271,8 @@ function _list(x, y, w, h) {
 			setTimeout(() => {window.RepaintRect(this.x, this.y, this.w, this.h);}, 300); 
 		}
 		// Up/down buttons
-		this.up_btn.paint(gr, panel.colours.text);
-		this.down_btn.paint(gr, panel.colours.text);
+		this.up_btn.paint(gr, this.up_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
+		this.down_btn.paint(gr, this.down_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text)
 	}
 
 	this.trace = (x, y) => { // On panel
@@ -343,6 +349,8 @@ function _list(x, y, w, h) {
 		this.bMouseOver = false;
 		// this.offset = 0;
 		this.clearSelPlaylistCache();
+		this.up_btn.hover = false;
+		this.down_btn.hover = false;
 		window.Repaint();
 	}
 	
@@ -368,6 +376,8 @@ function _list(x, y, w, h) {
 			this.tooltip.SetValue(headerText, true);
 			this.index = -1;
 			this.inRange = false;
+			this.up_btn.hover = false;
+			this.down_btn.hover = false;
 			window.Repaint(); // Removes selection indicator
 		}
 		if (this.trace(x, y)) {
@@ -460,6 +470,8 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else {
+			this.up_btn.hover = false;
+			this.down_btn.hover = false;
 			return false;
 		}
 	}

@@ -11,7 +11,8 @@ var panel_properties = {
 	customBackground	: ['Custom background colour', RGB(30, 30, 30)], // Black
 	bCustomText			: ['Text custom colour mode', false],
 	customText			: ['Custom text colour', RGB(157, 158, 163)], // Gray
-	buttonsTextColor	: ['Buttons\' text color', buttonsPanel.config.textColor]
+	buttonsTextColor	: ['Buttons\' text color', buttonsPanel.config.textColor],
+	bAltRowsColor		: ['Alternate rows background color', true]
 };
 
 setProperties(panel_properties, 'panel_');
@@ -105,6 +106,7 @@ function _panel(custom_background = false) {
 	this.colours.bCustomText = this.properties.bCustomText[1];
 	this.colours.customText = this.properties.customText[1];
 	this.colours.buttonsTextColor = this.properties.buttonsTextColor[1];
+	this.colours.bAltRowsColor = this.properties.bAltRowsColor[1];
 	this.list_objects = [];
 	this.text_objects = [];
 	this.font_changed();

@@ -18,7 +18,12 @@
 
 ## [Unreleased][]
 ### Added
+- Exporting Playlists: new config only accessible via the properties panel to disable the popup and explorer window on exporting.
+- UI: added UI-only playlists color config on menus.
+- UI: added new option to darken/lighten background of alternate rows on the list.
 ### Changed
+- UI: cursor is changed to a loading icon while panel is being loaded or blocked.
+- Exporting Playlists: TF expression shown on window is now split in lines when required (instead of forcing a huge window).
 ### Removed
 ### Fixed
 
