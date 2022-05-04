@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/04/22
+//04/05/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -115,7 +115,8 @@ var properties = {
 	autoBackN				: ['Auto-backup files allowed.', 50],
 	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state'],
 	bSavingDefExtension		: ['Try to save playlists always as default format?', true],
-	bNetworkPopup			: ['Playlist Manager on network drive: Fired once', false]
+	bNetworkPopup			: ['Playlist Manager on network drive: Fired once', false],
+	bOpenOnExport			: ['Open folder on export actions?', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -207,10 +208,13 @@ function on_mouse_lbtn_dblclk(x, y) {
 }
 
 function on_mouse_move(x, y, mask) {
-	if (pop.isEnabled()) {pop.move(x, y, mask); return;}
+	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
 	on_mouse_move_buttn(x, y, mask);
 	if (buttonsPanel.curBtn === null) {
 		list.move(x, y, mask);
+	} else {
+		list.up_btn.hover = false;
+		list.down_btn.hover = false;
 	}
 }
 

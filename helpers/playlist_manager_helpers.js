@@ -1,5 +1,5 @@
 'use strict';
-//02/05/22
+//04/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -447,7 +447,7 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
 	bDone = list.addAutoplaylist(objectPlaylist) ? true : false;
-	if (bDone) {console.log('Playlist Manager: done.');} else {console.log('Error duplicating playlist'); return false;}
+	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.')} else {console.log('Playlist Manager: Error duplicating playlist'); return false;}
 	return bDone;
 }
 
@@ -475,7 +475,10 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 	if (remDupl && remDupl.length && do_remove_duplicates) {do_remove_duplicates(null, null, remDupl);};
 	const objectPlaylist = list.add(false); // Create playlist from active playlist
 	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
-	if (bDone) {_explorer(objectPlaylist.path); console.log('Playlist Manager: done.');}
+	if (bDone) {
+		if (list.properties.bOpenOnExport[1]) {_explorer(objectPlaylist.path);}
+		console.log('Playlist Manager: cloning ' + playlistName + ' done.');
+	}
 	return bDone;
 }
 
@@ -494,7 +497,7 @@ function clonePlaylistInUI(list, z) {
 			bDone = true;
 		}
 	}
-	if (bDone) {console.log('Playlist Manager: done.');}
+	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');}
 	return bDone;
 }
 
@@ -521,8 +524,8 @@ function clonePlaylistFile(list, z, ext) {
 	}
 	bDone = bDone && _isFile(playlistPath); // Debug popups are already handled at prev line
 	if (bDone) {
-		_explorer(playlistPath);
-		console.log('Playlist Manager: done.');
+		if (list.properties.bOpenOnExport[1]) {_explorer(playlistPath);} 
+		console.log('Playlist Manager: cloning ' + playlistName + ' done.');
 		list.update();
 		list.filter();
 	}
@@ -540,8 +543,10 @@ function exportPlaylistFile(list, z, defPath = '') {
 	if (!path.length) {return bDone;}
 	if (path === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
 	bDone = _copyFile(playlistPath, path);
-	if (bDone) {_explorer(path); console.log('Playlist Manager: done.');}
-	else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name);}
+	if (bDone) {
+		if (list.properties.bOpenOnExport[1]) {_explorer(path);} 
+		console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+	} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name);}
 	return bDone;
 }
 
@@ -577,6 +582,7 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 			return {bDone, newPath, paths};
 		}
 	}
+	console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 	return {bDone, newPath, paths};
 }
 
@@ -611,9 +617,9 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 				resolve('done');
 			});
 		}).then(_ => {
-			_explorer(newPath);
+			if (list.properties.bOpenOnExport[1]) {_explorer(newPath);}
 			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-			console.log('Playlist Manager: done.');
+			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 			return bDone;
 		});
 	} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + newPath + '\'.', window.Name);}
@@ -621,7 +627,8 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 }
 
 function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = []) {
-	fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);
+	const bOpenOnExport = list.properties.bOpenOnExport[1];
+	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
 	const pls = list.data[z];
 	const playlistPath = pls.path;
@@ -634,7 +641,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	const playlistNameExt = playlistName + (extension.length ? extension : playlistExt);
 	// Set output
 	let newPath = '';
-	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true));} 
+	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf.match(/(.{1,100})/g).join('\n') + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true));} 
 	catch(e) {return bDone;}
 	if (!newPath.length) {return bDone;}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
@@ -692,15 +699,16 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
 				return bDone
 			}
-			_explorer(newPath);
-			console.log('Playlist Manager: done.');
+			if (bOpenOnExport) {_explorer(newPath);}
+			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 		}
 	}
 	return bDone;
 }
 
 function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = []) {
-	fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);
+	const bOpenOnExport = list.properties.bOpenOnExport[1];
+	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
 	const pls = list.data[z];
 	const playlistName = pls.name;
@@ -708,7 +716,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 	const playlistNameExt = playlistName + extension;
 	// Set output
 	let newPath = '';
-	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true));} 
+	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf.match(/(.{1,100})/g).join('\n') + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true));} 
 	catch(e) {return bDone;}
 	if (!newPath.length) {return bDone;}
 	// Get tracks
@@ -754,8 +762,8 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 			fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
 			return bDone
 		}
-		_explorer(newPath);
-		console.log('Playlist Manager: done.');
+		if (bOpenOnExport) {_explorer(newPath);}
+		console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 	}
 	return bDone;
 }
