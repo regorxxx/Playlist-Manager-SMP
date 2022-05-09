@@ -176,21 +176,43 @@ function createMenuLeft(forcedIndex = -1) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Tags and category
-		// Set category
-		menu.newEntry({entryText: 'Set category...', func: () => {
-			let category = '';
-			try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, pls.category !== null ? pls.category : '', true);} 
-			catch(e) {return;}
-			setCategory(category, list, z);
-		}, flags: !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED});
-		// Set tag(s)
-		menu.newEntry({entryText: 'Set playlist tag(s)...', func: () => {
-			let tags = '';
-			try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, pls.tags.join(';'), true);} 
-			catch(e) {return;}
-			tags = tags.split(';').filter(Boolean); // This filters blank values
-			setTag(tags, list, z);
-		}, flags: !bIsLockPls && bIsPlsEditable ? MF_STRING : MF_GRAYED});
+		{	// Set category
+			const menuName = menu.newMenu('Set category...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+			menu.newEntry({menuName, entryText: 'New category...', func: () => {
+				let category = '';
+				try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, pls.category !== null ? pls.category : '', true);} 
+				catch(e) {return;}
+				if (pls.category !== category) {setCategory(category, list, z);}
+			}});
+			menu.newEntry({menuName, entryText: 'sep'});
+			list.categories().forEach((category, i) => {
+				menu.newEntry({menuName, entryText: category, func: () => {
+					if (pls.category !== category) {setCategory(i ? category : '', list, z);}
+				}});
+				menu.newCheckMenu(menuName, category, void(0), () => {return (pls.category === (i ? category : ''));});
+			});
+		}
+		{	// Set tag(s)
+			const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+			menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
+				let tags = '';
+				try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, pls.tags.join(';'), true);} 
+				catch(e) {return;}
+				tags = tags.split(';').filter(Boolean); // This filters blank values
+				if (!isArrayEqual(pls.tags, tags)) {setTag(tags, list, z);}
+			}});
+			menu.newEntry({menuName, entryText: 'sep'});
+			list.tags().forEach((tag, i) => {
+				menu.newEntry({menuName, entryText: tag, func: () => {
+					let tags;
+					if (i === 0) {tags = [];}
+					else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
+					else {tags = [...pls.tags, tag];}
+					setTag(tags, list, z);
+				}});
+				menu.newCheckMenu(menuName, tag, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
+			});
+		}
 		// Adds track tag(s)
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
