@@ -27,6 +27,7 @@
 - UI: selection rectangle default color is now set to blue.
 - UI: cursor is changed to a loading icon while panel is being loaded or blocked.
 - Exporting Playlists: TF expression shown on window is now split in lines when required (instead of forcing a huge window).
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
