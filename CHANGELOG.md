@@ -22,6 +22,9 @@
 - UI: added UI-only playlists color config on menus.
 - UI: added new option to darken/lighten background of alternate rows on the list.
 ### Changed
+- Categories: entry to set playlist category has been reworked as a sub-menu which now displays all existing categories to easily reuse them, along an option to set it to none or adding a new one (the previous method).
+- Tags: entry to set playlist tags has been reworked as a sub-menu which now displays all existing tags to easily reuse them, along an option to set it to none or adding a new one (the previous method).
+- UI: selection rectangle default color is now set to blue.
 - UI: cursor is changed to a loading icon while panel is being loaded or blocked.
 - Exporting Playlists: TF expression shown on window is now split in lines when required (instead of forcing a huge window).
 ### Removed

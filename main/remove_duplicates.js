@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/05/22
+//09/05/22
 
 /*
 	Remove duplicates
@@ -99,7 +99,7 @@ function do_remove_duplicates(handleList = null, sortouput = null, checkKeys = [
 
 
 // V2: Equal to V1 but without n checks (faster)
-function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys = ['title','artist','date']) {
+function do_remove_duplicatesV2(handleList = null, sortouput = null, checkKeys = ['title','artist','date'], bProfile = false) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');

@@ -1,8 +1,9 @@
 'use strict';
-//04/05/22
+//09/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
+include('helpers_xxx_UI_draw.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_properties.js');
 include('helpers_xxx_playlists.js');
@@ -112,13 +113,16 @@ function _list(x, y, w, h) {
 		// List
 		const playingChar = String.fromCharCode(9654);
 		const loadedChar = String.fromCharCode(9644);
+		const panelBgColor = panel.getColorBackground();
 		const lockedPlaylistIconColour = blendColours(iconColour, this.colours.lockedPlaylistColour, 0.8);
-		const autoPlaylistIconColour = blendColours(RGB(...toRGB(0xFFFFFFFF)), this.colours.autoPlaylistColour, 0.8);
-		const smartPlaylistIconColour = blendColours(RGB(...toRGB(0xFFFFFFFF)), this.colours.smartPlaylistColour, 0.8);
+		const autoPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.autoPlaylistColour, 0.8);
+		const smartPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.smartPlaylistColour, 0.8);
+		const uiPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.uiPlaylistColour, 0.8);
 		const categoryHeaderOffset = _scale(panel.fonts.size - 4);
-		const categoryHeaderColour = blendColours(panel.colours.background, panel.colours.text, 0.6);
-		const categoryHeaderLineColour = blendColours(panel.colours.background, categoryHeaderColour, 0.5);
-		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // We compare to the next one or the previous one according to sort order
+		const categoryHeaderColour = blendColours(panelBgColor, panel.colours.text, 0.6);
+		const categoryHeaderLineColour = blendColours(panelBgColor, categoryHeaderColour, 0.5);
+		const altColorRow = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(panelBgColor) < 50 ? 25 : 7);
+		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // Compare to the next one or the previous one according to sort order
 		const rows = Math.min(this.items, this.rows);
 		// Highlight
 		if (idxHighlight !== -1) {
@@ -143,6 +147,7 @@ function _list(x, y, w, h) {
 				idxHighlight = -1;
 			}
 		} else {animation.bHighlight = false;}
+		// Rows
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -152,8 +157,7 @@ function _list(x, y, w, h) {
 			// Alternate row colors
 			if (panel.colours.bAltRowsColor && (i + this.offset) % 2) {
 				const selWidth =  this.x + this.w; // Ignore separator UI config
-				const altColor = RGBA(...toRGB(invert(panel.colours.background, true)), 7);
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColor);
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColorRow);
 			}
 			const currIdx = i + this.offset;
 			// Add category sep
@@ -205,7 +209,7 @@ function _list(x, y, w, h) {
 				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), smartPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.smartPlaylistColour,  this.x + 5 + iconCharPlaylistLockedW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			} else if (this.data[currIdx].extension === '.ui') { // Highlight smart playlists
-				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), smartPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
+				gr.GdiDrawText(iconCharPlaylistLocked, gfontIconChar(), uiPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, this.colours.uiPlaylistColour,  this.x + 5 + iconCharPlaylistLockedW, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			} else { // Standard playlists
 				gr.GdiDrawText((this.data[currIdx].size) ? iconCharPlaylist : iconCharPlaylistEmpty, gfontIconChar(), iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, LEFT);
@@ -221,7 +225,7 @@ function _list(x, y, w, h) {
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
-		if (this.colours.selectedPlaylistColour !== panel.colours.background && this.bMouseOver) {
+		if (this.colours.selectedPlaylistColour !== panelBgColor && this.bMouseOver) {
 			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
@@ -2288,19 +2292,19 @@ function _list(x, y, w, h) {
 			}
 			if (!this.colours || !Object.keys(this.colours).length) { // Sets default colours
 				this.colours = {};
-				this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C));
+				this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C)); // Red
 				this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFFFF629B)), 0.6);
 				this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF65CC32)), 0.6);
-				this.colours['selectedPlaylistColour'] = blendColours(panel.colours.highlight, RGB(...toRGB(0xFFDC143C)), 0.8);
-				this.colours['uiPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF00AFFD)), 0.8);
+				this.colours['selectedPlaylistColour'] = RGB(...toRGB(0xFF0080C0)); // Blue
+				this.colours['uiPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
 				bDone = true;
 			}
 			if (this.colours && Object.keys(this.colours).length !== 4) { // Fills missing colours
-				if (!this.colours['lockedPlaylistColour']) {this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C));}
+				if (!this.colours['lockedPlaylistColour']) {this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C));} // Red
 				if (!this.colours['autoPlaylistColour']) {this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFFFF629B)), 0.6);}
 				if (!this.colours['smartPlaylistColour']) {this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF65CC32)), 0.6);}
-				if (!this.colours['selectedPlaylistColour']) {this.colours['selectedPlaylistColour'] = blendColours(panel.colours.highlight, RGB(...toRGB(0xFFDC143C)), 0.8);}
-				if (!this.colours['uiPlaylistColour']) {this.colours['uiPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF00AFFD)), 0.8);}
+				if (!this.colours['selectedPlaylistColour']) {this.colours['selectedPlaylistColour'] = RGB(...toRGB(0xFF0080C0));} // Blue
+				if (!this.colours['uiPlaylistColour']) {this.colours['uiPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF00AFFD)), 0.8);} // Blue
 				bDone = true;
 			}
 			return bDone;

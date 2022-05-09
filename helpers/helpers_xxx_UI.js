@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/03/22
+//09/05/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -238,7 +238,7 @@ function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
 
 function RGBA(r, g, b, a) {
 	let res = 0xff000000 | (r << 16) | (g << 8) | (b);
-	if (a !== undefined) res = (res & 0x00ffffff) | (a << 24);
+	if (a !== undefined) {res = (res & 0x00ffffff) | (a << 24);}
 	return res;
 }
 
@@ -246,42 +246,36 @@ function RGB(r, g, b) {
 	return (0xff000000 | (r << 16) | (g << 8) | (b));
 }
 
-function toRGB(col) { // returns an array like [192, 0, 0]
-	const a = col - 0xFF000000;
+function toRGB(color) { // returns an array like [192, 0, 0]
+	const a = color - 0xFF000000;
 	return [a >> 16, a >> 8 & 0xFF, a & 0xFF];
 }
 
-function blendColours(c1, c2, f) {
+function blendColours(color1, color2, f) {
 	// When factor is 0, result is 100% color1, when factor is 1, result is 100% color2.
-	c1 = toRGB(c1);
-	c2 = toRGB(c2);
-	const r = Math.round(c1[0] + f * (c2[0] - c1[0]));
-	const g = Math.round(c1[1] + f * (c2[1] - c1[1]));
-	const b = Math.round(c1[2] + f * (c2[2] - c1[2]));
-	return RGB(r, g, b);
+	const [c1, c2] = [toRGB(color1), toRGB(color2)];
+	return RGB(...c1.map((_, i) => {return Math.round(c1[i] + f * (c2[i] - c1[i]));}));
 }
 
-function getAlpha(col) {
-	return ((col >> 24) & 0xff);
+function getAlpha(color) {
+	return ((color >> 24) & 0xff);
 }
 
-function getRed(col) {
-	return ((col >> 16) & 0xff);
+function getRed(color) {
+	return ((color >> 16) & 0xff);
 }
 
-function getGreen(col) {
-	return ((col >> 8) & 0xff);
+function getGreen(color) {
+	return ((color >> 8) & 0xff);
 }
 
-function getBlue(col) {
-	return (col & 0xff);
+function getBlue(color) {
+	return (color & 0xff);
 }
 
 function tintColor(color, percent) {
-	const red = getRed(color);
-	const green = getGreen(color);
-	const blue = getBlue(color);
-	return RGBA(lightenColorVal(red, percent), lightenColorVal(green, percent), lightenColorVal(blue, percent), getAlpha(color));
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+	return RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color));
 }
 
 function darkenColorVal(color, percent) {
@@ -291,7 +285,7 @@ function darkenColorVal(color, percent) {
 }
 
 function lightenColorVal(color, percent) {
-	const val = Math.round(color + ((255-color) * (percent / 100)));
+	const val = Math.round(color + ((255 - color) * (percent / 100)));
 	return Math.min(val, 255);
 }
 
@@ -299,12 +293,18 @@ function opaqueColor(color, percent) {
 	return RGBA(...toRGB(color), Math.min(255, 255 * (percent / 100)));
 }
 
+function getBrightness(r, g, b) { // https://www.w3.org/TR/AERT/#color-contrast
+	return (r * 0.299 + g * 0.587 + b * 0.114);
+}
+
+function isDark(r, g, b) {
+	return (getBrightness(r,g,b) < 186);
+}
+
 function invert(color, bBW = false) {
-	let r = getRed(color);
-	let g = getGreen(color);
-	let b = getBlue(color);
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
 	if (bBW) {
-		return (r * 0.299 + g * 0.587 + b * 0.114) > 186 ? RGB(0, 0, 0) : RGB(255, 255, 255);
+		return (isDark(r, g, b) ? RGB(255, 255, 255) : RGB(0, 0, 0));
 	} else {
 		return RGB(255 - r, 255 - g, 255 - b);
 	}
@@ -329,127 +329,4 @@ function _gdiFont(name, size, style) {
 
 function _textWidth(value, font) {
 	return _gr.CalcTextWidth(value, font);
-}
-
-/* 
-	Draw
-*/
-
-function _sb(t, x, y, w, h, v, fn) {
-	this.paint = (gr, colour) => {
-		gr.SetTextRenderingHint(4);
-		if (this.v()) {
-			gr.DrawString(this.t, this.font, colour, this.x, this.y, this.w, this.h, SF_CENTRE);
-		}
-	}
-	this.trace = (x, y) => {
-		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h && this.v();
-	}
-	this.move = (x, y) => {
-		if (this.trace(x, y)) {
-			window.SetCursor(IDC_HAND);
-			this.hover = true;
-			return true;
-		} else {
-			//window.SetCursor(IDC_ARROW);
-			this.hover = false;
-			return false;
-		}
-	}
-	this.lbtn_up = (x, y) => {
-		if (this.trace(x, y)) {
-			if (this.fn) {
-				this.fn(x, y);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-	this.hover = false;
-	this.t = t;
-	this.x = x;
-	this.y = y;
-	this.w = w;
-	this.h = h;
-	this.v = v;
-	this.fn = fn;
-	this.font = _gdiFont('FontAwesome', this.h);
-}
-
-function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
-	if (y1 === y2) { // Horizontal
-		const numberDots = Math.floor((x2 - x1) / dot_sep / 2);
-		let newX1 = x1;
-		let newX2 = x1 + dot_sep;
-		for (let i = 0; i <= numberDots; i++) {
-			gr.DrawLine(newX1, y1, newX2, y1, line_width, colour);
-			newX1 += dot_sep * 2;
-			newX2 += dot_sep * 2;
-		}
-	} else if (x1 === x2) { // Vertical
-		const numberDots = Math.floor((y2 - y1) / dot_sep / 2);
-		let newY1 = y1;
-		let newY2 = y1 + dot_sep;
-		for (let i = 0; i <= numberDots; i++) {
-			gr.DrawLine(x1, newY1, x1, newY2, line_width, colour);
-			newY1 += dot_sep * 2;
-			newY2 += dot_sep * 2;
-		}
-	} else { // Any angle: Would work alone, but checking coordinates first is faster for vertical and horizontal...
-		const numberDots = Math.floor(((x2 - x1)**2 + (y2 - y1)**2)**(1/2) / dot_sep / 2);
-		const angle = (y2 !== y1) ? Math.atan((x2 - x1)/(y2 - y1)) : 0;
-		const xStep = dot_sep * Math.cos(angle);
-		const yStep = dot_sep * Math.sin(angle);
-		let newX1 = x1;
-		let newX2 = x1 + xStep;
-		let newY1 = y1;
-		let newY2 = y1 + yStep;
-		for (let i = 0; i <= numberDots; i++) {
-			gr.DrawLine(newX1, newY1, newX2, newY2, line_width, colour);
-			newX1 += xStep * 2;
-			newX2 += xStep * 2;
-			newY1 += yStep * 2;
-			newY2 += yStep * 2;
-		}
-	}
-}
-
-function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
-	const dotSize = _scale(3);
-	if (x1 > x2) {[x1, x2] = [x2, x1];} 
-	if (y1 > y2) {[y1, y2] = [y2, y1];} 
-	const diffX = x2 - x1;
-	const diffY = y2 - y1;
-	let iX = x1, iY = y1;
-	switch (pattern){
-		case 'verticalDotted': {
-			size = getClosestDivisor(diffX, size);
-			const rep = diffX / size;
-			for (let i = 0; i <= rep; i++) {
-				drawDottedLine(gr, iX, y1, iX, y2 - dotSize, lineWidth, colour, dotSize);
-				iX += size;
-			}
-			break;
-		}
-		case 'horizontalDotted': {
-			size = getClosestDivisor(diffY, size);
-			const rep = diffY / size;
-			for (let i = 0; i <= rep; i++) {
-				drawDottedLine(gr, x1, iY, x2 - dotSize, iY, lineWidth, colour, dotSize);
-				iY += size;
-			}
-			break;
-		}
-		case 'squares': {
-			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, 'verticalDotted');
-			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, 'horizontalDotted');
-			break;
-		}
-		case 'mossaic': {
-			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 2/3, 'verticalDotted');
-			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 1/3, 'horizontalDotted');
-			break;
-		}
-	}
 }
