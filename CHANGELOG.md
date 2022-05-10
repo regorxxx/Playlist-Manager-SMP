@@ -372,12 +372,12 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.5...HEAD
-[0.5.0-beta.5]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.4...0.5.0-beta.5
-[0.5.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.3...0.5.0-beta.4
-[0.5.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.2...0.5.0-beta.3
-[0.5.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/0.5.0-beta.1...0.5.0-beta.2
-[0.5.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...0.5.0-beta.1
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.5...HEAD
+[0.5.0-beta.5]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.4...v0.5.0-beta.5
+[0.5.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.3...v0.5.0-beta.4
+[0.5.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.2...v0.5.0-beta.3
+[0.5.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.1...v0.5.0-beta.2
+[0.5.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.1...v0.5.0-beta.1
 [0.4.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.3.0...v0.3.1
