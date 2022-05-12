@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //27/04/22
 
 include('helpers_xxx.js');

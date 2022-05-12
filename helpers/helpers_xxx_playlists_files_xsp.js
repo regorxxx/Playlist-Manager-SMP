@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //10/04/22
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');

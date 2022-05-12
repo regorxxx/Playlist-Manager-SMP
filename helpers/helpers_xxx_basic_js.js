@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //05/01/22
 
 // https://github.com/angus-c/just

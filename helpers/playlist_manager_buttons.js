@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //27/04/22
 
 //Always loaded along other buttons and panel

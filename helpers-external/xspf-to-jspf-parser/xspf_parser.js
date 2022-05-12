@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 // 27/04/22
 // Copyright Regorxxx 2022
 // Based on works by J. Chris Anderson 2007 

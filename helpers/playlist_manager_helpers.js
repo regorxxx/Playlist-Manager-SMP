@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //04/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //25/02/22
 
 // https://wiki.xiph.org/XSPF_v1_Notes_and_Errata
