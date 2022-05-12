@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/03/22
+//12/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -57,7 +57,7 @@ function consoleLog() {
 console.checkSize = () => {
 	if (utils.IsFile(conLog) && utils.GetFileSize(conLog) > conLogMaxSize) {
 		try {utils.WriteTextFile(conLog, '', false);} catch (e) {}
-		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 10000000) + ' MB, creating new file: ' + conLog);
+		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 1e7) + ' MB, creating new file: ' + conLog);
 		return true;
 	}
 	return false;
