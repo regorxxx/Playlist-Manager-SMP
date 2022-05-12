@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/22
+//12/05/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -54,21 +54,21 @@
 include(fb.ComponentPath + 'docs\\Flags.js');
 
 function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity} = {}) {
-	var menuArrTemp = [];
-	var menuArr = [];
-	var menuMap = new Map();
+	let menuArrTemp = [];
+	let menuArr = [];
+	let menuMap = new Map();
 	
-	var entryArrTemp = [];
-	var entryArr = [];
+	let entryArrTemp = [];
+	let entryArr = [];
 	
-	var checkMenuArr = [];
-	var checkMenuArrTemp = [];
+	let checkMenuArr = [];
+	let checkMenuArrTemp = [];
 	
-	var checkMenuMap = new Map();
-	var entryMap = new Map();
-	var entryMapInverted = new Map();
-	var idxMap = new Map();
-	var idx = 0;
+	let checkMenuMap = new Map();
+	let entryMap = new Map();
+	let entryMapInverted = new Map();
+	let idxMap = new Map();
+	let idx = 0;
 	
 	this.properties = properties; // To simplify usage along other scripts
 	this.lastCall = '';
