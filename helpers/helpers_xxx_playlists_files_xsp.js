@@ -570,7 +570,7 @@ if (!stripSort) {
 function recursiveSplit(arr, regExp, split) {
 	let copy;
 	if (Array.isArray(arr)) {
-		copy = arr.map((_) => {return recursiveSplit(_, regExp, split);});
+		copy = arr.map((newArr) => {return recursiveSplit(newArr, regExp, split);});
 	} else {
 		copy = arr.split(regExp).map((item, i, ori) => {return i === ori.length - 1 ? (item.length ? [item] : []) : (item.length ? [item, split] : [split]);}).flat(Infinity)
 	}

@@ -12,12 +12,12 @@ function consoleLog() {
 	let log = '';
 	// Load previous log
 	console.checkSize();
-	if (utils.IsFile(conLog)) {try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {}}
+	if (utils.IsFile(conLog)) {try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {/* continue regardless of error */}}
 	// Add HH:MM:SS
 	const stamp = '[' + new Date().toLocaleTimeString() + ']';
 	log += (log && log.length ? '\n' : '') + stamp;
 	// Unpack args
-	[...arguments].forEach((arg, i) => {
+	[...arguments].forEach((arg) => {
 		const type = typeof arg;
 		let val = null;
 		switch (type) {
@@ -50,13 +50,13 @@ function consoleLog() {
 		log += ' ' + val;
 	});
 	// Write
-	try {utils.WriteTextFile(conLog, log, false);} catch (e) {}
+	try {utils.WriteTextFile(conLog, log, false);} catch (e) {/* continue regardless of error */}
 }
 
 // Check file size doesn't exceed threshold or reset it
 console.checkSize = () => {
 	if (utils.IsFile(conLog) && utils.GetFileSize(conLog) > conLogMaxSize) {
-		try {utils.WriteTextFile(conLog, '', false);} catch (e) {}
+		try {utils.WriteTextFile(conLog, '', false);} catch (e) {/* continue regardless of error */}
 		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 1e7) + ' MB, creating new file: ' + conLog);
 		return true;
 	}

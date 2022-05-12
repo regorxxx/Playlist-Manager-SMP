@@ -613,10 +613,10 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 					}, wait);
 				}));
 			});
-			Promise.all(promises).then((_) => {
+			Promise.all(promises).then(() => {
 				resolve('done');
 			});
-		}).then(_ => {
+		}).then(() => {
 			if (list.properties.bOpenOnExport[1]) {_explorer(newPath);}
 			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
@@ -1018,7 +1018,7 @@ function findMixedPaths() {
 				}, 10 * i);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});
@@ -1065,7 +1065,7 @@ function findExternal() {
 				}, iDelayPlaylists * i);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});
@@ -1111,7 +1111,7 @@ function findDead() {
 				}, iDelay);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});
@@ -1138,7 +1138,7 @@ function findDuplicates() {
 				}, iDelayPlaylists / 5 * i);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});
@@ -1209,7 +1209,7 @@ function findSizeMismatch() {
 				}, iDelayPlaylists / 5 * i);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});
@@ -1268,7 +1268,7 @@ function findDurationMismatch() {
 				}, iDelayPlaylists * i);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});
@@ -1303,7 +1303,7 @@ function findBlank() {
 				}, iDelayPlaylists / 5 * i);
 			}));
 		});
-		Promise.all(promises).then((_) => {
+		Promise.all(promises).then(() => {
 			resolve(found);
 		});
 	});

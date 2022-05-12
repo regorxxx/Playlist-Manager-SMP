@@ -150,7 +150,7 @@ const doOnce = (task, fn) => {
 function tryFunc(fn) {
 	return (...args) => {
 		let cache;
-		try {cache = fn(...args);} catch(e) {}
+		try {cache = fn(...args);} catch(e) {/* continue regardless of error */}
 		return cache;
 	}
 }
@@ -158,7 +158,7 @@ function tryFunc(fn) {
 function tryMethod(fn, parent) {
 	return (...args) => {
 		let cache;
-		try {cache = parent[fn](...args);} catch(e) {}
+		try {cache = parent[fn](...args);} catch(e) {/* continue regardless of error */}
 		return cache;
 	}
 }

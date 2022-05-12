@@ -291,7 +291,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
 					if (bExecute) {
 						if (bindArgs !== null) {
-							if (bindArgs.pos >= 1) {func(...[...Array(bindArgs.pos)].map((_) => {return void(0);}), bindArgs.args)}
+							if (bindArgs.pos >= 1) {func(...[...Array(bindArgs.pos)].map(() => {return void(0);}), bindArgs.args)}
 							else {func(bindArgs.args);}
 						} else {func();}
 					}

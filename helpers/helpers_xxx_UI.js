@@ -78,7 +78,7 @@ function nextId(method, bNext = true, bCharsForced = true) {
 	}
 }
 
-function getIdRegEx(method, bNext = true, bCharsForced = true) {
+function getIdRegEx(method) {
 	switch (true) {
 		case method === 'invisible':
 			return / \(\*[\u200b\u200c\u200d\u200e]{5}\)$/g;
@@ -92,11 +92,11 @@ function getIdRegEx(method, bNext = true, bCharsForced = true) {
 }
 
 const nextIdInvisible = (function() {
-		var nextIndex = [0,0,0,0,0];
+		let nextIndex = [0,0,0,0,0];
 		const chars = hiddenChars;
 		const charsForced = [' (*',')'];
 		const num = chars.length;
-		var prevId = nextIndex.length + charsForced.join('').length;
+		let prevId = nextIndex.length + charsForced.join('').length;
 
 		return function(bNext = true, bCharsForced = true) {
 			if (!bNext) {return prevId;}
@@ -128,11 +128,11 @@ const nextIdInvisible = (function() {
 }());
 
 const nextIdLetters = (function() {
-		var nextIndex = [0,0,0,0,0];
+		let nextIndex = [0,0,0,0,0];
 		const chars = ['a','b','c','d','f'];
 		const charsForced = [' (',')'];
 		const num = chars.length;
-		var prevId = nextIndex.length + charsForced.join('').length;
+		let prevId = nextIndex.length + charsForced.join('').length;
 
 		return function(bNext = true, bCharsForced = true) {
 			if (!bNext) {return prevId;}

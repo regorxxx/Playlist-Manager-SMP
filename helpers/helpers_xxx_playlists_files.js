@@ -694,9 +694,9 @@ function arePathsInMediaLibrary(filePaths, relPath = '') {
 	const poolItemsCount = poolItems.Count;
 	// const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
 	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%$ifgreater(%subsong%,0,\',\'%subsong%,)').EvalWithMetadbs(poolItems);
-	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((_) => {return _.toLowerCase();}));
+	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((path) => {return path.toLowerCase();}));
 	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than tf again
-	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((_) => {return _.toLowerCase();})) : null;
+	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((path) => {return path.toLowerCase();})) : null;
 	let filePool = new Set(filePaths.map((path) => {return path.toLowerCase();}));
 	const filePoolSize = filePool.size;
 	let path;

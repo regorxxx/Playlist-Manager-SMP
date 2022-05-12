@@ -44,7 +44,7 @@ function _list(x, y, w, h) {
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
 	var currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 	var idxHighlight = -1;
-	var animation = {bHighlight: false};
+	var animation = {bHighlight: false, fRepaint: null};
 	
 	// Global tooltip
 	this.tooltip = new _tt(null, void(0), void(0), 600);  
@@ -142,7 +142,7 @@ function _list(x, y, w, h) {
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
 				}
 				animation.bHighlight = false;
-				setTimeout(() => {window.RepaintRect(this.x, this.y, this.w, this.h);}, 300); 
+				animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(this.x, this.y, this.w, this.h);}, 600);
 			} else if (!this.lastCharsPressed.bDraw) {
 				idxHighlight = -1;
 			}
@@ -272,7 +272,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			this.lastCharsPressed.bDraw = false;
-			setTimeout(() => {window.RepaintRect(this.x, this.y, this.w, this.h);}, 300); 
+			animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(this.x, this.y, this.w, this.h);}, 600);
 		}
 		// Up/down buttons
 		this.up_btn.paint(gr, this.up_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
@@ -331,20 +331,23 @@ function _list(x, y, w, h) {
 	}
 	
 	this.showPlsByIdx = (idx) => {
-		if (idxHighlight === idx) {
+		if (idx === -1) {
+			idxHighlight = -1;
+			animation.bHighlight = false;
+			window.RepaintRect(this.x, this.y, this.w, this.h);
+			return false;
+		} else if (idxHighlight === idx) {
 			animation.bHighlight = true;
 			window.RepaintRect(this.x, this.y, this.w, this.h);
 			return true;
-		} else if (idx !== -1) {
+		} else {
 			idxHighlight = idx;
+			animation.bHighlight = true;
 			this.simulateWheelToIndex(idx, currentItemIndex > 0 ? currentItemIndex : 1, this.lastOffset ? this.lastOffset : 1);
 			currentItemIndex = idx;
-			animation.bHighlight = true;
 			window.RepaintRect(this.x, this.y, this.w, this.h);
 			return true;
 		}
-		animation.bHighlight = false;
-		return false;
 	}
 	
 	this.onMouseLeaveList = () => {  // Removes selection indicator
@@ -636,6 +639,7 @@ function _list(x, y, w, h) {
 			default: { // Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				const keyChar = keyCode(k);
 				if (keyChar && keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
+					if (animation.fRepaint !== null) {clearTimeout(animation.fRepaint);}
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
 					let method = this.methodState.split('\t')[0].replace('By ', '');
 					if (method === 'name' || !(new oPlaylist('', '')).hasOwnProperty(method)) {method = 'nameId';} // Fallback to name for sorting methods associated to non tracked variables

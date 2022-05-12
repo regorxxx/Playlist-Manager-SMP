@@ -35,7 +35,7 @@ function roughSizeOfObject(object) {
 		}
 		else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
 			objectList.push( value );
-			for(var i in value) {stack.push( value[ i ]);}
+			for(let i in value) {stack.push( value[i]);}
 		}
 	}
 	return bytes;
@@ -175,9 +175,10 @@ function isArrayEqual(arrayA, arrayB) {
 // Use this to change states on buttons on click. So every click changes to next state.
 // arr = [0,1,2]; arr.rotate(1); -> [1,2,0]
 Array.prototype.rotate = (function() {
-	var unshift = Array.prototype.unshift, splice = Array.prototype.splice;
+	const unshift = Array.prototype.unshift, splice = Array.prototype.splice;
 	return function(count) {
-		var len = this.length >>> 0, count = count >> 0;
+		const len = this.length >>> 0;
+		count = count >> 0;
 		unshift.apply(this, splice.call(this, count % len, len));
 		return this;
 	};
@@ -309,4 +310,4 @@ function isBoolean(obj) {
 	Maps
 */
 // Allows forward and backward iteration
-try {include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js');} catch (e) {}
+try {include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js');} catch (e) {/* continue regardless of error */}

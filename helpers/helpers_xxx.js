@@ -59,9 +59,9 @@ function getSoFeatures() {
 	// Scripting
 	if (utils.IsFile && utils.IsFile(fb.ProfilePath + 'yttm\\foo_lastfm_img.vbs')) {
 		try {
-			new ActiveXObject("Scripting.FileSystemObject");
-			new ActiveXObject("MSXML2.XMLHTTP");
-			new ActiveXObject("ADODB.Stream");
+			new ActiveXObject('Scripting.FileSystemObject');
+			new ActiveXObject('MSXML2.XMLHTTP');
+			new ActiveXObject('ADODB.Stream');
 		} catch (e) {soFeat.bio = false;}
 	}
 	// UI
@@ -117,7 +117,7 @@ function initCheckFeatures(soFeat) {
 	const bPrevFile = utils.IsFile(soFeatFile);
 	let bCheck = false;
 	if (bPrevFile) {
-		try {data = utils.ReadTextFile(soFeatFile, 65001);} catch (e) {}
+		try {data = utils.ReadTextFile(soFeatFile, 65001);} catch (e) {/* continue regardless of error */}
 		data = data ? JSON.parse(data) : null;
 	}
 	if (!bPrevFile || !data) {

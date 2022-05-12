@@ -94,7 +94,7 @@ const XSPF = {
 	},
 	getKeyValuePairs: function(node,filter,nowrap) {
 		const length = node.childNodes ? node.childNodes.length : 0;
-		let result = filter ? [...Array(filter.length)].map((_) => {return [];}) : [];
+		let result = filter ? [...Array(filter.length)].map(() => {return [];}) : [];
 		for (let y = 0; y < length; y++) {
 			let value = {};
 			const attr = node.childNodes[y];
@@ -130,8 +130,8 @@ const XSPF = {
 	getDirectChildrenByTagName: function(source_node,tag_name,val) {
 		const nodes = source_node.childNodes;
 		const length = nodes.length;
-		let matches = [...Array(tag_name.length)].map((_) => {return new Array(val);});
-		let j = [...Array(tag_name.length)].map((_) => {return 0;});
+		let matches = [...Array(tag_name.length)].map(() => {return new Array(val);});
+		let j = [...Array(tag_name.length)].map(() => {return 0;});
 		for (let i=0; i < length; i++) {
 			const node = nodes[i];
 			const pos = tag_name.indexOf(node.tagName);
@@ -193,8 +193,8 @@ const XSPF = {
 		const xml_contents = xml_node.childNodes;
 		const xml_contentsLength = xml_contents.length;
 		const length = xml_contentsLength >= val ? val : xml_contentsLength;
-		let contents = [...Array(tag.length)].map((_) => {return new Array(val);});
-		let j = [...Array(tag.length)].map((_) => {return 0;});
+		let contents = [...Array(tag.length)].map(() => {return new Array(val);});
+		let j = [...Array(tag.length)].map(() => {return 0;});
 		for (let i = 0; i < xml_contentsLength; i++) {
 			const xml_content = xml_contents[i];
 			const pos = tag.indexOf(xml_content.tagName);
