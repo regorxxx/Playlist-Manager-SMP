@@ -173,12 +173,12 @@ buttonsPanel.buttons.filterTwoButton.method = list.properties.filterMethod[1].sp
 recalcWidth();
 
 function on_colours_changed() {
-	panel.colours_changed();
+	panel.coloursChanged();
 	window.Repaint();
 }
 
 function on_font_changed() {
-	panel.font_changed();
+	panel.fontChanged();
 	window.Repaint();
 }
 

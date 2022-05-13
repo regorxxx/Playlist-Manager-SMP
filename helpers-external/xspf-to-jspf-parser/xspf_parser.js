@@ -48,13 +48,13 @@ const XSPF = {
 		if (attrs && attrs.length) {playlist.attribution = this.getKeyValuePairs(attrs,['location','identifier']).flat();}
 		if (linknodes && linknodes.length) {playlist.link = this.getRelValuePairs(linknodes);}
 		if (metanodes && metanodes.length) {playlist.meta = this.getRelValuePairs(metanodes, true);}
-		 
+		
 		playlist.license = this.strWh(license[0]);
 		
 		playlist.extension = {};
 		if (extnodes) {
 			const length = extnodes.length;
-			for (var i=0; i < length; i++) {
+			for (let i = 0; i < length; i++) {
 				const node = extnodes[i];
 				const app = node ? node.getAttribute('application') : null;
 				if (app) {

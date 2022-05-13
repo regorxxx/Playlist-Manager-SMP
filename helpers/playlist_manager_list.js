@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/22
+//13/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2414,7 +2414,7 @@ function _list(x, y, w, h) {
 		}
 	}
 	
-	panel.list_objects.push(this);
+	panel.listObjects.push(this);
 	this.inRange = false;
 	this.x = x;
 	this.y = y;

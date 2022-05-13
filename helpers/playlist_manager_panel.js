@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/22
+//13/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -19,7 +19,7 @@ setProperties(panel_properties, 'panel_');
 
 function _panel(custom_background = false) {
 	
-	this.colours_changed = () => {
+	this.coloursChanged = () => {
 		if (window.InstanceType) {
 			this.colours.background = window.GetColourDUI(1);
 			this.colours.text = this.colours.bCustomText ? this.colours.customText : window.GetColourDUI(0);
@@ -38,7 +38,7 @@ function _panel(custom_background = false) {
 		buttonsPanel.config.textColor = this.colours.buttonsTextColor // buttons_xxx.js
 	}
 	
-	this.font_changed = () => {
+	this.fontChanged = () => {
 		let name;
 		let font = window.InstanceType ? window.GetFontDUI(0) : window.GetFontCUI(0);
 		if (font) {
@@ -52,9 +52,9 @@ function _panel(custom_background = false) {
 		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
 		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
 		this.row_height = this.fonts.normal.Height;
-		this.list_objects.forEach((item) => {item.size();});
-		this.list_objects.forEach((item) => {item.update();});
-		this.text_objects.forEach((item) => {item.size();});
+		this.listObjects.forEach((item) => {item.size();});
+		this.listObjects.forEach((item) => {item.update();});
+		this.textObjects.forEach((item) => {item.size();});
 	}
 	
 	this.size = () => {
@@ -107,8 +107,8 @@ function _panel(custom_background = false) {
 	this.colours.customText = this.properties.customText[1];
 	this.colours.buttonsTextColor = this.properties.buttonsTextColor[1];
 	this.colours.bAltRowsColor = this.properties.bAltRowsColor[1];
-	this.list_objects = [];
-	this.text_objects = [];
-	this.font_changed();
-	this.colours_changed();
+	this.listObjects = [];
+	this.textObjects = [];
+	this.fontChanged();
+	this.coloursChanged();
 }

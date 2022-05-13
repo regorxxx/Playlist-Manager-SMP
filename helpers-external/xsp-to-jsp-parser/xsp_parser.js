@@ -44,7 +44,6 @@ const XSP = {
 		});
 		// Rules
 		const rules = playlist.rules;
-		const rulesLength = rules.length;
 		for (const rule of rules) {
 			if (rule && rule.hasOwnProperty('field') && rule.hasOwnProperty('operator') && rule.hasOwnProperty('value')) {
 				if (typeof rule.field !== 'undefined' && typeof rule.operator !== 'undefined') {
@@ -184,7 +183,6 @@ const XSP = {
 		}
 		return rules; 
 	},
-	
 	getContents : function(xml_node, tag, val = Infinity) {
 		const xml_contents = xml_node.childNodes;
 		const xml_contentsLength = xml_contents.length;

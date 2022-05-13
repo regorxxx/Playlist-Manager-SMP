@@ -118,7 +118,6 @@ XSP.hasQueryPlaylists = function(jsp) {
 
 XSP.getQueryPlaylists = function(jsp) {
 	const playlist = jsp.playlist;
-	const match = playlist.match === 'all' ? 'AND' : 'OR';
 	const rules = playlist.rules;
 	let query = {is: [], isnot: []}
 	for (let rule of rules) {

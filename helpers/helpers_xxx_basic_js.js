@@ -137,7 +137,7 @@ const throttle = (fn, delay, immediate) => {
 };
 
 // Fire functions only once
-var doOnceCache = [];
+const doOnceCache = [];
 const doOnce = (task, fn) => {
 	return (...args) => {
 		if(doOnceCache.indexOf(task) === -1) {
