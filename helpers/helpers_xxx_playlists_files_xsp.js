@@ -7,7 +7,7 @@ XSP.getQuerySort = function(jsp) {
 	let query = this.getQuery(jsp);
 	let sort = query.length ? ' ' + this.getSort(jsp) : '';
 	return query + sort;
-}
+};
 
 XSP.getQuery = function(jsp, bOmitPlaylist = false) {
 	const playlist = jsp.playlist;
@@ -106,7 +106,7 @@ XSP.getQuery = function(jsp, bOmitPlaylist = false) {
 	}
 	query = query_join(query, match) || '';
 	return query;
-}
+};
 
 XSP.hasQueryPlaylists = function(jsp) {
 	const playlist = jsp.playlist;
@@ -114,7 +114,7 @@ XSP.hasQueryPlaylists = function(jsp) {
 	let bPlaylists = false;
 	for (let rule of rules) {if (this.getFbTag(rule.field) === '#PLAYLIST#') {bPlaylists = true; break;}}
 	return bPlaylists;
-}
+};
 
 XSP.getQueryPlaylists = function(jsp) {
 	const playlist = jsp.playlist;
@@ -140,7 +140,7 @@ XSP.getQueryPlaylists = function(jsp) {
 		}
 	}
 	return query;
-}
+};
 
 XSP.getSort = function(jsp) {
 	const playlist = jsp.playlist;
@@ -163,7 +163,7 @@ XSP.getSort = function(jsp) {
 		}
 	}
 	return sort;
-}
+};
 
 XSP.getFbTag = function(tag) {
 	let fbTag = '';
@@ -199,7 +199,7 @@ XSP.getFbTag = function(tag) {
 		}
 	}
 	return (fbTag.indexOf('$') !== -1 ? fbTag : fbTag.toUpperCase());
-}
+};
 
 XSP.getTag = function(fbTag) {
 	let tag = '';
@@ -232,18 +232,18 @@ XSP.getTag = function(fbTag) {
 		}
 	}
 	return tag;
-}
+};
 
 XSP.getMatch = function(jsp) {
 	const playlist = jsp.playlist;
 	return  playlist.match === 'all' ? 'AND' : 'OR';
-}
+};
 
 XSP.getLimit = function(jsp) {
 	const playlist = jsp.playlist;
 	const limit = playlist.hasOwnProperty('limit') && playlist.limit !== void(0) ? Number(playlist.limit) : null;
 	return  limit || Infinity; // 0 retrieves All
-}
+};
 
 XSP.getOrder = function(queryOrSort) {
 	let order = [{}]; // TODO [] ?
@@ -260,7 +260,7 @@ XSP.getOrder = function(queryOrSort) {
 		if (tag.length) {order[0][direction] = tag;}
 	}
 	return order;
-}
+};
 
 XSP.getRules = function(querySort) {
 	const bDebug = false;
@@ -444,7 +444,7 @@ XSP.getRules = function(querySort) {
 		rules = rulesV4;
 	}
 	return {rules, match};
-}
+};
 
 XSP.getRule = function(query) {
 	let rule = {operator: '', field: '', value: []};
@@ -522,7 +522,7 @@ XSP.getRule = function(query) {
 		}
 	}
 	return rule;
-}
+};
 
 if (!query_join) {
 	const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR NOT'];
@@ -563,7 +563,7 @@ if (!stripSort) {
 			else if (query.indexOf(' SORT ASCENDING BY ') !== -1) {queryNoSort = query.split(' SORT ASCENDING BY ')[0];}
 		}
 		return queryNoSort;
-	}
+	};
 }
 
 function recursiveSplit(arr, regExp, split) {

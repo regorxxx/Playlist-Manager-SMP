@@ -443,18 +443,18 @@ function convertToRelPaths(list, z) {
 function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 	let bDone = false;
 	const pls = list.data[z];
-	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0)+ ')';
+	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++;} return count;}, 0)+ ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
 	bDone = list.addAutoplaylist(objectPlaylist) ? true : false;
-	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.')} else {console.log('Playlist Manager: Error duplicating playlist'); return false;}
+	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');} else {console.log('Playlist Manager: Error duplicating playlist'); return false;}
 	return bDone;
 }
 
 function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
-	const playlistName = pls.name + ' (std copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (std copy ')) {count++}; return count;}, 0)+ ')';
+	const playlistName = pls.name + ' (std copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (std copy ')) {count++;} return count;}, 0)+ ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
 	const idx = getPlaylistIndexArray(list.data[z].nameId);
 	if (idx && idx.length === 1) { // Already loaded? Duplicate it
@@ -472,7 +472,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
-	if (remDupl && remDupl.length && do_remove_duplicates) {do_remove_duplicates(null, null, remDupl);};
+	if (remDupl && remDupl.length && do_remove_duplicates) {do_remove_duplicates(null, null, remDupl);}
 	const objectPlaylist = list.add(false); // Create playlist from active playlist
 	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
 	if (bDone) {
@@ -593,12 +593,12 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 		const root = utils.SplitFilePath(newPath)[0];
 		const report = [];
 		const plsRoot = utils.SplitFilePath(list.data[z].path)[0];
-		new Promise(resolve => {
+		new Promise((resolve) => {
 			const total = paths.length - 1;
 			const promises = [];
 			paths.forEach((trackPath, i) => {
-				promises.push(new Promise(resolve => {
-					const wait = bAsync ? 50 * i + (i % 4 === 0 ? 1000 : 0) : 0 // Give some time on Async processing between successive calls to not overload HDDs
+				promises.push(new Promise((resolve) => {
+					const wait = bAsync ? 50 * i + (i % 4 === 0 ? 1000 : 0) : 0; // Give some time on Async processing between successive calls to not overload HDDs
 					setTimeout(() => {
 						const fileName = utils.SplitFilePath(trackPath).slice(1).join('');
 						const outputName = root + fileName;
@@ -697,7 +697,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-				return bDone
+				return bDone;
 			}
 			if (bOpenOnExport) {_explorer(newPath);}
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
@@ -723,7 +723,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 	if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone;}
 	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 	if (handleList && handleList.Count) {
-		if (remDupl && remDupl.length && do_remove_duplicates) {handleList = do_remove_duplicates(handleList, null, remDupl);};
+		if (remDupl && remDupl.length && do_remove_duplicates) {handleList = do_remove_duplicates(handleList, null, remDupl);}
 		if (pls.sort) {
 			const sortObj = getSortObj(pls.sort);
 			if (sortObj) {handleList.OrderByFormat(sortObj.tf, sortObj.direction);}
@@ -892,9 +892,10 @@ function rewriteXSPQuery(pls, newQuery) {
 		if (rules.length) {
 			const playlistPath = pls.path;
 			const bCache = xspCache.has(playlistPath);
+			let playlistText = '';
 			if (!bCache) {
-				var playlistText = _open(playlistPath);
-				if (playlistText.length) {
+				playlistText = _open(playlistPath);
+				if (playlistText && playlistText.length) {
 					// Safe checks to ensure proper encoding detection
 					const codePage = checkCodePage(playlistText, '.xsp');
 					if (codePage !== -1) {playlistText = _open(playlistPath, codePage); if (!playlistText.length) {return bDone;}}
@@ -1001,12 +1002,12 @@ function backup(n = 50) { // Backup playlist and json file
 
 function findMixedPaths() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
 		list.dataAll.forEach((playlist, i) => {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
@@ -1027,13 +1028,13 @@ async function findMixedPathsAsync() {return await findMixedPaths();}
 
 function findExternal() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
 		const subsongRegex = /,\d*$/g;
 		list.dataAll.forEach((playlist, i) => {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
@@ -1074,7 +1075,7 @@ async function findExternalAsync() {return await findExternal();}
 
 function findDead() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1082,7 +1083,7 @@ function findDead() {
 		const subsongRegex = /,\d*$/g;
 		list.dataAll.forEach((playlist, i) => {
 			iDelay = isNaN(playlist.size) ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
@@ -1120,12 +1121,12 @@ async function findDeadAsync() {return await findDead();}
 
 function findDuplicates() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
 		list.dataAll.forEach((playlist, i) => {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
@@ -1147,12 +1148,12 @@ async function findDuplicatesAsync() {return await findDuplicates();}
 
 function findSizeMismatch() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
 		list.dataAll.forEach((playlist, i) => {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.xsp' && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
@@ -1201,7 +1202,7 @@ function findSizeMismatch() {
 						if (typeof text === 'undefined' || !text.length) {found.push(playlist.path + ' (blank)');}
 						else if (typeof size === 'undefined') {found.push(playlist.path + ' (no size tag found)');}
 						else if (filePathsNum !== size) {found.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')');}
-						else if (playlist.extension === '.strm' && size > 1) {found.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)')}
+						else if (playlist.extension === '.strm' && size > 1) {found.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)');}
 					}
 					const progress = Math.round(i / total * 10) * 10;
 					if (progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + progress + '%.');}
@@ -1218,12 +1219,12 @@ async function findSizeMismatchAsync() {return await findSizeMismatch();}
 
 function findDurationMismatch() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
 		list.dataAll.forEach((playlist, i) => {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.xsp' && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
@@ -1277,12 +1278,12 @@ async function findDurationMismatchAsync() {return await findDurationMismatch();
 
 function findBlank() {
 	const found = [];
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
 		list.dataAll.forEach((playlist, i) => {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);

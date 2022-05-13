@@ -259,7 +259,7 @@ function _list(x, y, w, h) {
 				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
 				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2 );
 				const lineW = Math.min(popX + sizeX / 2 + textW / 2 - 1, popX + sizeX - textOffset / 2);
-				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, opaqueColor(this.colours.selectedPlaylistColour, 70))
+				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, opaqueColor(this.colours.selectedPlaylistColour, 70));
 			} else { // when found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				// And highlight a few ms the found playlist
@@ -276,7 +276,7 @@ function _list(x, y, w, h) {
 		}
 		// Up/down buttons
 		this.up_btn.paint(gr, this.up_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
-		this.down_btn.paint(gr, this.down_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text)
+		this.down_btn.paint(gr, this.down_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
 	}
 
 	this.trace = (x, y) => { // On panel
@@ -371,7 +371,7 @@ function _list(x, y, w, h) {
 			let headerText = this.playlistsPath;
 			headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
 			headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
-			const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum)}, 0); // Counts autoplaylists and smart playlists
+			const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum);}, 0); // Counts autoplaylists and smart playlists
 			headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
 			// Tips
 			if (this.bShowTips) {
@@ -958,7 +958,7 @@ function _list(x, y, w, h) {
 			if (plman.IsAutoPlaylist(playlistIndex)) {return false;} // Always skip updates for AutoPlaylists
 			if (this.lastPlsLoaded.length) { // skip auto-update for the last loaded playlists
 				const nameId = plman.GetPlaylistName(playlistIndex);
-				const idx = this.lastPlsLoaded.findIndex((pls) => {return nameId === pls.nameId});
+				const idx = this.lastPlsLoaded.findIndex((pls) => {return nameId === pls.nameId;});
 				if (idx !== -1) {
 					const pls = this.lastPlsLoaded.splice(idx, 1)[0]; // Remove from list
 					if (pls.isAutoPlaylist || pls.query) {return false;} // Always skip updates for AutoPlaylists
@@ -1058,7 +1058,6 @@ function _list(x, y, w, h) {
 				this.update(true, true); // We have already updated data before only for the variables changed
 				this.filter();
 				return true;
-				break;
 			}
 		}
 		return false;
@@ -1089,7 +1088,7 @@ function _list(x, y, w, h) {
 			});
 		}
 		else if (idx === -1) {toSave = bAll ? [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp] : [...this.dataAutoPlaylists];}
-		else {toSave.push(this.data[idx])}
+		else {toSave.push(this.data[idx]);}
 		_save(path, JSON.stringify(toSave, this.replacer, '\t'), this.bBOM); // No BOM
 		return path;
 	}
@@ -1183,7 +1182,7 @@ function _list(x, y, w, h) {
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
 			this.data = this.dataAll.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
-			this.data = this.dataAll.filter((item) => {return item.extension === '.ui'});
+			this.data = this.dataAll.filter((item) => {return item.extension === '.ui';});
 		}
 		// And then... we use this.data to filter again by lock state
 		if (lockState === this.constLockStates()[0]) {
@@ -1427,7 +1426,7 @@ function _list(x, y, w, h) {
 							const cacheSize = item.size;
 							const cacheDuration = item.duration;
 							let bDone = false;
-							promises.push(new Promise(resolve => {
+							promises.push(new Promise((resolve) => {
 								loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
 									if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 										if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
@@ -1453,7 +1452,7 @@ function _list(x, y, w, h) {
 						} else { // Updates tags for AutoPlaylists. Warning takes a lot of time! Only when required...
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
-									promises.push(new Promise(resolve => {
+									promises.push(new Promise((resolve) => {
 										loadAutoPlaylistAsync(item, i).then((handleList = null) => {
 											if (handleList && item.size) {
 												const bUpdated = this.updateTags(handleList, item);
@@ -1830,7 +1829,7 @@ function _list(x, y, w, h) {
 				catch (e) {return false;}
 			}
 			if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
-			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');;
+			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 			const newForced = (newSort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
 			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
 			const handleList = hasSize && hasQuery && pls.query === newQuery ? null: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
@@ -2068,7 +2067,7 @@ function _list(x, y, w, h) {
 				if (!namesSet.size) {return;}
 				if (namesSet.has(pls.name)) {playlistsManager.add(idx); namesSet.delete(pls.name);}
 			});
-			 // Otherwise playlists loaded
+			// Otherwise playlists loaded
 			namesSet.forEach((name) => {playlistsUI = playlistsUI.union(new Set(getPlaylistIndexArray(name)));});
 			// Join
 			let output = new FbMetadbHandleList();
@@ -2492,7 +2491,7 @@ function _list(x, y, w, h) {
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process
 function loadAutoPlaylist(pls, i) {
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		setTimeout(() => {
 			if (!checkQuery(pls.query, false, true)) {
 				if (pls.query.indexOf('#PLAYLIST# IS') === -1) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); resolve(null);}

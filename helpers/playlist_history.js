@@ -90,19 +90,19 @@ function onPlaylistsChanged() {
 		}
 	} else {initplsHistory();}
 }
-if (on_playlists_changed) {
+if (typeof on_playlists_changed !== 'undefined') {
 	const oldFunc = on_playlists_changed;
 	on_playlists_changed = function() {
 		oldFunc();
 		onPlaylistsChanged();
-	}
+	};
 } else {var on_playlists_changed = onPlaylistsChanged;}
 
 
 function onSelectionChanged() {
 	if (!plsHistory.length) {initplsHistory();}
 }
-if (on_selection_changed) {
+if (typeof on_selection_changed !== 'undefined') {
 	const oldFunc = on_selection_changed;
 	on_selection_changed = function() {
 		oldFunc();
