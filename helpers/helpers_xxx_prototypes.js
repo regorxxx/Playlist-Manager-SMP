@@ -34,8 +34,8 @@ function roughSizeOfObject(object) {
 			bytes += 8;
 		}
 		else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
-			objectList.push( value );
-			for(let i in value) {stack.push( value[i]);}
+			objectList.push(value);
+			for (let i in value) {if (!value.hasOwnProperty(i)) {continue;} stack.push(value[i]);}
 		}
 	}
 	return bytes;

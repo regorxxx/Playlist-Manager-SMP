@@ -152,7 +152,7 @@ function tryFunc(fn) {
 		let cache;
 		try {cache = fn(...args);} catch(e) {/* continue regardless of error */}
 		return cache;
-	}
+	};
 }
 
 function tryMethod(fn, parent) {
@@ -160,7 +160,7 @@ function tryMethod(fn, parent) {
 		let cache;
 		try {cache = parent[fn](...args);} catch(e) {/* continue regardless of error */}
 		return cache;
-	}
+	};
 }
 
 /* 

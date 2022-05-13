@@ -107,7 +107,7 @@ if (typeof on_selection_changed !== 'undefined') {
 	on_selection_changed = function() {
 		oldFunc();
 		onSelectionChanged();
-	}
+	};
 } else {var on_selection_changed = onSelectionChanged;}
 
 const initplsHistory = delayFn(() => {plsHistory.push({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});}, 300);

@@ -22,7 +22,7 @@ function _popup({w = window.Width , h = window.Height, UI = 'MATERIAL', properti
 			this.popupColor = opaqueColor(tintColor(this.panelColor || RGB(0, 0, 0), 20), 80);
 			this.borderColor = opaqueColor(invert(this.popupColor), 50);
 		},
-	}
+	};
 	
 	this.properties = properties;
 	this.fontSize = typeof this.properties.fontSize !== 'undefined' ? this.properties.fontSize[1] : _scale(10);
@@ -83,7 +83,7 @@ function _popup({w = window.Width , h = window.Height, UI = 'MATERIAL', properti
 				gr.FillEllipse(x, y, size, size, opaqueColor(0xFF4354AF, Math.round(count / step * 10)));
 			}
 			this.icon.step = cyclicOffset(this.icon.step, 1, [0,count]);
-			setTimeout(() => {return window.Repaint();}, 400)
+			setTimeout(() => {return window.Repaint();}, 400);
 		}
 	}
 	

@@ -966,7 +966,7 @@ function createMenuRightTop() {
 				const presets = JSON.parse(list.properties.converterPreset[1]);
 				presets.forEach((preset, i) => {
 					const path = preset.path;
-					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 					const tf = preset.tf;
@@ -1047,7 +1047,7 @@ function createMenuRightTop() {
 				const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
 				presets.forEach((preset, i) => {
 					const path = preset.path;
-					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 					const tf = preset.tf;

@@ -225,7 +225,7 @@ function on_mouse_leave() {
 }
 
 function on_mouse_rbtn_up(x, y) {
-	if (pop.isEnabled()) {return;}
+	if (pop.isEnabled()) {return true;}
 	if (list.traceHeader(x, y)) { // Header menu
 		return createMenuRightTop().btn_up(x, y);
 	} else if (buttonsPanel.curBtn === null) { // List menu

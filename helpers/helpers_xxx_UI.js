@@ -31,7 +31,7 @@ const colorBlind = {
 	blue:	[RGB(230,128,230), RGB(84, 53, 255), RGB(0,  0,  255)],
 	white:	[RGB(255,255,255), RGB(240,240,240), RGB(220,220,220)],
 	black:	[RGB(150,150,150), RGB(75 , 75, 75), RGB(0,   0,   0)]
-}
+};
 
 // Cache
 const scaleDPI = {}; // Caches _scale() values;
@@ -246,7 +246,7 @@ function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
 
 function RGBA(r, g, b, a) {
 	let res = 0xff000000 | (r << 16) | (g << 8) | (b);
-	if (a !== undefined) {res = (res & 0x00ffffff) | (a << 24);}
+	if (typeof a !== 'undefined') {res = (res & 0x00ffffff) | (a << 24);}
 	return res;
 }
 

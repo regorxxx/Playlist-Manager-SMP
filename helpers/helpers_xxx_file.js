@@ -162,7 +162,7 @@ function _recycleFile(file, bCheckBin = false) {
 						app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
 						// fso.GetFile(file).Delete(true);
 				} catch (e) {
-					try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true); console.log('hola')} // cmdUtils as fallback
+					try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true);} // cmdUtils as fallback
 					catch (e) {return false;}
 				}
 			}
@@ -373,7 +373,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 					let check = _open(filePath, convertCharsetToCodepage('UTF-8'));
 					bDone = (check === fileTextNew);
 				} else {reason = -1;}
-			} else {reason = 1}
+			} else {reason = 1;}
 		} else {reason = 0;}
 	} else {reason = -1;}
 	return [bDone, reason];

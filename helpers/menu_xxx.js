@@ -124,7 +124,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => {this.initMenu(object, bindArgs); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
 	this.getMenus = () => {return [...menuArr];};
 	this.getMainMenuName = () => {return menuArr[0].menuName;};
-	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true)}) !== -1);};
+	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true);}) !== -1);};
 	
 	// <-- Internal
 	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);};
@@ -161,12 +161,12 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			let entryTextSanitized = entryTextName;
 			const chars = [')', ']', '}', ':'];
 			if (entryTextName.length > iMaxEntryLen) {
-				const bHasChar = chars.map((c) => {return entryTextName.slice(-1) === c});
+				const bHasChar = chars.map((c) => {return entryTextName.slice(-1) === c;});
 				entryTextSanitized = entryTextName.substring(0, iMaxEntryLen) + '...' + bHasChar.map((b, i) => {return b ? chars[i] : '';}).filter(Boolean).join('');
 			}
 			if (entryTextTab) {
 				if (entryTextTab.length > iMaxTabLen) {
-					const bHasChar = chars.map((c) => {return entryTextTab.slice(-1) === c});
+					const bHasChar = chars.map((c) => {return entryTextTab.slice(-1) === c;});
 					entryTextSanitized += '\t' + entryTextTab.substring(0, iMaxTabLen) + '...' + bHasChar.map((b, i) => {return b ? chars[i] : '';}).filter(Boolean).join('');
 				} else {entryTextSanitized += '\t' + entryTextTab;}
 			}
@@ -234,7 +234,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		entryArr.forEach( (entry) => {
 			if (entry.hasOwnProperty('condFunc') && entry.condFunc) { // Create menu
 				if (bindArgs !== null) {
-					if (bindArgs.pos >= 1) {entry.condFunc(...[...Array(bindArgs.pos)].map((_) => {return void(0);}), bindArgs.args)}
+					if (bindArgs.pos >= 1) {entry.condFunc(...[...Array(bindArgs.pos)].map((_) => {return void(0);}), bindArgs.args);}
 					else {entry.condFunc(bindArgs.args);}
 				} else {entry.condFunc();}
 			}
@@ -291,7 +291,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
 					if (bExecute) {
 						if (bindArgs !== null) {
-							if (bindArgs.pos >= 1) {func(...[...Array(bindArgs.pos)].map(() => {return void(0);}), bindArgs.args)}
+							if (bindArgs.pos >= 1) {func(...[...Array(bindArgs.pos)].map(() => {return void(0);}), bindArgs.args);}
 							else {func(bindArgs.args);}
 						} else {func();}
 					}
@@ -355,6 +355,6 @@ function isArray(checkKeys) {
 }
 
 function menuError({} = {}) {
-	if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu')} 
+	if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu');} 
 	else {Object.entries(...arguments).map((_) => {return _.join(': ');}).forEach((arg) => {console.log(arg);});}
 }

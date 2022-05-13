@@ -536,7 +536,7 @@ if (!query_join) {
 			let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
 			if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
 				console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
-				return; //Array was null or not an array
+				return ''; //Array was null or not an array
 			}
 			
 			let query = '';

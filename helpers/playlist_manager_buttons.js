@@ -77,6 +77,7 @@ function filterName() {
 				case list.constAutoPlaylistStates()[1]: {return 'Ap';}
 				case list.constAutoPlaylistStates()[2]: {return 'Pls';}
 			}
+			break;
 		}
 		case 'Tag': {
 			const options = ['All', ...list.tags()];
