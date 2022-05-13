@@ -119,7 +119,7 @@ XSP.hasQueryPlaylists = function(jsp) {
 XSP.getQueryPlaylists = function(jsp) {
 	const playlist = jsp.playlist;
 	const rules = playlist.rules;
-	let query = {is: [], isnot: []}
+	let query = {is: [], isnot: []};
 	for (let rule of rules) {
 		const tag = rule.field;
 		const op = rule.operator;
@@ -188,7 +188,7 @@ XSP.getFbTag = function(tag) {
 		case 'moods': {fbTag = 'mood'; break;}
 		case 'themes': {fbTag = 'theme'; break;}
 		case 'styles': {fbTag = 'style'; break;}
-		case 'albumartist': {fbTag = "album artist"; break;}
+		case 'albumartist': {fbTag = 'album artist'; break;}
 		case 'playcount': {fbTag = '%play_count%'; break;} // Requires foo playcount
 		case 'lastplayed': {fbTag = '%last_played%'; break;} // Requires foo playcount
 		// Special Tags
@@ -310,21 +310,20 @@ XSP.getRules = function(querySort) {
 			if (q === '(' || q === ')') {idx.push(i);}
 		});
 		idx = idx.reduce(function(result, value, index, array) {
-			if (index % 2 === 0)
-			result.push(array.slice(index, index + 2));
+			if (index % 2 === 0) {result.push(array.slice(index, index + 2));}
 			return result;
 		}, []);
-
+		
 		let querySplitCopy = [];
 		if (idx.length) {
 			querySplit.forEach((q, j) => {
 				if (j < idx[0][0]) {querySplitCopy.push(q);}
-				else if (j === idx[0][0]) {querySplitCopy.push([])}
+				else if (j === idx[0][0]) {querySplitCopy.push([]);}
 				else if (j >= idx[0][1]) {idx.splice(0,1);}
 				else {querySplitCopy[querySplitCopy.length - 1].push(q);}
 			});
 		} else {querySplitCopy = querySplit;}
-		match = rules.length === 1 || querySplitCopy.every((item) => {return item !== 'OR' && item !== 'OR NOT';}) ? 'all' : 'one'
+		match = rules.length === 1 || querySplitCopy.every((item) => {return item !== 'OR' && item !== 'OR NOT';}) ? 'all' : 'one';
 		let prevOp = '';
 		rules = querySplitCopy.map((query) => {return this.getRule(query);});
 		let rulesV2 = rules.map((rule) => {
@@ -530,7 +529,7 @@ if (!query_join) {
 	var query_join = function(queryArray, setLogic) {
 			if (logicDic.indexOf(setLogic) === -1) {
 				console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
-				return;
+				return '';
 			}
 			let arrayLength = queryArray.length;
 			// Wrong array
@@ -571,7 +570,7 @@ function recursiveSplit(arr, regExp, split) {
 	if (Array.isArray(arr)) {
 		copy = arr.map((newArr) => {return recursiveSplit(newArr, regExp, split);});
 	} else {
-		copy = arr.split(regExp).map((item, i, ori) => {return i === ori.length - 1 ? (item.length ? [item] : []) : (item.length ? [item, split] : [split]);}).flat(Infinity)
+		copy = arr.split(regExp).map((item, i, ori) => {return i === ori.length - 1 ? (item.length ? [item] : []) : (item.length ? [item, split] : [split]);}).flat(Infinity);
 	}
 	return copy;
 }

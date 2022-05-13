@@ -61,6 +61,7 @@ XSPF.toXSPF = function(jspf) {
 		if (inputFields && Object.keys(inputFields).length) {
 			code.push('		<track>');
 			for (const key in inputFields) {
+				if (!inputFields.hasOwnProperty(key)){continue;}
 				let value = inputFields[key];
 				const typeVal = typeof value;
 				let bWrite = false;
@@ -130,14 +131,14 @@ XSPF.toXSPF = function(jspf) {
 		}
 	}
 	return code;
-}
+};
 
 function htmlEntities(str, typeVal) {
 	if (typeVal === 'string') {
-		str = str.replace(/&/g, "&amp;");
-		str = str.replace(/"/g, "&quot;");
-		str = str.replace(/</g, "&lt;");
-		str = str.replace(/>/g, "&gt;");
+		str = str.replace(/&/g, '&amp;');
+		str = str.replace(/"/g, '&quot;');
+		str = str.replace(/</g, '&lt;');
+		str = str.replace(/>/g, '&gt;');
 	}
 	return str;
 }

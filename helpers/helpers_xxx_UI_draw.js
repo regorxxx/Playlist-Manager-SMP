@@ -9,10 +9,10 @@ function _sb(t, x, y, w, h, v, fn) {
 		if (this.v()) {
 			gr.DrawString(this.t, this.font, colour, this.x, this.y, this.w, this.h, SF_CENTRE);
 		}
-	}
+	};
 	this.trace = (x, y) => {
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h && this.v();
-	}
+	};
 	this.move = (x, y) => {
 		if (this.trace(x, y)) {
 			window.SetCursor(IDC_HAND);
@@ -23,7 +23,7 @@ function _sb(t, x, y, w, h, v, fn) {
 			this.hover = false;
 			return false;
 		}
-	}
+	};
 	this.lbtn_up = (x, y) => {
 		if (this.trace(x, y)) {
 			if (this.fn) {
@@ -33,7 +33,7 @@ function _sb(t, x, y, w, h, v, fn) {
 		} else {
 			return false;
 		}
-	}
+	};
 	this.hover = false;
 	this.t = t;
 	this.x = x;

@@ -489,7 +489,7 @@ function clonePlaylistInUI(list, z) {
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList && handleList.Count) {
-		const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0) + ')';
+		const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++;} return count;}, 0) + ')';
 		const idx = plman.CreatePlaylist(plman.PlaylistCount, playlistName);
 		if (idx !== -1) {
 			plman.ActivePlaylist = idx;
@@ -506,7 +506,7 @@ function clonePlaylistFile(list, z, ext) {
 	let bDone = false;
 	const pls = list.data[z];
 	const bUI = pls.extension === '.ui';
-	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++}; return count;}, 0) + ')';
+	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++;} return count;}, 0) + ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
@@ -760,7 +760,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 			}
 		} else {
 			fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-			return bDone
+			return bDone;
 		}
 		if (bOpenOnExport) {_explorer(newPath);}
 		console.log('Playlist Manager: exporting ' + playlistName + ' done.');

@@ -35,8 +35,8 @@ function _panel(custom_background = false) {
 			this.colours.highlight = blendColours(this.colours.text, this.colours.background, 0.4);
 		}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
-		buttonsPanel.config.textColor = this.colours.buttonsTextColor // buttons_xxx.js
-	}
+		buttonsPanel.config.textColor = this.colours.buttonsTextColor; // buttons_xxx.js
+	};
 	
 	this.fontChanged = () => {
 		let name;
@@ -55,12 +55,12 @@ function _panel(custom_background = false) {
 		this.listObjects.forEach((item) => {item.size();});
 		this.listObjects.forEach((item) => {item.update();});
 		this.textObjects.forEach((item) => {item.size();});
-	}
+	};
 	
 	this.size = () => {
 		this.w = window.Width;
 		this.h = window.Height;
-	}
+	};
 	
 	this.getColorBackground = () => {
 		let col;
@@ -80,13 +80,13 @@ function _panel(custom_background = false) {
 				break;
 		}
 		return col;
-	}
+	};
 	this.paint = (gr) => {
 		const col = this.getColorBackground();
 		if (typeof col !== 'undefined') {
 			gr.FillSolidRect(1, 1, this.w - 1, this.h - 1, col);
 		}
-	}
+	};
 	
 	window.DlgCode = DLGC_WANTALLKEYS;
 	this.properties = getPropertiesPairs(panel_properties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
