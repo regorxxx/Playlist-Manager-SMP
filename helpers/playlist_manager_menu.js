@@ -127,7 +127,7 @@ function createMenuLeft(forcedIndex = -1) {
 					if (isNaN(input)) {return;}
 					if (!Number.isFinite(input)) {input = 0;}
 					if (input !== pls.limit) {
-						const bDone = rewriteXSPLimit(pls, input)
+						const bDone = rewriteXSPLimit(pls, input);
 						if (bDone) {
 							list.editData(pls, {
 								limit: input,
@@ -142,11 +142,11 @@ function createMenuLeft(forcedIndex = -1) {
 			// Updates playlist file with any new changes on the playlist binded within foobar
 			menu.newEntry({entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
 				if (_isFile(pls.path)) {
-					const old_nameId = pls.nameId;
-					const old_name = pls.name;
-					const duplicated = getPlaylistIndexArray(old_nameId);
+					const oldNameId = pls.nameId;
+					const oldName = pls.name;
+					const duplicated = getPlaylistIndexArray(oldNameId);
 					if (duplicated.length > 1) { // There is more than 1 playlist with same name
-						fb.ShowPopupMessage('You have more than one playlist with the same name: ' + old_name + '\n' + 'Please delete any duplicates and leave only the one you want.'  + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
+						fb.ShowPopupMessage('You have more than one playlist with the same name: ' + oldName + '\n' + 'Please delete any duplicates and leave only the one you want.'  + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
 					} else {
 						let answer = popup.yes;
 						if (pls.isLocked) { // Safety check for locked files (but can be overridden)
@@ -159,16 +159,16 @@ function createMenuLeft(forcedIndex = -1) {
 			// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
 			menu.newEntry({entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
 				if (_isFile(pls.path)) {
-					const old_nameId = plman.GetPlaylistName(plman.ActivePlaylist);
-					const new_nameId = pls.nameId;
-					const new_name = pls.name;
-					var duplicated = plman.FindPlaylist(new_nameId);
+					const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
+					const newNameId = pls.nameId;
+					const newName = pls.name;
+					var duplicated = plman.FindPlaylist(newNameId);
 					if (duplicated !== -1) {
-						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + new_name + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 					} else {
-						list.updatePlman(new_nameId, old_nameId);
+						list.updatePlman(newNameId, oldNameId);
 						const bDone = list.updatePlaylist(z);
-						if (!bDone) {list.updatePlman(old_nameId, new_nameId);} // Reset change
+						if (!bDone) {list.updatePlman(oldNameId, newNameId);} // Reset change
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: bIsPlsActive  && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED});
@@ -281,7 +281,7 @@ function createMenuLeft(forcedIndex = -1) {
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			presets.forEach((preset) => {
 				const path = preset.path;
-				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)')
+				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 				const dsp = preset.dsp;
 				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 				const tf = preset.tf;
@@ -380,8 +380,8 @@ function createMenuRight() {
 							_restoreFile(list.deletedItems[i].path);
 							// Revert timestamps
 							let newPath = list.deletedItems[i].path.split('.').slice(0,-1).join('.').split('\\');
-							const new_name = newPath.pop().split('_ts_')[0];
-							newPath = newPath.concat([new_name]).join('\\') + list.deletedItems[i].extension;
+							const newName = newPath.pop().split('_ts_')[0];
+							newPath = newPath.concat([newName]).join('\\') + list.deletedItems[i].extension;
 							_renameFile(list.deletedItems[i].path, newPath);
 							list.update(false, true); // Updates path..
 						}
@@ -484,7 +484,7 @@ function createMenuRightTop() {
 				return;
 			}
 			// Update property to save between reloads
-			list.properties['playlistPath'][1] = input
+			list.properties['playlistPath'][1] = input;
 			list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
 			list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
 			list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
@@ -738,7 +738,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Auto-Saving
-			menu.newEntry({menuName: menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + ' ms)', func: () => {
+			menu.newEntry({menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Save changes within foobar playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoSave'][1]), true));}
 				catch(e) {return;}
@@ -751,7 +751,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return (Number(list.properties['autoSave'][1]) !== 0 ? 1 : 0);});
 		}
 		{	// Auto-Loading
-			menu.newEntry({menuName: menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + ' ms)', func: () => {
+			menu.newEntry({menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoUpdate'][1]), true));}
 				catch(e) {return;}
@@ -764,7 +764,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return (Number(list.properties['autoUpdate'][1]) !== 0 ? 1 : 0);});
 		}
 		{	// Auto-Backup
-			menu.newEntry({menuName: menuName, entryText: 'Auto-backup interval...\t(' + (isInt(list.properties['autoBack'][1]) ? list.properties['autoBack'][1] : '\u221E') + ' ms)', func: () => {
+			menu.newEntry({menuName, entryText: 'Auto-backup interval...\t(' + (isInt(list.properties['autoBack'][1]) ? list.properties['autoBack'][1] : '\u221E') + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Backup to zip periodically the tracked folder.\nEnter integer number > ' + list.properties['autoBack'][2].range[1][0] + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)', window.Name, Number(list.properties['autoBack'][1]), true));}
 				catch(e) {return;}
@@ -990,7 +990,7 @@ function createMenuRightTop() {
 					}});
 					{
 						const subMenuNameThree = menu.newMenu('Set playlist format...' + nextId('invisible', true, false), subMenuNameTwo);
-						const options = ['', ...writablePlaylistFormats]
+						const options = ['', ...writablePlaylistFormats];
 						options.forEach((extension) => {
 							menu.newEntry({menuName: subMenuNameThree, entryText: extension.length ? extension : '(original)', func: () => {
 								if (extension !== preset.extension) {
@@ -1061,7 +1061,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}});
 				});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'})
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
 					list.properties['converterPreset'][1] = properties.converterPreset[1];
 					overwriteProperties(list.properties);
@@ -1384,7 +1384,7 @@ function createMenuRightFilter(buttonKey) {
 				menu.newEntry({entryText: item, func: () => {
 					// Switch buttons if they are duplicated
 					const buttonsArr = Object.entries(buttonsPanel.buttons);
-					const idx = buttonsArr.findIndex((pair) => {return pair[0] !== buttonKey && pair[1].method === item;})
+					const idx = buttonsArr.findIndex((pair) => {return pair[0] !== buttonKey && pair[1].method === item;});
 					if (idx !== -1) {buttonsPanel.buttons[buttonsArr[idx][0]].method = buttonsPanel.buttons[buttonKey].method;}
 					// Set new one
 					buttonsPanel.buttons[buttonKey].method = item;

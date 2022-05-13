@@ -78,4 +78,4 @@ if (conLog && conLog.length && conLogMaxSize && console.log) {
 		consoleLog(...arguments);
 	};
 	console.checkSize();
-};
+}

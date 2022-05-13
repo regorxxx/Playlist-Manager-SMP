@@ -31,7 +31,7 @@ function getPrevPls() {
 
 function getPrevPlsName() {
 	const prevPls = getPrevPls();
-	return prevPls !== -1 ? plman.GetPlaylistName(prevPls) : '-None-'
+	return prevPls !== -1 ? plman.GetPlaylistName(prevPls) : '-None-';
 }
 
 // Menus
@@ -68,12 +68,12 @@ function onPlaylistSwitch() {
 		plsHistory.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
 	} else {initplsHistory();}
 }
-if (on_playlist_switch) {
+if (typeof on_playlist_switch !== 'undefined') {
 	const oldFunc = on_playlist_switch;
 	on_playlist_switch = function() {
 		oldFunc();
 		onPlaylistSwitch();
-	}
+	};
 } else {var on_playlist_switch = onPlaylistSwitch;}
 
 function onPlaylistsChanged() {
@@ -100,7 +100,7 @@ if (on_playlists_changed) {
 
 
 function onSelectionChanged() {
-	if (!plsHistory.length) {initplsHistory()}
+	if (!plsHistory.length) {initplsHistory();}
 }
 if (on_selection_changed) {
 	const oldFunc = on_selection_changed;
