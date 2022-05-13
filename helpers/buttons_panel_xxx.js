@@ -45,7 +45,7 @@ buttonsPanel.buttons = {}; // Global list
 // Others (internal use)
 buttonsPanel.oldButtonCoordinates = {x: 0, y: 0, w: 0, h: 0}; // To store coordinates of previous buttons when drawing
 buttonsPanel.tooltipButton = new _tt(null, 'Segoe UI', _scale(10), 1200);  // Global tooltip
-buttonsPanel.g_down = false;
+buttonsPanel.gDown = false;
 buttonsPanel.curBtn = null;
 
 function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.config.orientation , recalc = true) {
@@ -64,7 +64,7 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	const keys = ['x','y','w','h'];
 	const bFuncCoord = Object.fromEntries(keys.map((c) => {return [c, isFunction(coord[c])];}));
 	const iCoord = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? coord[c]() : coord[c]];}));
-	newCoordinates = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? () => {return old[c] + coord[c]()} : old[c] + iCoord[c]];}));
+	newCoordinates = Object.fromEntries(keys.map((c) => {return [c, bFuncCoord[c] ? () => {return old[c] + coord[c]();} : old[c] + iCoord[c]];}));
 	if (recalc) {
 		if (orientation === 'x') {old.x += iCoord.x + iCoord.w; old.h = Math.max(old.h, iCoord.h);}
 		else if (orientation === 'y') {old.y += iCoord.y + iCoord.h; old.w = Math.max(old.w, iCoord.w);}
@@ -72,7 +72,7 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	return newCoordinates;
 }
 
-function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, g_font_icon = _gdiFont('FontAwesome', 12)) {
+function themedButton(x, y, w, h, text, fonClick, state, gFont = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, gFontIcon = _gdiFont('FontAwesome', 12)) {
 	this.state = state ? state : buttonStates.normal;
 	this.x = x;
 	this.y = y;
@@ -80,24 +80,24 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 	this.h = h;
 	this.originalWindowWidth = window.Width;
 	this.g_theme = window.CreateThemeManager('Button');
-	this.g_font = g_font;
-	this.g_font_icon = g_font_icon;
+	this.gFont = gFont;
+	this.gFontIcon = gFontIcon;
 	this.description = description;
 	this.text = text;
-	this.textWidth  = isFunction(this.text) ? () => {return _gr.CalcTextWidth(this.text(), g_font);} : _gr.CalcTextWidth(this.text, g_font);
-	this.icon = this.g_font_icon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
-	this.iconWidth = isFunction(this.icon) ? () => {return _gr.CalcTextWidth(this.icon(), g_font_icon);} : _gr.CalcTextWidth(this.icon, g_font_icon);
+	this.textWidth  = isFunction(this.text) ? () => {return _gr.CalcTextWidth(this.text(), gFont);} : _gr.CalcTextWidth(this.text, gFont);
+	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+	this.iconWidth = isFunction(this.icon) ? () => {return _gr.CalcTextWidth(this.icon(), gFontIcon);} : _gr.CalcTextWidth(this.icon, gFontIcon);
 	this.fonClick = fonClick;
 	this.prefix = prefix; // This let us identify properties later for different instances of the same button, like an unique ID
 	this.descriptionWithID = isFunction(this.description) ? () => {return this.prefix ? this.prefix.replace('_','') + ': ' + this.description() : this.description();}: (this.prefix ? this.prefix.replace('_','') + ': ' + this.description : this.description); // Adds prefix to description, whether it's a func or a string
 	this.buttonsProperties = Object.assign({}, buttonsProperties); // Clone properties for later use
 
 	this.containXY = function (x, y) {
-		const x_calc = isFunction(this.x) ? this.x() : this.x;
-		const y_calc = isFunction(this.y) ? this.y() : this.y;
-		const w_calc = isFunction(this.w) ? this.w() : this.w;
-		const h_calc = isFunction(this.h) ? this.h() : this.h;
-		return (x_calc <= x) && (x <= x_calc + w_calc) && (y_calc <= y) && (y <= y_calc + h_calc );
+		const xCalc = isFunction(this.x) ? this.x() : this.x;
+		const yCalc = isFunction(this.y) ? this.y() : this.y;
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		return (xCalc <= x) && (x <= xCalc + wCalc) && (yCalc <= y) && (y <= yCalc + hCalc );
 	};
 
 	this.changeState = function (state) {
@@ -107,9 +107,9 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 	};
 
 	this.draw = function (gr) {
-		const w_calc = isFunction(this.w) ? this.w() : this.w;
-		const h_calc = isFunction(this.h) ? this.h() : this.h;
-		if (w_calc <= 0 || h_calc <= 0) {return;}
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		if (wCalc <= 0 || hCalc <= 0) {return;}
 		if (this.state === buttonStates.hide) {
 			return;
 		}
@@ -132,25 +132,25 @@ function themedButton(x, y, w, h, text, fonClick, state, g_font = _gdiFont('Sego
 				return;
 		}
 		
-		const x_calc = isFunction(this.x) ? this.x() : this.x;
-		const y_calc = isFunction(this.y) ? this.y() : this.y;
+		const xCalc = isFunction(this.x) ? this.x() : this.x;
+		const yCalc = isFunction(this.y) ? this.y() : this.y;
 		
-		this.g_theme.DrawThemeBackground(gr, x_calc, y_calc, w_calc, h_calc);
+		this.g_theme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
 		const offset = 10;
 		if (this.icon !== null) {
 			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
-			let textWidthCalculated = w_calc - iconWidthCalculated - offset;
+			let textWidthCalculated = wCalc - iconWidthCalculated - offset;
 			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
 			let textCalculated = isFunction(this.text) ? this.text() : this.text;
-			gr.GdiDrawText(iconCalculated, this.g_font_icon, buttonsPanel.config.textColor, x_calc + offset, y_calc, w_calc - iconWidthCalculated - offset, h_calc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
-			if (w_calc > iconWidthCalculated * 4 + offset * 4) {
-				gr.GdiDrawText(textCalculated, this.g_font, buttonsPanel.config.textColor, x_calc + iconWidthCalculated, y_calc, w_calc - offset, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			gr.GdiDrawText(iconCalculated, this.gFontIcon, buttonsPanel.config.textColor, xCalc + offset, yCalc, wCalc - iconWidthCalculated - offset, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
+			if (wCalc > iconWidthCalculated * 4 + offset * 4) {
+				gr.GdiDrawText(textCalculated, this.gFont, buttonsPanel.config.textColor, xCalc + iconWidthCalculated, yCalc, wCalc - offset, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			} else {
-				gr.GdiDrawText(textCalculated, this.g_font, buttonsPanel.config.textColor, x_calc + offset * 2 + iconWidthCalculated , y_calc, w_calc - offset * 3 - iconWidthCalculated, h_calc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+				gr.GdiDrawText(textCalculated, this.gFont, buttonsPanel.config.textColor, xCalc + offset * 2 + iconWidthCalculated , yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			}
 		} else {
 			let textCalculated = isFunction(this.text) ? this.text() : this.text;
-			gr.GdiDrawText(textCalculated, this.g_font, buttonsPanel.config.textColor, x_calc, y_calc, w_calc, h_calc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			gr.GdiDrawText(textCalculated, this.gFont, buttonsPanel.config.textColor, xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 		}
 	};
 
@@ -191,10 +191,10 @@ function on_mouse_move_buttn(x, y) {
 	buttonsPanel.curBtn = chooseButton(x, y);
 
 	if (old === buttonsPanel.curBtn) {
-		if (buttonsPanel.g_down) {
+		if (buttonsPanel.gDown) {
 			return;
 		}
-	} else if (buttonsPanel.g_down && buttonsPanel.curBtn && buttonsPanel.curBtn.state !== buttonStates.down) {
+	} else if (buttonsPanel.gDown && buttonsPanel.curBtn && buttonsPanel.curBtn.state !== buttonStates.down) {
 		buttonsPanel.curBtn.changeState(buttonStates.down);
 		window.Repaint();
 		return;
@@ -215,7 +215,7 @@ function on_mouse_move_buttn(x, y) {
 }
 
 function on_mouse_leave_buttn() {
-	buttonsPanel.g_down = false;
+	buttonsPanel.gDown = false;
 
 	if (buttonsPanel.curBtn) {
 		buttonsPanel.curBtn.changeState(buttonStates.normal);
@@ -224,7 +224,7 @@ function on_mouse_leave_buttn() {
 }
 
 function on_mouse_lbtn_down_buttn(x, y) {
-	buttonsPanel.g_down = true;
+	buttonsPanel.gDown = true;
 
 	if (buttonsPanel.curBtn) {
 		buttonsPanel.curBtn.changeState(buttonStates.down);
@@ -233,7 +233,7 @@ function on_mouse_lbtn_down_buttn(x, y) {
 }
 
 function on_mouse_lbtn_up_buttn(x, y) {
-	buttonsPanel.g_down = false;
+	buttonsPanel.gDown = false;
 
 	if (buttonsPanel.curBtn) {
 		buttonsPanel.curBtn.onClick();

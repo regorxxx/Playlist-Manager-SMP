@@ -82,14 +82,14 @@ function filterName() {
 			const options = ['All', ...list.tags()];
 			const idx = list.tagState.length === 1 ? options.indexOf(list.tagState[0]) : -1;
 			const name = idx !== -1 ? options[idx] : options[0];
-			const lines = _gr.EstimateLineWrap(name, this.g_font, this.w() - 50);
+			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...': name;
 		}
 		case 'Category': {
 			const options = ['All', ...list.categories()];
 			const idx = list.categoryState.length === 1 ? options.indexOf(list.categoryState[0]) : -1;
 			const name = idx !== -1 ? options[idx] : options[0];
-			const lines = _gr.EstimateLineWrap(name, this.g_font, this.w() - 50);
+			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...': name;
 		}
 	}

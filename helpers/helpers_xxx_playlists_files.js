@@ -21,7 +21,7 @@ const loadablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl','.strm','.
 
 // Retrieve system codepage
 if (!_isFile(folders.data + '\\systemCodePage.txt') || lastStartup() > lastModified(folders.data + '\\systemCodePage.txt')) {
-	_runCmd('CMD /C CHCP > ' + _q(folders.data + 'systemCodePage.txt'), true)
+	_runCmd('CMD /C CHCP > ' + _q(folders.data + 'systemCodePage.txt'), true);
 }
 const systemCodePage = _isFile(folders.data + '\\systemCodePage.txt') ? _open(folders.data + '\\systemCodePage.txt').split(': ').pop() : -1;
 
@@ -138,7 +138,7 @@ function savePlaylist(playlistIndex, playlistPath, ext = '.m3u8', playlistName =
 			playlist.meta = [
 				{uuid: (useUUID ? nextId(useUUID) : '')},
 				{locked: bLocked},
-				{category: category},
+				{category},
 				{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
 				{trackTags: (isArray(trackTags) ? JSON.stringify(trackTags) : '')},
 				{playlistSize: 0},
@@ -420,19 +420,19 @@ var libItemsRelPaths = {};
 
 // Calculate paths in x steps to not freeze the UI
 function precacheLibraryPaths(iSteps, iDelay) {
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const items = fb.GetLibraryItems().Convert();
 		const count = items.length;
 		const range = count / iSteps;
 		let libCopy = [...libItemsAbsPaths];
 		const promises = [];
 		for (let i = 1; i <= iSteps; i++) {
-			promises.push(new Promise(resolve => {
+			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
-						const items_i = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
-						// libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(items_i));
-						libCopy = libCopy.concat(fb.TitleFormat(pathTF).EvalWithMetadbs(items_i));
+						const iItems = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
+						// libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(iItems));
+						libCopy = libCopy.concat(fb.TitleFormat(pathTF).EvalWithMetadbs(iItems));
 						const progress = Math.round(i / iSteps * 100);
 						if (progress % 10 === 0) {console.log('Caching library paths ' + Math.round(progress) + '%.');}
 						if (libItemsAbsPaths.length === count) {new Error('already cached');}
@@ -455,7 +455,7 @@ async function precacheLibraryPathsAsync(iSteps = iStepsLibrary, iDelay = iDelay
 function precacheLibraryRelPaths(relPath) {
 	if (libItemsAbsPaths.length && relPath.length && (!libItemsRelPaths.hasOwnProperty(relPath) || !libItemsRelPaths[relPath].length)) {
 		libItemsRelPaths[relPath] = getRelPaths(libItemsAbsPaths, relPath);
-		console.log('precacheLibraryRelPaths: got rel paths (' + relPath + ') from ' + libItemsRelPaths[relPath].length + ' items.')
+		console.log('precacheLibraryRelPaths: got rel paths (' + relPath + ') from ' + libItemsRelPaths[relPath].length + ' items.');
 	}
 }
 
@@ -475,7 +475,7 @@ function getRelPaths(pathArr, relPath = '') {
 function getRelPath(itemPath, relPathSplit) {
 	let cache = '';
 	relPathSplit.forEach((folder) => {
-		const level = new RegExp(folder + '\\\\', 'i')
+		const level = new RegExp(folder + '\\\\', 'i');
 		cache = itemPath.replace(level, '');
 		if (itemPath === cache) {itemPath = '..\\' + cache;}
 		else {itemPath = cache;}

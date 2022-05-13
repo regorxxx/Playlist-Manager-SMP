@@ -34,7 +34,7 @@ const soFeatFile = folders.data + 'soFeatures.json';
 initCheckFeatures(soFeat);
 
 function getSoFeatures() {
-	const soFeat = {gecko: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true}
+	const soFeat = {gecko: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true};
 	const WshShell = new ActiveXObject('WScript.Shell');
 	const app = new ActiveXObject('Shell.Application');
 	let doc;
