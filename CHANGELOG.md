@@ -21,6 +21,7 @@
 - Exporting Playlists: new config only accessible via the properties panel to disable the popup and explorer window on exporting.
 - UI: added UI-only playlists color config on menus.
 - UI: added new option to darken/lighten background of alternate rows on the list.
+- UI: added presets to easily switch all the colors on the UI at the same time to pre-defined sets. Also added specific presets for Color Blindness (deuteranopia) and Grey Scale to improve accessibility, having special care with background / text contrast and playlist identification.
 ### Changed
 - Categories: entry to set playlist category has been reworked as a sub-menu which now displays all existing categories to easily reuse them, along an option to set it to none or adding a new one (the previous method).
 - Tags: entry to set playlist tags has been reworked as a sub-menu which now displays all existing tags to easily reuse them, along an option to set it to none or adding a new one (the previous method).
