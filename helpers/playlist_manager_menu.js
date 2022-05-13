@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/05/22
+//13/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1137,7 +1137,7 @@ function createMenuRightTop() {
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Font size
 			const subMenuName = menu.newMenu('Font size...', menuName);
-			if (panel.list_objects.length || panel.text_objects.length) {
+			if (panel.listObjects.length || panel.textObjects.length) {
 				const options = [...panel.fonts.sizes, 'Other...'];
 				const optionsLength = options.length;
 				options.forEach((item, index) => {
@@ -1148,7 +1148,7 @@ function createMenuRightTop() {
 								// Update property to save between reloads
 								panel.properties['fontSize'][1] = item;
 								overwriteProperties(panel.properties);
-								panel.font_changed();
+								panel.fontChanged();
 								window.Repaint();
 							}
 						} else {
@@ -1161,7 +1161,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							panel.properties['fontSize'][1] = input;
 							overwriteProperties(panel.properties);
-							panel.font_changed();
+							panel.fontChanged();
 							window.Repaint();
 						}
 					}});
@@ -1184,8 +1184,7 @@ function createMenuRightTop() {
 					if (i === 3) {list.colours.lockedPlaylistColour = utils.ColourPicker(window.ID, list.colours.lockedPlaylistColour);}
 					if (i === 4) {list.colours.selectedPlaylistColour = utils.ColourPicker(window.ID, list.colours.selectedPlaylistColour);}
 					// Update property to save between reloads
-					let coloursString = convertObjectToString(list.colours);
-					list.properties['listColours'][1] = coloursString;
+					list.properties.listColours[1] = convertObjectToString(list.colours);
 					overwriteProperties(list.properties);
 					list.checkConfig();
 					window.Repaint();
@@ -1200,9 +1199,9 @@ function createMenuRightTop() {
 					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
 						panel.colours.bCustomText = i !== 0;
 						// Update property to save between reloads
-						panel.properties['bCustomText'][1] = panel.colours.bCustomText;
+						panel.properties.bCustomText[1] = panel.colours.bCustomText;
 						overwriteProperties(panel.properties);
-						panel.colours_changed();
+						panel.coloursChanged();
 						window.Repaint();
 					}});
 				});
@@ -1211,9 +1210,9 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'Set custom colour...', func: () => {
 					panel.colours.customText = utils.ColourPicker(window.ID, panel.colours.customText);
 					// Update property to save between reloads
-					panel.properties['customText'][1] = panel.colours.customText;
+					panel.properties.customText[1] = panel.colours.customText;
 					overwriteProperties(panel.properties);
-					panel.colours_changed();
+					panel.coloursChanged();
 					window.Repaint();
 				}, flags: panel.colours.bCustomText ? MF_STRING : MF_GRAYED,});
 			}
@@ -1224,10 +1223,10 @@ function createMenuRightTop() {
 				options.forEach((item, i) => {
 					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
 						panel.colours.buttonsTextColor = i ? utils.ColourPicker(window.ID, panel.colours.buttonsTextColor) : RGB(0,0,0);
-						panel.properties['buttonsTextColor'][1] = panel.colours.buttonsTextColor;
+						panel.properties.buttonsTextColor[1] = panel.colours.buttonsTextColor;
 						// Update property to save between reloads
 						overwriteProperties(panel.properties);
-						panel.colours_changed();
+						panel.coloursChanged();
 						window.Repaint();
 					}});
 				});
@@ -1245,7 +1244,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							panel.properties['coloursMode'][1] = panel.colours.mode;
 							overwriteProperties(panel.properties);
-							panel.colours_changed();
+							panel.coloursChanged();
 							window.Repaint();
 						}});
 					});
@@ -1265,10 +1264,54 @@ function createMenuRightTop() {
 					panel.colours.bAltRowsColor = !panel.colours.bAltRowsColor;
 					panel.properties['bAltRowsColor'][1] = panel.colours.bAltRowsColor;
 					overwriteProperties(panel.properties);
-					panel.colours_changed();
+					panel.coloursChanged();
 					window.Repaint();
 				}});
 				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background color', void(0), () => {return panel.colours.bAltRowsColor;});
+			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{	// Presets
+				const subMenuSecondName = menu.newMenu('Presets...', subMenuName);
+				const presets = [ /*[autoPlaylistColour, smartPlaylistColour, uiPlaylistColour, lockedPlaylistColour, selectedPlaylistColour, standard text, buttons, background ]*/
+					{name: 'Color Blindness (light)', colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0]]},
+					{name: 'Color Blindness (dark)', colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2], colorBlind.black[2]]},
+					{name: 'sep'},
+					{name: 'Gray Scale (dark)', colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.white[0], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0], colorBlind.black[2], colorBlind.black[0]]},
+					{name: 'Gray Scale (light)', colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.black[0], colorBlind.black[1], colorBlind.black[2], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0]]},
+					{name: 'sep'},
+					{name: 'Dark theme', colors: [blendColours(RGB(157, 158, 163), RGB(...toRGB(0xFFFF629B)), 0.6), blendColours(RGB(157, 158, 163), RGB(...toRGB(0xFF65CC32)), 0.6), blendColours(RGB(157, 158, 163), RGB(...toRGB(0xFF00AFFD)), 0.8), RGB(...toRGB(0xFFDC143C)), RGB(...toRGB(0xFF0080C0)), RGB(170, 170, 170), RGB(0, 0, 0), RGB(30, 30, 30)]},
+					{name: 'sep'},
+					{name: 'Default'}
+				];
+				presets.forEach((preset) => {
+					if (preset.name.toLowerCase() === 'sep') {menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'}); return;}
+					menu.newEntry({menuName: subMenuSecondName, entryText: preset.name, func: () => {
+						if (preset.name.toLowerCase() === 'default') {
+							panel.properties.coloursMode[1] = panel.colours.mode = 0;
+							panel.properties.buttonsTextColor[1] = panel.colours.buttonsTextColor = RGB(0,0,0);
+							panel.properties.bCustomText[1] = panel.colours.bCustomText = false;
+							list.colours = {};
+						}
+						else {
+							panel.properties.coloursMode[1] = panel.colours.mode = 2;
+							panel.properties.customBackground[1] = panel.colours.custom_background = preset.colors[7];
+							panel.properties.buttonsTextColor[1] = panel.colours.buttonsTextColor = preset.colors[6];
+							panel.properties.bCustomText[1] = panel.colours.bCustomText = true;
+							panel.properties.customText[1] = panel.colours.customText = preset.colors[5];
+							list.colours.autoPlaylistColour = preset.colors[0];
+							list.colours.smartPlaylistColour = preset.colors[1];
+							list.colours.uiPlaylistColour = preset.colors[2];
+							list.colours.lockedPlaylistColour = preset.colors[3];
+							list.colours.selectedPlaylistColour = preset.colors[4];
+						}				
+						list.properties.listColours[1] = convertObjectToString(list.colours);
+						overwriteProperties(list.properties);
+						overwriteProperties(panel.properties);
+						panel.coloursChanged();
+						list.checkConfig();
+						window.Repaint();
+					}});
+				});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Reset all to default', func: () => {
@@ -1280,7 +1323,7 @@ function createMenuRightTop() {
 				panel.colours.bCustomText = false;
 				panel.properties['bCustomText'][1] = panel.colours.bCustomText;
 				panel.colours.buttonsTextColor = RGB(0,0,0);
-				panel.colours_changed();
+				panel.coloursChanged();
 				overwriteProperties(list.properties);
 				list.checkConfig();
 				window.Repaint();

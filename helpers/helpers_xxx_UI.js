@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/22
+//13/05/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -24,6 +24,14 @@ if (on_script_unload) {
 const WshShellUI = new ActiveXObject('WScript.Shell');
 const _bmp = gdi.CreateImage(1, 1);
 const _gr = _bmp.GetGraphics();
+
+// Color blindness presets
+const colorBlind = {
+	yellow:	[RGB(255,255,202), RGB(248,255,102), RGB(183,183,  0)],
+	blue:	[RGB(230,128,230), RGB(84, 53, 255), RGB(0,  0,  255)],
+	white:	[RGB(255,255,255), RGB(240,240,240), RGB(220,220,220)],
+	black:	[RGB(150,150,150), RGB(75 , 75, 75), RGB(0,   0,   0)]
+}
 
 // Cache
 const scaleDPI = {}; // Caches _scale() values;
