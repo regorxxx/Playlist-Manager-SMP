@@ -928,9 +928,10 @@ function rewriteXSPSort(pls, newSort) {
 		const order = XSP.getOrder(newSort);
 		const playlistPath = pls.path;
 		const bCache = xspCache.has(playlistPath);
+		let playlistText = '';
 		if (!bCache) {
-			var playlistText = _open(playlistPath);
-			if (playlistText.length) {
+			playlistText = _open(playlistPath);
+			if (playlistText && playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, '.xsp');
 				if (codePage !== -1) {playlistText = _open(playlistPath, codePage); if (!playlistText.length) {return bDone;}}
@@ -960,9 +961,10 @@ function rewriteXSPLimit(pls, newLimit) {
 	if (pls.extension === '.xsp') {
 		const playlistPath = pls.path;
 		const bCache = xspCache.has(playlistPath);
+		let playlistText = '';
 		if (!bCache) {
-			var playlistText = _open(playlistPath);
-			if (playlistText.length) {
+			playlistText = _open(playlistPath);
+			if (playlistText && playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, '.xsp');
 				if (codePage !== -1) {playlistText = _open(playlistPath, codePage); if (!playlistText.length) {return bDone;}}

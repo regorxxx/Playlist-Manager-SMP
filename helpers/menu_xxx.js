@@ -88,7 +88,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
-	}
+	};
 	this.newMenu(); // Default menu
 	
 	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
@@ -99,7 +99,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		entryArr.push({entryText, func, menuName, flags, bIsMenu: false});
 		return entryArr[entryArr.length -1];
-	}
+	};
 	
 	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFun) => {
 		const mType = typeof menuName, eAType = typeof entryTextA, eBType = typeof entryTextB;
@@ -110,13 +110,13 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		if (eBType === 'string' && entryTextB.indexOf('&') !== - 1) {entryTextB = entryTextB.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
-	}
+	};
 	
 	this.newCondEntry = ({entryText = '', condFunc}) => {
 		if (eTypeToStr.indexOf(typeof entryText) !== -1) {entryText = entryText.toString();}
 		entryArr.push({entryText, condFunc});
 		return entryArr[entryArr.length -1];
-	}
+	};
 	
 	// To retrieve elements
 	this.getNumEntries = () => {return entryArr.length;};
@@ -137,7 +137,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		if (isFunction(menuName)) {menuName = menuName();}
 		menuMap.set(menuName, window.CreatePopupMenu());
 		return menuMap.get(menuName);
-	}
+	};
 	
 	this.addToMenu = ({entryText = null, func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
 		if (entryText === 'sep' || entryText === 'separator') {menuMap.get(menuName).AppendMenuSeparator();}
@@ -184,7 +184,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			}
 			idxMap.set(idx, func);
 		}
-	}
+	};
 	
 	this.checkMenu = (menuName, entryTextA, entryTextB, idxFunc) => {
 		if (isFunction(menuName)) {menuName = menuName();}
@@ -201,11 +201,11 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 				return menuMap.get(menuName).CheckMenuItem(this.getIdx(entryNameA), idxFunc());
 			});
 		}
-	}
+	};
 	
 	this.concat = (menuObj) => {
 		entryArr = entryArr.concat(menuObj.getEntries());
-	}
+	};
 	
 	this.initMenu = (object, bindArgs = null /*{pos: -1, args: null}*/) => {
 		entryArrTemp = [...entryArr]; // Create backup to restore later
@@ -272,7 +272,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			}
 		}
 		return manualMenuArr;
-	}
+	};
 	// -->
 	
 	// Used to call the menus on callbacks, etc.
@@ -312,7 +312,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		// Clear all
 		this.clear();
 		return bSupressDefaultMenu;
-	}
+	};
 	
 	this.clear = (bForce = false) => {
 		// These should be always cleared and created again on every call
@@ -333,7 +333,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		if (bForce) {checkMenuArr = [];}
 		checkMenuArrTemp = [];
 		idx = 0;
-	}
+	};
 }
 
 // Helpers

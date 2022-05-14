@@ -85,51 +85,51 @@ function _popup({w = window.Width , h = window.Height, UI = 'MATERIAL', properti
 			this.icon.step = cyclicOffset(this.icon.step, 1, [0,count]);
 			setTimeout(() => {return window.Repaint();}, 400);
 		}
-	}
+	};
 	
 	this.enable = (bPaint = false, popText = '', ttText = '') => {
 		this.bEnabled = true;
 		if (popText && popText.length) {this.popText = popText;}
 		if (ttText && ttText.length) {this.ttText = ttText;}
 		if (bPaint) {window.Repaint();}
-	}
+	};
 	
 	this.disable = (bPaint = false) => {
 		this.bEnabled = false;
 		if (bPaint) {window.Repaint();}
-	}
+	};
 	
 	this.isEnabled = () => {
 		return this.bEnabled;
-	}
+	};
 	
 	this.setText = (popText = '') => {
 		return (this.popText = popText ? popText : '');
-	}
+	};
 	
 	this.setTooltipText = (ttText = '') => {
 		return (this.ttText = ttText ? ttText : '');
-	}
+	};
 	
 	this.trace = (x, y) => { // On panel
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
-	}
+	};
 	
 	this.move = (x, y) => {
 		if (this.trace(x, y)) {tooltip.SetValue(this.ttText);}
 		else {tooltip.Deactivate();}
 		return;
-	}
+	};
 	
 	this.leave = () => {
 		tooltip.Deactivate();
 		return;
-	}
+	};
 
 	this.resize = (w = window.Width, h = window.Height) => {
 		this.x = x * this.w / w;
 		this.y = y * this.h / h;
 		this.w = w;
 		this.h = h;
-	}
+	};
 }

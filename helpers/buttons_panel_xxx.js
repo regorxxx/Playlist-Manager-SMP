@@ -72,7 +72,7 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	return newCoordinates;
 }
 
-function themedButton(x, y, w, h, text, fonClick, state, gFont = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, gFontIcon = _gdiFont('FontAwesome', 12)) {
+function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, gFontIcon = _gdiFont('FontAwesome', 12)) {
 	this.state = state ? state : buttonStates.normal;
 	this.x = x;
 	this.y = y;
@@ -87,7 +87,7 @@ function themedButton(x, y, w, h, text, fonClick, state, gFont = _gdiFont('Segoe
 	this.textWidth  = isFunction(this.text) ? () => {return _gr.CalcTextWidth(this.text(), gFont);} : _gr.CalcTextWidth(this.text, gFont);
 	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
 	this.iconWidth = isFunction(this.icon) ? () => {return _gr.CalcTextWidth(this.icon(), gFontIcon);} : _gr.CalcTextWidth(this.icon, gFontIcon);
-	this.fonClick = fonClick;
+	this.func = func;
 	this.prefix = prefix; // This let us identify properties later for different instances of the same button, like an unique ID
 	this.descriptionWithID = isFunction(this.description) ? () => {return this.prefix ? this.prefix.replace('_','') + ': ' + this.description() : this.description();}: (this.prefix ? this.prefix.replace('_','') + ': ' + this.description : this.description); // Adds prefix to description, whether it's a func or a string
 	this.buttonsProperties = Object.assign({}, buttonsProperties); // Clone properties for later use
@@ -155,7 +155,7 @@ function themedButton(x, y, w, h, text, fonClick, state, gFont = _gdiFont('Segoe
 	};
 
 	this.onClick = function () {
-		this.fonClick && this.fonClick();
+		this.func && this.func();
 	};
 }
 
@@ -202,10 +202,11 @@ function on_mouse_move_buttn(x, y) {
 	
 	//Tooltip fix
 	if (old !== null) {
-		if (buttonsPanel.curBtn === null) {buttonsPanel.tooltipButton.Deactivate();} // Needed because tooltip is only activated/deactivated on redrawing... 
-															// otherwise it shows on empty spaces after leaving a button.
-		else if (old !== buttonsPanel.curBtn && old.description === buttonsPanel.curBtn.description) { 	// This forces redraw even if buttons have the same text!
-			buttonsPanel.tooltipButton.Deactivate();											// Updates position but tooltip becomes slower since it sets delay time to initial... 
+		// Needed because tooltip is only activated/deactivated on redrawing... otherwise it shows on empty spaces after leaving a button.
+		if (buttonsPanel.curBtn === null) {buttonsPanel.tooltipButton.Deactivate();}
+		// This forces redraw even if buttons have the same text! Updates position but tooltip becomes slower since it sets delay time to initial... 
+		else if (old !== buttonsPanel.curBtn && old.description === buttonsPanel.curBtn.description) { 	
+			buttonsPanel.tooltipButton.Deactivate();
 			buttonsPanel.tooltipButton.SetDelayTime(3, 0); //TTDT_INITIAL
 		} else {buttonsPanel.tooltipButton.SetDelayTime(3, buttonsPanel.tooltipButton.oldDelay);} 
 	}
@@ -237,7 +238,8 @@ function on_mouse_lbtn_up_buttn(x, y) {
 
 	if (buttonsPanel.curBtn) {
 		buttonsPanel.curBtn.onClick();
-		if (buttonsPanel.curBtn) { // Solves error if you create a new Whsell Popup (buttonsPanel.curBtn becomes null) after pressing the button and firing buttonsPanel.curBtn.onClick()
+		// Solves error if you create a new Whsell Popup (buttonsPanel.curBtn becomes null) after pressing the button and firing buttonsPanel.curBtn.onClick()
+		if (buttonsPanel.curBtn) {
 			buttonsPanel.curBtn.changeState(buttonStates.hover);
 			window.Repaint();
 		}
