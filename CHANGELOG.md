@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.6](#050-beta6---2022-05-19)
 - [0.5.0-beta.5](#050-beta5---2022-05-04)
 - [0.5.0-beta.4](#050-beta4---2022-04-27)
 - [0.5.0-beta.3](#050-beta3---2022-04-13)
@@ -17,6 +18,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.6] - 2022-05-19
 ### Added
 - Exporting Playlists: new config only accessible via the properties panel to disable the popup and explorer window on exporting.
 - UI: added UI-only playlists color config on menus.
@@ -374,7 +381,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.5...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.6...HEAD
+[0.5.0-beta.6]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.5...v0.5.0-beta.6
 [0.5.0-beta.5]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.4...v0.5.0-beta.5
 [0.5.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.3...v0.5.0-beta.4
 [0.5.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.2...v0.5.0-beta.3
