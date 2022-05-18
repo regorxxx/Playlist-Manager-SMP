@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/05/22
+//15/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -496,8 +496,8 @@ function clonePlaylistInUI(list, z) {
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
 			bDone = true;
 		}
+		if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');}
 	}
-	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');}
 	return bDone;
 }
 

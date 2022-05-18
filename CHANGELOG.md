@@ -31,6 +31,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Crash when cloning playlist to UI.
 
 ## [0.5.0-beta.5] - 2022-05-04
 ### Added
