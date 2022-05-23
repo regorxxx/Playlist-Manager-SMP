@@ -51,7 +51,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Playlist unique IDs. You can have multiple playlists with same name on the UI and bound to different files. (configurable)
   * If changing UUIDs config while having playlists already loaded, then new config will be used whenever they get updated.
   * You can manually force new UUID config just by renaming the files.
-* Show playlist size on the list. (some limits apply for .fpl playlist files (\*)) (configurable)
+* Show playlist size on the list. (some limits apply for .fpl playlist files [^1]) (configurable)
   * All (refresh AutoPlaylists queries)
   * Only standard playlist
   * No size
@@ -100,13 +100,13 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Category filters: playlist may be filtered by category (like virtual folders), multiple selection allowed in a menu.
   * When lists are being filtered by category, an indicator is shown in the header text.
 * Additional tools for playlists:
-  * Check -on demand- for dead items on playlists files (without having to load them on foobar!). (\*\*)
-  * Check -on demand- for duplicate items on playlists files (without having to load them on foobar!). (\*\*\*)
+  * Check -on demand- for dead items on playlists files (without having to load them on foobar!). [^2]
+  * Check -on demand- for duplicate items on playlists files (without having to load them on foobar!). [^3]
     * Before adding new tracks to a playlist file, duplicates may be filtered from selected tracks on real time.
   * Check -on demand- for playlists with mixed relative and absolute paths.
-  * Check -on demand- for playlists with items not present on library. [(\*\*\*\*)](\*\*\*\*)
+  * Check -on demand- for playlists with items not present on library. [^4]
   * Check -on demand- for playlists with blank lines.
-* 4 different writable formats. (some limits apply for .pls playlist files (\*\*\*\*\*)) (configurable)
+* 4 different writable formats. (some limits apply for .pls playlist files [^5]) (configurable)
 * Filter (configurable) and sorting gets saved between reloads.
 * RecycleBin: deleting and restoring.
   * Uses timestamps to uniquely identify files: no collisions with other files within the RecycleBin.
@@ -126,15 +126,15 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Other scripts integration:
   * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
 
-(\*) .fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
+[^1]: .fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
 
-(\*\*) also recognizes streams (http and https) and skips them.
+[^2]: also recognizes streams (http and https) and skips them.
 
-(\*\*\*) also recognizes subsongs from a same physical file (for example iso files).
+[^3]: also recognizes subsongs from a same physical file (for example iso files).
 
-(\*\*\*\*) also recognizes relative paths on playlists (with or without .\) when trying to match files against the library.
+[^4]: also recognizes relative paths on playlists (with or without .\) when trying to match files against the library.
 
-(\*\*\*\*\*) .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
+[^5]: .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
  
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
