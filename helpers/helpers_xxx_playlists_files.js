@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/04/22
+//23/05/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -15,9 +15,29 @@ include('helpers_xxx_playlists_files_xsp.js');
 */
 
 // Playlists descriptors
-const writablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.xspf']); // Playlist formats which are writable
-const readablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.strm','.xspf','.xsp']); // Playlist formats which are readable to retrieve paths
-const loadablePlaylistFormats = new Set(['.m3u','.m3u8','.pls','.fpl','.strm','.xspf','.xsp']); // ^laylist formats which are loadable into the manager (shown as files)
+const playlistDescriptors = {
+	// Physical items
+	'.m3u':			{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf15c', iconBg: null},
+	'.m3u8':		{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf15c', iconBg: null},
+	'.pls':			{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf15c', iconBg: null},
+	'.xspf':		{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf1e0', iconBg: null},
+	'.xsp':			{					isReadable: true,	isLoadable: true,	icon: '\uf0d0', iconBg: null},
+	'.strm':		{					isReadable: true,	isLoadable: true,	icon: '\uf0f6', iconBg: null},
+	'.fpl':			{										isLoadable: true,	icon: '\uf1c6', iconBg: null},
+	// Abstract items
+	'.ui':			{															icon: '\uf26c', iconBg: null},
+	autoPlaylist:	{															icon: '\uf0e7', iconBg: '\uf15b'},
+	blank:			{															icon: '\uf15b', iconBg: null},
+	locked:			{															icon: '\uf023', iconBg: null}
+};
+const writablePlaylistFormats = new Set(); // Playlist formats which are writable
+const readablePlaylistFormats = new Set(); // Playlist formats which are readable to retrieve paths
+const loadablePlaylistFormats = new Set(); // Playlist formats which are loadable into the manager (shown as files)
+Object.keys(playlistDescriptors).forEach((key) => {
+	if (playlistDescriptors[key].isWritable) {writablePlaylistFormats.add(key);}
+	if (playlistDescriptors[key].isReadable) {readablePlaylistFormats.add(key);}
+	if (playlistDescriptors[key].isLoadable) {loadablePlaylistFormats.add(key);}
+});
 
 // Retrieve system codepage
 if (!_isFile(folders.data + '\\systemCodePage.txt') || lastStartup() > lastModified(folders.data + '\\systemCodePage.txt')) {

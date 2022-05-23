@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/05/22
+//23/05/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -254,8 +254,6 @@ function on_paint(gr) {
 
 function on_size() {
 	panel.size();
-	list.w = panel.w - (LM * 2);
-	list.h = panel.h - TM;
 	list.size();
 	on_size_buttn();
 	pop.resize();

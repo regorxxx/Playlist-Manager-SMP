@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/22
+//23/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1255,7 +1255,7 @@ function createMenuRightTop() {
 						// Update property to save between reloads
 						panel.properties['customBackground'][1] = panel.colours.custom_background;
 						overwriteProperties(panel.properties);
-						panel.colours_changed();
+						panel.coloursChanged();
 						window.Repaint();
 					}, flags: panel.colours.mode === 2 ? MF_STRING : MF_GRAYED,});
 				}
