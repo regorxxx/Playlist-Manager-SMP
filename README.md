@@ -5,10 +5,10 @@
 ![GitHub](https://img.shields.io/github/license/regorxxx/Playlist-Manager-SMP)  
 A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
 
-![Animation2](https://user-images.githubusercontent.com/83307074/116749102-f8b7b900-a9ef-11eb-9054-08fcb349813d.gif)
+![PLM_1](https://user-images.githubusercontent.com/83307074/169891736-d774fad4-e7c2-4943-992a-ceff7c955d86.gif)
 
 ## Features
-![Animation3](https://user-images.githubusercontent.com/83307074/116749322-4d5b3400-a9f0-11eb-9e55-cdd91370f624.gif)
+![PLM_3](https://user-images.githubusercontent.com/83307074/169891784-9a8bea2a-ebc7-4a53-a10b-7b1abb397bfa.gif)
 
 * Manages Playlist files and AutoPlaylists.  
   * Playlist files are linked to physical files (.m3u8, .m3u, .pls, .xspf, .xsp or .fpl).
@@ -136,7 +136,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 
 [^5]: .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
  
-![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
+![PLM_2](https://user-images.githubusercontent.com/83307074/169891819-bd5ce698-deac-4344-bad7-6540da17d414.gif)
 
 ### Current limitations
 .fpl playlists (native format) are read only and can not be auto-saved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).  
