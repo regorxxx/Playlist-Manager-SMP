@@ -20,7 +20,7 @@ function _list(x, y, w, h) {
 	// Icons
 	const gfontIconChar = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 4), 0);};
 	const gfontIconCharAlt = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 6), 0);};
-	const iconCharHeader = '\uf03a';
+	const iconCharHeader = chars.folderOpenBlack;
 	const iconCharPlaylistWidth = Object.fromEntries(Object.entries(playlistDescriptors).map((pair) => {return [pair[0], _gr.CalcTextWidth(pair[1].icon, gfontIconChar())];}));
 	var maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
 	
@@ -79,13 +79,15 @@ function _list(x, y, w, h) {
 		const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
 		const offsetHeader = yOffset / 10;
 		const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
-		const iconHeaderColour = blendColours(panel.colours.highlight, panelBgColor, 0.1);
+		const iconHeaderColour = this.headerButton.inFocus ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : blendColours(panel.colours.highlight, panelBgColor, 0.1);
 		const iconW = gr.CalcTextWidth(catIcon, gfontHeader);
 		const iconH = gr.CalcTextHeight(catIcon, gfontHeader);
 		const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.title);
-		gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColour, LM, 0, iconW, TM, CENTRE);
+		const maxHeaderH = Math.max(iconH, headerTextH);
+		[this.headerButton.x, this.headerButton.y, this.headerButton.w, this.headerButton.h] = [LM, (maxHeaderH - iconH) / 2, iconW, iconH] // Update button coords
+		gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColour, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colours.highlight, LM + iconW + 5, 0, panel.w - (LM * 2), TM, LEFT);
-		let lineY = (headerTextH > iconH) ? (headerTextH % 2 ? headerTextH + 2 : headerTextH + 1) : (iconH % 2 ? iconH + 2 : iconH + 1);
+		let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
 		lineY += offsetHeader;
 		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colours.highlight);
 		headerW = LM + iconW + 5;
@@ -114,7 +116,7 @@ function _list(x, y, w, h) {
 		// List
 		const playingChar = String.fromCharCode(9654);
 		const loadedChar = String.fromCharCode(9644);
-		const standardPlaylistIconColour = iconHeaderColour;
+		const standardPlaylistIconColour = blendColours(panel.colours.highlight, panelBgColor, 0.1);
 		const lockedPlaylistIconColour = blendColours(standardPlaylistIconColour, this.colours.lockedPlaylistColour, 0.8);
 		const autoPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.autoPlaylistColour, 0.8);
 		const smartPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.smartPlaylistColour, 0.8);
@@ -287,6 +289,10 @@ function _list(x, y, w, h) {
 		return x > 0 && x < panel.w && y > 0 && y < headerH;
 	}
 	
+	this.traceHeaderButton = (x, y) => { // On Header
+		return x > this.headerButton.x && x < this.headerButton.x + this.headerButton.w && y > this.headerButton.y && y < this.headerButton.y + this.headerButton.h;
+	}
+	
 	this.wheel = (s, bPaint = true) => {
 		if (this.trace(this.mx, this.my) || !bPaint) {
 			if (this.items > this.rows) {
@@ -368,25 +374,32 @@ function _list(x, y, w, h) {
 		this.my = y;
 		if (bMoved) {window.SetCursor(IDC_ARROW);}
 		if (this.traceHeader(x,y)) { // Tooltip for header
-			let headerText = this.playlistsPath;
-			headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
-			headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
-			const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum);}, 0); // Counts autoplaylists and smart playlists
-			headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
-			// Tips
-			if (this.bShowTips) {
-				headerText += '\n----------------------------------------------';
-				headerText += '\n(R. Click for config menus)';
-				headerText += '\n(L. Click to highlight active\\playing playlist)';
-				headerText += '\n(Double Click to cycle categories)';
+			if (this.traceHeaderButton(x,y)) {
+				window.SetCursor(IDC_HAND);
+				this.tooltip.SetValue('Open playlists folder', true);
+				this.headerButton.inFocus = true;
+			} else {
+				this.headerButton.inFocus = false;
+				let headerText = this.playlistsPath;
+				headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
+				headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
+				const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum);}, 0); // Counts autoplaylists and smart playlists
+				headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
+				// Tips
+				if (this.bShowTips) {
+					headerText += '\n----------------------------------------------';
+					headerText += '\n(R. Click for config menus)';
+					headerText += '\n(L. Click to highlight active\\playing playlist)';
+					headerText += '\n(Double Click to cycle categories)';
+				}
+				this.tooltip.SetValue(headerText, true);
 			}
-			this.tooltip.SetValue(headerText, true);
 			this.index = -1;
 			this.inRange = false;
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
 			window.Repaint(); // Removes selection indicator
-		}
+		} else {this.headerButton.inFocus = false;}
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			this.index = Math.floor((y - this.y - yOffset) / panel.row_height) + this.offset;
@@ -545,7 +558,11 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
-			this.showCurrPls() || this.showCurrPls(true);
+			if (this.traceHeaderButton(x,y)) {
+				_explorer(this.playlistsPath);
+			} else {
+				this.showCurrPls() || this.showCurrPls(true);
+			}
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
@@ -2486,6 +2503,7 @@ function _list(x, y, w, h) {
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel(1); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel(-1); });
+	this.headerButton = {x: 0, y: 0, w: 0, h: 0, inFocus: false};
 	this.init();
 }
 
