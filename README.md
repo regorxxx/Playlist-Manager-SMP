@@ -119,22 +119,18 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Empty / not empty playlist indicators. To be used as fallback when size is not shown.
   * Font Size (configurable).
   * Separators between different names/categories (configurable).
+  * Ready to use presets. Also specific ones for Color Blindness (deuteranopia) and Grey Scale
+  * Icons for different playlists types.
   * Colors for different playlists types, status, text, background and selection (configurable).
-* Shortcuts:
-  * Double Click: Load playlist / Make bound playlist active
-  * Left Click: playlist contextual menu
-  * Right Click: panel menu
-  * Ctrl + Left Click: Load playlist / Make bound playlist active
-  * Shift + Left Click: Send current selection to playlist
-  * Ctrl + Shift + Left Click: Delete playlist
+* Shortcuts: modifiers allow to directly apply different actions on playlists. See manual.
 * Other scripts integration:
   * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
 
-(*) .fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.  
-(**) also recognizes streams (http and https) and skips them.
-(***) also recognizes subsongs from a same physical file (for example iso files).
-(****) also recognizes relative paths on playlists (with or without .\) when trying to match files against the library.
-(*****) .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
+(/*) .fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.  
+(/**) also recognizes streams (http and https) and skips them.
+(/***) also recognizes subsongs from a same physical file (for example iso files).
+(/****) also recognizes relative paths on playlists (with or without .\) when trying to match files against the library.
+(/*****) .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
  
 ![Animation1](https://user-images.githubusercontent.com/83307074/116749095-f6555f00-a9ef-11eb-9723-7229766bed90.gif)
 
