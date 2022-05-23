@@ -364,6 +364,7 @@ function _list(x, y, w, h) {
 		this.clearSelPlaylistCache();
 		this.up_btn.hover = false;
 		this.down_btn.hover = false;
+		this.headerButton.inFocus = false;
 		window.Repaint();
 	}
 	

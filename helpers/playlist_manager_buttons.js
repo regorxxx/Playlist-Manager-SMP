@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/22
+//23/05/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -113,10 +113,11 @@ function doFilter(parent) {
 		}
 		case 'Extension': {
 			const initial = list.extStates[0];
+			const default = list.constExtStates()[0];
 			list.extStates.rotate(1);
 			// Filter non present extensions
-			if (list.extStates[0] !== list.constExtStates()[0]) { 
-				while (!list.dataAll.some((pls) => {return pls.extension === list.extStates[0];})) {
+			if (list.extStates[0] !== default) { 
+				while (!list.dataAll.some((pls) => {return pls.extension === list.extStates[0] || list.extStates[0] === default;})) {
 					list.extStates.rotate(1);
 				}
 			}

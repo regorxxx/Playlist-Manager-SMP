@@ -2,7 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.5.0-beta.6](#050-beta6---2022-05-19)
+- [0.5.0-beta.6](#050-beta6---2022-05-23)
 - [0.5.0-beta.5](#050-beta5---2022-05-04)
 - [0.5.0-beta.4](#050-beta4---2022-04-27)
 - [0.5.0-beta.3](#050-beta3---2022-04-13)
@@ -23,7 +23,7 @@
 ### Removed
 ### Fixed
 
-## [0.5.0-beta.6] - 2022-05-19
+## [0.5.0-beta.6] - 2022-05-23
 ### Added
 - Exporting Playlists: new config only accessible via the properties panel to disable the popup and explorer window on exporting.
 - UI: added UI-only playlists color config on menus.
@@ -41,8 +41,9 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
-- Crash when cloning playlist to UI.
 - UI: small repaint glitches while scrolling.
+- UI: extension filter button skipping 'All' while cycling.
+- Crash when cloning playlist to UI.
 
 ## [0.5.0-beta.5] - 2022-05-04
 ### Added
