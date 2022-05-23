@@ -113,11 +113,11 @@ function doFilter(parent) {
 		}
 		case 'Extension': {
 			const initial = list.extStates[0];
-			const default = list.constExtStates()[0];
+			const defaultState = list.constExtStates()[0];
 			list.extStates.rotate(1);
 			// Filter non present extensions
-			if (list.extStates[0] !== default) { 
-				while (!list.dataAll.some((pls) => {return pls.extension === list.extStates[0] || list.extStates[0] === default;})) {
+			if (list.extStates[0] !== defaultState) { 
+				while (!list.dataAll.some((pls) => {return pls.extension === list.extStates[0] || list.extStates[0] === defaultState;})) {
 					list.extStates.rotate(1);
 				}
 			}
