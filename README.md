@@ -104,7 +104,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Check -on demand- for duplicate items on playlists files (without having to load them on foobar!). (\*\*\*)
     * Before adding new tracks to a playlist file, duplicates may be filtered from selected tracks on real time.
   * Check -on demand- for playlists with mixed relative and absolute paths.
-  * Check -on demand- for playlists with items not present on library. (\*\*\*\*)
+  * Check -on demand- for playlists with items not present on library. [(\*\*\*\*)](\*\*\*\*)
   * Check -on demand- for playlists with blank lines.
 * 4 different writable formats. (some limits apply for .pls playlist files (\*\*\*\*\*)) (configurable)
 * Filter (configurable) and sorting gets saved between reloads.
