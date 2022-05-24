@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.7](#050-beta7---2022-05-24)
 - [0.5.0-beta.6](#050-beta6---2022-05-23)
 - [0.5.0-beta.5](#050-beta5---2022-05-04)
 - [0.5.0-beta.4](#050-beta4---2022-04-27)
@@ -22,6 +23,14 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.5.0-beta.7] - 2022-05-24
+### Added
+### Changed
+### Removed
+### Fixed
+- UI: panel was not being shown properly on startup, required manual resizing after foobar init to work as intended (or manually reloading the panel).
+- UI: small repaint glitches while scrolling.
 
 ## [0.5.0-beta.6] - 2022-05-23
 ### Added
@@ -386,7 +395,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.6...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.7...HEAD
+[0.5.0-beta.7]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.6...v0.5.0-beta.7
 [0.5.0-beta.6]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.5...v0.5.0-beta.6
 [0.5.0-beta.5]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.4...v0.5.0-beta.5
 [0.5.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.3...v0.5.0-beta.4

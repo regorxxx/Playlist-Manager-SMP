@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/05/22
+//24/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -16,10 +16,9 @@ include('playlist_manager_helpers.js');
 include('..\\helpers-external\\keycode-2.2.0\\index.js');
 
 function _list(x, y, w, h) {
-	
 	// Icons
-	const gfontIconChar = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 4), 0);};
-	const gfontIconCharAlt = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - 6), 0);};
+	const gfontIconChar = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 8 : _scale(72) > 96 ? 6 : 4)), 0);}; // Icon may overlap on high DPI systems without this adjustment
+	const gfontIconCharAlt = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 10 : _scale(72) > 96 ? 8 : 6)), 0);};
 	const iconCharHeader = chars.folderOpenBlack;
 	const iconCharPlaylistWidth = Object.fromEntries(Object.entries(playlistDescriptors).map((pair) => {return [pair[0], _gr.CalcTextWidth(pair[1].icon, gfontIconChar())];}));
 	var maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
@@ -50,6 +49,7 @@ function _list(x, y, w, h) {
 		this.h = panel.h - this.y;
 		this.index = 0;
 		this.offset = 0;
+		if (oldH > 0 && this.h > 0) {yOffset = (_scale(6) + panel.row_height / 4) * (this.h / oldH);}
 		this.rows = Math.floor((this.h - _scale(24) - yOffset) / panel.row_height); // 24
 		this.up_btn.x = this.x + Math.round((this.w - _scale(12)) / 2);
 		this.down_btn.x = this.up_btn.x;
@@ -58,7 +58,6 @@ function _list(x, y, w, h) {
 		this.headerTextUpdate();
 		for (let key in iconCharPlaylistWidth) {iconCharPlaylistWidth[key] = _gr.CalcTextWidth(playlistDescriptors[key].icon, gfontIconChar());}
 		maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
-		if (oldH) {yOffset = (_scale(6) + panel.row_height / 4) * (this.h / oldH);}
 	}
 	
 	this.headerText = window.Name;
@@ -145,7 +144,7 @@ function _list(x, y, w, h) {
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
 				}
 				animation.bHighlight = false;
-				animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(this.x, this.y, this.w, this.h);}, 600);
+				animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h);}, 600);
 			} else if (!this.lastCharsPressed.bDraw) {
 				idxHighlight = -1;
 			}
@@ -274,7 +273,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			this.lastCharsPressed.bDraw = false;
-			animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(this.x, this.y, this.w, this.h);}, 600);
+			animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h);}, 600);
 		}
 		// Up/down buttons
 		this.up_btn.paint(gr, this.up_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
@@ -340,18 +339,18 @@ function _list(x, y, w, h) {
 		if (idx === -1) {
 			idxHighlight = -1;
 			animation.bHighlight = false;
-			window.RepaintRect(this.x, this.y, this.w, this.h);
+			window.RepaintRect(0, this.y, window.Width, this.h);
 			return false;
 		} else if (idxHighlight === idx) {
 			animation.bHighlight = true;
-			window.RepaintRect(this.x, this.y, this.w, this.h);
+			window.RepaintRect(0, this.y, window.Width, this.h);
 			return true;
 		} else {
 			idxHighlight = idx;
 			animation.bHighlight = true;
 			this.simulateWheelToIndex(idx, currentItemIndex > 0 ? currentItemIndex : 1, this.lastOffset ? this.lastOffset : 1);
 			currentItemIndex = idx;
-			window.RepaintRect(this.x, this.y, this.w, this.h);
+			window.RepaintRect(0, this.y, window.Width, this.h);
 			return true;
 		}
 	}
