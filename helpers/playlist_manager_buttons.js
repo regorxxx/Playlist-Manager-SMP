@@ -96,8 +96,6 @@ function filterName() {
 	}
 }
 function doFilter(parent) {
-	// let t0 = Date.now();
-	// let t1 = 0;
 	switch (parent.method) {
 		case 'Playlist type': {
 			list.autoPlaylistStates.rotate(1);
@@ -137,8 +135,6 @@ function doFilter(parent) {
 			break;
 		}
 	}
-	// t1 = Date.now();
-	// console.log('Call to Filter took ' + (t1 - t0) + ' milliseconds.');
 }
 function filterTooltip() {
 	let ttText = '';
