@@ -120,7 +120,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Font Size (configurable).
   * Separators between different names/categories (configurable).
   * Ready to use presets. Also specific ones for Color Blindness (deuteranopia) and Grey Scale
-  * Icons for different playlists types.
+  * Icons for different playlists types (configurable). Can also be hidden.
   * Colors for different playlists types, status, text, background and selection (configurable).
 * Shortcuts: modifiers allow to directly apply different actions on playlists. See manual.
 * Other scripts integration:
