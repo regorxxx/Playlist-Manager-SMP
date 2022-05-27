@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/05/22
+//27/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1103,6 +1103,35 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowSep ? 0 : 1);});
 		}
+		{	// Name/category sep
+			const subMenuName = menu.newMenu('Set playlist icons...', menuName);
+			const options = ['Yes: icons + playlist name','No: only playlist name'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Show playlist icons?', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bShowIcons = (i === 0) ? true : false;
+					list.properties['bShowIcons'][1] = list.bShowIcons;
+					overwriteProperties(list.properties);
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bShowIcons ? 0 : 1);});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Personalize playlist icons...', func: () => {
+				let input;
+				try {input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name, list.properties['playlistIcons'][1], true);} 
+				catch(e) {return;}
+				if (!input.length) {input = '{}';}
+				if (input === list.properties['playlistIcons'][1]) {return;}
+				try {JSON.parse(input)} catch(e) {return;}
+				list.playlistIcons = JSON.parse(input);
+				list.properties['playlistIcons'][1] = input;
+				overwriteProperties(list.properties);
+				list.updatePlaylistIcons();
+				window.Repaint();
+			}});
+		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Tooltips
 			const subMenuName = menu.newMenu('Show usage info on tooltips...', menuName);
@@ -1153,7 +1182,7 @@ function createMenuRightTop() {
 							}
 						} else {
 							let input;
-							try {input = Number(utils.InputBox(window.ID, 'Input a number :', window.Name, panel.fonts.size, true));} 
+							try {input = Number(utils.InputBox(window.ID, 'Input a number:', window.Name, panel.fonts.size, true));} 
 							catch(e) {return;}
 							if (input === panel.fonts.size) {return;}
 							if (!Number.isSafeInteger(input)) {return;}

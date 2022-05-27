@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/05/22
+//27/05/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -41,7 +41,20 @@ function _list(x, y, w, h) {
 	var animation = {bHighlight: false, fRepaint: null};
 	
 	// Global tooltip
-	this.tooltip = new _tt(null, void(0), void(0), 600);  
+	this.tooltip = new _tt(null, void(0), void(0), 600); 
+	
+	this.updatePlaylistIcons = () => {
+		for (let key in iconCharPlaylistWidth) {
+			let icon = playlistDescriptors[key].icon;
+			if (this.playlistIcons.hasOwnProperty(key)) {
+				if (this.playlistIcons[key].hasOwnProperty('icon')) {
+					icon = this.playlistIcons[key].icon ? String.fromCharCode(parseInt(this.playlistIcons[key].icon, 16)) : null;
+				}
+			}
+			iconCharPlaylistWidth[key] = icon ? _gr.CalcTextWidth(icon, gfontIconChar()) : 0;
+		}
+		maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
+	}
 	
 	this.size = () => {
 		const oldW = this.w, oldH = this.h;
@@ -56,8 +69,7 @@ function _list(x, y, w, h) {
 		this.up_btn.y = this.y + _scale(1);
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
 		this.headerTextUpdate();
-		for (let key in iconCharPlaylistWidth) {iconCharPlaylistWidth[key] = _gr.CalcTextWidth(playlistDescriptors[key].icon, gfontIconChar());}
-		maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
+		this.updatePlaylistIcons();
 	}
 	
 	this.headerText = window.Name;
@@ -211,13 +223,27 @@ function _list(x, y, w, h) {
 			else if (extension === '.xsp') {playlistColour = this.colours.smartPlaylistColour; iconColour = smartPlaylistIconColour;}
 			else if (extension === '.ui') {playlistColour = this.colours.uiPlaylistColour; iconColour = uiPlaylistIconColour;}
 			if (this.data[currIdx].size === 0) {extension = 'blank';}
-			if (playlistDescriptors[extension].iconBg) {
-				gr.GdiDrawText(playlistDescriptors[extension].iconBg, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
-				gr.GdiDrawText(playlistDescriptors[extension].icon, iconFontAlt, blendColours(panelBgColor, iconColour, 0.2), this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
-			} else {
-				gr.GdiDrawText(playlistDescriptors[extension].icon, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+			if (this.bShowIcons) {
+				let icon = playlistDescriptors[extension].icon;
+				let iconBg = playlistDescriptors[extension].iconBg;
+				if (this.playlistIcons.hasOwnProperty(extension)) {
+					if (this.playlistIcons[extension].hasOwnProperty('icon')) {
+						icon = this.playlistIcons[extension].icon ? String.fromCharCode(parseInt(this.playlistIcons[extension].icon, 16)) : null;
+					}
+					if (this.playlistIcons[extension].hasOwnProperty('iconBg')) {
+						iconBg = this.playlistIcons[extension].iconBg ? String.fromCharCode(parseInt(this.playlistIcons[extension].iconBg, 16)) : null;
+					}
+				}
+				if (iconBg) {
+					gr.GdiDrawText(iconBg, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					if (icon) {
+						gr.GdiDrawText(icon, iconFontAlt, blendColours(panelBgColor, iconColour, 0.2), this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					}
+				} else if (icon) {
+					gr.GdiDrawText(icon, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+				}
 			}
-			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColour, this.x + maxIconWidth, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
+			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColour, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			// Add playing now indicator
 			let playlistDataTextRight = '';
 			if (fb.IsPlaying && plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[currIdx].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
@@ -292,8 +318,8 @@ function _list(x, y, w, h) {
 		return x > this.headerButton.x && x < this.headerButton.x + this.headerButton.w && y > this.headerButton.y && y < this.headerButton.y + this.headerButton.h;
 	}
 	
-	this.wheel = (s, bPaint = true) => {
-		if (this.trace(this.mx, this.my) || !bPaint) {
+	this.wheel = (s, bPaint = true, bForce = false) => {
+			if (this.trace(this.mx, this.my) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				let offset = this.offset - (s * 3); // Offset changes by 3 on every step
 				if (offset < 0) {
@@ -325,6 +351,11 @@ function _list(x, y, w, h) {
 				this.wheel(-1, false);
 				if (cache === this.offset) {break;}
 				cache = this.offset;
+			}
+			// Move a bit the list to center the search if possible....
+			if (this.index < (this.items - this.rows) && (this.offset + this.rows) >= this.index) {
+				this.offset -= 3;
+				if (this.offset <= 0) {this.offset = 0;}
 			}
 		}
 	}
@@ -502,7 +533,7 @@ function _list(x, y, w, h) {
 			this.lastOffset = this.offset;
 		}
 		currentItemIndex = this.lastIndex;
-		if (currentItemIndex >= this.data.length) {currentItemIndex = this.data.length - 1;}
+		if (currentItemIndex >= this.items) {currentItemIndex = this.items - 1;}
 		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
 		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
 		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
@@ -608,20 +639,20 @@ function _list(x, y, w, h) {
 		switch (k) {
 			// Scroll wheel
 			case VK_UP: {
-				this.wheel(1);
+				this.wheel(1, void(0), true);
 				return true;
 			}
 			case VK_DOWN: {
-				this.wheel(-1);
+				this.wheel(-1, void(0), true);
 				return true;
 			}
 			// Scroll entire pages
 			case VK_PGUP: {
-				this.wheel(this.rows / 3);
+				this.wheel(this.rows / 3, void(0), true);
 				return true;
 			}
 			case VK_PGDN: {
-				this.wheel(-this.rows / 3);
+				this.wheel(-this.rows / 3, void(0), true);
 				return true;
 			}
 			// Go to top/bottom
@@ -629,7 +660,7 @@ function _list(x, y, w, h) {
 				let offset = 0;
 				while (true) {
 					this.wheel(1, false);
-					if (offset === this.offset) {window.Repaint(); break;} else {offset = this.offset;}
+					if (offset === this.offset) {window.Repaint(); currentItemIndex = 0; break;} else {offset = this.offset;}
 				}
 				return true;
 			}
@@ -637,7 +668,7 @@ function _list(x, y, w, h) {
 				let offset = 0;
 				while (true) {
 					this.wheel(-1, false);
-					if (offset === this.offset) {window.Repaint(); break;} else {offset = this.offset;}
+					if (offset === this.offset) {window.Repaint(); currentItemIndex = this.items - 1; break;} else {offset = this.offset;}
 				}
 				return true;
 			}
@@ -2411,6 +2442,7 @@ function _list(x, y, w, h) {
 		let bDone = this.checkConfig();
 		this.update(false, true, void(0), true); // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
+		this.updatePlaylistIcons();
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
 	}
 	
@@ -2463,15 +2495,20 @@ function _list(x, y, w, h) {
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1].toLowerCase();
-	this.bShowSize = this.properties['bShowSize'][1];
+	// Playlist behavour
 	this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
 	this.bUseUUID = this.properties['bUseUUID'][1];
 	this.optionsUUID = () => {return ['Yes: Using invisible chars plus (*) indicator (experimental)','Yes: Using a-f chars','Yes: Using only (*) indicator','No: Only the name'];};
 	this.optionUUID = this.properties['optionUUID'][1];
 	this.bFplLock = this.properties['bFplLock'][1];
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
+	// UI
+	this.bShowSize = this.properties['bShowSize'][1];
 	this.bShowSep = this.properties['bShowSep'][1];
+	this.bShowIcons = this.properties['bShowIcons'][1];
 	this.bShowTips = this.properties['bShowTips'][1];
+	this.playlistIcons = JSON.parse(this.properties['playlistIcons'][1]);
+	// Panel behavior
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
 	this.bAutoLockTag = this.properties['bAutoLockTag'][1];

@@ -1,12 +1,12 @@
 ﻿'use strict';
-//23/05/22
+//27/05/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0', features: {drag_n_drop: false}});
+window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0', features: {drag_n_drop: false, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -116,7 +116,16 @@ var properties = {
 	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state'],
 	bSavingDefExtension		: ['Try to save playlists always as default format?', true],
 	bNetworkPopup			: ['Playlist Manager on network drive: Fired once', false],
-	bOpenOnExport			: ['Open folder on export actions?', true]
+	bOpenOnExport			: ['Open folder on export actions?', true],
+	bShowIcons				: ['Show playlist icons?', true],
+	playlistIcons			: ['Playlist icons codes (Font Awesome)', JSON.stringify(
+		Object.fromEntries(Object.entries(playlistDescriptors).map((plsPair) => {
+			const key = plsPair[0];
+			const icon = plsPair[1].icon ? plsPair[1].icon.charCodeAt(0).toString(16) : null;
+			const iconBg = plsPair[1].iconBg ? plsPair[1].iconBg.charCodeAt(0).toString(16) : null;
+			return [key, {icon, iconBg}];
+		})))
+	]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

@@ -20,9 +20,12 @@
 
 ## [Unreleased][]
 ### Added
+- UI: configuration menu to show/hide playlist icons.
+- UI: configuration menu to edit icons per playlist type. Use default one when a extension icon is not set.
 ### Changed
 ### Removed
 ### Fixed
+- UI: fix to quick-searching not jumping to found playlist was it was on last rows.
 
 ## [0.5.0-beta.7] - 2022-05-24
 ### Added
