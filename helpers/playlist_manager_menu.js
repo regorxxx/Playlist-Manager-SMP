@@ -1372,8 +1372,14 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bDynamicMenus = i === 0 ? true : false;
+					if (list.bDynamicMenus) {
+						fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Panel properties (\'edit\' at top)', window.Name);
+					}
 					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
 					overwriteProperties(list.properties);
+					// And create / delete menus
+					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();} 
+					else {list.deleteMainMenuDynamic();}
 				}, flags});
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDynamicMenus ? 0 : 1);});

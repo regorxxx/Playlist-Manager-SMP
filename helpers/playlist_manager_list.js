@@ -1793,8 +1793,8 @@ function _list(x, y, w, h) {
 				});
 				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp], this.replacer, '\t'), this.bBOM); // No BOM
 			}
-			this.createMainMenuDynamic();
-			this.exportPlaylistsInfo();
+			if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo();}
+			else if (this.mainMenuDynamic.length) {this.deleteMainMenuDynamic();}
 		}
 		
 		this.addToData = (objectPlaylist) => {
@@ -2432,13 +2432,13 @@ function _list(x, y, w, h) {
 		}
 		
 		this.createMainMenuDynamic = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerentries.json'} = {}) => {
-			// if (getInstancesByKey('Playlist Manager').size > 1) {fb.ShowPopupMessage('Multiple Playlist Manager panels have been found.\nWhen using dynamic main menus, all the panels must have different "Panel names" to work.\n\nPres Shift + Win + R. Click to open the Panel menu and click on "Configure panel...". At "Panel Name" click on "Edit" and edit accordingly.');}
 			this.deleteMainMenuDynamic();
 			let currId = this.mainMenuDynamic.length;
+			const bToFile = file && file.length;
 			try {
 				const listExport = {};
 				const listMenuTypes = {};
-				const data = _jsonParseFile(file, convertCharsetToCodepage('UTF-8')) || {};
+				const data = bToFile ? _jsonParseFile(file, convertCharsetToCodepage('UTF-8')) || {} : {};
 				const wName = window.Name;
 				const menusPls = [
 					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: []			, skipProp: []},
@@ -2486,7 +2486,9 @@ function _list(x, y, w, h) {
 					currId++;
 				});
 				data[wName] = listExport;
-				return _save(file, JSON.stringify(data, null, '\t'));
+				// Don try to export for ajquery-xxx integration when it isn't installed
+				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !_isFolder(file.split('\\').slice(0, -1).join('\\'))) {return true;}
+				return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
 			} catch (e) {console.log('this.createMainMenuDynamic: unknown error'); console.log(e.message);}
 			return false;
 		}
@@ -2497,6 +2499,9 @@ function _list(x, y, w, h) {
 		}
 		
 		this.exportPlaylistsInfo = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json'} = {}) => {
+			const bToFile = file && file.length;
+			// Don try to export for ajquery-xxx integration when it isn't installed
+			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFolder(file.split('\\').slice(0, -1).join('\\'))) {return false;}
 			try {
 				const data = _jsonParseFile(file, convertCharsetToCodepage('UTF-8')) || {};
 				const wName = window.Name;
@@ -2578,8 +2583,10 @@ function _list(x, y, w, h) {
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-		this.createMainMenuDynamic();
-		this.exportPlaylistsInfo();
+		if (this.bDynamicMenus) {
+			this.createMainMenuDynamic();
+			this.exportPlaylistsInfo();
+		}
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
