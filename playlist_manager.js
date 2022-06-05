@@ -1,12 +1,12 @@
 ﻿'use strict';
-//27/05/22
+//02/06/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0', features: {drag_n_drop: false, grab_focus: true}});
+window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0-beta8', features: {drag_n_drop: false, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -21,6 +21,8 @@ include('helpers\\helpers_xxx_file_zip.js');
 include('helpers\\popup_xxx.js');
 include('helpers\\helpers_xxx_instances.js');
 include('helpers\\playlist_history.js')
+
+checkCompatible('1.6.1');
 
 // Cache
 let plmInit = {};
@@ -125,7 +127,8 @@ var properties = {
 			const iconBg = plsPair[1].iconBg ? plsPair[1].iconBg.charCodeAt(0).toString(16) : null;
 			return [key, {icon, iconBg}];
 		})))
-	]
+	],
+	bDynamicMenus			: ['Show dynamic menus?', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -251,7 +254,7 @@ function on_mouse_rbtn_up(x, y) {
 
 function on_mouse_wheel(s) {
 	if (pop.isEnabled()) {return;}
-	list.wheel(s);
+	list.wheel({s});
 }
 
 function on_paint(gr) {
@@ -314,6 +317,68 @@ function on_notify_data(name, info) {
 	}
 }
 
+// Main menu commands
+function on_main_menu_dynamic(id) {
+	if (list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
+		const menu = list.mainMenuDynamic[id];
+		let bDone = false;
+		switch (menu.type.toLowerCase()){
+			case 'load playlist': {
+				const idx = [...menu.arg];
+				idx.forEach((i) => {list.loadPlaylistOrShow(i, true);});
+				bDone = true;
+				break;
+			}
+			case 'lock playlist': {
+				const idx = [...menu.arg];
+				idx.forEach((i) => {switchLock(list, i, true);});
+				bDone = true;
+				break;
+			}
+			case 'delete playlist': {
+				const idx = [...menu.arg];
+				idx.forEach((i) => {list.removePlaylist(i, true);});
+				bDone = true;
+				break;
+			}
+			case 'clone in ui': {
+				const idx = [...menu.arg];
+				idx.forEach((i) => {clonePlaylistInUI(list, i, true);});
+				bDone = true;
+				break;
+			}
+			case 'send selection': {
+				const idx = [...menu.arg];
+				idx.forEach((i) => {list.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bAlsoHidden: true});});
+				bDone = true;
+				break;
+			}
+			case 'manual refresh': {
+				createMenuRight().btn_up(-1,-1, null, 'Manual refresh');
+				bDone = true;
+				break;
+			}
+			case 'new playlist (empty)': {
+				let name =  'New playlist';
+				if (list.dataAll.some((pls) => {return pls.name === name;})) {
+					name += ' ' + _p(list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(name)) {count++;} return count;}, 0));
+				}
+				list.add({bEmpty: true, name, bShowPopups: false});
+				bDone = true;
+				break;
+			}
+			case 'new playlist (ap)': {
+				if (plman.ActivePlaylist === -1) {return;}
+				const name = plman.GetPlaylistName(plman.ActivePlaylist);
+				list.add({bEmpty: false, name, bShowPopups: false});
+				bDone = true;
+				break;
+			}
+		}
+		console.log('on_main_menu_dynamic: ' + (bDone ? menu.name :JSON.stringify(menu) + ' not found'));
+	}
+}
+
 // function on_drag_over(action, x, y, mask) { // Tracks movement for index selecting inside the panel
 	// if (buttonsPanel.curBtn === null) {
 		// list.move(x, y);
@@ -338,7 +403,7 @@ function on_playlist_items_reordered(playlistIndex, oldName = null) {
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_reordered, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
 	// Update
-	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
+	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
 }
 
 function on_playlist_items_removed(playlistIndex, oldName = null) {
@@ -346,7 +411,7 @@ function on_playlist_items_removed(playlistIndex, oldName = null) {
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
 	// Update
-	debouncedUpdate ? debouncedUpdate(playlistIndex, true) : null;
+	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
 }
   
 function on_playlist_items_added(playlistIndex, oldName = null) {
@@ -354,7 +419,7 @@ function on_playlist_items_added(playlistIndex, oldName = null) {
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
 	// Update
-	if (debouncedUpdate) {debouncedUpdate(playlistIndex, true);}
+	if (debouncedUpdate) {debouncedUpdate({playlistIndex, bCallback: true});}
 	else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
 		if (list.bAutoTrackTagAlways) {list.updatePlaylistOnlyTracks(playlistIndex);}
 		else if (plman.IsAutoPlaylist(playlistIndex)) {

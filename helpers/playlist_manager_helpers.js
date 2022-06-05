@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/05/22
+//05/06/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -311,28 +311,33 @@ function setCategory(category, list, z) {
 	return bDone;
 }
 
-function switchLock(list, z) {
+function switchLock(list, z, bAlsoHidden = false) {
+	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+		console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+		return false;
+	}
 	let bDone = false;
-	const boolText = list.data[z].isLocked ? ['true','false'] : ['false','true'];
-	if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl' || list.data[z].extension === '.strm' || list.data[z].extension === '.xsp') {
-		list.editData(list.data[z], {isLocked: !list.data[z].isLocked});
+	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
+	const boolText = pls.isLocked ? ['true','false'] : ['false','true'];
+	if (pls.isAutoPlaylist || pls.extension === '.fpl' || pls.extension === '.strm' || pls.extension === '.xsp') {
+		list.editData(pls, {isLocked: !pls.isLocked});
 		list.update(true, true);
 		list.filter();
 		bDone = true;
 	} else {
-		const name = list.data[z].name;
-		const path = list.data[z].path;
+		const name = pls.name;
+		const path = pls.path;
 		if (_isFile(path)) {
 			// Backup
 			const backPath = path + '.back';
 			_copyFile(path, backPath);
 			delayAutoUpdate();
 			let reason = -1;
-			if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM);}
-			else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="locked">' + boolText[0],'<meta rel="locked">' + boolText[1], list.bBOM);}
+			if (pls.extension === '.m3u' || pls.extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#LOCKED:' + boolText[0],'#LOCKED:' + boolText[1], list.bBOM);}
+			else if (pls.extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="locked">' + boolText[0],'<meta rel="locked">' + boolText[1], list.bBOM);}
 			if (!bDone && reason === 1) {
-				bDone = rewriteHeader(list, z);
-				if (bDone) {switchLock(list, z); return;}
+				bDone = rewriteHeader(list, z, bAlsoHidden);
+				if (bDone) {switchLock(list, z, bAlsoHidden); return;}
 			}
 			if (!bDone) {
 				fb.ShowPopupMessage('Error changing lock status on playlist file: ' + name + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
@@ -340,7 +345,7 @@ function switchLock(list, z) {
 				console.log('Playlist manager: Restoring backup...');
 			} else {
 				if (_isFile(backPath)) {_deleteFile(backPath);}
-				list.editData(list.data[z], {isLocked: !list.data[z].isLocked});
+				list.editData(pls, {isLocked: !pls.isLocked});
 				list.update(true, true);
 				list.filter();
 			}
@@ -351,47 +356,52 @@ function switchLock(list, z) {
 	return bDone;
 }
 
-function rewriteHeader(list, z) {
+function rewriteHeader(list, z, bAlsoHidden = false) {
+	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+		console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+		return false;
+	}
 	let bDone = false;
-	if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {
-		let fileText = _open(list.data[z].path);
-		const codePage = checkCodePage(fileText, list.data[z].extension);
-		if (codePage !== -1) {fileText = _open(list.data[z].path, codePage); if (!fileText.length) {return false;}}
+	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
+	if (pls.extension === '.m3u' || pls.extension === '.m3u8') {
+		let fileText = _open(pls.path);
+		const codePage = checkCodePage(fileText, pls.extension);
+		if (codePage !== -1) {fileText = _open(pls.path, codePage); if (!fileText.length) {return false;}}
 		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
 		const idx = fileText.findIndex((line) => {return line.startsWith('#EXTINF:') || !line.startsWith('#');});
 		if (idx !== -1) {
 			const newHeader = [
 				'#EXTM3U',
 				'#EXTENC:UTF-8',
-				'#PLAYLIST:' + list.data[z].name,
-				'#UUID:' + list.data[z].id,
-				'#LOCKED:' + list.data[z].isLocked,
-				'#CATEGORY:' + list.data[z].category,
-				'#TAGS:' + (isArrayStrings(list.data[z].tags) ? list.data[z].tags.join(';') : ''),
-				'#TRACKTAGS:' + (isArray(list.data[z].trackTags) ? JSON.stringify(list.data[z].trackTags) : ''),
-				'#PLAYLISTSIZE:' + list.data[z].size,
+				'#PLAYLIST:' + pls.name,
+				'#UUID:' + pls.id,
+				'#LOCKED:' + pls.isLocked,
+				'#CATEGORY:' + pls.category,
+				'#TAGS:' + (isArrayStrings(pls.tags) ? pls.tags.join(';') : ''),
+				'#TRACKTAGS:' + (isArray(pls.trackTags) ? JSON.stringify(pls.trackTags) : ''),
+				'#PLAYLISTSIZE:' + pls.size,
 			];
 			fileText.splice(0, idx, ...newHeader);
-			bDone = _save(list.data[z].path, fileText.join('\r\n'));
+			bDone = _save(pls.path, fileText.join('\r\n'));
 		}
-	} else if (list.data[z].extension === '.xspf') {
-		let fileText = _open(list.data[z].path);
-		const codePage = checkCodePage(fileText, list.data[z].extension);
-		if (codePage !== -1) {fileText = _open(list.data[z].path, codePage); if (!fileText.length) {return false;}}
+	} else if (pls.extension === '.xspf') {
+		let fileText = _open(pls.path);
+		const codePage = checkCodePage(fileText, pls.extension);
+		if (codePage !== -1) {fileText = _open(pls.path, codePage); if (!fileText.length) {return false;}}
 		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
 		const idx = fileText.findIndex((line) => {return line.indexOf('<trackList>') !== -1;});
 			if (idx >= 2) {
 			const newHeader = [
-				'	<title>' + list.data[z].name + '</title>',
-				'	<meta rel="uuid">' + list.data[z].id + '</meta>',
-				'	<meta rel="locked">' + list.data[z].isLocked + '</meta>',
-				'	<meta rel="category">' + list.data[z].category + '</meta>',
-				'	<meta rel="tags">' + (isArrayStrings(list.data[z].tags) ? list.data[z].tags.join(';') : '') + '</meta>',
-				'	<meta rel="trackTags">' + (isArray(list.data[z].trackTags) ? JSON.stringify(list.data[z].trackTags) : '') + '</meta>',
-				'	<meta rel="playlistSize">' + list.data[z].size + '</meta>',
+				'	<title>' + pls.name + '</title>',
+				'	<meta rel="uuid">' + pls.id + '</meta>',
+				'	<meta rel="locked">' + pls.isLocked + '</meta>',
+				'	<meta rel="category">' + pls.category + '</meta>',
+				'	<meta rel="tags">' + (isArrayStrings(pls.tags) ? pls.tags.join(';') : '') + '</meta>',
+				'	<meta rel="trackTags">' + (isArray(pls.trackTags) ? JSON.stringify(pls.trackTags) : '') + '</meta>',
+				'	<meta rel="playlistSize">' + pls.size + '</meta>',
 			];
 			fileText.splice(2, idx - 2, ...newHeader);
-			bDone = _save(list.data[z].path, fileText.join('\r\n'));
+			bDone = _save(pls.path, fileText.join('\r\n'));
 		}
 	}
 	return bDone;
@@ -473,7 +483,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 		return false;
 	}
 	if (remDupl && remDupl.length && do_remove_duplicates) {do_remove_duplicates(null, null, remDupl);}
-	const objectPlaylist = list.add(false); // Create playlist from active playlist
+	const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
 	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
 	if (bDone) {
 		if (list.properties.bOpenOnExport[1]) {_explorer(objectPlaylist.path);}
@@ -482,9 +492,13 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z) {
+function clonePlaylistInUI(list, z, bAlsoHidden = false) {
+	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+		console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+		return false;
+	}
 	let bDone = false;
-	const pls = list.data[z];
+	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found

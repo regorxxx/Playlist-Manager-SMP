@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/22
+//02/06/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -61,7 +61,7 @@ function createMenuLeft(forcedIndex = -1) {
 		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 		menu.newEntry({entryText: 'Send selection to playlist', func: () => {
 			if (selItems && selItems.Count) {
-				list.sendSelectionToPlaylist(z, true);
+				list.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true});
 			}
 		}, flags: !bIsAutoPls && !bIsLockPls && (bWritableFormat || bIsPlsUI) && selItems.Count ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
@@ -152,7 +152,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (pls.isLocked) { // Safety check for locked files (but can be overridden)
 							answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
 						}
-						if (answer === popup.yes) {list.updatePlaylist(z);}
+						if (answer === popup.yes) {list.updatePlaylist({playlistIndex: z});}
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED});
@@ -167,7 +167,7 @@ function createMenuLeft(forcedIndex = -1) {
 						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 					} else {
 						list.updatePlman(newNameId, oldNameId);
-						const bDone = list.updatePlaylist(z);
+						const bDone = list.updatePlaylist({playlistIndex: z});
 						if (!bDone) {list.updatePlman(oldNameId, newNameId);} // Reset change
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
@@ -236,7 +236,7 @@ function createMenuLeft(forcedIndex = -1) {
 				cloneAsAutoPls(list, z);
 			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export as json file...', func: () => {
-				const path = list.exportJson(z);
+				const path = list.exportJson({idx: z});
 				if (_isFile(path)) {_explorer(path);}
 			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			if (pls.extension === '.xsp') {
@@ -324,11 +324,11 @@ function createMenuRight() {
 	menu.clear(true); // Reset one every call
 	// Entries
 	{ // New Playlists
-		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add(true);}});
+		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add({bEmpty: true});}});
 		menu.newEntry({entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
 		menu.newEntry({entryText: 'Add new Smart Playlist...', func: () => {list.addSmartplaylist();}});
 		menu.newEntry({entryText: 'sep'});
-		menu.newEntry({entryText: 'Create new playlist file from active playlist...', func: () => {list.add(false);}});
+		menu.newEntry({entryText: 'Create new playlist file from active playlist...', func: () => {list.add({bEmpty: false});}});
 		if (plman.IsAutoPlaylist(plman.ActivePlaylist)) {
 			menu.newEntry({entryText: 'Create new AutoPlaylist from active playlist...', func: () => {
 				const pls = {name: plman.GetPlaylistName(plman.ActivePlaylist)};
@@ -399,7 +399,7 @@ function createMenuRight() {
 			}});
 			menu.newEntry({entryText: 'Export playlists as json file...', func: () => {
 				let answer = WshShell.Popup('Export only AutoPlaylists (yes) or both AutoPlaylists and other playlists -.fpl & .xsp- (no)?', 0, window.Name, popup.question + popup.yes_no);
-				const path = list.exportJson(-1, answer === popup.yes ? false : true); // All
+				const path = list.exportJson({idx: -1, bAllExt: answer === popup.yes ? false : true},); // All
 				if (_isFile(path)) {_explorer(path);}
 			}});
 		}
@@ -1359,6 +1359,26 @@ function createMenuRightTop() {
 			}});
 		}
 	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Integration
+		const menuName = menu.newMenu('Integration');
+		{	// Dynamic menus
+			const flags = isCompatible('1.6.1') ? MF_STRING : MF_GRAYED;
+			const subMenuName = menu.newMenu('Create dynamic menus...', menuName);
+			const options = ['Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...', 'No: don\'t integrate the panel in main menu'];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'File\\Spider Monkey Panel\\Script commands:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					list.bDynamicMenus = i === 0 ? true : false;
+					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
+					overwriteProperties(list.properties);
+				}, flags});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDynamicMenus ? 0 : 1);});
+		}
+	}
 	return menu;
 }
 
@@ -1430,7 +1450,7 @@ function createMenuRightFilter(buttonKey) {
 	menu.newEntry({entryText: 'sep'});
 	{	// Restore
 		menu.newEntry({entryText: 'Restore all filters', func: () => {
-			list.filter({autoPlaylistState: list.constAutoPlaylistStates()[0], lockState: list.constLockStates()[0], extState: list.constExtStates()[0], tagState: list.tags(), categoryState: list.categories()});
+			list.resetFilter();
 		}});
 	}
 	return menu;
