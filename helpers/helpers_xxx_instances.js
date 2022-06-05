@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/12/21
+//29/05/22
 include('helpers_xxx.js');
 include('helpers_xxx_file.js');
 
@@ -48,7 +48,7 @@ function getInstances() {
 }
 
 function getInstancesByKey(key = window.Name) {
-	return getInstances()[key] || [];
+	return getInstances()[key] || new Set();
 }
 
 function removeInstance(key = window.Name) {
