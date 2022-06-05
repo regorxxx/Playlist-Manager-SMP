@@ -1,13 +1,14 @@
 ﻿'use strict';
-//03/02/22
+//05/06/22
 
 include('helpers_xxx_file.js');
+include('helpers_xxx_console.js');
 
 /* 
 	Panels
 */
 
-function isCompatible(requiredVersionStr = '1.4.0') {
+function isCompatible(requiredVersionStr = '1.6.1') {
 	let requiredVersion = requiredVersionStr.split('.');
 	let currentVersion = utils.Version.split('.'); // e.g. 0.1.0-alpha.2
 	if (currentVersion.length > 3) {
@@ -23,9 +24,9 @@ function isCompatible(requiredVersionStr = '1.4.0') {
 	return true;
 }
 
-function checkCompatible(requiredVersionStr = '1.4.0') {
+function checkCompatible(requiredVersionStr = '1.6.1') {
 	if (!isCompatible(requiredVersionStr)) {
-		fb.ShowPopupMessage('This script requires v' + requiredVersionStr + '. Current component version is v' + utils.Version + '.');
+		console.popup('This script requires v' + requiredVersionStr + '. Current component version is v' + utils.Version + '.', window.Name);
 	}
 }
 

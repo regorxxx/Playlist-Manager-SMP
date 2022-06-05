@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/05/22
+//05/06/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -64,8 +64,8 @@ console.checkSize = () => {
 };
 
 // Send to popup and console
-console.popup = (arg, popupName) => {
-	fb.ShowPopupMessage(arg, popupName);
+console.popup = (arg, popupName, bPopup = true) => {
+	if (bPopup) {fb.ShowPopupMessage(arg, popupName);}
 	arg.split('\n').forEach((line) => {
 		if (line && line.length) {console.log(line);}
 	});
