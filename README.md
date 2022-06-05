@@ -126,7 +126,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Other scripts integration:
   * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
   * [ajquery-xxx](https://github.com/regorxxx/ajquery-xxx): Online controller fully compatible with the manager, allows to browse playlist files, load, edit them, etc.
-  * SMP Dynamic menus: playlist actions are also available as main menu entries -if enabled-, which allows to bind them to keyboard shortcuts, toolbar buttons or executing then via command line.
+  * SMP Dynamic menus: playlist actions are also available as main menu entries -if enabled-, which allows to bind them to keyboard shortcuts, toolbar buttons or executing them using command line.
 
 [^1]: .fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it's set for the first time.
 
