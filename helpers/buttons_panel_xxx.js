@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/22
+//22/06/22
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -37,6 +37,7 @@ buttonsPanel.config = {
 	bToolbar: false, // Change this on buttons bars files to set the background color
 	textColor: RGB(0,0,0),
 	orientation: 'x',
+	bUseThemeManager: true,
 	partAndStateID: 1 // 1 standard button, 6 no bg/border button (+hover)
 };
 // Button objs
@@ -79,7 +80,7 @@ function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI'
 	this.w = w;
 	this.h = h;
 	this.originalWindowWidth = window.Width;
-	this.g_theme = window.CreateThemeManager('Button');
+	this.g_theme = buttonsPanel.config.bUseThemeManager ? window.CreateThemeManager('Button') : null;
 	this.gFont = gFont;
 	this.gFontIcon = gFontIcon;
 	this.description = description;
@@ -107,35 +108,83 @@ function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI'
 	};
 
 	this.draw = function (gr) {
+		// Check SO allows button theme
+		if (buttonsPanel.config.bUseThemeManager) {
+			if (!this.g_theme) { // may have been changed before drawing but initially not set
+				this.g_theme = window.CreateThemeManager('Button');
+				if (!this.g_theme) {
+					buttonsPanel.config.bUseThemeManager = false; 
+					console.log('Buttons: window.CreateThemeManager(\'Button\') failed, using experimental buttons');
+				}
+			}
+		}
+		// Draw?
 		const wCalc = isFunction(this.w) ? this.w() : this.w;
 		const hCalc = isFunction(this.h) ? this.h() : this.h;
 		if (wCalc <= 0 || hCalc <= 0) {return;}
-		if (this.state === buttonStates.hide) {
-			return;
+		if (this.state === buttonStates.hide) {return;}
+		// Themed Button states
+		if (buttonsPanel.config.bUseThemeManager) {
+			switch (this.state) {
+				case buttonStates.normal:
+					this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 1);
+					break;
+				case buttonStates.hover:
+					buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
+					this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 2);
+					break;
+				case buttonStates.down:
+					this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 3);
+					break;
+				case buttonStates.hide:
+					return;
+			}
 		}
-
-		switch (this.state) {
-			case buttonStates.normal:
-				this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 1);
-				break;
-
-			case buttonStates.hover:
-				buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
-				this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 2);
-				break;
-
-			case buttonStates.down:
-				this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 3);
-				break;
-
-			case buttonStates.hide:
-				return;
-		}
-		
+		// New coordinates must be calculated
 		const xCalc = isFunction(this.x) ? this.x() : this.x;
 		const yCalc = isFunction(this.y) ? this.y() : this.y;
-		
-		this.g_theme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
+		// Draw Button
+		if (buttonsPanel.config.bUseThemeManager) {this.g_theme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);}
+		else {
+			const x = xCalc + 1;
+			const y = yCalc;
+			const w =  wCalc - 4;
+			const h =  hCalc - 2;
+			const arc = 3;
+			gr.SetSmoothingMode(4); // Antialias for lines
+			switch (this.state) {
+				case buttonStates.normal:
+					gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+					gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+					gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+					gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+					break;
+				case buttonStates.hover:
+					buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
+					gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+					gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+					gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+					gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+					gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
+					gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(17,166,248,50));
+					break;
+				case buttonStates.down:
+					gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+					gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+					gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+					gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+					gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
+					gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(37,196,255,80));
+					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 3, RGBA(0,0,0,50));
+					break;
+				case buttonStates.hide:
+					return;
+			}
+			gr.SetSmoothingMode(0);
+		}
 		const offset = 10;
 		if (this.icon !== null) {
 			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
