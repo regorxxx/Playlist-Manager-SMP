@@ -833,7 +833,7 @@ function _list(x, y, w, h) {
 					return false;
 				});
 				// Add to pls
-				this.addTracksToPlaylist({playlistIndex: this.index, handleList: selItems, bAlsoHidden});
+				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden});
 				const index = plman.FindPlaylist(pls.nameId);
 				// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
 				if (index !== -1 && plman.ActivePlaylist !== index) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
@@ -2495,7 +2495,7 @@ function _list(x, y, w, h) {
 		
 		this.deleteMainMenuDynamic = () => {
 			this.mainMenuDynamic.forEach((pls, i) => {fb.UnregisterMainMenuCommand(i)});
-			this.mainMenuDynamic = [];
+			this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 		}
 		
 		this.exportPlaylistsInfo = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json'} = {}) => {

@@ -1373,7 +1373,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bDynamicMenus = i === 0 ? true : false;
 					if (list.bDynamicMenus) {
-						fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Panel properties (\'edit\' at top)', window.Name);
+						fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)', window.Name);
 					}
 					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
 					overwriteProperties(list.properties);
