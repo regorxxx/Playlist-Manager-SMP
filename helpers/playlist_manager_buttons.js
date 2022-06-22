@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/05/22
+//22/06/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -76,6 +76,7 @@ function filterName() {
 				case list.constAutoPlaylistStates()[0]: {return list.autoPlaylistStates[0];}
 				case list.constAutoPlaylistStates()[1]: {return 'Ap';}
 				case list.constAutoPlaylistStates()[2]: {return 'Pls';}
+				case list.constAutoPlaylistStates()[3]: {return 'UI';}
 			}
 			break;
 		}
