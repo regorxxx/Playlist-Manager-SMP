@@ -90,9 +90,17 @@ function capitalize(s) {
 function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
 	if (typeof s !== 'string') {return '';}
 	if (isArray(sep)) {
-		let copy = s;
-		for (const sep_i of sep) {copy = capitalizeAll(copy, sep_i, bJoinSep);}
-		return copy;
+		const copy = Array.from(s.toLowerCase());
+		const len = s.length;
+		for (const sep_i of sep) {
+			s = capitalizeAll(s, sep_i, bJoinSep);
+			for (let i = 0; i < len; i++) {
+				if (s[i] === s[i].toUpperCase()) {
+					copy[i] = s[i];
+				}
+			}
+		}
+		return copy.join('');
 	}
 	return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1).toLowerCase();}).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
 }

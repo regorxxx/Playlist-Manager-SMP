@@ -205,7 +205,7 @@ function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
 			return;
 		} else {
 			if (this.tooltip.Text !== value) {
-				this.tooltip.Text = value;
+				this.text = this.tooltip.Text = value;
 				this.Activate();
 			}
 			if (bForceActivate) {this.Activate();} // Only on force to avoid flicker

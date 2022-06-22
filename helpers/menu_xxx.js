@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/05/22
+//21/06/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -75,6 +75,14 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	
 	const eTypeToStr = ['number', 'boolean', 'object']; // Variable types converted to string for menu and entry names
 	
+	// To retrieve elements
+	this.getNumEntries = () => {return entryArr.length;};
+	this.getEntries = () => {return [...entryArr];}; // To get all menu entries, but those created by conditional menus are not set yet!
+	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => {this.initMenu(object, bindArgs); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
+	this.getMenus = () => {return [...menuArr];};
+	this.getMainMenuName = () => {return menuArr[0].menuName;};
+	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true);}) !== -1);};
+	
 	// To create new elements
 	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
 		const mType = typeof menuName, smType = typeof subMenuFrom;
@@ -85,6 +93,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
 		if (mType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (smType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (this.hasMenu(menuName)) {menuError({menuName, subMenuFrom, flags}); throw 'There is already another menu with same name';}
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
@@ -117,14 +126,6 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		entryArr.push({entryText, condFunc});
 		return entryArr[entryArr.length -1];
 	};
-	
-	// To retrieve elements
-	this.getNumEntries = () => {return entryArr.length;};
-	this.getEntries = () => {return [...entryArr];}; // To get all menu entries, but those created by conditional menus are not set yet!
-	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => {this.initMenu(object, bindArgs); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
-	this.getMenus = () => {return [...menuArr];};
-	this.getMainMenuName = () => {return menuArr[0].menuName;};
-	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true);}) !== -1);};
 	
 	// <-- Internal
 	this.getMenu = (menuName) => {return (!menuName) ? menuMap : menuMap.get(menuName);};
@@ -357,4 +358,23 @@ function isArray(checkKeys) {
 function menuError({} = {}) {
 	if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu');} 
 	else {Object.entries(...arguments).map((_) => {return _.join(': ');}).forEach((arg) => {console.log(arg);});}
+}
+
+// Adds a created menu to an already existing object (which is suppposed to have a this.trace function
+// Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
+function _attachedMenu({rMenu = null, lMenu = null} = {}) {
+	this.rMmenu = rMenu;
+	this.lMmenu = lMenu;
+	this.rbtn_up = (x,y) => {
+		if (this.trace(x,y) && rMenu) {
+			return this.rMmenu().btn_up(x, y);
+		}
+		return false;
+	}
+	this.lbtn_up = (x,y) => {
+		if (this.trace(x,y) && lMenu) {
+			return this.lMmenu().btn_up(x, y);
+		}
+		return false;
+	}
 }
