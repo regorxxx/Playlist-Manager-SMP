@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/22
+//27/06/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -584,7 +584,8 @@ function _list(x, y, w, h) {
 						if (mask === MK_CONTROL) { // Pressing control
 							this.loadPlaylistOrShow(z);
 						} else if (mask === MK_SHIFT) { // Pressing SHIFT
-							this.sendSelectionToPlaylist({playlistIndex: z});
+							this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});
+							window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 						} else if (mask === MK_SHIFT + MK_CONTROL) { // Pressing control + SHIFT
 							this.removePlaylist(z);
 						} else { // Only mouse
@@ -794,7 +795,7 @@ function _list(x, y, w, h) {
 		return bDup;
 	}
 	
-	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false} = {}) => {
+	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true} = {}) => {
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
 			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
 			return false;
@@ -833,7 +834,7 @@ function _list(x, y, w, h) {
 					return false;
 				});
 				// Add to pls
-				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden});
+				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
 				const index = plman.FindPlaylist(pls.nameId);
 				// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
 				if (index !== -1 && plman.ActivePlaylist !== index) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
@@ -847,7 +848,7 @@ function _list(x, y, w, h) {
 		this.selPaths = {pls: new Set(), sel: []};
 	}
 	
-	this.addTracksToPlaylist = ({playlistIndex, handleList, bAlsoHidden = false} = {}) => { // Sends tracks to playlist file directly
+	this.addTracksToPlaylist = ({playlistIndex, handleList, bAlsoHidden = false, bPaint = true} = {}) => { // Sends tracks to playlist file directly
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
 			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
 			return false;
@@ -880,7 +881,7 @@ function _list(x, y, w, h) {
 		console.log('Playlist Manager: drag n drop done.');
 		this.lastPlsLoaded.push(pls);
 		this.update(true, true); // We have already updated data before only for the variables changed
-		this.filter();
+		if (!bPaint) {this.filter();}
 		return true;
 	}
 	
@@ -1450,12 +1451,12 @@ function _list(x, y, w, h) {
 		if (bPaint) {window.Repaint();}
 	}
 	
-	this.update = (bJustPaint = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
+	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const oldCategories = this.categories();
 		// Saves currently selected item for later use
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
-		if (bJustPaint) {
+		if (bReuseData) {
 			// Recalculates from data
 			this.data = this.data.map((item) => {
 					if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal) + 8 + maxIconWidth;} 

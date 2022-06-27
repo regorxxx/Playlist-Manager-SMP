@@ -15,6 +15,7 @@ const chars = {
 	heartOff		: '\uf08A',
 	music			: '\uf001',
 	headphones 		: '\uf025',
+	speaker 		: '\uf028',
 	microphone 		: '\uf130',
 	noMicrophone 	: '\uf131',
 	minus			: '\uf068',
