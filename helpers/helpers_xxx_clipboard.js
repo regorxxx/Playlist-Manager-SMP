@@ -1,12 +1,12 @@
 ﻿'use strict';
-//07/10/21
+//28/06/22
 
 const doc = new ActiveXObject('htmlfile');
 
 function _getClipboardData() {
-	return doc.parentWindow.clipboardData.getData('Text');
+	return utils.GetClipboardText ? utils.GetClipboardText() : doc.parentWindow.clipboardData.getData('Text');
 }
 
 function _setClipboardData(value) {
-	return doc.parentWindow.clipboardData.setData('Text', value.toString());
+	return utils.SetClipboardText ?  utils.SetClipboardText(value.toString()) : doc.parentWindow.clipboardData.setData('Text', value.toString());
 }
