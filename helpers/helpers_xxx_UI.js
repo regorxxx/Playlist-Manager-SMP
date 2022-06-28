@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/22
+//28/06/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -190,16 +190,8 @@ function removeIdFromStr(nameId) {
 */
 
 function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
-	this.tooltip = window.Tooltip;
-	this.font = {name: font, size: fontSize};
-	this.tooltip.SetFont(font, fontSize);
-	this.width = width;
-	this.tooltip.SetMaxWidth(width);
-	this.text = this.tooltip.Text = value;
-	this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
-	this.bActive = false;
-	
-	this.SetValue = function (value,  bForceActivate = false) {
+	this.SetValue = (value,  bForceActivate = false) => {
+		if (!this.tooltip && !this.init()) {return;}
 		if (value === null) {
 			this.Deactivate();
 			return;
@@ -212,32 +204,57 @@ function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
 		}
 	};
 	
-	this.SetFont = function (font_name, font_size_pxopt, font_styleopt) {
-		this.tooltip.SetFont(font_name, font_size_pxopt, font_styleopt);
+	this.SetFont = (name, size, style = 0) => {
+		if (!this.tooltip && !this.init()) {return;}
+		this.tooltip.SetFont(name, size, style);
+		this.font = {name, size, style};
 	};
 	
-	this.SetMaxWidth = function (width) {
+	this.SetMaxWidth = (width) => {
+		if (!this.tooltip && !this.init()) {return;}
 		this.tooltip.SetMaxWidth(width);
+		this.width = width;
 	};
 	
-	this.Activate = function () {
+	this.Activate = () => {
+		if (!this.tooltip && !this.init()) {return;}
 		this.tooltip.Activate();
 		this.bActive = true;
 	};
 	
-	this.Deactivate = function () {
+	this.Deactivate = () => {
+		if (!this.tooltip && !this.init()) {return;}
 		this.tooltip.Deactivate();
 		this.bActive = false;
 	};
 	
-	this.SetDelayTime = function (type, time) {
+	this.SetDelayTime = (type, time) => {
+		if (!this.tooltip && !this.init()) {return;}
 		this.tooltip.SetDelayTime(type, time) ;
     };
 	
-	this.GetDelayTime = function (type) {
+	this.GetDelayTime = (type) => {
+		if (!this.tooltip && !this.init()) {return;}
 		this.tooltip.GetDelayTime(type) ;
 	};
-
+	
+	this.init = () => {
+		this.tooltip = window.Tooltip;
+		if (!this.tooltip) {doOnce('tooltip fail', console.log)('Tooltip failed to initialize'); return false;} // Workaround for tooltip bug
+		if (utils.CheckFont(this.font.name)) {this.SetFont(this.font.name, this.font.size);} // Workaround for missing fonts
+		this.SetMaxWidth(this.width);
+		this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
+		this.tooltip.Text = this.text;
+		return true;
+	}
+	
+	this.tooltip = null;
+	this.width = width;
+	this.text = value;
+	this.font = {name: font, size: fontSize, style: 0};
+	this.bActive = false;
+	this.oldDelay = 100;
+	this.init();
 }
 
 /* 
