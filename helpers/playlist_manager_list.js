@@ -584,7 +584,9 @@ function _list(x, y, w, h) {
 						if (mask === MK_CONTROL) { // Pressing control
 							this.loadPlaylistOrShow(z);
 						} else if (mask === MK_SHIFT) { // Pressing SHIFT
+							const cache = [this.offset, this.index];
 							this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});
+							[this.offset, this.index] = cache;
 							window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 						} else if (mask === MK_SHIFT + MK_CONTROL) { // Pressing control + SHIFT
 							this.removePlaylist(z);
