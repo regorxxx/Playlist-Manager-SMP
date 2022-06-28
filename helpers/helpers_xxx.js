@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/22
+//27/06/22
 
 // Folders
 const folders = {};
@@ -34,7 +34,7 @@ const soFeatFile = folders.data + 'soFeatures.json';
 initCheckFeatures(soFeat);
 
 function getSoFeatures() {
-	const soFeat = {gecko: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true};
+	const soFeat = {gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true};
 	const WshShell = new ActiveXObject('WScript.Shell');
 	const app = new ActiveXObject('Shell.Application');
 	let doc;
@@ -50,6 +50,7 @@ function getSoFeatures() {
 		} catch (e) {soFeat.clipboard = false;}
 		if (clText !== 'test') {soFeat.clipboard = false;}
 	} else {soFeat.clipboard = false;}
+	if (!soFeat.gecko || !soFeat.clipboard) {soFeat.popup = false;}
 	// File system
 	if (typeof app !== 'undefined') {
 		try {app.NameSpace(10).MoveHere(null);} catch (e) {
@@ -83,8 +84,13 @@ function checkSoFeatures(soFeat) {
 	if (!soFeat.gecko) {
 		fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');
 		bPass = false;
-	} else  if (!soFeat.clipboard) {
+	} 
+	if (!soFeat.clipboard) {
 		fb.ShowPopupMessage('Found an issue on current installation:\nclipboardData failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
+		bPass = false;
+	}
+	if (!soFeat.popup) {
+		fb.ShowPopupMessage('Found an issue on current installation:\nHTML popups failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
 		bPass = false;
 	}
 	// File system
