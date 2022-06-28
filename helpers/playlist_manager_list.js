@@ -881,7 +881,7 @@ function _list(x, y, w, h) {
 		console.log('Playlist Manager: drag n drop done.');
 		this.lastPlsLoaded.push(pls);
 		this.update(true, true); // We have already updated data before only for the variables changed
-		if (!bPaint) {this.filter();}
+		if (bPaint) {this.filter();}
 		return true;
 	}
 	
