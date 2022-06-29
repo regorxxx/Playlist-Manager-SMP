@@ -24,18 +24,20 @@
 ### Changed
 - UI: themed buttons are replaced with manually drawn buttons when the first method fails (on Wine for ex.). Console will output: "window.CreateThemeManager('Button') failed, using experimental buttons" in such case.
 - Helpers: updated helpers.
+- Minor speed optimization on multiple tools/buttons using duplicates removal code.
 ### Removed
 ### Fixed
 - UI: after adding a track to a playlist using the keyboard shortcuts, playlist did not restored position properly in some cases.
 - UI: filter button showing 'undefined' for UI playlists.
 - UI: crash due to themed buttons not being available on wine.
+- Helpers: added additional checks for 32 bits systems to use 32 bits binaries for external tools. Should solve multiple issues on Wine when using 32 prefix.
 - Panel crash due to a typo when font was missing.
 
 ## [0.5.0-beta.8] - 2022-06-05
 ### Added
 - UI: configuration menu to show/hide playlist icons as a global switch.
 - UI: configuration menu to edit icons per playlist type or status (lock, empty). Uses default one when an icon is not set in the menu. Also, setting an icon or background to null will disable it.
-- Dynamic menus: new dynamic menus available with [SMP 1.6.1](https://github.com/TheQwertiest/foo_spider_monkey_panel/releases/tag/v1.6.1) which allow to execute panel actions via main menus and even associate them to a keyboard shortcut or toolbar buttons. There is no limit (the old method was limited to 10 entries), so it can be used independently to other panels. It also allows to control the manager via CMD. Current actions allowed: load, lock/unlock, delete or clone any playlist file. Sending selection to a playlist, creating new playlists (empty or from active playlist) and refresh the panel. Every manager panel has its own set of associated playlists, so every panel must have different panel names to work. Entries may be found at 'File\Spider Monkey Panel\Script Commands\[Panel Name]\...'.
+- Dynamic menus: new dynamic menus available with [SMP 1.6.1](https://github.com/TheQwertiest/foo_spider_monkey_panel/releases/tag/v1.6.1) which allow to execute panel actions via main menus and even associate them to a keyboard shortcut or toolbar buttons. There is no limit (the old method was limited to 10 entries), so it can be used independently to other panels. It also allows to control the manager via CMD. Current actions allowed: load, lock/unlock, delete or clone any playlist file. Sending selection to a playlist, creating new playlists (empty or from active playlist) and refresh the panel. Every manager panel has its own set of associated playlists, so every panel must have different panel names to work. Entries may be found at 'File\Spider Monkey Panel\Script Commands\\[Panel Name]\\...'.
 - Online controllers integration: full integration with [foo_httpcontrol](https://hydrogenaud.io/index.php/topic,62218.0.html) has been added when using the preset [ajquery-xxx](https://github.com/regorxxx/ajquery-xxx). Any playlist manager can be used with the online controller, allowing to: load, lock/unlock, delete or clone any playlist file. Sending selection to a playlist, creating new playlists (empty or from active playlist) and refresh the panel. All available playlists are shown on the controller, along basic metadata. Multiple panels are allowed at the same time, showing playlists from all of them in an aggregated list. [foo_runcmd](https://foosion.foobar2000.org/components/?id=runcmd) and [foo_run_main](https://marc2k3.github.io/run-main/) are needed. It makes use of the new dynamic menus from [SMP 1.6.1](https://github.com/TheQwertiest/foo_spider_monkey_panel/releases/tag/v1.6.1) (only has been tested with foobar 1.6.11). Every manager panel has its own set of associated playlists, so every panel must have different panel name to work.
 ### Changed
 - UI: enforced SMP version checking via popups.
