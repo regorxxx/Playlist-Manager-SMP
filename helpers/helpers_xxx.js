@@ -34,20 +34,20 @@ const soFeatFile = folders.data + 'soFeatures.json';
 initCheckFeatures(soFeat);
 
 function getSoFeatures() {
-	const soFeat = {gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true};
+	const soFeat = {gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true, x64: true};
 	const WshShell = new ActiveXObject('WScript.Shell');
 	const app = new ActiveXObject('Shell.Application');
 	let doc;
 	// Internals
 	try {doc = new ActiveXObject('htmlfile');} catch (e) {soFeat.gecko = false;}
-	if (typeof doc !== 'undefined' && soFeat.gecko) {
+	if (typeof doc !== 'undefined' && doc && soFeat.gecko) {
 		let clText = 'test', cache = null;
+		try {cache = doc.parentWindow.clipboardData.getData('Text');} catch (e) {}
 		try {
-			cache = doc.parentWindow.clipboardData.getData('Text'); 
 			doc.parentWindow.clipboardData.setData('Text', clText); 
 			clText = doc.parentWindow.clipboardData.getData('Text');
-			if (cache !== null) {doc.parentWindow.clipboardData.setData('Text', cache);} // Just in case previous clipboard data is needed
 		} catch (e) {soFeat.clipboard = false;}
+		if (cache) {try {doc.parentWindow.clipboardData.setData('Text', cache);} catch (e) {}} // Just in case previous clipboard data is needed
 		if (clText !== 'test') {soFeat.clipboard = false;}
 	} else {soFeat.clipboard = false;}
 	if (!soFeat.gecko || !soFeat.clipboard) {soFeat.popup = false;}
@@ -75,6 +75,13 @@ function getSoFeatures() {
 	if (!utils.CheckFont('Segoe UI')) {
 		soFeat.segoe = false;
 	}
+	const soArchFile = folders.data + 'soArch.txt';
+	if (!utils.IsFile(soArchFile)) {
+		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
+		const run = function () {try {WshShell.Run([...arguments].map((arg) => {return '"' + arg + '"';}).join(' '), 0, true);} catch (e) {}};
+		run(soBat, soArchFile);
+	}
+	if (utils.IsFile(soArchFile) && (utils.ReadTextFile(soArchFile) || '').slice(0,3) !== 'x64') {soFeat.x64 = false;}
 	return soFeat;
 }
 
