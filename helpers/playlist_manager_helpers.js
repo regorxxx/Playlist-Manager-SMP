@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/22
+//29/06/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -482,7 +482,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
-	if (remDupl && remDupl.length && do_remove_duplicates) {do_remove_duplicates(null, null, remDupl);}
+	if (remDupl && remDupl.length && removeDuplicates) {removeDuplicates(null, null, remDupl);}
 	const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
 	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
 	if (bDone) {
@@ -737,7 +737,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 	if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone;}
 	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 	if (handleList && handleList.Count) {
-		if (remDupl && remDupl.length && do_remove_duplicates) {handleList = do_remove_duplicates(handleList, null, remDupl);}
+		if (remDupl && remDupl.length && removeDuplicatesV2) {handleList = removeDuplicatesV2({handleList, checkKeys: remDupl});}
 		if (pls.sort) {
 			const sortObj = getSortObj(pls.sort);
 			if (sortObj) {handleList.OrderByFormat(sortObj.tf, sortObj.direction);}

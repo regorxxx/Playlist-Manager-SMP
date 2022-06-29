@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/05/22
+//29/06/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -572,7 +572,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		else {console.log('Error on XSP Playlist: ' + query);}
 		if (handlePlaylist) {
 			handlePlaylist.Sort();
-			if (remDupl && remDupl.length && do_remove_duplicates) {handlePlaylist = do_remove_duplicates(handlePlaylist, null, remDupl);}
+			if (remDupl && remDupl.length && removeDuplicatesV2) {handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist,checkKeys: remDupl});}
 			if (sort.length) {
 				const sortObj = getSortObj(sort);
 				if (sortObj) {handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction);}
