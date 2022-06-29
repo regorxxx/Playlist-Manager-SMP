@@ -85,7 +85,7 @@
 - Backup: in case there is an error while setting tags, category, lock status, renaming, ... a backup of the original playlist before editing is restored to ensure no data is lost. (This is in addition to the regular backups)
 ### Removed
 ### Fixed
-- Renaming: error while renaming with : and – chars.
+- Renaming: error while renaming with : and â€“ chars.
 - Renaming: error while renaming when name was different but sanitized path matched original one (for example when renaming "Playlist A xxx" to "Playlist A: xxx").
 - Playlists consistency tools: error while checking for external items for tracks with subsong idx on the path.
 - Playlists consistency tools: wrong logging text on blank lines checking.
