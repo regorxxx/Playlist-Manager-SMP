@@ -27,6 +27,7 @@
 - Minor speed optimization on multiple tools/buttons using duplicates removal code.
 ### Removed
 ### Fixed
+- XSP: values with '-', '+' or '<' were not recognized properly in queries. For ex. '#PLAYLIST# IS Chill Hip-Hop' was cut right after 'Hip'.
 - UI: after adding a track to a playlist using the keyboard shortcuts, playlist did not restored position properly in some cases.
 - UI: filter button showing 'undefined' for UI playlists.
 - UI: crash due to themed buttons not being available on wine.

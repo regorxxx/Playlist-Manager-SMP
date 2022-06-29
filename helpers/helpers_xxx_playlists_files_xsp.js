@@ -452,64 +452,64 @@ XSP.getRule = function(query) {
 		if (new Set(['AND','AND NOT','OR','NOT']).has(query)) {rule = query;}
 		else {
 			switch (true) {
-				case query.match(/NOT [ #"%.-<>\w]* IS [ #,"%.-<>\w]*/g) !== null: {
+				case query.match(/NOT [ #"%.+\-<>\w]* IS [ #,"%.+\-<>\w]*/g) !== null: {
 					rule.operator = 'isnot';
-					[ , rule.field, rule.value] = query.match(/NOT ([ #"%.-<>\w]*) IS ([ #,"%.-<>\w]*)/);
+					[ , rule.field, rule.value] = query.match(/NOT ([ #"%.+\-<>\w]*) IS ([ #,"%.+\-<>\w]*)/);
 					break;
 				}
-				case query.match(/[ #"%.-<>\w]* IS [ #,"%.-<>\w]*/g) !== null: {
+				case query.match(/[ #"%.+\-<>\w]* IS [ #,"%.+\-<>\w]*/g) !== null: {
 					rule.operator = 'is';
-					[ , rule.field, rule.value] = query.match(/([ #"%.-<>\w]*) IS ([ #,"%.-<>\w]*)/);
+					[ , rule.field, rule.value] = query.match(/([ #"%.+\-<>\w]*) IS ([ #,"%.+\-<>\w]*)/);
 					break;
 				}
-				case query.match(/NOT [ #"%.-<>\w]* HAS [ #,"%.-<>\w]*/g) !== null: {
+				case query.match(/NOT [ #"%.+\-<>\w]* HAS [ #,"%.+\-<>\w]*/g) !== null: {
 					rule.operator = 'doesnotcontain';
-					[ , rule.field, rule.value] = query.match(/NOT ([ #"%.-<>\w]*) HAS ([ #,"%.-<>\w]*)/);
+					[ , rule.field, rule.value] = query.match(/NOT ([ #"%.+\-<>\w]*) HAS ([ #,"%.+\-<>\w]*)/);
 					break;
 				}
-				case query.match(/[ #"%.-<>\w]* HAS [ #,"%.-<>\w]*/g) !== null: {
+				case query.match(/[ #"%.+\-<>\w]* HAS [ #,"%.+\-<>\w]*/g) !== null: {
 					rule.operator = 'contains';
-					[ , rule.field, rule.value] = query.match(/([ #"%.-<>\w]*) HAS ([ #,"%.-<>\w]*)/);
+					[ , rule.field, rule.value] = query.match(/([ #"%.+\-<>\w]*) HAS ([ #,"%.+\-<>\w]*)/);
 					break;
 				}
-				case query.match(/\$strstr\([ %.-<>\w]*\) EQUAL 1/g) !== null: { // $strstr(%artist%,Wilco) EQUAL 1
+				case query.match(/\$strstr\([ %.+\-<>\w]*\) EQUAL 1/g) !== null: { // $strstr(%artist%,Wilco) EQUAL 1
 					rule.operator = 'startswith';
-					[ , rule.field, rule.value] = query.match(/\$strstr\(([ %.-<>\w]*),([ ,#"%.-\w]*)/);
+					[ , rule.field, rule.value] = query.match(/\$strstr\(([ %.+\-<>\w]*),([ ,#"%.+\-\w]*)/);
 					break;
 				}
-				case query.match(/\$strstr\(\$right\([ %.-<>\w]*,\$len\([ #,"%.-<>\w]*\)\)[ #,"%.-<>\w]*\) EQUAL 1/g) !== null: { // $strstr($right(%artist%,$len(Wilco)),Wilco) EQUAL 1
+				case query.match(/\$strstr\(\$right\([ %.+\-<>\w]*,\$len\([ #,"%.+\-<>\w]*\)\)[ #,"%.+\-<>\w]*\) EQUAL 1/g) !== null: { // $strstr($right(%artist%,$len(Wilco)),Wilco) EQUAL 1
 					rule.operator = 'endswith';
-					[ , rule.field, rule.value] = query.match(/\$strstr\(\$right\(([ %.-<>\w]*),\$len\(([ #,"%.-<>\w]*)/);
+					[ , rule.field, rule.value] = query.match(/\$strstr\(\$right\(([ %.+\-<>\w]*),\$len\(([ #,"%.+\-<>\w]*)/);
 					break;
 				}
-				case query.match(/[ %.-<>\w]* LESS [ \d]*/g) !== null: {
+				case query.match(/[ %.+\-<>\w]* LESS [ \d]*/g) !== null: {
 					rule.operator = 'lessthan';
-					[ , rule.field, rule.value] = query.match(/([ %.-<>\w]*) LESS ([ \d]*)/);
+					[ , rule.field, rule.value] = query.match(/([ %.+\-<>\w]*) LESS ([ \d]*)/);
 					break;
 				}
-				case query.match(/[ %.-<>\w]* GREATER [ \d]*/g) !== null: {
+				case query.match(/[ %.+\-<>\w]* GREATER [ \d]*/g) !== null: {
 					rule.operator = 'greaterthan';
-					[ , rule.field, rule.value] = query.match(/([ %.-<>\w]*) GREATER ([ \d]*)/);
+					[ , rule.field, rule.value] = query.match(/([ %.+\-<>\w]*) GREATER ([ \d]*)/);
 					break;
 				}
-				case query.match(/[ %.-<>\w]* AFTER [ \d]*/g) !== null: {
+				case query.match(/[ %.+\-<>\w]* AFTER [ \d]*/g) !== null: {
 					rule.operator = 'after';
 					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) AFTER ([ \d]*)/);
 					break;
 				}
-				case query.match(/[ %.-<>\w]* BEFORE [ \d]*/g) !== null: {
+				case query.match(/[ %.+\-<>\w]* BEFORE [ \d]*/g) !== null: {
 					rule.operator = 'before';
-					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) BEFORE ([ \d]*)/);
+					[ , rule.field, rule.value] = query.match(/([ ",%.+\-\w]*) BEFORE ([ \d]*)/);
 					break;
 				}
-				case query.match(/NOT [ %.-<>\w]* DURING LAST [ \w]*/g) !== null: {
+				case query.match(/NOT [ %.+\-<>\w]* DURING LAST [ \w]*/g) !== null: {
 					rule.operator = 'notinthelast';
-					[ , rule.field, rule.value] = query.match(/NOT ([ ",%.-\w]*) DURING LAST ([ \w]*)/);
+					[ , rule.field, rule.value] = query.match(/NOT ([ ",%.+\-\w]*) DURING LAST ([ \w]*)/);
 					break;
 				}
-				case query.match(/[ %.-<>\w]* DURING LAST [ \w]*/g) !== null: {
+				case query.match(/[ %.+\-<>\w]* DURING LAST [ \w]*/g) !== null: {
 					rule.operator = 'inthelast';
-					[ , rule.field, rule.value] = query.match(/([ ",%.-\w]*) DURING LAST ([ \w]*)/);
+					[ , rule.field, rule.value] = query.match(/([ ",%.+\-\w]*) DURING LAST ([ \w]*)/);
 					break;
 				}
 				default: {
