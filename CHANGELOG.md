@@ -24,13 +24,11 @@
 ### Changed
 - UI: themed buttons are replaced with manually drawn buttons when the first method fails (on Wine for ex.). Console will output: "window.CreateThemeManager('Button') failed, using experimental buttons" in such case.
 - Helpers: updated helpers.
-- Minor speed optimization on multiple tools/buttons using duplicates removal code.
 ### Removed
 ### Fixed
 - UI: after adding a track to a playlist using the keyboard shortcuts, playlist did not restored position properly in some cases.
 - UI: filter button showing 'undefined' for UI playlists.
 - UI: crash due to themed buttons not being available on wine.
-- Helpers: added additional checks for 32 bits systems to use 32 bits binaries for external tools. Should solve multiple issues on Wine when using 32 prefix.
 - Panel crash due to a typo when font was missing.
 
 ## [0.5.0-beta.8] - 2022-06-05
