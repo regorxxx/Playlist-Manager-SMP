@@ -482,7 +482,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
-	if (remDupl && remDupl.length && removeDuplicates) {removeDuplicates(null, null, remDupl);}
+	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl});}
 	const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
 	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
 	if (bDone) {
