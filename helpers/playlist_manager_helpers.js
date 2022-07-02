@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/22
+//01/07/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -700,7 +700,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 			} else { // Or create new playlist file when translating between different formats
 				savePlaylist(-1, newPath, extension, pls.name, null, pls.isLocked, pls.category, pls.tags, '', pls.trackTags, list.bBOM);
 				addHandleToPlaylist(handleList, newPath, '', list.bBOM);
-				file = _open(newPath, convertCharsetToCodepage('UTF-8'));
+				file = _open(newPath, utf8);
 				paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 			}
 			if (bDeleted !== false) {
@@ -764,7 +764,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 		// Create new playlist file when translating between different formats
 		savePlaylist(-1, newPath, extension, pls.name, null, pls.isLocked, pls.category, pls.tags, '', pls.trackTags, list.bBOM);
 		addHandleToPlaylist(handleList, newPath, '', list.bBOM);
-		let file = _open(newPath, convertCharsetToCodepage('UTF-8'));
+		let file = _open(newPath, utf8);
 		paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 		if (bDeleted !== false) {
 			bDone = file && file.length ? _save(newPath, file, list.bBOM) : false; // No BOM

@@ -146,7 +146,7 @@ setProperties(properties, prefix);
 		overwriteProperties(prop); // Updates panel
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
-		const readme = _open(readmePath, convertCharsetToCodepage('UTF-8'));
+		const readme = _open(readmePath, utf8);
 		if (readme.length) {fb.ShowPopupMessage(readme, window.Name);}
 	}
 }
@@ -169,7 +169,7 @@ if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
 		list.properties['bNetworkPopup'][1] = true;
 		overwriteProperties(list.properties); // Updates panel
 		const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
-		const readme = _open(file, convertCharsetToCodepage('UTF-8'));
+		const readme = _open(file, utf8);
 		fb.ShowPopupMessage(readme, window.Name);
 	}
 } else if (list.properties['bNetworkPopup'][1]) {

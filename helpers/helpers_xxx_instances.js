@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/22
+//01/07/22
 include('helpers_xxx.js');
 include('helpers_xxx_file.js');
 
@@ -40,7 +40,7 @@ function addInstance(newKey = window.Name) {
 }
 
 function getInstances() {
-	const newInstances = _jsonParseFileCheck(folders.xxxInstances, 'Instances json file', void(0), convertCharsetToCodepage('UTF-8'));
+	const newInstances = _jsonParseFileCheck(folders.xxxInstances, 'Instances json file', void(0), utf8);
 	if (newInstances) {
 		for (let key of Object.keys(newInstances)) {if (key !== 'date') {newInstances[key] = new Set(newInstances[key]);}}
 	}

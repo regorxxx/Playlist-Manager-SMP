@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/06/22
+//01/07/22
 
 // Folders
 const folders = {};
@@ -7,6 +7,7 @@ folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install 
 folders.dataName = 'js_data\\';
 folders.xxx = fb.ProfilePath + folders.xxxName; 
 folders.data = fb.ProfilePath + folders.dataName;
+folders.temp = folders.data + 'temp\\';
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include(fb.ComponentPath + 'docs\\Flags.js');

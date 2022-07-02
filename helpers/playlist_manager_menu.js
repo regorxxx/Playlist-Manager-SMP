@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/06/22
+//01/07/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -491,7 +491,7 @@ function createMenuRightTop() {
 			if (mappedDrives.indexOf(list.playlistsPath.match(/^(.+?:)/g)[0]) !== -1) {
 				if (!list.properties['bNetworkPopup'][1]) {list.properties['bNetworkPopup'][1] = true;}
 				const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
-				const readme = _open(file, convertCharsetToCodepage('UTF-8'));
+				const readme = _open(file, utf8);
 				fb.ShowPopupMessage(readme, window.Name);
 			} else {list.properties['bNetworkPopup'][1] = false;}
 			overwriteProperties(list.properties);

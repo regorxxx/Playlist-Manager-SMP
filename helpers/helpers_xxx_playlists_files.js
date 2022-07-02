@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/22
+//01/07/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -206,7 +206,7 @@ function savePlaylist(playlistIndex, playlistPath, ext = '.m3u8', playlistName =
 		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
-			let check = _open(playlistPath, convertCharsetToCodepage('UTF-8'));
+			let check = _open(playlistPath, utf8);
 			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;
@@ -364,7 +364,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
-			let check = _open(playlistPath, convertCharsetToCodepage('UTF-8'));
+			let check = _open(playlistPath, utf8);
 			bDone = (check === playlistText);
 		}
 		return bDone ? playlistPath : false;

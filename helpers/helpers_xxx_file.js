@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/22
+//01/07/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -14,6 +14,11 @@ const WshShell = new ActiveXObject('WScript.Shell');
 const app = new ActiveXObject('Shell.Application');
 const spaces = {desktop: 0, bin: 10, userdesktop: 16, fonts: 19};
 const fileAttr = {Normal: 0, ReadOnly: 1, Hidden: 2, Syestem: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048};
+const utf8 = convertCharsetToCodepage('UTF-8');
+
+// Create global folders
+_createFolder(folders.data);
+_createFolder(folders.temp);
 
 // Additional code to check for network drives: these don't have recycle bin so _recycleFile would always fail or show a prompt
 const mappedDrivesFile = folders.data + 'mappedDrives.txt';
@@ -370,7 +375,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 				bDone = utils.WriteTextFile(filePath, fileTextNew, bBOM);
 				// Check
 				if (_isFile(filePath) && bDone) {
-					let check = _open(filePath, convertCharsetToCodepage('UTF-8'));
+					let check = _open(filePath, utf8);
 					bDone = (check === fileTextNew);
 				} else {reason = -1;}
 			} else {reason = 1;}
@@ -382,7 +387,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	let codepage = -1;
 	const plsText = isArray(originalText) ? originalText : originalText.split(/\r\n|\n\r|\n|\r/);
-	if (extension === '.m3u8') {codepage = convertCharsetToCodepage('UTF-8');}
+	if (extension === '.m3u8') {codepage = utf8;}
 	else if (extension === '.m3u' && plsText.length >= 2 && plsText[1].startsWith('#EXTENC:')) {
 		const codepageName = plsText[1].split(':').pop();
 		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
@@ -394,7 +399,7 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 			line = line.toLowerCase();
 			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1) ;
 			})) {
-			codepage = convertCharsetToCodepage('UTF-8');
+			codepage = utf8;
 		} else if (plsText.length && plsText.some((line) => {line = line.toLowerCase(); return (line.indexOf('�') !== -1);})) {
 			codepage = systemCodePage;
 		}

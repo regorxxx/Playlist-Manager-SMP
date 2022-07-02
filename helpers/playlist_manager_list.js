@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/06/22
+//07/07/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -1174,7 +1174,7 @@ function _list(x, y, w, h) {
 		}
 		let answer = bOldVersion === void(0) ? WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n(no = json file by this playlist manager)', 0, window.Name, popup.question + popup.yes_no) : (bOldVersion ? popup.yes : popup.no);
 		let dataExternalPlaylists = [];
-		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? convertCharsetToCodepage('UTF-8') : 0);
+		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? utf8 : 0);
 		if (!data) {return false;}
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
@@ -1478,7 +1478,7 @@ function _list(x, y, w, h) {
 			this.dataXsp = [];
 			if (_isFile(this.filename)) {
 				if (this.bUpdateAutoplaylist && this.bShowSize) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
-				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, convertCharsetToCodepage('UTF-8'));
+				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
 				if (!data) {return;}
 				else if (!data) {return;}
 				let i = 0;
@@ -2430,7 +2430,7 @@ function _list(x, y, w, h) {
 		
 		this.loadConfigFile = (file = this.filename.replace('.json','_config.json')) => {
 			if (!file.length) {this.configFile = null; return;}
-			if (_isFile(file)) {this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, convertCharsetToCodepage('UTF-8'));}
+			if (_isFile(file)) {this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, utf8);}
 			else {this.configFile = null;}
 		}
 		
@@ -2441,7 +2441,7 @@ function _list(x, y, w, h) {
 			try {
 				const listExport = {};
 				const listMenuTypes = {};
-				const data = bToFile ? _jsonParseFile(file, convertCharsetToCodepage('UTF-8')) || {} : {};
+				const data = bToFile ? _jsonParseFile(file, utf8) || {} : {};
 				const wName = window.Name;
 				const menusPls = [
 					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: []			, skipProp: []},
@@ -2506,7 +2506,7 @@ function _list(x, y, w, h) {
 			// Don try to export for ajquery-xxx integration when it isn't installed
 			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFolder(file.split('\\').slice(0, -1).join('\\'))) {return false;}
 			try {
-				const data = _jsonParseFile(file, convertCharsetToCodepage('UTF-8')) || {};
+				const data = _jsonParseFile(file, utf8) || {};
 				const wName = window.Name;
 				let listExport = [];
 				this.dataAll.forEach((pls, i) => {
