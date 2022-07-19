@@ -633,7 +633,7 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 		}).then(() => {
 			if (list.properties.bOpenOnExport[1]) {_explorer(newPath);}
 			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+			console.log('Playlist Manager: exporting to ' + newPath + ' done.');
 			return bDone;
 		});
 	} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + newPath + '\'.', window.Name);}
