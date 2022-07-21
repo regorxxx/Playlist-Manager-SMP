@@ -604,9 +604,11 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths(list, z, void(0), defPath);
 	if (!newPath.length) {return;}
 	if (bDone) {
+		const playlistPath = list.data[z].path;
+		const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 		const root = utils.SplitFilePath(newPath)[0];
 		const report = [];
-		const plsRoot = utils.SplitFilePath(list.data[z].path)[0];
+		const plsRoot = utils.SplitFilePath(playlistPath)[0];
 		new Promise((resolve) => {
 			const total = paths.length - 1;
 			const promises = [];
@@ -633,7 +635,7 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 		}).then(() => {
 			if (list.properties.bOpenOnExport[1]) {_explorer(newPath);}
 			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
-			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+			console.log('Playlist Manager: exporting tracks from ' + playlistName + ' done.');
 			return bDone;
 		});
 	} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + newPath + '\'.', window.Name);}
