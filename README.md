@@ -38,7 +38,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Copy playlist file to location.
   * Export playlist file along its tracks.
   * Export playlist file and convert its tracks to another format (using Foobar2000 converter presets).
-* **Bind playlist to files:**
+* **Bind playlist to physical files:**
   * Tracks playlists for changes and update bound files.
   * Auto-saving (configurable).
   * Deleting the file also ask to delete the bound playlist.
