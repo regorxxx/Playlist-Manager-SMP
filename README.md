@@ -81,7 +81,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
     * Status (lock).
     * Query. Sort Pattern. (AutoPlaylists) Output limit. (Smart Playlists)
 * **Filters:**
-  * Show All | Only Autoplaylists % Smart Playlists | Only standard Playlists
+  * Show All | Only Autoplaylists & Smart Playlists | Only standard Playlists
   * Show All | Not locked | Only locked
   * By extension
   * By tag
