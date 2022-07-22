@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/07/22
+//22/07/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -344,8 +344,10 @@ function _runHidden() {
 function _runCmd(command, bWait) {
 	try {
 		WshShell.Run(command, 0, bWait);
+		return true;
 	} catch (e) {
 		console.log('_runCmd(): failed to run command ' + command + '(' + e + ')');
+		return false;
 	}
 }
 

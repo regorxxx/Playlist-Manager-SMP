@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/07/22
+//22/07/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1384,6 +1384,16 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDynamicMenus ? 0 : 1);});
 		}
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Readme
+		const path = folders.xxx + 'readmes\\playlist_manager.pdf';
+		menu.newEntry({entryText: 'Open documentation...',  func: () => {
+			if (_isFile(path)) {
+				const bDone = _run(path);
+				if (!bDone) {_explorer(path);}
+			} else {console.log('Readme not found: ' + path);}
+		}});
 	}
 	return menu;
 }
