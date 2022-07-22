@@ -29,7 +29,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Allow to limit the number of tracks output by a query.
   * Allows to use other playlists as source (even AutoPlaylists) via queries.
   * Have the same advanced UI features than AutoPlaylists.
-*** Complete documentation**, FAQ and step by step guide (see 'readmes\playlist_manager.pdf').
+* **Complete documentation**, FAQ and step by step guide (see 'readmes\playlist_manager.pdf').
 * **Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar** (if all items are on library). i.e. "As fast as the native format".
 * **Auto-saves changes** within foobar to bound playlists files. (configurable)
 * Automatically updates changes within the tracked folder. (configurable)
@@ -38,7 +38,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Copy playlist file to location.
   * Export playlist file along its tracks.
   * Export playlist file and convert its tracks to another format (using Foobar2000 converter presets).
-* **Bind playlist to files:**
+* **Bind playlist to physical files:**
   * Tracks playlists for changes and update bound files.
   * Auto-saving (configurable).
   * Deleting the file also ask to delete the bound playlist.
@@ -81,7 +81,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
     * Status (lock).
     * Query. Sort Pattern. (AutoPlaylists) Output limit. (Smart Playlists)
 * **Filters:**
-  * Show All | Only Autoplaylists % Smart Playlists | Only standard Playlists
+  * Show All | Only Autoplaylists & Smart Playlists | Only standard Playlists
   * Show All | Not locked | Only locked
   * By extension
   * By tag
