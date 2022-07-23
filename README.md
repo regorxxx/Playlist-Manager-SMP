@@ -49,8 +49,8 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * When locked, playlists can not be updated nor edited. They can be deleted.
   * Filename can be changed, but not playlist name (inside the file). This allows to set different playlist and file names if required.
 * **Playlist unique IDs.** You can have multiple playlists with same name on the UI and bound to different files. (configurable)
-  * If changing UUIDs config while having playlists already loaded, then new config will be used whenever they get updated.
-  * You can manually force new UUID config just by renaming the files.
+  * Changing UUIDs config while having playlists already	loaded, will defer UUID refresh until next update.
+  * New UUID can also be forced just by renaming the files.
 * **Show playlist size on the panel.** (some limits apply for .fpl playlist files [^1]) (configurable)
   * All (refresh AutoPlaylists queries)
   * Only standard playlist
