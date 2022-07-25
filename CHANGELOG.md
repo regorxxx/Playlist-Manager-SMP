@@ -24,6 +24,7 @@
 - Readmes: added new menu entry on header menu to open the documentation (PDF).
 ### Changed
 - UI: themed buttons are replaced with manually drawn buttons when the first method fails (on Wine for ex.). Console will output: "window.CreateThemeManager('Button') failed, using experimental buttons" in such case.
+- Helpers: temp files are now written at 'js_data\temp' instead of 'js_data'.
 - Helpers: updated helpers.
 - Readmes: rewritten readmes to avoid line wrapping wen showing them within popup for a cleaner presentation.
 - Minor speed optimization on multiple tools/buttons using duplicates removal code.
