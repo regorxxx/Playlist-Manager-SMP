@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/07/22
+//24/07/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -38,12 +38,6 @@ Object.keys(playlistDescriptors).forEach((key) => {
 	if (playlistDescriptors[key].isReadable) {readablePlaylistFormats.add(key);}
 	if (playlistDescriptors[key].isLoadable) {loadablePlaylistFormats.add(key);}
 });
-
-// Retrieve system codepage
-if (!_isFile(folders.data + '\\systemCodePage.txt') || lastStartup() > lastModified(folders.data + '\\systemCodePage.txt')) {
-	_runCmd('CMD /C CHCP > ' + _q(folders.data + 'systemCodePage.txt'), true);
-}
-const systemCodePage = _isFile(folders.data + '\\systemCodePage.txt') ? _open(folders.data + '\\systemCodePage.txt').split(': ').pop() : -1;
 
 // XSPF cache
 // Parser is too slow when retrieving tracks... so the object is cached for consecutive uses

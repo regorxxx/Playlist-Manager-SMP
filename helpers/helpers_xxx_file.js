@@ -5,7 +5,6 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 
-
 /* 
 	Global Variables 
 */
@@ -19,9 +18,12 @@ const utf8 = convertCharsetToCodepage('UTF-8');
 // Create global folders
 _createFolder(folders.data);
 _createFolder(folders.temp);
+// Add info files
+_save(folders.data + '_XXX-SCRIPTS_CONFIG_FILES', null);
+_save(folders.temp + '_SAFE_TO_REMOVE_TEMP_FILES', null);
 
 // Additional code to check for network drives: these don't have recycle bin so _recycleFile would always fail or show a prompt
-const mappedDrivesFile = folders.data + 'mappedDrives.txt';
+const mappedDrivesFile = folders.temp + 'mappedDrives.txt';
 const mappedDrives = [];
 if (!_isFile(mappedDrivesFile) || lastStartup() !== lastModified(mappedDrivesFile)) {
 	_runCmd('CMD /C wmic path Win32_LogicalDisk Where DriveType="4" get DeviceID, ProviderName > ' + _q(mappedDrivesFile), true);
@@ -37,6 +39,13 @@ if (!_isFile(mappedDrivesFile) || lastStartup() !== lastModified(mappedDrivesFil
 		});
 	}
 }
+
+// Retrieve system codepage
+const systemCodePageFile = folders.temp + 'systemCodePage.txt';
+if (!_isFile(systemCodePageFile) || lastStartup() > lastModified(systemCodePageFile)) {
+	_runCmd('CMD /C CHCP > ' + _q(systemCodePageFile), true);
+}
+const systemCodePage = _isFile(systemCodePageFile) ? _open(systemCodePageFile).split(': ').pop() : -1;
 
 /* 
 	File manipulation 

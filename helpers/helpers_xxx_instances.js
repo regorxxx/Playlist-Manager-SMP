@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/07/22
+//24/07/22
 include('helpers_xxx.js');
 include('helpers_xxx_file.js');
 
@@ -11,12 +11,10 @@ include('helpers_xxx_file.js');
 	using 'addInstance'. This ensures the file is empty of IDs when Foobar closes. Otherwise, the file
 	is cleared on consecutive Foobar startups.
 */
-folders.xxxInstances = folders.data + 'xxxInstances.json';
+folders.xxxInstances = folders.temp + 'xxxInstances.json';
 const instances = {};
 instances.date = lastStartup().toString(); // Alternative to checking new startup via SDK?
 instances.id = window.ID; // Could be changed to an arbitrary Id per panel
-
-if (_isFile(folders.data + 'xxsInstances.json')) {_deleteFile(folders.data + 'xxsInstances.json');} // TODO remove on future versions
 
 // Create file the first time and ensure the file is up to date (avoids old Ids on file from previously crashed instances)
 if (!_isFile(folders.xxxInstances)) {_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, '\t'));}

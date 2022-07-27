@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/22
+//25/07/22
 
 /* 
 	Objects
@@ -42,11 +42,36 @@ function roughSizeOfObject(object) {
 }
 
 /* 
+	Maps
+*/
+
+class biMap {
+	constructor(map) {
+	   this.map = map;
+	   this.uniMap = {...this.map};
+	   for (const key in map) {
+		  const value = map[key];
+		  this.map[value] = key;   
+	   }
+	}
+	get(key) {return this.map[key];}
+	has(key) {return this.map.hasOwnProperty(key);}
+	keys() {return Object.keys(this.map);}
+	uniKeys() {return Object.keys(this.uniMap);}
+	values() {return Object.values(this.map);}
+	uniValues() {return Object.values(this.uniMap);}
+	entries() {return Object.entries(this.map);}
+	uniEntries() {return Object.entries(this.uniMap);}
+	set(key, value) {this.map[key] = value; this.uniMap[key] = value;}
+	unset(key) {delete this.map[key]; delete this.uniMap[key]}
+}
+
+/* 
 	Functions
 */
 
 function isFunction(obj) {
-  return !!(obj && obj.constructor && obj.call && obj.apply);
+	return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
 /* 
@@ -54,7 +79,7 @@ function isFunction(obj) {
 */
 
 function isPromise(prom) {
-  return prom && Object.prototype.toString.call(prom) === '[object Promise]';
+	return prom && Object.prototype.toString.call(prom) === '[object Promise]';
 }
 
 /* 
