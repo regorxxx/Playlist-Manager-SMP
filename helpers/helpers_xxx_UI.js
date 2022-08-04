@@ -33,6 +33,18 @@ const colorBlind = {
 	black:	[RGB(150,150,150), RGB(75 , 75, 75), RGB(0,   0,   0)]
 };
 
+// colorbrewer presets
+const colorbrewer = {
+	diverging: ['Spectral','RdYlGn','RdBu','PiYG','PRGn','RdYlBu','BrBG','RdGy','PuOr'],
+	qualitative: ['Set2','Accent','Set1','Set3','Dark2','Paired','Pastel2','Pastel1'],
+	sequential: ['OrRd','PuBu','BuPu','Oranges','BuGn','YlOrBr','YlGn','Reds','RdPu','Greens','YlGnBu','Purples','GnBu','Greys','YlOrRd','PuRd','Blues','PuBuGn'],
+	colorBlind: {
+		diverging: ['RdBu','PiYG','PRGn','RdYlBu','BrBG','PuOr'],
+		qualitative: ['Set2','Dark2','Paired'],
+		sequential: ['OrRd','PuBu','BuPu','Oranges','BuGn','YlOrBr','YlGn','Reds','RdPu','Greens','YlGnBu','Purples','GnBu','Greys','YlOrRd','PuRd','Blues','PuBuGn']
+	}
+}
+
 // Cache
 const scaleDPI = {}; // Caches _scale() values;
 const fonts = {notFound: []}; // Caches _gdifont() values;

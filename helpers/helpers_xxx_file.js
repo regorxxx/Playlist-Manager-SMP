@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/22
+//01/08/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -67,7 +67,7 @@ function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which
 }
 
 function _isFile(file) {
-	if (isCompatible('1.4.0')) {return utils.IsFile(file);} 
+	if (isCompatible('1.4.0', 'smp')) {return utils.IsFile(file);} 
 	else { //TODO: Deprecated
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		return isString(file) ? fso.FileExists(file) : false;
@@ -75,7 +75,7 @@ function _isFile(file) {
 }
 
 function _isFolder(folder) {
-	if (isCompatible('1.4.0')) {return utils.IsDirectory(folder);} 
+	if (isCompatible('1.4.0', 'smp')) {return utils.IsDirectory(folder);} 
 	else { //TODO: Deprecated
 		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
 		return isString(folder) ? fso.FolderExists(folder) : false;

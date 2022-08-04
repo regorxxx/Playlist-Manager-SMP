@@ -1363,7 +1363,7 @@ function createMenuRightTop() {
 	{	// Integration
 		const menuName = menu.newMenu('Integration');
 		{	// Dynamic menus
-			const flags = isCompatible('1.6.1') ? MF_STRING : MF_GRAYED;
+			const flags = isCompatible('1.6.1', 'smp') ? MF_STRING : MF_GRAYED;
 			const subMenuName = menu.newMenu('Create dynamic menus...', menuName);
 			const options = ['Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...', 'No: don\'t integrate the panel in main menu'];
 			const optionsLength = options.length;

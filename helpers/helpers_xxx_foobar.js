@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/22
+//01/08/22
 
 include('helpers_xxx_file.js');
 include('helpers_xxx_console.js');
@@ -8,9 +8,9 @@ include('helpers_xxx_console.js');
 	Panels
 */
 
-function isCompatible(requiredVersionStr = '1.6.1') {
+function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
 	let requiredVersion = requiredVersionStr.split('.');
-	let currentVersion = utils.Version.split('.'); // e.g. 0.1.0-alpha.2
+	let currentVersion = (target.toLowerCase === 'smp' ? utils : fb).Version.split('.'); // e.g. 0.1.0-alpha.2
 	if (currentVersion.length > 3) {
 		curraentVersion.length = 3; // We need only numbers
 	}
@@ -24,9 +24,9 @@ function isCompatible(requiredVersionStr = '1.6.1') {
 	return true;
 }
 
-function checkCompatible(requiredVersionStr = '1.6.1') {
+function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
 	if (!isCompatible(requiredVersionStr)) {
-		console.popup('This script requires v' + requiredVersionStr + '. Current component version is v' + utils.Version + '.', window.Name);
+		console.popup('This script requires v' + requiredVersionStr + '. Current ' + (target.toLowerCase === 'smp' ? 'component' : 'Foobar2000') + ' version is v' + (target.toLowerCase === 'smp' ? utils : fb).Version + '.', window.Name);
 	}
 }
 

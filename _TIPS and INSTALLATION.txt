@@ -1,10 +1,10 @@
 REQUISITES:
--------------
+-----------
 Spider Monkey Panel 1.6.1 or greater (only stable releases supported):
 https://theqwertiest.github.io/foo_spider_monkey_panel/
 
 WINE USERS: 
--------------
+-----------
 All scripts try to use wine-friendly methods, focusing on config settings that can be changed via
 menus or the UI panel, instead of using HTML (which only works on Windows), known working fonts, etc.
 
@@ -41,8 +41,12 @@ Some extra folders from other components which must be moved include (non extens
 If you don't move all the config folders/files then on startup default values will be used for things not found, probably "losing"
 the theme or other config. You may "fix" it later moving the missing files which still reside in the root. May take some tries to do them all.
 
-SMP 1.5.2+ BUG: 
--------------
+SMP 1.5.2+ WINE BUG (crash when installing scripts): 
+----------------------------------------------------
+After loading a script into a panel, Foobar2000 may crash (not only the panel). See below.
+
+SMP 1.5.2+ BUG (crash when installing scripts): 
+-----------------------------------------------
 After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files', check '_switchPaths.zip'.
 Follow its instructions to fix it. Then report it at https://hydrogenaud.io/index.php?topic=116669.0 and hopefully it will be fixed.
 
@@ -86,7 +90,7 @@ so they make it easier to tag or visualize most commonly used tags, variables, e
 		- CUI
 
 INFO: 
--------------
+-----
 This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist Manager, Search By Distance, World Map and Playlist Tools).
 And a collection of small utilities and/or buttons (search same by..., top tracks, remove duplicates, device priority, etc.). 
 All files have extensive comments and descriptions at the header and all along the code, so you can check specific info about what everything does in its own file.
