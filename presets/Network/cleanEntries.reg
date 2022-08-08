@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{9147E464-33A6-48E2-A3C9-361EFD417DEF}]
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\BitBucket\KnownFolder\{9147E464-33A6-48E2-A3C9-361EFD417DEF}]
+
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{9147E464-33A6-48E2-A3C9-361EFD417DEF}]
+
+[-HKEY_CURRENT_USER\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\BitBucket\KnownFolder\{9147E464-33A6-48E2-A3C9-361EFD417DEF}]
