@@ -20,7 +20,7 @@ For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scrip
 For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  (**)
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
-Then load any script into a SMP panel within foobar. See info for usage.
+Then load any script into a SMP panel within foobar ('File' as script source). See info for usage.
 
 Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section 
 for more details, the github page or the related pdf documentation at 'readmes' folder (if available).
@@ -30,16 +30,18 @@ and change the variable named 'folders.xxxName'. This is a workaround for some S
 when working with relative paths. Its use is at your own responsibility but feel free to report
 any problem with it.
 
-(**) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile' folder does not exist.
-In such case you have to create it and move all the config folders/files to it, where they should reside (instead of the root of the 
-foobar2000 installation path). Some native folders and files which must be moved include: 
-	index-data, js_data, component-updates, configuration, crash reports, user-components, foo_spider_monkey_panel, library, playlists,
-	theme.fth, LargeFieldsConfig.txt, version.txt
+(**) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile'
+folder does not exist. In such case you have to create it and move all the config folders/files to it,
+where they should reside (instead of the root of the foobar2000 installation path). Some native folders
+and files which must be moved include:
+	index-data, js_data, component-updates, configuration, crash reports, user-components,
+	foo_spider_monkey_panel, library, playlists, theme.fth, LargeFieldsConfig.txt, version.txt
 Some extra folders from other components which must be moved include (non extensive list): 
-	autobackup, dvda_metabase, foo_httpcontrol_data, foo_youtube, images, lastfm, python, sacd_metabase, vst-presets, yttm,
-	minibar.db, playlist-tree-0.pts, playlist-tree-1.pts,
-If you don't move all the config folders/files then on startup default values will be used for things not found, probably "losing"
-the theme or other config. You may "fix" it later moving the missing files which still reside in the root. May take some tries to do them all.
+	autobackup, dvda_metabase, foo_httpcontrol_data, foo_youtube, images, lastfm, python, sacd_metabase,
+	vst-presets, yttm,minibar.db, playlist-tree-0.pts, playlist-tree-1.pts,
+If you don't move all the config folders/files then on startup default values will be used for things
+not found, probably "losing" the theme or other config. You may "fix" it later moving the missing files
+which still reside in the root. May take some tries to do them all.
 
 SMP 1.5.2+ WINE BUG (crash when installing scripts): 
 ----------------------------------------------------
@@ -47,60 +49,77 @@ After loading a script into a panel, Foobar2000 may crash (not only the panel). 
 
 SMP 1.5.2+ BUG (crash when installing scripts): 
 -----------------------------------------------
-After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files', check '_switchPaths.zip'.
-Follow its instructions to fix it. Then report it at https://hydrogenaud.io/index.php?topic=116669.0 and hopefully it will be fixed.
+After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files',
+check '_switchPaths.zip'. Follow its instructions to fix it. Then report it at 
+https://hydrogenaud.io/index.php?topic=116669.0
 
 PORTABLE TIP: 
 -------------
-Some scripts have configurable paths to save json data, track playlists, etc. Those can be found on the properties panel.
-Instead of using the menus and adding an absolute path, it would be advisable to edit them manually to ensure they are relative too:
+Some scripts have configurable paths to save json data, track playlists, etc. Those can be found on
+the properties panel. Instead of using the menus and adding an absolute path, it would be advisable
+to edit them manually to ensure they are relative too:
 For ex. for the playlist manager, the tracked folder:
 H:\MySoftware\foobar2000\profile\playlist_manager\	--> .\profile\playlist_manager\	(>= 1.6:)
 													--> .\playlist_manager\			(<= 1.5:)
 
-When an script finds it's being loaded within a portable installation, will set the default paths using relative paths. It will also warn
-with popups and/or the console about the -non recommended- use of absolute paths on portable installations. If you are using a portable 
-installation on fixed discs with absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it 
-in a removable device (whose disk letter changes). The configured paths would look for a disk letter which would be different every time.
+When an script finds it's being loaded within a portable installation, will set the default paths using
+relative paths. It will also warn with popups and/or the console about the -non recommended- use of 
+absolute paths on portable installations. If you are using a portable installation on fixed discs with
+absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it in a 
+removable device (whose disk letter changes). The configured paths would look for a disk letter which 
+would be different every time.
 
 FOO_JESUS TIP:
 -------------
-If using Autosave & Autobackup component (https://www.foobar2000.org/components/view/foo_jesus) it's recommended to add 'js_data' and 
-'playlist_manager' folders at 'Preferences\Advanced\Autosave & Autobackup\Files and directories to backup (...)'. 'js_data' contains 
-config json data for most of these scripts, while 'playlist_manager' folder is the default folder to save playlists files for the playlist manager (*).
+If using Autosave & Autobackup component (https://www.foobar2000.org/components/view/foo_jesus) it's 
+recommended to add 'js_data' and 'playlist_manager' folders at 
+'Preferences\Advanced\Autosave & Autobackup\Files and directories to backup (...)'. 
+'js_data' contains config json data for most of these scripts, while 'playlist_manager' folder is the 
+default folder to save playlists files for the playlist manager (*).
 
-(*) When the default path is changed or when using multiple playlist manager panels (and thus different paths), don't forget to add them 
-to Autosave config too. There is a limit though, paths outside the profile folder can not be autosaved by the component. That happens 
-when tracking a playlist folder at the place where the music resides (for relative paths playlist usage), network locations, etc. 
-In some cases this limitation can be bypassed by creating a SymLink at the profile folder to the external path.
+(*) When the default path is changed or when using multiple playlist manager panels (and thus different
+paths), don't forget to add them to Autosave config too. There is a limit though, paths outside the 
+profile folder can not be autosaved by the component. That happens when tracking a playlist folder at 
+the place where the music resides (for relative paths playlist usage), network locations, etc. In some 
+cases this limitation can be bypassed by creating a SymLink at the profile folder to the external path.
 For ex: C:\Foobar2000\profile\my_external_folder\ -> symlink -> H:\Music\
 
 Presets TIP:
 -------------
-There are multiple useful presets for components, the UI or these SMP scripts at the folder named 'Presets'. Readmes can be found there.
-Some of them are meant to be loaded automatically (recipes and themes for Search By Distance) to then be set at buttons, others are meant
-to be loaded on demand to modify the panel behavior (Playlist Tools). Masstagger presets can be loaded at its panel, while UI TF scripts
-are meant to be used at different places of UI config (columns, library view, etc.) if desired. In both cases their use is in line with these SMP scripts,
-so they make it easier to tag or visualize most commonly used tags, variables, etc. (for ex. a CUI script which displays keys in Camelot Wheel notation with colors).
-	- Masstagger
-	- Playlist Tools
-	- Search by [distance]
-	- UI
+There are multiple useful presets for components, the UI or these SMP scripts at the folder named 
+'Presets'. Readmes can be found there. Some of them are meant to be loaded automatically (recipes and 
+themes for Search By Distance) to then be set at buttons, others are meant to be loaded on demand to 
+modify the panel behavior (Playlist Tools). Masstagger presets can be loaded at its panel, while UI
+TF scripts are meant to be used at different places of UI config (columns, library view, etc.) if 
+desired. In both cases their use is in line with these SMP scripts, so they make it easier to tag or 
+visualize most commonly used tags, variables, etc. (for ex. a CUI script which displays keys in 
+Camelot Wheel notation with colors).
+	- AutoHotkey: for world map script automatic tagging
+	- Masstagger: general tagging scripts which may be useful
+	- Network: for playlist manager script and network drives without recycle bin
+	- Notepad++: to highligh picard code on notepad++
+	- Picard: to be used on picard as tagging scripts
+	- Playlist Tools: presets (menu entries) which can be added to the script
+	- Search by [distance]: presets (menu entries) which are loaded on the fly on the custom button
+	- UI: multiple UI scripts
 		- DUI
 		- CUI
-
+	- World Map: pre-filled database with artist/country tags
 INFO: 
 -----
-This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist Manager, Search By Distance, World Map and Playlist Tools).
-And a collection of small utilities and/or buttons (search same by..., top tracks, remove duplicates, device priority, etc.). 
-All files have extensive comments and descriptions at the header and all along the code, so you can check specific info about what everything does in its own file.
+This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist
+Manager, Search By Distance, World Map and Playlist Tools). And a collection of small utilities and/or
+buttons (search same by..., top tracks, remove duplicates, device priority, etc.). 
+All files have extensive comments and descriptions at the header and all along the code, so you can 
+check specific info about what everything does in its own file.
 
-There is a thread at hydrogenaud.io which contains several images and explanations of what each thing does while it was work in progress (now you have github).
+There is a thread at hydrogenaud.io which contains several images and explanations of what each thing
+ does while it was work in progress (now you have github).
 https://hydrogenaud.io/index.php?topic=120394
 
 The '_images' folder shows screenshots to show how the scripts look in my pc:
 
-The root folder (the one you found this readme) contains these scripts which can be loaded in any panel directly:
+The root folder (with this readme) contains these scripts which can be loaded in any panel directly:
 	+ playlist_manager.js (*)[+]
 		- Playlist manager requires some fonts.
 			- _resources\fontawesome-webfont.ttf
@@ -122,7 +141,8 @@ The root folder (the one you found this readme) contains these scripts which can
 		- Requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
 
-The main folder (the one named 'main') contains these scripts (without UI). Linked buttons (for panels) are listed below for convenience:
+The main folder (the one named 'main') contains these scripts (without UI). Linked buttons (for panels)
+are listed below for convenience:
 	+ .\main\playlist_tools_menu.js [+]
 		- .\buttons\buttons_playlist_tools.js (*)
 		- Playlist Tools button requires some fonts.
@@ -147,7 +167,7 @@ The main folder (the one named 'main') contains these scripts (without UI). Link
 			+ .\main\search_bydistance.js [+]
 				- ALSO READ: helpers\music_graph_descriptors_xxx.js
 				- ALSO SEE: Draw Graph.html
-				- .\buttons\buttons_search_bydistance_customizable.js (*) (fully configurable with menus)
+				- .\buttons\buttons_search_bydistance_customizable.js (*) (configurable with menus)
 				- .\buttons\buttons_search_bydistance_DYNGENRE.js (*) (pre-configured)
 				- .\buttons\buttons_search_bydistance_GRAPH.js (*) (pre-configured)
 				- .\buttons\buttons_search_bydistance_WEIGHT.js (*) (pre-configured)
@@ -175,14 +195,16 @@ The main folder (the one named 'main') contains these scripts (without UI). Link
 				- ALSO SEE: playlist_tools_menu.js
 				- .\buttons\buttons_playlist_history.js (*)
 
-As can be seen, Playlist Tools contains both, its own button (a menu) or individual buttons for the different tools integrated on it.
-Search By Distance would be one of those scripts integrated too, but it's considered also an standalone release because it includes
-so many things it can be used alone (and again, also has its own buttons to use if desired).
+As can be seen, Playlist Tools contains both, its own button (a menu) or individual buttons for the 
+different tools integrated on it. Search By Distance would be one of those scripts integrated too, but
+it's considered also an standalone release because it includes so many things it can be used alone 
+(and again, also has its own buttons to use if desired).
 
-All these js files (except those with (*)) contain only the functions, i.e. they will not do anything if you load them on a panel. 
-You would need a button, a main menu call, etc. to use them. So they are meant to be called by other scripts.
-If you want to use them as standalone scripts within a panel, check the examples at 'buttons' folder.
-Those are individual working buttons (check list). Since they are working standalone examples, all are marked with (*).
+All these js files (except those with (*)) contain only the functions, i.e. they will not do anything 
+if you load them on a panel. You would need a button, a main menu call, etc. to use them. So they are
+meant to be called by other scripts. If you want to use them as standalone scripts within a panel, 
+check the examples at 'buttons' folder. Those are individual working buttons (check list). Since they 
+are working standalone examples, all are marked with (*).
 	+ .\buttons\buttons_playlist_tools.js (*) (below 4 buttons require this one to be loaded too)
 		+ .\buttons\buttons_playlist_tools_macro_custom.js (*)
 		+ .\buttons\buttons_playlist_tools_macros.js (*)
@@ -203,15 +225,16 @@ Those are individual working buttons (check list). Since they are working standa
 	+ .\buttons\buttons_device_priority.js (*)
 	+ .\buttons\buttons_save_tags.js (*)
 	
-For complete buttons bar with merged buttons, check list below. Adding/removing buttons to create your own bar is easy.
+For complete buttons bar with merged buttons, check list below. Adding/removing buttons to create
+your own bar is easy.
 	+ .\main\search_bydistance.js
 		- buttons_toolbar.js (*) (and just configure it to only add related buttons)
 		- .\buttons\toolbars\_buttons_toolbar_sbd_customizable.js (*)
 	+ ALL:
 		- buttons_toolbar.js (*)
 
-The buttons framework has some examples that can be used to create your own combinations of buttons and bars.
-They do nothing by their-selves, since they have no functionality associated to pressing the button.
+The buttons framework has some examples that can be used to create your own combinations of buttons
+and bars. They do nothing by their-selves, since they have no functionality associated (are examples).
 	+ .\buttons\examples\_buttons_panel_blank.js
 	+ .\buttons\examples\_buttons_example_merged_double.js
 	+ .\buttons\examples\_buttons_example_merged.js
@@ -219,9 +242,11 @@ They do nothing by their-selves, since they have no functionality associated to 
 	+ .\buttons\examples\_buttons_blank_merged.js
 	+ .\buttons\examples\_buttons_blank.js
 	
-The 'helpers' folder contains common files used by most of the scripts. Don't touch or load these alone, although there are 3 exceptions.
-'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js' and 'dyngenre_map_xxx.js' files, which are related to 'search_bydistance' & 'search_same_by'. 
-Look at those files to understand what they do and why some users may want to add their own genres/styles there.
+The 'helpers' folder contains common files used by most of the scripts. Don't touch or load these alone,
+although there are 3 exceptions. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js'
+and 'dyngenre_map_xxx.js' files, which are related to 'search_bydistance' & 'search_same_by'. Look at 
+those files to understand what they do and why some users may want to add their own genres/styles there.
 
-The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create graphs within foobar or for html rendering.
-Read 'music_graph_descriptors_xxx.js' and check 'Draw Graph.html' in your browser (drag n drop) to see what they do.
+The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create 
+graphs within foobar or for html rendering. Read 'music_graph_descriptors_xxx.js' and check 
+'Draw Graph.html' in your browser (drag n drop) to see what they do.
