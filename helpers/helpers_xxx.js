@@ -31,7 +31,7 @@ conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null disable
 
 // Linux features
 const soFeat = getSoFeatures();
-const soFeatFile = folders.data + 'soFeatures.json';
+const soFeatFile = folders.temp + 'soFeatures.json';
 initCheckFeatures(soFeat);
 
 function getSoFeatures() {
@@ -76,7 +76,7 @@ function getSoFeatures() {
 	if (!utils.CheckFont('Segoe UI')) {
 		soFeat.segoe = false;
 	}
-	const soArchFile = folders.data + 'soArch.txt';
+	const soArchFile = folders.temp + 'soArch.txt';
 	if (!utils.IsFile(soArchFile)) {
 		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
 		const run = function () {try {WshShell.Run([...arguments].map((arg) => {return '"' + arg + '"';}).join(' '), 0, true);} catch (e) {}};
