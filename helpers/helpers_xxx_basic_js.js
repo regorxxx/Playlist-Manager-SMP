@@ -238,6 +238,6 @@ function require(script) {
 	let newScript = script;
 	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => {newScript.replace(new RegExp('^\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\');});
 	['helpers'].forEach((folder) => {newScript.replace(new RegExp('^\.\\\\' + folder + '\\\\', 'i'), '');});
-	include(newScript + '.js') ;
+	include(newScript + '.js');
 	return module.exports;
 }
