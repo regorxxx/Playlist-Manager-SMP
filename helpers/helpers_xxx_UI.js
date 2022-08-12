@@ -1,25 +1,19 @@
 ﻿'use strict';
-//28/06/22
+//12/08/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
 include('helpers_xxx_UI_chars.js');
+include('callbacks_xxx.js');
 
 /* 
 	Global Variables 
 */
 
-// Callbacks: append to any previously existing callback
-function onScriptUnloadUI() {
+// Callbacks
+addEventListener('on_script_unload', () => {
 	window.Tooltip.Deactivate();
-}
-if (on_script_unload) {
-	const oldFunc = on_script_unload;
-	on_script_unload = function() {
-		oldFunc();
-		onScriptUnloadUI();
-	};
-} else {var on_script_unload = onScriptUnloadUI;}
+});
 
 const WshShellUI = new ActiveXObject('WScript.Shell');
 const _bmp = gdi.CreateImage(1, 1);

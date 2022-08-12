@@ -1,12 +1,12 @@
 ﻿'use strict';
-//01/08/22
+//12/08/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0-beta8', features: {drag_n_drop: false, grab_focus: true}});
+window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0-beta10', features: {drag_n_drop: false, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -20,7 +20,8 @@ include('helpers\\playlist_manager_helpers.js');
 include('helpers\\helpers_xxx_file_zip.js');
 include('helpers\\popup_xxx.js');
 include('helpers\\helpers_xxx_instances.js');
-include('helpers\\playlist_history.js')
+include('helpers\\playlist_history.js');
+include('helpers\\callbacks_xxx.js');
 
 checkCompatible('1.6.1', 'smp');
 
@@ -184,42 +185,42 @@ buttonsPanel.buttons.filterOneButton.method = list.properties.filterMethod[1].sp
 buttonsPanel.buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
 recalcWidth();
 
-function on_colours_changed() {
+addEventListener('on_colours_changed', () => {
 	panel.coloursChanged();
 	window.Repaint();
-}
+});
 
-function on_font_changed() {
+addEventListener('on_font_changed', () => {
 	panel.fontChanged();
 	window.Repaint();
-}
+});
 
-function on_key_down(k) {
+addEventListener('on_key_down', (k) => {
 	if (pop.isEnabled()) {return;}
 	list.key_down(k);
-}
+});
 
-function on_mouse_lbtn_up(x, y, mask) {
+addEventListener('on_key_down', (x, y, mask) => {
 	if (pop.isEnabled()) {return;}
 	if (buttonsPanel.curBtn === null) {
 		list.lbtn_up(x, y, mask);
 	}
 	on_mouse_lbtn_up_buttn(x, y);
-}
+});
 
-function on_mouse_lbtn_down(x, y) {
+addEventListener('on_mouse_lbtn_down', (x, y) => {
 	if (pop.isEnabled()) {return;}
 	on_mouse_lbtn_down_buttn(x, y);
-}
+});
 
-function on_mouse_lbtn_dblclk(x, y) {
+addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
 	if (pop.isEnabled()) {return;}
 	if (buttonsPanel.curBtn === null) {
 		list.lbtn_dblclk(x, y);
 	}
-}
+});
 
-function on_mouse_move(x, y, mask) {
+addEventListener('on_mouse_move', (x, y, mask) => {
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
 	on_mouse_move_buttn(x, y, mask);
 	if (buttonsPanel.curBtn === null) {
@@ -228,15 +229,15 @@ function on_mouse_move(x, y, mask) {
 		list.up_btn.hover = false;
 		list.down_btn.hover = false;
 	}
-}
+});
 
-function on_mouse_leave() {
+addEventListener('on_mouse_leave', () => {
 	if (pop.isEnabled()) {return;}
 	on_mouse_leave_buttn();
 	list.onMouseLeaveList(); // Clears index selector
-}
+});
 
-function on_mouse_rbtn_up(x, y) {
+addEventListener('on_mouse_rbtn_up', (x, y) => {
 	if (pop.isEnabled()) {return true;}
 	if (list.traceHeader(x, y)) { // Header menu
 		return createMenuRightTop().btn_up(x, y);
@@ -250,36 +251,36 @@ function on_mouse_rbtn_up(x, y) {
 		return createMenuRightFilter('filterTwoButton').btn_up(x, y);
 	}
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
-}
+});
 
-function on_mouse_wheel(s) {
+addEventListener('on_mouse_wheel', (s) => {
 	if (pop.isEnabled()) {return;}
 	list.wheel({s});
-}
+});
 
-function on_paint(gr) {
+addEventListener('on_paint', (gr) => {
 	panel.paint(gr);
 	list.paint(gr);
 	on_paint_buttn(gr);
 	pop.paint(gr);
-}
+});
 
-function on_size() {
+addEventListener('on_size', () => {
 	panel.size();
 	list.size();
 	on_size_buttn();
 	pop.resize();
-}
+});
 
-function on_playback_new_track() { // To show playing now playlist indicator...
+addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
 	window.Repaint();
-}
+});
 
-function on_playlists_changed() { // To show/hide loaded playlist indicators...
+addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
 	window.Repaint();
-}
+});
 
-function on_notify_data(name, info) {
+addEventListener('on_notify_data', (name, info) => { 
 	switch (name) {
 		case 'Playlist manager: playlistPath': {
 			if (!info) {window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath);} // Share paths
@@ -315,10 +316,10 @@ function on_notify_data(name, info) {
 			break;
 		}
 	}
-}
+});
 
 // Main menu commands
-function on_main_menu_dynamic(id) {
+addEventListener('on_main_menu_dynamic', (id) => { 
 	if (list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
 		const menu = list.mainMenuDynamic[id];
 		let bDone = false;
@@ -377,44 +378,29 @@ function on_main_menu_dynamic(id) {
 		}
 		console.log('on_main_menu_dynamic: ' + (bDone ? menu.name :JSON.stringify(menu) + ' not found'));
 	}
-}
-
-// function on_drag_over(action, x, y, mask) { // Tracks movement for index selecting inside the panel
-	// if (buttonsPanel.curBtn === null) {
-		// list.move(x, y);
-	// }
-// }
-
-// function on_drag_leave() {
-	// on_mouse_leave_buttn();
-	// list.onMouseLeaveList(); // Clears index selector
-// }
-
-// function on_drag_drop(action, x, y, mask) {
-	// list.onDragDrop(); // Sends track to playlist file
-// }
+});
 
 // Autosave
 // Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
 // if Autosave === 0, then it does nothing...
 var debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
-function on_playlist_items_reordered(playlistIndex, oldName = null) {
+addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) => { 
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_reordered, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
 	// Update
 	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
-}
+});
 
-function on_playlist_items_removed(playlistIndex, oldName = null) {
+addEventListener('on_playlist_items_removed', (playlistIndex, oldName = null) => { 
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
 	// Update
 	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
-}
-  
-function on_playlist_items_added(playlistIndex, oldName = null) {
+});
+
+addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => { 
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
@@ -426,10 +412,10 @@ function on_playlist_items_added(playlistIndex, oldName = null) {
 			if (list.bAutoTrackTagAutoPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
 		} else if (list.bAutoTrackTagPls || list.bAutoTrackTagLockPls) {list.updatePlaylistOnlyTracks(playlistIndex);}
 	}
-}
+});
 
 if (plman.ActivePlaylist !== -1) {initplsHistory();}
-function on_playlists_changed() {
+addEventListener('on_playlists_changed', () => { 
 	if (list.bAllPls) { // For UI only playlists
 		list.update(true, true);
 		const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
@@ -450,7 +436,7 @@ function on_playlists_changed() {
 			}
 		}
 	}
-}
+});
 
 // Auto-update if there are a different number of items on folder or the total file sizes change
 // Note tracking it's not perfect... yes, you could change characters on a file without modifying size
@@ -482,7 +468,7 @@ function autoUpdate() {
 	return false;
 }
 
-function onScriptUnloadPLM() {
+addEventListener('on_script_unload', () => { 
 	// Instance manager
 	removeInstance('Playlist Manager');
 	// Backup
@@ -494,27 +480,20 @@ function onScriptUnloadPLM() {
 	if (autoBackRepeat) {clearInterval(autoBackRepeat);}
 	if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
 	if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
-}
-if (on_script_unload) {
-	const oldFunc = on_script_unload;
-	on_script_unload = function() {
-		oldFunc();
-		onScriptUnloadPLM();
-	};
-} else {var on_script_unload = onScriptUnloadPLM;}
+});
 const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
 
 // Update cache on changes!
 const debouncedCacheLib = debounce(cacheLib, 5000);
-function on_library_items_added() {
+addEventListener('on_library_items_added', () => { 
 	debouncedCacheLib(false, 'Updating...');
 	typeof list !== 'undefined' && list.clearSelPlaylistCache();
-}
+});
 
-function on_library_items_removed() {
+addEventListener('on_library_items_removed', () => { 
 	debouncedCacheLib(false, 'Updating...');
 	typeof list !== 'undefined' && list.clearSelPlaylistCache();
-}
+});
 
 // key listener (workaround for keys not working when focus is not on panel)
 const keyListener = {};
