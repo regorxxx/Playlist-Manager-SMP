@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/07/22
+//12/08/22
 
 // Folders
 const folders = {};
@@ -32,7 +32,9 @@ conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null disable
 // Linux features
 const soFeat = getSoFeatures();
 const soFeatFile = folders.temp + 'soFeatures.json';
-initCheckFeatures(soFeat);
+if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry once if something fails
+	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then((resolve) => {initCheckFeatures(soFeat);});
+} else {initCheckFeatures(soFeat);}
 
 function getSoFeatures() {
 	const soFeat = {gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true, x64: true};
