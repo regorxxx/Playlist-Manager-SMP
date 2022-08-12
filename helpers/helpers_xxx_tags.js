@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/22
+//12/08/22
 
 include('helpers_xxx.js');
 
@@ -29,7 +29,7 @@ if (bLoadTags) {
 	for (let i = 0; i < externalPath.length; i++) {
 		const path = externalPath[i];
 		if (_isFile(path)) {
-			console.log('cyclicTagsDescriptor - File loaded: ' + path);
+			// console.log('cyclicTagsDescriptor - File loaded: ' + path);
 			include(path, {always_evaluate: false});
 		} else {
 			console.log('cyclicTagsDescriptor - WARNING missing: ' + path);
