@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.10](#050-beta10---2022-08-12)
 - [0.5.0-beta.9](#050-beta9---2022-08-09)
 - [0.5.0-beta.8](#050-beta8---2022-08-05)
 - [0.5.0-beta.7](#050-beta7---2022-05-24)
@@ -24,6 +25,15 @@
 ### Added
 ### Changed
 - Helpers: updated helpers.
+### Removed
+### Fixed
+- Workaround for some instances where the scripts would warn about some feature not being supported by the OS (due to an OS or SMP bug).
+
+## [0.5.0-beta.10] - 2022-08-12
+### Added
+### Changed
+- Helpers: updated helpers.
+- Helpers: switched all callbacks to [event listeners](https://github.com/regorxxx/Callbacks-Framework-SMP).
 ### Removed
 ### Fixed
 - Workaround for some instances where the scripts would warn about some feature not being supported by the OS (due to an OS or SMP bug).
@@ -432,7 +442,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.9...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.10...HEAD
+[0.5.0-beta.10]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.9...v0.5.0-beta.10
 [0.5.0-beta.9]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.8...v0.5.0-beta.9
 [0.5.0-beta.8]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.7...v0.5.0-beta.8
 [0.5.0-beta.7]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.6...v0.5.0-beta.7
