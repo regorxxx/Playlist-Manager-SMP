@@ -23,8 +23,10 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Workaround for some instances where the scripts would warn about some feature not being supported by the OS (due to an OS or SMP bug).
 
 ## [0.5.0-beta.9] - 2022-08-09
 ### Added
