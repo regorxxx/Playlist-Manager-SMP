@@ -242,10 +242,11 @@ and bars. They do nothing by their-selves, since they have no functionality asso
 	+ .\buttons\examples\_buttons_blank_merged.js
 	+ .\buttons\examples\_buttons_blank.js
 	
-The 'helpers' folder contains common files used by most of the scripts. Don't touch or load these alone,
-although there are 3 exceptions. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js'
-and 'dyngenre_map_xxx.js' files, which are related to 'search_bydistance' & 'search_same_by'. Look at 
-those files to understand what they do and why some users may want to add their own genres/styles there.
+The 'helpers' folder contains common files used by most of the scripts. Don't touch or load these alone.
+'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js' and 'dyngenre_map_xxx.js' files,
+are related to 'search_bydistance' & 'search_same_by'. Look at those files to understand what they do. 
+Some users may want to add their own genres/styles at 'music_graph_descriptors_xxx_user.js', to do so a
+copy of the file must be placed at (profile folder) '.\\js_data\\helpers\\' (or use the custom button).
 
 The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create 
 graphs within foobar or for html rendering. Read 'music_graph_descriptors_xxx.js' and check 

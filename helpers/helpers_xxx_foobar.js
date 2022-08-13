@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/22
+//12/08/22
 
 include('helpers_xxx_file.js');
 include('helpers_xxx_console.js');
@@ -50,14 +50,3 @@ function isPortable(propertyText, bWarn = true) {
 function lastStartup() {
 	return lastModified(fb.ProfilePath + 'running');
 }
-
-/* function on_key_upCrash(vkey) {
-	if (vkey === VK_BACK && (utils.IsKeyPressed(0x5B) || utils.IsKeyPressed(0x5C))) {crashThisInstance;}
-}
-if (on_key_up) {
-	const oldFunc = on_key_up;
-	on_key_up = function(vkey) {
-		oldFunc(vkey);
-		on_key_upCrash(vkey);
-	};
-} else {var on_key_up = on_key_upCrash;} */
