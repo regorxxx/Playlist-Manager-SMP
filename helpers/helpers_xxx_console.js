@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/22
+//14/08/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -13,17 +13,20 @@ let conLogCache = []; // Internal use.
 
 // Override logging
 function consoleLog() {
+	const bCache = conLogCache.length !== 0;
 	let log = '';
 	// Load previous log
 	console.checkSize();
 	if (utils.IsFile(conLog)) {try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {/* continue regardless of error */}}
 	// Add HH:MM:SS
-	const stamp = '[' + new Date().toLocaleTimeString() + ']';
-	log += (log && log.length ? '\n' : '') + stamp;
+	const stamp = bCache ? '' : '[' + new Date().toLocaleTimeString() + ']';
+	log += (log && log.length ? '\n' : '') + (bCache ? '' : stamp);
 	// Unpack args
-	const args = conLogCache.length ? conLogCache : [[...arguments]];
-	args.forEach((call) => {
-		call.forEach((arg) => {
+	const args = bCache ? conLogCache : [[...arguments]];
+	if (bCache) {conLogCache = [];}
+	args.forEach((call, j) => {
+		if (bCache && j !== 0) {log += '\n';}
+		call.forEach((arg, i) => {
 			const type = typeof arg;
 			let val = null;
 			switch (type) {
@@ -53,7 +56,7 @@ function consoleLog() {
 					break;
 				}
 			}
-			log += ' ' + val;
+			log += (bCache && i === 0 ? '' : ' ') + val;
 		});
 	});
 	// Write
@@ -84,7 +87,9 @@ if (conLog && conLog.length && conLogMaxSize && console.log) {
 		console.logUI(...arguments);
 		if (conLogThrottling) {
 			clearTimeout(conLogTimer);
-			conLogCache.push([...arguments]);
+			// Add HH:MM:SS
+			const stamp = '[' + new Date().toLocaleTimeString() + ']';
+			conLogCache.push([stamp, ...arguments]);
 			conLogTimer = setTimeout(consoleLog, conLogThrottling);
 		} else {
 			consoleLog(...arguments);
