@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/08/22
+//14/08/22
 
 include('helpers_xxx.js');
 
@@ -284,8 +284,9 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	let tagString = '';
 	const outputArray_length = handle.Count;
 	while (i < tagArray_length) {
-		if (bMerged) {tagString += i === 0 ? '[%' + tagsArray[i] + '%]' : '[, ' + '%' + tagsArray[i] + '%]';} // We have all values separated by comma
-		else {tagString += i === 0 ? '[%' + tagsArray[i] + '%]' : '| ' + '[%' + tagsArray[i] + '%]';} // We have tag values separated by comma and different tags by |
+		const tagStr = tagsArray[i].indexOf('$') === -1 ? '%' + tagsArray[i] + '%' : tagsArray[i];
+		if (bMerged) {tagString += _b((i === 0 ? '' : ', ') + tagStr);} // We have all values separated by comma
+		else {tagString += (i === 0 ? '' : '| ') + _b(tagStr);} // We have tag values separated by comma and different tags by |
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
