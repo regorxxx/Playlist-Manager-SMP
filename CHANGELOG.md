@@ -34,7 +34,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
-- UI: left click actions not working (playlists, buttons, etc).
+- UI: left click actions not working (playlists, buttons, etc). Present on [0.5.0-beta.10](#050-beta10---2022-08-12).
 - Logging: fixed console logging to file (lines were not being split properly).
 
 ## [0.5.0-beta.10] - 2022-08-12
