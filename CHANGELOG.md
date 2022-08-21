@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.11](#050-beta11---2022-08-21)
 - [0.5.0-beta.10](#050-beta10---2022-08-12)
 - [0.5.0-beta.9](#050-beta9---2022-08-09)
 - [0.5.0-beta.8](#050-beta8---2022-08-05)
@@ -24,9 +25,16 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.11] - 2022-08-21
+### Added
+### Changed
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- UI: left click actions not working (playlists, buttons, etc).
 - Logging: fixed console logging to file (lines were not being split properly).
 
 ## [0.5.0-beta.10] - 2022-08-12
@@ -442,7 +450,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.10...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.11...HEAD
+[0.5.0-beta.11]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.10...v0.5.0-beta.11
 [0.5.0-beta.10]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.9...v0.5.0-beta.10
 [0.5.0-beta.9]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.8...v0.5.0-beta.9
 [0.5.0-beta.8]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.7...v0.5.0-beta.8
