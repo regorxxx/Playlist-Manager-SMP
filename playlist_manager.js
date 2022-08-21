@@ -200,7 +200,7 @@ addEventListener('on_key_down', (k) => {
 	list.key_down(k);
 });
 
-addEventListener('on_key_down', (x, y, mask) => {
+addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 	if (pop.isEnabled()) {return;}
 	if (buttonsPanel.curBtn === null) {
 		list.lbtn_up(x, y, mask);
