@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/22
+//22/08/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -305,9 +305,31 @@ function createMenuLeft(forcedIndex = -1) {
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
 		// Locks playlist file
-		menu.newEntry({entryText: !bIsLockPls ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
-			switchLock(list, z);
-		}, flags: bIsPlsLockable ? MF_STRING : MF_GRAYED});
+		if (!bIsPlsUI) {
+			menu.newEntry({entryText: !bIsLockPls ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
+				switchLock(list, z);
+			}, flags: bIsPlsLockable ? MF_STRING : MF_GRAYED});
+		}
+		// Locks UI playlist
+		if (bIsPlsUI || bIsPlsLoaded) {
+			const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist', 'ExecuteDefaultAction'];
+			const defaultLockTypes = lockTypes.slice(0, 4);
+			const index = plman.FindPlaylist(pls.nameId);
+			const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
+			const lockName = plman.GetPlaylistLockName(index);
+			const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+			const bLocked = !bSMPLock || playlistLockTypes.size;
+			const flags = bSMPLock ? MF_STRING: MF_GRAYED;
+			const entryText = 'Edit UI Playlist lock' + (!bSMPLock ? ' ' + _p(lockName) : '');
+			menu.newEntry({entryText, func: () => {
+				let newLock = '';
+				const oldLock = (bLocked ? [...playlistLockTypes] : []);
+				try {newLock = utils.InputBox(window.ID, 'Lock types, multiple values separated by \';\' :\n\n' + _p(lockTypes.joinEvery(', ', 4)), window.Name, oldLock.join(';'), true);} 
+				catch(e) {return;}
+				newLock = [...new Set(newLock.split(';')).intersection(lockTypes)]; // This filters blank values
+				if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
+			}, flags});
+		}
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
 		menu.newEntry({entryText: 'Open file on explorer', func: () => {
