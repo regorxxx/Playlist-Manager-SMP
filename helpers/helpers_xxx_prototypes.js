@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/07/22
+//22/08/22
 
 /* 
 	Objects
@@ -227,6 +227,18 @@ Array.prototype.shuffle = function() {
 		[this[n], this[last]] = [this[last], this[n]];
 	}
 	return this;
+};
+
+// Join array and split lines every n elements joined
+Array.prototype.joinEvery = function(sep, n) {
+	const len = this.length;
+	let i = 0;
+	let str = '';
+	while (i < len) {
+		str += (str.length ? sep + '\n' : '') + this.slice(i, i + n).join(sep);
+		i += n;
+	}
+	return str;
 };
 
 /* 
