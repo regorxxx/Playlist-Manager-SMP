@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.12](#050-beta12---2022-08-22)
 - [0.5.0-beta.11](#050-beta11---2022-08-21)
 - [0.5.0-beta.10](#050-beta10---2022-08-12)
 - [0.5.0-beta.9](#050-beta9---2022-08-09)
@@ -25,6 +26,15 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.12] - 2022-08-22
+### Added
+- Playlist locks: new menu entry to lock/unlock playlists (L. Click menu). Allows fine-grained control of lock types. Note playlist locked by other components or main program can not be edited via SMP.
+### Changed
+- UI: minor improvements to word lists within popups in some instances. Now split in new lines after X elements.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
@@ -450,7 +460,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.11...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.12...HEAD
+[0.5.0-beta.12]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.11...v0.5.0-beta.12
 [0.5.0-beta.11]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.10...v0.5.0-beta.11
 [0.5.0-beta.10]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.9...v0.5.0-beta.10
 [0.5.0-beta.9]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.8...v0.5.0-beta.9
