@@ -25,9 +25,12 @@
 
 ## [Unreleased][]
 ### Added
+- Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
 ### Changed
+- XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
 ### Removed
 ### Fixed
+- XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
