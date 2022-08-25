@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/07/22
+//25/08/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -475,9 +475,12 @@ function _list(x, y, w, h) {
 							const pls = this.data[this.index];
 							if (pls) {
 								const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath,'')  + ')' : '';
+								const locks = getLocks(pls.nameId);
 								let playlistDataText = pls.isAutoPlaylist ? 'AutoPlaylist: ' : (pls.extension === '.xsp' ? 'Smart Playlist: ' : 'Playlist: ');
 								playlistDataText += pls.nameId + ' - ' +  pls.size + ' Tracks ' + path;
 								playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
+								playlistDataText +=  locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '' ) + locks.name) : '';
+								playlistDataText +=  locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
 								playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
 								playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
 								playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0];}).join(', ') : '-');
@@ -2175,9 +2178,11 @@ function _list(x, y, w, h) {
 			const pls = this.dataAll[idx];
 			let handleList = new FbMetadbHandleList();
 			if (pls.isAutoPlaylist) { // AutoPlaylist
-				if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
-				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
-				this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true); // Update size on load
+				if (!checkQuery(pls.query, true, true)) {console.popup('Query not valid:\n' + pls.query, window.Name);}
+				else {
+					handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
+					this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true); // Update size on load
+				}
 			} else { // Or file
 				if (_isFile(pls.path)) {
 					// Try to load handles from library first, greatly speeds up non fpl large playlists
@@ -2186,10 +2191,9 @@ function _list(x, y, w, h) {
 					const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
 					handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void(0), remDupl);
 					if (handleList) {this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true);}  // Update size on load for smart playlists
-					else {handleList = new FbMetadbHandleList();}
-				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false;}
+				} else {console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}
-			return handleList;
+			return handleList || new FbMetadbHandleList();
 		}
 		
 		this.showBindedPlaylist = (idx, bAlsoHidden = false) => {

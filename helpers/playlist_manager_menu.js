@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/08/22
+//25/08/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -324,9 +324,9 @@ function createMenuLeft(forcedIndex = -1) {
 			menu.newEntry({entryText, func: () => {
 				let newLock = '';
 				const oldLock = (bLocked ? [...playlistLockTypes] : []);
-				try {newLock = utils.InputBox(window.ID, 'Lock types, multiple values separated by \';\' :\n\n' + _p(lockTypes.joinEvery(', ', 4)), window.Name, oldLock.join(';'), true);} 
+				try {newLock = utils.InputBox(window.ID, 'Lock types, multiple values separated by \',\':\n\n' + _p(lockTypes.joinEvery(', ', 4)), window.Name, oldLock.join(','), true);} 
 				catch(e) {return;}
-				newLock = [...new Set(newLock.split(';')).intersection(lockTypes)]; // This filters blank values
+				newLock = [...new Set(newLock.split(/;|,/g)).intersection(lockTypes)]; // This filters blank values
 				if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
 			}, flags});
 		}

@@ -142,3 +142,12 @@ function getHandleFromUIPlaylists(names = [], bSort = true) {
 	if (bSort) {output.Sort();}
 	return output;
 }
+
+function getLocks(plsName) {
+	const index = plman.FindPlaylist(plsName);
+	const types = index !== -1 ? [...new Set(plman.GetPlaylistLockedActions(index))] : [];
+	const name = index !== -1 ? plman.GetPlaylistLockName(index) : '';
+	const isSMPLock = name === 'foo_spider_monkey_panel' || !name;
+	const isLocked = types.length ? true : false;
+	return {isLocked , isSMPLock, name, types, index};
+}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/08/22
+//25/08/22
 
 /* 
 	Objects
@@ -230,12 +230,12 @@ Array.prototype.shuffle = function() {
 };
 
 // Join array and split lines every n elements joined
-Array.prototype.joinEvery = function(sep, n) {
+Array.prototype.joinEvery = function(sep, n, newLineChar = '\n') {
 	const len = this.length;
 	let i = 0;
 	let str = '';
 	while (i < len) {
-		str += (str.length ? sep + '\n' : '') + this.slice(i, i + n).join(sep);
+		str += (str.length ? sep + newLineChar : '') + this.slice(i, i + n).join(sep);
 		i += n;
 	}
 	return str;
