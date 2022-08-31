@@ -1,12 +1,12 @@
 ﻿'use strict';
-//12/08/22
+//31/08/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', { author: 'XXX', version: '0.5.0-beta10', features: {drag_n_drop: false, grab_focus: true}});
+window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta13', features: {drag_n_drop: false, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -129,7 +129,19 @@ var properties = {
 			return [key, {icon, iconBg}];
 		})))
 	],
-	bDynamicMenus			: ['Show dynamic menus?', true]
+	bDynamicMenus			: ['Show dynamic menus?', true],
+	lShortcuts				: ['L. click modifiers', JSON.stringify({
+		Ctrl:			'Load / show playlist',
+		Shift:			'Send selection to playlist',
+		'Ctrl + Shift':	'Clone playlist in UI',
+		'Double Click':	'Load / show playlist'
+	})],
+	mShortcuts				: ['M. click modifiers', JSON.stringify({
+		Ctrl:			'- None -',
+		Shift:			'- None -',
+		'Ctrl + Shift':	'- None -',
+		'Single Click':	'- None -'
+	})]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -206,6 +218,13 @@ addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 		list.lbtn_up(x, y, mask);
 	}
 	on_mouse_lbtn_up_buttn(x, y);
+});
+
+addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
+	if (pop.isEnabled()) {return;}
+	if (buttonsPanel.curBtn === null) {
+		list.mbtn_up(x, y, mask);
+	}
 });
 
 addEventListener('on_mouse_lbtn_down', (x, y) => {
