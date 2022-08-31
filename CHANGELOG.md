@@ -26,11 +26,17 @@
 ## [Unreleased][]
 ### Added
 - Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
+- UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' actions (along the previous ones).
+- UI: added M. Click actions, configurable the same way than L. Click actions. Not set by default.
 ### Changed
+- UI: keyboard modifiers on L. Click are now fully configurable using the header menu. See 'UI\Shortcuts...'. Playlist's tooltip will reflect the config too.
+- UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
+- Fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added

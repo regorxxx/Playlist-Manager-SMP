@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/22
+//30/08/22
 
 /* 
 	Objects
@@ -217,13 +217,11 @@ Array.prototype.rotate = (function() {
 	};
 })();
 
-// Randomly rearranges the items in an array, modifies original
+// Randomly rearranges the items in an array, modifies original. Fisher-Yates algortithm
 Array.prototype.shuffle = function() {
-	let last = this.length;
-	let n;
+	let last = this.length, n;
 	while (last > 0) {
-		n = Math.floor(Math.random() * last);
-		--last;
+		n = Math.floor(Math.random() * last--);
 		[this[n], this[last]] = [this[last], this[n]];
 	}
 	return this;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/22
+//28/08/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -102,9 +102,12 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	
 	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
 		const eType = typeof entryText, mType = typeof menuName;
-		if (eTypeToStr.indexOf(eType) !== -1) {entryText = entryText.toString();}
+		if (eTypeToStr.indexOf(eType) !== -1) {	entryText = entryText.toString();}
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
-		if (eType === 'string' && entryText.indexOf('&') !== - 1) {entryText = entryText.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (eType === 'string') {
+			if (entryText.indexOf('&') !== - 1) {entryText = entryText.replace(/&&/g,'&').replace(/&/g,'&&');}
+			if (entryText.toLowerCase() === 'sep') {func = null; flags = MF_GRAYED;}
+		}
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		entryArr.push({entryText, func, menuName, flags, bIsMenu: false});
 		return entryArr[entryArr.length -1];
