@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/22
+//31/08/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -693,7 +693,7 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bSaveFilterStates ? 0 : 1);});
 		}
-		{	// Filtering
+		{	// UI-only playlists
 			const subMenuName = menu.newMenu('Track UI-only playlists...', menuName);
 			const options = ['Yes: also show UI-only playlists','No: Only playlist files on tracked folder'];
 			const optionsLength = options.length;
@@ -1379,6 +1379,54 @@ function createMenuRightTop() {
 				list.checkConfig();
 				window.Repaint();
 			}});
+		}
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Shortcuts
+			const subMenuName = menu.newMenu('Shortcuts...', menuName);
+			{
+				const subMenuNameL = menu.newMenu('Left CLick', subMenuName)
+				const shortcuts =  list.getDefaultShortcuts('L');
+				const modifiers = shortcuts.options.map((_) => {return _.key;});
+				const actions = shortcuts.actions.map((_) => {return _.key;});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+				modifiers.forEach((modifier) => {
+					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameL);
+					actions.forEach((action) => {
+						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+							list.lShortcuts[modifier] = action;
+							list.properties['lShortcuts'][1] = JSON.stringify(list.lShortcuts);
+							overwriteProperties(list.properties);
+						}});
+					});
+					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+						const idx = actions.indexOf(list.lShortcuts[modifier]);
+						return (idx !== -1 ? idx : 0);
+					});
+				});
+			}
+			{
+				const subMenuNameM = menu.newMenu('Middle CLick', subMenuName)
+				const shortcuts =  list.getDefaultShortcuts('M');
+				const modifiers = shortcuts.options.map((_) => {return _.key;});
+				const actions = shortcuts.actions.map((_) => {return _.key;});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+				modifiers.forEach((modifier) => {
+					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameM);
+					actions.forEach((action) => {
+						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+							list.mShortcuts[modifier] = action;
+							list.properties['mShortcuts'][1] = JSON.stringify(list.mShortcuts);
+							overwriteProperties(list.properties);
+						}});
+					});
+					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+						const idx = actions.indexOf(list.mShortcuts[modifier]);
+						return (idx !== -1 ? idx : 0);
+					});
+				});
+			}
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
