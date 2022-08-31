@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/22
+//31/08/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -180,14 +180,18 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 
 function setTrackTags(trackTags, list, z) {
 	let bDone = false;
+	const extension = list.data[z].extension;
 	const oldTags = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
 	if (oldTags !== newTags) { // Compares objects
-		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl' || list.data[z].extension === '.xsp') {
+		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			list.editData(list.data[z], {trackTags});
 			list.update(true, true);
 			list.filter();
 			bDone = true;
+		} else if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls' ) {
+			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
+			bDone = false;
 		} else {
 			const name = list.data[z].name;
 			const path = list.data[z].path;
@@ -197,8 +201,8 @@ function setTrackTags(trackTags, list, z) {
 				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM);}
-				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + oldTags,'<meta rel="tags">' + newTags, list.bBOM);}
+				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TRACKTAGS:' + oldTags,'#TRACKTAGS:' + newTags, list.bBOM);}
+				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + oldTags,'<meta rel="tags">' + newTags, list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z);
 					if (bDone) {setTag(trackTags, list, z); return;}
@@ -223,13 +227,17 @@ function setTrackTags(trackTags, list, z) {
 
 function setTag(tags, list, z) {
 	let bDone = false;
+	const extension = list.data[z].extension;
 	if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
-		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl' || list.data[z].extension === '.xsp') {
+		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			list.editData(list.data[z], {tags});
 			list.update(true, true);
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 			list.filter({tagState});
 			bDone = true;
+		} else if (pls.extension === '.ui' || pls.extension === '.strm') {
+			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
+			bDone = false;
 		} else {
 			const name = list.data[z].name;
 			const path = list.data[z].path;
@@ -239,8 +247,8 @@ function setTag(tags, list, z) {
 				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
-				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + list.data[z].tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
+				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
+				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + list.data[z].tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z);
 					if (bDone) {setTag(tags, list, z); return;}
@@ -266,8 +274,10 @@ function setTag(tags, list, z) {
 
 function setCategory(category, list, z) {
 	let bDone = false;
+	const extension = list.data[z].extension;
+	if (extension === '.ui' || extension === '.strm') {return bDone;}
 	if (list.data[z].category !== category) {
-		if (list.data[z].isAutoPlaylist || list.data[z].extension === '.fpl' || list.data[z].extension === '.xsp') {
+		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			list.editData(list.data[z], {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
@@ -275,6 +285,9 @@ function setCategory(category, list, z) {
 			const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
 			list.filter({categoryState});
 			bDone = true;
+		} else if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls' ) {
+			console.log('Playlist Manager: Playlist\'s category can not be edited due to format ' + pls.extension);
+			bDone = false;
 		} else {
 			const name = list.data[z].name;
 			const path = list.data[z].path;
@@ -284,8 +297,8 @@ function setCategory(category, list, z) {
 				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (list.data[z].extension === '.m3u' || list.data[z].extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM);}
-				else if (list.data[z].extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="category">' + list.data[z].category,'<meta rel="category">' + category, list.bBOM);}
+				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM);}
+				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="category">' + list.data[z].category,'<meta rel="category">' + category, list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z); 
 					if (bDone) {setCategory(category, list, z); return;}
@@ -313,7 +326,7 @@ function setCategory(category, list, z) {
 
 function switchLock(list, z, bAlsoHidden = false) {
 	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
-		console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+		console.log('Playlist Manager: Error editing playlist. Index out of bounds.');
 		return false;
 	}
 	let bDone = false;
@@ -324,6 +337,9 @@ function switchLock(list, z, bAlsoHidden = false) {
 		list.update(true, true);
 		list.filter();
 		bDone = true;
+	} else if (pls.extension === '.ui' || pls.extension === '.pls') {
+		console.log('Playlist Manager: Playlist can not be locked due to format ' + pls.extension);
+		bDone = false;
 	} else {
 		const name = pls.name;
 		const path = pls.path;
@@ -356,9 +372,30 @@ function switchLock(list, z, bAlsoHidden = false) {
 	return bDone;
 }
 
+function switchLockUI(list, z, bAlsoHidden = false) {
+	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+		console.log('Playlist Manager: Error editing playlist. Index out of bounds.');
+		return false;
+	}
+	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
+	const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist'];
+	const index = plman.FindPlaylist(pls.nameId);
+	if (index === -1) {return false;}
+	const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
+	const lockName = plman.GetPlaylistLockName(index);
+	const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+	const bLocked = !bSMPLock || playlistLockTypes.size;
+	const newLock = bLocked ? [] : lockTypes; // This filters blank values
+	plman.SetPlaylistLockedActions(index, newLock);
+	list.editData(pls, {isLocked: !pls.isLocked});
+	list.update(true, true);
+	list.filter();
+	return true;
+}
+
 function rewriteHeader(list, z, bAlsoHidden = false) {
 	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
-		console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+		console.log('Playlist Manager: Error editing playlist. Index out of bounds.');
 		return false;
 	}
 	let bDone = false;
@@ -494,7 +531,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 
 function clonePlaylistInUI(list, z, bAlsoHidden = false) {
 	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
-		console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
 	}
 	let bDone = false;
