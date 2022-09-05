@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/22
+//05/09/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -180,12 +180,13 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 
 function setTrackTags(trackTags, list, z) {
 	let bDone = false;
-	const extension = list.data[z].extension;
-	const oldTags = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
+	const pls = list.data[z];
+	const extension = pls.extension;
+	const oldTags = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
 	if (oldTags !== newTags) { // Compares objects
-		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			list.editData(list.data[z], {trackTags});
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+			list.editData(pls, {trackTags});
 			list.update(true, true);
 			list.filter();
 			bDone = true;
@@ -193,8 +194,8 @@ function setTrackTags(trackTags, list, z) {
 			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
 			bDone = false;
 		} else {
-			const name = list.data[z].name;
-			const path = list.data[z].path;
+			const name = pls.name;
+			const path = pls.path;
 			if (_isFile(path)) {
 				// Backup
 				const backPath = path + '.back';
@@ -213,7 +214,7 @@ function setTrackTags(trackTags, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) {_deleteFile(backPath);}
-					list.editData(list.data[z], {trackTags});
+					list.editData(pls, {trackTags});
 					list.update(true , true);
 					list.filter();
 				}
@@ -227,10 +228,11 @@ function setTrackTags(trackTags, list, z) {
 
 function setTag(tags, list, z) {
 	let bDone = false;
-	const extension = list.data[z].extension;
-	if (! new Set(tags).isEqual(new Set(list.data[z].tags))) { // Compares arrays
-		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			list.editData(list.data[z], {tags});
+	const pls = list.data[z];
+	const extension = pls.extension;
+	if (! new Set(tags).isEqual(new Set(pls.tags))) { // Compares arrays
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+			list.editData(pls, {tags});
 			list.update(true, true);
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 			list.filter({tagState});
@@ -239,16 +241,16 @@ function setTag(tags, list, z) {
 			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
 			bDone = false;
 		} else {
-			const name = list.data[z].name;
-			const path = list.data[z].path;
+			const name = pls.name;
+			const path = pls.path;
 			if (_isFile(path)) {
 				// Backup
 				const backPath = path + '.back';
 				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TAGS:' + list.data[z].tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
-				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + list.data[z].tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
+				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#TAGS:' + pls.tags.join(';'),'#TAGS:' + tags.join(';'), list.bBOM);}
+				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="tags">' + pls.tags.join(';'),'<meta rel="tags">' + tags.join(';'), list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z);
 					if (bDone) {setTag(tags, list, z); return;}
@@ -259,7 +261,7 @@ function setTag(tags, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) {_deleteFile(backPath);}
-					list.editData(list.data[z], {tags});
+					list.editData(pls, {tags});
 					list.update(true , true);
 					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 					list.filter({tagState});
@@ -274,11 +276,12 @@ function setTag(tags, list, z) {
 
 function setCategory(category, list, z) {
 	let bDone = false;
-	const extension = list.data[z].extension;
+	const pls = list.data[z];
+	const extension = pls.extension;
 	if (extension === '.ui' || extension === '.strm') {return bDone;}
-	if (list.data[z].category !== category) {
-		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			list.editData(list.data[z], {category});
+	if (pls.category !== category) {
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+			list.editData(pls, {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
 			list.update(true, true);
@@ -289,16 +292,16 @@ function setCategory(category, list, z) {
 			console.log('Playlist Manager: Playlist\'s category can not be edited due to format ' + pls.extension);
 			bDone = false;
 		} else {
-			const name = list.data[z].name;
-			const path = list.data[z].path;
+			const name = pls.name;
+			const path = pls.path;
 			if (_isFile(path)) {
 				// Backup
 				const backPath = path + '.back';
 				_copyFile(path, backPath);
 				delayAutoUpdate();
 				let reason = -1;
-				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#CATEGORY:' + list.data[z].category,'#CATEGORY:' + category, list.bBOM);}
-				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="category">' + list.data[z].category,'<meta rel="category">' + category, list.bBOM);}
+				if (extension === '.m3u' || extension === '.m3u8') {[bDone, reason] = editTextFile(path,'#CATEGORY:' + pls.category,'#CATEGORY:' + category, list.bBOM);}
+				else if (extension === '.xspf') {[bDone, reason] = editTextFile(path,'<meta rel="category">' + pls.category,'<meta rel="category">' + category, list.bBOM);}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, z); 
 					if (bDone) {setCategory(category, list, z); return;}
@@ -309,7 +312,7 @@ function setCategory(category, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) {_deleteFile(backPath);}
-					list.editData(list.data[z], {category});
+					list.editData(pls, {category});
 					list.update(true, true);
 					// Add new category to current view! (otherwise it gets filtered)
 					// Easy way: intersect current view + new one with refreshed list

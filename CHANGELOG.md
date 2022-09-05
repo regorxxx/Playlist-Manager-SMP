@@ -36,6 +36,9 @@
 ### Removed
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
+- Crash using set playlist tags menu entry.
+- Crash using set playlist category menu entry.
+- Crash using set track tags menu entry.
 - Fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
 
 ## [0.5.0-beta.12] - 2022-08-22
