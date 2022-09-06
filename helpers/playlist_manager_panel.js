@@ -1,23 +1,22 @@
 ﻿'use strict';
-//13/05/22
+//06/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
 include('helpers_xxx_UI.js');
 
-var panel_properties = {
-	fontSize 			: ['Font size', _scale(10)],
-	coloursMode			: ['Background colour mode', 0],
-	customBackground	: ['Custom background colour', RGB(30, 30, 30)], // Black
-	bCustomText			: ['Text custom colour mode', false],
-	customText			: ['Custom text colour', RGB(157, 158, 163)], // Gray
-	buttonsTextColor	: ['Buttons\' text color', buttonsPanel.config.textColor],
-	bAltRowsColor		: ['Alternate rows background color', true]
-};
-
-setProperties(panel_properties, 'panel_');
-
 function _panel(custom_background = false) {
+	
+	const panelProperties = {
+		fontSize 			: ['Font size', _scale(10)],
+		coloursMode			: ['Background colour mode', 0],
+		customBackground	: ['Custom background colour', RGB(30, 30, 30)], // Black
+		bCustomText			: ['Text custom colour mode', false],
+		customText			: ['Custom text colour', RGB(157, 158, 163)], // Gray
+		buttonsTextColor	: ['Buttons\' text color', buttonsPanel.config.textColor],
+		bAltRowsColor		: ['Alternate rows background color', true]
+	};
+	setProperties(panelProperties, 'panel_');
 	
 	this.coloursChanged = () => {
 		if (window.InstanceType) {
@@ -89,7 +88,7 @@ function _panel(custom_background = false) {
 	};
 	
 	window.DlgCode = DLGC_WANTALLKEYS;
-	this.properties = getPropertiesPairs(panel_properties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
+	this.properties = getPropertiesPairs(panelProperties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.fonts = {};
 	this.colours = {};
 	this.w = 0;
