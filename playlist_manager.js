@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/22
+//06/09/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -84,7 +84,6 @@ var properties = {
 	bAutoCustomTag			: ['Automatically add custom tags to all playlists', false],
 	autoCustomTag			: ['Custom tags to add', ''],
 	bApplyAutoTags			: ['Apply actions based on tags (lock, load)', false],
-	// autoPlaylistTags		: ['Playlist tags and actions config', JSON.parse({bAutoLoadTag: false, bAutoLockTag: false, bAutoCustomTag: false, bApplyAutoTags: false, autoCustomTag: ''})],
 	bAutoTrackTag			: ['Enable auto-tagging for added tracks (at autosave)', false],
 	bAutoTrackTagAlways		: ['Enable auto-tagging for added tracks (always)', false],
 	bAutoTrackTagPls		: ['Auto-tagging for standard playlists', false],
@@ -140,8 +139,9 @@ var properties = {
 		Ctrl:			'- None -',
 		Shift:			'- None -',
 		'Ctrl + Shift':	'- None -',
-		'Single Click':	'- None -'
-	})]
+		'Single Click':	'Multiple selection'
+	})],
+	bMultMenuTag			: ['Automatically add \'bMultMenu\' to all playlists', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
@@ -149,11 +149,14 @@ properties['extension'].push({func: (val) => {return writablePlaylistFormats.has
 properties['autoUpdate'].push({func: isInt, range: [[0,0],[200, Infinity]]}, properties['autoUpdate'][1]); // Safety limit 0 or > 200
 properties['autoBack'].push({func: !isNaN, range: [[0,0],[1000, Infinity]]}, properties['autoBack'][1]); // Safety limit 0 or > 1000
 properties['autoBackN'].push({func: isInt}, properties['autoBackN'][1]);
-var prefix = 'plm_';
-setProperties(properties, prefix);
+properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
+properties['playlistIcons'].push({func: isJSON}, properties['playlistIcons'][1]);
+properties['mShortcuts'].push({func: isJSON}, properties['mShortcuts'][1]);
+properties['lShortcuts'].push({func: isJSON}, properties['lShortcuts'][1]);
+setProperties(properties, 'plm_');
 
 { // Info Popup
-	let prop = getPropertiesPairs(properties, prefix);
+	let prop = getPropertiesPairs(properties, 'plm_');
 	if (!prop['bFirstPopup'][1]) {
 		prop['bFirstPopup'][1] = true;
 		overwriteProperties(prop); // Updates panel
@@ -394,6 +397,18 @@ addEventListener('on_main_menu_dynamic', (id) => {
 				bDone = true;
 				break;
 			}
+			case 'load playlist (mult)': {
+				const idx = list.dataAll.map((pls, i) => {return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1);}).filter((idx) => {return idx !== -1;});
+				idx.forEach((i) => {list.loadPlaylistOrShow(i, true);});
+				bDone = true;
+				break;
+			}
+			case 'clone in ui (mult)': {
+				const idx = list.dataAll.map((pls, i) => {return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1);}).filter((idx) => {return idx !== -1;});
+				idx.forEach((i) => {clonePlaylistInUI(list, i, true);});
+				bDone = true;
+				break;
+			}
 		}
 		console.log('on_main_menu_dynamic: ' + (bDone ? menu.name :JSON.stringify(menu) + ' not found'));
 	}
@@ -467,7 +482,8 @@ var debouncedAutoUpdate = (autoUpdateTimer) ? debounce(autoUpdate, autoUpdateTim
 const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
 function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 function autoUpdate() {
-	const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', prefix), loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
+	// const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', 'plm_'), loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
+	const playlistPathArray = getFiles(list.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	if (playlistPathArrayLength !== (list.getPlaylistNum())) { // Most times that's good enough. Count total items minus virtual playlists
 		list.update(false, true, list.lastIndex);
@@ -531,3 +547,6 @@ keyListener.fn = repeatFn(() => {
 		keyListener.bCtrol = bCtrol;
 	}
 }, 500)();
+
+// Delete unused variables
+properties = void(0);
