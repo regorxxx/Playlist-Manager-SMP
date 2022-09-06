@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/22
+//06/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -10,6 +10,7 @@ include('menu_xxx.js');
 // Menus
 const menuRbtn = new _menu();
 const menuLbtn = new _menu();
+const menuLbtnMult = new _menu();
 const menuRbtnTop = new _menu();
 const menuRbtnSort = new _menu();
 
@@ -29,6 +30,7 @@ function createMenuLeft(forcedIndex = -1) {
 		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
@@ -202,7 +204,7 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!isArrayEqual(pls.tags, tags)) {setTag(tags, list, z);}
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
-			list.tags().forEach((tag, i) => {
+			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
 				menu.newEntry({menuName, entryText: tag, func: () => {
 					let tags;
 					if (i === 0) {tags = [];}
@@ -223,7 +225,7 @@ function createMenuLeft(forcedIndex = -1) {
 				tags = tags.replaceAll('\'\'','"'); // Replace quotes
 				try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
 			}
-			setTrackTags(tags, list, z);
+			if (tagsString !== currValue) {setTrackTags(tags, list, z);}
 		}, flags: !bIsLockPls && bIsPlsEditable ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -330,12 +332,217 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
 			}, flags});
 		}
+		menu.newEntry({entryText: 'sep'});
 		// Deletes playlist file and playlist loaded
 		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
 		menu.newEntry({entryText: 'Open file on explorer', func: () => {
 			if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
 			else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
 		}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED});
+	}
+	return menu;
+}
+
+// on callbacks
+function createMenuLeftMult(forcedIndexes = []) {
+	// Constants
+	const indexes = forcedIndexes.length === 0 ? [...list.indexes] : [...forcedIndexes]; // When delaying menu, the mouse may move to other index...
+	list.tooltip.SetValue(null);
+	const menu = menuLbtnMult;
+	menu.clear(true); // Reset on every call
+	if (indexes.length === 0) {
+		fb.ShowPopupMessage('Selected indexes wwere empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		return menu;
+	}
+	const playlists = [];
+	indexes.forEach((z, i) => {
+		playlists.push(list.data[z]);
+		if (!playlists[i]) {
+			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+			return menu;
+		}
+	});
+	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
+	// Helpers
+	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
+	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
+	const isAutoPls = (pls) => {return pls.isAutoPlaylist || pls.query;};
+	const isLockPls = (pls) => {return pls.isLocked;};
+	const isPlsEditable = (pls) => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist;};
+	const isPlsLockable = (pls) => {return isPlsEditable(pls) || pls.extension === '.strm';};
+	const isPlsUI = (pls) => {return pls.extension === '.ui';};
+	// Evaluate
+	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
+	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => {return isPlsLoaded(pls);});
+	const bIsAutoPlsEvery = playlists.every((pls) => {return isAutoPls(pls);});
+	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => {return isAutoPls(pls);});
+	const bIsLockPlsEvery = playlists.filter((pls) => {return pls.extension !== '.ui';}).every((pls) => {return isLockPls(pls);});
+	const bIsPlsEditable = playlists.some((pls) => {return isPlsEditable(pls);});
+	const bIsPlsLockable = playlists.some((pls) => {return isPlsLockable(pls);});
+	const bIsPlsUIEvery = playlistsUI.length === playlists.length;
+	const bIsPlsUISome = playlistsUI.length ? true : false;
+	const bWritableFormat = playlists.some((pls) => {return writablePlaylistFormats.has(pls.extension);});
+	// Header
+	if (list.bShowMenuHeader) {
+		menu.newEntry({entryText: '--- ' + playlists.map((pls) => {return pls.name;}).joinUpToChars(', ', 20) + ' ---', flags: MF_GRAYED});
+		menu.newEntry({entryText: 'sep'});
+	}
+	// Entries
+	{	// Load
+		// Load playlist within foobar. Only 1 instance allowed
+		menu.newEntry({entryText: 'Load playlists', func: () => {
+			indexes.forEach((z, i) => {
+				const pls = playlists[i];
+				if (!isPlsUI(pls)) {list.loadPlaylist(z);}
+			})
+		}, flags: bIsPlsLoadedEvery ? MF_GRAYED : MF_STRING});
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Tags and category
+		{	// Set category
+			const menuName = menu.newMenu('Set category...', void(0), !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED);
+			menu.newEntry({menuName, entryText: 'New category...', func: () => {
+				let category = '';
+				try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, playlists[0].category !== null ? playlists[0].category : '', true);} 
+				catch(e) {return;}
+				indexes.forEach((z, i) => {
+					const pls = playlists[i];
+					if (!isLockPls(pls) && isPlsEditable(pls)) {
+						if (pls.category !== category) {setCategory(category, list, z);}
+					}
+				});
+			}});
+			menu.newEntry({menuName, entryText: 'sep'});
+			list.categories().forEach((category, i) => {
+				menu.newEntry({menuName, entryText: category, func: () => {
+					indexes.forEach((z, j) => {
+						const pls = playlists[j];
+						if (!isLockPls(pls) && isPlsEditable(pls)) {
+							if (pls.category !== category) {setCategory(i ? category : '', list, z);}
+						}
+					});
+				}});
+				menu.newCheckMenu(menuName, category, void(0), () => {return playlists.every((pls) => {return (pls.category === (i ? category : ''));});});
+			});
+		}
+		{	// Set tag(s)
+			const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPlsEvery &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+			menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
+				let tags = '';
+				try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, playlists[0].tags.join(';'), true);} 
+				catch(e) {return;}
+				tags = tags.split(';').filter(Boolean); // This filters blank values
+				indexes.forEach((z, i) => {
+					const pls = playlists[i];
+					if (!isLockPls(pls) && isPlsEditable(pls)) {
+						if (!isArrayEqual(pls.tags, tags)) {setTag(tags, list, z);}
+					}
+				});
+			}});
+			menu.newEntry({menuName, entryText: 'sep'});
+			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
+				menu.newEntry({menuName, entryText: tag, func: () => {
+					let tags;
+					indexes.forEach((z, j) => {
+						const pls = playlists[j];
+						if (!isLockPls(pls) && isPlsEditable(pls)) {
+							if (i === 0) {tags = [];}
+							else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
+							else {tags = [...pls.tags, tag];}
+							setTag(tags, list, z);
+						}
+					});
+				}});
+				menu.newCheckMenu(menuName, tag, void(0), () => {return playlists.every((pls) => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});});
+			});
+		}
+		{	// Adds track tag(s)
+			menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
+				let tags = '';
+				const currValue = playlists[0].trackTags && playlists[0].trackTags.length ? JSON.stringify(playlists[0].trackTags) : '';
+				try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true);} 
+				catch(e) {return;}
+				const tagsString = tags;
+				if (tags.length) {
+					tags = tags.replaceAll('\'\'','"'); // Replace quotes
+					try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
+				}
+				indexes.forEach((z, i) => {
+					const pls = playlists[i];
+					if (!isLockPls(pls) && isPlsEditable(pls)) {
+						if (tagsString !== JSON.stringify(pls.trackTags)) {setTrackTags(tags, list, z);}
+					}
+				});
+			}, flags: !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED});
+		}
+	}
+	menu.newEntry({entryText: 'sep'});
+	{ // Export and Convert
+		const presets = JSON.parse(list.properties.converterPreset[1]);
+		const flags = bWritableFormat || bIsPlsUISome || bIsAutoPlsSome ? MF_STRING : MF_GRAYED;
+		const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
+		menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		presets.forEach((preset) => {
+			const path = preset.path;
+			let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
+			const dsp = preset.dsp;
+			let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+			const tf = preset.tf;
+			let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+			const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+			const extensionName = extension.length ? '[' + extension + ']' : '';
+			if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
+			if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
+			if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
+			menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+				const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+				indexes.forEach((z, i) => {
+					const pls = playlists[i];
+					if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
+						if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);} 
+						else {exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);}
+					}
+				});
+			}, flags});
+		});
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// File management
+		// Locks playlist file
+		menu.newEntry({entryText: !bIsLockPlsEvery ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
+			indexes.forEach((z, i) => {
+				const pls = playlists[i];
+				if (!isPlsUI(pls) && isLockPls(pls) === bIsLockPlsEvery) {switchLock(list, z);}
+			});
+		}, flags: bIsPlsLockable && !bIsPlsUIEvery ? MF_STRING : MF_GRAYED});
+		// Locks UI playlist
+		const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist', 'ExecuteDefaultAction'];
+		const defaultLockTypes = lockTypes.slice(0, 4);
+		menu.newEntry({entryText: 'Edit UI Playlist lock', func: () => {
+			let newLock = '';
+			try {newLock = utils.InputBox(window.ID, 'Lock types, multiple values separated by \',\':\n\n' + _p(lockTypes.joinEvery(', ', 4)), window.Name, '', true);} 
+			catch(e) {return;}
+			newLock = [...new Set(newLock.split(/;|,/g)).intersection(lockTypes)]; // This filters blank values
+			playlistsUI.forEach((pls, i) => {
+				const index = plman.FindPlaylist(pls.nameId);
+				const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
+				const lockName = plman.GetPlaylistLockName(index);
+				const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+				const bLocked = !bSMPLock || playlistLockTypes.size;
+				const oldLock = (bLocked ? [...playlistLockTypes] : []);
+				if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
+			});
+		}, flags: bIsPlsUISome || bIsPlsLoadedSome ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: 'sep'});
+		// Deletes playlist file and playlist loaded
+		menu.newEntry({entryText: 'Delete', func: () => {
+			playlists.forEach((pls, i) => {
+				// Index change on every removal so it has to be recalculated
+				const z = list.data.indexOf(pls);
+				if (z !== -1) {list.removePlaylist(z);}
+			});
+		}});
 	}
 	return menu;
 }
@@ -875,7 +1082,7 @@ function createMenuRightTop() {
 				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
-				const options = ['bAutoLoad', 'bAutoLock'];
+				const options = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
 					const itemKey = item + 'Tag';
@@ -889,7 +1096,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
 					let tag = '';
-					try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'bAutoLoad,bAutoLock', true);}
+					try {tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, options.join(','), true);}
 					catch(e) {return;}
 					tag = tag.trim();
 					list.bAutoCustomTag = tag.length ? true : false;
@@ -1085,7 +1292,7 @@ function createMenuRightTop() {
 				});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
-					list.properties['converterPreset'][1] = properties.converterPreset[1];
+					list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
 					overwriteProperties(list.properties);
 				}});
 			}
@@ -1397,6 +1604,9 @@ function createMenuRightTop() {
 							list.lShortcuts[modifier] = action;
 							list.properties['lShortcuts'][1] = JSON.stringify(list.lShortcuts);
 							overwriteProperties(list.properties);
+							if (action === 'Multiple selection') {
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+							}
 						}});
 					});
 					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
@@ -1404,6 +1614,12 @@ function createMenuRightTop() {
 						return (idx !== -1 ? idx : 0);
 					});
 				});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
+					list.properties['lShortcuts'][1] = list.defaultProperties['lShortcuts'][3];
+					list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);
+					overwriteProperties(list.properties);
+				}});
 			}
 			{
 				const subMenuNameM = menu.newMenu('Middle CLick', subMenuName)
@@ -1419,6 +1635,9 @@ function createMenuRightTop() {
 							list.mShortcuts[modifier] = action;
 							list.properties['mShortcuts'][1] = JSON.stringify(list.mShortcuts);
 							overwriteProperties(list.properties);
+							if (action === 'Multiple selection') {
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+							}
 						}});
 					});
 					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
@@ -1426,6 +1645,12 @@ function createMenuRightTop() {
 						return (idx !== -1 ? idx : 0);
 					});
 				});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
+					list.properties['mShortcuts'][1] = list.defaultProperties['mShortcuts'][3];
+					list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);				list.mShortcuts = JSON.parse(list.properties['mShortcuts'][1]);
+					overwriteProperties(list.properties);
+				}});
 			}
 		}
 	}
@@ -1443,7 +1668,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					list.bDynamicMenus = i === 0 ? true : false;
 					if (list.bDynamicMenus) {
-						fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)', window.Name);
+						fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)\n\nPlaylists tagged with \'bMultMenu\' will be associated to these special\nmenu entries:\n\t-Load tagged playlists\n\t-Clone tagged playlists in UI', window.Name);
 					}
 					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
 					overwriteProperties(list.properties);

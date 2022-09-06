@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/22
+//06/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -266,6 +266,14 @@ function _list(x, y, w, h) {
 			else if (plman.FindPlaylist(this.data[currIdx].nameId) !== -1) {playlistDataTextRight += loadedChar;}
 			// Draw
 			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
+			// Multiple selection
+			if (this.indexes.length) {
+				if (this.indexes.indexOf(this.offset + i) !== -1) {
+					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+					gr.DrawRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
+				}					
+			}
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
@@ -584,31 +592,38 @@ function _list(x, y, w, h) {
 	}
 	
 	this.lbtn_up = (x, y, mask) => {
+		const shortcuts = this.getShortcuts('L');
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			switch (true) {
 				case this.up_btn.lbtn_up(x, y):
 				case this.down_btn.lbtn_up(x, y):
 				case !this.inRange:
+					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
-						const shortcuts = this.getShortcuts('L');
 						if (shortcuts.hasOwnProperty(mask)) {
 							if (shortcuts[mask].key === 'Send selection to playlist') {
 								const cache = [this.offset, this.index];
-								this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});
+								if (this.indexes.length) {
+									this.indexes.forEach((z) => {this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false});});
+								} else {this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
 								[this.offset, this.index] = cache;
 								window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 							} else {
-								shortcuts[mask].func(z);
+								this.executeAction(z, shortcuts[mask]);
 							}
 						} else { // Only mouse
 							if (!this.bDoubleclick) { // It's not a second lbtn click
 								this.timeOut = delayFn((x,y) => {
 									this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
-									createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 100 ms delay to another pls (bug) or even out of range (crash)
+									if (this.indexes.length) {
+										createMenuLeftMult(this.indexes).btn_up(x,y);
+									} else {
+										createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 100 ms delay to another pls (bug) or even out of range (crash)
+									}
 									this.bSelMenu = false;
 								}, 100)(x,y); // Creates the menu and calls it later
 							} else {this.bDoubleclick = false;}
@@ -619,6 +634,7 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 			if (this.traceHeaderButton(x,y)) {
 				_explorer(this.playlistsPath);
 			} else {
@@ -632,26 +648,29 @@ function _list(x, y, w, h) {
 	}
 	
 	this.mbtn_up = (x, y, mask) => {
+		const shortcuts = this.getShortcuts('M');
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			switch (true) {
 				case !this.inRange:
+					if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
-						const shortcuts = this.getShortcuts('M');
 						if (shortcuts.hasOwnProperty(mask)) {
 							if (shortcuts[mask].key === 'Send selection to playlist') {
 								const cache = [this.offset, this.index];
-								this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});
+								if (this.indexes.length) {
+									this.indexes.forEach((z) => {this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false});});
+								} else {this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
 								[this.offset, this.index] = cache;
 								window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 							} else {
-								shortcuts[mask].func(z);
+								this.executeAction(z, shortcuts[mask]);
 							}
 						} else { // Only mouse
-							shortcuts['SG_CLICK'].func(z);
+							this.executeAction(z, shortcuts['SG_CLICK']);
 						}
 					}
 					break;
@@ -659,11 +678,13 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else {
+			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
 	}
 	
 	this.lbtn_dblclk = (x, y) => {
+		const shortcuts = this.getShortcuts('L');
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			switch (true) {
@@ -671,11 +692,11 @@ function _list(x, y, w, h) {
 					break;
 				default:
 				{
+					const z = this.index;
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
 					this.bDoubleclick = true;
-					const shortcuts = this.getShortcuts('L');
-					shortcuts['DB_CLICK'].func(this.index);
+					this.executeAction(z, 'DB_CLICK');
 					break;
 				}
 			}
@@ -685,6 +706,7 @@ function _list(x, y, w, h) {
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
 	}
@@ -767,6 +789,27 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.multSelect = (playlistIndex = -1) => {
+		if (playlistIndex === -1) {this.resetMultSelect();}
+		else {
+			const found = this.indexes.indexOf(playlistIndex);
+			if (found !== -1) {this.indexes.splice(found, 1);}
+			else {this.indexes.push(playlistIndex);}
+		}
+		return this.indexes;
+	}
+	
+	this.resetMultSelect = () => {
+		this.indexes = [];
+		return this.indexes;
+	}
+	
+	this.executeAction = (z, shortcut) => {
+		if (shortcut.key !== 'Multiple selection' && this.indexes.length) {
+			this.indexes.forEach((z) => {shortcut.func(z);});
+		} else {shortcut.func(z);}
+	}
+	
 	this.getDefaultShortcuts = (mouseBtn = 'L') => {
 		const shortcuts = {options: null, actions: null};
 		switch (mouseBtn.toUpperCase()) {
@@ -797,7 +840,8 @@ function _list(x, y, w, h) {
 				{key: 'Clone playlist in UI',		func: clonePlaylistInUI.bind(this, this)},
 				{key: 'Recycle playlist',			func: this.removePlaylist},
 				{key: 'Lock/unlock playlist file',	func: switchLock.bind(this, this)},
-				{key: 'Lock/unlock UI playlist',	func: switchLockUI.bind(this, this)}
+				{key: 'Lock/unlock UI playlist',	func: switchLockUI.bind(this, this)},
+				{key: 'Multiple selection',			func: this.multSelect},
 			];
 		}
 		return shortcuts;
@@ -1310,6 +1354,7 @@ function _list(x, y, w, h) {
 		// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
 		dataExternalPlaylists.forEach((oPlaylist) => {
 			if (this.bAutoLoadTag && oPlaylist.tags.indexOf('bAutoLoad') === -1) {oPlaylist.tags.push('bAutoLoad');}
+			if (this.bMultMenuTag && oPlaylist.tags.indexOf('bMultMenu') === -1) {oPlaylist.tags.push('bMultMenu');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (tag !== 'bAutoLock' && ! new Set(oPlaylist.tags).has(tag)) {oPlaylist.tags.push(tag);}});}
 		});
 		if (dataExternalPlaylists.length) {this.addToData(dataExternalPlaylists);} // Add to database
@@ -1583,6 +1628,7 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
+			this.indexes = [];
 			if (_isFile(this.filename)) {
 				if (this.bUpdateAutoplaylist && this.bShowSize) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
 				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
@@ -1667,7 +1713,7 @@ function _list(x, y, w, h) {
 			this.itemsFpl = this.dataFpl.length;
 			this.itemsXsp = this.dataXsp.length;
 			this.data = [];
-			this.data = loadPlaylistsFromFolder().map((item) => {
+			this.data = loadPlaylistsFromFolder(this.playlistsPath).map((item) => {
 					if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
 						if (this.bFplLock) {item.isLocked = true;}
 						let fplPlaylist = this.dataFpl.find((pls) => {return pls.name === item.name;});
@@ -1705,6 +1751,7 @@ function _list(x, y, w, h) {
 				// Auto-Tags
 				if (this.bAutoLoadTag && item.tags.indexOf('bAutoLoad') === -1) {item.tags.push('bAutoLoad'); bSave = true;}
 				if (this.bAutoLockTag && item.tags.indexOf('bAutoLock') === -1) {item.tags.push('bAutoLock'); bSave = true;}
+				if (this.bMultMenuTag && item.tags.indexOf('bMultMenu') === -1) {item.tags.push('bMultMenu'); bSave = true;}
 				if (this.bAutoCustomTag) {
 					this.autoCustomTag.forEach( (tag) => {
 						if (!(new Set(item.tags).has(tag))) {item.tags.push(tag); bSave = true;}
@@ -1747,6 +1794,7 @@ function _list(x, y, w, h) {
 		// Playlists on UI
 		if (this.bAllPls) {
 			// Remove any previous UI pls on update
+			this.indexes = [];
 			this.dataAll = this.dataAll.filter((pls) => {return pls.extension !== '.ui';});
 			this.data = this.data.filter((pls) => {return pls.extension !== '.ui';});
 			// And refresh
@@ -2017,6 +2065,7 @@ function _list(x, y, w, h) {
 			// Auto-Tags
 			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
+			if (this.bMultMenuTag && objectPlaylist.tags.indexOf('bMultMenu') === -1) {objectPlaylist.tags.push('bMultMenu');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
 			// Add tags of current view
 			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
@@ -2072,6 +2121,7 @@ function _list(x, y, w, h) {
 			// Auto-Tags
 			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
+			if (this.bMultMenuTag && objectPlaylist.tags.indexOf('bMultMenu') === -1) {objectPlaylist.tags.push('bMultMenu');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach( (tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
 			// Add tags of current view
 			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(objectPlaylist.tags).has(tag)) {objectPlaylist.tags.push(tag);}});}
@@ -2114,6 +2164,7 @@ function _list(x, y, w, h) {
 			let objectPlaylist = null;
 			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
+			if (this.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
 			if (this.bAutoCustomTag) {this.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
 			// Add tags of current view
 			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
@@ -2592,7 +2643,9 @@ function _list(x, y, w, h) {
 				const menusGlobal = [
 					{type:'manual refresh',			name: 'Manual refresh',					description: 'Refresh the manager.'},
 					{type:'new playlist (empty)',	name: 'New empty playlist',				description: 'Create a new empty playlist file.'},
-					{type:'new playlist (ap)',		name: 'New playlist (active)',			description: 'Create new playlist file from active playlist.'}
+					{type:'new playlist (ap)',		name: 'New playlist (active)',			description: 'Create new playlist file from active playlist.'},
+					{type:'load playlist (mult)',	name: 'Load tagged playlists',			description: 'Load all playlists tagged with \'bMultMenu\'.'},
+					{type:'clone in ui (mult)',		name: 'Clone tagged playlists in UI',	description: 'Load a copy of all playlists tagged with \'bMultMenu\'.'}
 				];
 				menusPls.forEach((menu) => {listExport[menu.type] = [];});
 				this.dataAll.forEach((pls, i) => {
@@ -2617,7 +2670,7 @@ function _list(x, y, w, h) {
 					});
 				});
 				menusGlobal.forEach((menu) => {listExport[menu.type] = [];});
-				menusGlobal.forEach((menu) => {
+				menusGlobal.forEach((menu, i) => {
 					const type = menu.type;
 					const name = menu.name;
 					const description = menu.description;
@@ -2667,6 +2720,7 @@ function _list(x, y, w, h) {
 			this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1];
 			this.totalFileSize = 0;
 			this.index = -1;
+			this.indexes = [];
 			this.lastIndex = -1;
 			this.lastOffset = 0;
 			this.data = []; // Data to paint
@@ -2691,6 +2745,7 @@ function _list(x, y, w, h) {
 			this.bRelativePath = this.properties['bRelativePath'][1];
 			this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
 			this.bAutoLockTag = this.properties['bAutoLockTag'][1];
+			this.bMultMenuTag = this.properties['bMultMenuTag'][1];
 			this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
 			this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
 			this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
@@ -2756,6 +2811,7 @@ function _list(x, y, w, h) {
 	this.my = 0;
 	this.bMouseOver = false;
 	this.index = -1;
+	this.indexes = [];
 	this.lastIndex = -1;
 	this.offset = 0;
 	this.lastOffset = 0;
@@ -2775,7 +2831,8 @@ function _list(x, y, w, h) {
 	this.lastPlsLoaded = [];
 	this.mainMenuDynamic = [];
 	// Properties
-	this.properties = getPropertiesPairs(properties, prefix); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
+	this.defaultProperties = clone(properties); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
+	this.properties = getPropertiesPairs(properties, 'plm_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.') ? findRelPathInAbsPath(this.properties['playlistPath'][1]) : this.properties['playlistPath'][1];
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
@@ -2799,6 +2856,7 @@ function _list(x, y, w, h) {
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
 	this.bAutoLockTag = this.properties['bAutoLockTag'][1];
+	this.bMultMenuTag = this.properties['bMultMenuTag'][1];
 	this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
 	this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
 	this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
