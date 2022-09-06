@@ -362,6 +362,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			return menu;
 		}
 	});
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];	
 	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
