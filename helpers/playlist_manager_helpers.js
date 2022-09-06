@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/09/22
+//06/09/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -32,7 +32,8 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.duration = Number.isFinite(duration) ? duration : -1;
 }
 
-function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'playlistPath', prefix)) {
+function loadPlaylistsFromFolder(folderPath = '') {
+	if (!folderPath.length && typeof list !== 'undefined') {folderPath = list.playlistsPath;}
 	const playlistPathArray = getFiles(folderPath, loadablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	let playlistArray = [];
@@ -180,13 +181,12 @@ function loadPlaylistsFromFolder(folderPath = getPropertyByKey(properties, 'play
 
 function setTrackTags(trackTags, list, z) {
 	let bDone = false;
-	const pls = list.data[z];
-	const extension = pls.extension;
-	const oldTags = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
+	const extension = list.data[z].extension;
+	const oldTags = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
 	if (oldTags !== newTags) { // Compares objects
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			list.editData(pls, {trackTags});
+		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+			list.editData(list.data[z], {trackTags});
 			list.update(true, true);
 			list.filter();
 			bDone = true;
@@ -194,8 +194,8 @@ function setTrackTags(trackTags, list, z) {
 			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
 			bDone = false;
 		} else {
-			const name = pls.name;
-			const path = pls.path;
+			const name = list.data[z].name;
+			const path = list.data[z].path;
 			if (_isFile(path)) {
 				// Backup
 				const backPath = path + '.back';
@@ -214,7 +214,7 @@ function setTrackTags(trackTags, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) {_deleteFile(backPath);}
-					list.editData(pls, {trackTags});
+					list.editData(list.data[z], {trackTags});
 					list.update(true , true);
 					list.filter();
 				}
