@@ -1382,7 +1382,7 @@ function _list(x, y, w, h) {
 	this.tagState = [];
 	// These are constant
 	this.constLockStates = () => {return ['All','Not locked','Locked'];};
-	this.constAutoPlaylistStates = (bUI = this.bAllPls) => {return bUI ? this.constAutoPlaylistStates(false).concat(['UI-only Playlists']): ['All','AutoPlaylists & Smart Playlists','Standard Playlists'];};
+	this.constAutoPlaylistStates = (bUI = this.bAllPls) => {return bUI ? this.constAutoPlaylistStates(false).concat(['UI-only Playlists']): ['All','AutoPlaylists && Smart Playlists','Standard Playlists'];};
 	this.constExtStates = (bUI = this.bAllPls) => {return bUI ? this.constExtStates(false).concat(['.ui']) : ['All', ...loadablePlaylistFormats];};
 	// These rotate over time
 	this.lockStates = this.constLockStates();
