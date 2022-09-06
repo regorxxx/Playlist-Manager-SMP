@@ -19,15 +19,15 @@ addButton({
 		list.sort(void(0), true); // Uses current state
 		// t1 = Date.now();
 		// console.log('Call to Sort took ' + (t1 - t0) + ' milliseconds.');
-	}, null, void(0), sortTooltip, prefix, void(0), sortIcon),
+	}, null, void(0), sortTooltip, 'plm_', void(0), sortIcon),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
 	filterOneButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
 		doFilter(this);
-	}, null, void(0), filterTooltip, prefix, void(0), chars.filter),
+	}, null, void(0), filterTooltip, 'plm_', void(0), chars.filter),
 	// Cycle filtering between playlist lock states: all, not locked, locked
 	filterTwoButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
-	}, null, void(0), filterTooltip, prefix, void(0), chars.filter),
+	}, null, void(0), filterTooltip, 'plm_', void(0), chars.filter),
 });
 
 // Defaults
