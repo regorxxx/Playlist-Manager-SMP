@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/08/22
+//05/09/22
 
 /* 
 	Objects
@@ -236,6 +236,13 @@ Array.prototype.joinEvery = function(sep, n, newLineChar = '\n') {
 		str += (str.length ? sep + newLineChar : '') + this.slice(i, i + n).join(sep);
 		i += n;
 	}
+	return str;
+};
+
+Array.prototype.joinUpToChars = function(sep, chars) {
+	let str = '';
+	str = this.join(sep);
+	if (str.length > chars) {str = str.slice(0, chars) + '...';}
 	return str;
 };
 
