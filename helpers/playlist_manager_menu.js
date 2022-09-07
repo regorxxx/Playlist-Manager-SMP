@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/09/22
+//07/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1216,6 +1216,7 @@ function createMenuRightTop() {
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 						}
 					}});
 					{
@@ -1227,6 +1228,7 @@ function createMenuRightTop() {
 									preset.extension = extension;
 									list.properties['converterPreset'][1] = JSON.stringify(presets);
 									overwriteProperties(list.properties);
+									if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 								}
 							}});
 						});
@@ -1241,6 +1243,7 @@ function createMenuRightTop() {
 							preset.dsp = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 						}
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
@@ -1252,6 +1255,7 @@ function createMenuRightTop() {
 							preset.tf = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 						}
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
@@ -1265,6 +1269,7 @@ function createMenuRightTop() {
 							preset.name = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 						}
 					}});
 				});
@@ -1273,6 +1278,7 @@ function createMenuRightTop() {
 					presets.push({dsp: '...', tf: '.\\%filename%.mp3', path: ''});
 					list.properties['converterPreset'][1] = JSON.stringify(presets);
 					overwriteProperties(list.properties);
+					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 				}});
 				const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
 				presets.forEach((preset, i) => {
@@ -1289,12 +1295,14 @@ function createMenuRightTop() {
 						presets.splice(i, 1);
 						list.properties['converterPreset'][1] = JSON.stringify(presets);
 						overwriteProperties(list.properties);
+						if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 					}});
 				});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
 					list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
 					overwriteProperties(list.properties);
+					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 				}});
 			}
 		}
@@ -1601,6 +1609,7 @@ function createMenuRightTop() {
 				modifiers.forEach((modifier) => {
 					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameL);
 					actions.forEach((action) => {
+						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
 						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
 							list.lShortcuts[modifier] = action;
 							list.properties['lShortcuts'][1] = JSON.stringify(list.lShortcuts);
@@ -1608,7 +1617,7 @@ function createMenuRightTop() {
 							if (action === 'Multiple selection') {
 								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
 							}
-						}});
+						}, flags});
 					});
 					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
 						const idx = actions.indexOf(list.lShortcuts[modifier]);

@@ -27,10 +27,12 @@
 ### Added
 - Tags: new auto-tag named 'bMultMenu' which associates tagged playlists to specific dynamic main menu entries which apply an action to a group of playlists.
 - Dynamic menus: new dynamic main menu entries which apply an action to a group of playlists tagged with 'bMultMenu'. These are meant to be associated to an standard Foobar2000 button (or CMD commands), to easily load or apply generic actions to a group of playlists at once.
+- Dynamic Menus: menu warns about entries needing input via popups and those are skipped on the Online Controller actions.
 - Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
 - UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' and 'Multiple selection' actions (along the previous ones).
 - UI: added M. Click actions, configurable the same way than L. Click actions. Set by default to multiple selection.
 - UI: multiple playlist selection. Using any other mouse shortcut will apply the action to the entire selection, instead of a single playlist. Opening the playlist menu (L. Click) while using multiple selection, will display a different list of actions to apply to the entire selection.
+- UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists by filtering by type, categories, tags...
 ### Changed
 - UI: keyboard modifiers on L. Click are now fully configurable using the header menu. See 'UI\Shortcuts...'. Playlist's tooltip will reflect the config too.
 - UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
@@ -42,8 +44,10 @@
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
+- Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
-- Fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
+- Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
+- Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added

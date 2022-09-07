@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/09/22
+//07/09/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -406,6 +406,20 @@ addEventListener('on_main_menu_dynamic', (id) => {
 			case 'clone in ui (mult)': {
 				const idx = list.dataAll.map((pls, i) => {return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1);}).filter((idx) => {return idx !== -1;});
 				idx.forEach((i) => {clonePlaylistInUI(list, i, true);});
+				bDone = true;
+				break;
+			}
+			case 'export convert (mult)': {
+				const idx = list.dataAll.map((pls, i) => {return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1);}).filter((idx) => {return idx !== -1;});
+				idx.forEach((i) => {
+					const preset = menu.arg;
+					const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+					if (!list.dataAll[i].isAutoPlaylist) {
+						exportPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl);
+					} else {
+						exportAutoPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl);
+					}
+				});
 				bDone = true;
 				break;
 			}

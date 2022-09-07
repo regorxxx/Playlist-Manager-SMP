@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/09/22
+//07/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -440,11 +440,30 @@ function _list(x, y, w, h) {
 				const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum);}, 0); // Counts autoplaylists and smart playlists
 				headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
 				// Tips
+				const lShortcuts = this.getShortcuts('L');
+				const mShortcuts = this.getShortcuts('M');
+				const multSelAction = 'Multiple selection'; // All actions are shared for M or L mouse
 				if (this.bShowTips) {
 					headerText += '\n----------------------------------------------';
 					headerText += '\n(R. Click for config menus)';
 					headerText += '\n(L. Click to highlight active\\playing playlist)';
 					headerText += '\n(Double Click to cycle categories)';
+					// Middle button
+					headerText += mShortcuts['SG_CLICK'].key === multSelAction ? '\n(M. Click to Select all playlists)' : '';
+					headerText += mShortcuts[MK_CONTROL].key === multSelAction ? '\n(Ctrl + M. Click to Select all playlists)' : '';
+					headerText += mShortcuts[MK_SHIFT].key === multSelAction ? '\n(Shift + M. Click to Select all playlists)' : '';
+					headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key === multSelAction ? '\n(Ctrl + Shift + M. Click to Select all playlists)' : '';
+				} else {
+					if (mask === MK_CONTROL) {
+						headerText += lShortcuts[MK_CONTROL].key === multSelAction ? '\n(Ctrl + L. Click to Select all playlists)' : '';
+						headerText += mShortcuts[MK_CONTROL].key === multSelAction ? '\n(Ctrl + M. Click to Select all playlists)' : '';
+					} else if (mask === MK_SHIFT) {
+						headerText += lShortcuts[MK_SHIFT].key === multSelAction ? '\n(Shift + L. Click to Select all playlists)' : '';
+						headerText += mShortcuts[MK_SHIFT].key === multSelAction ? '\n(Shift + M. Click to Select all playlists)' : '';
+					} else if (mask === MK_SHIFT + MK_CONTROL) {
+						headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key === multSelAction ? '\n(Ctrl + Shift + L. Click to Select all playlists)' : '';
+						headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key === multSelAction ? '\n(Ctrl + Shift + M. Click to Select all playlists)' : '';
+					}
 				}
 				this.tooltip.SetValue(headerText, true);
 			}
@@ -634,7 +653,11 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
-			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
+			// Select all from current view or clean selection
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {
+				if (this.indexes.length) {this.resetMultSelect();}
+				else {this.indexes = range(0, this.data.length - 1, 1);}
+			}
 			if (this.traceHeaderButton(x,y)) {
 				_explorer(this.playlistsPath);
 			} else {
@@ -643,6 +666,7 @@ function _list(x, y, w, h) {
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
 	}
@@ -677,7 +701,15 @@ function _list(x, y, w, h) {
 				}
 			}
 			return true;
+		} else if (this.traceHeader(x, y)) {
+			// Select all from current view or clean selection
+			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {
+				if (this.indexes.length) {this.resetMultSelect();}
+				else {this.indexes = range(0, this.data.length - 1, 1);}
+			}
+			return false;
 		} else {
+			// Select all from current view or clean selection
 			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
@@ -1630,7 +1662,9 @@ function _list(x, y, w, h) {
 			this.dataXsp = [];
 			this.indexes = [];
 			if (_isFile(this.filename)) {
-				if (this.bUpdateAutoplaylist && this.bShowSize) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
+				const bUpdateSize = this.bUpdateAutoplaylist && this.bShowSize;
+				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit;
+				if (bUpdateSize || bUpdateTags) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
 				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
 				if (!data) {return;}
 				else if (!data) {return;}
@@ -1640,7 +1674,7 @@ function _list(x, y, w, h) {
 					if (item.isAutoPlaylist || item.query) {
 						if (!item.hasOwnProperty('duration')) {item.duration = -1;}
 						i++;
-						if (this.bUpdateAutoplaylist && this.bShowSize) { // Updates size for AutoPlaylists. Warning takes a lot of time! Only when required...
+						if (bUpdateSize) { // Updates size for AutoPlaylists. Warning takes a lot of time! Only when required...
 							// Only re-checks query when forcing update of size for performance reasons
 							// Note the query is checked on user input, external json loading and just before loading the playlist
 							// So checking it every time the panel is painted is totally useless...
@@ -1671,7 +1705,7 @@ function _list(x, y, w, h) {
 								});
 							}));
 						} else { // Updates tags for AutoPlaylists. Warning takes a lot of time! Only when required...
-							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
+							if (bUpdateTags) {
 								if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) {
 									promises.push(new Promise((resolve) => {
 										loadAutoPlaylistAsync(item, i).then((handleList = null) => {
@@ -1694,6 +1728,8 @@ function _list(x, y, w, h) {
 											resolve('done');
 										});
 									}));
+								} else {
+									promises.push(new Promise((resolve) => {resolve('done');})); // To ensure logging, saving and dynamic menu update
 								}
 							}
 						}
@@ -1838,7 +1874,7 @@ function _list(x, y, w, h) {
 				}
 			}
 		}
-		this.save(); // Updates this.dataAutoPlaylists
+		this.save(bInit); // Updates this.dataAutoPlaylists
 		this.itemsAutoplaylist = this.dataAutoPlaylists.length;
 		if (this.bUpdateAutoplaylist) {this.bUpdateAutoplaylist = false;}
 		if (!bInit && !isArrayEqual(oldCategories, this.categories())) { // When adding new files, new categories may appear, but those must not be filtered! Skip this on init
@@ -1935,7 +1971,7 @@ function _list(x, y, w, h) {
 	
 	this.init = () => {
 		
-		this.save = () => {
+		this.save = (bInit = false) => {
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
@@ -1951,8 +1987,10 @@ function _list(x, y, w, h) {
 				});
 				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp], this.replacer, '\t'), this.bBOM); // No BOM
 			}
-			if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo();}
-			else if (this.mainMenuDynamic.length) {this.deleteMainMenuDynamic();}
+			if (!bInit) {
+				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo();}
+				else if (this.mainMenuDynamic.length) {this.deleteMainMenuDynamic();}
+			}
 		}
 		
 		this.addToData = (objectPlaylist) => {
@@ -2632,6 +2670,8 @@ function _list(x, y, w, h) {
 				const listMenuTypes = {};
 				const data = bToFile ? _jsonParseFile(file, utf8) || {} : {};
 				const wName = window.Name;
+				data[wName] = {};
+				// Per playlist
 				const menusPls = [
 					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: []			, skipProp: []},
 					{type:'lock playlist',	name: 'Lock playlist/',			description: 'Lock playlist file.',					skipExt: []			, skipProp: ['isLocked']},
@@ -2639,13 +2679,6 @@ function _list(x, y, w, h) {
 					{type:'delete playlist',name: 'Delete playlist/', 		description: 'Delete playlist file.',				skipExt: []			, skipProp: []},
 					{type:'clone in ui',	name: 'Clone playlist in UI/',	description: 'Load a copy of the playlist file.',	skipExt: ['']		, skipProp: ['!size']},
 					{type:'send selection',	name: 'Send selection to/',		description: 'Send selection to playlist file.',	skipExt: ['','.fpl'], skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
-				];
-				const menusGlobal = [
-					{type:'manual refresh',			name: 'Manual refresh',					description: 'Refresh the manager.'},
-					{type:'new playlist (empty)',	name: 'New empty playlist',				description: 'Create a new empty playlist file.'},
-					{type:'new playlist (ap)',		name: 'New playlist (active)',			description: 'Create new playlist file from active playlist.'},
-					{type:'load playlist (mult)',	name: 'Load tagged playlists',			description: 'Load all playlists tagged with \'bMultMenu\'.'},
-					{type:'clone in ui (mult)',		name: 'Clone tagged playlists in UI',	description: 'Load a copy of all playlists tagged with \'bMultMenu\'.'}
 				];
 				menusPls.forEach((menu) => {listExport[menu.type] = [];});
 				this.dataAll.forEach((pls, i) => {
@@ -2665,18 +2698,47 @@ function _list(x, y, w, h) {
 						const description = menu.description;
 						this.mainMenuDynamic.push({type, arg: [i], name, description});
 						fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
-						listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
+						if (!name.endsWith('\t (input)')) { // Don't export when requiring input
+							listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
+						}
 						currId++;
 					});
 				});
+				// Per panel
+				const menusGlobal = [
+					{type:'manual refresh',			name: 'Manual refresh',					description: 'Refresh the manager.'},
+					{type:'new playlist (empty)',	name: 'New empty playlist',				description: 'Create a new empty playlist file.'},
+					{type:'new playlist (ap)',		name: 'New playlist (active)',			description: 'Create new playlist file from active playlist.'},
+					{type:'load playlist (mult)',	name: 'Load tagged playlists',			description: 'Load all playlists tagged with \'bMultMenu\'.'},
+					{type:'clone in ui (mult)',		name: 'Clone tagged playlists in UI',	description: 'Load a copy of all playlists tagged with \'bMultMenu\'.'}
+				];
+				(() => {
+					const defaultMenu = {type:'export convert (mult)',	name: 'Export and Convert',description: 'Export all playlists tagged with \'bMultMenu\'.'};
+					const presets = JSON.parse(this.properties.converterPreset[1]);
+					presets.forEach((preset) => {
+						const path = preset.path;
+						const dsp = preset.dsp;
+						const tf = preset.tf;
+						let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+						const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+						const menu = clone(defaultMenu);
+						menu.arg = [preset];
+						menu.name += ' ' + _b(tfName);
+						if (!path.length || !dsp.length || !tf.length || !extension.length) {menu.name += '\t (input)';} // Warn about requiring popups
+						menusGlobal.push(menu);
+					});
+				})()
 				menusGlobal.forEach((menu) => {listExport[menu.type] = [];});
 				menusGlobal.forEach((menu, i) => {
 					const type = menu.type;
 					const name = menu.name;
 					const description = menu.description;
-					this.mainMenuDynamic.push({type, arg: [i], name, description});
+					const arg = menu.arg || [i];
+					this.mainMenuDynamic.push({type, arg, name, description});
 					fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
-					listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
+					if (!name.endsWith('\t (input)')) { // Don't export when requiring input
+						listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
+					}
 					currId++;
 				});
 				data[wName] = listExport;
@@ -2779,9 +2841,10 @@ function _list(x, y, w, h) {
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-		if (this.bDynamicMenus) {
-			this.createMainMenuDynamic();
-			this.exportPlaylistsInfo();
+		if (this.bDynamicMenus) { // Init menus unless they will be init later after autoplaylists processing
+			if (!(this.properties['bUpdateAutoplaylist'][1] && this.bShowSize) && !(this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit)) {
+				this.createMainMenuDynamic(); this.exportPlaylistsInfo();
+			}
 		}
 	}
 	
