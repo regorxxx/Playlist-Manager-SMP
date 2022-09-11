@@ -1,10 +1,11 @@
 ﻿'use strict';
-//07/09/22
+//12/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
 include('helpers_xxx_prototypes.js');
 include('playlist_manager_helpers.js');
+include('playlist_manager_listenbrainz.js');
 include('menu_xxx.js');
 
 // Menus
@@ -229,7 +230,8 @@ function createMenuLeft(forcedIndex = -1) {
 		}, flags: !bIsLockPls && bIsPlsEditable ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
-	{	//	AutoPlaylists clone
+	{	// Export and clone
+		//	AutoPlaylists clone
 		if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
 			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 				cloneAsStandardPls(list, z, (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
@@ -275,7 +277,7 @@ function createMenuLeft(forcedIndex = -1) {
 				exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
 			}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
 		}
-		{ // Export and Convert
+		{	// Export and Convert
 			const presets = JSON.parse(list.properties.converterPreset[1]);
 			const flags = bWritableFormat || bIsPlsUI || bIsAutoPls? MF_STRING : MF_GRAYED;
 			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
@@ -302,6 +304,52 @@ function createMenuLeft(forcedIndex = -1) {
 					}
 				}, flags});
 			});
+		}
+		{	// Export to ListenBrainz
+			const subMenuName = menu.newMenu('Online sync...', void(0));
+			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz', func: async () => {
+				if (pls.playlist_mbid.length) {
+					console.log('Syncing playlist with MusicBrainz: ' + pls.name);
+					const playlist_mbid = syncToListenBrainz(pls, list.playlistsPath);
+					if (!playlist_mbid.length || typeof playlist_mbid !== 'string' || playlist_mbid.length) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+				} else {
+					console.log('Exporting playlist to MusicBrainz: ' + pls.name);
+					const playlist_mbid = await exportToListenBrainz(pls, list.playlistsPath);
+					if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {
+						if (bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
+					} else {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+				}
+			}});
+			menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz', func: async () => {
+				let bDone = false;
+				if (_isFile(pls.path)) {
+					const jspf = await importFromListenBrainz(pls);
+					if (jspf) {
+						const handleList = contentResolver(jspf);
+						if (handleList) {
+							if (jspf.playlist.track.length !== handleList.Count) {
+								const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
+								if (answer === popup.no) {return false;}
+							}
+							if (pls.isLocked) { // Safety check for locked files (but can be overridden)
+								let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+								if (answer === popup.no) {return false;}
+							}
+							const backPath = pls.path + '.back';
+							_renameFile(pls.path, backPath);
+							const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+							bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+							// Restore backup in case something goes wrong
+							if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
+							else if (_isFile(backPath)) {_deleteFile(backPath);}
+							if (bDone && bIsPlsLoaded) {sendToPlaylist(handleList, pls.name);}
+							clearInterval(delay);
+						}
+					}
+				} else {console.log('Playlist file not found: ' + pls.path);}
+				if (!bDone) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+				return bDone;
+			}, flags: pls.playlist_mbid.length && bWritableFormat ? MF_STRING : MF_GRAYED});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -566,6 +614,50 @@ function createMenuRight() {
 				list.addAutoplaylist(pls, true);
 			}});
 		}
+		menu.newEntry({entryText: 'Import new playlist from ListenBrainz', func: async () => {
+			let bDone = false;
+			let playlist_mbid = '';
+			try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, '', true);}
+			catch (e) {bDone = true;}
+			if (playlist_mbid.length) {
+				const jspf = await importFromListenBrainz({playlist_mbid});
+				if (jspf) {
+					const handleList = contentResolver(jspf);
+					if (handleList) {
+						if (jspf.playlist.track.length !== handleList.Count) {
+							const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
+							if (answer === popup.no) {return false;}
+						}
+						const playlistName = jspf.playlist.title;
+						const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
+						const backPath = playlistPath + '.back';
+						if (_isFile(playlistPath)) {
+							let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+							if (answer === popup.no) {return false;}
+							_renameFile(playlistPath, backPath);
+						}
+						const useUUID = list.optionsUUIDTranslate();
+						const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
+						const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
+						const tags = [];
+						if (list.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
+						if (list.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
+						if (list.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
+						if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
+						const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+						bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+						if (!bDone) {console.log('Failed saving playlist: ' + playlistPath);}
+						// Restore backup in case something goes wrong
+						if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+						else if (_isFile(backPath)) {_deleteFile(backPath);}
+						if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(handleList, playlistNameId);}
+						clearInterval(delay);
+					}
+				}
+			} else {bDone = true;}
+			if (!bDone) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+			return bDone;
+		}});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
