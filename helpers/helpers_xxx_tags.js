@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/08/22
+//08/09/22
 
 include('helpers_xxx.js');
 
@@ -133,7 +133,7 @@ function query_join(queryArray, setLogic) {
 // '(MOOD IS mood1 AND MOOD IS mood2) OR (MOOD IS mood1 AND MOOD IS mood3) OR ...'
 // Currently configurable only AND (NOT) / OR (NOT) logics.
 // For 1D arrays, only 'tagsArrayLogic' is used. i.e. 'STYLE IS style1 OR STYLE IS style2 ...'
-function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLogic) {
+function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subtagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
 		// Wrong tagsArray
 		if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
 			console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
@@ -148,7 +148,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 			let i = 0;
 			let queryArray = [];
 			while (i < queryKeyLength) {
-				queryArray.push(query_combinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic));
+				queryArray.push(query_combinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match));
 				i++;
 			}
 			return queryArray;
@@ -164,9 +164,9 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 			let i = 0;
 			while (i < tagsArrayLength) {
 				if (i === 0) {
-					query += queryKey + ' IS ' + tagsArray[0];
+					query += queryKey + ' ' + match + ' ' + tagsArray[0];
 				} else {
-					query += ' ' + tagsArrayLogic + ' ' + queryKey + ' IS ' + tagsArray[i];
+					query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + tagsArray[i];
 				}
 				i++;
 			}
@@ -184,9 +184,9 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic, subtagsArrayLog
 				let j = 0;
 				while (j < k) {
 					if (j === 0) {
-						query += (k > 1 ? '(' : '') + queryKey + ' IS ' + tagsArray[i][0]; // only adds pharentesis when more than one subtag! Estetic fix...
+						query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + tagsArray[i][0]; // only adds pharentesis when more than one subtag! Estetic fix...
 					} else {
-						query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' IS ' + tagsArray[i][j];
+						query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' '+ tagsArray[i][j];
 					}
 					j++;
 				}
