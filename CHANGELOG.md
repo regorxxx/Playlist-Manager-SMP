@@ -25,6 +25,10 @@
 
 ## [Unreleased][]
 ### Added
+- ListenBrainz: new options at 'Online sync...' to export (create new/update) and import playlists from ListenBrainz.
+- ListenBrainz: new options at R. Click menu to create a playlist from ListenBrainz importing by MBID.
+- ListenBrainz: 'PLAYLIST_MBID' is now saved on playlist's metadata and displayed on tooltips if available. Meant to be used along ListenBrainz integration. Id is resolved to an online playlist at 'https://listenbrainz.org/playlist/(PLAYLIST_MBID)'.
+- XSPF: identifier tag linked to 'MUSICBRAINZ_TRACKID' for content resolution.
 - Tags: new auto-tag named 'bMultMenu' which associates tagged playlists to specific dynamic main menu entries which apply an action to a group of playlists.
 - Dynamic menus: new dynamic main menu entries which apply an action to a group of playlists tagged with 'bMultMenu'. These are meant to be associated to an standard Foobar2000 button (or CMD commands), to easily load or apply generic actions to a group of playlists at once.
 - Dynamic Menus: menu warns about entries needing input via popups and those are skipped on the Online Controller actions.
@@ -37,17 +41,20 @@
 - UI: keyboard modifiers on L. Click are now fully configurable using the header menu. See 'UI\Shortcuts...'. Playlist's tooltip will reflect the config too.
 - UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
+- XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
 - Tags: auto-tags are now displayed on the tag list (on set tag menu) ready to be used, instead of only displaying the present user set tags.
 - Properties: additional checks to properties to ensure they don't get broken with manual edits.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
+- XSP: preventive fixes to Smart Playlists having empty rules, without operators or values.
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
 - Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
 - Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
 - Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
+- Playlist formats: any missing metadata on playlists is now filled with default values on load for compatibility purpose on future updates, which avoid crashes due to missing variables.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
