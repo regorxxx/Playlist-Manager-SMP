@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/04/22
+//09/09/22
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -12,7 +12,11 @@ XSP.getQuerySort = function(jsp) {
 XSP.getQuery = function(jsp, bOmitPlaylist = false) {
 	const playlist = jsp.playlist;
 	const match = playlist.match === 'all' ? 'AND' : 'OR';
-	const rules = playlist.rules;
+	const rules = playlist.rules.filter((rule) => {return (typeof rule === 'object' && rule.field.length && rule.operator.length && rule.value.length);});
+	if (rules.length !== playlist.rules.length) {
+		console.log('Malformed XSP playlist: ' + jsp.playlist.name);
+		console.log('There are empty or non recognized rules.');
+	}
 	let query = [];
 	for (let rule of rules) {
 		const tag = rule.field;
@@ -440,7 +444,7 @@ XSP.getRules = function(querySort) {
 			console.log('Final rules after discarding and grouping:\n', rulesV4);
 			// console.log('Rules V5:\n', rulesV5);
 		}
-		rules = rulesV4;
+		rules = (rulesV4 || []).filter((rule) => {return (typeof rule === 'object' && rule.field.length && rule.operator.length && rule.value.length);});
 	}
 	return {rules, match};
 };
