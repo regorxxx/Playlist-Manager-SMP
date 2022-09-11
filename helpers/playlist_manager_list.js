@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/09/22
+//12/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -16,6 +16,9 @@ include('playlist_manager_helpers.js');
 include('..\\helpers-external\\keycode-2.2.0\\index.js');
 
 function _list(x, y, w, h) {
+	// Pls Keys
+	const defPls = new oPlaylist();
+	const defPlsKeys = new Set(Object.keys(new oPlaylist()));
 	// Icons
 	const gfontIconChar = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 8 : _scale(72) > 96 ? 6 : 4)), 0);}; // Icon may overlap on high DPI systems without this adjustment
 	const gfontIconCharAlt = () => {return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 10 : _scale(72) > 96 ? 8 : 6)), 0);};
@@ -515,6 +518,10 @@ function _list(x, y, w, h) {
 									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : ''): '-');
 									playlistDataText += '\n' + 'Limit: ' +  (pls.limit ? pls.limit : '\u221E') + ' tracks';
 								}
+								// Synced playlists with ListenBrainz
+								if (pls.playlist_mbid.length) {
+									playlistDataText += '\n' + 'MBID: ' +  pls.playlist_mbid;
+								}
 								// Show UI playlist duplicate warning
 								let iDup = 0;
 								if (pls.extension === '.ui') {
@@ -654,7 +661,7 @@ function _list(x, y, w, h) {
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
 			// Select all from current view or clean selection
-			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {
+			if (shortcuts.hasOwnProperty(mask) && shortcuts[mask].key === 'Multiple selection') {
 				if (this.indexes.length) {this.resetMultSelect();}
 				else {this.indexes = range(0, this.data.length - 1, 1);}
 			}
@@ -709,7 +716,7 @@ function _list(x, y, w, h) {
 			}
 			return false;
 		} else {
-			// Select all from current view or clean selection
+			// Clean selection
 			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
@@ -728,7 +735,7 @@ function _list(x, y, w, h) {
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
 					this.bDoubleclick = true;
-					this.executeAction(z, 'DB_CLICK');
+					this.executeAction(z, shortcuts['DB_CLICK']);
 					break;
 				}
 			}
@@ -1262,7 +1269,7 @@ function _list(x, y, w, h) {
 					} else {bDeleted = true;}
 					if (bDeleted) {
 						const extension = this.bSavingDefExtension || plsData.extension === '.fpl' ? this.playlistsExtension : plsData.extension;
-						let done = savePlaylist(fbPlaylistIndex, playlistPath, extension, playlistName, this.optionsUUIDTranslate(), plsData.isLocked, plsData.category, plsData.tags, (this.bRelativePath ? this.playlistsPath : ''), plsData.trackTags, this.bBOM);
+						let done = savePlaylist({playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, bBom: this.bBOM});
 						if (!done) {
 							fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 							_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -1368,7 +1375,9 @@ function _list(x, y, w, h) {
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
-				const oAutoPlaylistItem = new oPlaylist('', '', item.name, '', size, 0, false, true, {query: item.query, sort: item.sort, bSortForced: item.forced}, '', [], [], 0, duration);
+				const oAutoPlaylistItem = new oPlaylist('', '', item.name, '', size, 0, false, true, {query: item.query, sort: item.sort, bSortForced: item.forced}, '', [], [], 0, duration, '');
+				const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
+				if (diffKeys.size) {diffKeys.forEach((key) => {item[key] = defPls[key];});}
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
@@ -1379,6 +1388,8 @@ function _list(x, y, w, h) {
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				item.size = handleList.Count;
 				item.duration = handleList.CalcTotalDuration();
+				const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
+				if (diffKeys.size) {diffKeys.forEach((key) => {item[key] = defPls[key];});}
 				// width is done along all playlist internally later...
 				dataExternalPlaylists.push(item);
 			});
@@ -1671,6 +1682,10 @@ function _list(x, y, w, h) {
 				let i = 0;
 				const promises = [];
 				data.forEach((item) => {
+					// Check missing metadata and fill
+					const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
+					if (diffKeys.size) {diffKeys.forEach((key) => {item[key] = defPls[key];});}
+					// Process
 					if (item.isAutoPlaylist || item.query) {
 						if (!item.hasOwnProperty('duration')) {item.duration = -1;}
 						i++;
@@ -1803,13 +1818,13 @@ function _list(x, y, w, h) {
 					if (item.extension === '.m3u' || item.extension === '.m3u8') {
 						[bDone, reason] = editTextFile(path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM); // No BOM
 						if (!bDone && reason === 1) { // Retry with new header
-							bDone = rewriteHeader(this, z); 
+							bDone = rewriteHeader(this, item); 
 							if (bDone) {bDone = editTextFile(path,'#TAGS:' + oriTags.join(';'),'#TAGS:' + item.tags.join(';'), this.bBOM);} // No BOM
 						}
 					} else if (item.extension === '.xspf') {
 						[bDone, reason] = editTextFile(path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM); // No BOM
 						if (!bDone && reason === 1) { // Retry with new header
-							bDone = rewriteHeader(this, z); 
+							bDone = rewriteHeader(this, item); 
 							if (bDone) {bDone = editTextFile(path,'<meta rel="tags">' + oriTags.join(';'),'<meta rel="tags">' + item.tags.join(';'), this.bBOM);} // No BOM
 						}
 					} else {bDone = true;} // Another format? Skip
@@ -1839,7 +1854,7 @@ function _list(x, y, w, h) {
 			fooPls.forEach((pls) => {
 				if (!this.dataAll.some((dataPls) => {return dataPls.nameId === pls.name;})) {
 					if (!this.dataFoobar.some((dataPls) => {return dataPls.nameId === pls.name;})) { // Remove duplicates
-						this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls', void(0), void(0), void(0), plman.GetPlaylistItems(pls.idx).CalcTotalDuration()));
+						this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls', void(0), void(0), void(0), plman.GetPlaylistItems(pls.idx).CalcTotalDuration(), ''));
 					}
 				}
 			});
@@ -1936,7 +1951,7 @@ function _list(x, y, w, h) {
 										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + new_id];
 										[bDone, reason] = editTextFile(path, originalStrings, newStrings, this.bBOM); // No BOM
 										if (!bDone && reason === 1) { // Retry with new header
-											bDone = rewriteHeader(this, z); 
+											bDone = rewriteHeader(this, playlistObj); 
 											if (bDone) {bDone = editTextFile(path, originalStrings, newStrings, this.bBOM);}
 										}
 								} else if (playlistObj.extension === '.xspf') {
@@ -1944,7 +1959,7 @@ function _list(x, y, w, h) {
 									let newStrings = ['<title>' + new_name, '<meta rel="uuid">' + new_id];
 									[bDone, reason] = editTextFile(path, originalStrings, newStrings, this.bBOM); // No BOM
 									if (!bDone && reason === 1) { // Retry with new header
-										bDone = rewriteHeader(this, z); 
+										bDone = rewriteHeader(this, playlistObj); 
 										if (bDone) {bDone = editTextFile(path, originalStrings, newStrings, this.bBOM);}
 									}
 								} else {bDone = true;}
@@ -2099,7 +2114,7 @@ function _list(x, y, w, h) {
 			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : handleList.Count;
 			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : handleList.CalcTotalDuration();
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-			const objectPlaylist = new oPlaylist(UUID, '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], 0, duration);
+			const objectPlaylist = new oPlaylist(UUID, '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], 0, duration, '');
 			// Auto-Tags
 			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
@@ -2155,7 +2170,7 @@ function _list(x, y, w, h) {
 				if (!Number.isFinite(newLimit)) {newLimit = 0;}
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
-			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit, duration);
+			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit, duration, '');
 			// Auto-Tags
 			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
@@ -2214,10 +2229,10 @@ function _list(x, y, w, h) {
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
-				let done = savePlaylist(bEmpty ? -1 : plman.ActivePlaylist, oPlaylistPath, this.playlistsExtension, new_name, this.optionsUUIDTranslate(), false, '', oPlaylistTags, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
+				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: new_name, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags);
+					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags, void(0), void(0), bEmpty ? void(0) : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration());
 					// Adds to list of objects and update variables
 					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
