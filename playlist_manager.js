@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/09/22
+//12/09/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -141,7 +141,9 @@ var properties = {
 		'Ctrl + Shift':	'- None -',
 		'Single Click':	'Multiple selection'
 	})],
-	bMultMenuTag			: ['Automatically add \'bMultMenu\' to all playlists', false]
+	bMultMenuTag			: ['Automatically add \'bMultMenu\' to all playlists', false],
+	lBrainzToken			: ['ListenBrainz user token', ''],
+	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
