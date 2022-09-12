@@ -25,7 +25,8 @@
 
 ## [Unreleased][]
 ### Added
-- ListenBrainz: new options at 'Online sync...' to export (create new/update) and import playlists from ListenBrainz.
+- ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
+- ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz.
 - ListenBrainz: new options at R. Click menu to create a playlist from ListenBrainz importing by MBID.
 - ListenBrainz: 'PLAYLIST_MBID' is now saved on playlist's metadata and displayed on tooltips if available. Meant to be used along ListenBrainz integration. Id is resolved to an online playlist at 'https://listenbrainz.org/playlist/(PLAYLIST_MBID)'.
 - XSPF: identifier tag linked to 'MUSICBRAINZ_TRACKID' for content resolution.
