@@ -28,6 +28,7 @@
 - ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
 - ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz.
 - ListenBrainz: new options at R. Click menu to create a playlist from ListenBrainz importing by MBID.
+- ListenBrainz: playlist importation may be done on any writable format, including '.xspf' format (which is essentially equivalent to '.jspf' format used internally by ListenBrainz). Saving to the latter format, allows content resolution -on load- on any library by artist, title or recording MBID and also store not found items on the playlist file. Using other formats will skip not found items on importing step.
 - ListenBrainz: 'PLAYLIST_MBID' is now saved on playlist's metadata and displayed on tooltips if available. Meant to be used along ListenBrainz integration. Id is resolved to an online playlist at 'https://listenbrainz.org/playlist/(PLAYLIST_MBID)'.
 - XSPF: identifier tag linked to 'MUSICBRAINZ_TRACKID' for content resolution.
 - Tags: new auto-tag named 'bMultMenu' which associates tagged playlists to specific dynamic main menu entries which apply an action to a group of playlists.
@@ -50,12 +51,17 @@
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
 - XSP: preventive fixes to Smart Playlists having empty rules, without operators or values.
+- XSPF: crash on some malformed playlists..
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
 - Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
+- UI: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and viceversa) for now playing and loaded indicators.
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
+- UI: adding new files with new tags did not updated properly the current view, showing by default the new tags too. Similar to past bug with categories.
+- Auto-Saving: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and vice-versa). Previously, it would ask to change the playlist format, which made no sense since no changes could be applied to those playlists.
 - Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
 - Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
 - Playlist formats: any missing metadata on playlists is now filled with default values on load for compatibility purpose on future updates, which avoid crashes due to missing variables.
+- Online controllers integration: fixed some inconsistencies on ajquery-xxx export files.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
