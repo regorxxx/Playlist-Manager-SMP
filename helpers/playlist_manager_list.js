@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/22
+//15/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -14,6 +14,7 @@ include('helpers_xxx_utils.js');
 include('playlist_manager_panel.js');
 include('playlist_manager_helpers.js');
 include('..\\helpers-external\\keycode-2.2.0\\index.js');
+include('helpers_xxx_controller.js');
 
 function _list(x, y, w, h) {
 	// Pls Keys
@@ -177,6 +178,7 @@ function _list(x, y, w, h) {
 				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColorRow);
 			}
 			const currIdx = i + this.offset;
+			const pls = this.data[currIdx];
 			// Add category sep
 			if (this.bShowSep) {
 				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to all use-cases
@@ -184,7 +186,7 @@ function _list(x, y, w, h) {
 				else if (this.methodState.split('\t')[0] === 'By name'){dataKey = 'name';}
 				else if (this.methodState.split('\t')[0] === 'By tags'){dataKey = 'tags';}
 				if (dataKey.length){
-					const data = isArray(this.data[currIdx][dataKey]) ? this.data[currIdx][dataKey][0] : this.data[currIdx][dataKey]; // If it's an array get first value
+					const data = isArray(pls[dataKey]) ? pls[dataKey][0] : pls[dataKey]; // If it's an array get first value
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
@@ -215,18 +217,18 @@ function _list(x, y, w, h) {
 				}
 			}
 			// Playlists
-			let playlistDataText =  this.data[currIdx].name + (this.bShowSize ? ' (' + this.data[currIdx].size + ')' : '');
+			let playlistDataText =  pls.name + (this.bShowSize ? ' (' + pls.size + ')' : '');
 			const iconFont = gfontIconChar();
 			const iconFontAlt = gfontIconCharAlt();
 			// Set colors and icons according to playlist type
 			let playlistColour = panel.colours.text, iconColour = standardPlaylistIconColour;
-			const plsExtension = this.data[currIdx].isAutoPlaylist ? 'autoPlaylist' : this.data[currIdx].extension;
-			let extension = this.data[currIdx].isLocked ? 'locked' : this.data[currIdx].isAutoPlaylist ? 'autoPlaylist' : plsExtension;
+			const plsExtension = pls.isAutoPlaylist ? 'autoPlaylist' : pls.extension;
+			let extension = pls.isLocked ? 'locked' : pls.isAutoPlaylist ? 'autoPlaylist' : plsExtension;
 			if (extension === 'locked') {playlistColour = this.colours.lockedPlaylistColour; iconColour = lockedPlaylistIconColour;}
 			else if (extension === 'autoPlaylist') {playlistColour = this.colours.autoPlaylistColour; iconColour = autoPlaylistIconColour;}
 			else if (extension === '.xsp') {playlistColour = this.colours.smartPlaylistColour; iconColour = smartPlaylistIconColour;}
 			else if (extension === '.ui') {playlistColour = this.colours.uiPlaylistColour; iconColour = uiPlaylistIconColour;}
-			if (this.data[currIdx].size === 0) {extension = 'blank';}
+			if (pls.size === 0) {extension = 'blank';}
 			if (this.bShowIcons) {
 				let icon = playlistDescriptors[extension].icon;
 				let iconBg = playlistDescriptors[extension].iconBg;
@@ -264,9 +266,12 @@ function _list(x, y, w, h) {
 			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColour, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			// Add playing now indicator
 			let playlistDataTextRight = '';
-			if (fb.IsPlaying && plman.PlayingPlaylist !== -1 && plman.FindPlaylist(this.data[currIdx].nameId) === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
-			// Add loaded indicator
-			else if (plman.FindPlaylist(this.data[currIdx].nameId) !== -1) {playlistDataTextRight += loadedChar;}
+			const findPlsIdx = plman.FindPlaylist(pls.nameId);
+			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === pls.isAutoplaylist) {
+				if (fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
+				// Add loaded indicator
+				else {playlistDataTextRight += loadedChar;}
+			}
 			// Draw
 			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 			// Multiple selection
@@ -1254,6 +1259,7 @@ function _list(x, y, w, h) {
 					if (bCallback) {return false;} // Skips locked playlists only for auto-saving!
 				}
 				const [handleUpdate, tagsUpdate] = this.bAutoTrackTag && this.bAutoTrackTagPls && (debouncedUpdate || !bCallback)? this.getUpdateTrackTags(plman.GetPlaylistItems(fbPlaylistIndex), plsData) : [null, null]; // Done at 2 steps, first get tags
+				if (bCallback && plsData.isAutoPlaylist) {return false;} // In case an UI playlist matches an Autoplaylist on manager
 				if (bCallback && !this.bSavingXsp && plsData.extension === '.xsp') {return false;}
 				if (plsData.extension !== '.ui') {
 					if (this.bSavingWarnings && this.bSavingDefExtension && plsData.extension !== this.playlistsExtension) {
@@ -1651,6 +1657,7 @@ function _list(x, y, w, h) {
 	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const oldCategories = this.categories();
+		const oldTags = this.tags();
 		// Saves currently selected item for later use
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
 		if (bReuseData) {
@@ -1895,6 +1902,10 @@ function _list(x, y, w, h) {
 		if (!bInit && !isArrayEqual(oldCategories, this.categories())) { // When adding new files, new categories may appear, but those must not be filtered! Skip this on init
 			this.categoryState = this.categoryState.concat([...new Set(this.categories()).difference(new Set(oldCategories))]); // Add new ones
 			this.categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))]; // Remove missing ones
+		}
+		if (!bInit && !isArrayEqual(oldTags, this.tags())) { // When adding new files, new tags may appear, but those must not be filtered! Skip this on init
+			this.tagState = this.tagState.concat([...new Set(this.tags()).difference(new Set(oldTags))]); // Add new ones
+			this.tagState = [...new Set(this.tagState).intersection(new Set(this.tags()))]; // Remove missing ones
 		}
 		this.headerTextUpdate();
 		if (!bNotPaint){window.Repaint();}
@@ -2769,7 +2780,7 @@ function _list(x, y, w, h) {
 			this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 		}
 		
-		this.exportPlaylistsInfo = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json'} = {}) => {
+		this.exportPlaylistsInfo = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json', bDelete = false} = {}) => {
 			const bToFile = file && file.length;
 			// Don try to export for ajquery-xxx integration when it isn't installed
 			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFolder(file.split('\\').slice(0, -1).join('\\'))) {return false;}
@@ -2785,6 +2796,21 @@ function _list(x, y, w, h) {
 				return _save(file, JSON.stringify(data, null, '\t'));
 			} catch (e) {console.log('this.exportPlaylistsInfo: unknown error'); console.log(e.message);}
 			return false;
+		}
+		
+		this.deleteExportInfo = (files = [
+				fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json', 
+				fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerentries.json'
+			]) => {
+			const wName = window.Name;
+			files.forEach((file) => {
+				const bToFile = file && file.length;
+				if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFile(file)) {return;}
+				const data = _jsonParseFile(file, utf8) || {};
+				data[wName] = null;
+				delete data[wName];
+				_save(file, JSON.stringify(data, null, '\t'));
+			});
 		}
 		
 		this.reset = () => {
@@ -2860,7 +2886,8 @@ function _list(x, y, w, h) {
 			if (!(this.properties['bUpdateAutoplaylist'][1] && this.bShowSize) && !(this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit)) {
 				this.createMainMenuDynamic(); this.exportPlaylistsInfo();
 			}
-		}
+		} else {this.deleteExportInfo();}
+		exportComponents(fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\');
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
