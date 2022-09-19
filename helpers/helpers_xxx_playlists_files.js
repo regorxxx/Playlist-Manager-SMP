@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/22
+//16/09/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -9,6 +9,7 @@ include('helpers_xxx_tags.js');
 include('helpers_xxx_playlists.js');
 include('helpers_xxx_playlists_files_xspf.js');
 include('helpers_xxx_playlists_files_xsp.js');
+var regExListenBrainz = /^(https:\/\/listenbrainz.org\/)|(recording)|(playlist)|\//g;
 
 /* 
 	Global Variables 
@@ -522,10 +523,13 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		plman.AddLocations(playlistIndex, playlistPath, true);
 		bDone = true;
 	} else {
-		let handlePlaylist = getHandlesFromPlaylist(playlistPath, relPath, void(0), remDupl);
+		const {handlePlaylist, pathsNotFound} = getHandlesFromPlaylist(playlistPath, relPath, void(0), remDupl, true);
 		if (handlePlaylist) {
 			plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
 			bDone = true;
+			if (pathsNotFound && pathsNotFound.length && extension === '.xspf') {
+				// plman.AddLocations(playlistIndex, pathsNotFound);
+			}
 		}
 	}
 	return bDone;
@@ -533,10 +537,10 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['title','artist','date']*/) {
+function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['title','artist','date']*/, bReturnNotFound = false) {
 	let test = new FbProfiler('getHandlesFromPlaylist');
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
-	let handlePlaylist = null;
+	let handlePlaylist = null, pathsNotFound = null;
 	if (extension === '.xsp') {
 		const bCache = xspCache.has(playlistPath);
 		let playlistText;
@@ -633,8 +637,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 					break;
 				}
 				count++;
-			} else if (bXSPF) {notFound.add(i);}
-			else {console.log(filePaths[i]);}
+			} else {notFound.add(i);}
 		}
 		
 		if (bXSPF && count !== filePaths.length) {
@@ -661,7 +664,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 						const key = look.xspfKey;
 						const queryKey = look.queryKey;
 						if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
-							lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace('https://musicbrainz.org/recording/','') : rows[i][key]);
+							lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz, '') : rows[i][key]);
 						}
 					});
 					for (let condition of conditions) {
@@ -676,18 +679,19 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 							}
 						}
 					}
-					if (!handlePlaylist[i]) {console.log(filePaths[i]);}
+					// if (!handlePlaylist[i]) {console.log(filePaths[i]);}
 				}
 			}
 		}
+		pathsNotFound = [...notFound].map((idx) => {return filePaths[idx];});
 		if (count === filePaths.length && filePaths.length) {
 			console.log(playlistPath.split('\\').pop() + ': Found all tracks on library.');
 			handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 		} else if (bOmitNotFound && handlePlaylist !== null) {
-			console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').');
+			console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').' + '\n' + pathsNotFound.join('\n'));
 			handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
 		} else {
-			console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').');
+			console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').' + '\n' + pathsNotFound.join('\n'));
 			handlePlaylist = null;
 		}
 		if (handlePlaylist !== null) {
@@ -696,7 +700,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		}
 	}
 	test.Print();
-	return handlePlaylist;
+	return (!bReturnNotFound ? handlePlaylist : {handlePlaylist, pathsNotFound});
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files

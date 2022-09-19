@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/09/22
+//19/09/22
 
 /* 
 	Objects
@@ -355,6 +355,8 @@ function round(floatnum, decimals){
 function isBoolean(obj) {
    return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
 }
+
+const regExBool = /^b[A-Z]\w*/;
 
 /* 
 	Maps

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/09/22
+//14/09/22
 
 include('helpers_xxx.js');
 
@@ -71,28 +71,22 @@ function queryReplaceWithCurrent(query, handle) {
 			let tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
-				// tfo = tfo.indexOf('$') === -1 ? '[%' + tfo + '%]' : '[' + tfo + ']';
 				const bIsFunc = tfo.indexOf('$') !== -1;
 				const bIsWithinFunc = query[idx[i] - 1] === '(' && query[idx[i + 1] + 1] === ')';
 				tfo = !bIsFunc ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
 				tfo = fb.TitleFormat(tfo);
 				tfoVal = bIsFunc || bIsWithinFunc ? sanitizeTagTfo(tfo.EvalWithMetadb(handle)) : tfo.EvalWithMetadb(handle);
 				if (tfoVal.indexOf('#') !== -1) { // Split multivalue tags if possible!
-					// tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interQueryStart = interText[0] === ')' ? interText.slice(0, interText.split('').findIndex((s) => {return s !== ')';})) : '';
 					const breakPoint = interText.lastIndexOf(' (');
 					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => {return s !== '(';})) : '';
-					// const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2) : '';
 					const interQuery = interQueryStart + interQueryEnd;
 					const multiQuery  = tfoVal.split('#').map((val) => {return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + val;});
-					// tempQuery = tfoVal.split('#').map((val) => {return tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + val;})
-					// tempQuery = query_join(tempQuery, 'AND');
 					tempQuery += interQuery + query_join(multiQuery, 'AND');
 				} else {
 					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + tfoVal;
 				}
-				// tempQuery = tempQuery + query.slice((i > 0 ? idx[i - 1] + 1 : 0), idx[i]) + tfoVal;
 			}
 			query = startQuery + tempQuery + endQuery;
 		}
