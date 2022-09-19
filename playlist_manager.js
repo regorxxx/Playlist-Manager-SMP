@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/22
+//13/09/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -22,6 +22,7 @@ include('helpers\\popup_xxx.js');
 include('helpers\\helpers_xxx_instances.js');
 include('helpers\\playlist_history.js');
 include('helpers\\callbacks_xxx.js');
+include('helpers\\playlist_manager_listenbrainz.js');
 
 checkCompatible('1.6.1', 'smp');
 
@@ -42,11 +43,18 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 		}, (error) => {
 			// Already using data from other instance. See on_notify_data
 			pop.disable(true);
-		}).finally(() => {
+		}).finally(async () => {
 			if (typeof list !== 'undefined' && list && list.bRelativePath && list.playlistsPath) {
 				if (!pop.isEnabled()) {pop.enable(true, message, tt);}
 				precacheLibraryRelPaths(list.playlistsPath);
 				pop.disable(true);
+				const lBrainzToken = list.properties.lBrainzToken[1];
+				const bEncrypted = list.properties.lBrainzEncrypt[1];
+				if (lBrainzToken.length && !bEncrypted) {
+					if (!(await validateToken(decryptToken({lBrainzToken, bEncrypted})))) {
+						fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); 
+					}
+				}
 			}
 		});
 	} else {

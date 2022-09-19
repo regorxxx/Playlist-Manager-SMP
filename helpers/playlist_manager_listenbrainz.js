@@ -1,10 +1,11 @@
 ﻿'use strict';
-//12/09/22
+//15/09/22
 
+include('helpers_xxx_basic_js.js');
 include('helpers_xxx_tags.js');
-include('..\\main\\remove_duplicates.js');
 include('helpers_xxx_web.js');
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
+var regExListenBrainz = /^(https:\/\/listenbrainz.org\/)|(recording)|(playlist)|\//g;
 
 // Post new playlist using the playlist file as reference and provides a new MBID
 // Note posting multiple times the same playlist file will create different entities
@@ -152,7 +153,7 @@ function importFromListenBrainz(pls /*{playlist_mbid}*/, token) {
 		(resolve) => {
 			if (resolve) { // Ensure it matches the ID
 				const jspf = JSON.parse(resolve);
-				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace('https://listenbrainz.org/playlist/', '')) {
+				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace(regExListenBrainz, '')) {
 					console.log('importFromListenBrainz: ' + JSON.stringify({creator: jspf.playlist.creator, identifier: jspf.playlist.identifier}));
 					return jspf;
 				}
@@ -167,12 +168,13 @@ function importFromListenBrainz(pls /*{playlist_mbid}*/, token) {
 	);
 }
 
-function contentResolver(jspf) {
+function contentResolver(jspf, bHandleList = true) {
 	if (!jspf) {return null;}
 	// Query cache (Library)
 	// Makes consecutive playlist loading by queries much faster (for ex. .xspf fuzzy matching)
 	const queryCache = new Map(); // {Query: handleList}
 	let handlePlaylist = [];
+	const notFound = [];
 	let count = 0;
 	const playlist = jspf.playlist;
 	const rows = playlist.track;
@@ -186,7 +188,7 @@ function contentResolver(jspf) {
 			const key = look.xspfKey;
 			const queryKey = look.queryKey;
 			if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
-				lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace('https://musicbrainz.org/recording/','') : rows[i][key]);
+				lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz,'') : rows[i][key]);
 			}
 		});
 		for (let condition of conditions) {
@@ -201,9 +203,10 @@ function contentResolver(jspf) {
 				}
 			}
 		}
-		if (!handlePlaylist[i]) {console.log(rows[i].title, rows[i].creator, rows[i].identifier);}
+		if (!handlePlaylist[i]) {notFound.push(rows[i].creator + ' - ' + rows[i].title + ': ' + rows[i].identifier);}
 	}
-	return new FbMetadbHandleList(handlePlaylist);
+	if (notFound.length) {console.log('Some tracks have not been found on library:\n' + notFound.join('\n'));}
+	return (bHandleList ? new FbMetadbHandleList(handlePlaylist.filter((n) => n)) : handlePlaylist);
 }
 
 function retrieveUserPlaylistsNames(user, token) {
@@ -230,7 +233,7 @@ function retrieveUserPlaylists(user, token) {
 	return retrieveUserPlaylistsNames(user, token).then(
 		(resolve) => {
 			const playlists = resolve.playlists;
-			const jsfpArr = playlists.map((pls) => {return importFromListenBrainz(pls.identifier.replace('https://listenbrainz.org/playlist/', ''));})
+			const jsfpArr = playlists.map((pls) => {return importFromListenBrainz(pls.identifier.replace(regExListenBrainz, ''));})
 			return Promise.all(jsfpArr);
 		},
 		(reject) => {
