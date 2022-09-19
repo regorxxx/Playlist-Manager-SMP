@@ -1,5 +1,5 @@
 ﻿'use strict';
-// 27/04/22
+// 15/09/22
 // Copyright Regorxxx 2022
 // Based on works by J. Chris Anderson 2007 
 // https://github.com/jchris/xspf-to-jspf-parser
@@ -224,10 +224,12 @@ const XSPF = {
 		}
 		let result = [];
 		const length = arr.length;
-		for (let i=0; i < length; i++) {
+		for (let i = 0; i < length; i++) {
 			let string = arr[i];
-			string = string.replace(/^\s*/,'');
-			string = string.replace(/\s*$/,'');
+			if (string) {
+				string = string.replace(/^\s*/,'');
+				string = string.replace(/\s*$/,'');
+			}
 			result.push(string);
 		}
 		if (scalar) {
