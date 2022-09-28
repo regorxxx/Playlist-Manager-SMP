@@ -22,7 +22,8 @@ include('helpers_xxx_foobar.js');
 
 // Async processing
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.
-const iDelayLibrary = 200; // ms per step for whole handle processing
+const iDelayLibrary = isCompatible('2.0', 'fb') ? 200 : 100; // ms per step for whole handle processing
+const iDelayLibraryPLM = isCompatible('2.0', 'fb') ? 40 : 25; // ms per step for whole handle processing
 const iDelayPlaylists = 120; // ms per step for playlist processing: playlist manager
 const iDelaySBDCache = 150; // ms per step for style/genre node processing: search by distance
 

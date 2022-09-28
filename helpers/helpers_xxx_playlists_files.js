@@ -441,17 +441,18 @@ function precacheLibraryPaths(iSteps, iDelay) {
 	return new Promise((resolve) => {
 		const items = fb.GetLibraryItems().Convert();
 		const count = items.length;
-		const range = count / iSteps;
+		const total = Math.ceil(count / iSteps);
 		let libCopy = [...libItemsAbsPaths];
 		const promises = [];
-		for (let i = 1; i <= iSteps; i++) {
+		let prevProgress = -1;
+		for (let i = 1; i <= total; i++) {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
-						const iItems = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
+						const iItems = new FbMetadbHandleList(items.slice((i - 1) * iSteps, i === total ? count : i * iSteps));
 						libCopy = libCopy.concat(fb.TitleFormat(pathTF).EvalWithMetadbs(iItems));
-						const progress = Math.round(i / iSteps * 100);
-						if (progress % 10 === 0) {console.log('Caching library paths ' + Math.round(progress) + '%.');}
+						const progress = Math.round(i / total * 100);
+						if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Caching library paths ' + progress + '%.');}
 						if (libItemsAbsPaths.length === count) {new Error('already cached');}
 						else {resolve('done');}
 					}
@@ -465,7 +466,7 @@ function precacheLibraryPaths(iSteps, iDelay) {
 	});
 }
 
-async function precacheLibraryPathsAsync(iSteps = iStepsLibrary, iDelay = iDelayLibrary) {
+async function precacheLibraryPathsAsync(iSteps = iStepsLibrary, iDelay = iDelayLibraryPLM) {
 	return await precacheLibraryPaths(iSteps, iDelay);
 }
 
