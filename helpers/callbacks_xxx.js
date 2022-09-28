@@ -1,5 +1,5 @@
 'use strict';
-//12/08/22
+//28/09/22
 
 /*
 	Usage:
@@ -97,13 +97,14 @@ const callbacks = {
 }
 
 const parentWindow = this; // This is Window in this context without SMP wrapping
+parentWindow.eventListener = {event: null, id: null};
 
 function addEventListener(event, listener, bRegister = true) {
 	if (!callbacks.hasOwnProperty(event)) {console.log('addEventListener: event does not exist -> ' + event); return false;}
 	const id = UUID();
 	callbacks[event].listeners.push({id, listener});
 	if (bRegister && !callbacks[event].bRegistered) {registerCallback(event);} // Only add those callbacks needed to the global context
-	return id;
+	return {event, id};
 }
 
 function findEventListener(event, listener = null, id = null) {
@@ -132,14 +133,19 @@ function removeEventListeners(event) {
 	return true;
 }
 
+// Should only be called within an event listener, since 'this' points to 'parentWindow'
+const removeEventListenerSelf = () => {return removeEventListener(this.eventListener.event, null, this.eventListener.id);}
+
 /*
 	Register callbacks
 */
 const fireEvents = function(event) {
 	return function() {
 		let bReturn = event === 'on_mouse_rbtn_up' && callbacks[event].length; // To be used by on_mouse_rbtn_up to disable default menu
-		callbacks[event].listeners.forEach((event) => {
-			bReturn = event.listener.apply(this, arguments);
+		callbacks[event].listeners.forEach((eventListener) => {
+			this.eventListener = {event, id: eventListener.id};
+			bReturn = eventListener.listener.apply(this, arguments);
+			this.eventListener = {event: null, id: null};
 		});
 		return bReturn;
 	};

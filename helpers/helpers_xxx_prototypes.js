@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/09/22
+//28/09/22
 
 /* 
 	Objects
@@ -244,6 +244,14 @@ Array.prototype.joinUpToChars = function(sep, chars) {
 	str = this.join(sep);
 	if (str.length > chars) {str = str.slice(0, chars) + '...';}
 	return str;
+};
+
+Array.prototype.multiIndexOf = function (el) { 
+    const idxs = [];
+    for (let i = this.length - 1; i >= 0; i--) {
+        if (this[i] === el) {idxs.unshift(i);}
+    }
+    return idxs;
 };
 
 /* 

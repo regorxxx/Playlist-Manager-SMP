@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/22
+//21/09/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -449,7 +449,6 @@ function precacheLibraryPaths(iSteps, iDelay) {
 				setTimeout(() => {
 					if (libCopy.length !== count && libItemsAbsPaths.length !== count) {
 						const iItems = new FbMetadbHandleList(items.slice((i - 1) * range, i === iSteps ? count : i * range));
-						// libCopy = libCopy.concat(fb.TitleFormat('%path%').EvalWithMetadbs(iItems));
 						libCopy = libCopy.concat(fb.TitleFormat(pathTF).EvalWithMetadbs(iItems));
 						const progress = Math.round(i / iSteps * 100);
 						if (progress % 10 === 0) {console.log('Caching library paths ' + Math.round(progress) + '%.');}

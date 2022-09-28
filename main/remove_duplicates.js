@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/22
+//28/09/22
 
 /*
 	Remove duplicates
@@ -23,18 +23,20 @@
 		Add musicBraiz track ID and album as default: solves same track with different dates...
 */	
 
+if (isCompatible('2.0', 'fb')) {include('..\\helpers\\helpers_xxx_tags_cache.js');}
+
 // Note number of final duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
 // 'nAllowed = 0' removes all duplicates.
 function removeDuplicates({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], nAllowed = 0, bProfile = false} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
+		console.log('removeDuplicates: checkKeys [' + checkKeys + '] was null, empty or not an array');
 		return; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
 		while (i--){
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
-				console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] some keys are not String objects');
+				console.log('removeDuplicates: checkKeys [' + checkKeys + '] some keys are not String objects');
 				return; //Array was null or not an array
 			}
 		}
@@ -105,13 +107,13 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = ['t
 function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], bProfile = false} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
+		console.log('removeDuplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
 		return; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
 		while (i--){
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
-				console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] some keys are not String objects');
+				console.log('removeDuplicatesV2: checkKeys [' + checkKeys + '] some keys are not String objects');
 				return; //Array was null or not an array
 			}
 		}
@@ -158,6 +160,85 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = [
 		items.OrderByFormat(tfo, 1);
 	}
 	
+	if (bActivePlaylist) {
+		let removedCount = handleList.Count - items.Count;
+		if (removedCount) { // Send to active playlist if there was no input list and changes were made
+			plman.UndoBackup(plman.ActivePlaylist);
+			plman.ClearPlaylist(plman.ActivePlaylist);
+			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, items);
+			console.log('Removed ' + removedCount + ' duplicates from active playlist by: ' + sortInput);
+		} else {
+			console.log('No duplicates found by: ' + sortInput);
+		}
+	}
+	if (bProfile) {test.Print('Task #1: Remove duplicates', false);}
+	return items;
+}
+
+// V3: Equal to V2 but async using tag cache
+async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], bProfile = false, bTagsCache = true} = {}) {
+	// Check input
+	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+		console.log('removeDuplicatesV3: checkKeys [' + checkKeys + '] was null, empty or not an array');
+		return; //Array was null or not an array
+	} else {
+		let i = checkKeys.length;
+		while (i--){
+			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
+				console.log('removeDuplicatesV3: checkKeys [' + checkKeys + '] some keys are not String objects');
+				return; //Array was null or not an array
+			}
+		}
+	}
+	if (bProfile) {var test = new FbProfiler('removeDuplicatesV3');}
+		
+	// Active playlist or input list?
+	let bActivePlaylist = false;
+	if (handleList === null) {
+		bActivePlaylist = true;
+		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
+	} 
+	let items = [];
+	let copy = handleList.Clone();
+	
+	let sortInput; // Sorting
+	let tags = [];
+	const count = copy.Count;
+	const checklength = checkKeys.length;
+	for (let i = 0; i < checklength; i++) {
+		let check_i = checkKeys[i];
+		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
+		else {sortInput += (check_i.replace('%',) === check_i) ? ' - %' + check_i + '%' :  ' - ' + check_i;}
+	}
+	let tfo = fb.TitleFormat(sortInput);
+	if (bTagsCache) {
+		const tagNames = checkKeys.map((tagName) => {return (tagName.indexOf('$') === -1 ? '%' + tagName + '%' : tagName);});
+		const tagsVal = await tagsCache.getTags(tagNames, handleList.Convert());
+		for (let i = 0; i < count; i++) {
+			let id = '';
+			tagNames.forEach((tag, j) => {id += (j ?  ' - ' : '') + tagsVal[tag][i].join(', ');});
+			tags.push(id);
+		}
+	} else {
+		tags = tfo.EvalWithMetadbs(copy);
+	}
+
+	let set = new Set();
+	for (let i = 0; i < count; i++) {
+		const str = tags[i];
+		if (!set.has(str)) {
+			set.add(str);
+			items.push(copy[i]);
+		}
+	}
+	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
+	
+	if (sortOutput !== null) { // Output Sorting?
+		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
+		else {tfo = fb.TitleFormat('$rand()');}
+		items.OrderByFormat(tfo, 1);
+	}
+
 	if (bActivePlaylist) {
 		let removedCount = handleList.Count - items.Count;
 		if (removedCount) { // Send to active playlist if there was no input list and changes were made

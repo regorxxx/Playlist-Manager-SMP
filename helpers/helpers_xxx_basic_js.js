@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/01/22
+//23/09/22
 
 // https://github.com/angus-c/just
 /*
@@ -224,8 +224,11 @@ function convertObjectToString(object, separator = ',') {
 }
 
 function SetReplacer(key, value) {
-	if (typeof value === 'object' && value instanceof Set) {return [...value];}
-	return value;
+	return (typeof value === 'object' && value instanceof Set ? [...value] : value);
+}
+
+function MapReplacer(key, value) {
+	return (typeof value === 'object' && value instanceof Map ?  [...value.entries()] : value);
 }
 
 /*
