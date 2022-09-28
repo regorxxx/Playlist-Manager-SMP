@@ -151,7 +151,8 @@ var properties = {
 	})],
 	bMultMenuTag			: ['Automatically add \'bMultMenu\' to all playlists', false],
 	lBrainzToken			: ['ListenBrainz user token', ''],
-	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false]
+	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false],
+	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000

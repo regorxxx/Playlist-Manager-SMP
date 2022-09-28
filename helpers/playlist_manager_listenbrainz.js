@@ -1,7 +1,8 @@
 ﻿'use strict';
-//15/09/22
+//28/09/22
 
 include('helpers_xxx_basic_js.js');
+include('helpers_xxx_prototypes.js');
 include('helpers_xxx_tags.js');
 include('helpers_xxx_web.js');
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
@@ -10,12 +11,26 @@ var regExListenBrainz = /^(https:\/\/listenbrainz.org\/)|(recording)|(playlist)|
 // Post new playlist using the playlist file as reference and provides a new MBID
 // Note posting multiple times the same playlist file will create different entities
 // Use sync to edit already exported playlists
-function exportToListenBrainz(pls /*{name, nameId, path}*/, root = '', token) {
+async function exportToListenBrainz(pls /*{name, nameId, path}*/, root = '', token, bLookupMBIDs = true) {
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, root, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
-	const mbid = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat().filter(Boolean);
-	if (handleList.Count !== mbid.length) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted on exporting');}
+	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat();
+	// Try to retrieve missing MBIDs
+	const missingIds = tags.multiIndexOf('');
+	const missingCount = missingIds.length;
+	if (bLookupMBIDs && missingCount) {
+		const missingHandleList = new FbMetadbHandleList(missingIds.map((idx) => {return handleList[idx];}));
+		const missingMBIDs = await lookupMBIDs(missingHandleList, token);
+		if (missingMBIDs.length) {
+			missingMBIDs.forEach((mbid, i) => {
+				const idx = missingIds[i];
+				tags[idx] = mbid;
+			});
+		}
+	}
+	const mbid = tags.filter(Boolean);
+	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks on exporting');}
 	const track = mbid.map((tag) => {return {identifier: 'https://musicbrainz.org/recording/' + tag};});
 	const data = { // JSPF playlist with minimum data
 		playlist: {
@@ -46,7 +61,7 @@ function exportToListenBrainz(pls /*{name, nameId, path}*/, root = '', token) {
 			return '';
 		},
 		(reject) => {
-			console.log('syncToListenBrainz: ' + reject.status + ' ' + reject.responseText);
+			console.log('exportToListenBrainz: ' + reject.status + ' ' + reject.responseText);
 			return '';
 		}
 	);
@@ -54,7 +69,7 @@ function exportToListenBrainz(pls /*{name, nameId, path}*/, root = '', token) {
 
 // Delete all tracks on online playlist and then add all tracks again using the playlist file as reference
 // Easier than single edits, etc.
-function syncToListenBrainz(pls /*{name, nameId, path, playlist_mbid}*/, root = '', token) {
+function syncToListenBrainz(pls /*{name, nameId, path, playlist_mbid}*/, root = '', token, bLookupMBIDs = true) {
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return '';}
 	const data = {
 		index: 0,
@@ -74,7 +89,7 @@ function syncToListenBrainz(pls /*{name, nameId, path, playlist_mbid}*/, root = 
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response.status === 'ok') {
-					return handleList.Count ? addToListenBrainz(pls, handleList, void(0), token) : pls.playlist_mbid;
+					return handleList.Count ? addToListenBrainz(pls, handleList, void(0), token, bLookupMBIDs) : pls.playlist_mbid;
 				}
 				return '';
 			}
@@ -87,7 +102,7 @@ function syncToListenBrainz(pls /*{name, nameId, path, playlist_mbid}*/, root = 
 				if (response.error === 'Failed to deleting recordings from the playlist. Please try again.') { // Playlist file was empty
 					const jspf = await importFromListenBrainz(pls, token);
 					if (jspf.playlist.track.length === 0) {
-						return handleList.Count ? addToListenBrainz(pls, handleList, void(0), token) : pls.playlist_mbid;
+						return handleList.Count ? addToListenBrainz(pls, handleList, void(0), token, bLookupMBIDs) : pls.playlist_mbid;
 					}
 				} else if (response.code === 404 && response.error === ('Cannot find playlist: ' + pls.playlist_mbid)) { // Playlist file had a MBID not found on server
 					return exportToListenBrainz(pls, root, token);
@@ -100,11 +115,25 @@ function syncToListenBrainz(pls /*{name, nameId, path, playlist_mbid}*/, root = 
 }
 
 // Add handleList to given online playlist
-function addToListenBrainz(pls /*{name, playlist_mbid}*/, handleList, offset, token) {
+async function addToListenBrainz(pls /*{name, playlist_mbid}*/, handleList, offset, token, bLookupMBIDs = true) {
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return '';}
 	if (!handleList || !handleList.Count) {return pls.playlist_mbid;}
-	const mbid = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat().filter(Boolean);
-	if (handleList.Count !== mbid.length) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted on exporting');}
+	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat();
+	// Try to retrieve missing MBIDs
+	const missingIds = tags.multiIndexOf('');
+	const missingCount = missingIds.length;
+	if (bLookupMBIDs && missingCount) {
+		const missingHandleList = new FbMetadbHandleList(missingIds.map((idx) => {return handleList[idx];}));
+		const missingMBIDs = await lookupMBIDs(missingHandleList, token);
+		if (missingMBIDs.length) {
+			missingMBIDs.forEach((mbid, i) => {
+				const idx = missingIds[i];
+				tags[idx] = mbid;
+			});
+		}
+	}
+	const mbid = tags.filter(Boolean);
+	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks on exporting');}
 	const track = mbid.map((tag) => {return {identifier: 'https://musicbrainz.org/recording/' + tag};});
 	// TODO slice handleList into parts to not reach max tracks count on server
 	const data = { // JSPF playlist with minimum data
@@ -164,6 +193,82 @@ function importFromListenBrainz(pls /*{playlist_mbid}*/, token) {
 		(reject) => {
 			console.log('importFromListenBrainz: ' + reject.status + ' -> ' + reject.responseText);
 			return null;
+		}
+	);
+}
+
+function lookupTracks(handleList, token) {
+	const count = handleList.Count;
+	if (!handleList.Count) {return [];}
+	const [artist, title] = getTagsValuesV4(handleList, ['ARTIST', 'TITLE']);
+	const data = new Array(count).fill({});
+	data.forEach((_, i, thisArr) => {
+		thisArr[i] = {};
+		thisArr[i]['[artist_credit_name]'] = artist[i].join(', ');
+		thisArr[i]['[recording_name]'] = title[i].join(', ');
+	});
+	return send({
+		method: 'POST', 
+		URL: 'https://labs.api.listenbrainz.org/mbid-mapping/json',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) { // Ensure it matches the ID
+				const response  = JSON.parse(resolve);
+				console.log('lookupTracks: ' + response.length + '/' + count + ' found items');
+				return response; // Response may contain fewer items than original list
+			}
+			return []; 
+		},
+		(reject) => {
+			console.log('lookupTracks: ' + reject.status + ' ' + reject.responseText);
+			return [];
+		}
+	);
+}
+
+function lookupRecordingInfo(handleList, infoNames = ['recording_mbid'], token) {
+	const allInfo = [
+		'artist_credit_arg', 'artist_credit_id', 'artist_credit_name', 
+		'artist_mbids', 'index', 'match_type', 'recording_arg', 'recording_mbid', 
+		'recording_name', 'release_mbid', 'release_name', 'year'
+	];
+	if (!infoNames || !infoNames.length) {infoNames = allInfo;}
+	return lookupTracks(handleList, token).then(
+		(resolve) => {
+			if (resolve.length) {
+				const info = {};
+				infoNames.forEach((tag) => {
+					info[tag] = new Array(handleList.Count).fill('');
+					if (allInfo.indexOf(tag) !== -1) {
+						resolve.forEach((obj, i) => {info[tag][obj.index] = obj[tag];});
+					}
+				});
+				return info; // Response may contain fewer items than original list
+			}
+			return [];
+		},
+		(reject) => {
+			console.log('lookupMBIDs: ' + reject);
+			return [];
+		}
+	);
+}
+
+function lookupMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
+	return lookupTracks(handleList, token).then(
+		(resolve) => {
+			if (resolve.length) {
+				const MBIDs = new Array(handleList.Count).fill('');
+				resolve.forEach((obj, i) => {MBIDs[obj.index] = obj.recording_mbid;});
+				return MBIDs; // Response may contain fewer items than original list
+			}
+			return [];
+		},
+		(reject) => {
+			console.log('lookupMBIDs: ' + reject);
+			return [];
 		}
 	);
 }

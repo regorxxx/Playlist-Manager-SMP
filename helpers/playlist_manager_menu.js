@@ -312,13 +312,14 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!await checkLBToken()) {return false;}
 				let bUpdateMBID = false;
 				let playlist_mbid = '';
+				const bLookupMBIDs = list.properties.bLookupMBIDs[1];
 				if (pls.playlist_mbid.length) {
 					console.log('Syncing playlist with MusicBrainz: ' + pls.name);
-					playlist_mbid = await syncToListenBrainz(pls, list.playlistsPath, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
+					playlist_mbid = await syncToListenBrainz(pls, list.playlistsPath, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}), bLookupMBIDs);
 					if (pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true;}
 				} else {
 					console.log('Exporting playlist to MusicBrainz: ' + pls.name);
-					playlist_mbid = await exportToListenBrainz(pls, list.playlistsPath, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
+					playlist_mbid = await exportToListenBrainz(pls, list.playlistsPath, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}), bLookupMBIDs);
 					if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 				}
 				if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
@@ -1888,6 +1889,15 @@ function createMenuRightTop() {
 				const user = await retrieveUser(decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
 				if (user.length) {_runCmd('CMD /C START https://listenbrainz.org/user/' + user + '/playlists/', false);}
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Lookup for missing track MBIDs?', func: () => {
+				list.properties.bLookupMBIDs[1] = !list.properties['bLookupMBIDs'][1];
+				if (list.properties.bLookupMBIDs[1]) {
+					fb.ShowPopupMessage('Exporting a playlist requires tracks to have \'MUSICBRAINZ_TRACKID\' tags on files.\n\nWhenever such tag is missing, the file can not be sent to ListenBrainz\'s online playlist. As workaround, the script may try to lookup missing MBIDs before exporting.\n\nNote results depend on the success of MusicBrainz api, so it\'s not guaranteed to find the proper match in all cases. Tag properly your files with Picard or foo_musicbrainz in such case.\n\nApi used:\nhttps://labs.api.listenbrainz.org/mbid-mapping', window.Name);
+				}
+				overwriteProperties(list.properties);
+			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
+			menu.newCheckMenu(subMenuName, 'Lookup for missing track MBIDs?', void(0), () => {return list.properties.bLookupMBIDs[1];});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
