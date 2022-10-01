@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/09/22
+//28/09/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -537,7 +537,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['title','artist','date']*/, bReturnNotFound = false) {
+function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false) {
 	let test = new FbProfiler('getHandlesFromPlaylist');
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	let handlePlaylist = null, pathsNotFound = null;
@@ -573,7 +573,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		else {console.log('Error on XSP Playlist: ' + query);}
 		if (handlePlaylist) {
 			handlePlaylist.Sort();
-			if (remDupl && remDupl.length && removeDuplicatesV2) {handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist,checkKeys: remDupl});}
+			if (remDupl && remDupl.length && removeDuplicatesV2) {handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist, checkKeys: remDupl});}
 			if (sort.length) {
 				const sortObj = getSortObj(sort);
 				if (sortObj) {handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction);}

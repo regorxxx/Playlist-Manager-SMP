@@ -27,7 +27,7 @@ if (isCompatible('2.0', 'fb')) {include('..\\helpers\\helpers_xxx_tags_cache.js'
 
 // Note number of final duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
 // 'nAllowed = 0' removes all duplicates.
-function removeDuplicates({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], nAllowed = 0, bProfile = false} = {}) {
+function removeDuplicates({handleList = null, sortOutput = null, checkKeys = ['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)'], nAllowed = 0, bProfile = false} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicates: checkKeys [' + checkKeys + '] was null, empty or not an array');
@@ -104,7 +104,7 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = ['t
 
 
 // V2: Equal to V1 but without n checks (faster)
-function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], bProfile = false} = {}) {
+function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = ['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)'], bProfile = false} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
@@ -176,7 +176,7 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = [
 }
 
 // V3: Equal to V2 but async using tag cache
-async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], bProfile = false, bTagsCache = true} = {}) {
+async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKeys = ['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)'], bProfile = false, bTagsCache = true} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicatesV3: checkKeys [' + checkKeys + '] was null, empty or not an array');
@@ -255,7 +255,7 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 }
 
 // The inverse function to remove duplicates, only outputs duplicates according to TF
-function showDuplicates({handleList = null, sortOutput = null, checkKeys = ['title','artist','date'], bProfile = false} = {}) {
+function showDuplicates({handleList = null, sortOutput = null, checkKeys = ['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)'], bProfile = false} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('do_remove_duplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
