@@ -95,7 +95,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
 		if (mType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (smType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (this.hasMenu(menuName)) {menuError({menuName, subMenuFrom, flags}); throw 'There is already another menu with same name';}
+		if (this.hasMenu(menuName)) {menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); throw 'There is already another menu with same name';}
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
@@ -124,6 +124,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		if (eAType === 'string' && entryTextA.indexOf('&') !== - 1) {entryTextA = entryTextA.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (eBType === 'string' && entryTextB.indexOf('&') !== - 1) {entryTextB = entryTextB.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (mType === 'string' && !this.hasMenu(menuName)) {menuError({'function': 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFun}); throw 'There is no menu with such name';}
 		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
 		return true;
 	};
@@ -156,14 +157,14 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			if (isFunction(entryText)) {entryText = entryText();}
 			// Safe-checks
 			const eType = typeof entryText, mType = typeof menuName;
-			if (mType === 'undefined') {menuError({menuName, entryText, flags}); throw 'menuName is not defined';}
+			if (mType === 'undefined') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'menuName is not defined';}
 			else if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
 			else if (mType === 'function') {menuName = menuName.name;}
-			else if (mType !== 'string') {menuError({menuName, entryText, flags}); throw 'menuName type is not recognized';}
-			if (eType === 'undefined') {menuError({menuName, entryText, flags}); throw 'entryText is not defined!';}
+			else if (mType !== 'string') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'menuName type is not recognized';}
+			if (eType === 'undefined') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'entryText is not defined!';}
 			else if (eTypeToStr.indexOf(eType) !== -1) {entryText = entryText.toString();}
 			else if (eType === 'function') {menuName = menuName.name;}
-			else if (eType !== 'string') {menuError({menuName, entryText, flags}); throw 'entryText type is not recognized';}
+			else if (eType !== 'string') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'entryText type is not recognized';}
 			// Cut len
 			let [entryTextName, entryTextTab] = entryText.split('\t');
 			let entryTextSanitized = entryTextName;

@@ -143,6 +143,7 @@ const fireEvents = function(event) {
 	return function() {
 		let bReturn = event === 'on_mouse_rbtn_up' && callbacks[event].length; // To be used by on_mouse_rbtn_up to disable default menu
 		callbacks[event].listeners.forEach((eventListener) => {
+			if (typeof this === 'undefined') {console.log(event); console.log(eventListener.listener.toString());}
 			this.eventListener = {event, id: eventListener.id};
 			bReturn = eventListener.listener.apply(this, arguments);
 			this.eventListener = {event: null, id: null};
@@ -160,7 +161,7 @@ function registerCallback(event) {
 			return (cache || output); // To be used by on_mouse_rbtn_up to disable default menu
 		}
 	} else {
-		parentWindow[event] = fireEvents(event);
+		parentWindow[event] = fireEvents(event).bind(parentWindow);
 	}
 	callbacks[event].bRegistered = true;
 }

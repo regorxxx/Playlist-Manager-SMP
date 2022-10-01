@@ -352,7 +352,7 @@ function _gdiFont(name, size, style) {
 	}
 	if (fonts[id].Name !== name && fonts.notFound.indexOf(name) === -1) { // Display once per session, otherwise it floods the console with the same message...
 		fonts.notFound.push(name);
-		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install dependency found at:\n' + folders.xxx + '_resources', window.Name);
+		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install dependency found at (a restart is required):\n' + folders.xxx + '_resources', window.Name);
 		console.log('Missing font: ' + name);
 	}
 	return fonts[id];
