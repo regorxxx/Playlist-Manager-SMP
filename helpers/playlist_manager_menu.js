@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/09/22
+//30/09/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -32,6 +32,7 @@ function createMenuLeft(forcedIndex = -1) {
 		return menu;
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];
+	const lb = listenBrainz;
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
@@ -49,7 +50,8 @@ function createMenuLeft(forcedIndex = -1) {
 	const bIsPlsLockable = isPlsLockable();
 	const bIsPlsUI = isPlsUI();
 	const bWritableFormat = writablePlaylistFormats.has(pls.extension);
-	const bListenBrainz = list.properties.lBrainzToken[1].length;
+	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
+	const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : '';
 	// Header
 	if (list.bShowMenuHeader) {
 		menu.newEntry({entryText: '--- ' + (bIsAutoPls ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
@@ -315,11 +317,11 @@ function createMenuLeft(forcedIndex = -1) {
 				const bLookupMBIDs = list.properties.bLookupMBIDs[1];
 				if (pls.playlist_mbid.length) {
 					console.log('Syncing playlist with MusicBrainz: ' + pls.name);
-					playlist_mbid = await syncToListenBrainz(pls, list.playlistsPath, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}), bLookupMBIDs);
+					playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 					if (pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true;}
 				} else {
 					console.log('Exporting playlist to MusicBrainz: ' + pls.name);
-					playlist_mbid = await exportToListenBrainz(pls, list.playlistsPath, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}), bLookupMBIDs);
+					playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 					if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 				}
 				if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
@@ -329,7 +331,7 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!await checkLBToken()) {return false;}
 				let bDone = false;
 				if (_isFile(pls.path)) {
-					const jspf = await importFromListenBrainz(pls, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
+					const jspf = await lb.importPlaylist(pls, token);
 					if (jspf) {
 						const handleList = contentResolver(jspf);
 						if (handleList) {
@@ -606,7 +608,9 @@ function createMenuRight() {
 	// Constants
 	const menu = menuRbtn;
 	menu.clear(true); // Reset one every call
-	const bListenBrainz = list.properties.lBrainzToken[1].length;
+	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
+	const lb = listenBrainz;
+	const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : '';
 	// Entries
 	{ // New Playlists
 		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add({bEmpty: true});}});
@@ -629,7 +633,7 @@ function createMenuRight() {
 			catch (e) {bDone = true;}
 			playlist_mbid = playlist_mbid.replace(regExListenBrainz, ''); // Allow web link too
 			if (playlist_mbid.length) {
-				const jspf = await importFromListenBrainz({playlist_mbid}, decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
+				const jspf = await lb.importPlaylist({playlist_mbid}, token);
 				if (jspf) {
 					let bXSPF = false;
 					if (list.playlistsExtension !== '.xspf') {
@@ -887,7 +891,9 @@ function createMenuRightTop() {
 	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtnTop;
 	menu.clear(true); // Reset one every call
-	const bListenBrainz = list.properties.lBrainzToken[1].length;
+	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
+	const lb = listenBrainz;
+	const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : '';
 	// Entries
 	{	// Playlist folder
 		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
@@ -1886,7 +1892,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, 'Set token...', void(0), () => {return list.properties.lBrainzToken[1].length ? true : false;});
 			menu.newEntry({menuName: subMenuName, entryText: 'Open user profile'  + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 				if (!await checkLBToken()) {return;}
-				const user = await retrieveUser(decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
+				const user = await lb.retrieveUser(token);
 				if (user.length) {_runCmd('CMD /C START https://listenbrainz.org/user/' + user + '/playlists/', false);}
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -1989,13 +1995,14 @@ function createMenuRightFilter(buttonKey) {
 
 async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 	if (!lBrainzToken.length) {
+		const lb = listenBrainz;
 		const encryptToken = '********-****-****-****-************';
 		const currToken = list.properties.lBrainzEncrypt[1] ? encryptToken : list.properties.lBrainzToken[1];
 		try {lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name, currToken, true);} 
 		catch(e) {return false;}
 		if (lBrainzToken === currToken || lBrainzToken === encryptToken) {return false;}
 		if (lBrainzToken.length) {
-			if (!(await validateToken(lBrainzToken))) {fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); return false;}
+			if (!(await lb.validateToken(lBrainzToken))) {fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); return false;}
 			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				let pass = '';
