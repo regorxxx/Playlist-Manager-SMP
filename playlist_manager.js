@@ -67,37 +67,37 @@ plmInit.interval = setInterval(cacheLib, 500, true);
 
 var properties = {
 	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
-	autoSave				: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000],
-	bFplLock				: ['Load .fpl native playlists as read only?' , true],
-	extension				: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
-	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000],
-	bShowSize				: ['Show playlist size' , true],
-	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output', true],
-	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).', false],
-	optionUUID				: ['UUID current method', ''],
-	methodState				: ['Current sorting method. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	sortState				: ['Current sorting order. Allowed: ', ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	bSaveFilterStates		: ['Maintain filters between sessions?', true], // Description and value filled on list.init() with defaults. Just a placeholder
+	autoSave				: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000, {func: isInt, range: [[0,0],[1000, Infinity]]}, 3000], // Safety limit 0 or > 1000
+	bFplLock				: ['Load .fpl native playlists as read only?' , true, {func: isBoolean}, true],
+	extension				: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8', {func: (val) => {return writablePlaylistFormats.has(val);}}, '.m3u8'],
+	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000, {func: isInt, range: [[0,0],[200, Infinity]]}, 5000], // Safety limit 0 or > 200
+	bShowSize				: ['Show playlist size' , true, {func: isBoolean}, true],
+	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output', true, {func: isBoolean}, true],
+	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).', false, {func: isBoolean}, false],
+	optionUUID				: ['UUID current method', '', {func: isStringWeak}, ''],
+	methodState				: ['Current sorting method. Allowed: ', '', {func: isStringWeak}, ''], // Description and value filled on list.init() with defaults. Just a placeholder
+	sortState				: ['Current sorting order. Allowed: ', '', {func: isStringWeak}, ''], // Description and value filled on list.init() with defaults. Just a placeholder
+	bSaveFilterStates		: ['Maintain filters between sessions?', true, {func: isBoolean}, true],
 	filterStates			: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowSep				: ['Show name/category separators: ', true],
-	listColours				: ['Color codes for the list. Use contextual menu to set them: ', ''],
-	bFirstPopup				: ['Playlist Manager: Fired once', false],
-	bRelativePath			: ['Use relative paths for all new playlists', false],
-	bFirstPopupFpl			: ['Playlist Manager fpl: Fired once', false],
-	bFirstPopupPls			: ['Playlist Manager pls: Fired once', false],
+	bShowSep				: ['Show name/category separators: ', true, {func: isBoolean}, true],
+	listColours				: ['Color codes for the list. Use contextual menu to set them: ', '', {func: isStringWeak}, ''],
+	bFirstPopup				: ['Playlist Manager: Fired once', false, {func: isBoolean}, false],
+	bRelativePath			: ['Use relative paths for all new playlists', false, {func: isBoolean}, false],
+	bFirstPopupFpl			: ['Playlist Manager fpl: Fired once', false, {func: isBoolean}, false],
+	bFirstPopupPls			: ['Playlist Manager pls: Fired once', false, {func: isBoolean}, false],
 	categoryState			: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowTips				: ['Usage text on tooltips.', true],
-	bAutoLoadTag			: ['Automatically add \'bAutoLoad\' to all playlists', false],
-	bAutoLockTag			: ['Automatically add \'bAutoLock\' to all playlists', false],
-	bAutoCustomTag			: ['Automatically add custom tags to all playlists', false],
-	autoCustomTag			: ['Custom tags to add', ''],
-	bApplyAutoTags			: ['Apply actions based on tags (lock, load)', false],
-	bAutoTrackTag			: ['Enable auto-tagging for added tracks (at autosave)', false],
-	bAutoTrackTagAlways		: ['Enable auto-tagging for added tracks (always)', false],
-	bAutoTrackTagPls		: ['Auto-tagging for standard playlists', false],
-	bAutoTrackTagLockPls	: ['Auto-tagging for locked playlists', false],
-	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false],
-	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false],
+	bShowTips				: ['Usage text on tooltips.', true, {func: isBoolean}, true],
+	bAutoLoadTag			: ['Automatically add \'bAutoLoad\' to all playlists', false, {func: isBoolean}, false],
+	bAutoLockTag			: ['Automatically add \'bAutoLock\' to all playlists', false, {func: isBoolean}, false],
+	bAutoCustomTag			: ['Automatically add custom tags to all playlists', false, {func: isBoolean}, false],
+	autoCustomTag			: ['Custom tags to add', '', {func: isStringWeak}, ''],
+	bApplyAutoTags			: ['Apply actions based on tags (lock, load)', false, {func: isBoolean}, false],
+	bAutoTrackTag			: ['Enable auto-tagging for added tracks (at autosave)', false, {func: isBoolean}, false],
+	bAutoTrackTagAlways		: ['Enable auto-tagging for added tracks (always)', false, {func: isBoolean}, false],
+	bAutoTrackTagPls		: ['Auto-tagging for standard playlists', false, {func: isBoolean}, false],
+	bAutoTrackTagLockPls	: ['Auto-tagging for locked playlists', false, {func: isBoolean}, false],
+	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false, {func: isBoolean}, false],
+	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false, {func: isBoolean}, false],
 	converterPreset			: ['Converter Preset list', JSON.stringify([
 		{name: '', dsp: '...', tf: '.\\%filename%.mp3', path: '', extension: ''}, // Export all at same folder
 		{name: '', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: ''}, // Transfer library
@@ -107,27 +107,27 @@ var properties = {
 		{name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\%artist%\\$ascii($meta(artist,0)\\%track% - %title%).mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on same root than music (without a folder)
 		{name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\%artist%\\$ascii($meta(artist,0)\\%track% - %title%).mp3', path: '', extension: '.m3u8'} // Foobar2000 mobile, playlists on same folder than music
 	])],
-	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true],
-	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false],
-	bBOM					: ['Save files as UTF8 with BOM?', false],
-	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', 'artist,date,title'],
-	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true],
-	bShowMenuHeader			: ['Show header on playlist menus?', true],
-	bCopyAsync				: ['Copy tracks asynchronously on export?', true],
-	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true],
-	bSavingWarnings			: ['Warnings when saving to another format', true],
-	bFirstPopupXsp			: ['Playlist Manager xsp: Fired once', false],
-	bFirstPopupXspf			: ['Playlist Manager xspf: Fired once', false],
-	bCheckDuplWarnings		: ['Warnings when loading duplicated playlists', true],
-	bSavingXsp				: ['Auto-save .xsp playlists?', false],
-	bAllPls					: ['Track UI-only playlists?', false],
-	autoBack				: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity],
-	autoBackN				: ['Auto-backup files allowed.', 50],
-	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state'],
-	bSavingDefExtension		: ['Try to save playlists always as default format?', true],
-	bNetworkPopup			: ['Playlist Manager on network drive: Fired once', false],
-	bOpenOnExport			: ['Open folder on export actions?', true],
-	bShowIcons				: ['Show playlist icons?', true],
+	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true, {func: isBoolean}, true],
+	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false, {func: isBoolean}, false],
+	bBOM					: ['Save files as UTF8 with BOM?', false, {func: isBoolean}, false],
+	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', 'artist,$year(%DATE%),$ascii($lower($trim(%TITLE%)))', {func: isStringWeak}, 'artist,$year(%DATE%),$ascii($lower($trim(%TITLE%)))'],
+	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true, {func: isBoolean}, true],
+	bShowMenuHeader			: ['Show header on playlist menus?', true, {func: isBoolean}, true],
+	bCopyAsync				: ['Copy tracks asynchronously on export?', true, {func: isBoolean}, true],
+	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, {func: isBoolean}, true],
+	bSavingWarnings			: ['Warnings when saving to another format', true, {func: isBoolean}, true],
+	bFirstPopupXsp			: ['Playlist Manager xsp: Fired once', false, {func: isBoolean}, false],
+	bFirstPopupXspf			: ['Playlist Manager xspf: Fired once', false, {func: isBoolean}, false],
+	bCheckDuplWarnings		: ['Warnings when loading duplicated playlists', true, {func: isBoolean}, true],
+	bSavingXsp				: ['Auto-save .xsp playlists?', false, {func: isBoolean}, false],
+	bAllPls					: ['Track UI-only playlists?', false, {func: isBoolean}, false],
+	autoBack				: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, {func: !isNaN, range: [[0,0],[1000, Infinity]]}, Infinity], // Safety limit 0 or > 1000
+	autoBackN				: ['Auto-backup files allowed.', 50, {func: isInt}, 50],
+	filterMethod			: ['Current filter buttons', 'Playlist type,Lock state', {func: isString}, 'Playlist type,Lock state'],
+	bSavingDefExtension		: ['Try to save playlists always as default format?', true, {func: isBoolean}, true],
+	bNetworkPopup			: ['Playlist Manager on network drive: Fired once', false, {func: isBoolean}, false],
+	bOpenOnExport			: ['Open folder on export actions?', true, {func: isBoolean}, true],
+	bShowIcons				: ['Show playlist icons?', true, {func: isBoolean}, true],
 	playlistIcons			: ['Playlist icons codes (Font Awesome)', JSON.stringify(
 		Object.fromEntries(Object.entries(playlistDescriptors).map((plsPair) => {
 			const key = plsPair[0];
@@ -136,7 +136,7 @@ var properties = {
 			return [key, {icon, iconBg}];
 		})))
 	],
-	bDynamicMenus			: ['Show dynamic menus?', true],
+	bDynamicMenus			: ['Show dynamic menus?', true, {func: isBoolean}, true],
 	lShortcuts				: ['L. click modifiers', JSON.stringify({
 		Ctrl:			'Load / show playlist',
 		Shift:			'Send selection to playlist',
@@ -150,16 +150,11 @@ var properties = {
 		'Single Click':	'Multiple selection'
 	})],
 	bMultMenuTag			: ['Automatically add \'bMultMenu\' to all playlists', false],
-	lBrainzToken			: ['ListenBrainz user token', ''],
-	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false],
-	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true]
+	lBrainzToken			: ['ListenBrainz user token', '', {func: isStringWeak}, ''],
+	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false, {func: isBoolean}, false],
+	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true, {func: isBoolean}, true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
-properties['autoSave'].push({func: isInt, range: [[0,0],[1000, Infinity]]}, properties['autoSave'][1]); // Safety limit 0 or > 1000
-properties['extension'].push({func: (val) => {return writablePlaylistFormats.has(val);}}, properties['extension'][1]);
-properties['autoUpdate'].push({func: isInt, range: [[0,0],[200, Infinity]]}, properties['autoUpdate'][1]); // Safety limit 0 or > 200
-properties['autoBack'].push({func: !isNaN, range: [[0,0],[1000, Infinity]]}, properties['autoBack'][1]); // Safety limit 0 or > 1000
-properties['autoBackN'].push({func: isInt}, properties['autoBackN'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
 properties['playlistIcons'].push({func: isJSON}, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({func: isJSON}, properties['mShortcuts'][1]);
