@@ -2769,7 +2769,7 @@ function _list(x, y, w, h) {
 				});
 				data[wName] = listExport;
 				// Don try to export for ajquery-xxx integration when it isn't installed
-				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !_isFolder(folders.ajquery)) {return true;}
+				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) {return true;}
 				return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
 			} catch (e) {console.log('this.createMainMenuDynamic: unknown error'); console.log(e.message);}
 			return false;
@@ -2783,7 +2783,7 @@ function _list(x, y, w, h) {
 		this.exportPlaylistsInfo = ({file = folders.ajquerySMP + 'playlistmanagerpls.json', bDelete = false} = {}) => {
 			const bToFile = file && file.length;
 			// Don try to export for ajquery-xxx integration when it isn't installed
-			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFolder(folders.ajquery)) {return false;}
+			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) {return false;}
 			try {
 				const data = _jsonParseFile(file, utf8) || {};
 				const wName = window.Name;
@@ -2805,7 +2805,7 @@ function _list(x, y, w, h) {
 			const wName = window.Name;
 			files.forEach((file) => {
 				const bToFile = file && file.length;
-				if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFile(file)) {return;}
+				if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) {return;}
 				const data = _jsonParseFile(file, utf8) || {};
 				data[wName] = null;
 				delete data[wName];
@@ -2887,7 +2887,7 @@ function _list(x, y, w, h) {
 				this.createMainMenuDynamic(); this.exportPlaylistsInfo();
 			}
 		} else {this.deleteExportInfo();}
-		if (_isFolder(folders.ajquery)) {exportComponents(folders.ajquerySMP);}
+		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
