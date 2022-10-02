@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/09/22
+//02/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1881,7 +1881,7 @@ function createMenuRightTop() {
 					// And create / delete menus
 					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();} 
 					else {list.deleteMainMenuDynamic(); list.deleteExportInfo();}
-					exportComponents(fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\');
+					if (_isFolder(folders.ajquery)) {exportComponents(folders.ajquerySMP);}
 				}, flags});
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDynamicMenus ? 0 : 1);});

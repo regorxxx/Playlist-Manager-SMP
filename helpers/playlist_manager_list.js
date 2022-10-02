@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/09/22
+//02/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2687,7 +2687,7 @@ function _list(x, y, w, h) {
 			else {this.configFile = null;}
 		}
 		
-		this.createMainMenuDynamic = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerentries.json'} = {}) => {
+		this.createMainMenuDynamic = ({file = folders.ajquerySMP + 'playlistmanagerentries.json'} = {}) => {
 			this.deleteMainMenuDynamic();
 			let currId = this.mainMenuDynamic.length;
 			const bToFile = file && file.length;
@@ -2769,7 +2769,7 @@ function _list(x, y, w, h) {
 				});
 				data[wName] = listExport;
 				// Don try to export for ajquery-xxx integration when it isn't installed
-				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !_isFolder(file.split('\\').slice(0, -1).join('\\'))) {return true;}
+				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !_isFolder(folders.ajquery)) {return true;}
 				return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
 			} catch (e) {console.log('this.createMainMenuDynamic: unknown error'); console.log(e.message);}
 			return false;
@@ -2780,10 +2780,10 @@ function _list(x, y, w, h) {
 			this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 		}
 		
-		this.exportPlaylistsInfo = ({file = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json', bDelete = false} = {}) => {
+		this.exportPlaylistsInfo = ({file = folders.ajquerySMP + 'playlistmanagerpls.json', bDelete = false} = {}) => {
 			const bToFile = file && file.length;
 			// Don try to export for ajquery-xxx integration when it isn't installed
-			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFolder(file.split('\\').slice(0, -1).join('\\'))) {return false;}
+			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !_isFolder(folders.ajquery)) {return false;}
 			try {
 				const data = _jsonParseFile(file, utf8) || {};
 				const wName = window.Name;
@@ -2799,8 +2799,8 @@ function _list(x, y, w, h) {
 		}
 		
 		this.deleteExportInfo = (files = [
-				fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerpls.json', 
-				fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\playlistmanagerentries.json'
+				folders.ajquerySMP + 'playlistmanagerpls.json', 
+				folders.ajquerySMP + 'playlistmanagerentries.json'
 			]) => {
 			const wName = window.Name;
 			files.forEach((file) => {
@@ -2887,7 +2887,7 @@ function _list(x, y, w, h) {
 				this.createMainMenuDynamic(); this.exportPlaylistsInfo();
 			}
 		} else {this.deleteExportInfo();}
-		exportComponents(fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\smp\\');
+		if (_isFolder(folders.ajquery)) {exportComponents(folders.ajquerySMP);}
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js

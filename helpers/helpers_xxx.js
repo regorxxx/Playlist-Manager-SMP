@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/09/22
+//02/10/22
 
 // Folders
 const folders = {};
@@ -7,6 +7,8 @@ folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install 
 folders.dataName = 'js_data\\';
 folders.xxx = fb.ProfilePath + folders.xxxName; 
 folders.data = fb.ProfilePath + folders.dataName;
+folders.ajquery = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\'
+folders.ajquerySMP = folders.ajquery  + 'SMP\\'
 folders.userHelpers = folders.data + 'helpers\\';
 folders.temp = folders.data + 'temp\\';
 

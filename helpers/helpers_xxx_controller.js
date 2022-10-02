@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/22
+//02/10/22
 
 include('helpers_xxx_file.js');
 
@@ -14,7 +14,7 @@ function exportDevices(path) {
 	return _save(path + 'devices.json', JSON.stringify(data, null, '\t'));
 }
 function exportComponents(path, newEntries /*{key: val, ...*/) {
-	const data = _jsonParseFile(path + 'components.json', utf8);
+	const data = _jsonParseFile(path + 'components.json', utf8) || {};
 	['foo_run_main', 'foo_runcmd', 'foo_quicksearch', 'foo_youtube'].forEach((key) => {
 		data[key] = utils.CheckComponent(key, true);
 	});
