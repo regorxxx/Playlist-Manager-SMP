@@ -2,6 +2,9 @@
 //02/10/22
 
 include('helpers_xxx_file.js');
+folders.ajquery = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\'
+folders.ajquerySMP = folders.ajquery  + 'SMP\\'
+folders.ajqueryCheck = () => {return utils.CheckComponent('foo_httpcontrol') && _isFolder(folders.ajquery);}
 
 // Global scope
 function exportDSP(path) {
