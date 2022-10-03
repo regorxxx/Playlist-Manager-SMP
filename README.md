@@ -29,6 +29,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Allow to limit the number of tracks output by a query.
   * Allows to use other playlists as source (even AutoPlaylists) via queries.
   * Have the same advanced UI features than AutoPlaylists.
+* **[ListenBrainz](https://listenbrainz.org/) integration**: sync user's playlists, import by playlist's MBID; track content resolution by Title, Recording MBID, ....
 * **Complete documentation**, FAQ and step by step guide (see 'readmes\playlist_manager.pdf').
 * **Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar** (if all items are on library). i.e. "As fast as the native format".
 * **Auto-saves changes** within foobar to bound playlists files. (configurable)
