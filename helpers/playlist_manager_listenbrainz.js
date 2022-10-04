@@ -573,8 +573,8 @@ listenBrainz.decryptToken = function decryptToken({lBrainzToken, bEncrypted = tr
 	if (bEncrypted) {
 		let pass = '';
 		try {pass = utils.InputBox(window.ID, 'Enter password:', window.Name, pass, true);} 
-		catch(e) {return;}
-		if (!pass.length) {return;}
+		catch(e) {return null;}
+		if (!pass.length) {return null;}
 		key = new SimpleCrypto(pass);
 	}
 	return (bEncrypted ? key.decrypt(lBrainzToken) : lBrainzToken);

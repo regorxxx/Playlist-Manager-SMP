@@ -51,7 +51,6 @@ function createMenuLeft(forcedIndex = -1) {
 	const bIsPlsUI = isPlsUI();
 	const bWritableFormat = writablePlaylistFormats.has(pls.extension);
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
-	const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : '';
 	// Header
 	if (list.bShowMenuHeader) {
 		menu.newEntry({entryText: '--- ' + (bIsAutoPls ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
@@ -315,10 +314,12 @@ function createMenuLeft(forcedIndex = -1) {
 				let bUpdateMBID = false;
 				let playlist_mbid = '';
 				const bLookupMBIDs = list.properties.bLookupMBIDs[1];
+				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+				if (!token) {return false;}
 				if (pls.playlist_mbid.length) {
 					console.log('Syncing playlist with MusicBrainz: ' + pls.name);
 					playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
-					if (pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true;}
+					if (pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
 				} else {
 					console.log('Exporting playlist to MusicBrainz: ' + pls.name);
 					playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
@@ -331,6 +332,8 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!await checkLBToken()) {return false;}
 				let bDone = false;
 				if (_isFile(pls.path)) {
+					const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+					if (!token) {return false;}
 					const jspf = await lb.importPlaylist(pls, token);
 					if (jspf) {
 						const handleList = contentResolver(jspf);
@@ -610,7 +613,6 @@ function createMenuRight() {
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	const lb = listenBrainz;
-	const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : '';
 	// Entries
 	{ // New Playlists
 		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add({bEmpty: true});}});
@@ -633,6 +635,8 @@ function createMenuRight() {
 			catch (e) {bDone = true;}
 			playlist_mbid = playlist_mbid.replace(regExListenBrainz, ''); // Allow web link too
 			if (playlist_mbid.length) {
+				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+				if (!token) {return false;}
 				const jspf = await lb.importPlaylist({playlist_mbid}, token);
 				if (jspf) {
 					let bXSPF = false;
@@ -893,7 +897,6 @@ function createMenuRightTop() {
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	const lb = listenBrainz;
-	const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : '';
 	// Entries
 	{	// Playlist folder
 		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
@@ -1892,6 +1895,8 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, 'Set token...', void(0), () => {return list.properties.lBrainzToken[1].length ? true : false;});
 			menu.newEntry({menuName: subMenuName, entryText: 'Open user profile'  + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 				if (!await checkLBToken()) {return;}
+				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+				if (!token) {return false;}
 				const user = await lb.retrieveUser(token);
 				if (user.length) {_runCmd('CMD /C START https://listenbrainz.org/user/' + user + '/playlists/', false);}
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
