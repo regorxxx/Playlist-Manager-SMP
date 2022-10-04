@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/09/22
+//03/10/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -535,6 +535,7 @@ addEventListener('on_script_unload', () => {
 	if (autoBackRepeat) {clearInterval(autoBackRepeat);}
 	if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
 	if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
+	list.deleteMainMenuDynamic();
 });
 const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
 
