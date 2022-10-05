@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/22
+//04/10/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -360,6 +360,20 @@ function _runCmd(command, bWait) {
 		console.log('_runCmd(): failed to run command ' + command + '(' + e + ')');
 		return false;
 	}
+}
+
+function _exec(command) {
+	const execObj = WshShell.Exec(command);
+	return new Promise((res, rej) => {
+		const intervalID = setInterval(() => {
+            switch (execObj.Status) {
+                case 2: rej(execObj.StdErr.ReadAll()); break;
+                case 1: res(execObj.StdOut.ReadAll()); break;
+                default: return; // do nothing
+            }
+            clearInterval(intervalID);
+		}, 50);
+	});
 }
 
 // Replace once originalString from a file
