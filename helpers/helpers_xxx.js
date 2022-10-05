@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/09/22
+//05/10/22
 
 // Folders
 const folders = {};
@@ -10,6 +10,7 @@ folders.data = fb.ProfilePath + folders.dataName;
 folders.userHelpers = folders.data + 'helpers\\';
 folders.temp = folders.data + 'temp\\';
 
+// Global helpers
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_basic_js.js');
@@ -19,6 +20,31 @@ include('helpers_xxx_foobar.js');
 /* 
 	Global Variables 
 */
+
+// Queries
+const globQuery = {};
+globQuery.filter = 'NOT (%RATING% EQUAL 2 OR %RATING% EQUAL 1) AND NOT (STYLE IS live AND NOT STYLE IS hi-fi) AND %CHANNELS% LESS 3 AND NOT COMMENT HAS quad';
+globQuery.female = 'STYLE IS female vocal OR STYLE IS female OR GENRE IS female vocal OR GENRE IS female OR GENDER IS female';
+globQuery.instrumental = 'STYLE IS instrumental OR GENRE IS instrumental OR SPEECHINESS EQUAL 0';
+globQuery.acoustic = 'STYLE IS acoustic OR GENRE IS acoustic OR ACOUSTICNESS GREATER 75';
+globQuery.notLowRating = 'NOT (%RATING% EQUAL 2 OR %RATING% EQUAL 1)';
+globQuery.ratingGr2 = '%RATING% GREATER 2';
+globQuery.ratingGr3 = '%RATING% GREATER 3';
+globQuery.shortLength = '%LENGTH_SECONDS% LESS 360';
+globQuery.stereo = '%CHANNELS% LESS 3 AND NOT COMMENT HAS quad';
+globQuery.noFemale = 'NOT (' + globQuery.female + ')';
+globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
+globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
+globQuery.noRating = '%RATING% MISSING';
+globQuery.noLive = '(NOT GENRE IS live AND NOT STYLE IS live) OR ((GENRE IS live OR STYLE IS live) AND style IS hi-fi)';
+globQuery.noLiveNone = 'NOT GENRE IS live AND NOT STYLE IS live';
+
+// Tags
+const globTags = {};
+globTags.title = '$ascii($lower($trim(%TITLE%)))';
+globTags.date = '$year(%DATE%)';
+globTags.artist = 'ARTIST';
+globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 
 // Async processing
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.
@@ -31,7 +57,9 @@ const iDelaySBDCache = 150; // ms per step for style/genre node processing: sear
 conLog = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
 conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null disables logging too
 
-// Linux features
+/* 
+	SO features
+*/
 const soFeat = getSoFeatures();
 const soFeatFile = folders.temp + 'soFeatures.json';
 if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry once if something fails

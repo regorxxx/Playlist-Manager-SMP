@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/22
+//05/10/22
 
 include('helpers_xxx.js');
 
@@ -9,8 +9,8 @@ include('helpers_xxx.js');
 // Tags descriptors: 
 // Always use .toLowerCase first before checking if the set has the string. For ex
 // numericTags.has(tagName.toLowerCase())
-const dynamicTags = new Set(['rating','$year(%date%)']); // Tags only found by title formatting
-const numericTags = new Set(['date','year','bpm','dynamic range','album dynamic range','rating','$year(%date%)']);  // These are tags which are always a number
+const dynamicTags = new Set(['rating',globTags.date.toLowerCase()]); // Tags only found by title formatting
+const numericTags = new Set(['date','year','bpm','dynamic range','album dynamic range','rating',globTags.date.toLowerCase()]);  // These are tags which are always a number
 const cyclicTags = new Set(['dynamic_genre']); // These are numeric tags with limited range: {0...K, k + 1 = 0}
 // Put here the corresponding function for the cyclic tag. Swap lower/upper values before return if required. They must be always ordered.
 // ALWAYS RETURN [valueLower, valueUpper, lowerLimit, upperLimit];
