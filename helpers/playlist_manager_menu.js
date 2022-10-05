@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/10/22
+//05/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -456,6 +456,13 @@ function createMenuLeftMult(forcedIndexes = []) {
 				if (!isPlsUI(pls)) {list.loadPlaylist(z);}
 			})
 		}, flags: bIsPlsLoadedEvery ? MF_GRAYED : MF_STRING});
+		// Clone in UI
+		menu.newEntry({entryText: 'Clone playlists in UI', func: () => {
+			indexes.forEach((z, i) => {
+				const pls = playlists[i];
+				if (!isPlsUI(pls)) {clonePlaylistFile(list, z, '.ui');}
+			})
+		}, flags: bIsPlsLoadedEvery ? MF_GRAYED : MF_STRING});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Tags and category
@@ -474,7 +481,9 @@ function createMenuLeftMult(forcedIndexes = []) {
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
 			list.categories().forEach((category, i) => {
-				menu.newEntry({menuName, entryText: category, func: () => {
+				const count =  playlists.reduce((total, pls) => {return (pls.category === (i === 0 ? '' : category) ? total + 1 : total);}, 0);
+				const entryText = category + '\t' + _b(count);
+				menu.newEntry({menuName, entryText, func: () => {
 					indexes.forEach((z, j) => {
 						const pls = playlists[j];
 						if (!isLockPls(pls) && isPlsEditable(pls)) {
@@ -482,7 +491,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						}
 					});
 				}});
-				menu.newCheckMenu(menuName, category, void(0), () => {return playlists.every((pls) => {return (pls.category === (i ? category : ''));});});
+				menu.newCheckMenu(menuName, entryText, void(0), () => {return (playlists.length === count);});
 			});
 		}
 		{	// Set tag(s)
@@ -500,8 +509,13 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
+			let bAddId = false;
+			const invId = nextId('invisible', true, false);
 			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
-				menu.newEntry({menuName, entryText: tag, func: () => {
+				const count =  playlists.reduce((total, pls) => {return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(tag)) ? total + 1 : total);}, 0);
+				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddId = true; return;}
+				const entryText = tag + '\t' + _b(count) + (bAddId ? invId : ''); // Add invisible id for entries after separator to duplicate check marks
+				menu.newEntry({menuName, entryText, func: () => {
 					let tags;
 					indexes.forEach((z, j) => {
 						const pls = playlists[j];
@@ -513,7 +527,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						}
 					});
 				}});
-				menu.newCheckMenu(menuName, tag, void(0), () => {return playlists.every((pls) => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});});
+				menu.newCheckMenu(menuName, entryText, void(0), () => {return (playlists.length === count);});
 			});
 		}
 		{	// Adds track tag(s)
@@ -951,7 +965,8 @@ function createMenuRightTop() {
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
 		options.forEach((item, i) => {
-			menu.newEntry({menuName: subMenuName, entryText: item + (i === iInherit ? '\t-inherit-' : ''), func: () => {
+			const count =  list.data.reduce((total, pls) => {return (pls.category === (i === 0 ? '' : item) ? total + 1 : total);}, 0);
+			menu.newEntry({menuName: subMenuName, entryText: item + '\t' + (i === iInherit ? '-inherit- ' : '') + _b(count), func: () => {
 				let categoryState;
 				// Disable all other tags when pressing shift
 				if (utils.IsKeyPressed(VK_SHIFT)) {
@@ -975,9 +990,11 @@ function createMenuRightTop() {
 			list.filter({tagState: options});
 		}});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-		const bInherit = list.tagState.indexOf(defOpt) === -1;
+		const bDef = list.tagState.indexOf(defOpt) !== -1;
 		options.forEach((item, i) => {
-			menu.newEntry({menuName: subMenuName, entryText: item + (bInherit && i !== 0 ? '\t-inherit-' : ''), func: () => {
+			const bInherit = !bDef && list.tagState.indexOf(item) !== -1;
+			const count =  list.data.reduce((total, pls) => {return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(item)) ? total + 1 : total);}, 0);
+			menu.newEntry({menuName: subMenuName, entryText: item + '\t' + (bInherit && i !== 0 ? '-inherit- ' : '') + _b(count), func: () => {
 				let tagState;
 				// Disable all other categories when pressing shift
 				if (utils.IsKeyPressed(VK_SHIFT)) {
