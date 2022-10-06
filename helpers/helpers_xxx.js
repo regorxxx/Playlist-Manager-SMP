@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/10/22
+//06/10/22
 
 // Folders
 const folders = {};
@@ -9,6 +9,8 @@ folders.xxx = fb.ProfilePath + folders.xxxName;
 folders.data = fb.ProfilePath + folders.dataName;
 folders.userHelpers = folders.data + 'helpers\\';
 folders.temp = folders.data + 'temp\\';
+folders.userPresets = folders.data + 'presets\\';
+folders.userPresetsGlobal = folders.userPresets + 'global\\';
 
 // Global helpers
 include(fb.ComponentPath + 'docs\\Codepages.js');
@@ -20,31 +22,67 @@ include('helpers_xxx_foobar.js');
 /* 
 	Global Variables 
 */
+function loadUserDefFile(def) {
+	let bSave = false;
+	if (_isFile(def._file)) {
+		const data = _jsonParseFileCheck(def._file, 'User definition file', window.Name, utf8);
+		if (data) {
+			for (let key in data) {
+				if (def.hasOwnProperty(key)) {
+					def[key] = data[key];
+				}
+			}
+			if (Object.keys(data).length !== Object.keys(def)) {bSave = true;}
+		}
+	} else {bSave = true;}
+	if (bSave) {
+		const {_file, ...rest} = def;
+		_save(def._file, JSON.stringify(rest, null, '\t'));
+	}
+	
+}
 
-// Queries
+// Tags: user replaceable with a presets file at folders.data
+const globTags = {};
+globTags._file = folders.userPresetsGlobal + 'globTags.json';
+globTags._description = 'Don\'t add multiple tags to these variables. TITLE, DATE and RATING must be enclosed on %.';
+globTags.title = '$ascii($lower($trim(%TITLE%)))';
+globTags.date = '$year(%DATE%)';
+globTags.artist = 'ARTIST';
+globTags.genre = 'GENRE';
+globTags.style = 'STYLE';
+globTags.mood = 'MOOD';
+globTags.bpm = 'BPM';
+globTags.key = 'KEY';
+globTags.rating = '%RATING%';
+globTags.acoustidFP = 'ACOUSTID_FINGERPRINT_RAW';
+globTags.fooidFP = 'FINGERPRINT_FOOID';
+globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
+// Load user file
+loadUserDefFile(globTags);
+
+// Queries: user replaceable with a presets file at folders.data
 const globQuery = {};
-globQuery.filter = 'NOT (%RATING% EQUAL 2 OR %RATING% EQUAL 1) AND NOT (STYLE IS live AND NOT STYLE IS hi-fi) AND %CHANNELS% LESS 3 AND NOT COMMENT HAS quad';
-globQuery.female = 'STYLE IS female vocal OR STYLE IS female OR GENRE IS female vocal OR GENRE IS female OR GENDER IS female';
-globQuery.instrumental = 'STYLE IS instrumental OR GENRE IS instrumental OR SPEECHINESS EQUAL 0';
-globQuery.acoustic = 'STYLE IS acoustic OR GENRE IS acoustic OR ACOUSTICNESS GREATER 75';
-globQuery.notLowRating = 'NOT (%RATING% EQUAL 2 OR %RATING% EQUAL 1)';
-globQuery.ratingGr2 = '%RATING% GREATER 2';
-globQuery.ratingGr3 = '%RATING% GREATER 3';
+globQuery._file = folders.userPresetsGlobal + 'globQuery.json';
+globQuery.filter = 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1) AND NOT (' + globTags.style + ' IS live AND NOT ' + globTags.style + ' IS hi-fi) AND %CHANNELS% LESS 3 AND NOT COMMENT HAS quad';
+globQuery.female = globTags.style + ' IS female vocal OR ' + globTags.style + ' IS female OR ' + globTags.genre + ' IS female vocal OR ' + globTags.genre + ' IS female OR GENDER IS female';
+globQuery.instrumental = globTags.style + ' IS instrumental OR ' + globTags.genre + ' IS instrumental OR SPEECHINESS EQUAL 0';
+globQuery.acoustic = globTags.style + ' IS acoustic OR ' + globTags.genre + ' IS acoustic OR ACOUSTICNESS GREATER 75';
+globQuery.notLowRating = 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1)';
+globQuery.ratingGr2 = globTags.rating + ' GREATER 2';
+globQuery.ratingGr3 = globTags.rating + ' GREATER 3';
 globQuery.shortLength = '%LENGTH_SECONDS% LESS 360';
 globQuery.stereo = '%CHANNELS% LESS 3 AND NOT COMMENT HAS quad';
 globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
-globQuery.noRating = '%RATING% MISSING';
-globQuery.noLive = '(NOT GENRE IS live AND NOT STYLE IS live) OR ((GENRE IS live OR STYLE IS live) AND style IS hi-fi)';
-globQuery.noLiveNone = 'NOT GENRE IS live AND NOT STYLE IS live';
-
-// Tags
-const globTags = {};
-globTags.title = '$ascii($lower($trim(%TITLE%)))';
-globTags.date = '$year(%DATE%)';
-globTags.artist = 'ARTIST';
-globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
+globQuery.noRating = globTags.rating + ' MISSING';
+globQuery.noLive = '(NOT ' + globTags.genre + ' IS live AND NOT ' + globTags.style + ' IS live) OR ((' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live) AND ' + globTags.style + ' IS hi-fi)';
+globQuery.noLiveNone = 'NOT ' + globTags.genre + ' IS live AND NOT ' + globTags.style + ' IS live';
+globQuery.noSACD = 'NOT %_PATH% HAS .iso AND NOT CODEC IS MLP AND NOT CODEC IS DSD64 AND NOT CODEC IS DST64';
+globQuery.compareTitle = '"$stricmp(' + globTags.title + ',' + globTags.title.replaceAll('%','#') + ')" IS 1';
+// Load user file
+loadUserDefFile(globQuery);
 
 // Async processing
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.

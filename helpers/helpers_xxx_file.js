@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/10/22
+//06/10/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -19,9 +19,13 @@ const utf8 = convertCharsetToCodepage('UTF-8');
 _createFolder(folders.data);
 _createFolder(folders.userHelpers);
 _createFolder(folders.temp);
+_createFolder(folders.userPresets);
+_createFolder(folders.userPresetsGlobal);
 // Add info files
 _save(folders.data + '_XXX-SCRIPTS_CONFIG_FILES', null);
 _save(folders.userHelpers + '_XXX-SCRIPTS_CONFIG_FILES', null);
+_save(folders.userPresets + '_XXX-SCRIPTS_CONFIG_FILES', null);
+_save(folders.userPresetsGlobal + '_DELETE_globQuery_TO_USE_SET_TAGS', null);
 _save(folders.temp + '_SAFE_TO_REMOVE_TEMP_FILES', null);
 
 // Additional code to check for network drives: these don't have recycle bin so _recycleFile would always fail or show a prompt
