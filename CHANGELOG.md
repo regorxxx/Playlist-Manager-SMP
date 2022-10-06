@@ -25,7 +25,7 @@
 
 ## [Unreleased][]
 ### Added
-- Presets: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel. Don't forget to reload the panels/restart foobar and restore defaults on all relevant buttons and menus to use the new values. It's recommended to do it upon installation of this update.
+- Presets: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel.
 - ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
 - ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz. Exporting a playlist requires tracks to have 'MUSICBRAINZ_TRACKID' tags present; there is an additional option to perform MBIDs lookups on exporting when tags are missing.
 - ListenBrainz: new options at R. Click menu to create a playlist from ListenBrainz importing by MBID.
