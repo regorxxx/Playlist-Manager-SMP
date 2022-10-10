@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/09/22
+//10/10/22
 
 /* 
 	Objects
@@ -353,6 +353,20 @@ function round(floatnum, decimals){
 		else {result = Math.round(floatnum * Math.pow(10, decimals)) / Math.pow(10, decimals);}
 	} else {result =  Math.round(floatnum);}
 	return result;
+}
+
+Math.randomNum = function randomNum(min, max, bInt = false) {
+	if (bInt) {
+		min = Math.ceil(min);
+		max = Math.floor(max);
+		return Math.floor(Math.random() * (max - min) + min)
+	} else {
+		return Math.random() * (max - min) + min;
+	}
+}
+
+Math.randomInt = function randomNum(min, max) {
+	return Math.randomNum(min, max, true);
 }
 
 /* 

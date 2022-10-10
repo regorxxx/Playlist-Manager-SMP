@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/10/22
+//10/10/22
 
 include('helpers_xxx.js');
 
@@ -12,6 +12,8 @@ include('helpers_xxx.js');
 const dynamicTags = new Set(['rating',globTags.date.toLowerCase()]); // Tags only found by title formatting
 const numericTags = new Set(['date','year','bpm','dynamic range','album dynamic range','rating',globTags.date.toLowerCase()]);  // These are tags which are always a number
 const cyclicTags = new Set(['dynamic_genre']); // These are numeric tags with limited range: {0...K, k + 1 = 0}
+const keyTags = new Set(['KEY_BACKUP1', 'KEY_BACKUP2', 'INITIAL KEY', 'INITIALKEY', 'KEY_START', 'KEY', 'KEY_CAMELOT', 'KEY_OPENKEY']);
+
 // Put here the corresponding function for the cyclic tag. Swap lower/upper values before return if required. They must be always ordered.
 // ALWAYS RETURN [valueLower, valueUpper, lowerLimit, upperLimit];
 // Object keys must match the tag names at cyclicTags... 
@@ -325,6 +327,55 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 			}
 		} else {
 			for (let j = 0; j < outputArrayi_length; j++) {
+				outputArray[i][j] = [outputArray[i][j]];
+			}
+		}
+		i++;
+	}
+	if (bMerged) {outputArray = outputArray.flat();}
+	return outputArray;
+}
+
+function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
+	if (!isArray (tagsArray)) {return null;}
+	if (!handle) {return null;}
+	
+	const tagArray_length = tagsArray.length;
+	let outputArrayi_length = handle.Count;
+	let outputArray = [];
+	let i = 0;
+	while (i < tagArray_length) {
+		const tagName = tagsArray[i].name;
+		const type = tagsArray[i].type;
+		if (tagName.toLowerCase() === 'skip') {
+			outputArray[i] = [[]];
+			i++;
+			continue;
+		}
+		let tagString = ((tagName.indexOf('$') === -1) ? (bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]') : (bEmptyVal ? tagName: '[' + tagName + ']')); // Tagname or TF expression, with or without empty values
+		let tfo = fb.TitleFormat(tagString);
+		outputArray[i] = tfo.EvalWithMetadbs(handle);
+		if (splitBy && splitBy.length) {
+			for (let j = 0; j < outputArrayi_length; j++) {
+				outputArray[i][j] = outputArray[i][j].split(splitBy, iLimit);
+				if (type) {
+					outputArray[i][j] = outputArray[i][j].map((val) => {
+						switch (type) {
+							case 'number': {return Number(val);}
+							case 'string': {return String(val);}
+						}
+						return val;
+					});
+				}
+			}
+		} else {
+			for (let j = 0; j < outputArrayi_length; j++) {
+				if (type) {
+					switch (type) {
+						case 'number': {outputArray[i][j] = Number(outputArray[i][j]);}
+						case 'string': {outputArray[i][j] = String(outputArray[i][j]);}
+					}
+				}
 				outputArray[i][j] = [outputArray[i][j]];
 			}
 		}
