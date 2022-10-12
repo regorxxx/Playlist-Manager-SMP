@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/10/22
+//12/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -444,7 +444,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bWritableFormat = playlists.some((pls) => {return writablePlaylistFormats.has(pls.extension);});
 	// Header
 	if (list.bShowMenuHeader) {
-		menu.newEntry({entryText: '--- ' + playlists.map((pls) => {return pls.name;}).joinUpToChars(', ', 20) + ' ---', flags: MF_GRAYED});
+		menu.newEntry({entryText: '--- ' +  playlists.length + ' playlists: ' + playlists.map((pls) => {return pls.name;}).joinUpToChars(', ', 20) + ' ---', flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 	}
 	// Entries
