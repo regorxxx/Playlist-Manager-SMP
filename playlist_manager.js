@@ -248,9 +248,9 @@ addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
 	}
 });
 
-addEventListener('on_mouse_move', (x, y, mask) => {
+addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
-	on_mouse_move_buttn(x, y, mask);
+	if (!bDragDrop) {on_mouse_move_buttn(x, y, mask);}
 	if (buttonsPanel.curBtn === null) {
 		list.move(x, y, mask);
 	} else {
@@ -500,17 +500,19 @@ addEventListener('on_drag_enter', (action, x, y, mask) => {
 });
 
 addEventListener('on_drag_leave', (action, x, y, mask) => {
-	on_mouse_leave(x, y, mask)
+	on_mouse_leave(x, y, mask);
 });
 
 addEventListener('on_drag_over', (action, x, y, mask) => {
 	// Avoid things outside foobar
 	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
+	// Move list
+	on_mouse_move(x, y, mask, true);
+	if (buttonsPanel.curBtn !== null || list.index === -1) {action.Effect = dropEffect.none; return;}
 	// Set effects
 	if (mask === dropMask.ctrl) {action.Effect = dropEffect.copy;} // Mask is mouse + key
 	else {action.Effect = dropEffect.move;}
-	on_mouse_move(x, y, mask);
 });
 
 addEventListener('on_drag_drop', (action, x, y, mask) => {
