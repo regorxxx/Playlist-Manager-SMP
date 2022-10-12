@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/10/22
+//12/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -638,11 +638,18 @@ function _list(x, y, w, h) {
 						if (shortcuts.hasOwnProperty(mask)) {
 							if (shortcuts[mask].key === 'Send selection to playlist') {
 								const cache = [this.offset, this.index];
+								let bSucess = false;
 								if (this.indexes.length) {
-									this.indexes.forEach((z) => {this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false});});
-								} else {this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
-								[this.offset, this.index] = cache;
-								window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+									this.indexes.forEach((z) => {
+										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false})) {
+											bSucess = true;
+										}
+									});
+								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
+								if (bSucess) {
+									[this.offset, this.index] = cache;
+									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+								}
 							} else {
 								this.executeAction(z, shortcuts[mask]);
 							}
@@ -697,11 +704,18 @@ function _list(x, y, w, h) {
 						if (shortcuts.hasOwnProperty(mask)) {
 							if (shortcuts[mask].key === 'Send selection to playlist') {
 								const cache = [this.offset, this.index];
+								let bSucess = false;
 								if (this.indexes.length) {
-									this.indexes.forEach((z) => {this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false});});
-								} else {this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
-								[this.offset, this.index] = cache;
-								window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+									this.indexes.forEach((z) => {
+										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false})) {
+											bSucess = true;
+										}
+									});
+								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
+								if (bSucess) {
+									[this.offset, this.index] = cache;
+									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+								}
 							} else {
 								this.executeAction(z, shortcuts[mask]);
 							}
