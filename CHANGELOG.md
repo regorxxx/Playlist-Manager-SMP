@@ -25,6 +25,7 @@
 
 ## [Unreleased][]
 ### Added
+- Drag n Drop: tracks can now be sent to a playlist directly with Drag n Drop, instead of using key shortcuts + mouse. Both move and copy (pressing Control) are allowed. Only tracks withing foobar2000 context can be drop, trying to drop any other thing, track from outside or file is not allowed.
 - Presets: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel.
 - ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
 - ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz. Exporting a playlist requires tracks to have 'MUSICBRAINZ_TRACKID' tags present; there is an additional option to perform MBIDs lookups on exporting when tags are missing.
@@ -64,6 +65,7 @@
 - UI: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and viceversa) for now playing and loaded indicators.
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
 - UI: adding new files with new tags did not updated properly the current view, showing by default the new tags too. Similar to past bug with categories.
+- UI: after sending a track to a playlist(s), the UI was being repaint even if no changes were made (for ex. on duplicated track). Implies no change for final user.
 - Auto-Saving: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and vice-versa). Previously, it would ask to change the playlist format, which made no sense since no changes could be applied to those playlists.
 - Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
 - Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
