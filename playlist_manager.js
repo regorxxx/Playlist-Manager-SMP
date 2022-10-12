@@ -1,12 +1,12 @@
 ﻿'use strict';
-//03/10/22
+//12/10/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta13', features: {drag_n_drop: false, grab_focus: true}});
+window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta13', features: {drag_n_drop: true, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -488,6 +488,35 @@ addEventListener('on_playlists_changed', () => {
 					else {console.log('Playlist manager: failed renaming playlist ' + oldName + ' -\-> ' + newName);}
 				}
 			}
+		}
+	}
+});
+
+// Drag n drop to copy/move tracks to playlists (only files from foobar)
+addEventListener('on_drag_over', (action, x, y, mask) => { 
+	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
+	// Avoid things outside foobar
+	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
+	// Set effects
+	if (mask === dropMask.ctrl) {action.Effect = dropEffect.copy;} // Mask is mouse + key
+	else {action.Effect = dropEffect.move;}
+	on_mouse_move(x, y, mask);
+});
+
+addEventListener('on_drag_drop', (action, x, y, mask) => { 
+	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
+	// Avoid things outside foobar
+	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {return;}
+	action.Effect = dropEffect.none; // Forces not sending things to a playlist
+	if (plman.ActivePlaylist !== -1) {
+		const cache = [list.offset, list.index];
+		const bSucess = list.sendSelectionToPlaylist({playlistIndex: list.index, bCheckDup: true, bAlsoHidden: false, bPaint: false});
+		if (bSucess) {
+			// Don't reload the list but just paint with changes to avoid jumps
+			window.RepaintRect(0, list.y, window.Width, list.h);
+			[list.offset, list.index] = cache;
+			// Remove track on move
+			if (mask !== MK_CONTROL) {plman.RemovePlaylistSelection(plman.ActivePlaylist);}
 		}
 	}
 });
