@@ -493,21 +493,30 @@ addEventListener('on_playlists_changed', () => {
 });
 
 // Drag n drop to copy/move tracks to playlists (only files from foobar)
-addEventListener('on_drag_over', (action, x, y, mask) => { 
-	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
+addEventListener('on_drag_enter', (action, x, y, mask) => {
 	// Avoid things outside foobar
 	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
+	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
+});
+
+addEventListener('on_drag_leave', (action, x, y, mask) => {
+	on_mouse_leave(x, y, mask)
+});
+
+addEventListener('on_drag_over', (action, x, y, mask) => {
+	// Avoid things outside foobar
+	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
+	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 	// Set effects
 	if (mask === dropMask.ctrl) {action.Effect = dropEffect.copy;} // Mask is mouse + key
 	else {action.Effect = dropEffect.move;}
 	on_mouse_move(x, y, mask);
 });
 
-addEventListener('on_drag_drop', (action, x, y, mask) => { 
-	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
+addEventListener('on_drag_drop', (action, x, y, mask) => {
 	// Avoid things outside foobar
-	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {return;}
-	action.Effect = dropEffect.none; // Forces not sending things to a playlist
+	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
+	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 	if (plman.ActivePlaylist !== -1) {
 		const cache = [list.offset, list.index];
 		const bSucess = list.sendSelectionToPlaylist({playlistIndex: list.index, bCheckDup: true, bAlsoHidden: false, bPaint: false});
@@ -519,6 +528,7 @@ addEventListener('on_drag_drop', (action, x, y, mask) => {
 			if (mask !== MK_CONTROL) {plman.RemovePlaylistSelection(plman.ActivePlaylist);}
 		}
 	}
+	action.Effect = dropEffect.none; // Forces not sending things to a playlist
 });
 
 // Auto-update if there are a different number of items on folder or the total file sizes change
