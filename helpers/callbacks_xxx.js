@@ -181,16 +181,3 @@ if (typeof UUID === 'undefined') {
 		});
 	};
 }
-
-const dropEffect = {
-	none:   0,
-	copy:   1,
-	move:   2,
-	link:   4,
-	scroll: 0x80000000
-};
-
-const dropMask = { // on_drag_over, on_drag_leave, on_drag_over, on_drag_enter
-	ctrl: MK_LBUTTON + MK_CONTROL,
-	shift: MK_LBUTTON + MK_SHIFT
-};
