@@ -25,7 +25,7 @@
 
 ## [Unreleased][]
 ### Added
-- Drag n Drop: tracks can now be sent to a playlist directly with Drag n Drop, instead of using key shortcuts + mouse. Both move and copy (pressing Control) are allowed. Only tracks withing foobar2000 context can be drop, trying to drop any other thing, track from outside or file is not allowed.
+- Drag and Drop: tracks can now be sent to a playlist directly with Drag and Drop, instead of using key shortcuts + mouse. Both move and copy (pressing Control) are allowed. Only tracks withing foobar2000 context can be drop, trying to drop any other thing, track from outside or file is not allowed. Pessing 'Alt' on drop will create a new playlist instead of sending it to the selected playlist. To warn about this behavior, no playlist is highlighted while pressing the key (contrary to the usual drag and drop). List can be scrolled up or down by moving the mouse to the arrow buttons while dragging.
 - Presets: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel.
 - ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
 - ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz. Exporting a playlist requires tracks to have 'MUSICBRAINZ_TRACKID' tags present; there is an additional option to perform MBIDs lookups on exporting when tags are missing.
@@ -34,13 +34,17 @@
 - ListenBrainz: 'PLAYLIST_MBID' is now saved on playlist's metadata and displayed on tooltips if available. Meant to be used along ListenBrainz integration. Id is resolved to an online playlist at 'https://listenbrainz.org/playlist/(PLAYLIST_MBID)'.
 - XSPF: identifier tag linked to 'MUSICBRAINZ_TRACKID' for content resolution.
 - Tags: new auto-tag named 'bMultMenu' which associates tagged playlists to specific dynamic main menu entries which apply an action to a group of playlists.
+- Tags: new auto-tag 'bSkipMenu' which makes the tagged playlist to be skipped on dynamic menu creation.
 - Dynamic menus: new dynamic main menu entries which apply an action to a group of playlists tagged with 'bMultMenu'. These are meant to be associated to an standard Foobar2000 button (or CMD commands), to easily load or apply generic actions to a group of playlists at once.
 - Dynamic Menus: menu warns about entries needing input via popups and those are skipped on the Online Controller actions.
+- Dynamic menus: new 'Move selection to playlist' dynamic menu.
 - Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
 - UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' and 'Multiple selection' actions (along the previous ones).
-- UI: added M. Click actions, configurable the same way than L. Click actions. Set by default to multiple selection.
+- UI: added M. Click actions, configurable the same way than L. Click actions. Set by default to 'Multiple selection'.
+- UI: added 'Multiple selection (range)' shortcut action, which emulates the usual Shift + Click action to select a range on files on explorer.
 - UI: multiple playlist selection. Using any other mouse shortcut will apply the action to the entire selection, instead of a single playlist. Opening the playlist menu (L. Click) while using multiple selection, will display a different list of actions to apply to the entire selection.
 - UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists filtered by type, categories, tags...
+- UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
 ### Changed
 - Filter: category playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
@@ -48,6 +52,9 @@
 - Cache: reworked path caching, now will process 100 items at the same time until all tracks are done instead of forcing an specific total startup time. Adjusted delays for Foobar 2000 2.0+ tag retrieval. It should lead to faster startups in both cases, specially for small libraries (< 70K tracks).
 - UI: keyboard modifiers on L. Click are now fully configurable using the header menu. See 'UI\Shortcuts...'. Playlist's tooltip will reflect the config too.
 - UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
+- UI: 'Send selection to playlist' renamed to 'Copy selection to playlist'. Reconfigure the shortcut on the menus before using.
+- UI: 'Send selection to playlist' now creates an undo backup point before inserting the new tracks if the playlist is loaded on UI.
+- Dynamic menus: Dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
 - XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
 - Tags: auto-tags are now displayed on the tag list (on set tag menu) ready to be used, instead of only displaying the present user set tags.
@@ -66,6 +73,7 @@
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
 - UI: adding new files with new tags did not updated properly the current view, showing by default the new tags too. Similar to past bug with categories.
 - UI: after sending a track to a playlist(s), the UI was being repaint even if no changes were made (for ex. on duplicated track). Implies no change for final user.
+- UI: Tags entries were not properly shown with a check in the upper list of 'Set tag' submenu.
 - Auto-Saving: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and vice-versa). Previously, it would ask to change the playlist format, which made no sense since no changes could be applied to those playlists.
 - Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
 - Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
