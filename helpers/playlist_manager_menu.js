@@ -31,7 +31,7 @@ function createMenuLeft(forcedIndex = -1) {
 		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
-	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
 	const lb = listenBrainz;
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(pls.nameId) !== -1;};
@@ -64,7 +64,7 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-		menu.newEntry({entryText: 'Send selection to playlist', func: () => {
+		menu.newEntry({entryText: 'Copy selection to playlist', func: () => {
 			if (selItems && selItems.Count) {
 				list.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true});
 			}
@@ -207,15 +207,19 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!isArrayEqual(pls.tags, tags)) {setTag(tags, list, z);}
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
+			let bAddId = false;
+			const invId = nextId('invisible', true, false);
 			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
-				menu.newEntry({menuName, entryText: tag, func: () => {
+				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddId = true; return;}
+				const entryText = tag + (bAddId ? invId : ''); // Add invisible id for entries after separator to duplicate check marks
+				menu.newEntry({menuName, entryText, func: () => {
 					let tags;
 					if (i === 0) {tags = [];}
 					else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
 					else {tags = [...pls.tags, tag];}
 					setTag(tags, list, z);
 				}});
-				menu.newCheckMenu(menuName, tag, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
+				menu.newCheckMenu(menuName, entryText, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
 			});
 		}
 		// Adds track tag(s)
@@ -421,7 +425,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			return menu;
 		}
 	});
-	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];	
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];	
 	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
@@ -1315,7 +1319,7 @@ function createMenuRightTop() {
 				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
-				const options = ['bAutoLoad', 'bAutoLock', 'bMultMenu'];
+				const options = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
 					const itemKey = item + 'Tag';
@@ -1349,6 +1353,7 @@ function createMenuRightTop() {
 						list.bApplyAutoTags = (i === 0) ? true : false;
 						list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
 						overwriteProperties(list.properties);
+						fb.ShowPopupMessage('Note in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).\n\n\'bMultMenu\': Associates playlist to menu entries applied to multiple playlists.\n\n\'bSkipMenu\': Skips dynamic menu creation for tagged playlist.', window.Name);
 					}});
 				});
 				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});

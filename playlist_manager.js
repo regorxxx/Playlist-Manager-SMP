@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/10/22
+//14/10/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -139,13 +139,13 @@ var properties = {
 	bDynamicMenus			: ['Show dynamic menus?', true, {func: isBoolean}, true],
 	lShortcuts				: ['L. click modifiers', JSON.stringify({
 		Ctrl:			'Load / show playlist',
-		Shift:			'Send selection to playlist',
+		Shift:			'Copy selection to playlist',
 		'Ctrl + Shift':	'Clone playlist in UI',
 		'Double Click':	'Load / show playlist'
 	})],
 	mShortcuts				: ['M. click modifiers', JSON.stringify({
 		Ctrl:			'- None -',
-		Shift:			'- None -',
+		Shift:			'Multiple selection (range)',
 		'Ctrl + Shift':	'- None -',
 		'Single Click':	'Multiple selection'
 	})],
@@ -376,9 +376,15 @@ addEventListener('on_main_menu_dynamic', (id) => {
 				bDone = true;
 				break;
 			}
-			case 'send selection': {
+			case 'copy selection': {
 				const idx = [...menu.arg];
 				idx.forEach((i) => {list.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bAlsoHidden: true});});
+				bDone = true;
+				break;
+			}
+			case 'move selection': {
+				const idx = [...menu.arg];
+				idx.forEach((i) => {list.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bAlsoHidden: true, bDelSource: true});});
 				bDone = true;
 				break;
 			}
@@ -507,27 +513,50 @@ addEventListener('on_drag_over', (action, x, y, mask) => {
 	// Avoid things outside foobar
 	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
-	// Move list
-	on_mouse_move(x, y, mask, true);
-	if (buttonsPanel.curBtn !== null || list.index === -1) {action.Effect = dropEffect.none; return;}
+	// Move playlist index only while not pressing alt
+	if ((mask & 32) === 32) {
+		if (list.index !== -1) {
+			list.index = -1;
+			window.Repaint();
+		}
+	} else {on_mouse_move(x, y, mask, true);}
+	// Force scrolling so the list doesn't get blocked at current view
+	list.up_btn.hover = list.up_btn.lbtn_up(x, y);
+	list.down_btn.hover = list.down_btn.lbtn_up(x, y);
+	if (buttonsPanel.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
 	// Set effects
-	if (mask === dropMask.ctrl) {action.Effect = dropEffect.copy;} // Mask is mouse + key
+	if ((mask & dropMask.ctrl) === dropMask.ctrl) {action.Effect = dropEffect.copy;} // Mask is mouse + key
+	// else if ((mask & 32) === 32) {action.Effect = dropEffect.link;} // TODO: Bug, sends callback to on_drag_leave
 	else {action.Effect = dropEffect.move;}
 });
 
 addEventListener('on_drag_drop', (action, x, y, mask) => {
 	// Avoid things outside foobar
-	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
+	if (action.Effect === dropEffect.none) {return;}
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 	if (plman.ActivePlaylist !== -1) {
-		const cache = [list.offset, list.index];
-		const bSucess = list.sendSelectionToPlaylist({playlistIndex: list.index, bCheckDup: true, bAlsoHidden: false, bPaint: false});
-		if (bSucess) {
-			// Don't reload the list but just paint with changes to avoid jumps
-			window.RepaintRect(0, list.y, window.Width, list.h);
-			[list.offset, list.index] = cache;
+		if ((mask & 32) === 32) { // Create new playlist when pressing alt
+ 			const oldIdx = plman.ActivePlaylist;
+			const pls = list.add({bEmpty: true});
+			if (pls) {
+				const playlistIndex = list.getPlaylistsIdxByName([pls.name])[0];
+				const newIdx = plman.ActivePlaylist;
+				plman.ActivePlaylist = oldIdx;
+				// Remove track on move
+				const bSucess = list.sendSelectionToPlaylist({playlistIndex, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: (mask - 32) !==  MK_CONTROL});
+				// Don't reload the list but just paint with changes to avoid jumps
+				list.showPlsByIdx(playlistIndex);
+				plman.ActivePlaylist = newIdx;
+			}
+		} else { // Send to existing playlist
+			const cache = [list.offset, list.index];
 			// Remove track on move
-			if (mask !== MK_CONTROL) {plman.RemovePlaylistSelection(plman.ActivePlaylist);}
+			const bSucess = list.sendSelectionToPlaylist({playlistIndex: list.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: mask !== MK_CONTROL});
+			if (bSucess) {
+				// Don't reload the list but just paint with changes to avoid jumps
+				window.RepaintRect(0, list.y, window.Width, list.h);
+				[list.offset, list.index] = cache;
+			}
 		}
 	}
 	action.Effect = dropEffect.none; // Forces not sending things to a playlist

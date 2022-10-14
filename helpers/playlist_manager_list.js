@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/10/22
+//14/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -562,7 +562,7 @@ function _list(x, y, w, h) {
 									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 								}
 								// Adding Duplicates on selection hint
-								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Send selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Send selection to playlist') {
+								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Copy selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
 									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}
 									else if (pls.extension === '.fpl') {playlistDataText += '\n(.fpl playlists are non editable, convert it first)';}
 									else if (pls.isLocked) {playlistDataText += '\n(Locked playlists are non editable, unlock it first)';}
@@ -602,10 +602,10 @@ function _list(x, y, w, h) {
 		}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.items) {currentItemIndex = this.items - 1;}
-		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
-		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
-		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
-		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
+		const item = (currentItemIndex !== -1) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
+		currentItemPath = item ? item.path : null;
+		currentItemNameId = item ? item.nameId : null;
+		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
 	}
 	
 	this.clearLastPosition = () => { // Clears position
@@ -615,9 +615,10 @@ function _list(x, y, w, h) {
 		}
 		currentItemIndex = -1;
 		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
-		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
-		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
-		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
+		const item = (currentItemIndex !== -1) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
+		currentItemPath = item ? item.path : null;
+		currentItemNameId = item ? item.nameId : null;
+		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
 		this.index = -1;
 		this.offset = 0;
 	}
@@ -630,22 +631,23 @@ function _list(x, y, w, h) {
 				case this.up_btn.lbtn_up(x, y):
 				case this.down_btn.lbtn_up(x, y):
 				case !this.inRange:
-					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
+					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (shortcuts.hasOwnProperty(mask)) {
-							if (shortcuts[mask].key === 'Send selection to playlist') {
+							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
+								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
 								const cache = [this.offset, this.index];
 								let bSucess = false;
 								if (this.indexes.length) {
 									this.indexes.forEach((z) => {
-										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false})) {
+										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false, bDelSource})) {
 											bSucess = true;
 										}
 									});
-								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
+								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false, bDelSource});}
 								if (bSucess) {
 									[this.offset, this.index] = cache;
 									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
@@ -673,7 +675,7 @@ function _list(x, y, w, h) {
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
 			// Select all from current view or clean selection
-			if (shortcuts.hasOwnProperty(mask) && shortcuts[mask].key === 'Multiple selection') {
+			if (shortcuts.hasOwnProperty(mask) && shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {
 				if (this.indexes.length) {this.resetMultSelect();}
 				else {this.indexes = range(0, this.data.length - 1, 1);}
 			}
@@ -685,33 +687,35 @@ function _list(x, y, w, h) {
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
-			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
 			return false;
 		}
 	}
 	
 	this.mbtn_up = (x, y, mask) => {
 		const shortcuts = this.getShortcuts('M');
+		const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			switch (true) {
 				case !this.inRange:
-					if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
+					if (sgShortcut.key === 'Multiple selection' || sgShortcut.key === 'Multiple selection (range)') {this.resetMultSelect();}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (shortcuts.hasOwnProperty(mask)) {
-							if (shortcuts[mask].key === 'Send selection to playlist') {
+							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
+								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
 								const cache = [this.offset, this.index];
 								let bSucess = false;
 								if (this.indexes.length) {
 									this.indexes.forEach((z) => {
-										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false})) {
+										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false, bDelSource})) {
 											bSucess = true;
 										}
 									});
-								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
+								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false, bDelSource});}
 								if (bSucess) {
 									[this.offset, this.index] = cache;
 									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
@@ -729,14 +733,14 @@ function _list(x, y, w, h) {
 			return true;
 		} else if (this.traceHeader(x, y)) {
 			// Select all from current view or clean selection
-			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {
+			if (sgShortcut.key === 'Multiple selection' || sgShortcut.key === 'Multiple selection (range)') {
 				if (this.indexes.length) {this.resetMultSelect();}
 				else {this.indexes = range(0, this.data.length - 1, 1);}
 			}
 			return false;
 		} else {
 			// Clean selection
-			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
+			if (sgShortcut.key === 'Multiple selection' || sgShortcut.key === 'Multiple selection (range)') {this.resetMultSelect();}
 			return false;
 		}
 	}
@@ -764,7 +768,7 @@ function _list(x, y, w, h) {
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
-			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
 			return false;
 		}
 	}
@@ -857,13 +861,33 @@ function _list(x, y, w, h) {
 		return this.indexes;
 	}
 	
+	this.multSelectRange = (playlistIndex = -1) => {
+		if (playlistIndex === -1) {this.resetMultSelect();}
+		else {
+			const found = this.indexes.indexOf(playlistIndex);
+			if (found !== -1) {
+				const start = this.indexes.slice(-1)[0];
+				const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
+				this.indexes.splice(0, Infinity);
+				Array.prototype.push.apply(this.indexes, idxArr);
+			} else {
+				const start = this.indexes.slice(-1)[0] || 0;
+				const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
+				idxArr.forEach((idx) => {
+					if (!this.indexes.includes(idx)) {this.indexes.push(idx);}
+				});
+			}
+		}
+		return this.indexes;
+	}
+	
 	this.resetMultSelect = () => {
 		this.indexes = [];
 		return this.indexes;
 	}
 	
 	this.executeAction = (z, shortcut) => {
-		if (shortcut.key !== 'Multiple selection' && this.indexes.length) {
+		if (shortcut.key !== 'Multiple selection' && shortcut.key !== 'Multiple selection (range)' && this.indexes.length) {
 			this.indexes.forEach((z) => {shortcut.func(z);});
 		} else {shortcut.func(z);}
 	}
@@ -894,12 +918,14 @@ function _list(x, y, w, h) {
 			shortcuts.actions = [
 				{key: '- None -',					func: () => {void(0);}},
 				{key: 'Load / show playlist',		func: this.loadPlaylistOrShow},
-				{key: 'Send selection to playlist',	func: null}, // Processed at lbtn_up
+				{key: 'Copy selection to playlist',	func: null}, // Processed at lbtn_up
+				{key: 'Move selection to playlist',	func: null}, // Processed at lbtn_up
 				{key: 'Clone playlist in UI',		func: clonePlaylistInUI.bind(this, this)},
 				{key: 'Recycle playlist',			func: this.removePlaylist},
 				{key: 'Lock/unlock playlist file',	func: switchLock.bind(this, this)},
 				{key: 'Lock/unlock UI playlist',	func: switchLockUI.bind(this, this)},
 				{key: 'Multiple selection',			func: this.multSelect},
+				{key: 'Multiple selection (range)',	func: this.multSelectRange},
 			];
 		}
 		return shortcuts;
@@ -920,9 +946,9 @@ function _list(x, y, w, h) {
 		}
 		if (prop) {
 			for (let key in prop) {
-				const mask = options.find((obj) => {return obj.key === key;}).mask || 'none';
+				const mask = (options.find((obj) => {return obj.key === key;}) || {}).mask || 'none';
 				const action = prop[key];
-				const func = actions.find((obj) => {return obj.key === action;}).func || (() => {console.popup('Shortcut not properly set: ' + key + ' --> ' + action);});
+				const func = (actions.find((obj) => {return obj.key === action;}) || {}).func || (() => {console.popup('Shortcut not properly set: ' + key + ' --> ' + action);});
 				shortcuts[mask] = {key: action, func};
 			}
 		}
@@ -1006,11 +1032,12 @@ function _list(x, y, w, h) {
 		return bDup;
 	}
 	
-	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true} = {}) => {
+	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false} = {}) => {
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
 			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
 			return false;
 		}
+		if (plman.ActivePlaylist === -1) {return;}
 		const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
 		if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) {return false;} // Skip non writable playlists
 		let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
@@ -1048,7 +1075,12 @@ function _list(x, y, w, h) {
 				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
 				const index = plman.FindPlaylist(pls.nameId);
 				// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
-				if (index !== -1 && plman.ActivePlaylist !== index) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
+				if (index !== -1 && plman.ActivePlaylist !== index) {
+					plman.UndoBackup(index);
+					plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
+				}
+				// Remove items when moving
+				if (bDelSource) {plman.UndoBackup(plman.ActivePlaylist); plman.RemovePlaylistSelection(plman.ActivePlaylist);}
 				return true;
 			}
 		}
@@ -2713,16 +2745,18 @@ function _list(x, y, w, h) {
 				data[wName] = {};
 				// Per playlist
 				const menusPls = [
-					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: []			, skipProp: []},
-					{type:'lock playlist',	name: 'Lock playlist/',			description: 'Lock playlist file.',					skipExt: []			, skipProp: ['isLocked']},
-					{type:'lock playlist',	name: 'Unlock playlist/',		description: 'Unlock playlist file.',				skipExt: []			, skipProp: ['!isLocked']},
-					{type:'delete playlist',name: 'Delete playlist/', 		description: 'Delete playlist file.',				skipExt: []			, skipProp: []},
-					{type:'clone in ui',	name: 'Clone playlist in UI/',	description: 'Load a copy of the playlist file.',	skipExt: ['']		, skipProp: ['!size']},
-					{type:'send selection',	name: 'Send selection to/',		description: 'Send selection to playlist file.',	skipExt: ['','.fpl'], skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
+					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: ['.ui'],		skipProp: []},
+					{type:'lock playlist',	name: 'Lock playlist/',			description: 'Lock playlist file.',					skipExt: ['.ui'],		skipProp: ['isLocked']},
+					{type:'lock playlist',	name: 'Unlock playlist/',		description: 'Unlock playlist file.',				skipExt: ['.ui'],		skipProp: ['!isLocked']},
+					{type:'delete playlist',name: 'Delete playlist/', 		description: 'Delete playlist file.',				skipExt: ['.ui'],		skipProp: []},
+					{type:'clone in ui',	name: 'Clone playlist in UI/',	description: 'Load a copy of the playlist file.',	skipExt: ['','.ui'],	skipProp: ['!size']},
+					{type:'copy selection',	name: 'Copy selection to/',		description: 'Copy selection to playlist file.',	skipExt: ['','.fpl'],	skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
+					{type:'move selection',	name: 'Move selection to/',		description: 'Move selection to playlist file.',	skipExt: ['','.fpl'],	skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
 				];
 				menusPls.forEach((menu) => {listExport[menu.type] = [];});
 				this.dataAll.forEach((pls, i) => {
-					if (pls.extension === '.ui') {return;}
+					if (!this.bAllPls && pls.extension === '.ui') {return;}
+					if (pls.tags.includes('bSkipMenu')) {return;}
 					menusPls.forEach((menu) => {
 						if (menu.skipExt.indexOf(pls.extension) !== -1) {return;}
 						if (menu.skipProp.some((key) => {

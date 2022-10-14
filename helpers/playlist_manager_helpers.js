@@ -281,6 +281,8 @@ function setTag(tags, list, z) {
 			}
 		}
 	}
+	// Rebuild dynamic menus if needed
+	if (bDone && (tags.includes('bSkipMenu') || pls.tags.includes('bSkipMenu')) && list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
 	return bDone;
 }
 
