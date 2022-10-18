@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/10/22
+//16/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -166,6 +166,7 @@ function _list(x, y, w, h) {
 			}
 		} else {animation.bHighlight = false;}
 		// Rows
+		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -190,7 +191,7 @@ function _list(x, y, w, h) {
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
-						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
+						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
@@ -200,7 +201,7 @@ function _list(x, y, w, h) {
 						const nextIdx = currIdx + indexSortStateOffset;
 						const nextData = isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
 						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
-						if (sepLetter !== nextsepLetter && isNaN(sepLetter)) {
+						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
@@ -210,7 +211,7 @@ function _list(x, y, w, h) {
 					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
 						let sepIndex = i + indexSortStateOffset;
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
-						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
+						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
@@ -675,7 +676,7 @@ function _list(x, y, w, h) {
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
 			// Select all from current view or clean selection
-			if (shortcuts.hasOwnProperty(mask) && shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {
+			if (shortcuts.hasOwnProperty(mask) && (shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)')) {
 				if (this.indexes.length) {this.resetMultSelect();}
 				else {this.indexes = range(0, this.data.length - 1, 1);}
 			}
@@ -2223,7 +2224,7 @@ function _list(x, y, w, h) {
 			} else if (bEdit) {
 				try {newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true));}
 				catch (e) {return false;}
-				if (isNaN(newLimit)) {return false;}
+				if (Number.isNaN(newLimit)) {return false;}
 				if (!Number.isFinite(newLimit)) {newLimit = 0;}
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
