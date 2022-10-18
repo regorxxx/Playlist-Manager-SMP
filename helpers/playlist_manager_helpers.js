@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/22
+//16/10/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -1197,7 +1197,7 @@ function findDead() {
 		let iDelay = 0;
 		const subsongRegex = /,\d*$/g;
 		list.dataAll.forEach((playlist, i) => {
-			iDelay = isNaN(playlist.size) ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
+			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
