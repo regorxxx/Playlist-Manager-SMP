@@ -228,6 +228,7 @@ function createMenuLeft(forcedIndex = -1) {
 			const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true);} 
 			catch(e) {return;}
+			const tagsString = tags;
 			if (tags.length) {
 				tags = tags.replaceAll('\'\'','"'); // Replace quotes
 				try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
