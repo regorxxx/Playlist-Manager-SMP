@@ -80,6 +80,7 @@
 - Playlist formats: any missing metadata on playlists is now filled with default values on load for compatibility purpose on future updates, which avoid crashes due to missing variables.
 - Online controllers integration: fixed some inconsistencies on ajquery-xxx export files.
 - Online controllers integration: fixed crash when data file was not found.
+- Tags: crash editing auto-tags.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added

@@ -355,18 +355,18 @@ function round(floatnum, decimals){
 	return result;
 }
 
-Math.randomNum = function randomNum(min, max, bInt = false) {
-	if (bInt) {
+Math.randomNum = function randomNum(min, max, options = {integer: false, includeMax: false}) {
+	if (options.integer) {
 		min = Math.ceil(min);
-		max = Math.floor(max);
-		return Math.floor(Math.random() * (max - min) + min)
+		max = Math.floor(max) + (options.includeMax ? 1 : 0);
+		return (Math.random() * (max - min) | 0) + min;
 	} else {
-		return Math.random() * (max - min) + min;
+		return Math.random() * (max - min + (options.includeMax ? 1 : 0)) + min;
 	}
 }
 
-Math.randomInt = function randomNum(min, max) {
-	return Math.randomNum(min, max, true);
+Math.randomInt = function randomNum(min, max, includeMax = false) {
+	return Math.randomNum(min, max, {integer: true, includeMax});
 }
 
 /* 

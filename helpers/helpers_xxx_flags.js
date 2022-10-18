@@ -42,5 +42,6 @@ const dropEffect = {
 
 const dropMask = { // on_drag_over, on_drag_leave, on_drag_over, on_drag_enter
 	ctrl: MK_LBUTTON + MK_CONTROL,
-	shift: MK_LBUTTON + MK_SHIFT
+	shift: MK_LBUTTON + MK_SHIFT,
+	shiftCtrl: MK_LBUTTON + MK_CONTROL + MK_SHIFT
 };
