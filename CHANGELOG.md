@@ -45,6 +45,7 @@
 - UI: multiple playlist selection. Using any other mouse shortcut will apply the action to the entire selection, instead of a single playlist. Opening the playlist menu (L. Click) while using multiple selection, will display a different list of actions to apply to the entire selection.
 - UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists filtered by type, categories, tags...
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
+- Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 ### Changed
 - Filter: category playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
@@ -80,7 +81,7 @@
 - Playlist formats: any missing metadata on playlists is now filled with default values on load for compatibility purpose on future updates, which avoid crashes due to missing variables.
 - Online controllers integration: fixed some inconsistencies on ajquery-xxx export files.
 - Online controllers integration: fixed crash when data file was not found.
-- Tags: crash editing auto-tags.
+- Track Auto-tagging: crash editing track auto-tags.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
