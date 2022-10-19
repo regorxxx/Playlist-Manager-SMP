@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/10/22
+//19/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -1157,7 +1157,7 @@ function _list(x, y, w, h) {
 					} else if (expression.indexOf('JS:') !== -1) { // JS expression by function name at 'helpers_xxx_utils.js'
 						let funcName = expression.replace('JS:', '');
 						if (funcDict.hasOwnProperty(funcName)) {
-							try {value = funcDict[funcName]();}
+							try {value = funcDict[funcName](pls);}
 							catch (e) {fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name);}
 						} else {fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name);}
 					} else if (expression.indexOf(',') !== -1) { // Array (list sep by comma)

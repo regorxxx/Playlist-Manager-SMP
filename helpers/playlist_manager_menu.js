@@ -226,7 +226,7 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
 			const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
-			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true);} 
+			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"}]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);} 
 			catch(e) {return;}
 			const tagsString = tags;
 			if (tags.length) {
