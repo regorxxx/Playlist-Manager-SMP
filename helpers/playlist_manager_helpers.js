@@ -191,12 +191,13 @@ function loadPlaylistsFromFolder(folderPath = '') {
 
 function setTrackTags(trackTags, list, z) {
 	let bDone = false;
-	const extension = list.data[z].extension;
-	const oldTags = list.data[z].trackTags && list.data[z].trackTags.length ? JSON.stringify(list.data[z].trackTags) : '';
+	const pls = list.data[z];
+	const extension = pls.extension;
+	const oldTags = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
 	if (oldTags !== newTags) { // Compares objects
-		if (list.data[z].isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			list.editData(list.data[z], {trackTags});
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+			list.editData(pls, {trackTags});
 			list.update(true, true);
 			list.filter();
 			bDone = true;
@@ -204,8 +205,8 @@ function setTrackTags(trackTags, list, z) {
 			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
 			bDone = false;
 		} else {
-			const name = list.data[z].name;
-			const path = list.data[z].path;
+			const name = pls.name;
+			const path = pls.path;
 			if (_isFile(path)) {
 				// Backup
 				const backPath = path + '.back';
@@ -224,7 +225,7 @@ function setTrackTags(trackTags, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) {_deleteFile(backPath);}
-					list.editData(list.data[z], {trackTags});
+					list.editData(pls, {trackTags});
 					list.update(true , true);
 					list.filter();
 				}
@@ -566,7 +567,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 	const pls = list.data[z];
 	const playlistName = pls.name + ' (std copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (std copy ')) {count++;} return count;}, 0)+ ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
-	const idx = getPlaylistIndexArray(list.data[z].nameId);
+	const idx = getPlaylistIndexArray(pls.nameId);
 	if (idx && idx.length === 1) { // Already loaded? Duplicate it
 		plman.ActivePlaylist = idx[0];
 		const newIdx = plman.DuplicatePlaylist(plman.ActivePlaylist, plman.GetPlaylistName(plman.ActivePlaylist).replace(pls.name, playlistName));
@@ -648,7 +649,8 @@ function clonePlaylistFile(list, z, ext) {
 // TODO: Use m3u8 as default format if original playlist format is not writable
 function exportPlaylistFile(list, z, defPath = '') {
 	let bDone = false;
-	const playlistPath = list.data[z].path;
+	const pls = list.data[z];
+	const playlistPath = pls.path;
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let path = '';
 	try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
@@ -665,7 +667,8 @@ function exportPlaylistFile(list, z, defPath = '') {
 
 function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	let bDone = false;
-	const playlistPath = list.data[z].path;
+	const pls = list.data[z];
+	const playlistPath = pls.path;
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let newPath = '';
 	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
@@ -675,7 +678,7 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	const paths = getFilePathsFromPlaylist(playlistPath);
 	let relPaths = paths.map((path) => {return '.\\' + path.split('\\').pop();});
 	if (ext.length) {relPaths = relPaths.map((path) => {return path.split('.').slice(0, -1).concat([ext]).join('.');});}
-	const codePage = checkCodePage(_open(playlistPath), list.data[z].extension);
+	const codePage = checkCodePage(_open(playlistPath), pls.extension);
 	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 	if (file.length) {
 		paths.forEach((path, i) => {file = file.replace(path, relPaths[i]);});
@@ -703,7 +706,8 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths(list, z, void(0), defPath);
 	if (!newPath.length) {return;}
 	if (bDone) {
-		const playlistPath = list.data[z].path;
+		const pls = list.data[z];
+		const playlistPath = pls.path;
 		const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 		const root = utils.SplitFilePath(newPath)[0];
 		const report = [];
