@@ -292,8 +292,6 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 			outputArray[i] = outputArray[i].split(', ');
 			}
 	} else { // Array of values tag and per track; n x tagNumber
-		let tfo = fb.TitleFormat(tagString); 
-		outputArray = tfo.EvalWithMetadbs(handle);
 		for (let i = 0; i < outputArray_length; i++) {
 			outputArray[i] = outputArray[i].split('| ');
 			for (let j = 0; j < tagArray_length; j++) {
