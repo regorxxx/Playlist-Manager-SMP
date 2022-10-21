@@ -47,6 +47,7 @@
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 ### Changed
+- Track Auto-tagging: reworked entire feature to fine-tune overwriting or value addition behavior, in particular for JS functions. Empty values will now delete the tag, otherwise added to current tag by default. Check documentation for further details.
 - Filter: category playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: count for tags and category entries for filters on header menu.
@@ -82,6 +83,8 @@
 - Online controllers integration: fixed some inconsistencies on ajquery-xxx export files.
 - Online controllers integration: fixed crash when data file was not found.
 - Track Auto-tagging: crash editing track auto-tags.
+- Track Auto-tagging: not being applied on AutoPlaylists / Smart Playlists loading.
+- Track Auto-tagging: JS functions being applied multiple times.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
