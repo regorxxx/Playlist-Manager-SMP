@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/10/22
+//21/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -1131,13 +1131,14 @@ function _list(x, y, w, h) {
 	
 	this.getUpdateTrackTags = (handleList, pls) => { // Add tags to tracks according to playlist, only applied once per track. i.e. adding multiple copies will not add multiple times the tag
 		if (!pls.hasOwnProperty('trackTags') || !pls.trackTags || !pls.trackTags.length || !handleList || !handleList.Count) {return [new FbMetadbHandleList(), []];}
-		const oldHandles = pls.path && !pls.isAutoPlaylist ? getHandlesFromPlaylist(pls.path, this.playlistsPath) : null;
+		// const oldHandles = pls.path && !pls.isAutoPlaylist ? getHandlesFromPlaylist(pls.path, this.playlistsPath) : null;
 		const newHandles = handleList.Clone();
-		if (oldHandles) {
-			oldHandles.Sort();
-			newHandles.Sort();
-			newHandles.MakeDifference(oldHandles);
-		}
+		newHandles.Sort();
+		// if (oldHandles) {
+			// oldHandles.Sort();
+			// newHandles.Sort();
+			// newHandles.MakeDifference(oldHandles);
+		// }
 		let tagsArr = [];
 		const newHandlesNoTags = new FbMetadbHandleList();
 		if (newHandles.Count) {
@@ -1147,28 +1148,41 @@ function _list(x, y, w, h) {
 				pls.trackTags.forEach((tagObj) => { // TODO: Don't rewrite tags but add?
 					const name = Object.keys(tagObj)[0];
 					const expression = tagObj[name];
+					let bFunc = false, bOverWrite = false, bMultiple = false;
 					let value = null;
-					if (expression.indexOf('$') !== -1) { // TF
-						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]);}
+					if (typeof expression === 'number') {value = [expression.toString()];}
+					else if (expression.indexOf('$') !== -1) { // TF
+						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]).split(', ');}
 						catch (e) {fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name);}
 					} else if (expression.indexOf('%') !== -1) { // Tag remapping
-						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]);}
+						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]).split(', ');}
 						catch (e) {fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name);}
 					} else if (expression.indexOf('JS:') !== -1) { // JS expression by function name at 'helpers_xxx_utils.js'
+						bFunc = true;
 						let funcName = expression.replace('JS:', '');
 						if (funcDict.hasOwnProperty(funcName)) {
-							try {value = funcDict[funcName](pls);}
+							try {({value, bOverWrite, bMultiple} = funcDict[funcName](pls));}
 							catch (e) {fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name);}
 						} else {fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name);}
 					} else if (expression.indexOf(',') !== -1) { // Array (list sep by comma)
 						value = expression.split(',');
 						value = value.map((_) => {return _.trim();});
-					} else {value = expression;} // Strings, numbers, etc.
+					} else {value = [expression];} // Strings, etc.
 					if (value) { // Append to current tags
 						const currVal = getTagsValues(newHandles[i], [name], true);
 						if (currVal && currVal.length) {
-							if (currVal.indexOf(value) === -1) {tags[name] = [...currVal, value];} // Don't duplicate values
-						} else {tags[name] = value;}
+							let newVal = currVal;
+							if (bFunc) {
+								if (!bMultiple && !bOverWrite) {return;}
+								if (bOverWrite) {tags[name] = value.length ? value : [''];}
+								else if (bMultiple && value.length && !isArrayEqual(currVal, value)) {newVal = [...new Set([...currVal, ...value])];} // Don't duplicate values
+							} else {
+								if (!value.length) {newVal = [''];} // Delete
+								else if (!isArrayEqual(currVal, value)) {newVal = [...new Set([...currVal, ...value])];} // Don't duplicate values
+							}
+							// Double check there are changes
+							if (!isArrayEqual(currVal, newVal)) {tags[name] = newVal;}
+						} else if (value.length) {tags[name] = value;}
 					}
 				});
 				if (Object.keys(tags).length) {tagsArr.push(tags);} //Tags with no values may produce holes in the list compared against the handles
@@ -1727,8 +1741,8 @@ function _list(x, y, w, h) {
 			this.dataXsp = [];
 			this.indexes = [];
 			if (_isFile(this.filename)) {
-				const bUpdateSize = this.bUpdateAutoplaylist && this.bShowSize;
-				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit;
+				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoplaylist || this.bAutoTrackTagAutoPlsInit && bInit);
+				const bUpdateSize = this.bUpdateAutoplaylist && (this.bShowSize || bUpdateTags);
 				if (bUpdateSize || bUpdateTags) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
 				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
 				if (!data) {return;}
@@ -1752,7 +1766,7 @@ function _list(x, y, w, h) {
 							let bDone = false;
 							promises.push(new Promise((resolve) => {
 								loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
-									if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
+									if (handleList && item.size && bUpdateTags) {
 										if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
 											const bUpdated = this.updateTags(handleList, item);
 											if (bUpdated) {console.log('Playlist Manager: Auto-tagging playlist ' + item.name);}
@@ -2371,10 +2385,14 @@ function _list(x, y, w, h) {
 					if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
 					plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 					plman.ActivePlaylist = fbPlaylistIndex;
+					const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 					this.editData(pls, {
-						size: plman.PlaylistItemCount(fbPlaylistIndex),
-						duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
+						size: handleList.Count,
+						duration: handleList.CalcTotalDuration()
 					}, true); // Update size on load
+					if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
+						this.updateTags(handleList, pls);
+					}
 				} else { // Or file
 					if (_isFile(pls.path)) {
 						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
@@ -2386,10 +2404,14 @@ function _list(x, y, w, h) {
 						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl);
 						if (!bDone) {plman.AddLocations(fbPlaylistIndex, [pls.path], true);}
 						else if (pls.query) { // Update size on load for smart playlists
+							const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 							this.editData(pls, {
-								size: plman.PlaylistItemCount(fbPlaylistIndex), 
-								duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
+								size: handleList.Count, 
+								duration: handleList.CalcTotalDuration()
 							}, true);
+							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
+								this.updateTags(handleList, pls);
+							}
 						}
 						if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
 							setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
