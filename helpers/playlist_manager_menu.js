@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/10/22
+//21/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -226,7 +226,7 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 			let tags = '';
 			const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
-			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"}]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);} 
+			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);} 
 			catch(e) {return;}
 			const tagsString = tags;
 			if (tags.length) {
@@ -790,8 +790,8 @@ function createMenuRight() {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.loadConfigFile();
 				const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
-				list.bUpdateAutoplaylist = true;
-				list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
+				list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
+				list.update(void(0), true, z);
 				list.filter();
 				list.lastPlsLoaded = [];
 				if (typeof xspCache !== 'undefined') {xspCache.clear();} // Discard old cache to load new changes
@@ -1369,7 +1369,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
-					if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+					if (!list.bAutoTrackTagPls) {fb.ShowPopupMessage('Tracks added to non-locked playlist will be automatically tagged.', window.Name);}
 					list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
 					list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
 					overwriteProperties(list.properties);
@@ -1381,7 +1381,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
-					if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
+					if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nAlternatively, using the manual refresh menu entry will force AutoPlaylists tagging (and size updating) on all of them.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
 					list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
 					list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
 					overwriteProperties(list.properties);
@@ -1400,7 +1400,7 @@ function createMenuRightTop() {
 			{
 				const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
-					if (!list.bAutoTrackTag) {fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load and/or save.\n\n(*) Use contextual menu.', window.Name);}
+					if (!list.bAutoTrackTag) {fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load (AutoPlaylists) and/or save. Also on manual refresh (AutoPlaylists).\n\n(*) Use contextual menu.', window.Name);}
 					list.bAutoTrackTag = !list.bAutoTrackTag;
 					list.properties['bAutoTrackTag'][1] = list.bAutoTrackTag;
 					overwriteProperties(list.properties);
