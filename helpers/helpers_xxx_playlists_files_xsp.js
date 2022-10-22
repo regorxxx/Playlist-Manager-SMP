@@ -1,7 +1,9 @@
 ﻿'use strict';
-//09/09/22
+//22/10/22
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
+
+XSP.isFoec = typeof utils !== 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount');
 
 XSP.getQuerySort = function(jsp) {
 	let query = this.getQuery(jsp);
@@ -18,6 +20,9 @@ XSP.getQuery = function(jsp, bOmitPlaylist = false) {
 		console.log('There are empty or non recognized rules.');
 	}
 	let query = [];
+	const textTags = new Set(['GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '%PLAY_COUNT%', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%', '#PLAYLIST#']);
+	const numTags = new Set(['TRACKNUMBER', '%RATING%', 'DATE', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '%PLAY_COUNT%']);
+	const dateTags = new Set(['DATE', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%']);
 	for (let rule of rules) {
 		const tag = rule.field;
 		const op = rule.operator;
@@ -26,9 +31,6 @@ XSP.getQuery = function(jsp, bOmitPlaylist = false) {
 		if (!fbTag.length || (bOmitPlaylist && fbTag === '#PLAYLIST#')) {continue;} 
 		let queryRule = '';
 		// Check operators match specific tags
-		const textTags = new Set(['GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"', '%PLAY_COUNT%', '%LAST_PLAYED%', '#PLAYLIST#']);
-		const numTags = new Set(['TRACKNUMBER', '%RATING%', 'DATE', '%PLAY_COUNT%', '%LAST_PLAYED%']);
-		const dateTags = new Set(['DATE','%PLAY_COUNT%', '%LAST_PLAYED%']);
 		switch (op) {
 			case 'is': {
 				if (textTags.has(fbTag)){
@@ -178,59 +180,62 @@ XSP.getFbTag = function(tag) {
 		case 'artist':
 		case 'title':
 		case 'comment':
-		case 'tracknumber': {fbTag = tag; break;}
+		case 'tracknumber': {fbTag = tag.toUpperCase(); break;}
 		// Need %
 		case 'filename':
-		case 'path': {fbTag = '%' + tag + '%'; break;}
+		case 'path': {fbTag = '%' + tag.toUpperCase() + '%'; break;}
 		// Are the same
 		case 'rating':
-		case 'userrating': {fbTag = '%rating%'; break;} // Requires foo playcount
+		case 'userrating': {fbTag = '%RATING%'; break;} // Requires foo playcount
 		// Idem
 		case 'year':
-		case 'time': {fbTag = 'date'; break;}
+		case 'time': {fbTag = 'DATE'; break;}
 		// Others...
-		case 'moods': {fbTag = 'mood'; break;}
-		case 'themes': {fbTag = 'theme'; break;}
-		case 'styles': {fbTag = 'style'; break;}
-		case 'albumartist': {fbTag = 'album artist'; break;}
-		case 'playcount': {fbTag = '%play_count%'; break;} // Requires foo playcount
-		case 'lastplayed': {fbTag = '%last_played%'; break;} // Requires foo playcount
+		case 'moods': {fbTag = 'MOOD'; break;}
+		case 'themes': {fbTag = 'THEME'; break;}
+		case 'styles': {fbTag = 'STYLE'; break;}
+		case 'albumartist': {fbTag = '"ALBUM ARTIST"'; break;}
+		case 'playcount': {fbTag = XSP.isFoec ? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"' : '%PLAY_COUNT%'; break;} // Requires foo playcount
+		case 'lastplayed': {fbTag = XSP.isFoec ? '%LAST_PLAYED_ENHANCED%' : '%LAST_PLAYED%'; break;} // Requires foo playcount
 		// Special Tags
-		case 'playlist': {fbTag = '#playlist#'; break;} // Does not work in foobar queries
+		case 'playlist': {fbTag = '#PLAYLIST#'; break;} // Does not work in foobar queries
 		case 'random': {fbTag = '$rand()'; break;} // Does not work in foobar queries
 		default: {
 			console.log('Tag not recognized: ' + tag);
 		}
 	}
-	return (fbTag.indexOf('$') !== -1 ? fbTag : fbTag.toUpperCase());
+	return fbTag;
 };
 
 XSP.getTag = function(fbTag) {
 	let tag = '';
-	let fbTaglw = fbTag.toLowerCase().replace(/["%]/g,''); // removes % in any case to match all possibilities
-	switch (fbTaglw) {
-		case 'genre':
-		case 'album':
-		case 'artist':
-		case 'title':
-		case 'comment':
-		case 'tracknumber':
-		case 'rating': // Requires foo playcount, userrating has no correspondence
-		case 'filename':
-		case 'path': {tag = fbTaglw; break;}
-		case 'year':
-		case 'date': {tag = 'year'; break;}
+	let fbTaguc = fbTag.toUpperCase().replace(/["%]/g,''); // removes % in any case to match all possibilities
+	switch (fbTaguc) {
+		case 'GENRE':
+		case 'ALBUM':
+		case 'ARTIST':
+		case 'TITLE':
+		case 'COMMENT':
+		case 'TRACKNUMBER':
+		case 'RATING': // Requires foo playcount, userrating has no correspondence
+		case 'FILENAME':
+		case 'PATH': {tag = fbTaguc; break;}
+		case 'YEAR':
+		case 'DATE': {tag = 'year'; break;}
 		// time has no correspondence
 		// Others...
-		case 'mood': {tag = 'moods'; break;}
-		case 'theme': {tag = 'themes'; break;}
-		case 'style': {tag = 'styles'; break;}
-		case '"album artist"': {tag = 'albumartist'; break;}
-		case 'play_count': {tag = 'playcount'; break;} // Requires foo playcount
-		case 'last_played': {tag = 'lastplayed'; break;} // Requires foo playcount
+		case 'MOOD': {tag = 'moods'; break;}
+		case 'THEME': {tag = 'themes'; break;}
+		case 'STYLE': {tag = 'styles'; break;}
+		case 'ALBUM ARTIST': {tag = 'albumartist'; break;}
+		case '$MAX(PLAY_COUNT,LASTFM_PLAY_COUNT)': // Requires foo_enhanced_playcount
+		case '$MAX(LASTFM_PLAY_COUNT,PLAY_COUNT)':
+		case 'PLAY_COUNT': {tag = 'playcount'; break;} // Requires foo playcount
+		case 'LAST_PLAYED_ENHANCED': // Requires foo_enhanced_playcount
+		case 'LAST_PLAYED': {tag = 'lastplayed'; break;} // Requires foo playcount
 		// Special tags
-		case '#playlist#': {tag = 'playlist'; break;} // Does not work in foobar queries
-		case '$rand()': {tag = 'random'; break;} // Does not work in foobar queries
+		case '#PLAYLIST#': {tag = 'playlist'; break;} // Does not work in foobar queries
+		case '$RAND()': {tag = 'random'; break;} // Does not work in foobar queries
 		default: {
 			console.log('Tag not recognized: ' + fbTag);
 		}
@@ -250,10 +255,10 @@ XSP.getLimit = function(jsp) {
 };
 
 XSP.getOrder = function(queryOrSort) {
-	let order = [{}]; // TODO [] ?
+	let order = [];
 	let direction = '';
 	let fbTag = '';
-	if (queryOrSort.match(/ *SORT.*$/)) {	
+	if (queryOrSort.match(/ *SORT.*$/)) {
 		if (queryOrSort.match(/ *SORT BY .*$/)) {direction = 'ascending'; fbTag = queryOrSort.match(/(?: *SORT BY )(.*$)/)[1];}
 		else if (queryOrSort.match(/ *SORT DESCENDING BY .*$/)) {direction = 'descending'; fbTag = queryOrSort.match(/(?: *SORT DESCENDING BY )(.*$)/)[1];}
 		else if (queryOrSort.match(/ *SORT ASCENDING BY .*$/)) {direction = 'ascending'; fbTag = queryOrSort.match(/(?: *SORT ASCENDING BY )(.*$)/)[1];}
@@ -261,7 +266,7 @@ XSP.getOrder = function(queryOrSort) {
 	}
 	if (direction.length && fbTag.length) {
 		let tag = this.getTag(fbTag);
-		if (tag.length) {order[0][direction] = tag;}
+		if (tag.length) {order.push({[direction]: tag});}
 	}
 	return order;
 };
