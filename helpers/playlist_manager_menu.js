@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/10/22
+//22/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -84,9 +84,10 @@ function createMenuLeft(forcedIndex = -1) {
 			// Change AutoPlaylist sort
 			menu.newEntry({entryText: 'Edit sort pattern...', func: () => {
 				let newSort = '';
-				try {newSort = utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, pls.sort);}
+				try {newSort = utils.InputBox(window.ID, 'Enter sort pattern (optional):\n\nStart with \'SORT BY\', \'SORT ASCENDING BY\', ...', window.Name, pls.sort);}
 				catch(e) {return;}
 				let bDone = false;
+				if (newSort.length && !newSort.match(/SORT.*$/)) {fb.ShowPopupMessage('Sort not valid:\n' + newSort, window.Name); return;}
 				if (newSort !== pls.sort) { // Pattern
 					list.editData(pls, {
 						sort: newSort,
@@ -94,10 +95,13 @@ function createMenuLeft(forcedIndex = -1) {
 					bDone = true;
 				}
 				if (pls.sort.length) { // And force sorting
-					list.editData(pls, {
-						bSortForced: pls.extension === '.xsp' ? false : WshShell.Popup('Force sort?\n(currently ' + pls.bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes,
-					});
-					bDone = true;
+					const bSortForced = pls.extension === '.xsp' ? false : WshShell.Popup('Force sort?\n(currently ' + pls.bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
+					if (bSortForced !== pls.bSortForced) {
+						list.editData(pls, {
+							bSortForced,
+						});
+						bDone = true;
+					}
 				}
 				if (bDone) {bDone = pls.extension === '.xsp' ? rewriteXSPSort(pls, newSort) : true;}
 				if (bDone) {
