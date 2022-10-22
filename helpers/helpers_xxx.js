@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/10/22
+//22/10/22
 
 // Folders
 const folders = {};
@@ -57,6 +57,8 @@ globTags.key = 'KEY';
 globTags.rating = '%RATING%';
 globTags.acoustidFP = 'ACOUSTID_FINGERPRINT_RAW';
 globTags.fooidFP = 'FINGERPRINT_FOOID';
+globTags.playCount = '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)';
+globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 // Load user file
 loadUserDefFile(globTags);
