@@ -47,6 +47,8 @@
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 ### Changed
+- XSP: 'playcount' XSP tag now gets translated into '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
+- XSP: 'lastplayed' XSP tag now gets translated into '%LAST_PLAYED_ENHANCED%' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
 - Track Auto-tagging: reworked entire feature to fine-tune overwriting or value addition behavior, in particular for JS functions. Empty values will now delete the tag, otherwise added to current tag by default. Check documentation for further details.
 - Filter: category playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
@@ -56,6 +58,7 @@
 - UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
 - UI: 'Send selection to playlist' renamed to 'Copy selection to playlist'. Reconfigure the shortcut on the menus before using.
 - UI: 'Send selection to playlist' now creates an undo backup point before inserting the new tracks if the playlist is loaded on UI.
+- UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
 - Dynamic menus: Dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
 - XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
@@ -67,6 +70,8 @@
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
 - XSP: preventive fixes to Smart Playlists having empty rules, without operators or values.
+- XSP: undefined sort order on files.
+- XSP: playlists are no longer rewritten every time sort order is not set.
 - XSPF: crash on some malformed playlists.
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
 - Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
