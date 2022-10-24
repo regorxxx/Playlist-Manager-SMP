@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/10/22
+//24/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2400,7 +2400,7 @@ function _list(x, y, w, h) {
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
 						// But it will fail as soon as any track is not found on library
 						// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-						const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+						const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls : [];
 						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl);
 						if (!bDone) {plman.AddLocations(fbPlaylistIndex, [pls.path], true);}
 						else if (pls.query) { // Update size on load for smart playlists
@@ -2476,7 +2476,7 @@ function _list(x, y, w, h) {
 					// Try to load handles from library first, greatly speeds up non fpl large playlists
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-					const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+					const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls : [];
 					handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void(0), remDupl);
 					if (handleList) {this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true);}  // Update size on load for smart playlists
 				} else {console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
@@ -2932,9 +2932,10 @@ function _list(x, y, w, h) {
 			this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 			this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 			this.bBOM = this.properties['bBOM'][1];
-			this.removeDuplicatesAutoPls = this.properties['removeDuplicatesAutoPls'][1];
+			this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
 			this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 			this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
+			this.bAdvTitle = this.properties['bAdvTitle'][1];
 			this.bSavingWarnings = this.properties['bSavingWarnings'][1];
 			this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 			this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
@@ -3045,8 +3046,9 @@ function _list(x, y, w, h) {
 	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 	this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 	this.bBOM = this.properties['bBOM'][1];
-	this.removeDuplicatesAutoPls = this.properties['removeDuplicatesAutoPls'][1];
+	this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
 	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
+	this.bAdvTitle = this.properties['bAdvTitle'][1];
 	this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
 	this.bSavingWarnings = this.properties['bSavingWarnings'][1];
 	this.bSavingDefExtension = this.properties['bSavingDefExtension'][1];

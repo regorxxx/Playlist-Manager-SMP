@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/10/22
+//24/10/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -562,7 +562,7 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 	return bDone;
 }
 
-function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
 	const playlistName = pls.name + ' (std copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (std copy ')) {count++;} return count;}, 0)+ ')';
@@ -583,7 +583,7 @@ function cloneAsStandardPls(list, z, remDupl = []) { // May be used to copy an A
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
-	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl});}
+	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
 	const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
 	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
 	if (bDone) {
@@ -745,7 +745,7 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = []) {
+function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
@@ -765,7 +765,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	if (!newPath.length) {return bDone;}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
 	// Get tracks
-	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true, remDupl) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true, remDupl, void(0), bAdvTitle) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
 	const subsongRegex = /,\d*$/g;
 	const paths = (!bUI && !bXSP ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => {return path.replace(subsongRegex,'');});
 	const root = utils.SplitFilePath(newPath)[0];
@@ -824,7 +824,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	return bDone;
 }
 
-function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = []) {
+function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
@@ -841,7 +841,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 	if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone;}
 	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 	if (handleList && handleList.Count) {
-		if (remDupl && remDupl.length && removeDuplicatesV2) {handleList = removeDuplicatesV2({handleList, checkKeys: remDupl});}
+		if (remDupl && remDupl.length && removeDuplicatesV2) {handleList = removeDuplicatesV2({handleList, checkKeys: remDupl, bAdvTitle});}
 		if (pls.sort) {
 			const sortObj = getSortObj(pls.sort);
 			if (sortObj) {handleList.OrderByFormat(sortObj.tf, sortObj.direction);}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/22
+//24/10/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -245,7 +245,7 @@ function createMenuLeft(forcedIndex = -1) {
 		//	AutoPlaylists clone
 		if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
 			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
-				cloneAsStandardPls(list, z, (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : []);
+				cloneAsStandardPls(list, z, (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [], list.bAdvTitle);
 			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => { // Here creates a foobar autoplaylist no matter the original format
 				cloneAsAutoPls(list, z);
@@ -307,11 +307,11 @@ function createMenuLeft(forcedIndex = -1) {
 				if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
 				if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
 				menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-					const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+					const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 					if (!pls.isAutoPlaylist) {
-						exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);
+						exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); // Include remDupl for XSP playlists
 					} else {
-						exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);
+						exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);
 					}
 				}, flags});
 			});
@@ -579,12 +579,12 @@ function createMenuLeftMult(forcedIndexes = []) {
 			if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
 			if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
 			menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-				const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
 					if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
-						if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);} 
-						else {exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl);}
+						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
+						if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);} 
+						else {exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);}
 					}
 				});
 			}, flags});
@@ -1305,15 +1305,22 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, 'On Smart Playlist loading & cloning', void(0), () => {return list.bRemoveDuplicatesSmartPls;});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
-				let input = '';
-				try {input = utils.InputBox(window.ID, 'Enter tag(s) or TF expression(s):\n(sep by comma)', window.Name, list.removeDuplicatesAutoPls.split(',').filter((n) => n), true);}
+				let input = [];
+				try {input = JSON.parse(utils.InputBox(window.ID, 'Enter tag(s) or TF expression(s):\n(sep by comma)', window.Name, JSON.stringify(list.removeDuplicatesAutoPls), true));}
 				catch (e) {return;}
-				if (input) {input = input.split(',').filter((n) => n).join(',');}
-				if (input === list.removeDuplicatesAutoPls) {return;}
+				if (input) {input = input.filter((n) => n);}
+				if (isArrayEqual(input, list.removeDuplicatesAutoPls)) {return;}
 				list.removeDuplicatesAutoPls = input;
-				list.properties['removeDuplicatesAutoPls'][1] = list.removeDuplicatesAutoPls;
+				list.properties['removeDuplicatesAutoPls'][1] = JSON.stringify(list.removeDuplicatesAutoPls);
 				overwriteProperties(list.properties);
 			}});
+			menu.newEntry({menuName: subMenuName, entryText: 'Use RegExp for title matching?', func: () => {
+				list.bAdvTitle = !list.bAdvTitle;
+				list.properties.bAdvTitle[1] = list.bAdvTitle;
+				if (list.bAdvTitle) {fb.ShowPopupMessage(globRegExp.title.desc, window.Name);}
+				overwriteProperties(list.properties);
+			}});
+			menu.newCheckMenu(subMenuName, 'Use RegExp for title matching?', void(0), () => {return list.bAdvTitle;});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Playlist AutoTags & Actions

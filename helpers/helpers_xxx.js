@@ -46,7 +46,9 @@ function loadUserDefFile(def) {
 const globTags = {};
 globTags._file = folders.userPresetsGlobal + 'globTags.json';
 globTags._description = 'Don\'t add multiple tags to these variables. TITLE, DATE and RATING must be enclosed on %.';
-globTags.title = '$ascii($lower($trim(%TITLE%)))';
+globTags.title = '$ascii($lower($trim(%TITLE%)))'; // Takes ~0.5 secs on 70K tracks
+globTags.titleLowPerf = '$trim($replace($ascii($lower(%TITLE%)),\'(12\'$char(39)$char(39)\' mix)\',,\'(12\'$char(39)$char(39)\' single)\',,\'(12\'$char(39)$char(39)\' version)\',,\'(12\'$char(34)\' mix)\',,\'(12\'$char(34)\' single)\',,\'(12\'$char(34)\' version)\',,\'(7\'$char(39)$char(39)\' mix)\',,\'(7\'$char(39)$char(39)\' single)\',,\'(7\'$char(39)$char(39)\' version)\',,\'(7\'$char(34)\' mix)\',,\'(7\'$char(34)\' single)\',,\'(7\'$char(34)\' version)\',,\'(acoustic intro)\',,\'(acoustic version)\',,\'(acoustic)\',,\'(album mix)\',,\'(album version)\',,\'(album)\',,\'(alt. lyrics)\',,\'(alt. mix)\',,\'(alt. take)\',,\'(alt. version)\',,\'(alternate intro mix)\',,\'(alternate lyrics)\',,\'(alternate mix)\',,\'(alternate take)\',,\'(alternate version)\',,\'(alternate vocal mix)\',,\'(alternate)\',,\'(bbc session)\',,\'(demo)\',,\'(dub mix)\',,\'(dub)\',,\'(duo version)\',,\'(early version)\',,\'(edit mix)\',,\'(edit)\',,\'(electric intro)\',,\'(electric verison)\',,\'(extended version)\',,\'(fast version)\',,\'(hit version)\',,\'(instrumental version)\',,\'(instrumental)\',,\'(live acoustic)\',,\'(live at the bbc)\',,\'(live bbc)\',,\'(live studio version)\',,\'(live version)\',,\'(live)\',,\'(long)\',,\'(mix)\',,\'(mono)\',,\'(movie mix)\',,\'(original mono mix)\',,\'(original version)\',,\'(outtake)\',,\'(radio)\',,\'(remix version)\',,\'(remix)\',,\'(reprise)\',,\'(rough mix)\',,\'(rough version)\',,\'(short)\',,\'(single edit)\',,\'(single version)\',,\'(single)\',,\'(slow version)\',,\'(stereo mix)\',,\'(stereo)\',,\'(studio demo)\',,\'(studio outtake)\',,\'(studio)\',,\'(take 1)\',,\'(take 2)\',,\'(take 3)\',,\'(take 4)\',,\'(take 5)\',,\'(take 6)\',,\'(take 7)\',,\'(take 8)\',,\'(take 9)\',,\'(tv mix)\',,\'(unissued version)\',,\'(unplugged)\',,\'(unreleased alt. mix)\',,\'(unreleased alternate mix)\',,\'(unreleased mono mix)\',,\'(unreleased stereo mix)\',,\'(unreleased)\',,))'; // Takes +1.5 secs on 70K tracks
+globTags.titleMedPerf = '$ascii($lower($trim($left(%TITLE%,$if2($strstr(%TITLE%,\' (\'),-1)))))'; // Takes ~0.5 secs on 70K tracks but there are false positives
 globTags.date = '$year(%DATE%)';
 globTags.artist = 'ARTIST';
 globTags.genre = 'GENRE';
@@ -85,6 +87,12 @@ globQuery.noSACD = 'NOT %_PATH% HAS .iso AND NOT CODEC IS MLP AND NOT CODEC IS D
 globQuery.compareTitle = '"$stricmp(' + globTags.title + ',' + globTags.title.replaceAll('%','#') + ')" IS 1';
 // Load user file
 loadUserDefFile(globQuery);
+
+const globRegExp = {};
+globRegExp.title = {
+	re: /(?!\s+[\(\[](?:part.*|pt.*|act.*|A|B|I+V?X?|V+I{0,3})[\)\]])(?:\s+[\(\[].*[\)\]])(?=\||$)/i,
+	desc: 'Identifies duplicates with advanced partial title matching. For example, tracks like these would be considered to be duplicates:\nMy track (live) | My track (acoustic) | My track (2022 remix) | ...\n\nTracks containing these keywords on parentheses or brackets are skipped:\npart |pt. | act | A | B | Roman numerals\n\niI.E. these tracks would not be considered to be the \'same track\' (unless the entire title is matched):\nMy track (part 1) | My track (pt. 2) | My track (act 2) | ....\n\nObviously these are no real \'duplicates\', but the philosophy behind the \'remove duplicates\' concept is not having 2 times the same song	on a playlist, so having multiple versions of the same track is	undesirable in many cases.'
+};
 
 // Async processing
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.

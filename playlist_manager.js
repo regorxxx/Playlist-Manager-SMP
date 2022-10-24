@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/10/22
+//24/10/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -110,7 +110,7 @@ var properties = {
 	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true, {func: isBoolean}, true],
 	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false, {func: isBoolean}, false],
 	bBOM					: ['Save files as UTF8 with BOM?', false, {func: isBoolean}, false],
-	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', 'artist,$year(%DATE%),$ascii($lower($trim(%TITLE%)))', {func: isStringWeak}, 'artist,$year(%DATE%),$ascii($lower($trim(%TITLE%)))'],
+	removeDuplicatesAutoPls	: ['AutoPlaylists, Remove duplicates by', JSON.stringify(globTags.remDupl), {func: isJSON}, JSON.stringify(globTags.remDupl)],
 	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true, {func: isBoolean}, true],
 	bShowMenuHeader			: ['Show header on playlist menus?', true, {func: isBoolean}, true],
 	bCopyAsync				: ['Copy tracks asynchronously on export?', true, {func: isBoolean}, true],
@@ -152,7 +152,8 @@ var properties = {
 	bMultMenuTag			: ['Automatically add \'bMultMenu\' to all playlists', false],
 	lBrainzToken			: ['ListenBrainz user token', '', {func: isStringWeak}, ''],
 	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false, {func: isBoolean}, false],
-	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true, {func: isBoolean}, true]
+	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true, {func: isBoolean}, true],
+	bAdvTitle				: ['AutoPlaylists, duplicates RegExp title matching?', true, {func: isBoolean}, true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -425,11 +426,11 @@ addEventListener('on_main_menu_dynamic', (id) => {
 				const idx = list.dataAll.map((pls, i) => {return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1);}).filter((idx) => {return idx !== -1;});
 				idx.forEach((i) => {
 					const preset = menu.arg;
-					const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
+					const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls : [];
 					if (!list.dataAll[i].isAutoPlaylist) {
-						exportPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl);
+						exportPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle);
 					} else {
-						exportAutoPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl);
+						exportAutoPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle);
 					}
 				});
 				bDone = true;
