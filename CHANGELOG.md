@@ -64,7 +64,8 @@
 - XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
 - Tags: auto-tags are now displayed on the tag list (on set tag menu) ready to be used, instead of only displaying the present user set tags.
 - Properties: additional checks to properties to ensure they don't get broken with manual edits.
-- Removed Duplicates: all uses of function changed to make use of '$year(%DATE%)' and '$ascii($lower($trim(%TITLE%))' instead of 'DATE' and 'TITLE'. This is a changed ported from Search by Distance, to ensure the most matches possible.
+- Remove Duplicates: all uses of function changed to make use of '$year(%DATE%)' and '$ascii($lower($trim(%TITLE%))' instead of 'DATE' and 'TITLE'. This is a changed ported from Search by Distance, to ensure the most matches possible.
+- Remove Duplicates: Advanced RegEx title matching option. For example, tracks like these would be considered to be duplicates: 'My track (live)', 'My track (acoustic)', 'My track (2022 remix)', ' My track [take 3]', ... but not those with keywrods like 'part', 'pt.', 'act' or Roman numerals.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
@@ -72,6 +73,7 @@
 - XSP: preventive fixes to Smart Playlists having empty rules, without operators or values.
 - XSP: undefined sort order on files.
 - XSP: playlists are no longer rewritten every time sort order is not set.
+- XSP: duplicates were not removed on all use-cases (exporting, cloning, ...) when option was activated.
 - XSPF: crash on some malformed playlists.
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
 - Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
