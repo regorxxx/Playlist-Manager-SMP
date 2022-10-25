@@ -92,6 +92,7 @@
 - Track Auto-tagging: crash editing track auto-tags.
 - Track Auto-tagging: not being applied on AutoPlaylists / Smart Playlists loading.
 - Track Auto-tagging: JS functions being applied multiple times.
+-  Instances manager: crash on instances file deleted while panel is being reloaded.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
