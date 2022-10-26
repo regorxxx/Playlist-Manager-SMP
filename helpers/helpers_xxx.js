@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/22
+//26/10/22
 
 // Folders
 const folders = {};
@@ -91,7 +91,7 @@ loadUserDefFile(globQuery);
 const globRegExp = {};
 globRegExp.title = {
 	re: /(?!\s+[\(\[](?:part.*|pt.*|act.*|A|B|I+V?X?|V+I{0,3})[\)\]])(?:\s+[\(\[].*[\)\]])(?=\||$)/i,
-	desc: 'Identifies duplicates with advanced partial title matching. For example, tracks like these would be considered to be duplicates:\nMy track (live) | My track (acoustic) | My track (2022 remix) | ...\n\nTracks containing these keywords on parentheses or brackets are skipped:\npart |pt. | act | A | B | Roman numerals\n\niI.E. these tracks would not be considered to be the \'same track\' (unless the entire title is matched):\nMy track (part 1) | My track (pt. 2) | My track (act 2) | ....\n\nObviously these are no real \'duplicates\', but the philosophy behind the \'remove duplicates\' concept is not having 2 times the same song	on a playlist, so having multiple versions of the same track is	undesirable in many cases.'
+	desc: 'Identifies duplicates with advanced partial title matching. For example, tracks like these would be considered to be duplicates:\nMy track (live) | My track (acoustic) | My track (2022 remix) | ...\n\nTracks containing these keywords on parentheses or brackets are skipped:\npart |pt. | act | A | B | Roman numerals\n\niI.E. these tracks would not be considered to be the \'same track\' (unless the entire title is matched):\nMy track (part 1) | My track (pt. 2) | My track (act 2) | ....\n\nObviously these are no real \'duplicates\', but the philosophy behind the \'remove duplicates\' concept is not having 2 times the same song on a playlist, so having multiple versions of the same track is undesirable in many cases.'
 };
 
 // Async processing
@@ -99,7 +99,7 @@ const iStepsLibrary = 100; // n steps to split whole library processing: check l
 const iDelayLibrary = isCompatible('2.0', 'fb') ? 200 : 100; // ms per step for whole handle processing
 const iDelayLibraryPLM = isCompatible('2.0', 'fb') ? 40 : 25; // ms per step for whole handle processing
 const iDelayPlaylists = 120; // ms per step for playlist processing: playlist manager
-const iDelaySBDCache = 150; // ms per step for style/genre node processing: search by distance
+const iDelaySBDCache = 0.55; // ms per step for style/genre node processing: search by distance
 
 // Console log file
 conLog = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
