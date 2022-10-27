@@ -9,18 +9,18 @@ include('helpers_xxx.js');
 // Tags descriptors: 
 // Always use .toLowerCase first before checking if the set has the string. For ex
 // numericTags.has(tagName.toLowerCase())
-const dynamicTags = new Set(['rating',globTags.date.toLowerCase()]); // Tags only found by title formatting
-const numericTags = new Set(['date','year','bpm','dynamic range','album dynamic range','rating',globTags.date.toLowerCase()]);  // These are tags which are always a number
-const cyclicTags = new Set(['dynamic_genre']); // These are numeric tags with limited range: {0...K, k + 1 = 0}
+const dynamicTags = new Set(['rating', globTags.date.toLowerCase()]); // Only found by title formatting
+const numericTags = new Set(['date', 'year', 'bpm', 'dynamic range', 'album dynamic range', 'rating',globTags.date.toLowerCase()]);  // Always a number
+const cyclicTags = new Set(['dynamic_genre']); // Numeric tags with limited range: {0...K, k + 1 = 0}
 const keyTags = new Set(['KEY_BACKUP1', 'KEY_BACKUP2', 'INITIAL KEY', 'INITIALKEY', 'KEY_START', 'KEY', 'KEY_CAMELOT', 'KEY_OPENKEY']);
 
 // Put here the corresponding function for the cyclic tag. Swap lower/upper values before return if required. They must be always ordered.
 // ALWAYS RETURN [valueLower, valueUpper, lowerLimit, upperLimit];
 // Object keys must match the tag names at cyclicTags... 
-const cyclicTagsDescriptor =	{	
-									//dyngenre_map_xxx.js
-									dynamic_genre(tagValue, valueRange, bReturnLimits) {return dyn_genre_range(tagValue, valueRange, bReturnLimits);},
-								};
+const cyclicTagsDescriptor ={
+	//dyngenre_map_xxx.js
+	dynamic_genre(tagValue, valueRange, bReturnLimits) {return dynGenreRange(tagValue, valueRange, bReturnLimits);},
+};
 // Add here the external files required for cyclic tags
 var bLoadTags; // This tells the helper to load tags descriptors extra files. False by default
 if (bLoadTags) {

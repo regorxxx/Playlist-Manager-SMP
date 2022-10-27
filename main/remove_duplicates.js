@@ -214,7 +214,7 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 }
 
 // V3: Equal to V2 but async using tag cache
-async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bProfile = false} = {}) {
+async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bTagsCache = true, bProfile = false} = {}) {
 	// Check input
 	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicatesV3: checkKeys [' + checkKeys + '] was null, empty or not an array');

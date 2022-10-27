@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/22
+//27/10/22
 
 /* 
 	Objects
@@ -217,7 +217,12 @@ Array.prototype.rotate = (function() {
 	};
 })();
 
-// Randomly rearranges the items in an array, modifies original. Fisher-Yates algortithm
+Array.prototype.swap = function (i, j) { 
+	[this[i], this[j]] = [this[j], this[i]];
+	return this;
+};
+
+// Randomly rearranges the items in an array, modifies original. Fisher-Yates algorithm
 Array.prototype.shuffle = function() {
 	let last = this.length, n;
 	while (last > 0) {
@@ -225,6 +230,25 @@ Array.prototype.shuffle = function() {
 		[this[n], this[last]] = [this[last], this[n]];
 	}
 	return this;
+};
+
+// Fisher-Yates algorithm on multiple arrays at the same time
+Array.shuffle = function() {
+	let last = 0;
+	const argsLength = arguments.length;
+	for (let idx = 0; idx < argsLength; idx++) {
+		if (!isArray(arguments[idx])) {throw new TypeError("Argument is not an array.");}
+		if (idx === 0) {last = arguments[0].length;}
+		if (last !== arguments[idx].length) {throw new RangeError("Array lengths do not match.");}
+	}
+	let n;
+	while (last > 0) {
+		n = Math.floor(Math.random() * last--);
+		for (let argsIndex = 0; argsIndex < argsLength; argsIndex++) {
+			arguments[argsIndex].swap(last, n);
+		}
+	}
+	return [...arguments];
 };
 
 // Join array and split lines every n elements joined
@@ -247,11 +271,11 @@ Array.prototype.joinUpToChars = function(sep, chars) {
 };
 
 Array.prototype.multiIndexOf = function (el) { 
-    const idxs = [];
-    for (let i = this.length - 1; i >= 0; i--) {
-        if (this[i] === el) {idxs.unshift(i);}
-    }
-    return idxs;
+	const idxs = [];
+	for (let i = this.length - 1; i >= 0; i--) {
+		if (this[i] === el) {idxs.unshift(i);}
+	}
+	return idxs;
 };
 
 /* 
