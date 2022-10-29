@@ -45,3 +45,6 @@ const dropMask = { // on_drag_over, on_drag_leave, on_drag_over, on_drag_enter
 	shift: MK_LBUTTON + MK_SHIFT,
 	shiftCtrl: MK_LBUTTON + MK_CONTROL + MK_SHIFT
 };
+
+const VK_LWIN = 0x5B;
+const VK_RWIN = 0x5C;
