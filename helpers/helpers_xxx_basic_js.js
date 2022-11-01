@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/09/22
+//01/10/22
 
 // https://github.com/angus-c/just
 /*
@@ -88,14 +88,14 @@ function randomString(len, charSet) {
 // const repeatedFunction = repeatFn(function, ms);
 // repeatedFunction(arguments);
 const repeatFn = (fn, ms) => {
-	return (...args) => {return setInterval(fn.bind(this, ...args), ms);};
+	return (ms > 0 && Number.isFinite(ms) ? (...args) => {return setInterval(fn.bind(this, ...args), ms);} : () => {return null;});
 };
 
 // Delay execution according to interval (ms). Ex:
 // const delayedFunction = delayFn(function, ms);
 // delayedFunction(arguments);
 const delayFn = (fn, ms) => {
-	return (...args) => {return setTimeout(fn.bind(this, ...args), ms);};
+	return (ms >= 0 && Number.isFinite(ms) ? (...args) => {return setTimeout(fn.bind(this, ...args), ms);} : () => {return null;});
 };
 
 // Halt execution if trigger rate is greater than delay (ms), so it fires only once after successive calls. Ex:

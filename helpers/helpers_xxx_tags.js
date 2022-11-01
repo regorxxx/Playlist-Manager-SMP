@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/22
+//30/10/22
 
 include('helpers_xxx.js');
 
@@ -280,7 +280,11 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	let tagString = '';
 	const outputArray_length = handle.Count;
 	while (i < tagArray_length) {
-		const tagStr = tagsArray[i].indexOf('$') === -1 ? '%' + tagsArray[i] + '%' : tagsArray[i];
+		const tagStr = tagsArray[i].indexOf('$') === -1 
+			? tagsArray[i].indexOf('%') === -1 
+				? '%' + tagsArray[i] + '%' 
+				: tagsArray[i] 
+			: tagsArray[i];
 		if (bMerged) {tagString += _b((i === 0 ? '' : ', ') + tagStr);} // We have all values separated by comma
 		else {tagString += (i === 0 ? '' : '| ') + _b(tagStr);} // We have tag values separated by comma and different tags by |
 		i++;
@@ -316,7 +320,15 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 			i++;
 			continue;
 		}
-		let tagString = ((tagsArray[i].indexOf('$') === -1) ? (bEmptyVal ? '%' + tagsArray[i] + '%' : '[%' + tagsArray[i] + '%]') : (bEmptyVal ? tagsArray[i]: '[' + tagsArray[i] + ']')); // Tagname or TF expression, with or without empty values
+		// Tagname or TF expression, with or without empty values
+		let tagString = tagsArray[i].indexOf('$') === -1 
+			? tagsArray[i].indexOf('%') === -1 
+				? '%' + tagsArray[i] + '%' 
+				: tagsArray[i] 
+			: tagsArray[i];
+		tagString = bEmptyVal 
+				? tagString 
+				: '[' + tagString + ']';
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
 		if (splitBy && splitBy.length) {
