@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/10/22
+//08/11/22
 
 /*
 	Remove duplicates
@@ -23,7 +23,7 @@
 		Add musicBraiz track ID and album as default: solves same track with different dates...
 */	
 include('..\\helpers\\helpers_xxx.js');
-if (isCompatible('2.0', 'fb')) {include('..\\helpers\\helpers_xxx_tags_cache.js');}
+if (isFoobarV2) {include('..\\helpers\\helpers_xxx_tags_cache.js');}
 
 // Note number of final duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
 // 'nAllowed = 0' removes all duplicates.
@@ -73,8 +73,10 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 	const count = tfoCopy.length;
 	if (bAdvTitle) {
 		const titleRe = globRegExp.title.re;
+		const titleReV2 = globRegExp.title.ingAposVerbs.re;
+		const titleReV3 = globRegExp.title.ingVerbs.re;
 		while (i < count) {
-			const str = tfoCopy[i].replace(titleRe, '').trim();
+			const str = tfoCopy[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
 			if (countMap.has(str)) {
 				if (countMap.get(str).val <= nAllowed) {
 					countMap.get(str).val++;
@@ -172,8 +174,10 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 	const count = tfoCopy.length;
 	if (bAdvTitle) {
 		const titleRe = globRegExp.title.re;
+		const titleReV2 = globRegExp.ingAposVerbs.re;
+		const titleReV3 = globRegExp.ingVerbs.re;
 		while (i < count) {
-			const str = tfoCopy[i].replace(titleRe, '').trim();
+			const str = tfoCopy[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
 			if (!set.has(str)) {
 				set.add(str);
 				items.push(copy[i]);
@@ -268,8 +272,10 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 	let set = new Set();
 	if (bAdvTitle) {
 		const titleRe = globRegExp.title.re;
+		const titleReV2 = globRegExp.ingAposVerbs.re;
+		const titleReV3 = globRegExp.ingVerbs.re;
 		for (let i = 0; i < count; i++) {
-			const str = tags[i].replace(titleRe, '').trim();
+			const str = tags[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
 			if (!set.has(str)) {
 				set.add(str);
 				items.push(copy[i]);
@@ -355,8 +361,10 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 	const count = tfoCopy.length;
 	if (bAdvTitle) {
 		const titleRe = globRegExp.title.re;
+		const titleReV2 = globRegExp.ingAposVerbs.re;
+		const titleReV3 = globRegExp.ingVerbs.re;
 		while (i < count) {
-			const str = tfoCopy[i].replace(titleRe, '').trim();
+			const str = tfoCopy[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
 			if (!map.has(str)) {map.set(str, [i]);}
 			else {map.set(str, map.get(str).concat([i]));}
 			i++;
