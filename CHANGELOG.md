@@ -25,8 +25,8 @@
 
 ## [Unreleased][]
 ### Added
+- Configuration: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel. Don't forget to reload the panels/restart foobar and restore defaults on all relevant buttons and menus to use the new values. For Playlist Manager, it's only used for the default values of Duplicates Removal feature, so only that sub-menu needs to be restored to defaults (not the entire panel).
 - Drag and Drop: tracks can now be sent to a playlist directly with Drag and Drop, instead of using key shortcuts + mouse. Both move and copy (pressing Control) are allowed. Only tracks withing foobar2000 context can be drop, trying to drop any other thing, track from outside or file is not allowed. Pessing 'Alt' on drop will create a new playlist instead of sending it to the selected playlist. To warn about this behavior, no playlist is highlighted while pressing the key (contrary to the usual drag and drop). List can be scrolled up or down by moving the mouse to the arrow buttons while dragging.
-- Presets: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel.
 - ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
 - ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz. Exporting a playlist requires tracks to have 'MUSICBRAINZ_TRACKID' tags present; there is an additional option to perform MBIDs lookups on exporting when tags are missing.
 - ListenBrainz: new options at R. Click menu to create a playlist from ListenBrainz importing by MBID.
@@ -46,6 +46,7 @@
 - UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists filtered by type, categories, tags...
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
+- Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
 ### Changed
 - XSP: 'playcount' XSP tag now gets translated into '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
 - XSP: 'lastplayed' XSP tag now gets translated into '%LAST_PLAYED_ENHANCED%' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
@@ -64,8 +65,9 @@
 - XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
 - Tags: auto-tags are now displayed on the tag list (on set tag menu) ready to be used, instead of only displaying the present user set tags.
 - Properties: additional checks to properties to ensure they don't get broken with manual edits.
-- Remove Duplicates: all uses of function changed to make use of '$year(%DATE%)' and '$ascii($lower($trim(%TITLE%))' instead of 'DATE' and 'TITLE'. This is a changed ported from Search by Distance, to ensure the most matches possible.
-- Remove Duplicates: Advanced RegEx title matching option. For example, tracks like these would be considered to be duplicates: 'My track (live)', 'My track (acoustic)', 'My track (2022 remix)', ' My track [take 3]', ... but not those with keywords like 'part', 'pt.', 'act' or Roman numerals.
+- Remove duplicates: all uses of function changed to make use of '$year(%DATE%)' and '$ascii($lower($trim(%TITLE%))' instead of 'DATE' and 'TITLE'. This is a changed ported from Search by Distance, to ensure the most matches possible.
+- Remove duplicates: advanced RegEx title matching option. For example, tracks like these would be considered to be duplicates: 'My track (live)', 'My track (acoustic)', 'My track (2022 remix)', ' My track [take 3]', ... but not those with keywords like 'part', 'pt.', 'act' or Roman numerals.
+- Remove duplicates: advanced RegEx title matching option. Words with "-in'" and a list of verbs ending in "-in" are matched against "-ing" verbs to further refine the search. For ex. "walkin", "walkin'" and "walking" are all considered equivalent.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
