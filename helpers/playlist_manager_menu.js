@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/10/22
+//08/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -1247,6 +1247,13 @@ function createMenuRightTop() {
 			}});
 			menu.newCheckMenu(menuName, 'Auto-backup interval...', void(0),  () => {return (Number(list.properties['autoBack'][1]) !== 0 ? 1 : 0);});
 		}
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// Stop tracking library paths
+			menu.newEntry({menuName, entryText: 'Don\'t track library (until next startup)', func: () => {
+				list.switchTracking(void(0), true);
+			}});
+			menu.newCheckMenu(menuName, 'Don\'t track library (until next startup)', void(0),  () => {return !list.bTracking;});
+		}
 	}
 	{	// Playlists behavior
 		const menuName = menu.newMenu('Playlists behavior');
@@ -1293,16 +1300,24 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'On AutoPlaylist cloning', func: () => {
 				list.bRemoveDuplicatesAutoPls = !list.bRemoveDuplicatesAutoPls;
-				list.properties['bRemoveDuplicatesAutoPls'][1] = list.bRemoveDuplicatesAutoPls;
+				list.properties.bRemoveDuplicatesAutoPls[1] = list.bRemoveDuplicatesAutoPls;
 				overwriteProperties(list.properties);
 			}});
 			menu.newCheckMenu(subMenuName, 'On AutoPlaylist cloning', void(0), () => {return list.bRemoveDuplicatesAutoPls;});
 			menu.newEntry({menuName: subMenuName, entryText: 'On Smart Playlist loading & cloning', func: () => {
 				list.bRemoveDuplicatesSmartPls = !list.bRemoveDuplicatesSmartPls;
-				list.properties['bRemoveDuplicatesSmartPls'][1] = list.bRemoveDuplicatesSmartPls;
+				list.properties.bRemoveDuplicatesSmartPls[1] = list.bRemoveDuplicatesSmartPls;
 				overwriteProperties(list.properties);
 			}});
 			menu.newCheckMenu(subMenuName, 'On Smart Playlist loading & cloning', void(0), () => {return list.bRemoveDuplicatesSmartPls;});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Use RegExp for title matching?', func: () => {
+				list.bAdvTitle = !list.bAdvTitle;
+				list.properties.bAdvTitle[1] = list.bAdvTitle;
+				if (list.bAdvTitle) {fb.ShowPopupMessage(globRegExp.title.desc, window.Name);}
+				overwriteProperties(list.properties);
+			}});
+			menu.newCheckMenu(subMenuName, 'Use RegExp for title matching?', void(0), () => {return list.bAdvTitle;});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
 				let input = [];
@@ -1311,16 +1326,21 @@ function createMenuRightTop() {
 				if (input) {input = input.filter((n) => n);}
 				if (isArrayEqual(input, list.removeDuplicatesAutoPls)) {return;}
 				list.removeDuplicatesAutoPls = input;
-				list.properties['removeDuplicatesAutoPls'][1] = JSON.stringify(list.removeDuplicatesAutoPls);
+				list.properties.removeDuplicatesAutoPls[1] = JSON.stringify(list.removeDuplicatesAutoPls);
 				overwriteProperties(list.properties);
 			}});
-			menu.newEntry({menuName: subMenuName, entryText: 'Use RegExp for title matching?', func: () => {
-				list.bAdvTitle = !list.bAdvTitle;
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults...', func: () => {
+				list.bRemoveDuplicatesAutoPls = list.properties.bRemoveDuplicatesAutoPls[3];
+				list.properties.bRemoveDuplicatesAutoPls[1] = list.bRemoveDuplicatesAutoPls;
+				list.bRemoveDuplicatesSmartPls = list.properties.bRemoveDuplicatesSmartPls[3];
+				list.properties.bRemoveDuplicatesSmartPls[1] = list.bRemoveDuplicatesSmartPls;
+				list.bAdvTitle = list.properties.bAdvTitle[3];
 				list.properties.bAdvTitle[1] = list.bAdvTitle;
-				if (list.bAdvTitle) {fb.ShowPopupMessage(globRegExp.title.desc, window.Name);}
+				list.removeDuplicatesAutoPls = JSON.parse(list.properties.removeDuplicatesAutoPls[3]);
+				list.properties.removeDuplicatesAutoPls[1] = JSON.stringify(list.removeDuplicatesAutoPls);
 				overwriteProperties(list.properties);
 			}});
-			menu.newCheckMenu(subMenuName, 'Use RegExp for title matching?', void(0), () => {return list.bAdvTitle;});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Playlist AutoTags & Actions

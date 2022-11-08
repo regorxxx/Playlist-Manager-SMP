@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/10/22
+//07/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2056,6 +2056,16 @@ function _list(x, y, w, h) {
 		return (bAll ? list.itemsAll : list.itemsAll - list.itemsAutoplaylist - list.itemsFoobar);
 	}
 	
+	this.switchTracking = (forced = null, bNotify = false) => {
+		this.bTracking = forced !== null ? forced : !this.bTracking;
+		if (this.bTracking) {
+			debouncedCacheLib(false, 'Updating...');
+			this.clearSelPlaylistCache();
+		}
+		if (bNotify) {window.NotifyOthers('Playlist manager: switch tracking', this.bTracking);}
+		return this.bTracking;
+	}
+	
 	this.init = () => {
 		
 		this.save = (bInit = false) => {
@@ -2940,6 +2950,7 @@ function _list(x, y, w, h) {
 			this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 			this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
 			this.bAllPls = this.properties['bAllPls'][1];
+			this.bTracking = true;
 		}
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
@@ -3057,6 +3068,7 @@ function _list(x, y, w, h) {
 	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.bAllPls = this.properties['bAllPls'][1];
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
+	this.bTracking = true;
 	// Other
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};

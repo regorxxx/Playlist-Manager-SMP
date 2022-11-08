@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/10/22
+//07/11/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -324,6 +324,10 @@ addEventListener('on_notify_data', (name, info) => {
 			} // Share paths
 			break;
 		}
+		case 'Playlist manager: switch tracking': {
+			list.switchTracking(info);
+			break;
+		}
 		case 'precacheLibraryPaths': {
 			libItemsAbsPaths = [...info];
 			if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
@@ -612,14 +616,18 @@ const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup
 
 // Update cache on changes!
 const debouncedCacheLib = debounce(cacheLib, 5000);
-addEventListener('on_library_items_added', () => { 
-	debouncedCacheLib(false, 'Updating...');
-	typeof list !== 'undefined' && list.clearSelPlaylistCache();
+addEventListener('on_library_items_added', () => {
+	if (typeof list !== 'undefined' && list.bTracking) {
+		debouncedCacheLib(false, 'Updating...');
+		list.clearSelPlaylistCache();
+	}
 });
 
 addEventListener('on_library_items_removed', () => { 
-	debouncedCacheLib(false, 'Updating...');
-	typeof list !== 'undefined' && list.clearSelPlaylistCache();
+	if (typeof list !== 'undefined' && list.bTracking) {
+		debouncedCacheLib(false, 'Updating...');
+		list.clearSelPlaylistCache();
+	}
 });
 
 // key listener (workaround for keys not working when focus is not on panel)
