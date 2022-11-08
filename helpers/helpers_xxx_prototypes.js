@@ -232,6 +232,14 @@ Array.prototype.shuffle = function() {
 	return this;
 };
 
+function zeroOrVal(e){
+	return (e === 0 || e);
+}
+
+function emptyOrVal(e){
+	return (e === '' || e);
+}
+
 // Fisher-Yates algorithm on multiple arrays at the same time
 Array.shuffle = function() {
 	let last = 0;
