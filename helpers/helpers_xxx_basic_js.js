@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/22
+//08/11/22
 
 // https://github.com/angus-c/just
 /*
@@ -160,6 +160,18 @@ function tryMethod(fn, parent) {
 		let cache;
 		try {cache = parent[fn](...args);} catch(e) {/* continue regardless of error */}
 		return cache;
+	};
+}
+
+function memoize(fn) {
+	const results = {};
+	return (...args) => {
+		// Create key for cache
+		const argsKey = JSON.stringify(args);
+		if (!results.hasOwnProperty(argsKey)) {
+			results[argsKey] = fn(...args)
+		}
+		return results[argsKey];
 	};
 }
 

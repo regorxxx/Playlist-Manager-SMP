@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/08/22
+//13/11/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -92,14 +92,14 @@ function nextId(method, bNext = true, bCharsForced = true) {
 	}
 }
 
-function getIdRegEx(method) {
+function getIdRegEx(method, bCharsForced = true) {
 	switch (true) {
 		case method === 'invisible':
-			return / \(\*[\u200b\u200c\u200d\u200e]{5}\)$/g;
+			return (bCharsForced ? / \(\*[\u200b\u200c\u200d\u200e]{5}\)$/g : /[\u200b\u200c\u200d\u200e]{5}$/g);
 		case method === 'letters':
-			return / \([abcdf]{5}\)$/g;
+			return (bCharsForced ? / \([abcdf]{5}\)$/g : /[abcdf]{5}$/g);
 		case method === 'indicator':
-			return / \(\*\)$/g;
+			return (/ \(\*\)$/g);
 		default:
 			return null;
 	}
