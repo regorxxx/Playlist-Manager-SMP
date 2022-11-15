@@ -39,6 +39,7 @@
 - Dynamic Menus: menu warns about entries needing input via popups and those are skipped on the Online Controller actions.
 - Dynamic menus: new 'Move selection to playlist' dynamic menu.
 - Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
+- UI: show an icon related to the current filter state. For ex. the extension filter will show the associated playlist icon.
 - UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' and 'Multiple selection' actions (along the previous ones).
 - UI: added M. Click actions, configurable the same way than L. Click actions. Set by default to 'Multiple selection'.
 - UI: added 'Multiple selection (range)' shortcut action, which emulates the usual Shift + Click action to select a range on files on explorer.
@@ -80,6 +81,7 @@
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
 - Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
 - Filter: '-inherit-' warning was shown on all tags on filter header menu, even for those not being shown. Cosmetic bug.
+- UI: filter buttons will display 'Multiple...' instead of 'All' when multiple values have been selected via header menu, thus properly displaying the manager is currently being filtered when not cycling tag/categories.
 - UI: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and viceversa) for now playing and loaded indicators.
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
 - UI: adding new files with new tags did not updated properly the current view, showing by default the new tags too. Similar to past bug with categories.
