@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/21
+//15/11/21
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -27,6 +27,8 @@ const chars = {
 	bolt			: '\uf0e7',
 	dotCircle		: '\uf192',
 	hourglass		: '\uf254',
+	lock			: '\uf023',
+	unlock			: '\uf09c',
 	// Files
 	folderOpenBlack	: '\uf07c',
 	folderOpenWhite	: '\uf115',
@@ -51,6 +53,7 @@ const chars = {
 	info 			: '\uf05A',
 	tasks 			: '\uf0cb',
 	history			: '\uf1da',
+	bookmark		: '\uf02e',
 	// Playback
 	prev			: '\uf049',
 	next			: '\uf050',

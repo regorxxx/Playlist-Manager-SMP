@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/06/22
+//15/11/22
 
 //Always loaded along other buttons and panel
 include('buttons_panel_xxx.js');
@@ -23,11 +23,11 @@ addButton({
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
 	filterOneButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
 		doFilter(this);
-	}, null, void(0), filterTooltip, 'plm_', void(0), chars.filter),
+	}, null, void(0), filterTooltip, 'plm_', void(0), filterIcon),
 	// Cycle filtering between playlist lock states: all, not locked, locked
 	filterTwoButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
-	}, null, void(0), filterTooltip, 'plm_', void(0), chars.filter),
+	}, null, void(0), filterTooltip, 'plm_', void(0), filterIcon),
 });
 
 // Defaults
@@ -81,16 +81,18 @@ function filterName() {
 			break;
 		}
 		case 'Tag': {
-			const options = ['All', ...list.tags()];
+			const states = list.tags();
+			const options = ['All', ...states];
 			const idx = list.tagState.length === 1 ? options.indexOf(list.tagState[0]) : -1;
-			const name = idx !== -1 ? options[idx] : options[0];
+			const name = idx !== -1 ? options[idx] : isArrayEqual(list.tagState, states) ? options[0] : 'Multiple...';
 			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...': name;
 		}
 		case 'Category': {
-			const options = ['All', ...list.categories()];
+			const states = list.categories();
+			const options = ['All', ...states];
 			const idx = list.categoryState.length === 1 ? options.indexOf(list.categoryState[0]) : -1;
-			const name = idx !== -1 ? options[idx] : options[0];
+			const name = idx !== -1 ? options[idx] : isArrayEqual(list.categoryState, states) ? options[0] : 'Multiple...';
 			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...': name;
 		}
@@ -137,6 +139,7 @@ function doFilter(parent) {
 		}
 	}
 }
+
 function filterTooltip() {
 	let ttText = '';
 	switch (this.method) {
@@ -156,7 +159,7 @@ function filterTooltip() {
 			break;
 		}
 		case 'Tag': {
-			const options = list.categories();
+			const options = list.tags();
 			const defOpt = options[0];
 			const bInherit = list.tagState.indexOf(defOpt) === -1;
 			ttText = 'Cycle through the different tags:\n' + list.tags().map((item, i) => {return item + (list.tagState.indexOf(item) !== -1? '  <--' + (bInherit && i !== 0 ? '\t-inherit-' : '') : '');}).join('\n');
@@ -177,6 +180,7 @@ function filterTooltip() {
 	}
 	return ttText;
 }
+
 function sortTooltip() {
 	let ttText = '';
 	ttText = !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';
@@ -187,6 +191,7 @@ function sortTooltip() {
 	}
 	return ttText;
 }
+
 function sortIcon() {
 	const bDir = !list.getIndexSortState(); // Natural or inverted order
 	const varType = (list.methodState.match(/tag|name|category/gi) ? 'str' : (list.methodState.match(/date|size/gi) ? 'num' : 'other'));
@@ -199,6 +204,49 @@ function sortIcon() {
 		}
 		default: {
 			return bDir ? '\uf160' : '\uf161';
+		}
+	}
+}
+
+function filterIcon() {
+	const processChar = (c) => {return String.fromCharCode(parseInt(c, 16));}
+	const icons = list.playlistIcons;
+	switch (this.method) {
+		case 'Lock state': {
+			const curr = list.lockStates[0];
+			const states = list.constLockStates();
+			if (curr === states[1]) {return chars.unlock;}
+			else if (curr === states[2]) {return chars.lock;}
+			else {return chars.filter;}
+		}
+		case 'Extension': {
+			const curr = list.extStates[0];
+			const states = list.constExtStates();
+			if (curr !== states[0] && icons.hasOwnProperty(curr) && icons[curr].icon) {return processChar(icons[curr].icon);}
+			else {return chars.filter;}
+		}
+		case 'Playlist type': {
+			const curr = list.autoPlaylistStates[0];
+			const states = list.constAutoPlaylistStates();
+			if (curr === states[1] && icons.hasOwnProperty('autoPlaylist') && icons['autoPlaylist'].icon) {return processChar(icons['autoPlaylist'].icon);}
+			else if (curr === states[2] && icons.hasOwnProperty('.m3u') && icons['.m3u8'].icon) {return processChar(icons['.m3u'].icon);}
+			else if (curr === states[3] && icons.hasOwnProperty('.ui') && icons['.ui'].icon) {return processChar(icons['.ui'].icon);}
+			else {return chars.filter;}
+		}
+		case 'Tag': {
+			const curr = list.tagState;
+			const states = list.tags();
+			if (!isArrayEqual(curr, states)) {return curr.length === 1 ? chars.tag : chars.tags;}
+			else {return chars.filter;}
+		}
+		case 'Category': {
+			const curr = list.categoryState;
+			const states = list.categories();
+			if (!isArrayEqual(curr, states)) {return chars.bookmark;}
+			else {return chars.filter;}
+		}
+		default: {
+			return chars.filter;
 		}
 	}
 }
