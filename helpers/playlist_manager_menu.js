@@ -1988,6 +1988,7 @@ function createMenuRightTop() {
 			
 			const subMenuName = menu.newMenu('Startup active playlist...', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Set active playlist at startup:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Current playlist', func: () => {
 				list.activePlsStartup = name;
 				list.properties.activePlsStartup[1] = list.activePlsStartup;
