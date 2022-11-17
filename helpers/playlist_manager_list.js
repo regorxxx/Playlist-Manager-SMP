@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/22
+//15/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -1614,7 +1614,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	this.resetFilter = ({autoPlaylist = true, lock = true, ext = true, tag = true, category = true} = {}) => {
-		this.filter({autoPlaylistState: list.constAutoPlaylistStates()[0], lockState: list.constLockStates()[0], extState: list.constExtStates()[0], tagState: list.tags(), categoryState: list.categories()});
+		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories()});
 	}
 	
 	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
@@ -2053,7 +2053,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.getPlaylistNum = (bAll = false) => {
-		return (bAll ? list.itemsAll : list.itemsAll - list.itemsAutoplaylist - list.itemsFoobar);
+		return (bAll ? this.itemsAll : this.itemsAll - this.itemsAutoplaylist - this.itemsFoobar);
 	}
 	
 	this.switchTracking = (forced = null, bNotify = false) => {
@@ -2410,7 +2410,7 @@ function _list(x, y, w, h) {
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
 						// But it will fail as soon as any track is not found on library
 						// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-						const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls : [];
+						const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl);
 						if (!bDone) {plman.AddLocations(fbPlaylistIndex, [pls.path], true);}
 						else if (pls.query) { // Update size on load for smart playlists
@@ -2429,7 +2429,7 @@ function _list(x, y, w, h) {
 					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false;}
 				}
 			}
-			if (autoBackTimer && debouncedUpdate) {backup(list.properties.autoBackN[1]);} // Backup before autosaving
+			if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1]);} // Backup before autosaving
 			this.lastPlsLoaded.push(pls);
 			return true;
 		}
@@ -2486,7 +2486,7 @@ function _list(x, y, w, h) {
 					// Try to load handles from library first, greatly speeds up non fpl large playlists
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-					const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls : [];
+					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 					handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void(0), remDupl);
 					if (handleList) {this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true);}  // Update size on load for smart playlists
 				} else {console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
