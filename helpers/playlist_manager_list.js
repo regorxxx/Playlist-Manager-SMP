@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/22
+//17/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2950,6 +2950,7 @@ function _list(x, y, w, h) {
 			this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 			this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
 			this.bAllPls = this.properties['bAllPls'][1];
+			this.activePlsStartup = this.properties['activePlsStartup'][1];
 			this.bTracking = true;
 		}
 		
@@ -2971,6 +2972,17 @@ function _list(x, y, w, h) {
 			}
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
+		if (this.activePlsStartup.length) { // Give priority to playlist on UI, then to manager playlists
+			let id = plman.FindPlaylist(this.activePlsStartup);
+			if (id === -1) {
+				const plsIdx = this.getPlaylistsIdxByName([this.activePlsStartup]);
+				if (plsIdx.length) {
+					id = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
+				}
+			}
+			if (id !== -1 && plman.ActivePlaylist !== id) {plman.ActivePlaylist = id;}
+			else {console.log('Playlist Manager: active playlist at startup not found - ' + this.activePlsStartup);}
+		}
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
@@ -3068,6 +3080,7 @@ function _list(x, y, w, h) {
 	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.bAllPls = this.properties['bAllPls'][1];
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
+	this.activePlsStartup = this.properties['activePlsStartup'][1];
 	this.bTracking = true;
 	// Other
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/22
+//17/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -7,6 +7,7 @@ include('helpers_xxx_prototypes.js');
 include('playlist_manager_helpers.js');
 include('playlist_manager_listenbrainz.js');
 include('menu_xxx.js');
+include('helpers_xxx_input.js');
 
 // Menus
 const menuRbtn = new _menu();
@@ -1979,6 +1980,30 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
 			menu.newCheckMenu(subMenuName, 'Lookup for missing track MBIDs?', void(0), () => {return list.properties.bLookupMBIDs[1];});
+		}
+		{	// Startup active playlist
+			const nameUI = plman.GetPlaylistName(plman.ActivePlaylist);
+			const idx = list.dataAll.findIndex((pls, idx) => {return pls.nameId === nameUI;});
+			const name = idx !== -1 ? list.dataAll[idx].name : nameUI;
+			
+			const subMenuName = menu.newMenu('Startup active playlist...', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Set active playlist at startup:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'Current playlist', func: () => {
+				list.activePlsStartup = name;
+				list.properties.activePlsStartup[1] = list.activePlsStartup;
+				overwriteProperties(list.properties);
+				window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup)
+			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
+			menu.newCheckMenu(subMenuName, 'Current playlist', void(0), () => {return list.activePlsStartup === name;});
+			menu.newEntry({menuName: subMenuName, entryText: 'Input name...', func: () => {
+				const input = Input.string('string', list.activePlsStartup, 'Input playlist name:\n\nIn case the playlist is present on the manager, it\'s required to set \'bAutoLoad\' tag on playlist file to load it on startup too (otherwise playlist will not be loaded on startup).', 'Playlist Manager', 'My playlist');
+				if (input === null) {return;}
+				list.activePlsStartup = input;
+				list.properties.activePlsStartup[1] = list.activePlsStartup;
+				overwriteProperties(list.properties);
+				window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup)
+			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
+			menu.newCheckMenu(subMenuName, 'Input name...', void(0), () => {return list.activePlsStartup.length && list.activePlsStartup !== name;});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});

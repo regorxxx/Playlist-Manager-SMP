@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/22
+//17/11/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -153,7 +153,8 @@ var properties = {
 	lBrainzToken			: ['ListenBrainz user token', '', {func: isStringWeak}, ''],
 	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false, {func: isBoolean}, false],
 	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true, {func: isBoolean}, true],
-	bAdvTitle				: ['AutoPlaylists, duplicates RegExp title matching?', true, {func: isBoolean}, true]
+	bAdvTitle				: ['AutoPlaylists, duplicates RegExp title matching?', true, {func: isBoolean}, true],
+	activePlsStartup		: ['Active playlist on startup', '', {func: isStringWeak}, '']
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -326,6 +327,14 @@ addEventListener('on_notify_data', (name, info) => {
 		}
 		case 'Playlist manager: switch tracking': {
 			list.switchTracking(info);
+			break;
+		}
+		case 'Playlist manager: change startup playlist': {
+			if (list.activePlsStartup !== info) {
+				list.activePlsStartup = info;
+				list.properties.activePlsStartup[1] = list.activePlsStartup;
+				overwriteProperties(list.properties);
+			}
 			break;
 		}
 		case 'precacheLibraryPaths': {
