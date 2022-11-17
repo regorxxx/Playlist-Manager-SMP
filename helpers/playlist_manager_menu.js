@@ -1990,14 +1990,14 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'Set active playlist at startup:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Current playlist', func: () => {
-				list.activePlsStartup = name;
+				list.activePlsStartup = list.activePlsStartup === name ? '' : name;
 				list.properties.activePlsStartup[1] = list.activePlsStartup;
 				overwriteProperties(list.properties);
 				window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup)
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 			menu.newCheckMenu(subMenuName, 'Current playlist', void(0), () => {return list.activePlsStartup === name;});
 			menu.newEntry({menuName: subMenuName, entryText: 'Input name...', func: () => {
-				const input = Input.string('string', list.activePlsStartup, 'Input playlist name:\n\nIn case the playlist is present on the manager, it\'s required to set \'bAutoLoad\' tag on playlist file to load it on startup too (otherwise playlist will not be loaded on startup).', 'Playlist Manager', 'My playlist');
+				const input = Input.string('string', list.activePlsStartup, 'Input playlist name: (empty to disable)\n\nIn case the playlist is present on the manager, it\'s required to set \'bAutoLoad\' tag on playlist file to load it on startup too (otherwise playlist will not be loaded on startup).', 'Playlist Manager', 'My playlist');
 				if (input === null) {return;}
 				list.activePlsStartup = input;
 				list.properties.activePlsStartup[1] = list.activePlsStartup;
