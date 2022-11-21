@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/22
+//21/11/22
 
 include('helpers_xxx_prototypes.js');
 
@@ -27,12 +27,12 @@ function playlistCountNoLocked(type = []) {
 // When nTracks is negative and start is zero or not provided,
 // then start is set to playlist length
 function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
-        plman.ClearPlaylistSelection(playlistIndex);
-		const sign = Math.sign(nTracks);
-		start = sign < 0 && !start ?  plman.PlaylistItemCount(playlistIndex) - 1 : start;
-		const selection = range(start, start + sign * (Math.abs(nTracks) - 1), sign);
-        plman.SetPlaylistSelection(playlistIndex, selection, true);
-        plman.RemovePlaylistSelection(playlistIndex, true);
+	plman.ClearPlaylistSelection(playlistIndex);
+	const sign = Math.sign(nTracks);
+	start = sign < 0 && !start ?  plman.PlaylistItemCount(playlistIndex) - 1 : start;
+	const selection = range(start, start + sign * (Math.abs(nTracks) - 1), sign);
+	plman.SetPlaylistSelection(playlistIndex, selection, true);
+	plman.RemovePlaylistSelection(playlistIndex, true);
 }
 
 // Outputs indexes of all playlists with that name

@@ -38,7 +38,7 @@
 - Dynamic menus: new dynamic main menu entries which apply an action to a group of playlists tagged with 'bMultMenu'. These are meant to be associated to an standard Foobar2000 button (or CMD commands), to easily load or apply generic actions to a group of playlists at once.
 - Dynamic Menus: menu warns about entries needing input via popups and those are skipped on the Online Controller actions.
 - Dynamic menus: new 'Move selection to playlist' dynamic menu.
-- Startup playlist: added new option at integration header menu to set the active playlist at panel startup, allowing to start Foobar2000 automatically with a given playlist. In case it's a playlist present on the manager but not loaded, it's required to set 'bAutoLoad' tag on playlist file to load it on startup too (otherwise playlist will not be loaded on startup).
+- Startup playlist: added new option at integration header menu to set the active playlist at panel startup, allowing to start Foobar2000 automatically with a given playlist. In case it's a playlist present on the manager but not loaded, it's required to set 'bAutoLoad' tag on playlist file to load it automatically on startup too. RegExp may be used too, returning the first match found.
 - Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
 - UI: show an icon related to the current filter state. For ex. the extension filter will show the associated playlist icon.
 - UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' and 'Multiple selection' actions (along the previous ones).

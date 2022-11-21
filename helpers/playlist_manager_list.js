@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/22
+//21/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -2894,6 +2894,33 @@ function _list(x, y, w, h) {
 			});
 		}
 		
+		this.startupPlaylist = (name = this.activePlsStartup) => {
+			let re, flag, idx = -1, bRegExp = false;
+			try {
+				[, re, flag] = name.match(/\/(.*)\/([a-z]+)?/);
+				if (re) {
+					name = new RegExp(re, flag); 
+					bRegExp = true;
+				}
+			} catch (e) {}
+			if (bRegExp) {
+				const playlists = getPlaylistNames();
+				const pls = (playlists.find((pls) => {return name.test(pls.name);}) || {idx: -1}).idx;
+				idx = pls.idx;
+			} else {
+				idx = plman.FindPlaylist(name);
+			}
+			if (idx === -1) { // Give priority to playlist on UI, then to manager playlists
+				const plsIdx = this.getPlaylistsIdxByName([name]);
+				if (plsIdx.length) {
+					idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
+				}
+			}
+			if (idx !== -1 && plman.ActivePlaylist !== idx) {plman.ActivePlaylist = idx;}
+			else {console.log('Playlist Manager: active playlist at startup not found - ' + name);}
+			return idx;
+		}
+		
 		this.reset = () => {
 			this.inRange = false;
 			this.items = 0;
@@ -2972,17 +2999,7 @@ function _list(x, y, w, h) {
 			}
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
-		if (this.activePlsStartup.length) { // Give priority to playlist on UI, then to manager playlists
-			let id = plman.FindPlaylist(this.activePlsStartup);
-			if (id === -1) {
-				const plsIdx = this.getPlaylistsIdxByName([this.activePlsStartup]);
-				if (plsIdx.length) {
-					id = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
-				}
-			}
-			if (id !== -1 && plman.ActivePlaylist !== id) {plman.ActivePlaylist = id;}
-			else {console.log('Playlist Manager: active playlist at startup not found - ' + this.activePlsStartup);}
-		}
+		if (this.activePlsStartup.length) {this.startupPlaylist();}
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
