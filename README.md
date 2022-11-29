@@ -158,6 +158,9 @@ Tracking playlists within a network drive requires additional steps to make use 
 See [Readme (pdf)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/readmes/playlist_manager.pdf), [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
+## Documentation
+Full documentation notes can be found at the <a href="https://github.com/regorxxx/Playlist-Manager-SMP/raw/main/readmes/playlist_manager.pdf" target="_blank" class="image fit" type="application/pdf">PDF Manual.</a>
+
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg?include_prereleases
 [codacy_badge]: https://api.codacy.com/project/badge/Grade/329cf09cbffc46618a64d04e51f32011
