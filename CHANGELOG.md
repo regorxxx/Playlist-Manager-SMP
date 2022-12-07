@@ -47,6 +47,7 @@
 - UI: multiple playlist selection. Using any other mouse shortcut will apply the action to the entire selection, instead of a single playlist. Opening the playlist menu (L. Click) while using multiple selection, will display a different list of actions to apply to the entire selection.
 - UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists filtered by type, categories, tags...
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
+- UI: new 'Find current selection' menu entry, on R. Click, to find the selected tracks on the tracked playlists. A report is shown with category and playlist name.
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 - Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
 ### Changed
