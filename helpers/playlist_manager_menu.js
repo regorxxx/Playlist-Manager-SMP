@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/22
+//07/12/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_properties.js');
@@ -73,25 +73,21 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
 		menu.newEntry({entryText: (!bIsLockPls) ? 'Rename...' : (bIsAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
-			let newName = '';
-			try {newName = utils.InputBox(window.ID, 'Rename playlist', window.Name, pls.name, true);} 
-			catch(e) {return;}
-			if (!newName.length) {return;}
-			renamePlaylist(list, z, newName);
+			const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
+			if (input === null) {return;}
+			renamePlaylist(list, z, input);
 		}});
 	}
 	{	// Edit and update
 		if (isAutoPls()) {
 			// Change AutoPlaylist sort
 			menu.newEntry({entryText: 'Edit sort pattern...', func: () => {
-				let newSort = '';
-				try {newSort = utils.InputBox(window.ID, 'Enter sort pattern (optional):\n\nStart with \'SORT BY\', \'SORT ASCENDING BY\', ...', window.Name, pls.sort);}
-				catch(e) {return;}
 				let bDone = false;
-				if (newSort.length && !newSort.match(/SORT.*$/)) {fb.ShowPopupMessage('Sort not valid:\n' + newSort, window.Name); return;}
-				if (newSort !== pls.sort) { // Pattern
+				const input = Input.string('string', pls.sort, 'Enter sort pattern (optional):\n\nStart with \'SORT BY\', \'SORT ASCENDING BY\', ...', window.Name, 'SORT BY GENRE', [(s) => !s.length || s.match(/SORT.*$/)], false);
+				if (input === null && !Input.isLastEqual) {return;}
+				if (input !== null) {
 					list.editData(pls, {
-						sort: newSort,
+						sort: input,
 					});
 					bDone = true;
 				}
@@ -104,7 +100,7 @@ function createMenuLeft(forcedIndex = -1) {
 						bDone = true;
 					}
 				}
-				if (bDone) {bDone = pls.extension === '.xsp' ? rewriteXSPSort(pls, newSort) : true;}
+				if (bDone) {bDone = pls.extension === '.xsp' ? rewriteXSPSort(pls, input) : true;}
 				if (bDone) {
 					list.update(true, true);
 					list.filter();
@@ -131,20 +127,16 @@ function createMenuLeft(forcedIndex = -1) {
 			}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
 			if (pls.extension === '.xsp') {
 				menu.newEntry({entryText: 'Edit limit...', func: () => {
-					let input = '';
-					try {input = Number(utils.InputBox(window.ID, 'Enter number of tracks', window.Name, pls.limit, true));}
-					catch(e) {return;}
-					if (isNaN(input)) {return;}
+					let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name, 50);
+					if (input === null) {return;}
 					if (!Number.isFinite(input)) {input = 0;}
-					if (input !== pls.limit) {
-						const bDone = rewriteXSPLimit(pls, input);
-						if (bDone) {
-							list.editData(pls, {
-								limit: input,
-							});
-							list.update(true, true);
-							list.filter();
-						}
+					const bDone = rewriteXSPLimit(pls, input);
+					if (bDone) {
+						list.editData(pls, {
+							limit: input,
+						});
+						list.update(true, true);
+						list.filter();
 					}
 				}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
 			}
@@ -189,10 +181,9 @@ function createMenuLeft(forcedIndex = -1) {
 		{	// Set category
 			const menuName = menu.newMenu('Set category...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({menuName, entryText: 'New category...', func: () => {
-				let category = '';
-				try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, pls.category !== null ? pls.category : '', true);} 
-				catch(e) {return;}
-				if (pls.category !== category) {setCategory(category, list, z);}
+				const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name, 'My category');
+				if (input === null) {return;}
+				setCategory(input, list, z);
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
 			list.categories().forEach((category, i) => {
@@ -205,11 +196,9 @@ function createMenuLeft(forcedIndex = -1) {
 		{	// Set tag(s)
 			const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
-				let tags = '';
-				try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, pls.tags.join(';'), true);} 
-				catch(e) {return;}
-				tags = tags.split(';').filter(Boolean); // This filters blank values
-				if (!isArrayEqual(pls.tags, tags)) {setTag(tags, list, z);}
+				const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name, '["TagA","TagB"]', void(0), true);
+				if (input === null) {return;}
+				setTag(input, list, z);
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
 			let bAddId = false;
@@ -911,6 +900,29 @@ function createMenuRight() {
 			}});
 		}
 	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Find selection
+		menu.newEntry({entryText: 'Find current selection...', func: () => {
+			const found = [];
+			for (let i = 0; i < list.itemsAll; i++) {
+				if (list.checkSelectionDuplicatesPlaylist({playlistIndex: i, bAlsoHidden: true})) {
+					found.push({name: list.dataAll[i].name, category: list.dataAll[i].category});
+				}
+			}
+			found.sort((a, b) => a.category.localeCompare(b.category));
+			for (let i = 0, prevCat = null; i < found.length; i++) {
+				if (prevCat !== found[i].category) {prevCat = found[i].category; found.splice(i, 0, found[i].category);}
+			}
+			for (let i = 0; i < found.length; i++) {
+				if (found[i].name) {
+					found[i] = '\t- ' + found[i].name;
+				} else {
+					found[i] = (found[i] || 'No category') + ':';
+				}
+			}
+			fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\nSelected tracks found on these playlists:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+		}});
+	}
 	return menu;
 }
 
@@ -1321,11 +1333,8 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, 'Use RegExp for title matching?', void(0), () => {return list.bAdvTitle;});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
-				let input = [];
-				try {input = JSON.parse(utils.InputBox(window.ID, 'Enter tag(s) or TF expression(s):\n(sep by comma)', window.Name, JSON.stringify(list.removeDuplicatesAutoPls), true));}
-				catch (e) {return;}
-				if (input) {input = input.filter((n) => n);}
-				if (isArrayEqual(input, list.removeDuplicatesAutoPls)) {return;}
+				const input = Input.json('array strings', list.removeDuplicatesAutoPls, 'Enter tag(s) or TF expression(s):\n(JSON)', window.Name, '["$ascii($lower($trim(%TITLE%)))","ARTIST","$year(%DATE%)"]', void(0), true);
+				if (input === null) {return;}
 				list.removeDuplicatesAutoPls = input;
 				list.properties.removeDuplicatesAutoPls[1] = JSON.stringify(list.removeDuplicatesAutoPls);
 				overwriteProperties(list.properties);
