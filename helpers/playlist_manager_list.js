@@ -268,7 +268,7 @@ function _list(x, y, w, h) {
 			// Add playing now indicator
 			let playlistDataTextRight = '';
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
-			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === pls.isAutoplaylist) {
+			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoplaylist) { // If missing it's false
 				if (fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
 				// Add loaded indicator
 				else {playlistDataTextRight += loadedChar;}
