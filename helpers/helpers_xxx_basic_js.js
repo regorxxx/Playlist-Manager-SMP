@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/22
+//21/11/22
 
 // https://github.com/angus-c/just
 /*
@@ -87,46 +87,40 @@ function randomString(len, charSet) {
 // Repeat execution indefinitely according to interval (ms). Ex:
 // const repeatedFunction = repeatFn(function, ms);
 // repeatedFunction(arguments);
-const repeatFn = (fn, ms) => {
-	return (ms > 0 && Number.isFinite(ms) ? (...args) => {return setInterval(fn.bind(this, ...args), ms);} : () => {return null;});
+const repeatFn = (fn, ms, parent = this) => {
+	return (ms > 0 && Number.isFinite(ms) ? (...args) => {return setInterval(fn.bind(parent, ...args), ms);} : () => {return null;});
 };
 
 // Delay execution according to interval (ms). Ex:
 // const delayedFunction = delayFn(function, ms);
 // delayedFunction(arguments);
-const delayFn = (fn, ms) => {
-	return (ms >= 0 && Number.isFinite(ms) ? (...args) => {return setTimeout(fn.bind(this, ...args), ms);} : () => {return null;});
+const delayFn = (fn, ms, parent = this) => {
+	return (ms >= 0 && Number.isFinite(ms) ? (...args) => {return setTimeout(fn.bind(parent, ...args), ms);} : () => {return null;});
 };
 
 // Halt execution if trigger rate is greater than delay (ms), so it fires only once after successive calls. Ex:
-// const debouncedFunction = debounce(function, delay[, immediate]);
+// const debouncedFunction = debounce(function, delay[, immediate, parent]);
 // debouncedFunction(arguments);
-const debounce = (fn, delay, immediate) => {
+const debounce = (fn, delay, immediate = false, parent = this) => {
 	let timerId;
 	return (...args) => {
-		const boundFunc = fn.bind(this, ...args);
+		const boundFunc = fn.bind(parent, ...args);
 		clearTimeout(timerId);
-		if (immediate && !timerId) {
-			boundFunc();
-		}
+		if (immediate && !timerId) {boundFunc();}
 		const calleeFunc = immediate ? () => {timerId = null;} : boundFunc;
 		timerId = setTimeout(calleeFunc, delay);
 	};
 };
 
 // Limit the rate at which a function can fire to delay (ms).
-// var throttledFunction = throttle(function, delay[, immediate]);
+// var throttledFunction = throttle(function, delay[, immediate, parent]);
 // throttledFunction(arguments);
-const throttle = (fn, delay, immediate) => {
+const throttle = (fn, delay, immediate = false, parent = this) => {
 	let timerId;
 	return (...args) => {
-		const boundFunc = fn.bind(this, ...args);
-		if (timerId) {
-			return;
-		}
-		if (immediate && !timerId) {
-			boundFunc();
-		}
+		const boundFunc = fn.bind(parent, ...args);
+		if (timerId) {return;}
+		if (immediate && !timerId) {boundFunc();}
 		timerId = setTimeout(() => {
 			if(!immediate) {
 				boundFunc(); 

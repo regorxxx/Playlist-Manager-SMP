@@ -1,78 +1,101 @@
 ﻿'use strict';
-//10/12/21
+//26/11/22
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_properties.js');
 
-function _popup({w = window.Width , h = window.Height, UI = 'MATERIAL', properties = {}, x = 0, y = 0} = {}) {
+function _popup({
+		x = 0, y = 0,
+		w = window.Width, h = window.Height,
+		offsetX = 0,
+		offsetY = 0,
+		UI = 'MATERIAL',
+		scale = 1,
+		configuration = {/* bEnabled, border: {enabled}, icon: {enabled, step}, ttText, popText, color, fontSize*/}
+	} = {}) {
 	const tooltip = new _tt('');
 	
 	const UIMethod = {
 		material: () => {
-			this.panelColor = 0xF0F0F00; // Light grey
-			this.textColor = 0xFF4354AF; // Blue
-			this.popupColor = opaqueColor(RGB(241, 241, 240), 80); // Light grey
-			this.borderColor = opaqueColor(invert(this.popupColor), 100);
+			this.color.panel = 0xF0F0F00; // Light grey
+			this.color.text = 0xFF4354AF; // Blue
+			this.color.popup = opaqueColor(RGB(241, 241, 240), 80); // Light grey
+			this.color.border = opaqueColor(invert(this.color.popup), 100);
+			this.color.icon = this.color.text;
 		},
 		default: () => {
-			this.panelColor = opaqueColor(0XFFCBC5C5, 30); // Grey tinted (r)
-			this.textColor = 0xFF000000; // Black
-			this.popupColor = opaqueColor(tintColor(this.panelColor || RGB(0, 0, 0), 20), 80);
-			this.borderColor = opaqueColor(invert(this.popupColor), 50);
+			this.color.panel = opaqueColor(0XFFCBC5C5, 30); // Grey tinted (r)
+			this.color.text = 0xFF000000; // Black
+			this.color.popup = opaqueColor(tintColor(this.color.panel || RGB(0, 0, 0), 20), 80);
+			this.color.border = opaqueColor(invert(this.color.popup), 50);
+			this.color.icon = this.color.text;
 		},
 	};
 	
-	this.properties = properties;
-	this.fontSize = typeof this.properties.fontSize !== 'undefined' ? this.properties.fontSize[1] : _scale(10);
-	this.gFont = _gdiFont('Segoe UI', this.fontSize, FontStyle.Bold);
+	this.configuration = configuration || {};
+	this.fontSize = _scale(10);
 	this.UI = UI.toLowerCase();
+	this.color = {};
 	UIMethod[this.UI]();
 	this.w = w;
 	this.h = h;
 	this.x = x;
 	this.y = y;
 	this.bEnabled = false;
-	this.icon = {};
-	this.icon.enabled = false;
-	this.icon.step = 0;
-	this.border = {};
-	this.border.enabled = true;
+	this.icon = {enabled: false, step: 0};
+	this.border = {enabled: true};
 	this.ttText = '';
 	this.popText = '';
+	this.scale = scale;
+	if (configuration) {
+		const configKeys = new Set(['bEnabled', 'border', 'icon', 'ttText', 'popText', 'color', 'fontSize']);
+		for (let key in configuration) {
+			if (configKeys.has(key) && this.hasOwnProperty(key)) {
+				if (key === 'border' || key === 'icon' || key === 'color') {this[key] = {...this[key], ...configuration[key]};}
+				else {this[key] = configuration[key];}
+			}
+		}
+	}
+	this.fontSize *= scale;
+	this.gFont = _gdiFont('Segoe UI', this.fontSize, FontStyle.Bold);
 	
 	// Paint
 	this.paint = (gr) => { // on_paint
 		if (!this.w || !this.h) {return;}
 		if (!this.bEnabled) {return;}
-		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.panelColor);
-		const scaleX = 0.75;
-		const scaleY = 1 / 2;
+		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.color.panel);
+		const scaleX = 0.75 * scale;
+		const scaleY = 1 / 2 * scale;
 		let sizeIcon = 0, size = 0, centerX = 0, centerY = 0, count = 0;
 		if (this.icon.enabled) {
-			sizeIcon = Math.round(Math.min(this.w / 15, this.h / 15));
+			sizeIcon = Math.round(Math.min(this.w / 15, this.h / 15)) * scale;
 			size = Math.round(sizeIcon / 2);
-			centerX = this.x + this.w / 2 - sizeIcon / 2;
-			centerY = this.y + this.h / 2 + sizeIcon;
+			centerX = this.x + this.w / 2 - sizeIcon / 2 + offsetX;
+			centerY = this.y + this.h / 2 + sizeIcon + offsetY;
 			count = 8;
 		}
 		let sizeX = Math.round(scaleX * this.w / 2);
 		let sizeY = Math.round(scaleY * this.h / 3) + sizeIcon * 3;
 		let textOffset = scaleX * this.w * 1 / 20;
-		let popX = this.x + this.w / 2 - sizeX / 2;
-		let popY = this.y + this.h / 2 - sizeY / 2;
+		let popX = this.x + this.w / 2 - sizeX / 2 + offsetX;
+		let popY = this.y + this.h / 2 - sizeY / 2 + offsetY;
+		let textX = popX;
+		let textY = popY;
+		if (popX < this.x) {popX = this.y + (this.w - sizeX + offsetX) / 2;}
+		if (popY < this.y) {popY = this.y + (this.h - sizeY + offsetY) / 2;}
 		// Draw the box
 		if (this.border.enabled) {
-			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, this.popupColor);
-			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, this.borderColor);
+			gr.FillRoundRect(popX, popY, sizeX + offsetX, sizeY - offsetY, sizeX / 6 + offsetX, sizeY / 2 + offsetY, this.color.popup);
+			gr.DrawRoundRect(popX, popY, sizeX + offsetX, sizeY - offsetY, sizeX / 6 + offsetX, sizeY / 2 + offsetY, 1, this.color.border);
 		}
 		// Draw the text
 		if (this.popText && this.popText.length) {
 			if (this.icon.enabled) {
-				gr.GdiDrawText(this.popText, this.gFont, this.textColor, popX + textOffset, popY + sizeIcon, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+				gr.GdiDrawText(this.popText, this.gFont, this.color.text, textX + textOffset, textY + sizeIcon, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 			} else {
-				gr.GdiDrawText(this.popText, this.gFont, this.textColor, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				gr.GdiDrawText(this.popText, this.gFont, this.color.text, textX + textOffset, textY, sizeX - textOffset * 2, sizeY, CENTRE);
 			}
 		}
 		if (this.icon.enabled) {
@@ -80,7 +103,7 @@ function _popup({w = window.Width , h = window.Height, UI = 'MATERIAL', properti
 				const x = centerX + (Math.sin(Math.PI * 2 / count * i) * sizeIcon);
 				const y = centerY + (Math.cos(Math.PI * 2 / count * i) * sizeIcon);
 				const step = cyclicOffset(this.icon.step, i, [0,count]);
-				gr.FillEllipse(x, y, size, size, opaqueColor(0xFF4354AF, Math.round(count / step * 10)));
+				gr.FillEllipse(x, y, size, size, opaqueColor(this.color.icon, Math.round(count / step * 10)));
 			}
 			this.icon.step = cyclicOffset(this.icon.step, 1, [0,count]);
 			setTimeout(() => {return window.Repaint();}, 400);

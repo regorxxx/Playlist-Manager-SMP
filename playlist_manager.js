@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/22
+//21/11/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -179,11 +179,13 @@ setProperties(properties, 'plm_');
 let panel = new _panel(true);
 let list = new _list(LM, TM, 0, 0);
 // Popups
-const pop = new _popup({x: 0, y: 0, w: 0, h: 0});
-pop.panelColor = opaqueColor(0xFF4354AF, 30); // Blue overlay
-pop.textColor = invert(panel.getColorBackground(), true);
-pop.border.enabled = false; // Just overlay without a popup
-pop.icon.enabled = true; // Enable animation
+const pop = new _popup({
+	configuration: {
+		border: {enabled: false}, // Just overlay without a popup
+		icon: {enabled: true}, // Enable animation
+		color: {panel: opaqueColor(0xFF4354AF, 30), text: invert(panel.getColorBackground(), true)} // Blue overlay
+	}
+});
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
 
 // Tracking a network drive?

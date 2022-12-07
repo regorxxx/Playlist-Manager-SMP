@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/08/22
+//04/12/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -10,14 +10,24 @@ let conLogThrottling = 100; // Interval to flush to console, in ms. Setting to z
 
 let conLogTimer; // Interval use.
 let conLogCache = []; // Internal use.
+const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
 
 // Override logging
 function consoleLog() {
 	const bCache = conLogCache.length !== 0;
+	const today = new Date().toLocaleDateString();
 	let log = '';
+	let lastMod = null;
 	// Load previous log
 	console.checkSize();
-	if (utils.IsFile(conLog)) {try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {/* continue regardless of error */}}
+	if (utils.IsFile(conLog)) {
+		try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {/* continue regardless of error */}
+		lastMod = new Date(fsoCL.GetFile(conLog).DateLastModified).toLocaleDateString();
+	}
+	// Add dd/mm/yyyy
+	if (lastMod !== today) {
+		log += (log && log.length ? '\n' : '') + '--------->' + today + '<---------';
+	}
 	// Add HH:MM:SS
 	const stamp = bCache ? '' : '[' + new Date().toLocaleTimeString() + ']';
 	log += (log && log.length ? '\n' : '') + (bCache ? '' : stamp);

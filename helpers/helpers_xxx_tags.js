@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/10/22
+//07/12/22
 
 include('helpers_xxx.js');
 
@@ -50,11 +50,16 @@ function sanitizeTagTfo(tag) {
 	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[\]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\''); // TODO .replace(/,/g,'\',\'')
 }
 
+// Quote value if needed
+function sanitizeQueryVal(val) {
+	return (val.match(/\(|\)/g) ? _q(val) : val);
+}
+
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
 function queryReplaceWithCurrent(query, handle) {
 	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return;}
-	if (query.indexOf('#') !== -1 && !handle) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
+	else if (!handle) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
 	if (query.indexOf('#') !== -1) {
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
@@ -160,9 +165,9 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 			let i = 0;
 			while (i < tagsArrayLength) {
 				if (i === 0) {
-					query += queryKey + ' ' + match + ' ' + tagsArray[0];
+					query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[0]);
 				} else {
-					query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + tagsArray[i];
+					query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i]);
 				}
 				i++;
 			}
@@ -180,9 +185,9 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 				let j = 0;
 				while (j < k) {
 					if (j === 0) {
-						query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + tagsArray[i][0]; // only adds pharentesis when more than one subtag! Estetic fix...
+						query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][0]); // only adds pharentesis when more than one subtag! Estetic fix...
 					} else {
-						query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' '+ tagsArray[i][j];
+						query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' '+ sanitizeQueryVal(tagsArray[i][j]);
 					}
 					j++;
 				}

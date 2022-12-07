@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/09/22
+//04/12/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -13,47 +13,50 @@
 		_menu({bSupressDefaultMenu: true, idxInitial: 0})
 			-bSupressDefaultMenu:	Suppress the default context menu. left shift + left windows key will bypass it. 
 			-idxInitial:			Specifies an initial idx to create menus (useful to concatenate multiple menus objects)
-			
+			-bAddInvisibleIds:		When trying to add multiple (sub)menus with same name (and different parent), an invisible ID 
+										may be added to allow it. .newMenu() will return the final name in such case.
+		
 		.btn_up(x, y, [object])
-			-NOTE: 		Called within callbacks to create the menu. Specifying an object or array of objects (like another menu instances), 
-						lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries
+			-NOTE: 					Called within callbacks to create the menu. Specifying an object or array of objects 
+										(like another menu instances), lets you concatenate multiple menus. Uses object.btn_up()
+										and object.btn_up_done() on manually added entries
+		
 		.getMainMenuName()
-			-NOTE:		Used to get the key of the main menu. Useful to concatenate multiple menus.
+			-NOTE:					Used to get the key of the main menu. Useful to concatenate multiple menus.
 	
 		.newMenu(menuName = 'main', subMenuFrom = 'main')
-			-menuName:	Specifies the menu name or submenus names. 
-			-NOTE:		Menu is called 'main' when it's called without an argument.
-			-NOTE:		Every menu created will be appended to the main menu, unless provided another 'subMenuFrom' value.
+			-menuName:				Specifies the menu name or submenus names. 
+			-NOTE:					Menu is called 'main' when it's called without an argument.
+			-NOTE:					Every menu created will be appended to the main menu, unless provided another 'subMenuFrom' value.
 			
 		.newEntry({entryText: null, func: null, menuName: menuArr[0], flags: MF_STRING})
-			-entryText: new menu entry text. Using 'sep' or 'separator' adds a dummy separator.
-			-func: 		function associated to that entry
-			-menuName:	to which menu/submenu the entry is associated. Uses main menu when not specified
-			-flags:		flags for the text 
-			-NOTE:		All arguments (but 'func') may be a variable or a function (evaluated when creating the menu)
+			-entryText: 			new menu entry text. Using 'sep' or 'separator' adds a dummy separator.
+			-func: 					function associated to that entry
+			-menuName:				to which menu/submenu the entry is associated. Uses main menu when not specified
+			-flags:					flags for the text 
+			-NOTE:					All arguments (but 'func') may be a variable or a function (evaluated when creating the menu)
 		
 		.newCheckMenu(menuName, entryTextA, entryTextB, idxFunc)
-			-menuName:	to which menu/submenu the check is associated
-			-entryTextA:From entry A (idx gets calculated automatically)
-			-entryTextB:To entry B (idx gets calculated automatically)
-			-idxFunc:	Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return values between 0 and 5.
-			-NOTE:		All arguments (but 'idxFunc') may be a variable or a function (evaluated when creating the menu)
+			-menuName:				to which menu/submenu the check is associated
+			-entryTextA:			From entry A (idx gets calculated automatically)
+			-entryTextB:			To entry B (idx gets calculated automatically)
+			-idxFunc:				Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
+										values between 0 and 5.
+			-NOTE:					All arguments (but 'idxFunc') may be a variable or a function (evaluated when creating the menu)
 			
 		.newCondEntry({entryText: '', condFunc})
-			-condFunc:	Function called on .btn_up()
-			-entryText: Just for information
-			-NOTE:		Used to create dynamic menus only when calling the contextual menu, useful to check for tracks selection, etc.
-						You may use any other method like .newMenu(), .newEntry(), etc. within condFunc. Thus creating menus only if required.
+			-condFunc:				Function called on .btn_up()
+			-entryText: 			Just for information
+			-NOTE:					Used to create dynamic menus only when calling the contextual menu, useful to check for tracks
+										selection, etc. You may use any other method like .newMenu(), .newEntry(), etc. within 
+										condFunc. Thus creating menus only if required.
 	Usage:
 		See examples folder.
-						
-	TODO:
-		- Add invisible IDs to entries names (?)
  */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity} = {}) {
+function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true} = {}) {
 	let menuArrTemp = [];
 	let menuArr = [];
 	let menuMap = new Map();
@@ -95,7 +98,16 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
 		if (mType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (smType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (this.hasMenu(menuName)) {menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); throw 'There is already another menu with same name';}
+		if (bAddInvisibleIds) {
+			if (this.hasMenu(menuName, subMenuFrom)) {
+				menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); 
+				throw 'There is already another menu with same name';
+			} else if (this.hasMenu(menuName)) {
+				menuName = menuName + invsId(true); // At this point don't use other name than this!
+			}
+		} else if (this.hasMenu(menuName)) {
+			menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); throw 'There is already another menu with same name';
+		}
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
 		return menuName;
@@ -370,19 +382,49 @@ function menuError({} = {}) {
 
 // Adds a created menu to an already existing object (which is suppposed to have a this.trace function
 // Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
-function _attachedMenu({rMenu = null, lMenu = null} = {}) {
+function _attachedMenu({rMenu = null, lMenu = null, popup = null} = {}) {
 	this.rMmenu = rMenu;
 	this.lMmenu = lMenu;
 	this.rbtn_up = (x,y) => {
 		if (this.trace(x,y) && rMenu) {
-			return this.rMmenu().btn_up(x, y);
+			return popup && popup.isEnabled() ? false : this.rMmenu().btn_up(x, y);
 		}
 		return false;
 	}
 	this.lbtn_up = (x,y) => {
 		if (this.trace(x,y) && lMenu) {
-			return this.lMmenu().btn_up(x, y);
+			return popup && popup.isEnabled() ? false : this.lMmenu().btn_up(x, y);
 		}
 		return false;
 	}
 }
+
+const invsId = (function() {
+		let nextIndex = [0,0,0,0,0];
+		const chars = hiddenChars;
+		const num = chars.length;
+		let prevId = nextIndex.length;
+		return function(bNext = true) {
+			if (!bNext) {return prevId;}
+			let a = nextIndex[0];
+			let b = nextIndex[1];
+			let c = nextIndex[2];
+			let d = nextIndex[3];
+			let e = nextIndex[4];
+			let id = chars[a] + chars[b] + chars[c] + chars[d] + chars[e];
+			a = ++a % num;
+			if (!a) {
+				b = ++b % num; 
+				if (!b) {
+					c = ++c % num;
+					if (!c) {
+						d = ++d % num;
+						if (!d) {e = ++e % num;}
+					}
+				}
+			}
+			nextIndex = [a, b, c, d, e];
+			prevId = id;
+			return id;
+		};
+}());
