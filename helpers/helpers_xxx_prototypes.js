@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/12/22
+//12/12/22
 
 /* 
 	Objects
@@ -37,7 +37,7 @@ function roughSizeOfObject(object) {
 			objectList.push(value);
 			for (let i in value) {if (!value.hasOwnProperty(i)) {continue;} stack.push(value[i]);}
 		}
-	}
+	} // TODO Handle lists? TF?
 	return bytes;
 }
 
@@ -118,6 +118,11 @@ String.prototype.count = function count(c) {
 function capitalize(s) {
 	if (!isString(s)) {return '';}
 	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+function capitalizePartial(s) {
+	if (!isString(s)) {return '';}
+	return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
@@ -225,7 +230,7 @@ Array.prototype.rotate = (function() {
 	};
 })();
 
-Array.prototype.swap = function (i, j) { 
+Array.prototype.swap = function(i, j) { 
 	[this[i], this[j]] = [this[j], this[i]];
 	return this;
 };

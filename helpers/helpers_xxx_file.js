@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/22
+//19/12/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -248,6 +248,7 @@ function _save(file, value, bBOM = false) {
 	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) {_createFolder(filePath);}
+	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2,1) > 110) {console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.Name + ': JSON saving');}
 	if (_isFolder(filePath) && utils.WriteTextFile(file, value, bBOM)) {
 		return true;
 	}
@@ -292,10 +293,13 @@ function _jsonParseFileSplit(filePath, reportName = 'Json', popupName = window.N
 	const [path, fileName, extension] = utils.SplitFilePath(filePath);
 	const files = utils.Glob(path + '\\' + fileName + '*' + extension);
 	let result = [];
+	const rgex = new RegExp(fileName + '[0-9]*' + extension); // Only allow numbers as suffix
 	for (let file of files) {
-		const data = _jsonParseFile(file, codePage);
-		if (data) {result = result.concat(data);}
-		else {return null;}
+		if (rgex.test(file)) {
+			const data = _jsonParseFile(file, codePage);
+			if (data) {result = result.concat(data);}
+			else {return null;}
+		}
 	}
 	return result;
 }
@@ -370,12 +374,12 @@ function _exec(command) {
 	const execObj = WshShell.Exec(command);
 	return new Promise((res, rej) => {
 		const intervalID = setInterval(() => {
-            switch (execObj.Status) {
-                case 2: rej(execObj.StdErr.ReadAll()); break;
-                case 1: res(execObj.StdOut.ReadAll()); break;
-                default: return; // do nothing
-            }
-            clearInterval(intervalID);
+			switch (execObj.Status) {
+				case 2: rej(execObj.StdErr.ReadAll()); break;
+				case 1: res(execObj.StdOut.ReadAll()); break;
+				default: return; // do nothing
+			}
+			clearInterval(intervalID);
 		}, 50);
 	});
 }

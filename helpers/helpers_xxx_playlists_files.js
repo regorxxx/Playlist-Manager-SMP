@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/10/22
+//19/12/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -9,7 +9,7 @@ include('helpers_xxx_tags.js');
 include('helpers_xxx_playlists.js');
 include('helpers_xxx_playlists_files_xspf.js');
 include('helpers_xxx_playlists_files_xsp.js');
-var regExListenBrainz = /^(https:\/\/listenbrainz.org\/)|(recording)|(playlist)|\//g;
+var regExListenBrainz = /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 
 /* 
 	Global Variables 

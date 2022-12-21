@@ -24,7 +24,7 @@
 		.getMainMenuName()
 			-NOTE:					Used to get the key of the main menu. Useful to concatenate multiple menus.
 	
-		.newMenu(menuName = 'main', subMenuFrom = 'main')
+		.newMenu(menuName = 'main', subMenuFrom = 'main', flags = MF_STRING)
 			-menuName:				Specifies the menu name or submenus names. 
 			-NOTE:					Menu is called 'main' when it's called without an argument.
 			-NOTE:					Every menu created will be appended to the main menu, unless provided another 'subMenuFrom' value.

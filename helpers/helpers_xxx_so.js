@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/22
+//17/12/22
 
 /* 
 	Global tags, queries, RegExp
@@ -109,8 +109,8 @@ function initCheckFeatures(soFeat) {
 		data = soFeat;
 		bCheck = true;
 	} else {
-		for (let key in data) {
-			if (!soFeat.hasOwnProperty(key) || data[key] !== soFeat[key]) {bCheck = true; break;}
+		for (let key in soFeat) {
+			if (!data.hasOwnProperty(key) || data[key] !== soFeat[key]) {bCheck = true; break;}
 		}
 	}
 	if (bCheck) {

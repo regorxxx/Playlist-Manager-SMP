@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/22
+//19/12/22
 
 include('helpers_xxx_prototypes.js');
 
@@ -7,10 +7,10 @@ include('helpers_xxx_prototypes.js');
 	Playlist manipulation 
 */
 
-// Outputs indexes of all playlists with that name
-function playlistCountNoLocked(type = []) {
+// Count locked playlist by type
+function playlistCountLocked(type = []) {
 	const playlistsNum = plman.PlaylistCount;
-	const bAll = type.length ? true : false;
+	const bAll = type.length ? false : true;
 	let count = 0;
 	for (let i = 0; i < playlistsNum; i++) {
 		const lockActions = plman.GetPlaylistLockedActions(i);

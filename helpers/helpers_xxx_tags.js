@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/12/22
+//16/12/22
 
 include('helpers_xxx.js');
 
@@ -89,10 +89,12 @@ function queryReplaceWithCurrent(query, handle) {
 					const breakPoint = interText.lastIndexOf(' (');
 					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => {return s !== '(';})) : '';
 					const interQuery = interQueryStart + interQueryEnd;
-					const multiQuery  = tfoVal.split('#').map((val) => {return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + val;});
+					const multiQuery  = tfoVal.split('#').map((val) => {
+						return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + sanitizeQueryVal(val);
+					});
 					tempQuery += interQuery + query_join(multiQuery, 'AND');
 				} else {
-					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + tfoVal;
+					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + sanitizeQueryVal(tfoVal);
 				}
 			}
 			query = startQuery + tempQuery + endQuery;
@@ -156,7 +158,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 		}
 		let tagsArrayLength = tagsArray.length;
 		let query = '';
-		let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]' ? 1 : 0; //subtagsArray
+		let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
 		if (!isArray) { //no subtagsArrays
 			if (logicDic.indexOf(tagsArrayLogic) === -1) {
 				console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
@@ -206,7 +208,7 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 		queryNoSort = stripSort(query);
 		if (!queryNoSort.length || queryNoSort !== query && !checkSort(query.replace(queryNoSort, ''))) {return false;}
 	}
-	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}
+	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}  // Test query against empty handle list since it's much faster!
 	catch (e) {bPass = false;}
 	if (!bAllowPlaylist && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
 	return bPass;
