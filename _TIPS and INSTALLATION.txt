@@ -20,7 +20,9 @@ For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scrip
 For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  (**)
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
-Then load any script into a SMP panel within foobar ('File' as script source). See info for usage.
+
+Then load any script found on the root folder into a SMP panel within foobar ('File' as
+script source). Check 'INFO' section (at bottom) for usage.
 
 Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section 
 for more details, the github page or the related pdf documentation at 'readmes' folder (if available).
@@ -105,148 +107,89 @@ Camelot Wheel notation with colors).
 		- DUI
 		- CUI
 	- World Map: pre-filled database with artist/country tags
+
 INFO: 
 -----
 This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist
 Manager, Search By Distance, World Map and Playlist Tools). And a collection of small utilities and/or
-buttons (search same by..., top tracks, remove duplicates, device priority, etc.). 
+buttons (quicksearch, top tracks, remove duplicates, device priority, etc.). 
 All files have extensive comments and descriptions at the header and all along the code, so you can 
 check specific info about what everything does in its own file.
 
-There is a thread at hydrogenaud.io which contains several images and explanations of what each thing
- does while it was work in progress (now you have github).
-https://hydrogenaud.io/index.php?topic=120394
-
-The '_images' folder shows screenshots to show how the scripts look in my pc:
+Every script has a github page with images, descriptions, etc. and updates must be get from there.
 
 The root folder (with this readme) contains these scripts which can be loaded in any panel directly:
-	+ playlist_manager.js (*)[+]
-		- Playlist manager requires some fonts.
+	+ playlist_manager.js [+]
+		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-manager-smp/
+		- Full documentation available on PDF. See '.\readmes' folder.
+		- Requires some fonts.
 			- _resources\fontawesome-webfont.ttf
-	+ world_map.js (*)[+]
-		- May be used along Biography 1.1.X or 1.2.X
+	+ world_map.js [+]
+		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/world-map-smp/
+		- May be used along Biography 1.1.X or 1.2.X+
 		- A pre-built artist-country database is provided: 
 			_resources\worldMap.json
-	+ buttons_playlist_tools.js (*)
-		- Independend button for Playlist Tools..
-		- Is a duplicate of '.\buttons\buttons_playlist_tools.js'
-		- Playlist manager requires some fonts.
-			- _resources\fontawesome-webfont.ttf (optional)
-	+ buttons_toolbar.js (*)
-		- Has buttons for Search By Distance, Playlist Tools and others.
-		- Toolbar which which with fully configurable buttons using menu.
-		- May use any of the buttons \ tools listed below.
-		- Is a duplicate of '.\buttons\toolbars\_buttons_toolbar.js'
+	+ buttons_toolbar.js [+]
+		- Compatible with:
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-tools-smp/ [+]
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/search-by-distance-smp/ [+]
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/device-priority-smp/
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/listenbrainz-smp/
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/auto-dj-smp/
+		- Toolbar with fully configurable buttons using menus.
+		- May use any of the buttons \ tools listed below. Missing buttons are skipped.
 		- Every button and tool has a readme which will be shown when you add them.
+		- Future scripts may be added and will be fully compatible with it.
 		- Requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
+	+ Draw Graph.html
+		- ALSO READ: helpers\music_graph_descriptors_xxx.js
+		- ALSO SEE: search_by_distance.js
+		- NOT meant to be used within foobar.
+		- Load the file in any browser to use it.
 
-The main folder (the one named 'main') contains these scripts (without UI). Linked buttons (for panels)
-are listed below for convenience:
-	+ .\main\playlist_tools_menu.js [+]
-		- .\buttons\buttons_playlist_tools.js (*)
-		- Playlist Tools button requires some fonts.
-			- _resources\fontawesome-webfont.ttf (optional)
-		- Includes all these script too:
-			+ .\main\top_tracks.js
-				- .\buttons\buttons_search_top_tracks.js (*)
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ .\main\top_tracks_from_date.js
-				- .\buttons\buttons_search_top_tracks_from_date.js (*)
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ .\main\tags_automation.js
-				- .\buttons\buttons_tags_automation.js (*)
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ .\main\search_same_by.js
-				- .\buttons\buttons_search_same_by.js (*)
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ .\main\search_same_style_moods.js
-				- .\buttons\buttons_search_same_style_moods.js (*)
-			+ .\main\search_same_style.js
-				- .\buttons\buttons_search_same_style.js (*)
-			+ .\main\search_bydistance.js [+]
-				- ALSO READ: helpers\music_graph_descriptors_xxx.js
-				- ALSO SEE: Draw Graph.html
-				- .\buttons\buttons_search_bydistance_customizable.js (*) (configurable with menus)
-				- .\buttons\buttons_search_bydistance_DYNGENRE.js (*) (pre-configured)
-				- .\buttons\buttons_search_bydistance_GRAPH.js (*) (pre-configured)
-				- .\buttons\buttons_search_bydistance_WEIGHT.js (*) (pre-configured)
-				- .\buttons\buttons_search_bydistance.js (*) (uses properties panel for config)
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ Draw Graph.html
-				- ALSO READ: helpers\music_graph_descriptors_xxx.js
-				- ALSO SEE: search_bydistance.js
-				- NOT meant to be used within foobar.
-				- Load the file in any browser to use it.
-			+ .\main\remove_duplicates.js
-				- .\buttons\buttons_remove_duplicates.js (*)
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ mainmenu_edit.js (*)
-				- ALSO SEE: skip_tag_from_playback.js
-				- Adds menu entries to File menu.
-			+ .\main\skip_tag_from_playback.js
-				- ALSO SEE: mainmenu_edit.js
-				- Meant to be used along standard foobar buttons.
-				- Link button to File\Spider Monkey Panel\x...
-			+ .\main\find_remove_from_playlists.js
-				- ALSO SEE: playlist_tools_menu.js
-				- .\buttons\buttons_playlist_tools.js (*)
-			+ .\helpers\playlist_history.js
-				- ALSO SEE: playlist_tools_menu.js
-				- .\buttons\buttons_playlist_history.js (*)
+The buttons folder (the one named 'buttons') contains buttons to be loaded by the toolbar (above):
+	+ Playlist Tools:
+		- .\buttons\buttons_playlist_tools.js (below 3 buttons require this one to be loaded too)
+			- .\buttons\buttons_playlist_tools_macro_custom.js
+			- .\buttons\buttons_playlist_tools_macros.js
+			- .\buttons\buttons_playlist_tools_pool.js
+	+ Search by Distance:
+		- .\buttons\buttons_search_by_distance_customizable.js (configurable with menus)
+		- .\buttons\buttons_search_by_distance.js
+	+ Playlist manipulation:
+		- .\buttons\buttons_remove_duplicates.js
+		- .\buttons\buttons_playlist_filter.js
+		- .\buttons\buttons_playlist_show_duplicates.js
+		- .\buttons\buttons_playlist_history.js
+	+ Output devices:
+		- .\buttons\buttons_others_device_priority.js
+		- .\buttons\buttons_others_device_selector
+	+ Library search:
+		- .\buttons\buttons_search_top_tracks.js
+		- .\buttons\buttons_search_top_tracks_from_date.js
+		- .\buttons\buttons_search_by_tags_combinations.js
+		- .\buttons\buttons_search_by_tags_queries.js
+		- .\buttons\buttons_search_quicksearch.js
+	+ Fingerprinting:
+		- .\buttons\buttons_fingerprint_tools.js
+	+ Auto-DJ:
+		- .\buttons\buttons_others_auto_dj.js
+	+ ListenBrainz:
+		- .\buttons\buttons_listenbrainz_tools.js
+	+ Tagging:
+		- .\buttons\buttons_tags_automation.js
 
-As can be seen, Playlist Tools contains both, its own button (a menu) or individual buttons for the 
-different tools integrated on it. Search By Distance would be one of those scripts integrated too, but
-it's considered also an standalone release because it includes so many things it can be used alone 
-(and again, also has its own buttons to use if desired).
+These buttons may be loaded as standalone scripts, and they should work, but such configuration
+is not supported. Only loading them via the toolbar script. The buttons folder contains multiple
+example files in case anyone wants to create their own buttons using the existing framework.
 
-All these js files (except those with (*)) contain only the functions, i.e. they will not do anything 
-if you load them on a panel. You would need a button, a main menu call, etc. to use them. So they are
-meant to be called by other scripts. If you want to use them as standalone scripts within a panel, 
-check the examples at 'buttons' folder. Those are individual working buttons (check list). Since they 
-are working standalone examples, all are marked with (*).
-	+ .\buttons\buttons_playlist_tools.js (*) (below 4 buttons require this one to be loaded too)
-		+ .\buttons\buttons_playlist_tools_macro_custom.js (*)
-		+ .\buttons\buttons_playlist_tools_macros.js (*)
-		+ .\buttons\buttons_playlist_tools_pool.js (*)
-		+ .\buttons\buttons_playlist_history.js (*)
-	+ .\buttons\buttons_remove_duplicates.js (*)
-	+ .\buttons\buttons_search_bydistance.js (*)
-	+ .\buttons\buttons_search_bydistance_customizable.js (*)
-	+ .\buttons\buttons_search_bydistance_DYNGENRE.js (*)
-	+ .\buttons\buttons_search_bydistance_GRAPH.js (*)
-	+ .\buttons\buttons_search_bydistance_WEIGHT.js (*)
-	+ .\buttons\buttons_search_same_style.js (*)
-	+ .\buttons\buttons_search_same_style_moods.js
-	+ .\buttons\buttons_search_same_by.js (*)
-	+ .\buttons\buttons_search_top_tracks.js (*)
-	+ .\buttons\buttons_search_top_tracks_from_date.js (*)
-	+ .\buttons\buttons_tags_automation.js (*)
-	+ .\buttons\buttons_device_priority.js (*)
-	+ .\buttons\buttons_save_tags.js (*)
-	
-For complete buttons bar with merged buttons, check list below. Adding/removing buttons to create
-your own bar is easy.
-	+ .\main\search_bydistance.js
-		- buttons_toolbar.js (*) (and just configure it to only add related buttons)
-		- .\buttons\toolbars\_buttons_toolbar_sbd_customizable.js (*)
-	+ ALL:
-		- buttons_toolbar.js (*)
-
-The buttons framework has some examples that can be used to create your own combinations of buttons
-and bars. They do nothing by their-selves, since they have no functionality associated (are examples).
-	+ .\buttons\examples\_buttons_panel_blank.js
-	+ .\buttons\examples\_buttons_example_merged_double.js
-	+ .\buttons\examples\_buttons_example_merged.js
-	+ .\buttons\examples\_buttons_example.js
-	+ .\buttons\examples\_buttons_blank_merged.js
-	+ .\buttons\examples\_buttons_blank.js
-	
-The 'helpers' folder contains common files used by most of the scripts. Don't touch or load these alone.
-'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js' and 'dyngenre_map_xxx.js' files,
-are related to 'search_bydistance' & 'search_same_by'. Look at those files to understand what they do. 
-Some users may want to add their own genres/styles at 'music_graph_descriptors_xxx_user.js', to do so a
-copy of the file must be placed at (profile folder) '.\\js_data\\helpers\\' (or use the custom button).
+The 'helpers' and 'main' folder contains common files used by most of the scripts. Don't touch
+or load these alone. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js' 
+and 'dyngenre_map_xxx.js' files, are related to 'Search by Distance' scripts. Look at those 
+files to understand what they do. Some users may want to add their own genres/styles at 
+'music_graph_descriptors_xxx_user.js', to do so a copy of the file must be placed at 
+(profile folder) '.\\js_data\\helpers\\' (this can be done with the customizable button).
 
 The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create 
 graphs within foobar or for html rendering. Read 'music_graph_descriptors_xxx.js' and check 
