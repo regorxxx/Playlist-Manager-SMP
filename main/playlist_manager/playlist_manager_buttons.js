@@ -1,8 +1,8 @@
 ﻿'use strict';
-//15/11/22
+//19/12/22
 
 //Always loaded along other buttons and panel
-include('buttons_panel_xxx.js');
+include('..\\..\\helpers\\buttons_panel_xxx.js');
 var buttonCoordinatesOne = {x: 1, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
 var buttonCoordinatesTwo = {x: () => {return buttonCoordinatesOne.x + buttonCoordinatesOne.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
 var buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + buttonCoordinatesTwo.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 3 - 1;}, h: 22};
@@ -44,13 +44,13 @@ recalcWidth();
 function recalcWidth () {
 	let bResize = false;
 	for (const key in buttonsPanel.buttons) {
-		if (buttonsPanel.buttons.hasOwnProperty(key) && buttonsPanel.buttons[key].hasOwnProperty('method') && buttonsPanel.buttons[key].method === 'Lock state') {bResize = true;}
+		if (buttonsPanel.buttons.hasOwnProperty(key) && buttonsPanel.buttons[key].hasOwnProperty('method') && (buttonsPanel.buttons[key].method === 'Lock state' || buttonsPanel.buttons[key].method === 'MBID')) {bResize = true;}
 	}
 	for (const key in buttonsPanel.buttons) {
 		if (buttonsPanel.buttons.hasOwnProperty(key)) {
 			const button = buttonsPanel.buttons[key];
 			if (button.hasOwnProperty('method')) {
-				if (button.method === 'Lock state') {
+				if (button.method === 'Lock state' || button.method === 'MBID') {
 					button.coord.w = button.w = () => {return window.Width / 7 * 3;};
 				} else if (!bResize) {
 					button.coord.w = button.w = () => {return window.Width / 7 * 2.5;};
@@ -65,11 +65,22 @@ function recalcWidth () {
 // Helpers
 function filterName() {
 	switch (this.method) {
-		case 'Lock state': {
-			return list.lockStates[0];
+		case 'Category': {
+			const states = list.categories();
+			const options = ['All', ...states];
+			const idx = list.categoryState.length === 1 ? options.indexOf(list.categoryState[0]) : -1;
+			const name = idx !== -1 ? options[idx] : isArrayEqual(list.categoryState, states) ? options[0] : 'Multiple...';
+			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
+			return lines[0] !== name ? lines[0] + '...': name;
 		}
 		case 'Extension': {
 			return list.extStates[0];
+		}
+		case 'Lock state': {
+			return list.lockStates[0];
+		}
+		case 'MBID': {
+			return list.mbidStates[0];
 		}
 		case 'Playlist type': {
 			switch (list.autoPlaylistStates[0]) {
@@ -88,28 +99,12 @@ function filterName() {
 			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...': name;
 		}
-		case 'Category': {
-			const states = list.categories();
-			const options = ['All', ...states];
-			const idx = list.categoryState.length === 1 ? options.indexOf(list.categoryState[0]) : -1;
-			const name = idx !== -1 ? options[idx] : isArrayEqual(list.categoryState, states) ? options[0] : 'Multiple...';
-			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
-			return lines[0] !== name ? lines[0] + '...': name;
-		}
 	}
 }
 function doFilter(parent) {
 	switch (parent.method) {
-		case 'Playlist type': {
-			list.autoPlaylistStates.rotate(1);
-			list.update(true, true);
-			list.filter(); // Current filter states
-			break;
-		}
-		case 'Lock state': {
-			list.lockStates.rotate(1);
-			list.update(true, true);
-			list.filter(); // Current filter states
+		case 'Category': {
+			cycleCategories();
 			break;
 		}
 		case 'Extension': {
@@ -129,12 +124,26 @@ function doFilter(parent) {
 			}
 			break;
 		}
-		case 'Tag': {
-			cycleTags();
+		case 'Lock state': {
+			list.lockStates.rotate(1);
+			list.update(true, true);
+			list.filter(); // Current filter states
 			break;
 		}
-		case 'Category': {
-			cycleCategories();
+		case 'MBID': {
+			list.mbidStates.rotate(1);
+			list.update(true, true);
+			list.filter(); // Current filter states
+			break;
+		}
+		case 'Playlist type': {
+			list.autoPlaylistStates.rotate(1);
+			list.update(true, true);
+			list.filter(); // Current filter states
+			break;
+		}
+		case 'Tag': {
+			cycleTags();
 			break;
 		}
 	}
@@ -143,8 +152,11 @@ function doFilter(parent) {
 function filterTooltip() {
 	let ttText = '';
 	switch (this.method) {
-		case 'Lock state': {
-			ttText = 'Cycle through the different filters:\n' + list.constLockStates().map((item) => {return item + (list.lockStates[0] === item ? '  <--' : '');}).join('\n');
+		case 'Category': {
+			const options = list.categories();
+			const defOpt = options[0];
+			const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
+			ttText = 'Cycle through the different categories:\n' + options.map((item, i) => {return item + (list.categoryState.indexOf(item) !== -1 ? '  <--' + (i === iInherit ? '\t-inherit-' : '') : '');}).join('\n');
 			break;
 		}
 		case 'Extension': {
@@ -152,6 +164,14 @@ function filterTooltip() {
 				// Add a cross to those extensions not being used
 				return item + (list.extStates[0] === item ? '\t<--' : (list.dataAll.some((pls) => {return pls.extension === item;}) || item === list.constExtStates()[0] ? '' : '\t[x]'));
 			}).join('\n');
+			break;
+		}
+		case 'Lock state': {
+			ttText = 'Cycle through the different filters:\n' + list.constLockStates().map((item) => {return item + (list.lockStates[0] === item ? '  <--' : '');}).join('\n');
+			break;
+		}
+		case 'MBID': {
+			ttText = 'Cycle through the different filters:\n' + list.constMbidStates().map((item) => {return item + (list.mbidStates[0] === item ? '  <--' : '');}).join('\n');
 			break;
 		}
 		case 'Playlist type': {
@@ -163,13 +183,6 @@ function filterTooltip() {
 			const defOpt = options[0];
 			const bInherit = list.tagState.indexOf(defOpt) === -1;
 			ttText = 'Cycle through the different tags:\n' + list.tags().map((item, i) => {return item + (list.tagState.indexOf(item) !== -1? '  <--' + (bInherit && i !== 0 ? '\t-inherit-' : '') : '');}).join('\n');
-			break;
-		}
-		case 'Category': {
-			const options = list.categories();
-			const defOpt = options[0];
-			const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
-			ttText = 'Cycle through the different categories:\n' + options.map((item, i) => {return item + (list.categoryState.indexOf(item) !== -1 ? '  <--' + (i === iInherit ? '\t-inherit-' : '') : '');}).join('\n');
 			break;
 		}
 	}
@@ -212,6 +225,18 @@ function filterIcon() {
 	const processChar = (c) => {return String.fromCharCode(parseInt(c, 16));}
 	const icons = list.playlistIcons;
 	switch (this.method) {
+		case 'Category': {
+			const curr = list.categoryState;
+			const states = list.categories();
+			if (!isArrayEqual(curr, states)) {return chars.bookmark;}
+			else {return chars.filter;}
+		}
+		case 'Extension': {
+			const curr = list.extStates[0];
+			const states = list.constExtStates();
+			if (curr !== states[0] && icons.hasOwnProperty(curr) && icons[curr].icon) {return processChar(icons[curr].icon);}
+			else {return chars.filter;}
+		}
 		case 'Lock state': {
 			const curr = list.lockStates[0];
 			const states = list.constLockStates();
@@ -219,10 +244,11 @@ function filterIcon() {
 			else if (curr === states[2]) {return chars.lock;}
 			else {return chars.filter;}
 		}
-		case 'Extension': {
-			const curr = list.extStates[0];
-			const states = list.constExtStates();
-			if (curr !== states[0] && icons.hasOwnProperty(curr) && icons[curr].icon) {return processChar(icons[curr].icon);}
+		case 'MBID': {
+			const curr = list.mbidStates[0];
+			const states = list.constMbidStates();
+			if (curr === states[1]) {return chars.unlock;}
+			else if (curr === states[2]) {return chars.lock;}
 			else {return chars.filter;}
 		}
 		case 'Playlist type': {
@@ -237,12 +263,6 @@ function filterIcon() {
 			const curr = list.tagState;
 			const states = list.tags();
 			if (!isArrayEqual(curr, states)) {return curr.length === 1 ? chars.tag : chars.tags;}
-			else {return chars.filter;}
-		}
-		case 'Category': {
-			const curr = list.categoryState;
-			const states = list.categories();
-			if (!isArrayEqual(curr, states)) {return chars.bookmark;}
 			else {return chars.filter;}
 		}
 		default: {

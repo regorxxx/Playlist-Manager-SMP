@@ -1,20 +1,20 @@
 ﻿'use strict';
-//21/11/22
+//19/12/22
 
-include('helpers_xxx.js');
-include('helpers_xxx_UI.js');
-include('helpers_xxx_UI_draw.js');
-include('helpers_xxx_prototypes.js');
-include('helpers_xxx_properties.js');
-include('helpers_xxx_playlists.js');
-include('helpers_xxx_playlists_files.js');
-include('helpers_xxx_tags.js');
-include('helpers_xxx_file.js');
-include('helpers_xxx_utils.js');
+include('..\\..\\helpers\\helpers_xxx.js');
+include('..\\..\\helpers\\helpers_xxx_UI.js');
+include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
+include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+include('..\\..\\helpers\\helpers_xxx_properties.js');
+include('..\\..\\helpers\\helpers_xxx_playlists.js');
+include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
+include('..\\..\\helpers\\helpers_xxx_tags.js');
+include('..\\..\\helpers\\helpers_xxx_file.js');
+include('..\\..\\helpers\\helpers_xxx_utils.js');
+include('..\\..\\helpers\\helpers_xxx_controller.js');
+include('..\\..\\helpers-external\\keycode-2.2.0\\index.js');
 include('playlist_manager_panel.js');
 include('playlist_manager_helpers.js');
-include('..\\helpers-external\\keycode-2.2.0\\index.js');
-include('helpers_xxx_controller.js');
 
 function _list(x, y, w, h) {
 	// Pls Keys
@@ -166,20 +166,10 @@ function _list(x, y, w, h) {
 			}
 		} else {animation.bHighlight = false;}
 		// Rows
-		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
-		for (let i = 0; i < rows; i++) {
-			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
-			if (i + this.offset >= this.items) {
-				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
-				break;
-			}
-			// Alternate row colors
-			if (panel.colours.bAltRowsColor && (i + this.offset) % 2) {
-				const selWidth =  this.x + this.w; // Ignore separator UI config
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColorRow);
-			}
-			const currIdx = i + this.offset;
-			const pls = this.data[currIdx];
+		const folders = [{name: 'my folder', isFolder: true, isOpen: false, pls: [this.data[0], this.data[1], this.data[6]]}];
+		// const folders = [];
+		const toPaint = [...folders, ...this.data];
+		const paintPls = (pls, i, currIdx, level = 0, plsList) => {
 			// Add category sep
 			if (this.bShowSep) {
 				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to all use-cases
@@ -191,7 +181,7 @@ function _list(x, y, w, h) {
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
-						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
+						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
@@ -199,9 +189,9 @@ function _list(x, y, w, h) {
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
 						const sepLetter = data.length ? data[0].toUpperCase() : '-';
 						const nextIdx = currIdx + indexSortStateOffset;
-						const nextData = isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
+						const nextData = isArray(plsList[nextIdx][dataKey]) ? plsList[nextIdx][dataKey][0] : plsList[nextIdx][dataKey]; // If it's an array get first value
 						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
-						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
+						if (sepLetter !== nextsepLetter && isNaN(sepLetter)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
@@ -211,13 +201,14 @@ function _list(x, y, w, h) {
 					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
 						let sepIndex = i + indexSortStateOffset;
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
-						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
+						if (!isNaN(sepLetter)) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
 				}
 			}
 			// Playlists
+			const offsetX = level * 20;
 			let playlistDataText =  pls.name + (this.bShowSize ? ' (' + pls.size + ')' : '');
 			const iconFont = gfontIconChar();
 			const iconFontAlt = gfontIconCharAlt();
@@ -256,19 +247,19 @@ function _list(x, y, w, h) {
 					}
 				}
 				if (iconBg) {
-					gr.GdiDrawText(iconBg, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(iconBg, iconFont, iconColour, this.text_x + 5 + offsetX, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 					if (icon) {
 						gr.GdiDrawText(icon, iconFontAlt, blendColours(panelBgColor, iconColour, 0.2), this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 					}
 				} else if (icon) {
-					gr.GdiDrawText(icon, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(icon, iconFont, iconColour, this.text_x + 5 + offsetX, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 				}
 			}
-			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColour, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
+			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColour, (this.bShowIcons ? this.x + maxIconWidth : this.x) + offsetX, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			// Add playing now indicator
 			let playlistDataTextRight = '';
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
-			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoplaylist) { // If missing it's false
+			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === pls.isAutoplaylist) {
 				if (fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
 				// Add loaded indicator
 				else {playlistDataTextRight += loadedChar;}
@@ -283,6 +274,40 @@ function _list(x, y, w, h) {
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
 				}					
 			}
+		}
+		let plsIdx = 0;
+		for (let i = 0; i < rows; i++) {
+			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
+			if (i + this.offset >= this.items) {
+				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
+				break;
+			}
+			// Alternate row colors
+			if (panel.colours.bAltRowsColor && (i + this.offset) % 2) {
+				const selWidth =  this.x + this.w; // Ignore separator UI config
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColorRow);
+			}
+			const currIdx = i + this.offset;
+			const pls = toPaint[currIdx];
+			if (pls.isFolder) {
+				const folder = pls;
+				const folderCount = folder.pls.length;
+				const folderText =  _b(folder.name) + (this.bShowSize ? ' (' + folderCount + ')' : '');
+				gr.GdiDrawText(folder.isOpen ? chars.downOutline : chars.leftOutline, gfontIconChar(), standardPlaylistIconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+				gr.GdiDrawText(folderText, panel.fonts.normal, panel.colours.text, this.x + maxIconWidth, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
+				if (folder.isOpen) {
+					let j;
+					for (j = 0; j < (rows - i) && j < folderCount; j++) {
+						const currIdx = i + 1 + j + this.offset;
+						const plsFolder = folder.pls[j];
+						paintPls(plsFolder, i + 1 + j, currIdx, 1, folder.pls);
+					}
+					plsIdx += j;
+				}
+			} else {
+				paintPls(pls, plsIdx, plsIdx + this.offset, 0, toPaint);
+			}
+			plsIdx++;
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
@@ -563,7 +588,7 @@ function _list(x, y, w, h) {
 									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 								}
 								// Adding Duplicates on selection hint
-								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Copy selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
+								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Send selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Send selection to playlist') {
 									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}
 									else if (pls.extension === '.fpl') {playlistDataText += '\n(.fpl playlists are non editable, convert it first)';}
 									else if (pls.isLocked) {playlistDataText += '\n(Locked playlists are non editable, unlock it first)';}
@@ -603,10 +628,10 @@ function _list(x, y, w, h) {
 		}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.items) {currentItemIndex = this.items - 1;}
-		const item = (currentItemIndex !== -1) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
-		currentItemPath = item ? item.path : null;
-		currentItemNameId = item ? item.nameId : null;
-		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
+		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
+		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
+		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
+		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 	}
 	
 	this.clearLastPosition = () => { // Clears position
@@ -616,10 +641,9 @@ function _list(x, y, w, h) {
 		}
 		currentItemIndex = -1;
 		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
-		const item = (currentItemIndex !== -1) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
-		currentItemPath = item ? item.path : null;
-		currentItemNameId = item ? item.nameId : null;
-		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
+		currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
+		currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
+		currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 		this.index = -1;
 		this.offset = 0;
 	}
@@ -632,27 +656,19 @@ function _list(x, y, w, h) {
 				case this.up_btn.lbtn_up(x, y):
 				case this.down_btn.lbtn_up(x, y):
 				case !this.inRange:
-					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
+					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (shortcuts.hasOwnProperty(mask)) {
-							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
-								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
+							if (shortcuts[mask].key === 'Send selection to playlist') {
 								const cache = [this.offset, this.index];
-								let bSucess = false;
 								if (this.indexes.length) {
-									this.indexes.forEach((z) => {
-										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false, bDelSource})) {
-											bSucess = true;
-										}
-									});
-								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false, bDelSource});}
-								if (bSucess) {
-									[this.offset, this.index] = cache;
-									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
-								}
+									this.indexes.forEach((z) => {this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false});});
+								} else {this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
+								[this.offset, this.index] = cache;
+								window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 							} else {
 								this.executeAction(z, shortcuts[mask]);
 							}
@@ -676,7 +692,7 @@ function _list(x, y, w, h) {
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
 			// Select all from current view or clean selection
-			if (shortcuts.hasOwnProperty(mask) && (shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)')) {
+			if (shortcuts.hasOwnProperty(mask) && shortcuts[mask].key === 'Multiple selection') {
 				if (this.indexes.length) {this.resetMultSelect();}
 				else {this.indexes = range(0, this.data.length - 1, 1);}
 			}
@@ -688,39 +704,30 @@ function _list(x, y, w, h) {
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
-			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
 	}
 	
 	this.mbtn_up = (x, y, mask) => {
 		const shortcuts = this.getShortcuts('M');
-		const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			switch (true) {
 				case !this.inRange:
-					if (sgShortcut.key === 'Multiple selection' || sgShortcut.key === 'Multiple selection (range)') {this.resetMultSelect();}
+					if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (shortcuts.hasOwnProperty(mask)) {
-							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
-								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
+							if (shortcuts[mask].key === 'Send selection to playlist') {
 								const cache = [this.offset, this.index];
-								let bSucess = false;
 								if (this.indexes.length) {
-									this.indexes.forEach((z) => {
-										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false, bDelSource})) {
-											bSucess = true;
-										}
-									});
-								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false, bDelSource});}
-								if (bSucess) {
-									[this.offset, this.index] = cache;
-									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
-								}
+									this.indexes.forEach((z) => {this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false});});
+								} else {this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false});}
+								[this.offset, this.index] = cache;
+								window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 							} else {
 								this.executeAction(z, shortcuts[mask]);
 							}
@@ -734,14 +741,14 @@ function _list(x, y, w, h) {
 			return true;
 		} else if (this.traceHeader(x, y)) {
 			// Select all from current view or clean selection
-			if (sgShortcut.key === 'Multiple selection' || sgShortcut.key === 'Multiple selection (range)') {
+			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {
 				if (this.indexes.length) {this.resetMultSelect();}
 				else {this.indexes = range(0, this.data.length - 1, 1);}
 			}
 			return false;
 		} else {
 			// Clean selection
-			if (sgShortcut.key === 'Multiple selection' || sgShortcut.key === 'Multiple selection (range)') {this.resetMultSelect();}
+			if (shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
 	}
@@ -769,7 +776,7 @@ function _list(x, y, w, h) {
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
-			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
+			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection') {this.resetMultSelect();}
 			return false;
 		}
 	}
@@ -862,33 +869,13 @@ function _list(x, y, w, h) {
 		return this.indexes;
 	}
 	
-	this.multSelectRange = (playlistIndex = -1) => {
-		if (playlistIndex === -1) {this.resetMultSelect();}
-		else {
-			const found = this.indexes.indexOf(playlistIndex);
-			if (found !== -1) {
-				const start = this.indexes.slice(-1)[0];
-				const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
-				this.indexes.splice(0, Infinity);
-				Array.prototype.push.apply(this.indexes, idxArr);
-			} else {
-				const start = this.indexes.slice(-1)[0] || 0;
-				const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
-				idxArr.forEach((idx) => {
-					if (!this.indexes.includes(idx)) {this.indexes.push(idx);}
-				});
-			}
-		}
-		return this.indexes;
-	}
-	
 	this.resetMultSelect = () => {
 		this.indexes = [];
 		return this.indexes;
 	}
 	
 	this.executeAction = (z, shortcut) => {
-		if (shortcut.key !== 'Multiple selection' && shortcut.key !== 'Multiple selection (range)' && this.indexes.length) {
+		if (shortcut.key !== 'Multiple selection' && this.indexes.length) {
 			this.indexes.forEach((z) => {shortcut.func(z);});
 		} else {shortcut.func(z);}
 	}
@@ -919,14 +906,12 @@ function _list(x, y, w, h) {
 			shortcuts.actions = [
 				{key: '- None -',					func: () => {void(0);}},
 				{key: 'Load / show playlist',		func: this.loadPlaylistOrShow},
-				{key: 'Copy selection to playlist',	func: null}, // Processed at lbtn_up
-				{key: 'Move selection to playlist',	func: null}, // Processed at lbtn_up
+				{key: 'Send selection to playlist',	func: null}, // Processed at lbtn_up
 				{key: 'Clone playlist in UI',		func: clonePlaylistInUI.bind(this, this)},
 				{key: 'Recycle playlist',			func: this.removePlaylist},
 				{key: 'Lock/unlock playlist file',	func: switchLock.bind(this, this)},
 				{key: 'Lock/unlock UI playlist',	func: switchLockUI.bind(this, this)},
 				{key: 'Multiple selection',			func: this.multSelect},
-				{key: 'Multiple selection (range)',	func: this.multSelectRange},
 			];
 		}
 		return shortcuts;
@@ -947,9 +932,9 @@ function _list(x, y, w, h) {
 		}
 		if (prop) {
 			for (let key in prop) {
-				const mask = (options.find((obj) => {return obj.key === key;}) || {}).mask || 'none';
+				const mask = options.find((obj) => {return obj.key === key;}).mask || 'none';
 				const action = prop[key];
-				const func = (actions.find((obj) => {return obj.key === action;}) || {}).func || (() => {console.popup('Shortcut not properly set: ' + key + ' --> ' + action);});
+				const func = actions.find((obj) => {return obj.key === action;}).func || (() => {console.popup('Shortcut not properly set: ' + key + ' --> ' + action);});
 				shortcuts[mask] = {key: action, func};
 			}
 		}
@@ -1033,12 +1018,11 @@ function _list(x, y, w, h) {
 		return bDup;
 	}
 	
-	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false} = {}) => {
+	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true} = {}) => {
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
 			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
 			return false;
 		}
-		if (plman.ActivePlaylist === -1) {return;}
 		const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
 		if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) {return false;} // Skip non writable playlists
 		let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
@@ -1076,12 +1060,7 @@ function _list(x, y, w, h) {
 				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
 				const index = plman.FindPlaylist(pls.nameId);
 				// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
-				if (index !== -1 && plman.ActivePlaylist !== index) {
-					plman.UndoBackup(index);
-					plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
-				}
-				// Remove items when moving
-				if (bDelSource) {plman.UndoBackup(plman.ActivePlaylist); plman.RemovePlaylistSelection(plman.ActivePlaylist);}
+				if (index !== -1 && plman.ActivePlaylist !== index) {plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);}
 				return true;
 			}
 		}
@@ -1131,14 +1110,13 @@ function _list(x, y, w, h) {
 	
 	this.getUpdateTrackTags = (handleList, pls) => { // Add tags to tracks according to playlist, only applied once per track. i.e. adding multiple copies will not add multiple times the tag
 		if (!pls.hasOwnProperty('trackTags') || !pls.trackTags || !pls.trackTags.length || !handleList || !handleList.Count) {return [new FbMetadbHandleList(), []];}
-		// const oldHandles = pls.path && !pls.isAutoPlaylist ? getHandlesFromPlaylist(pls.path, this.playlistsPath) : null;
+		const oldHandles = pls.path && !pls.isAutoPlaylist ? getHandlesFromPlaylist(pls.path, this.playlistsPath) : null;
 		const newHandles = handleList.Clone();
-		newHandles.Sort();
-		// if (oldHandles) {
-			// oldHandles.Sort();
-			// newHandles.Sort();
-			// newHandles.MakeDifference(oldHandles);
-		// }
+		if (oldHandles) {
+			oldHandles.Sort();
+			newHandles.Sort();
+			newHandles.MakeDifference(oldHandles);
+		}
 		let tagsArr = [];
 		const newHandlesNoTags = new FbMetadbHandleList();
 		if (newHandles.Count) {
@@ -1148,41 +1126,28 @@ function _list(x, y, w, h) {
 				pls.trackTags.forEach((tagObj) => { // TODO: Don't rewrite tags but add?
 					const name = Object.keys(tagObj)[0];
 					const expression = tagObj[name];
-					let bFunc = false, bOverWrite = false, bMultiple = false;
 					let value = null;
-					if (typeof expression === 'number') {value = [expression.toString()];}
-					else if (expression.indexOf('$') !== -1) { // TF
-						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]).split(', ');}
+					if (expression.indexOf('$') !== -1) { // TF
+						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]);}
 						catch (e) {fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name);}
 					} else if (expression.indexOf('%') !== -1) { // Tag remapping
-						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]).split(', ');}
+						try {value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]);}
 						catch (e) {fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name);}
 					} else if (expression.indexOf('JS:') !== -1) { // JS expression by function name at 'helpers_xxx_utils.js'
-						bFunc = true;
 						let funcName = expression.replace('JS:', '');
 						if (funcDict.hasOwnProperty(funcName)) {
-							try {({value, bOverWrite, bMultiple} = funcDict[funcName](pls));}
+							try {value = funcDict[funcName]();}
 							catch (e) {fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name);}
 						} else {fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name);}
 					} else if (expression.indexOf(',') !== -1) { // Array (list sep by comma)
 						value = expression.split(',');
 						value = value.map((_) => {return _.trim();});
-					} else {value = [expression];} // Strings, etc.
+					} else {value = expression;} // Strings, numbers, etc.
 					if (value) { // Append to current tags
 						const currVal = getTagsValues(newHandles[i], [name], true);
 						if (currVal && currVal.length) {
-							let newVal = currVal;
-							if (bFunc) {
-								if (!bMultiple && !bOverWrite) {return;}
-								if (bOverWrite) {tags[name] = value.length ? value : [''];}
-								else if (bMultiple && value.length && !isArrayEqual(currVal, value)) {newVal = [...new Set([...currVal, ...value])];} // Don't duplicate values
-							} else {
-								if (!value.length) {newVal = [''];} // Delete
-								else if (!isArrayEqual(currVal, value)) {newVal = [...new Set([...currVal, ...value])];} // Don't duplicate values
-							}
-							// Double check there are changes
-							if (!isArrayEqual(currVal, newVal)) {tags[name] = newVal;}
-						} else if (value.length) {tags[name] = value;}
+							if (currVal.indexOf(value) === -1) {tags[name] = [...currVal, value];} // Don't duplicate values
+						} else {tags[name] = value;}
 					}
 				});
 				if (Object.keys(tags).length) {tagsArr.push(tags);} //Tags with no values may produce holes in the list compared against the handles
@@ -1614,7 +1579,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	this.resetFilter = ({autoPlaylist = true, lock = true, ext = true, tag = true, category = true} = {}) => {
-		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories()});
+		this.filter({autoPlaylistState: list.constAutoPlaylistStates()[0], lockState: list.constLockStates()[0], extState: list.constExtStates()[0], tagState: list.tags(), categoryState: list.categories()});
 	}
 	
 	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
@@ -1741,8 +1706,8 @@ function _list(x, y, w, h) {
 			this.dataXsp = [];
 			this.indexes = [];
 			if (_isFile(this.filename)) {
-				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoplaylist || this.bAutoTrackTagAutoPlsInit && bInit);
-				const bUpdateSize = this.bUpdateAutoplaylist && (this.bShowSize || bUpdateTags);
+				const bUpdateSize = this.bUpdateAutoplaylist && this.bShowSize;
+				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit;
 				if (bUpdateSize || bUpdateTags) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
 				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
 				if (!data) {return;}
@@ -1766,7 +1731,7 @@ function _list(x, y, w, h) {
 							let bDone = false;
 							promises.push(new Promise((resolve) => {
 								loadAutoPlaylistAsync(item, i).then((handleList = null) => { // Update async delay i * 500 ms
-									if (handleList && item.size && bUpdateTags) {
+									if (handleList && item.size && this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit && bInit) {
 										if (item.hasOwnProperty('trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
 											const bUpdated = this.updateTags(handleList, item);
 											if (bUpdated) {console.log('Playlist Manager: Auto-tagging playlist ' + item.name);}
@@ -2053,17 +2018,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.getPlaylistNum = (bAll = false) => {
-		return (bAll ? this.itemsAll : this.itemsAll - this.itemsAutoplaylist - this.itemsFoobar);
-	}
-	
-	this.switchTracking = (forced = null, bNotify = false) => {
-		this.bTracking = forced !== null ? forced : !this.bTracking;
-		if (this.bTracking) {
-			debouncedCacheLib(false, 'Updating...');
-			this.clearSelPlaylistCache();
-		}
-		if (bNotify) {window.NotifyOthers('Playlist manager: switch tracking', this.bTracking);}
-		return this.bTracking;
+		return (bAll ? list.itemsAll : list.itemsAll - list.itemsAutoplaylist - list.itemsFoobar);
 	}
 	
 	this.init = () => {
@@ -2248,7 +2203,7 @@ function _list(x, y, w, h) {
 			} else if (bEdit) {
 				try {newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true));}
 				catch (e) {return false;}
-				if (Number.isNaN(newLimit)) {return false;}
+				if (isNaN(newLimit)) {return false;}
 				if (!Number.isFinite(newLimit)) {newLimit = 0;}
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
@@ -2395,14 +2350,10 @@ function _list(x, y, w, h) {
 					if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
 					plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 					plman.ActivePlaylist = fbPlaylistIndex;
-					const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 					this.editData(pls, {
-						size: handleList.Count,
-						duration: handleList.CalcTotalDuration()
+						size: plman.PlaylistItemCount(fbPlaylistIndex),
+						duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
 					}, true); // Update size on load
-					if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
-						this.updateTags(handleList, pls);
-					}
 				} else { // Or file
 					if (_isFile(pls.path)) {
 						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
@@ -2410,18 +2361,14 @@ function _list(x, y, w, h) {
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
 						// But it will fail as soon as any track is not found on library
 						// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-						const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+						const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
 						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl);
 						if (!bDone) {plman.AddLocations(fbPlaylistIndex, [pls.path], true);}
 						else if (pls.query) { // Update size on load for smart playlists
-							const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 							this.editData(pls, {
-								size: handleList.Count, 
-								duration: handleList.CalcTotalDuration()
+								size: plman.PlaylistItemCount(fbPlaylistIndex), 
+								duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
 							}, true);
-							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
-								this.updateTags(handleList, pls);
-							}
 						}
 						if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
 							setTimeout(() => {this.updatePlaylistFpl(fbPlaylistIndex);}, 2000);
@@ -2429,7 +2376,7 @@ function _list(x, y, w, h) {
 					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false;}
 				}
 			}
-			if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1]);} // Backup before autosaving
+			if (autoBackTimer && debouncedUpdate) {backup(list.properties.autoBackN[1]);} // Backup before autosaving
 			this.lastPlsLoaded.push(pls);
 			return true;
 		}
@@ -2486,7 +2433,7 @@ function _list(x, y, w, h) {
 					// Try to load handles from library first, greatly speeds up non fpl large playlists
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+					const remDupl = pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls ? list.removeDuplicatesAutoPls.split(',').filter((n) => n) : [];
 					handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void(0), remDupl);
 					if (handleList) {this.editData(pls, {size: handleList.Count, duration: handleList.CalcTotalDuration()}, true);}  // Update size on load for smart playlists
 				} else {console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
@@ -2778,18 +2725,16 @@ function _list(x, y, w, h) {
 				data[wName] = {};
 				// Per playlist
 				const menusPls = [
-					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: ['.ui'],		skipProp: []},
-					{type:'lock playlist',	name: 'Lock playlist/',			description: 'Lock playlist file.',					skipExt: ['.ui'],		skipProp: ['isLocked']},
-					{type:'lock playlist',	name: 'Unlock playlist/',		description: 'Unlock playlist file.',				skipExt: ['.ui'],		skipProp: ['!isLocked']},
-					{type:'delete playlist',name: 'Delete playlist/', 		description: 'Delete playlist file.',				skipExt: ['.ui'],		skipProp: []},
-					{type:'clone in ui',	name: 'Clone playlist in UI/',	description: 'Load a copy of the playlist file.',	skipExt: ['','.ui'],	skipProp: ['!size']},
-					{type:'copy selection',	name: 'Copy selection to/',		description: 'Copy selection to playlist file.',	skipExt: ['','.fpl'],	skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
-					{type:'move selection',	name: 'Move selection to/',		description: 'Move selection to playlist file.',	skipExt: ['','.fpl'],	skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
+					{type:'load playlist',	name: 'Load playlist/', 		description: 'Load playlist into UI.',				skipExt: []			, skipProp: []},
+					{type:'lock playlist',	name: 'Lock playlist/',			description: 'Lock playlist file.',					skipExt: []			, skipProp: ['isLocked']},
+					{type:'lock playlist',	name: 'Unlock playlist/',		description: 'Unlock playlist file.',				skipExt: []			, skipProp: ['!isLocked']},
+					{type:'delete playlist',name: 'Delete playlist/', 		description: 'Delete playlist file.',				skipExt: []			, skipProp: []},
+					{type:'clone in ui',	name: 'Clone playlist in UI/',	description: 'Load a copy of the playlist file.',	skipExt: ['']		, skipProp: ['!size']},
+					{type:'send selection',	name: 'Send selection to/',		description: 'Send selection to playlist file.',	skipExt: ['','.fpl'], skipProp: ['query', 'isAutoPlaylist' ,'isLocked']},
 				];
 				menusPls.forEach((menu) => {listExport[menu.type] = [];});
 				this.dataAll.forEach((pls, i) => {
-					if (!this.bAllPls && pls.extension === '.ui') {return;}
-					if (pls.tags.includes('bSkipMenu')) {return;}
+					if (pls.extension === '.ui') {return;}
 					menusPls.forEach((menu) => {
 						if (menu.skipExt.indexOf(pls.extension) !== -1) {return;}
 						if (menu.skipProp.some((key) => {
@@ -2894,33 +2839,6 @@ function _list(x, y, w, h) {
 			});
 		}
 		
-		this.startupPlaylist = (name = this.activePlsStartup) => {
-			let re, flag, idx = -1, bRegExp = false;
-			try {
-				[, re, flag] = name.match(/\/(.*)\/([a-z]+)?/);
-				if (re) {
-					name = new RegExp(re, flag); 
-					bRegExp = true;
-				}
-			} catch (e) {}
-			if (bRegExp) {
-				const playlists = getPlaylistNames();
-				const pls = (playlists.find((pls) => {return name.test(pls.name);}) || {idx: -1}).idx;
-				idx = pls.idx;
-			} else {
-				idx = plman.FindPlaylist(name);
-			}
-			if (idx === -1) { // Give priority to playlist on UI, then to manager playlists
-				const plsIdx = this.getPlaylistsIdxByName([name]);
-				if (plsIdx.length) {
-					idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
-				}
-			}
-			if (idx !== -1 && plman.ActivePlaylist !== idx) {plman.ActivePlaylist = idx;}
-			else {console.log('Playlist Manager: active playlist at startup not found - ' + name);}
-			return idx;
-		}
-		
 		this.reset = () => {
 			this.inRange = false;
 			this.items = 0;
@@ -2969,16 +2887,13 @@ function _list(x, y, w, h) {
 			this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 			this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 			this.bBOM = this.properties['bBOM'][1];
-			this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
+			this.removeDuplicatesAutoPls = this.properties['removeDuplicatesAutoPls'][1];
 			this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 			this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
-			this.bAdvTitle = this.properties['bAdvTitle'][1];
 			this.bSavingWarnings = this.properties['bSavingWarnings'][1];
 			this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 			this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
 			this.bAllPls = this.properties['bAllPls'][1];
-			this.activePlsStartup = this.properties['activePlsStartup'][1];
-			this.bTracking = true;
 		}
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
@@ -2999,7 +2914,6 @@ function _list(x, y, w, h) {
 			}
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
-		if (this.activePlsStartup.length) {this.startupPlaylist();}
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
@@ -3086,9 +3000,8 @@ function _list(x, y, w, h) {
 	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 	this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 	this.bBOM = this.properties['bBOM'][1];
-	this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
+	this.removeDuplicatesAutoPls = this.properties['removeDuplicatesAutoPls'][1];
 	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
-	this.bAdvTitle = this.properties['bAdvTitle'][1];
 	this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
 	this.bSavingWarnings = this.properties['bSavingWarnings'][1];
 	this.bSavingDefExtension = this.properties['bSavingDefExtension'][1];
@@ -3097,8 +3010,6 @@ function _list(x, y, w, h) {
 	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.bAllPls = this.properties['bAllPls'][1];
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
-	this.activePlsStartup = this.properties['activePlsStartup'][1];
-	this.bTracking = true;
 	// Other
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};

@@ -1,9 +1,9 @@
 ﻿'use strict';
-//06/09/22
+//19/12/22
 
-include('helpers_xxx.js');
-include('helpers_xxx_properties.js');
-include('helpers_xxx_UI.js');
+include('..\\..\\helpers\\helpers_xxx.js');
+include('..\\..\\helpers\\helpers_xxx_properties.js');
+include('..\\..\\helpers\\helpers_xxx_UI.js');
 
 function _panel(custom_background = false) {
 	

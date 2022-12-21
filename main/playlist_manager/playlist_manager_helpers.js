@@ -1,14 +1,14 @@
 ﻿'use strict';
-//24/10/22
+//19/12/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
-include('helpers_xxx.js');
-include('helpers_xxx_properties.js');
-include('helpers_xxx_file.js');
-include('helpers_xxx_prototypes.js');
-include('helpers_xxx_clipboard.js');
-include('helpers_xxx_playlists_files.js');
-include('..\\main\\remove_duplicates.js');
+include('..\\..\\helpers\\helpers_xxx.js');
+include('..\\..\\helpers\\helpers_xxx_properties.js');
+include('..\\..\\helpers\\helpers_xxx_file.js');
+include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+include('..\\..\\helpers\\helpers_xxx_clipboard.js');
+include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
+include('..\\filter_and_query\\remove_duplicates.js');
 
 function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '') {
 	if (typeof extension === 'undefined') {extension = utils.SplitFilePath(path)[2];}

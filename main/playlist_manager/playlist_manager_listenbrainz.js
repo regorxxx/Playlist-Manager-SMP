@@ -1,12 +1,12 @@
 ﻿'use strict';
-//29/09/22
+//19/12/22
 
-include('helpers_xxx_basic_js.js');
-include('helpers_xxx_prototypes.js');
-include('helpers_xxx_tags.js');
-include('helpers_xxx_web.js');
+include('..\\..\\helpers\\helpers_xxx_basic_js.js');
+include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+include('..\\..\\helpers\\helpers_xxx_tags.js');
+include('..\\..\\helpers\\helpers_xxx_web.js');
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
-var regExListenBrainz = /^(https:\/\/listenbrainz.org\/)|(recording)|(playlist)|\//g;
+var regExListenBrainz = /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 
 const listenBrainz = {};
 
@@ -67,6 +67,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response.playlist_mbid && response.playlist_mbid.length) {
+					console.log('Playlist URL: ' + this.getPlaylistURL(response));
 					return response.playlist_mbid;
 				}
 				return '';
@@ -102,7 +103,12 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response.status === 'ok') {
-					return handleList.Count ? this.addPlaylist(pls, handleList, void(0), token, bLookupMBIDs) : pls.playlist_mbid;
+					if (handleList.Count) {
+						return this.addPlaylist(pls, handleList, void(0), token, bLookupMBIDs);
+					} else {
+						console.log('Playlist URL: ' + this.getPlaylistURL(pls));
+						return pls.playlist_mbid;
+					}
 				}
 				return '';
 			}
@@ -115,7 +121,12 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 				if (response.error === 'Failed to deleting recordings from the playlist. Please try again.') { // Playlist file was empty
 					const jspf = await importPlaylist(pls, token);
 					if (jspf.playlist.track.length === 0) {
-						return handleList.Count ? this.addPlaylist(pls, handleList, void(0), token, bLookupMBIDs) : pls.playlist_mbid;
+						if (handleList.Count) {
+							return this.addPlaylist(pls, handleList, void(0), token, bLookupMBIDs);
+						} else {
+							console.log('Playlist URL: ' + this.getPlaylistURL(pls));
+							return pls.playlist_mbid;
+						}
 					}
 				} else if (response.code === 404 && response.error === ('Cannot find playlist: ' + pls.playlist_mbid)) { // Playlist file had a MBID not found on server
 					return this.exportPlaylist(pls, root, token);
@@ -159,6 +170,7 @@ listenBrainz.addPlaylist = async function addPlaylist(pls /*{name, playlist_mbid
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response.status === 'ok') {
+					console.log('Playlist URL: ' + this.getPlaylistURL(pls));
 					return pls.playlist_mbid;
 				}
 				return '';
@@ -235,6 +247,11 @@ listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 	if (!bDone) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
 	return bDone;
 }
+
+listenBrainz.getPlaylistURL = function getPlaylistURL(pls /*{playlist_mbid}*/) {
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return null;}
+	return ('https://listenbrainz.org/playlist/' + pls.playlist_mbid + '/');
+};
 
 /*
 	Feedback
@@ -486,7 +503,7 @@ listenBrainz.contentResolver = function contentResolver(jspf, bHandleList = true
 			const key = look.xspfKey;
 			const queryKey = look.queryKey;
 			if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
-				lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz,'') : rows[i][key]);
+				lookup[queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz,'') : rows[i][key]);
 			}
 		});
 		for (let condition of conditions) {
@@ -505,7 +522,11 @@ listenBrainz.contentResolver = function contentResolver(jspf, bHandleList = true
 	}
 	if (notFound.length) {console.log('Some tracks have not been found on library:\n' + notFound.join('\n'));}
 	return (bHandleList ? new FbMetadbHandleList(handlePlaylist.filter((n) => n)) : handlePlaylist);
-}
+};
+
+listenBrainz.sanitizeQueryValue = function sanitizeQueryValue(value) {
+	return sanitizeQueryVal(value).toLowerCase().replace(/’/g, '\'');
+};
 
 /*
 	User data
@@ -527,7 +548,7 @@ listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 			return null;
 		}
 	);
-}
+};
 
 listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
 	if (!token || !token.length) {return null;}
@@ -543,12 +564,12 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
 			return null;
 		}
 	);
-}
+};
 
 listenBrainz.retrieveUser = async function retrieveUser(token) {
 	const response = await this.retrieveUserResponse(token);
 	return response && response.valid ? response.user_name : '';
-}
+};
 
 listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token) {
 	if (!token || !token.length || !user || !user.length) {return null;}
@@ -563,7 +584,7 @@ listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token)
 			return null;
 		}
 	);
-}
+};
 
 /*
 	Token
@@ -584,4 +605,4 @@ listenBrainz.validateToken = async function validateToken(token) {
 	const response = await this.retrieveUserResponse(token);
 	console.log(response);
 	return (response && response.valid);
-}
+};
