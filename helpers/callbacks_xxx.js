@@ -181,3 +181,8 @@ if (typeof UUID === 'undefined') {
 		});
 	};
 }
+
+// Recommendable to pass some kind of flag at info
+window.NotifyThis = function NotifyThis(name, info) {
+	on_notify_data(name, info);
+}
