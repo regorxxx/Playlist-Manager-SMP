@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/22
+//21/12/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -12,17 +12,17 @@ include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
 include('helpers\\helpers_xxx_playlists_files.js');
 include('helpers\\buttons_panel_xxx.js');
-include('helpers\\playlist_manager_list.js');
-include('helpers\\playlist_manager_panel.js');
-include('helpers\\playlist_manager_buttons.js');
-include('helpers\\playlist_manager_menu.js');
-include('helpers\\playlist_manager_helpers.js');
 include('helpers\\helpers_xxx_file_zip.js');
 include('helpers\\popup_xxx.js');
 include('helpers\\helpers_xxx_instances.js');
 include('helpers\\playlist_history.js');
 include('helpers\\callbacks_xxx.js');
-include('helpers\\playlist_manager_listenbrainz.js');
+include('main\\playlist_manager\\playlist_manager_list.js');
+include('main\\playlist_manager\\playlist_manager_panel.js');
+include('main\\playlist_manager\\playlist_manager_buttons.js');
+include('main\\playlist_manager\\playlist_manager_menu.js');
+include('main\\playlist_manager\\playlist_manager_helpers.js');
+include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
 
 checkCompatible('1.6.1', 'smp');
 
@@ -154,7 +154,8 @@ var properties = {
 	lBrainzEncrypt			: ['Encript ListenBrainz user token?', false, {func: isBoolean}, false],
 	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true, {func: isBoolean}, true],
 	bAdvTitle				: ['AutoPlaylists, duplicates RegExp title matching?', true, {func: isBoolean}, true],
-	activePlsStartup		: ['Active playlist on startup', '', {func: isStringWeak}, '']
+	activePlsStartup		: ['Active playlist on startup', '', {func: isStringWeak}, ''],
+	bBlockUpdateAutoPls		: ['Block panel while updating AutoPlaylists', false, {func: isBoolean}, false]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -175,9 +176,8 @@ setProperties(properties, 'plm_');
 	}
 }
 
-// Panel and list
+// Panel
 let panel = new _panel(true);
-let list = new _list(LM, TM, 0, 0);
 // Popups
 const pop = new _popup({
 	configuration: {
@@ -187,6 +187,8 @@ const pop = new _popup({
 	}
 });
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
+// List
+let list = new _list(LM, TM, 0, 0);
 
 // Tracking a network drive?
 if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
@@ -312,7 +314,8 @@ addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist
 	window.Repaint();
 });
 
-addEventListener('on_notify_data', (name, info) => { 
+addEventListener('on_notify_data', (name, info) => {
+	if (name === 'bio_imgChange') {return;}
 	switch (name) {
 		case 'Playlist manager: playlistPath': {
 			if (!info) {window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath);} // Share paths
