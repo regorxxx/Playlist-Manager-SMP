@@ -29,6 +29,7 @@
 - Drag and Drop: tracks can now be sent to a playlist directly with Drag and Drop, instead of using key shortcuts + mouse. Both move and copy (pressing Control) are allowed. Only tracks withing foobar2000 context can be drop, trying to drop any other thing, track from outside or file is not allowed. Pessing 'Alt' on drop will create a new playlist instead of sending it to the selected playlist. To warn about this behavior, no playlist is highlighted while pressing the key (contrary to the usual drag and drop). List can be scrolled up or down by moving the mouse to the arrow buttons while dragging.
 - ListenBrainz: playlist ListenBrainz integration may be added with an [user token](https://listenbrainz.org/profile/). Token encryption is allowed with a password.
 - ListenBrainz: new options at L. Click menu, 'Online sync...', to export (create new/update) and import playlists from ListenBrainz. Exporting a playlist requires tracks to have 'MUSICBRAINZ_TRACKID' tags present; there is an additional option to perform MBIDs lookups on exporting when tags are missing.
+- ListenBrainz: new options at L. Click menu, 'Online sync...', to get the URL of the playlist on ListenBrainz or directly open it on web.
 - ListenBrainz: new options at R. Click menu to create a playlist from ListenBrainz importing by MBID.
 - ListenBrainz: playlist importation may be done on any writable format, including '.xspf' format (which is essentially equivalent to '.jspf' format used internally by ListenBrainz). Saving to the latter format, allows content resolution -on load- on any library by artist, title or recording MBID and also store not found items on the playlist file. Using other formats will skip not found items on importing step.
 - ListenBrainz: 'PLAYLIST_MBID' is now saved on playlist's metadata and displayed on tooltips if available. Meant to be used along ListenBrainz integration. Id is resolved to an online playlist at 'https://listenbrainz.org/playlist/(PLAYLIST_MBID)'.
@@ -48,6 +49,8 @@
 - UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists filtered by type, categories, tags...
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
 - UI: new 'Find current selection' menu entry, on R. Click, to find the selected tracks on the tracked playlists. A report is shown with category and playlist name.
+- UI: new filter for playlist with(out) MBID (i.e. to filter playlist synced with ListenBrainz).
+- UI: filter and sorting menu entries are now sorted.
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 - Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
 ### Changed
@@ -63,6 +66,8 @@
 - UI: 'Send selection to playlist' renamed to 'Copy selection to playlist'. Reconfigure the shortcut on the menus before using.
 - UI: 'Send selection to playlist' now creates an undo backup point before inserting the new tracks if the playlist is loaded on UI.
 - UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
+- UI: panel is now animated while performing asynchronous tasks on 'Playlist consistency tools'.
+- UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.
 - Dynamic menus: Dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
 - XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
@@ -72,6 +77,7 @@
 - Remove duplicates: advanced RegEx title matching option. For example, tracks like these would be considered to be duplicates: 'My track (live)', 'My track (acoustic)', 'My track (2022 remix)', ' My track [take 3]', ... but not those with keywords like 'part', 'pt.', 'act' or Roman numerals.
 - Remove duplicates: advanced RegEx title matching option. Words with "-in'" and a list of verbs ending in "-in" are matched against "-ing" verbs to further refine the search. For ex. "walkin", "walkin'" and "walking" are all considered equivalent.
 - Helpers: updated helpers.
+- Minor performance improvement (usually on subsequent calls) caching all TitleFormat expressions.
 ### Removed
 ### Fixed
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
