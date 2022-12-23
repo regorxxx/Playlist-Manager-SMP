@@ -186,3 +186,80 @@ if (typeof UUID === 'undefined') {
 window.NotifyThis = function NotifyThis(name, info) {
 	on_notify_data(name, info);
 }
+
+
+/*
+	Integration
+*/
+const callbacksListener = {
+	listenNames: false,
+	highlight: false,
+	step: 0, 
+	color: ((c = window.InstanceType ? window.GetColourDUI(1) : window.GetColourCUI(3), alpha = 15) => {
+		// RGB
+		const a = c - 0xFF000000;
+		let [r, g, b] = [a >> 16, a >> 8 & 0xFF, a & 0xFF]
+		// Invert
+		r = 255 - r; g = 255 - g; b = 255 - b;
+		return (0xff000000 | (r << 16) | (g << 8) | (b));
+	})(),
+	transparency: ((c = window.InstanceType ? window.GetColourDUI(1) : window.GetColourCUI(3), alpha = 15) => {
+		// RGB
+		const a = c - 0xFF000000;
+		let [r, g, b] = [a >> 16, a >> 8 & 0xFF, a & 0xFF]
+		// Invert
+		r = 255 - r; g = 255 - g; b = 255 - b;
+		// Opaque
+		let res = 0xff000000 | (r << 16) | (g << 8) | (b);
+		res = (res & 0x00ffffff) | (alpha << 24);
+		return res;
+	})()
+};
+
+callbacksListener.checkPanelNames = function() {
+	if (!window.Name.length) {
+		console.popup('Panel has no name: ' + _q(window.Name) + '\n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
+	} else {
+		this.listenNames = true;
+		window.NotifyOthers('xxx-scripts: panel name', window.Name);
+	}
+};
+
+callbacksListener.checkPanelNamesAsync = function() {setTimeout(this.checkPanelNames, 2000);}
+
+addEventListener('on_notify_data', (name, info) => {
+	if (!name.startsWith('xxx-scripts')) {return;}
+	switch (name) {
+		case 'xxx-scripts: panel name': {
+			window.NotifyOthers('xxx-scripts: panel name reply', window.Name);
+			break;
+		}
+		case 'xxx-scripts: panel name reply': {
+			if (callbacksListener.listenNames) {
+				if (info === window.Name) {
+					console.popup('There is another panel with same name: ' + _q(info) + '\n\nNames must be different to allow running dynamic menus. Change it at the SMP panel configuration.', window.Name);
+					callbacksListener.highlight = true;
+					window.Repaint();
+				}
+			}
+			break;
+		}
+	}
+});
+
+addEventListener('on_paint', (gr) => { // Make it flash 3 times
+	if (callbacksListener.highlight) {
+		gr.FillSolidRect(0, 0, window.Width, window.Height, callbacksListener.transparency);
+		gr.DrawRect(0, 0, window.Width - 2, window.Height - 2, 1, callbacksListener.color);
+		callbacksListener.step++;
+	}
+	if (callbacksListener.step && callbacksListener.step < 6) {
+		callbacksListener.highlight = !!!(callbacksListener.step % 2);
+		if (callbacksListener.step === 6) {callbacksListener.step = 0; callbacksListener.highlight = false}
+		else if (!callbacksListener.highlight) {callbacksListener.step++;}
+		setTimeout(() => {window.Repaint();} , 600);
+	}
+});
+
+// Notify the other panels
+setTimeout(() => {window.NotifyOthers('xxx-scripts: panel name reply', window.Name);}, 1000);
