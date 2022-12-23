@@ -114,7 +114,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	};
 	this.newMenu(); // Default menu
 	
-	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING}) => {
+	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING, data = null}) => {
 		const eType = typeof entryText, mType = typeof menuName;
 		if (eTypeToStr.indexOf(eType) !== -1) {	entryText = entryText.toString();}
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
@@ -123,7 +123,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			if (separator.test(entryText)) {func = null; flags = MF_GRAYED;}
 		}
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
-		entryArr.push({entryText, func, menuName, flags, bIsMenu: false});
+		entryArr.push({entryText, func, menuName, flags, bIsMenu: false, data});
 		return entryArr[entryArr.length -1];
 	};
 	
