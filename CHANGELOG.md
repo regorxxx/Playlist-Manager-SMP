@@ -54,6 +54,7 @@
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 - Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
 ### Changed
+- Quick-search: added new settings for its behavior when a key is pressed multiple times and also to allow cycling between results.
 - XSP: 'playcount' XSP tag now gets translated into '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
 - XSP: 'lastplayed' XSP tag now gets translated into '%LAST_PLAYED_ENHANCED%' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
 - Track Auto-tagging: reworked entire feature to fine-tune overwriting or value addition behavior, in particular for JS functions. Empty values will now delete the tag, otherwise added to current tag by default. Check documentation for further details.
@@ -68,7 +69,8 @@
 - UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
 - UI: panel is now animated while performing asynchronous tasks on 'Playlist consistency tools'.
 - UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.
-- Dynamic menus: Dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
+- Dynamic menus: dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
+- Dynamic menus: the panel warns about other panels having the same name if the feature is enabled at startup or when enabling it. Panel flashes for some seconds while the popup is shown.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
 - XSPF: content resolution for identifier tag supports now both raw tags and 'https://musicbrainz.org/recording/('MUSICBRAINZ_TRACKID)' format. This is done for compatibility with [JSPF format from ListenBrainz](https://musicbrainz.org/doc/jspf).
 - Tags: auto-tags are now displayed on the tag list (on set tag menu) ready to be used, instead of only displaying the present user set tags.
