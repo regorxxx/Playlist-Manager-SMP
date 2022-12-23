@@ -1543,7 +1543,7 @@ function createMenuRightTop() {
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 						}
 					}});
 					{
@@ -1555,7 +1555,7 @@ function createMenuRightTop() {
 									preset.extension = extension;
 									list.properties['converterPreset'][1] = JSON.stringify(presets);
 									overwriteProperties(list.properties);
-									if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+									if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 								}
 							}});
 						});
@@ -1570,7 +1570,7 @@ function createMenuRightTop() {
 							preset.dsp = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 						}
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
@@ -1582,7 +1582,7 @@ function createMenuRightTop() {
 							preset.tf = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 						}
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
@@ -1596,7 +1596,7 @@ function createMenuRightTop() {
 							preset.name = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 						}
 					}});
 				});
@@ -1605,7 +1605,7 @@ function createMenuRightTop() {
 					presets.push({dsp: '...', tf: '.\\%filename%.mp3', path: ''});
 					list.properties['converterPreset'][1] = JSON.stringify(presets);
 					overwriteProperties(list.properties);
-					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 				}});
 				const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
 				presets.forEach((preset, i) => {
@@ -1622,14 +1622,14 @@ function createMenuRightTop() {
 						presets.splice(i, 1);
 						list.properties['converterPreset'][1] = JSON.stringify(presets);
 						overwriteProperties(list.properties);
-						if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+						if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 					}});
 				});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
 					list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
 					overwriteProperties(list.properties);
-					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();}
 				}});
 			}
 		}
@@ -1990,6 +1990,28 @@ function createMenuRightTop() {
 				}});
 			}
 		}
+		menu.newEntry({menuName, entryText: 'sep'});
+		{	// QuickSearch
+			const subMenuName = menu.newMenu('Quick-search...', menuName);
+			{
+				menu.newEntry({menuName: subMenuName, entryText: 'Quick- search configuration:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Jump to next item on multiple presses', func: () => {
+					list.properties.bQuicSearchNext[1] = !list.properties.bQuicSearchNext[1];
+					overwriteProperties(list.properties);
+					fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name);
+				}});
+				menu.newCheckMenu(subMenuName, 'Jump to next item on multiple presses', void(0), () => list.properties.bQuicSearchNext[1]);
+				menu.newEntry({menuName: subMenuName, entryText: 'Cycle on last result?', func: () => {
+					list.properties.bQuicSearchCycle[1] = !list.properties.bQuicSearchCycle[1];
+					overwriteProperties(list.properties)
+					if (list.properties.bQuicSearchCycle[1]) {
+						fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name);
+					}
+				}, flags: list.properties.bQuicSearchNext[1] ? MF_STRING : MF_GRAYED});
+				menu.newCheckMenu(subMenuName, 'Cycle on last result?', void(0), () => list.properties.bQuicSearchCycle[1]);
+			}
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Integration
@@ -2010,8 +2032,8 @@ function createMenuRightTop() {
 					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
 					overwriteProperties(list.properties);
 					// And create / delete menus
-					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();} 
-					else {list.deleteMainMenuDynamic(); list.deleteExportInfo();}
+					if (list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo(); list.checkPanelNames();} 
+					else {list.deleteMainMenuDynamic(); list.deleteExportInfo(); list.listenNames = false;}
 					if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
 				}, flags});
 			});

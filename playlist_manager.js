@@ -155,7 +155,9 @@ var properties = {
 	bLookupMBIDs			: ['Lookup for missing track MBIDs?', true, {func: isBoolean}, true],
 	bAdvTitle				: ['AutoPlaylists, duplicates RegExp title matching?', true, {func: isBoolean}, true],
 	activePlsStartup		: ['Active playlist on startup', '', {func: isStringWeak}, ''],
-	bBlockUpdateAutoPls		: ['Block panel while updating AutoPlaylists', false, {func: isBoolean}, false]
+	bBlockUpdateAutoPls		: ['Block panel while updating AutoPlaylists', false, {func: isBoolean}, false],
+	bQuicSearchNext			: ['QuickSearch jump to next item when letter is pressed twice', true, {func: isBoolean}, true],
+	bQuicSearchCycle		: ['QuickSearch cycling when no more items found', true, {func: isBoolean}, true]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -315,7 +317,7 @@ addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist
 });
 
 addEventListener('on_notify_data', (name, info) => {
-	if (name === 'bio_imgChange') {return;}
+	if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev') {return;}
 	switch (name) {
 		case 'Playlist manager: playlistPath': {
 			if (!info) {window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath);} // Share paths
@@ -367,7 +369,7 @@ addEventListener('on_notify_data', (name, info) => {
 
 // Main menu commands
 addEventListener('on_main_menu_dynamic', (id) => { 
-	if (list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
+	if (list.bDynamicMenus && list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
 		const menu = list.mainMenuDynamic[id];
 		let bDone = false;
 		switch (menu.type.toLowerCase()){

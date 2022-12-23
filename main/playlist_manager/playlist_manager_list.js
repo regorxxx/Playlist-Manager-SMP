@@ -831,9 +831,16 @@ function _list(x, y, w, h) {
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
 					let method = this.methodState.split('\t')[0].replace('By ', '');
 					if (method === 'name' || !(new oPlaylist('', '')).hasOwnProperty(method)) {method = 'nameId';} // Fallback to name for sorting methods associated to non tracked variables
-					this.lastCharsPressed.str += keyChar;
-					this.lastCharsPressed.bDraw = true;
-					const idx = this.data.findIndex((pls, idx) => {
+					let bNext = false;
+					const bCycle = this.properties.bQuicSearchCycle[1];
+					if (!this.properties.bQuicSearchNext[1]) {
+						this.lastCharsPressed.str += keyChar;
+					} else { // Jump to next item with same char
+						if (this.lastCharsPressed.str !== keyChar) {this.lastCharsPressed.str += keyChar;} 
+						else {bNext = true;}						
+					}
+					// Helper
+					const searchStr = (pls) => {
 						if (pls.hasOwnProperty(method) && pls[method] !== null && pls[method] !== void(0)) {
 							const bArray = isArray(pls[method]);
 							if (bArray && !pls[method].length) {return false;}
@@ -842,8 +849,23 @@ function _list(x, y, w, h) {
 							if (typeof val === 'number') {return val.toString().startsWith(this.lastCharsPressed.str);}
 							else {return false;}
 						} else {return false;}
+					}
+					// Check the current playlist is a valid result when looking for next item
+					let currPlsIdx = -1;
+					if (bNext && this.index !== -1) {
+						const pls = this.data[this.index];
+						currPlsIdx = searchStr(pls) ? this.index : -1;
+					}
+					// Look for pls
+					const idx = this.data.findIndex((pls, idx) => {
+						if (bNext && currPlsIdx >= idx) {return false;}
+						return searchStr(pls);
 					});
-					this.showPlsByIdx(idx);
+					// Find first possible item if cycling is active
+					const startIdx = bNext && bCycle && idx === -1 ? this.data.findIndex((pls, idx) => {return searchStr(pls);}) : -1;
+					// Highlight found item or current one if there are no more items or cycle to the first one
+					this.lastCharsPressed.bDraw = true;
+					this.showPlsByIdx(currPlsIdx !== -1 && idx === -1 ? bCycle ? startIdx : currPlsIdx : idx);
 					this.lastCharsPressed.ms = Date.now();
 				} else {
 					this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
@@ -2104,7 +2126,7 @@ function _list(x, y, w, h) {
 				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp], this.replacer, '\t'), this.bBOM); // No BOM
 			}
 			if (!bInit) {
-				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo();}
+				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();}
 				else if (this.mainMenuDynamic.length) {this.deleteMainMenuDynamic();}
 			}
 		}
@@ -3014,7 +3036,7 @@ function _list(x, y, w, h) {
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
 		if (this.bDynamicMenus) { // Init menus unless they will be init later after autoplaylists processing
 			if (!(this.properties['bUpdateAutoplaylist'][1] && this.bShowSize) && !(this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit)) {
-				this.createMainMenuDynamic(); this.exportPlaylistsInfo();
+				this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
 			}
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
@@ -3126,6 +3148,7 @@ function _list(x, y, w, h) {
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel({s: 1}); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel({s: -1}); });
 	this.headerButton = {x: 0, y: 0, w: 0, h: 0, inFocus: false};
+	callbacksListener.listenNames = this.bDynamicMenus;
 	this.init();
 }
 
