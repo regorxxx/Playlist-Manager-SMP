@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/06/22
+//25/06/22
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -33,12 +33,13 @@ const buttonsPanel = {};
 buttonsPanel.config = {
 	bShowID: false, // Show Prefixes + ID on tooltips
 	toolbarTooltip: '', // Shown on toolbar
-	toolbarColor: RGB(211,218,237), // Toolbar color
+	toolbarColor: RGB(0,0,0), // Toolbar color
+	toolbarTransparency: 5, // Toolbar color
 	bToolbar: false, // Change this on buttons bars files to set the background color
 	textColor: RGB(0,0,0),
 	orientation: 'x',
 	bUseThemeManager: true,
-	partAndStateID: 1 // 1 standard button, 6 no bg/border button (+hover)
+	partAndStateID: 6 // 1 standard button, 6 no bg/border button (+hover)
 };
 // Button objs
 buttonsPanel.propertiesPrefixes = new Set(); // Global properties names prefixes
@@ -48,6 +49,9 @@ buttonsPanel.oldButtonCoordinates = {x: 0, y: 0, w: 0, h: 0}; // To store coordi
 buttonsPanel.tooltipButton = new _tt(null, 'Segoe UI', _scale(10), 1200);  // Global tooltip
 buttonsPanel.gDown = false;
 buttonsPanel.curBtn = null;
+buttonsPanel.useThemeManager = function useThemeManager() {
+	return (this.config.bUseThemeManager && this.config.partAndStateID === 1);
+}
 
 function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.config.orientation , recalc = true) {
 	let newCoordinates;
@@ -107,9 +111,12 @@ function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI'
 		return old;
 	};
 
-	this.draw = function (gr) {
+	this.draw = function (gr, bLast = false) {
+		// Draw?
+		if (this.state === buttonStates.hide) {return;}
+		const bDrawBackground = buttonsPanel.config.partAndStateID === 1;
 		// Check SO allows button theme
-		if (buttonsPanel.config.bUseThemeManager) {
+		if (buttonsPanel.useThemeManager() && !this.g_theme) {
 			if (!this.g_theme) { // may have been changed before drawing but initially not set
 				this.g_theme = window.CreateThemeManager('Button');
 				if (!this.g_theme) {
@@ -118,19 +125,25 @@ function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI'
 				}
 			}
 		}
-		// Draw?
 		const wCalc = isFunction(this.w) ? this.w() : this.w;
 		const hCalc = isFunction(this.h) ? this.h() : this.h;
 		if (wCalc <= 0 || hCalc <= 0) {return;}
 		if (this.state === buttonStates.hide) {return;}
 		// Themed Button states
-		if (buttonsPanel.config.bUseThemeManager) {
+		if (buttonsPanel.useThemeManager()) {
 			switch (this.state) {
 				case buttonStates.normal:
 					this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 1);
 					break;
 				case buttonStates.hover:
-					buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
+					buttonsPanel.tooltipButton.SetValue((buttonsPanel.config.bShowID 
+						? (isFunction(this.description) 
+							? this.descriptionWithID() 
+							: this.descriptionWithID) 
+						: (isFunction(this.description) 
+							? this.description() 
+							: this.description)
+					) , true); // ID or just description, according to string or func.
 					this.g_theme.SetPartAndStateID(buttonsPanel.config.partAndStateID, 2);
 					break;
 				case buttonStates.down:
@@ -144,41 +157,91 @@ function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI'
 		const xCalc = isFunction(this.x) ? this.x() : this.x;
 		const yCalc = isFunction(this.y) ? this.y() : this.y;
 		// Draw Button
-		if (buttonsPanel.config.bUseThemeManager) {this.g_theme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);}
+		if (buttonsPanel.useThemeManager()) {this.g_theme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);}
 		else {
-			const x = xCalc + 1;
-			const y = yCalc;
-			const w =  wCalc - 4;
-			const h =  hCalc - 2;
-			const arc = 3;
-			gr.SetSmoothingMode(4); // Antialias for lines
+			const x = xCalc + 1; const y = yCalc; const w =  wCalc - 4; const h =  hCalc - 2; const arc = 3;
+			gr.SetSmoothingMode(2); // Antialias for lines
+			const toolbarAlpha = Math.min(buttonsPanel.config.toolbarTransparency * 10, 100);
 			switch (this.state) {
 				case buttonStates.normal:
-					gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
-					gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-					gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
-					gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
-					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+					if (bDrawBackground) {
+						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+						gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+					} else if (buttonsPanel.config.bToolbar) {
+							gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+							if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
+					} else {
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+					}
 					break;
 				case buttonStates.hover:
-					buttonsPanel.tooltipButton.SetValue( (buttonsPanel.config.bShowID ? (isFunction(this.description) ? this.descriptionWithID() : this.descriptionWithID) : (isFunction(this.description) ? this.description() : this.description) ) , true); // ID or just description, according to string or func.
-					gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
-					gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-					gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
-					gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
-					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
-					gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
-					gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(17,166,248,50));
+					buttonsPanel.tooltipButton.SetValue((buttonsPanel.config.bShowID 
+						? (isFunction(this.description) 
+							? this.descriptionWithID() 
+							: this.descriptionWithID) 
+						: (isFunction(this.description) 
+							? this.description() 
+							: this.description)
+					) , true); // ID or just description, according to string or func.
+					if (bDrawBackground) {
+						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+						gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+					} else if (buttonsPanel.config.bToolbar) {
+						gr.FillSolidRect(x, y, wCalc, h, 1, RGB(160,160,160));
+					} else {
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(160,160,160));
+					}
+					if (buttonsPanel.config.bToolbar) {
+						if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
+						gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+						gr.DrawRect(x, y + 1, w, h, 1, RGB(243,243,243));
+					} else {
+						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+					}
+					if (bDrawBackground) {
+						gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
+						gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(17,166,248,50));
+					} else if (buttonsPanel.config.bToolbar) {
+						gr.FillSolidRect(x, y + 1, w, h / 2 - 1, RGBA(255,255,255,50));
+						gr.FillSolidRect(x, y + h / 2, w, h / 2, RGBA(0,0,0,10));
+					} else {
+						gr.FillRoundRect(x, y + 1, w, h / 2 - 1, arc, arc, RGBA(255,255,255,50));
+						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(0,0,0,10));
+					}
 					break;
 				case buttonStates.down:
-					gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
-					gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-					gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
-					gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
-					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
-					gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
-					gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(37,196,255,80));
-					gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 3, RGBA(0,0,0,50));
+					if (bDrawBackground) {
+						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+						gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+					}
+					if (buttonsPanel.config.bToolbar) {
+						if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
+						gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+					} else {
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+					}
+					if (bDrawBackground) {
+						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+						gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
+						gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(37,196,255,80));
+						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 3, RGBA(0,0,0,50));
+					} else if (buttonsPanel.config.bToolbar) {
+						gr.FillSolidRect(x - 1, y, w + 2, h / 8, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+						gr.FillSolidRect(x - 1, y, w + 2, h / 6, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+						gr.FillSolidRect(x - 1, y + h / 6, w + 2, h / 6, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+						gr.FillSolidRect(x - 1, y, w + 2, h, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+					} else {
+						gr.FillRoundRect(x, y, w, h / 8, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+						gr.FillRoundRect(x, y, w, h / 6, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+						gr.FillRoundRect(x, y + h / 6, w, h / 6, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+						gr.FillRoundRect(x, y, w, h, arc / 2, arc / 2, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+					}
 					break;
 				case buttonStates.hide:
 					return;
@@ -209,11 +272,13 @@ function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI'
 }
 
 function drawAllButtons(gr) {
-	for (let key in buttonsPanel.buttons) {
+	const keys = Object.keys(buttonsPanel.buttons);
+	const len = keys.length;
+	keys.forEach((key, i) => {
 		if (Object.prototype.hasOwnProperty.call(buttonsPanel.buttons, key)) {
-			buttonsPanel.buttons[key].draw(gr);
+			buttonsPanel.buttons[key].draw(gr, len === (i + 1));
 		}
-	}
+	});
 }
 
 function chooseButton(x, y) {
@@ -227,10 +292,25 @@ function chooseButton(x, y) {
 	return null;
 }
 
+function retrieveBarCoords() {
+	let x = 0, y = 0, w = 0, h = 0;
+	for (let key in buttonsPanel.buttons) {
+		if (Object.prototype.hasOwnProperty.call(buttonsPanel.buttons, key)) {
+			const button = buttonsPanel.buttons[key];
+			x = Math.min(isFunction(button.x) ? button.x() : button.x, x);
+			y = Math.max(isFunction(button.y) ? button.y() : button.y, y);
+			w = Math.max((isFunction(button.x) ? button.x() : button.x) + (isFunction(button.w) ? button.w() : button.w), w);
+			h = Math.max(isFunction(button.h) ? button.h() : button.h, h);
+		}
+	}
+	return [x, y, w, h];
+}
+
 function on_paint_buttn(gr) {
 	if (buttonsPanel.config.bToolbar){ // When not merged with panels
-		if (buttonsPanel.oldButtonCoordinates.x < window.Width) {gr.FillSolidRect(0, 0, window.Width, window.Height, buttonsPanel.config.toolbarColor);} // Toolbar color fix
-		else {gr.FillSolidRect(0, 0, window.Width, window.Height, utils.GetSysColour(15));} // Default
+		const [x, y, w, h] = retrieveBarCoords();
+		gr.FillSolidRect(x, y, w, h, opaqueColor(buttonsPanel.config.toolbarColor, buttonsPanel.config.toolbarTransparency));
+		gr.DrawLine(x, y, w, y, 1, opaqueColor(buttonsPanel.config.toolbarColor, Math.min(buttonsPanel.config.toolbarTransparency * 10, 100)));
 	}
 	drawAllButtons(gr);
 }
@@ -245,6 +325,7 @@ function on_mouse_move_buttn(x, y) {
 		}
 	} else if (buttonsPanel.gDown && buttonsPanel.curBtn && buttonsPanel.curBtn.state !== buttonStates.down) {
 		buttonsPanel.curBtn.changeState(buttonStates.down);
+		old && old.changeState(buttonStates.normal);
 		window.Repaint();
 		return;
 	} 

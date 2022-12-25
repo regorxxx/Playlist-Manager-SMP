@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//25/12/22
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -14,7 +14,11 @@ function _panel(custom_background = false) {
 		bCustomText			: ['Text custom colour mode', false],
 		customText			: ['Custom text colour', RGB(157, 158, 163)], // Gray
 		buttonsTextColor	: ['Buttons\' text color', buttonsPanel.config.textColor],
-		bAltRowsColor		: ['Alternate rows background color', true]
+		bAltRowsColor		: ['Alternate rows background color', true],
+		bToolbar			: ['Use toolbar mode?', true],
+		bButtonsBackground	: ['Use buttons background?', false],
+		buttonsToolbarColor	: ['Buttons\' toolbar color', RGB(0,0,0)],
+		buttonsToolbarTransparency	: ['Buttons\' toolbar transparency', 5]
 	};
 	setProperties(panelProperties, 'panel_');
 	
@@ -34,7 +38,11 @@ function _panel(custom_background = false) {
 			this.colours.highlight = blendColours(this.colours.text, this.colours.background, 0.4);
 		}
 		this.colours.header = this.colours.highlight & 0x45FFFFFF;
+		buttonsPanel.config.bToolbar = this.colours.bToolbar; // buttons_xxx.js
+		buttonsPanel.config.partAndStateID = this.colours.bButtonsBackground ? 1 : 6; // buttons_xxx.js
 		buttonsPanel.config.textColor = this.colours.buttonsTextColor; // buttons_xxx.js
+		buttonsPanel.config.toolbarColor = this.colours.buttonsToolbarColor; // buttons_xxx.js
+		buttonsPanel.config.toolbarTransparency = this.colours.buttonsToolbarTransparency; // buttons_xxx.js
 	};
 	
 	this.fontChanged = () => {
@@ -83,7 +91,7 @@ function _panel(custom_background = false) {
 	this.paint = (gr) => {
 		const col = this.getColorBackground();
 		if (typeof col !== 'undefined') {
-			gr.FillSolidRect(1, 1, this.w - 1, this.h - 1, col);
+			gr.FillSolidRect(0, 0, this.w, this.h, col);
 		}
 	};
 	
@@ -106,6 +114,10 @@ function _panel(custom_background = false) {
 	this.colours.customText = this.properties.customText[1];
 	this.colours.buttonsTextColor = this.properties.buttonsTextColor[1];
 	this.colours.bAltRowsColor = this.properties.bAltRowsColor[1];
+	this.colours.bToolbar = this.properties.bToolbar[1];
+	this.colours.bButtonsBackground = this.properties.bButtonsBackground[1];
+	this.colours.buttonsToolbarColor = this.properties.buttonsToolbarColor[1];
+	this.colours.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
 	this.listObjects = [];
 	this.textObjects = [];
 	this.fontChanged();

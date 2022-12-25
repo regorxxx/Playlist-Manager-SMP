@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/22
+//25/12/22
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -1810,8 +1810,35 @@ function createMenuRightTop() {
 					window.Repaint();
 				}, flags: panel.colours.bCustomText ? MF_STRING : MF_GRAYED,});
 			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{	// Buttons' toolbar
+				const subMenuSecondName = menu.newMenu('Button toolbar...', subMenuName);
+				const options = ['Use default (black)', 'Custom'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+						panel.colours.buttonsToolbarColor = i ? utils.ColourPicker(window.ID, panel.colours.buttonsToolbarColor) : RGB(0,0,0);
+						panel.properties.buttonsToolbarColor[1] = panel.colours.buttonsToolbarColor;
+						// Update property to save between reloads
+						overwriteProperties(panel.properties);
+						panel.coloursChanged();
+						window.Repaint();
+					}});
+				});
+				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return (panel.colours.buttonsToolbarColor === RGB(0,0,0) ? 0 : 1);});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
+					const input = Input.number('int positive', panel.colours.buttonsToolbarTransparency, 'Enter value:\n(0 to 100)', window.Name, 50);
+					if (input === null) {return;}
+					panel.properties.buttonsToolbarTransparency[1] = panel.colours.buttonsToolbarTransparency = input;
+					// Update property to save between reloads
+					overwriteProperties(panel.properties);
+					panel.coloursChanged();
+					window.Repaint();
+				}});
+			}
 			{	// Buttons' Text color
-				const subMenuSecondName = menu.newMenu('Buttons\' Text...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Buttons\' text...', subMenuName);
 				const options = ['Use default (black)', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -1923,6 +1950,22 @@ function createMenuRightTop() {
 				window.Repaint();
 			}});
 		}
+		{	// Buttons' toolbar
+			const subMenuName = menu.newMenu('Button toolbar...', menuName);
+			const options = ['Use default (toolbar)', 'Use no background buttons', 'Use background buttons (theme manager)'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					panel.properties.bToolbar[1] = panel.colours.bToolbar = i === 0 ? true : false;
+					panel.properties.bButtonsBackground[1] = panel.colours.bButtonsBackground = i === 2 ? true : false;
+					// Update property to save between reloads
+					overwriteProperties(panel.properties);
+					panel.coloursChanged();
+					window.Repaint();
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return (panel.colours.bToolbar ? 0 : (panel.colours.bButtonsBackground ? 2 : 1));});
+		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Shortcuts
 			const subMenuName = menu.newMenu('Shortcuts...', menuName);
@@ -1994,7 +2037,7 @@ function createMenuRightTop() {
 		{	// QuickSearch
 			const subMenuName = menu.newMenu('Quick-search...', menuName);
 			{
-				menu.newEntry({menuName: subMenuName, entryText: 'Quick- search configuration:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'Quick-search configuration:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuName, entryText: 'Jump to next item on multiple presses', func: () => {
 					list.properties.bQuicSearchNext[1] = !list.properties.bQuicSearchNext[1];
