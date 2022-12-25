@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/12/22
+//25/12/22
 
 include('helpers_xxx.js');
 
@@ -90,11 +90,11 @@ function queryReplaceWithCurrent(query, handle) {
 					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => {return s !== '(';})) : '';
 					const interQuery = interQueryStart + interQueryEnd;
 					const multiQuery  = tfoVal.split('#').map((val) => {
-						return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + sanitizeQueryVal(val);
+						return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(val) : val);
 					});
 					tempQuery += interQuery + query_join(multiQuery, 'AND');
 				} else {
-					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + sanitizeQueryVal(tfoVal);
+					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal);
 				}
 			}
 			query = startQuery + tempQuery + endQuery;

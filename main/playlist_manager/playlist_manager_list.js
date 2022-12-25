@@ -837,7 +837,7 @@ function _list(x, y, w, h) {
 						this.lastCharsPressed.str += keyChar;
 					} else { // Jump to next item with same char
 						if (this.lastCharsPressed.str !== keyChar) {this.lastCharsPressed.str += keyChar;} 
-						else {bNext = true;}						
+						else {bNext = true;}
 					}
 					// Helper
 					const searchStr = (pls) => {
