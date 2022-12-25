@@ -41,6 +41,7 @@
 - Dynamic menus: new 'Move selection to playlist' dynamic menu.
 - Startup playlist: added new option at integration header menu to set the active playlist at panel startup, allowing to start Foobar2000 automatically with a given playlist. In case it's a playlist present on the manager but not loaded, it's required to set 'bAutoLoad' tag on playlist file to load it automatically on startup too. RegExp may be used too, returning the first match found.
 - Playlist locks: UI lock status is now displayed on playlist tooltips, along the actions locked.
+- UI: filter/sorting buttons are now fully configurable (background, colors, toolbar mode, ...).
 - UI: show an icon related to the current filter state. For ex. the extension filter will show the associated playlist icon.
 - UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' and 'Multiple selection' actions (along the previous ones).
 - UI: added M. Click actions, configurable the same way than L. Click actions. Set by default to 'Multiple selection'.
