@@ -473,7 +473,7 @@ addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) 
 	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
 });
 
-addEventListener('on_playlist_items_removed', (playlistIndex, oldName = null) => { 
+addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => { 
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
 	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
