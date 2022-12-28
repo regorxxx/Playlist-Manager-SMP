@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/12/22
+//28/12/22
 
 /* 
 	Objects
@@ -40,6 +40,10 @@ function roughSizeOfObject(object) {
 	} // TODO Handle lists? TF?
 	return bytes;
 }
+
+// Throw errors when trying to get length from objects
+// Forces using typeof recipe === 'string' and similar but leads to cleaner code and no errors
+Object.defineProperty(Object.prototype, 'length', {get() {throw new Error('No length property on objects. Probably a coding error.');}});
 
 /* 
 	Maps

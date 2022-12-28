@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/22
+//28/12/22
 
 include('helpers_xxx.js');
 
@@ -47,7 +47,7 @@ const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR 
 
 // Quote special chars according to https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Titleformat_Reference#Syntax
 function sanitizeTagTfo(tag) {
-	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[\]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\''); // TODO .replace(/,/g,'\',\'')
+	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$\'').replace(/[[]/g,'\'[\'').replace(/[\]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\'').replace(/,/g,'\',\'');
 }
 
 // Quote value if needed
