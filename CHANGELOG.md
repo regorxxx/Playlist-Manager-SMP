@@ -83,6 +83,7 @@
 - Minor performance improvement (usually on subsequent calls) caching all TitleFormat expressions.
 ### Removed
 ### Fixed
+- Auto-Saving: playlists were not auto-saved after a path cache reload -if needed- as intended.
 - XSP: crash loading an Smart Playlist which tries to load another playlist with a query when it is not found.
 - XSP: preventive fixes to Smart Playlists having empty rules, without operators or values.
 - XSP: undefined sort order on files.
@@ -107,7 +108,7 @@
 - Track Auto-tagging: crash editing track auto-tags.
 - Track Auto-tagging: not being applied on AutoPlaylists / Smart Playlists loading.
 - Track Auto-tagging: JS functions being applied multiple times.
--  Instances manager: crash on instances file deleted while panel is being reloaded.
+- Instances manager: crash on instances file deleted while panel is being reloaded.
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
