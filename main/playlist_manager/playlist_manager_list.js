@@ -2835,10 +2835,9 @@ function _list(x, y, w, h) {
 						if (menu.skipExt.indexOf(pls.extension) !== -1) {return;}
 						if (menu.skipProp.some((key) => {
 							const notKey = key.startsWith('!') ? key.slice(1) : null;
-							return (notKey ? 
-								pls.hasOwnProperty(notKey) && !pls[notKey] && !isString(pls[notKey]) 
-								:
-								pls.hasOwnProperty(key) && (pls[key] || pls[key].length) 
+							return (notKey 
+								? pls.hasOwnProperty(notKey) && !pls[notKey] && !isString(pls[notKey]) 
+								: pls.hasOwnProperty(key) && (pls[key] || typeof value === 'string' && pls[key].length) 
 							);
 						})) {return;}
 						const type = menu.type;
