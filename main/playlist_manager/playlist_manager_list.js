@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/22
+//30/12/22
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -95,17 +95,17 @@ function _list(x, y, w, h) {
 		const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
 		const offsetHeader = yOffset / 10;
 		const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
-		const iconHeaderColour = this.headerButton.inFocus ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : blendColours(panel.colours.highlight, panelBgColor, 0.1);
+		const iconHeaderColor = this.headerButton.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
 		const iconW = gr.CalcTextWidth(catIcon, gfontHeader);
 		const iconH = gr.CalcTextHeight(catIcon, gfontHeader);
 		const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.title);
 		const maxHeaderH = Math.max(iconH, headerTextH);
 		[this.headerButton.x, this.headerButton.y, this.headerButton.w, this.headerButton.h] = [LM, (maxHeaderH - iconH) / 2, iconW, iconH] // Update button coords
-		gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColour, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colours.highlight, LM + iconW + 5, 0, panel.w - (LM * 2), TM, LEFT);
+		gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colors.highlight, LM + iconW + 5, 0, panel.w - (LM * 2), TM, LEFT);
 		let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
 		lineY += offsetHeader;
-		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colours.highlight);
+		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colors.highlight);
 		headerW = LM + iconW + 5;
 		headerH = lineY;
 		// Empty Panel
@@ -123,7 +123,7 @@ function _list(x, y, w, h) {
 			const emptyTextWrapped = gr.EstimateLineWrap(emptyText, panel.fonts.normal, panel.w - (LM * 2));
 			for (let i = 0; i < emptyTextWrapped.length; i++) {
 				if (i % 2) {
-					gr.GdiDrawText(emptyTextWrapped[i - 1], panel.fonts.normal, panel.colours.text, this.x,  this.y + (i * panel.row_height / 2), emptyTextWrapped[i], panel.row_height, LEFT); // Divide height by 2 since the loop is text rows * 2 !
+					gr.GdiDrawText(emptyTextWrapped[i - 1], panel.fonts.normal, panel.colors.text, this.x,  this.y + (i * panel.row_height / 2), emptyTextWrapped[i], panel.row_height, LEFT); // Divide height by 2 since the loop is text rows * 2 !
 				}
 			}
 			this.rows = cache;
@@ -132,14 +132,14 @@ function _list(x, y, w, h) {
 		// List
 		const playingChar = String.fromCharCode(9654);
 		const loadedChar = String.fromCharCode(9644);
-		const standardPlaylistIconColour = blendColours(panel.colours.highlight, panelBgColor, 0.1);
-		const lockedPlaylistIconColour = blendColours(standardPlaylistIconColour, this.colours.lockedPlaylistColour, 0.8);
-		const autoPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.autoPlaylistColour, 0.8);
-		const smartPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.smartPlaylistColour, 0.8);
-		const uiPlaylistIconColour = blendColours(RGB(...toRGB(panelBgColor)), this.colours.uiPlaylistColour, 0.8);
+		const standardPlaylistIconColor = blendColors(panel.colors.highlight, panelBgColor, 0.1);
+		const lockedPlaylistIconColor = blendColors(standardPlaylistIconColor, this.colors.lockedPlaylistColor, 0.8);
+		const autoPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.autoPlaylistColor, 0.8);
+		const smartPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.smartPlaylistColor, 0.8);
+		const uiPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.uiPlaylistColor, 0.8);
 		const categoryHeaderOffset = _scale(panel.fonts.size - 4);
-		const categoryHeaderColour = blendColours(panelBgColor, panel.colours.text, 0.6);
-		const categoryHeaderLineColour = blendColours(panelBgColor, categoryHeaderColour, 0.5);
+		const categoryHeaderColor = blendColors(panelBgColor, panel.colors.text, 0.6);
+		const categoryHeaderLineColor = blendColors(panelBgColor, categoryHeaderColor, 0.5);
 		const altColorRow = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
 		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // Compare to the next one or the previous one according to sort order
 		const rows = Math.min(this.items, this.rows);
@@ -150,15 +150,15 @@ function _list(x, y, w, h) {
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
 				const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
-				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
+				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 			}
 			if (this.lastCharsPressed.bDraw) {animation.bHighlight = false;}
 			if (animation.bHighlight) {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 				}
 				animation.bHighlight = false;
 				animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h);}, 600);
@@ -175,7 +175,7 @@ function _list(x, y, w, h) {
 				break;
 			}
 			// Alternate row colors
-			if (panel.colours.bAltRowsColor && (i + this.offset) % 2) {
+			if (panel.colors.bAltRowsColor && (i + this.offset) % 2) {
 				const selWidth =  this.x + this.w; // Ignore separator UI config
 				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColorRow);
 			}
@@ -193,8 +193,8 @@ function _list(x, y, w, h) {
 					if (indexSortStateOffset === -1 && i === 0) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
-						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
@@ -204,8 +204,8 @@ function _list(x, y, w, h) {
 						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
 						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
-							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
+							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 						}
 					}
 					// Show always current letter at bottom. Also shows number
@@ -213,8 +213,8 @@ function _list(x, y, w, h) {
 						let sepIndex = i + indexSortStateOffset;
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
-						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColour, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColour, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
 					}
 				}
 			}
@@ -223,13 +223,13 @@ function _list(x, y, w, h) {
 			const iconFont = gfontIconChar();
 			const iconFontAlt = gfontIconCharAlt();
 			// Set colors and icons according to playlist type
-			let playlistColour = panel.colours.text, iconColour = standardPlaylistIconColour;
+			let playlistColor = panel.colors.text, iconColor = standardPlaylistIconColor;
 			const plsExtension = pls.isAutoPlaylist ? 'autoPlaylist' : pls.extension;
 			let extension = pls.isLocked ? 'locked' : pls.isAutoPlaylist ? 'autoPlaylist' : plsExtension;
-			if (extension === 'locked') {playlistColour = this.colours.lockedPlaylistColour; iconColour = lockedPlaylistIconColour;}
-			else if (extension === 'autoPlaylist') {playlistColour = this.colours.autoPlaylistColour; iconColour = autoPlaylistIconColour;}
-			else if (extension === '.xsp') {playlistColour = this.colours.smartPlaylistColour; iconColour = smartPlaylistIconColour;}
-			else if (extension === '.ui') {playlistColour = this.colours.uiPlaylistColour; iconColour = uiPlaylistIconColour;}
+			if (extension === 'locked') {playlistColor = this.colors.lockedPlaylistColor; iconColor = lockedPlaylistIconColor;}
+			else if (extension === 'autoPlaylist') {playlistColor = this.colors.autoPlaylistColor; iconColor = autoPlaylistIconColor;}
+			else if (extension === '.xsp') {playlistColor = this.colors.smartPlaylistColor; iconColor = smartPlaylistIconColor;}
+			else if (extension === '.ui') {playlistColor = this.colors.uiPlaylistColor; iconColor = uiPlaylistIconColor;}
 			if (pls.size === 0) {extension = 'blank';}
 			if (this.bShowIcons) {
 				let icon = playlistDescriptors[extension].icon;
@@ -257,15 +257,15 @@ function _list(x, y, w, h) {
 					}
 				}
 				if (iconBg) {
-					gr.GdiDrawText(iconBg, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 					if (icon) {
-						gr.GdiDrawText(icon, iconFontAlt, blendColours(panelBgColor, iconColour, 0.2), this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 					}
 				} else if (icon) {
-					gr.GdiDrawText(icon, iconFont, iconColour, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 				}
 			}
-			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColour, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
+			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
 			// Add playing now indicator
 			let playlistDataTextRight = '';
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
@@ -275,26 +275,26 @@ function _list(x, y, w, h) {
 				else {playlistDataTextRight += loadedChar;}
 			}
 			// Draw
-			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colours.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
+			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colors.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 			// Multiple selection
 			if (this.indexes.length) {
 				if (this.indexes.indexOf(this.offset + i) !== -1) {
 					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
-					gr.DrawRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 50));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 30));
+					gr.DrawRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 				}					
 			}
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
-		if (this.colours.selectedPlaylistColour !== panelBgColor && this.bMouseOver) {
+		if (this.colors.selectedPlaylistColor !== panelBgColor && this.bMouseOver) {
 			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
 					const selWidth =  this.bShowSep ?  this.x + this.w - 15 :  this.x + this.w; // Adjust according to UI config
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colours.selectedPlaylistColour);
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylistColor);
 				}
 			}
 		}
@@ -302,7 +302,7 @@ function _list(x, y, w, h) {
 		if (this.lastCharsPressed.bDraw) {
 			const popupCol = opaqueColor(tintColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
 			const borderCol = opaqueColor(invert(popupCol), 50);
-			const textCol = panel.colours.text;
+			const textCol = panel.colors.text;
 			const scaleX = 0.75;
 			const scaleY = 1 / 2;
 			const sizeX = Math.round(scaleX * this.w / 2);
@@ -315,11 +315,11 @@ function _list(x, y, w, h) {
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
 			// Draw the letter
 			if (idxHighlight === -1) { // Striked out when not found
-				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, blendColours(textCol, this.colours.selectedPlaylistColour, 0.5), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, blendColors(textCol, this.colors.selectedPlaylistColor, 0.5), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
 				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2 );
 				const lineW = Math.min(popX + sizeX / 2 + textW / 2 - 1, popX + sizeX - textOffset / 2);
-				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, opaqueColor(this.colours.selectedPlaylistColour, 70));
+				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, opaqueColor(this.colors.selectedPlaylistColor, 70));
 			} else { // when found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				// And highlight a few ms the found playlist
@@ -327,16 +327,16 @@ function _list(x, y, w, h) {
 				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colours.selectedPlaylistColour, 80));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colours.selectedPlaylistColour, 50));
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 80));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 50));
 				}
 			}
 			this.lastCharsPressed.bDraw = false;
 			animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h);}, 600);
 		}
 		// Up/down buttons
-		this.up_btn.paint(gr, this.up_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
-		this.down_btn.paint(gr, this.down_btn.hover ? blendColours(RGB(...toRGB(panel.colours.text)), this.colours.selectedPlaylistColour, 0.8) : panel.colours.text);
+		this.up_btn.paint(gr, this.up_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
+		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
 	}
 
 	this.trace = (x, y) => { // On panel
@@ -684,7 +684,9 @@ function _list(x, y, w, h) {
 			if (this.traceHeaderButton(x,y)) {
 				_explorer(this.playlistsPath);
 			} else {
-				this.showCurrPls() || this.showCurrPls({bPlayingPls: true});
+				if (!this.bDoubleclick) { // It's not a second lbtn click
+					this.timeOut = delayFn(() => {this.showCurrPls() || this.showCurrPls({bPlayingPls: true});}, 100)();
+				} else {this.bDoubleclick = false;}
 			}
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
@@ -766,6 +768,9 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) {
+			clearTimeout(this.timeOut);
+			this.timeOut = null;
+			this.bDoubleclick = true;
 			cycleCategories();
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
@@ -1640,6 +1645,8 @@ function _list(x, y, w, h) {
 		}
 		// Update header whenever it's needed
 		this.headerTextUpdate();
+		// Update offset!
+		this.offset = 0;
 		window.Repaint();
 	}
 	this.resetFilter = ({autoPlaylist = true, lock = true, ext = true, tag = true, category = true} = {}) => {
@@ -2741,21 +2748,21 @@ function _list(x, y, w, h) {
 				this.extStates = this.constExtStates().rotate(rotations[2]);
 			}
 			// Check colors
-			if (!this.colours || !Object.keys(this.colours).length) { // Sets default colours
-				this.colours = {};
-				this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C)); // Red
-				this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFFFF629B)), 0.6);
-				this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF65CC32)), 0.6);
-				this.colours['selectedPlaylistColour'] = RGB(...toRGB(0xFF0080C0)); // Blue
-				this.colours['uiPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
+			if (!this.colors || !Object.keys(this.colors).length) { // Sets default colors
+				this.colors = {};
+				this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); // Red
+				this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);
+				this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
+				this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); // Blue
+				this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
 				bDone = true;
 			}
-			if (this.colours && Object.keys(this.colours).length !== 4) { // Fills missing colours
-				if (!this.colours['lockedPlaylistColour']) {this.colours['lockedPlaylistColour'] = RGB(...toRGB(0xFFDC143C));} // Red
-				if (!this.colours['autoPlaylistColour']) {this.colours['autoPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFFFF629B)), 0.6);}
-				if (!this.colours['smartPlaylistColour']) {this.colours['smartPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF65CC32)), 0.6);}
-				if (!this.colours['selectedPlaylistColour']) {this.colours['selectedPlaylistColour'] = RGB(...toRGB(0xFF0080C0));} // Blue
-				if (!this.colours['uiPlaylistColour']) {this.colours['uiPlaylistColour'] = blendColours(panel.colours.text, RGB(...toRGB(0xFF00AFFD)), 0.8);} // Blue
+			if (this.colors && Object.keys(this.colors).length !== 4) { // Fills missing colors
+				if (!this.colors.lockedPlaylistColor) {this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C));} // Red
+				if (!this.colors.autoPlaylistColor) {this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);}
+				if (!this.colors.smartPlaylistColor) {this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);}
+				if (!this.colors.selectedPlaylistColor) {this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0));} // Blue
+				if (!this.colors.uiPlaylistColor) {this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8);} // Blue
 				bDone = true;
 			}
 			// Check Shortcuts
@@ -2835,9 +2842,10 @@ function _list(x, y, w, h) {
 						if (menu.skipExt.indexOf(pls.extension) !== -1) {return;}
 						if (menu.skipProp.some((key) => {
 							const notKey = key.startsWith('!') ? key.slice(1) : null;
-							return (notKey 
-								? pls.hasOwnProperty(notKey) && !pls[notKey] && !isString(pls[notKey]) 
-								: pls.hasOwnProperty(key) && (pls[key] || typeof value === 'string' && pls[key].length) 
+							return (notKey ? 
+								pls.hasOwnProperty(notKey) && !pls[notKey] && !isString(pls[notKey]) 
+								:
+								pls.hasOwnProperty(key) && (pls[key] || pls[key].length) 
 							);
 						})) {return;}
 						const type = menu.type;
@@ -2992,7 +3000,7 @@ function _list(x, y, w, h) {
 			this.sortState = this.properties['sortState'][1];
 			this.optionUUID = this.properties['optionUUID'][1];
 			this.bShowSep = this.properties['bShowSep'][1];
-			this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
+			this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 			this.bRelativePath = this.properties['bRelativePath'][1];
 			this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
 			this.bAutoLockTag = this.properties['bAutoLockTag'][1];
@@ -3142,7 +3150,7 @@ function _list(x, y, w, h) {
 	// Other
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};
-	this.colours = convertStringToObject(this.properties['listColours'][1], 'number');
+	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel({s: 1}); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel({s: -1}); });
