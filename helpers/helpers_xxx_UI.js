@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/11/22
+//30/12/22
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -282,7 +282,7 @@ function toRGB(color) { // returns an array like [192, 0, 0]
 	return [a >> 16, a >> 8 & 0xFF, a & 0xFF];
 }
 
-function blendColours(color1, color2, f) {
+function blendColors(color1, color2, f) {
 	// When factor is 0, result is 100% color1, when factor is 1, result is 100% color2.
 	const [c1, c2] = [toRGB(color1), toRGB(color2)];
 	return RGB(...c1.map((_, i) => {return Math.round(c1[i] + f * (c2[i] - c1[i]));}));
