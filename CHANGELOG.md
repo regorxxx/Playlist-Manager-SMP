@@ -63,6 +63,8 @@
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: count for tags and category entries for filters on header menu.
 - Cache: reworked path caching, now will process 100 items at the same time until all tracks are done instead of forcing an specific total startup time. Adjusted delays for Foobar 2000 2.0+ tag retrieval. It should lead to faster startups in both cases, specially for small libraries (< 70K tracks).
+- UI: buttons' colors are now set by default according to the inverse of the background color. The same applies when applying presets, or changing the toolbar style.
+- UI: colours presets menu now show a check in case one of them is active.
 - UI: keyboard modifiers on L. Click are now fully configurable using the header menu. See 'UI\Shortcuts...'. Playlist's tooltip will reflect the config too.
 - UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
 - UI: 'Send selection to playlist' renamed to 'Copy selection to playlist'. Reconfigure the shortcut on the menus before using.
@@ -93,6 +95,7 @@
 - Dynamic menus: dynamic menus were not being set properly in some cases due to a typo.
 - Dynamic Menus: changed code logic to only create menus once after all init processes instead of multiple times. Should improve loading time by a few ms.
 - Filter: '-inherit-' warning was shown on all tags on filter header menu, even for those not being shown. Cosmetic bug.
+- UI: double clicking on header no longer shows the active/playing playlist while cycles between the categories. Now it checks when double clicking is performed to not fire the single click action too.
 - UI: filter buttons will display 'Multiple...' instead of 'All' when multiple values have been selected via header menu, thus properly displaying the manager is currently being filtered when not cycling tag/categories.
 - UI: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and viceversa) for now playing and loaded indicators.
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.

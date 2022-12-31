@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/22
+//30/12/22
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -80,7 +80,7 @@ var properties = {
 	bSaveFilterStates		: ['Maintain filters between sessions?', true, {func: isBoolean}, true],
 	filterStates			: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
 	bShowSep				: ['Show name/category separators: ', true, {func: isBoolean}, true],
-	listColours				: ['Color codes for the list. Use contextual menu to set them: ', '', {func: isStringWeak}, ''],
+	listColors				: ['Colour codes for the list. Use contextual menu to set them: ', '', {func: isStringWeak}, ''],
 	bFirstPopup				: ['Playlist Manager: Fired once', false, {func: isBoolean}, false],
 	bRelativePath			: ['Use relative paths for all new playlists', false, {func: isBoolean}, false],
 	bFirstPopupFpl			: ['Playlist Manager fpl: Fired once', false, {func: isBoolean}, false],
@@ -215,7 +215,7 @@ buttonsPanel.buttons.filterTwoButton.method = list.properties.filterMethod[1].sp
 recalcWidth();
 
 addEventListener('on_colours_changed', () => {
-	panel.coloursChanged();
+	panel.colorsChanged();
 	window.Repaint();
 });
 
