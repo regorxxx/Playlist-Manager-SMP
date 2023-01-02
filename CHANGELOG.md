@@ -45,9 +45,9 @@
 - UI: show an icon related to the current filter state. For ex. the extension filter will show the associated playlist icon.
 - UI: keyboard modifiers on L. Click now also allow 'Clone playlist in UI', 'Lock/unlock playlist file', 'Lock/unlock UI playlist' and 'Multiple selection' actions (along the previous ones).
 - UI: added M. Click actions, configurable the same way than L. Click actions. Set by default to 'Multiple selection'.
+- UI: added L. Click and M. Click actions on header, configurable the same way than the other actions. Set by default to 'Cycle categories' (previous behaviour) and 'Multiple selection (all)' (toggles selection for all playlists of current view).
 - UI: added 'Multiple selection (range)' shortcut action, which emulates the usual Shift + Click action to select a range on files on explorer.
 - UI: multiple playlist selection. Using any other mouse shortcut will apply the action to the entire selection, instead of a single playlist. Opening the playlist menu (L. Click) while using multiple selection, will display a different list of actions to apply to the entire selection.
-- UI: clicking on header using a shortcut associated to multiple selection (by default M. click) selects all playlists on current view. Clicking again cleans selection. This may be used to easily apply actions to group of playlists filtered by type, categories, tags...
 - UI: new 'Move selection to playlist' shortcut action, which copies the track to the selected playlist and removes it from the source.
 - UI: new 'Find current selection' menu entry, on R. Click, to find the selected tracks on the tracked playlists. A report is shown with category and playlist name.
 - UI: new filter for playlist with(out) MBID (i.e. to filter playlist synced with ListenBrainz).
