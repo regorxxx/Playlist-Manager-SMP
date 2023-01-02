@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/22
+//02/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -788,18 +788,7 @@ function createMenuRight() {
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
 		{	// Refresh
-			menu.newEntry({entryText: 'Manual refresh', func: () => {
-				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
-				list.loadConfigFile();
-				const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
-				list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
-				list.update(void(0), true, z);
-				list.filter();
-				list.lastPlsLoaded = [];
-				if (typeof xspCache !== 'undefined') {xspCache.clear();} // Discard old cache to load new changes
-				if (typeof xspfCache !== 'undefined') {xspfCache.clear();}
-				test.Print();
-			}});
+			menu.newEntry({entryText: 'Manual refresh', func: list.manualRefresh});
 		}
 		{	// Restore
 			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
@@ -2070,10 +2059,82 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
 					list.properties['mShortcuts'][1] = list.defaultProperties['mShortcuts'][3];
-					list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);				list.mShortcuts = JSON.parse(list.properties['mShortcuts'][1]);
+					list.mShortcuts = JSON.parse(list.properties['mShortcuts'][1]);
 					overwriteProperties(list.properties);
 				}});
 			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{
+				const subMenuNameL = menu.newMenu('Left CLick (header)', subMenuName)
+				const shortcuts =  list.getDefaultShortcuts('L', 'HEADER');
+				const modifiers = shortcuts.options.map((_) => {return _.key;});
+				const actions = shortcuts.actions.map((_) => {return _.key;});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+				modifiers.forEach((modifier) => {
+					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameL);
+					actions.forEach((action) => {
+						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
+						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+							list.lShortcutsHeader[modifier] = action;
+							list.properties['lShortcutsHeader'][1] = JSON.stringify(list.lShortcutsHeader);
+							overwriteProperties(list.properties);
+							if (action === 'Multiple selection') {
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+							}
+						}, flags});
+					});
+					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+						const idx = actions.indexOf(list.lShortcutsHeader[modifier]);
+						return (idx !== -1 ? idx : 0);
+					});
+				});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
+					list.properties['lShortcutsHeader'][1] = list.defaultProperties['lShortcutsHeader'][3];
+					list.lShortcutsHeader = JSON.parse(list.properties['lShortcutsHeader'][1]);
+					overwriteProperties(list.properties);
+				}});
+			}
+			{
+				const subMenuNameM = menu.newMenu('Middle CLick (header)', subMenuName)
+				const shortcuts =  list.getDefaultShortcuts('M', 'HEADER');
+				const modifiers = shortcuts.options.map((_) => {return _.key;});
+				const actions = shortcuts.actions.map((_) => {return _.key;});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+				modifiers.forEach((modifier) => {
+					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameM);
+					actions.forEach((action) => {
+						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+							list.mShortcutsHeader[modifier] = action;
+							list.properties['mShortcutsHeader'][1] = JSON.stringify(list.mShortcutsHeader);
+							overwriteProperties(list.properties);
+							if (action === 'Multiple selection') {
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+							}
+						}});
+					});
+					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+						const idx = actions.indexOf(list.mShortcutsHeader[modifier]);
+						return (idx !== -1 ? idx : 0);
+					});
+				});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
+					list.properties['mShortcutsHeader'][1] = list.defaultProperties['mShortcutsHeader'][3];
+					list.mShortcutsHeader = JSON.parse(list.properties['mShortcutsHeader'][1]);
+					overwriteProperties(list.properties);
+				}});
+			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults (all)', func: () => {
+				['lShortcuts', 'mShortcuts', 'lShortcutsHeader', 'mShortcutsHeader'].forEach((key) => {
+					list.properties[key][1] = list.defaultProperties[key][3];
+					list[key] = JSON.parse(list.properties[key][1]);
+				});
+				overwriteProperties(list.properties);
+			}});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// QuickSearch

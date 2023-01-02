@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/22
+//02/01/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -157,13 +157,28 @@ var properties = {
 	activePlsStartup		: ['Active playlist on startup', '', {func: isStringWeak}, ''],
 	bBlockUpdateAutoPls		: ['Block panel while updating AutoPlaylists', false, {func: isBoolean}, false],
 	bQuicSearchNext			: ['QuickSearch jump to next item when letter is pressed twice', true, {func: isBoolean}, true],
-	bQuicSearchCycle		: ['QuickSearch cycling when no more items found', true, {func: isBoolean}, true]
+	bQuicSearchCycle		: ['QuickSearch cycling when no more items found', true, {func: isBoolean}, true],
+	mShortcutsHeader		: ['M. click (header) modifiers', JSON.stringify({
+		Ctrl:			'- None -',
+		Shift:			'- None -',
+		'Ctrl + Shift':	'- None -',
+		'Single Click':	'Multiple selection (all)'
+	})],
+	lShortcutsHeader		: ['L. click (header) modifiers', JSON.stringify({
+		Ctrl:			'- None -',
+		Shift:			'- None -',
+		'Ctrl + Shift':	'- None -',
+		'Single Click':	'Show current / playing playlist',
+		'Double Click':	'Cycle categories'
+	})]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
 properties['playlistIcons'].push({func: isJSON}, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({func: isJSON}, properties['mShortcuts'][1]);
 properties['lShortcuts'].push({func: isJSON}, properties['lShortcuts'][1]);
+properties['lShortcutsHeader'].push({func: isJSON}, properties['lShortcutsHeader'][1]);
+properties['mShortcutsHeader'].push({func: isJSON}, properties['mShortcutsHeader'][1]);
 setProperties(properties, 'plm_');
 
 { // Info Popup
