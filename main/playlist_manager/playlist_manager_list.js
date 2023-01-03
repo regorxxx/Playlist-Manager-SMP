@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/23
+//03/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -999,7 +999,9 @@ function _list(x, y, w, h) {
 						{key: 'Cycle tags',							func: cycleTags.bind(this, this)},
 						{key: 'Add new empty playlist file',		func: () => {this.add({bEmpty: true});}},
 						{key: 'Add active playlist',				func: () => {this.add({bEmpty: false});}},
-						{key: 'Manual refresh',						func: this.manualRefresh}
+						{key: 'Manual refresh',						func: this.manualRefresh},
+						{key: 'Manual saving (all not locked)',		func: () => {console.log('Playlist Manager: Updated ' + this.updateAll(false) + ' playlists.');}},
+						{key: 'Manual saving (all)',				func: () => {console.log('Playlist Manager: Updated ' + this.updateAll(true) + ' playlists.');}},
 					];
 					break;
 				}
@@ -1346,7 +1348,20 @@ function _list(x, y, w, h) {
         }
 	}
 	
-	this.updatePlaylist = ({playlistIndex, bCallback = false} = {}) => { // Only changes total size
+	this.updateAll = (bForceLocked = false) => {
+		const current = getPlaylistNames();
+		let count = 0;
+		this.dataAll.forEach((pls, playlistIndex) => {
+			if (pls.isLocked && !bForceLocked || pls.extension === '.ui' || pls.isAutoPlaylist || pls.query) {return;}
+			if (pls.extension === '.xspf' && this.playlistsExtension !== pls.extension) {return;} // Don't save XSPF playlists unless format will not be changed
+			if (current.findIndex((uiPls) => uiPls.name === pls.nameId) !== -1) { // There may be other checks later, but at least omit these ones...
+				if (this.updatePlaylist({playlistIndex, bCallback: false, bForceLocked})) {count++;}
+			}
+		});
+		return count;
+	}
+	
+	this.updatePlaylist = ({playlistIndex, bCallback = false, bForceLocked = false} = {}) => { // Only changes total size
 		// playlistIndex: We have a foobar playlist and we iterate over playlist files
 		// Or we have the playlist file and we iterate over foobar playlists
 		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) {return false;}
@@ -1395,7 +1410,7 @@ function _list(x, y, w, h) {
 						const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(plman.GetPlaylistItems(fbPlaylistIndex), plsData); // Done at 2 steps, first get tags
 						this.updateTrackTags(handleUpdate, tagsUpdate);
 					} // Apply tags from before
-					if (bCallback) {return false;} // Skips locked playlists only for auto-saving!
+					if (!bForceLocked) {return false;} // Skips locked playlists usually for auto-saving!
 				}
 				const [handleUpdate, tagsUpdate] = this.bAutoTrackTag && this.bAutoTrackTagPls && (debouncedUpdate || !bCallback)? this.getUpdateTrackTags(plman.GetPlaylistItems(fbPlaylistIndex), plsData) : [null, null]; // Done at 2 steps, first get tags
 				if (bCallback && plsData.isAutoPlaylist) {return false;} // In case an UI playlist matches an Autoplaylist on manager

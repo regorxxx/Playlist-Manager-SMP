@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/23
+//03/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -154,7 +154,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (pls.isLocked) { // Safety check for locked files (but can be overridden)
 							answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
 						}
-						if (answer === popup.yes) {list.updatePlaylist({playlistIndex: z});}
+						if (answer === popup.yes) {list.updatePlaylist({playlistIndex: z, bForceLocked: true});}
 					}
 				} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);}
 			}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED});
@@ -2001,7 +2001,7 @@ function createMenuRightTop() {
 		{	// Shortcuts
 			const subMenuName = menu.newMenu('Shortcuts...', menuName);
 			{
-				const subMenuNameL = menu.newMenu('Left CLick', subMenuName)
+				const subMenuNameL = menu.newMenu('Left Click', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('L');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
 				const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -2033,7 +2033,7 @@ function createMenuRightTop() {
 				}});
 			}
 			{
-				const subMenuNameM = menu.newMenu('Middle CLick', subMenuName)
+				const subMenuNameM = menu.newMenu('Middle Click', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('M');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
 				const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -2065,7 +2065,7 @@ function createMenuRightTop() {
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			{
-				const subMenuNameL = menu.newMenu('Left CLick (header)', subMenuName)
+				const subMenuNameL = menu.newMenu('Left Click (header)', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('L', 'HEADER');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
 				const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -2097,7 +2097,7 @@ function createMenuRightTop() {
 				}});
 			}
 			{
-				const subMenuNameM = menu.newMenu('Middle CLick (header)', subMenuName)
+				const subMenuNameM = menu.newMenu('Middle Click (header)', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('M', 'HEADER');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
 				const actions = shortcuts.actions.map((_) => {return _.key;});
