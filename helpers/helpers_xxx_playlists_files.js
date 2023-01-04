@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//05/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -591,7 +591,11 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		const poolItemsCount = poolItems.Count;
 		// const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
 		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
-		const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than TF again
+		const newLibItemsRelPaths = relPath.length 
+			? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count 
+				? libItemsRelPaths[relPath] 
+				: getRelPaths(newLibItemsAbsPaths, relPath))
+			: null; // Faster than TF again
 		let pathPool = new Map();
 		let filePool = new Set(filePaths);
 		let path;
@@ -631,7 +635,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			if (pathPool.has(filePaths[i])) {
 				const idx = pathPool.get(filePaths[i]);
 				handlePlaylist[i] = poolItems[idx];
-				if (newLibItemsAbsPaths[idx].toLowerCase() !== filePaths[i] && newLibItemsRelPaths[idx].toLowerCase() !== filePaths[i]) { // Ensure the cache is up to date
+				if (newLibItemsAbsPaths[idx].toLowerCase() !== filePaths[i] && (!newLibItemsRelPaths || newLibItemsRelPaths && newLibItemsRelPaths[idx].toLowerCase() !== filePaths[i])) { // Ensure the cache is up to date
 					handlePlaylist = null;
 					fb.ShowPopupMessage('The library cache is not up to date and is being rebuilt; the playlist will be loaded using the native Foobar2000 method if trying to load the playlist into the UI. You may abort it and try loading the playlist afterwards or wait.\n\n In any other case, wait for the cache to be rebuilt and execute the action again.', window.Name);
 					break;
