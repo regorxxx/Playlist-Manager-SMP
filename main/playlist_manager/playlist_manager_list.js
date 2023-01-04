@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/01/23
+//04/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -489,6 +489,9 @@ function _list(x, y, w, h) {
 					headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
 					headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
 				}
+				let warningText = '';
+				if (this.bLibraryChanged) {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
+				if (warningText.length) {headerText += '\n' + warningText;}
 				this.tooltip.SetValue(headerText, true);
 			}
 			this.index = -1;
@@ -583,17 +586,20 @@ function _list(x, y, w, h) {
 									playlistDataText += '\n(R. Click for other tools / new playlists)';
 								}
 								// Adding Duplicates on selection hint
+								let warningText = '';
 								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Copy selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
-									if (pls.isAutoPlaylist || pls.query) {playlistDataText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}
-									else if (pls.extension === '.fpl') {playlistDataText += '\n(.fpl playlists are non editable, convert it first)';}
-									else if (pls.isLocked) {playlistDataText += '\n(Locked playlists are non editable, unlock it first)';}
+									if (pls.isAutoPlaylist || pls.query) {warningText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)';}
+									else if (pls.extension === '.fpl') {warningText += '\n(.fpl playlists are non editable, convert it first)';}
+									else if (pls.isLocked) {warningText += '\n(Locked playlists are non editable, unlock it first)';}
 									else {
 										const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-										if (!selItems || !selItems.Count) {playlistDataText += '\n(No items on active playlist current selection)';}
+										if (!selItems || !selItems.Count) {warningText += '\n(No items on active playlist current selection)';}
 									}
-									if (this.checkSelectionDuplicatesPlaylist({playlistIndex: this.index})) {playlistDataText += '\nWarning! Some track(s) already present...';}
+									if (this.checkSelectionDuplicatesPlaylist({playlistIndex: this.index})) {warningText += '\nWarning! Some track(s) already present...';}
 								}
-								if (iDup > 1) {playlistDataText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.';}
+								if (iDup > 1) {warningText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.';}
+								if (this.bLibraryChanged && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
+								if (warningText.length) {playlistDataText += '\n' + warningText;}
 								this.tooltip.SetValue(playlistDataText, true);
 							}
 							break;
@@ -2172,8 +2178,12 @@ function _list(x, y, w, h) {
 	this.switchTracking = (forced = null, bNotify = false) => {
 		this.bTracking = forced !== null ? forced : !this.bTracking;
 		if (this.bTracking) {
-			debouncedCacheLib(false, 'Updating...');
+			this.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 			this.clearSelPlaylistCache();
+		} else if (this.cacheLibTimer !== null) {
+			clearTimeout(this.cacheLibTimer);
+			this.cacheLibTimer = null;
+			this.bLibraryChanged = true;
 		}
 		if (bNotify) {window.NotifyOthers('Playlist manager: switch tracking', this.bTracking);}
 		return this.bTracking;
@@ -3228,6 +3238,8 @@ function _list(x, y, w, h) {
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
 	this.bTracking = true;
+	this.bLibraryChanged = false;
+	this.cacheLibTimer = null;
 	// Other
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};

@@ -109,6 +109,7 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 		if (immediate && !timerId) {boundFunc();}
 		const calleeFunc = immediate ? () => {timerId = null;} : boundFunc;
 		timerId = setTimeout(calleeFunc, delay);
+		return timerId;
 	};
 };
 

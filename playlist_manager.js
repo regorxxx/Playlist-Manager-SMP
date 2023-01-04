@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/23
+//04/01/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -28,9 +28,9 @@ checkCompatible('1.6.1', 'smp');
 
 // Cache
 let plmInit = {};
-const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.') => {
+const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.', bForce = false) => {
 	const plmInstances = [...getInstancesByKey('Playlist Manager')]; // First look if there are other panels already loaded
-	if (plmInstances[0] === window.ID) { // Only execute once per Foobar2000 instance
+	if (plmInstances[0] === window.ID || bForce) { // Only execute once per Foobar2000 instance
 		if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
 		else if (bInit) {return;} // Ensure it only runs once on startup
 		if (!pop.isEnabled()) {pop.enable(true, message, tt);}
@@ -44,17 +44,21 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 			// Already using data from other instance. See on_notify_data
 			pop.disable(true);
 		}).finally(async () => {
-			if (typeof list !== 'undefined' && list && list.bRelativePath && list.playlistsPath) {
-				if (!pop.isEnabled()) {pop.enable(true, message, tt);}
-				precacheLibraryRelPaths(list.playlistsPath);
-				pop.disable(true);
-				const lBrainzToken = list.properties.lBrainzToken[1];
-				const bEncrypted = list.properties.lBrainzEncrypt[1];
-				if (lBrainzToken.length && !bEncrypted) {
-					if (!(await validateToken(decryptToken({lBrainzToken, bEncrypted})))) {
-						fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); 
+			if (typeof list !== 'undefined' && list) {
+				if (list.bRelativePath && list.playlistsPath.length) {
+					if (!pop.isEnabled()) {pop.enable(true, message, tt);}
+					precacheLibraryRelPaths(list.playlistsPath);
+					pop.disable(true);
+					const lBrainzToken = list.properties.lBrainzToken[1];
+					const bEncrypted = list.properties.lBrainzEncrypt[1];
+					if (lBrainzToken.length && !bEncrypted) {
+						if (!(await validateToken(decryptToken({lBrainzToken, bEncrypted})))) {
+							fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); 
+						}
 					}
 				}
+				list.cacheLibTimer = null;
+				list.bLibraryChanged = false;
 			}
 		});
 	} else {
@@ -360,21 +364,29 @@ addEventListener('on_notify_data', (name, info) => {
 			break;
 		}
 		case 'precacheLibraryPaths': {
-			libItemsAbsPaths = [...info];
-			if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
-			console.log('precacheLibraryPaths: using paths from another instance.');
-			// Update rel paths if needed with new data
-			if (list.bRelativePath && list.playlistsPath.length) {
-				if (libItemsRelPaths.hasOwnProperty(list.playlistsPath) && libItemsRelPaths[list.playlistsPath].length !== libItemsAbsPaths.length) {
-					libItemsRelPaths[list.playlistsPath] = []; // Delete previous cache on library change
+			if (!info) {
+				cacheLib(void(0), void(0), void(0), true);
+			} else {
+				libItemsAbsPaths = [...info];
+				if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
+				console.log('precacheLibraryPaths: using paths from another instance.');
+				// Update rel paths if needed with new data
+				if (list.bRelativePath && list.playlistsPath.length) {
+					if (libItemsRelPaths.hasOwnProperty(list.playlistsPath) && libItemsRelPaths[list.playlistsPath].length !== libItemsAbsPaths.length) {
+						libItemsRelPaths[list.playlistsPath] = []; // Delete previous cache on library change
+					}
+					precacheLibraryRelPaths(list.playlistsPath);
 				}
-				precacheLibraryRelPaths(list.playlistsPath);
+				list.cacheLibTimer = null;
+				list.bLibraryChanged = false;
+				pop.disable(true);
 			}
-			pop.disable(true);
 			break;
 		}
 		case 'precacheLibraryPaths ask': {
-			if (libItemsAbsPaths && libItemsAbsPaths.length) {
+			if (list.bLibraryChanged) {
+				window.NotifyOthers('precacheLibraryPaths', null);
+			} else if (libItemsAbsPaths && libItemsAbsPaths.length) {
 				window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
 			}
 			break;
@@ -648,16 +660,22 @@ const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup
 // Update cache on changes!
 const debouncedCacheLib = debounce(cacheLib, 5000);
 addEventListener('on_library_items_added', () => {
-	if (typeof list !== 'undefined' && list.bTracking) {
-		debouncedCacheLib(false, 'Updating...');
-		list.clearSelPlaylistCache();
+	if (typeof list !== 'undefined') {
+		list.bLibraryChanged = true;
+		if (list.bTracking) {
+			list.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
+			list.clearSelPlaylistCache();
+		}
 	}
 });
 
 addEventListener('on_library_items_removed', () => { 
-	if (typeof list !== 'undefined' && list.bTracking) {
-		debouncedCacheLib(false, 'Updating...');
-		list.clearSelPlaylistCache();
+	if (typeof list !== 'undefined') {
+		list.bLibraryChanged = true;
+		if (list.bTracking) {
+			list.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
+			list.clearSelPlaylistCache();
+		}
 	}
 });
 
