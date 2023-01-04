@@ -54,6 +54,7 @@
 - UI: filter and sorting menu entries are now sorted.
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 - Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
+- Cache: whenever library paths cache is outdated, a warning is shown on the header and playlists' tooltips.
 ### Changed
 - Quick-search: added new settings for its behavior when a key is pressed multiple times and also to allow cycling between results.
 - XSP: 'playcount' XSP tag now gets translated into '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
