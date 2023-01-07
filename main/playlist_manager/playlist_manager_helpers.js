@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//07/01/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1121,6 +1121,7 @@ function backup(n = 50) { // Backup playlist and json file
 
 function findMixedPaths() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1130,7 +1131,9 @@ function findMixedPaths() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui') {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
-						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {found.push(playlist.path);}
+						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {
+							found.push(playlist);
+						}
 					}
 					const progress = Math.round(i / total * 10) * 10;
 					if (progress > prevProgress) {prevProgress = progress; console.log('Checking paths ' + progress + '%.');}
@@ -1139,7 +1142,8 @@ function findMixedPaths() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			if (found.length && !report.length) {found.forEach((pls) => {report.push(pls.extension === '.ui' ? pls.nameId : pls.path);});}
+			resolve({found, report: []});
 		});
 	});
 }
@@ -1147,6 +1151,7 @@ async function findMixedPathsAsync() {return await findMixedPaths();}
 
 function findExternal() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1173,10 +1178,11 @@ function findExternal() {
 								return bCheck;
 							});
 							if (bDead) {
-								found.push((bUI ? playlist.nameId : playlist.path) + '(contains dead items)');
+								report.push((bUI ? playlist.nameId : playlist.path) + '(contains dead items)');
 							} else {
-								found.push(bUI ? playlist.nameId : playlist.path);
+								report.push(bUI ? playlist.nameId : playlist.path);
 							}
+							found.push(playlist);
 						}
 					}
 					const progress = Math.round(i / total * 10) * 10;
@@ -1186,7 +1192,7 @@ function findExternal() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			resolve({found, report});
 		});
 	});
 }
@@ -1194,6 +1200,7 @@ async function findExternalAsync() {return await findExternal();}
 
 function findDead() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1223,7 +1230,7 @@ function findDead() {
 							}
 							return bCheck;
 						});
-						if (bDead) {found.push(bUI ? playlist.nameId : playlist.path);}
+						if (bDead) {found.push(playlist);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
 					if (progress > prevProgress) {prevProgress = progress; console.log('Checking dead items ' + progress + '%.');}
@@ -1232,7 +1239,8 @@ function findDead() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			if (found.length && !report.length) {found.forEach((pls) => {report.push(pls.extension === '.ui' ? pls.nameId : pls.path);});}
+			resolve({found, report});
 		});
 	});
 }
@@ -1240,6 +1248,7 @@ async function findDeadAsync() {return await findDead();}
 
 function findDuplicates() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1250,7 +1259,7 @@ function findDuplicates() {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl') {
 						const bUI = playlist.extension === '.ui';
 						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
-						if (new Set(filePaths).size !== filePaths.length) {found.push(bUI ? playlist.nameId : playlist.path);}
+						if (new Set(filePaths).size !== filePaths.length) {found.push(playlist);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
 					if (progress > prevProgress) {prevProgress = progress; console.log('Checking duplicates ' + progress + '%.');}
@@ -1259,7 +1268,8 @@ function findDuplicates() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			if (found.length && !report.length) {found.forEach((pls) => {report.push(pls.extension === '.ui' ? pls.nameId : pls.path);});}
+			resolve({found, report});
 		});
 	});
 }
@@ -1267,6 +1277,7 @@ async function findDuplicatesAsync() {return await findDuplicates();}
 
 function findSizeMismatch() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1317,11 +1328,16 @@ function findSizeMismatch() {
 									}
 								}
 							}
-						} 
-						if (typeof text === 'undefined' || !text.length) {found.push(playlist.path + ' (blank)');}
-						else if (typeof size === 'undefined') {found.push(playlist.path + ' (no size tag found)');}
-						else if (filePathsNum !== size) {found.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')');}
-						else if (playlist.extension === '.strm' && size > 1) {found.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)');}
+						}
+						let bDone = false;
+						if (typeof text === 'undefined' || !text.length) {report.push(playlist.path + ' (blank)'); bDone = true;}
+						else if (typeof size === 'undefined') {report.push(playlist.path + ' (no size tag found)'); bDone = true;}
+						else if (filePathsNum !== size) {report.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')'); bDone = true;}
+						else if (playlist.extension === '.strm' && size > 1) {
+							report.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)');
+							bDone = true;
+						}
+						if (bDone) {found.push(playlist);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
 					if (progress > prevProgress) {prevProgress = progress; console.log('Checking size ' + progress + '%.');}
@@ -1330,7 +1346,7 @@ function findSizeMismatch() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			resolve({found, report});
 		});
 	});
 }
@@ -1338,6 +1354,7 @@ async function findSizeMismatchAsync() {return await findSizeMismatch();}
 
 function findDurationMismatch() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1378,8 +1395,10 @@ function findDurationMismatch() {
 									}
 								}
 							}
-							if (typeof duration === 'undefined') {found.push(playlist.path + ' (no duration tag found)');}
-							else if (calcDuration !== duration) {found.push(playlist.path + ' (tag: ' + duration + ', calculated: ' + calcDuration + ')');}
+							let bDone = false;
+							if (typeof duration === 'undefined') {report.push(playlist.path + ' (no duration tag found)'); bDone = true;}
+							else if (calcDuration !== duration) {report.push(playlist.path + ' (tag: ' + duration + ', calculated: ' + calcDuration + ')'); bDone = true;}
+							if (bDone) {found.push(playlist);}
 						}
 					}
 					const progress = Math.round(i / total * 10) * 10;
@@ -1389,7 +1408,7 @@ function findDurationMismatch() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			resolve({found, report});
 		});
 	});
 }
@@ -1397,6 +1416,7 @@ async function findDurationMismatchAsync() {return await findDurationMismatch();
 
 function findBlank() {
 	const found = [];
+	const report = [];
 	return new Promise((resolve) => {
 		const total = list.itemsAll - 1;
 		const promises = [];
@@ -1413,9 +1433,11 @@ function findBlank() {
 							lines = text.split(/\r\n|\n\r|\n|\r/);
 							size = lines.filter(Boolean).length;
 							lines = lines.length;
-						} 
-						if (typeof text === 'undefined' || typeof size === 'undefined') {found.push(playlist.path + ' (blank)');}
-						else if (size !== lines) {found.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')');}
+						}
+						let bDone = false;
+						if (typeof text === 'undefined' || typeof size === 'undefined') {report.push(playlist.path + ' (blank)'); bDone = true;}
+						else if (size !== lines) {report.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')'); bDone = true;}
+						if (bDone) {found.push(playlist);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
 					if (progress > prevProgress) {prevProgress = progress; console.log('Checking blank lines ' + progress + '%.');}
@@ -1424,7 +1446,7 @@ function findBlank() {
 			}));
 		});
 		Promise.all(promises).then(() => {
-			resolve(found);
+			resolve({found, report});
 		});
 	});
 }

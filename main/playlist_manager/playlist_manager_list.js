@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/23
+//07/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -1603,10 +1603,15 @@ function _list(x, y, w, h) {
 	this.isFilterActive = () => {
 		return (this.constLockStates()[0] !== this.lockStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0] || this.constExtStates()[0] !== this.extStates[0] || this.constMbidStates()[0] !== this.mbidStates[0]);
 	};
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0]} = {}) => {
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = []} = {}) => {
 		// On first filter we use this.dataAll as origin
+		if (plsState.length) {
+			this.data = this.dataAll.filter((pls) => plsState.includes(pls));
+		} else {
+			this.data = [...this.dataAll];
+		}
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
-			this.data = [...this.dataAll]; // Copy of objects
+			// this.data = this.data;
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
 			this.data = this.dataAll.filter((item) => {return item.isAutoPlaylist || item.query;});
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {

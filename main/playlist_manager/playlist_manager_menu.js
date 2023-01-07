@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/01/23
+//07/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -852,8 +852,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other enviroments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking absolute/relative paths...\nPanel will be disabled during the process.');}
-				findMixedPathsAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findMixedPathsAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -863,8 +864,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Searching...', 'Searching external items...\nPanel will be disabled during the process.');}
-				findExternalAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findExternalAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -874,8 +876,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for dead items (i.e. items that don\'t exist in their path).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Searching...', 'Searching dead items...\nPanel will be disabled during the process.');}
-				findDeadAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findDeadAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -885,8 +888,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.');}
-				findDuplicatesAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findDuplicatesAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -896,8 +900,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking playlist size mismatch...\nPanel will be disabled during the process.');}
-				findSizeMismatchAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findSizeMismatchAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -907,8 +912,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist duration not matching duration of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking playlist duration mismatch...\nPanel will be disabled during the process.');}
-				findDurationMismatchAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findDurationMismatchAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -918,8 +924,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for blank lines (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking blank lines...\nPanel will be disabled during the process.');}
-				findBlankAsync().then((found) => {
-					fb.ShowPopupMessage('Found these playlists with blank lines:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				findBlankAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with blank lines:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
