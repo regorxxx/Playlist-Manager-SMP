@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/11/22
+//09/01/23
 
 /* 
 	Global tags, queries, RegExp
@@ -78,7 +78,8 @@ const globTags = {
 	rating: '%RATING%',
 	acoustidFP: 'ACOUSTID_FINGERPRINT_RAW',
 	fooidFP: 'FINGERPRINT_FOOID',
-	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)'
+	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)',
+	folksonomy: 'FOLKSONOMY'
 };
 
 // Queries: user replaceable with a presets file at folders.data

@@ -61,8 +61,24 @@ function consoleLog() {
 						case arg instanceof WeakSet: {instance = 'WeakSet '; break;}
 					}
 					if (instance) {val = [...arg];} // Convert to array objects if possible and stringify
-					try {val = (instance ? instance : 'Object ') + JSON.stringify(val ? val : arg);} 
-					catch (e) {val = '--error type--'; console.logUI('Console.log: argument type not recognized: ', type, val ? val : arg);}
+					try {
+						val = (instance ? instance : 'Object ') + JSON.stringify(val ? val : arg, (k, v) => {
+							if (v.hasOwnProperty('RawPath')) {
+								return "FbMetadbHandle " + JSON.stringify({FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong});
+							} 
+							else if (v instanceof FbMetadbHandleList) {
+								return "FbMetadbHandleList " + JSON.stringify({Count: v.Count});
+							}
+							return v;
+						});
+					} catch (e) {
+						if (e.message === 'can\'t access dead object') {
+							console.logUI('Console.log: can\'t access dead object: ', type);
+						} else {
+							val = '--error type--'; 
+							console.logUI('Console.log: argument type not recognized: ', type, val ? val : arg);
+						}
+					}
 					break;
 				}
 			}
