@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/12/22
+//08/01/23
 
 /* 
 	Objects
@@ -132,7 +132,7 @@ function capitalizePartial(s) {
 function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
 	if (typeof s !== 'string') {return '';}
 	if (isArray(sep)) {
-		const copy = Array.from(s.toLowerCase());
+		const copy = [...s.toLowerCase()];
 		const len = s.length;
 		for (const sep_i of sep) {
 			s = capitalizeAll(s, sep_i, bJoinSep);
@@ -393,7 +393,7 @@ function cyclicOffset(reference, offset, limits) {
 		return reference;
 }
 
-const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
+const range = (start, stop, step) => new Array((stop - start) / step + 1).fill(void(0)).map((_, i) => start + (i * step));
 
 function round(floatnum, decimals, eps = 10**-14){
 	let result;

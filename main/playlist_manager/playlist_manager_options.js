@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//08/01/23
 
 include('..\\..\\helpers\\window_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
@@ -40,7 +40,7 @@ options.load = () => {
 
 
 /* playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
-	extension				: ['Extension used when saving playlists (' + Array.from(writablePlaylistFormats).join(', ') + ')', '.m3u8'],
+	extension				: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8'],
 
 	// autoPlaylistTags		: ['Playlist tags and actions config', JSON.parse({bAutoLoadTag: false, bAutoLockTag: false, bAutoCustomTag: false, bApplyAutoTags: false, autoCustomTag: ''})],
 

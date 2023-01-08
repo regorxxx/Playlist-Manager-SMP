@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/23
+//08/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -1086,7 +1086,7 @@ function createMenuRightTop() {
 			}
 			{	// Playlist extension
 				const subMenuName = menu.newMenu('Default playlist extension...', menuName);
-				const options = Array.from(writablePlaylistFormats);
+				const options = [...writablePlaylistFormats];
 				const optionsLength = options.length;
 				menu.newEntry({menuName: subMenuName, entryText: 'Writable formats:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});

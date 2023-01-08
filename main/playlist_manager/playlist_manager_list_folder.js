@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//08/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -115,7 +115,7 @@ function _list(x, y, w, h) {
 			if (this.itemsAll !== 0) {
 				emptyText = 'No matches for the current filters.';
 			} else {
-				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them from json (right button).' + '\n\nReadable playlist formats:\n\'' + Array.from(loadablePlaylistFormats).join('\', \'') + '\'\nWritable formats:\n\'' + Array.from(writablePlaylistFormats).join('\', \'') + '\'';
+				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them from json (right button).' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
 			}
 			const cache = this.rows;
 			this.rows = (emptyText.match(/\n/g) || []).length; // # lines of previous text = # \n
@@ -2077,7 +2077,7 @@ function _list(x, y, w, h) {
 			const index = this.dataAll.indexOf(objectPlaylist);
 			if (index !== -1) { // Changes data on the other arrays too since they link to same object
 				Object.keys(properties).forEach( (property) => {this.dataAll[index][property] = properties[property];});
-			} else {console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+			} else {console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + [...objectPlaylist));}
 			if (bSave) {this.save();}
 			clearInterval(delay);
 		}
@@ -2094,30 +2094,30 @@ function _list(x, y, w, h) {
 				if (index !== -1) {
 					this.dataAutoPlaylists.splice(index, 1);
 					this.itemsAutoplaylist--;
-				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + [...objectPlaylist));}
 			} else if (objectPlaylist.extension === '.fpl') {
 				index = this.dataFpl.indexOf(objectPlaylist);
 				if (index !== -1) {
 					this.dataFpl.splice(index, 1);
 					this.itemsFpl--;
-				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + [...objectPlaylist));}
 			} else if (objectPlaylist.extension === '.xsp') {
 				index = this.dataXsp.indexOf(objectPlaylist);
 				if (index !== -1) {
 					this.dataXsp.splice(index, 1);
 					this.itemsXsp--;
-				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + [...objectPlaylist));}
 			}
 			index = this.data.indexOf(objectPlaylist);
 			if (index !== -1) {
 				this.data.splice(index, 1);
 				this.items--;
-			} else {console.log('Playlist Manager: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+			} else {console.log('Playlist Manager: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + [...objectPlaylist));}
 			index = this.dataAll.indexOf(objectPlaylist);
 			if (index !== -1) {
 				this.dataAll.splice(index, 1);
 				this.itemsAll--;
-			} else {console.log('Playlist Manager: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + Array.from(objectPlaylist));}
+			} else {console.log('Playlist Manager: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + [...objectPlaylist));}
 			clearInterval(delay);
 		}
 		
@@ -2608,7 +2608,7 @@ function _list(x, y, w, h) {
 				if (writablePlaylistFormats.has(this.playlistsExtension.toLowerCase())){
 					this.playlistsExtension = this.playlistsExtension.toLowerCase();
 				} else {
-					fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + Array.from(writablePlaylistFormats).join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
+					fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + [...writablePlaylistFormats].join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
 					this.playlistsExtension = '.m3u8';
 				}
 				this.properties['extension'][1] = this.playlistsExtension;

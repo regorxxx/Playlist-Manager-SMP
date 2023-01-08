@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/01/23
+//08/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -63,7 +63,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 	if (!playlistIndex && !handleList) {return false;}
 	const extension = ext.toLowerCase();
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
+		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
@@ -215,7 +215,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = false) {
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!writablePlaylistFormats.has(extension)){
-		console.log('addHandleToPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(writablePlaylistFormats).join(', '));
+		console.log('addHandleToPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
 		return false;
 	}
 	if (_isFile(playlistPath)) {
@@ -378,7 +378,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 	}
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!readablePlaylistFormats.has(extension)){
-		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(readablePlaylistFormats).join(', '));
+		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
 		return paths;
 	}
 	if (_isFile(playlistPath)) { // TODO: skip blank lines ?
@@ -512,7 +512,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 	}
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!readablePlaylistFormats.has(extension)){
-		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + Array.from(readablePlaylistFormats).join(', '));
+		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
 		return bDone;
 	}
 	if (extension === '.strm') {
