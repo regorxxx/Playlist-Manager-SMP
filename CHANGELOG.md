@@ -56,7 +56,8 @@
 - Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
 - Cache: whenever library paths cache is outdated, a warning is shown on the header and playlists' tooltips.
 ### Changed
-- Playlists consistency tools: list is now filtered with the results found -if any- (in addition the popup showing the report). Makes much easier to work with the problematic playlists, not having to manually search them.
+- Playlists maintenance tools: playlist consistency tools renamed to playlists maintenance tools.
+- Playlists maintenance tools: list is now filtered with the results found -if any- (in addition the popup showing the report). Makes much easier to work with the problematic playlists, not having to manually search them. Output also honors the current filtering configuration, so in case only M3U playlists are shown, the output will only show results being M3U (the report will list all results though).
 - Quick-search: added new settings for its behavior when a key is pressed multiple times and also to allow cycling between results.
 - XSP: 'playcount' XSP tag now gets translated into '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
 - XSP: 'lastplayed' XSP tag now gets translated into '%LAST_PLAYED_ENHANCED%' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
@@ -72,8 +73,9 @@
 - UI: 'Send selection to playlist' renamed to 'Copy selection to playlist'. Reconfigure the shortcut on the menus before using.
 - UI: 'Send selection to playlist' now creates an undo backup point before inserting the new tracks if the playlist is loaded on UI.
 - UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
-- UI: panel is now animated while performing asynchronous tasks on 'Playlist consistency tools'.
+- UI: panel is now animated while performing asynchronous tasks on 'Playlist maintenance tools'.
 - UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.
+- UI: quick-search color is now inverted when no result is found.
 - Dynamic menus: dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
 - Dynamic menus: the panel warns about other panels having the same name if the feature is enabled at startup or when enabling it. Panel flashes for some seconds while the popup is shown.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
