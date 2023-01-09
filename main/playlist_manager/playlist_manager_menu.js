@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/23
+//09/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -844,7 +844,7 @@ function createMenuRight() {
 	menu.newEntry({entryText: 'sep'});
 	{
 		// Playlist errors
-		const subMenuName = menu.newMenu('Check playlists consistency...');
+		const subMenuName = menu.newMenu('Playlists maintenance tools...');
 		menu.newEntry({menuName: subMenuName, entryText: 'Perform checks on all playlists:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		{	// Absolute/relative paths consistency
