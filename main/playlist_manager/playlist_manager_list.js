@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/23
+//09/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -318,11 +318,11 @@ function _list(x, y, w, h) {
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
 			// Draw the letter
 			if (idxHighlight === -1) { // Striked out when not found
-				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, blendColors(textCol, this.colors.selectedPlaylistColor, 0.5), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylistColor, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
 				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2 );
 				const lineW = Math.min(popX + sizeX / 2 + textW / 2 - 1, popX + sizeX - textOffset / 2);
-				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, opaqueColor(this.colors.selectedPlaylistColor, 70));
+				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, invert(opaqueColor(this.colors.selectedPlaylistColor, 70)));
 			} else { // when found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				// And highlight a few ms the found playlist
@@ -1613,11 +1613,11 @@ function _list(x, y, w, h) {
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// this.data = this.data;
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
-			this.data = this.dataAll.filter((item) => {return item.isAutoPlaylist || item.query;});
+			this.data = this.data.filter((item) => {return item.isAutoPlaylist || item.query;});
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
-			this.data = this.dataAll.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
+			this.data = this.data.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
-			this.data = this.dataAll.filter((item) => {return item.extension === '.ui';});
+			this.data = this.data.filter((item) => {return item.extension === '.ui';});
 		}
 		// And then... we use this.data to filter again by lock state
 		if (lockState === this.constLockStates()[0]) {
