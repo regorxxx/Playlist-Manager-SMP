@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/23
+//09/01/23
 
 include('helpers_xxx.js');
 
@@ -79,7 +79,9 @@ function queryReplaceWithCurrent(query, handle) {
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
 				const bIsFunc = tfo.indexOf('$') !== -1;
-				const bIsWithinFunc = query[idx[i] - 1] === '(' && query[idx[i + 1] + 1] === ')';
+				const prevChar = query[idx[i] - 1];
+				const nextChar = query[idx[i + 1] + 1];
+				const bIsWithinFunc = (prevChar === '('  || prevChar === ',') && (nextChar === ')' || nextChar === ',');
 				tfo = !bIsFunc ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
 				tfo = fb.TitleFormat(tfo);
 				tfoVal = bIsFunc || bIsWithinFunc ? sanitizeTagTfo(tfo.EvalWithMetadb(handle)) : tfo.EvalWithMetadb(handle);
