@@ -55,6 +55,8 @@
 - Track Auto-tagging: added new JS functions to retrieve properties from playlist: ('JS:' +) playlistName, playlistCategory, playlistTags and playlistMBID.
 - Cache: new option on header's menu to stop library path caching until next startup. This allows to perform path changes to files without constantly having the panel processing the changes, when done, deactivate it to update. This action is shared across all playlist manager panels (i.e. activating it in one, will activate it in the others).
 - Cache: whenever library paths cache is outdated, a warning is shown on the header and playlists' tooltips.
+- Playlists maintenance tools: added tool to check for subsong items (usually files from ISO files, etc.). They are fully supported within by the manager, but it's not guaranteed to work on other software.
+- Playlists maintenance tools: added tool to check for format specific errors (like XSP types not supported, wrong queries, etc.). The errors are shown on the report along the playlist name/path.
 ### Changed
 - Playlists maintenance tools: playlist consistency tools renamed to playlists maintenance tools.
 - Playlists maintenance tools: list is now filtered with the results found -if any- (in addition the popup showing the report). Makes much easier to work with the problematic playlists, not having to manually search them. Output also honors the current filtering configuration, so in case only M3U playlists are shown, the output will only show results being M3U (the report will list all results though).
