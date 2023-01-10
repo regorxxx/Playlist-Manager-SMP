@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/23
+//10/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -59,6 +59,11 @@ const pathTF = '$put(path,%path%)$if($stricmp($ext($get(path)),iso),\',\'%subson
 	Playlist file manipulation 
 */
 
+//	For XSP playlists use this:
+//		const jspPls = XSP.emptyJSP();
+//		... (set rules) ...
+//		const xspText = XSP.toXSP(jspPls);
+//		_save(path, xspText.join('\r\n'));
 function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', bBOM = false}) {
 	if (!playlistIndex && !handleList) {return false;}
 	const extension = ext.toLowerCase();

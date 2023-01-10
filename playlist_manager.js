@@ -620,7 +620,6 @@ var debouncedAutoUpdate = (autoUpdateTimer) ? debounce(autoUpdate, autoUpdateTim
 const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
 function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 function autoUpdate() {
-	// const playlistPathArray = getFiles(getPropertyByKey(properties, 'playlistPath', 'plm_'), loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArray = getFiles(list.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	if (playlistPathArrayLength !== (list.getPlaylistNum())) { // Most times that's good enough. Count total items minus virtual playlists
