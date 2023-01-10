@@ -61,6 +61,8 @@
 - Quick-search: added new settings for its behavior when a key is pressed multiple times and also to allow cycling between results.
 - XSP: 'playcount' XSP tag now gets translated into '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
 - XSP: 'lastplayed' XSP tag now gets translated into '%LAST_PLAYED_ENHANCED%' within foobar when 'foo_enhanced_playcount' is installed. This offers better support for scrobbles.
+- XSP: 'virtualfolder' XSP tag now gets translated into '#PLAYLIST#' within foobar. It simply remaps the tag to behave like 'playlist' XSP tag.
+- XSP: XSP playlists with a non compatible type now show a warning at tooltip, contextual menu and when trying to load/export them. Most other actions are disabled. Currently only 'songs' type is allowed.
 - Track Auto-tagging: reworked entire feature to fine-tune overwriting or value addition behavior, in particular for JS functions. Empty values will now delete the tag, otherwise added to current tag by default. Check documentation for further details.
 - Filter: category playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
