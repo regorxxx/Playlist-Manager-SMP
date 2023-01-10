@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/10/22
+//10/01/23
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -186,7 +186,7 @@ XSP.getFbTag = function(tag) {
 		case 'path': {fbTag = '%' + tag.toUpperCase() + '%'; break;}
 		// Are the same
 		case 'rating':
-		case 'userrating': {fbTag = '%RATING%'; break;} // Requires foo playcount
+		case 'userrating': {fbTag = '%RATING%'; break;} // Requires foo_playcount
 		// Idem
 		case 'year':
 		case 'time': {fbTag = 'DATE'; break;}
@@ -195,9 +195,10 @@ XSP.getFbTag = function(tag) {
 		case 'themes': {fbTag = 'THEME'; break;}
 		case 'styles': {fbTag = 'STYLE'; break;}
 		case 'albumartist': {fbTag = '"ALBUM ARTIST"'; break;}
-		case 'playcount': {fbTag = XSP.isFoec ? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"' : '%PLAY_COUNT%'; break;} // Requires foo playcount
-		case 'lastplayed': {fbTag = XSP.isFoec ? '%LAST_PLAYED_ENHANCED%' : '%LAST_PLAYED%'; break;} // Requires foo playcount
+		case 'playcount': {fbTag = XSP.isFoec ? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"' : '%PLAY_COUNT%'; break;} // Requires foo_enhanced_playcount or foo_playcount
+		case 'lastplayed': {fbTag = XSP.isFoec ? '%LAST_PLAYED_ENHANCED%' : '%LAST_PLAYED%'; break;} // Requires foo_enhanced_playcount or foo_playcount
 		// Special Tags
+		case 'virtualfolder': // Remap to playlist which is the most similar thing...
 		case 'playlist': {fbTag = '#PLAYLIST#'; break;} // Does not work in foobar queries
 		case 'random': {fbTag = '$rand()'; break;} // Does not work in foobar queries
 		default: {
@@ -217,7 +218,7 @@ XSP.getTag = function(fbTag) {
 		case 'TITLE':
 		case 'COMMENT':
 		case 'TRACKNUMBER':
-		case 'RATING': // Requires foo playcount, userrating has no correspondence
+		case 'RATING': // Requires foo_playcount, userrating has no correspondence
 		case 'FILENAME':
 		case 'PATH': {tag = fbTaguc; break;}
 		case 'YEAR':
@@ -230,11 +231,11 @@ XSP.getTag = function(fbTag) {
 		case 'ALBUM ARTIST': {tag = 'albumartist'; break;}
 		case '$MAX(PLAY_COUNT,LASTFM_PLAY_COUNT)': // Requires foo_enhanced_playcount
 		case '$MAX(LASTFM_PLAY_COUNT,PLAY_COUNT)':
-		case 'PLAY_COUNT': {tag = 'playcount'; break;} // Requires foo playcount
+		case 'PLAY_COUNT': {tag = 'playcount'; break;} // Requires foo_playcount
 		case 'LAST_PLAYED_ENHANCED': // Requires foo_enhanced_playcount
-		case 'LAST_PLAYED': {tag = 'lastplayed'; break;} // Requires foo playcount
+		case 'LAST_PLAYED': {tag = 'lastplayed'; break;} // Requires foo_playcount
 		// Special tags
-		case '#PLAYLIST#': {tag = 'playlist'; break;} // Does not work in foobar queries
+		case '#PLAYLIST#': {tag = 'playlist'; break;} // Does not work in foobar queries, virtualfolder will never be used here
 		case '$RAND()': {tag = 'random'; break;} // Does not work in foobar queries
 		default: {
 			console.log('Tag not recognized: ' + fbTag);
