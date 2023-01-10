@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/22
+//10/01/22
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -10,7 +10,7 @@ include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 
-function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '') {
+function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', type = '') {
 	if (typeof extension === 'undefined') {extension = utils.SplitFilePath(path)[2];}
 	if (typeof name === 'undefined') {name = utils.SplitFilePath(path)[1];}
 	this.id = id;
@@ -31,6 +31,7 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.limit = Number.isFinite(limit) ? limit : 0;
 	this.duration = Number.isFinite(duration) ? duration : -1;
 	this.playlist_mbid = playlist_mbid;
+	if (this.extension === '.xsp') {this.type = type || ''}
 }
 
 function loadPlaylistsFromFolder(folderPath = '') {
@@ -53,6 +54,7 @@ function loadPlaylistsFromFolder(folderPath = '') {
 		let limit = null;
 		let duration = null;
 		let playlist_mbid = '';
+		let type = null;
 		const fileSize = utils.GetFileSize(file);
 		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar native playlist format
 			let text = _open(file).split(/\r\n|\n\r|\n|\r/);
@@ -181,10 +183,28 @@ function loadPlaylistsFromFolder(folderPath = '') {
 					queryObj = {query: XSP.getQuery(jsp), sort: XSP.getSort(jsp), bSortForced: false};
 					bLocked = true;
 					limit = jPls.hasOwnProperty('limit') && jPls.limit ? jPls.limit : 0;
+					type = jPls.hasOwnProperty('type') && jPls.type ? jPls.type : '';
 				}
 			}
 		}
-		playlistArray[i] = new oPlaylist(uuid, file, name.length ? name : void(0), extension, size !== null ? size : void(0), fileSize, bLocked, void(0), queryObj ? queryObj : void(0), category.length ? category : void(0), isArrayStrings(tags) ? tags : void(0), isArray(trackTags) ? trackTags : void(0), Number.isFinite(limit) ? limit : void(0), Number.isFinite(duration) ? duration : void(0), playlist_mbid.length ? playlist_mbid : void(0));
+		playlistArray[i] = new oPlaylist(
+			uuid,
+			file,
+			name.length ? name : void(0),
+			extension,
+			size !== null ? size : void(0),
+			fileSize,
+			bLocked,
+			void(0),
+			queryObj ? queryObj : void(0),
+			category.length ? category : void(0),
+			isArrayStrings(tags) ? tags : void(0),
+			isArray(trackTags) ? trackTags : void(0),
+			Number.isFinite(limit) ? limit : void(0),
+			Number.isFinite(duration) ? duration : void(0),
+			playlist_mbid.length ? playlist_mbid : void(0),
+			extension === '.xsp' && type !== null ? type : void(0)
+		);
 	}
 	return playlistArray;
 }
@@ -192,6 +212,10 @@ function loadPlaylistsFromFolder(folderPath = '') {
 function setTrackTags(trackTags, list, z) {
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const extension = pls.extension;
 	const oldTags = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
@@ -345,6 +369,10 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 	const extension = pls.extension;
 	if (playlist_mbid !== pls.playlist_mbid) {
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+			if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+				return bDone;
+			}
 			list.editData(pls, {playlist_mbid});
 			list.update(true, true);
 			bDone = true;
@@ -554,6 +582,10 @@ function convertToRelPaths(list, z) {
 function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++;} return count;}, 0)+ ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
@@ -565,6 +597,10 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const playlistName = pls.name + ' (std copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (std copy ')) {count++;} return count;}, 0)+ ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
 	const idx = getPlaylistIndexArray(pls.nameId);
@@ -601,6 +637,10 @@ function clonePlaylistInUI(list, z, bAlsoHidden = false) {
 	let bDone = false;
 	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
 	const bUI = pls.extension === '.ui';
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList && handleList.Count) {
@@ -650,6 +690,10 @@ function clonePlaylistFile(list, z, ext) {
 function exportPlaylistFile(list, z, defPath = '') {
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const playlistPath = pls.path;
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let path = '';
@@ -668,6 +712,10 @@ function exportPlaylistFile(list, z, defPath = '') {
 function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const playlistPath = pls.path;
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let newPath = '';
@@ -704,9 +752,13 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 
 function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths(list, z, void(0), defPath);
-	if (!newPath.length) {return;}
+	if (!newPath.length) {return false;}
 	if (bDone) {
 		const pls = list.data[z];
+		if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+			return bDone;
+		}
 		const playlistPath = pls.path;
 		const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 		const root = utils.SplitFilePath(newPath)[0];
@@ -750,6 +802,10 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const playlistPath = pls.path;
 	const bUI = pls.extension === '.ui';
 	const bXSP = pls.extension === '.xsp';
@@ -829,6 +885,10 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3
 	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
 	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
 	const playlistName = pls.name;
 	const extension = ext.length ? ext.toLowerCase() : list.playlistsExtension;
 	const playlistNameExt = playlistName + extension;
@@ -1005,6 +1065,10 @@ function cycleTags() {
 function rewriteXSPQuery(pls, newQuery) {
 	let bDone = false;
 	if (pls.extension === '.xsp') {
+		if (pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+			return bDone;
+		}
 		const {rules, match} = XSP.getRules(newQuery);
 		if (rules.length) {
 			const playlistPath = pls.path;
@@ -1042,6 +1106,10 @@ function rewriteXSPQuery(pls, newQuery) {
 function rewriteXSPSort(pls, newSort) {
 	let bDone = false;
 	if (pls.extension === '.xsp') {
+		if (pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+			return bDone;
+		}
 		const order = XSP.getOrder(newSort);
 		const playlistPath = pls.path;
 		const bCache = xspCache.has(playlistPath);
@@ -1076,6 +1144,10 @@ function rewriteXSPSort(pls, newSort) {
 function rewriteXSPLimit(pls, newLimit) {
 	let bDone = false;
 	if (pls.extension === '.xsp') {
+		if (pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+			return bDone;
+		}
 		const playlistPath = pls.path;
 		const bCache = xspCache.has(playlistPath);
 		let playlistText = '';

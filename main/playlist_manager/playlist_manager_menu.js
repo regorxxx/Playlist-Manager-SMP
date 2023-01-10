@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/23
+//10/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -46,6 +46,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const bIsPlsLoaded = isPlsLoaded();
 	const bIsPlsActive = isPlsActive();
 	const bIsAutoPls = isAutoPls();
+	const bIsValidXSP = pls.extension !== '.xsp' || pls.hasOwnProperty('type') && pls.type === 'songs';
 	const bIsLockPls = isLockPls();
 	const bIsPlsEditable = isPlsEditable();
 	const bIsPlsLockable = isPlsLockable();
@@ -54,7 +55,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	// Header
 	if (list.bShowMenuHeader) {
-		menu.newEntry({entryText: '--- ' + (bIsAutoPls ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---', flags: MF_GRAYED});
+		menu.newEntry({entryText: '--- ' + (bIsAutoPls ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---' + (bIsValidXSP ? '' : ' (invalid type)'), flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 	}
 	// Entries
@@ -105,7 +106,7 @@ function createMenuLeft(forcedIndex = -1) {
 					list.update(true, true);
 					list.filter();
 				}
-			}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
+			}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			// Change AutoPlaylist query
 			menu.newEntry({entryText: 'Edit query...', func: () => {
 				let newQuery = '';
@@ -124,7 +125,7 @@ function createMenuLeft(forcedIndex = -1) {
 						list.filter();
 					}
 				}
-			}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
+			}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			if (pls.extension === '.xsp') {
 				menu.newEntry({entryText: 'Edit limit...', func: () => {
 					let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name, 50);
@@ -138,7 +139,7 @@ function createMenuLeft(forcedIndex = -1) {
 						list.update(true, true);
 						list.filter();
 					}
-				}, flags: !bIsLockPls ? MF_STRING : MF_GRAYED});
+				}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			}
 		} else {
 			// Updates playlist file with any new changes on the playlist binded within foobar
@@ -228,7 +229,7 @@ function createMenuLeft(forcedIndex = -1) {
 				try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
 			}
 			if (tagsString !== currValue) {setTrackTags(tags, list, z);}
-		}, flags: !bIsLockPls && bIsPlsEditable ? MF_STRING : MF_GRAYED});
+		}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Export and clone
@@ -236,12 +237,12 @@ function createMenuLeft(forcedIndex = -1) {
 		if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
 			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 				cloneAsStandardPls(list, z, (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [], list.bAdvTitle);
-			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
+			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => { // Here creates a foobar autoplaylist no matter the original format
 				cloneAsAutoPls(list, z);
-			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
+			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export as json file...', func: () => {
-				const path = list.exportJson({idx: z});
+				const path = list.exportJson({idx: z, bAllExt: true});
 				if (_isFile(path)) {_explorer(path);}
 			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
 			if (pls.extension === '.xsp') {
@@ -280,7 +281,7 @@ function createMenuLeft(forcedIndex = -1) {
 		}
 		{	// Export and Convert
 			const presets = JSON.parse(list.properties.converterPreset[1]);
-			const flags = bWritableFormat || bIsPlsUI || bIsAutoPls? MF_STRING : MF_GRAYED;
+			const flags = bWritableFormat || bIsPlsUI || bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED;
 			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
 			menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -307,7 +308,7 @@ function createMenuLeft(forcedIndex = -1) {
 			});
 		}
 		{	// Export to ListenBrainz
-			const subMenuName = menu.newMenu('Online sync...', void(0));
+			const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
 			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 				if (!await checkLBToken()) {return false;}
 				let bUpdateMBID = false;
@@ -442,6 +443,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
 	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => {return isPlsLoaded(pls);});
 	const bIsAutoPlsEvery = playlists.every((pls) => {return isAutoPls(pls);});
+	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => {return pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs';});
 	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => {return isAutoPls(pls);});
 	const bIsLockPlsEvery = playlists.filter((pls) => {return pls.extension !== '.ui';}).every((pls) => {return isLockPls(pls);});
 	const bIsPlsEditable = playlists.some((pls) => {return isPlsEditable(pls);});
@@ -467,9 +469,10 @@ function createMenuLeftMult(forcedIndexes = []) {
 		menu.newEntry({entryText: 'Clone playlists in UI', func: () => {
 			indexes.forEach((z, i) => {
 				const pls = playlists[i];
+				if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
 				if (!isPlsUI(pls)) {clonePlaylistFile(list, z, '.ui');}
 			})
-		}, flags: bIsPlsLoadedEvery ? MF_GRAYED : MF_STRING});
+		}, flags: bIsPlsLoadedEvery || !bIsValidXSPEvery ? MF_GRAYED : MF_STRING});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Tags and category
@@ -560,7 +563,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	menu.newEntry({entryText: 'sep'});
 	{ // Export and Convert
 		const presets = JSON.parse(list.properties.converterPreset[1]);
-		const flags = bWritableFormat || bIsPlsUISome || bIsAutoPlsSome ? MF_STRING : MF_GRAYED;
+		const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery ? MF_STRING : MF_GRAYED;
 		const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
 		menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -579,6 +582,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
+					if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
 					if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 						if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);} 

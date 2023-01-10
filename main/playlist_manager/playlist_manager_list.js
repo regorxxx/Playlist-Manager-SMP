@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/23
+//10/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -599,6 +599,7 @@ function _list(x, y, w, h) {
 								}
 								if (iDup > 1) {warningText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.';}
 								if (this.bLibraryChanged && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
+								if (pls.extension === '.xsp' && pls.type !== 'songs') {warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.';}
 								if (warningText.length) {playlistDataText += '\n' + warningText;}
 								this.tooltip.SetValue(playlistDataText, true);
 							}
@@ -1489,7 +1490,17 @@ function _list(x, y, w, h) {
 		else if (idx === -1) {name = sanitize(this.playlistsPathDisk + '_' + this.playlistsPathDirName) + '.json';}
 		else if (isInt(idx)) {name = sanitize(this.data[idx].name) + '.json';}
 		else {console.log('exportJson: Invalid index argument ' + idx); return '';}
-		if (!bArray && idx !== -1 && !this.data[idx].isAutoplaylist && !bAllExt && !this.data[idx].extension === '.fpl' && !this.data[idx].extension === '.xsp') {return '';} // Safety check
+		if (!bArray && idx !== -1 ) { // Safety check
+			const pls = this.data[idx];
+			if (!bAllExt && !pls.isAutoplaylist) {return '';}
+			else if (bAllExt) {
+				if (pls.extension !== '.fpl' && pls.extension !== '.xsp') {return '';}
+				if (pls.extension === '.xsp' &&  pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't export incompatible files
+					fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+					return '';
+				}
+			}
+		}
 		if (!path || !path.length) {
 			try {path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', window.Name, this.playlistsPath + 'Export\\' + name, true));}
 			catch (e) {return '';}
@@ -1502,8 +1513,15 @@ function _list(x, y, w, h) {
 		let toSave = [];
 		if (bArray) {
 			idx.forEach((i) => {
-				if ((this.data[i].extension === '.fpl' || this.data[i].extension === '.xsp') && bAllExt) {toSave.push(this.data[i]);}
-				else if (this.data[i].isAutoplaylist) {toSave.push(this.data[i]);}
+				const pls = this.data[i];
+				if ((pls.extension === '.fpl' || pls.extension === '.xsp') && bAllExt) {
+					if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't export incompatible files
+						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+						return;
+					}
+					toSave.push(pls);
+				}
+				else if (pls.isAutoplaylist) {toSave.push(pls);}
 			});
 		}
 		else if (idx === -1) {toSave = bAllExt ? [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp] : [...this.dataAutoPlaylists];}
@@ -1551,6 +1569,10 @@ function _list(x, y, w, h) {
 			data.forEach((item) => { // TODO: .fpl importing?
 				if (!item.hasOwnProperty('query') || !item.hasOwnProperty('isAutoPlaylist') || !item.isAutoPlaylist) {return;} // May be a non AutoPlaylist item
 				if (!checkQuery(item.query, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return;} // Don't allow empty but allow sort
+				if (item.extension === '.xsp' && item.hasOwnProperty('type') && item.type !== 'songs') { // Don't import incompatible files
+					fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+					return;
+				}
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				item.size = handleList.Count;
 				item.duration = handleList.CalcTotalDuration();
@@ -1891,10 +1913,12 @@ function _list(x, y, w, h) {
 									if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
 										console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 										if (item.extension === '.xsp') {
-											let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
-											if (xspPlaylist) {
-												xspPlaylist.size = item.size;
-												xspPlaylist.duration = item.duration;
+											if (item.hasOwnProperty('type') && item.type === 'songs') {
+												let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
+												if (xspPlaylist) {
+													xspPlaylist.size = item.size;
+													xspPlaylist.duration = item.duration;
+												}
 											}
 										}
 										window.Repaint();
@@ -1918,10 +1942,12 @@ function _list(x, y, w, h) {
 											if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
 												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 												if (item.extension === '.xsp') {
-													let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
-													if (xspPlaylist) {
-														xspPlaylist.size = item.size;
-														xspPlaylist.duration = item.duration;
+													if (item.hasOwnProperty('type') && item.type === 'songs') {
+														let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
+														if (xspPlaylist) {
+															xspPlaylist.size = item.size;
+															xspPlaylist.duration = item.duration;
+														}
 													}
 												}
 												window.Repaint();
@@ -2393,7 +2419,7 @@ function _list(x, y, w, h) {
 			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) {objectPlaylist.category = this.categoryState[0];} 
 			const {rules, match} = XSP.getRules(newQuery);
 			if (rules.length) {
-				const jspPls = XSP.emptyJSP();
+				const jspPls = XSP.emptyJSP('songs');
 				jspPls.playlist.name = newName;
 				jspPls.playlist.rules = rules;
 				jspPls.playlist.match = match;
@@ -2510,6 +2536,10 @@ function _list(x, y, w, h) {
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
+			if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+				return;
+			}
 			const old_nameId = pls.nameId;
 			const old_name = pls.name;
 			const duplicated = getPlaylistIndexArray(old_nameId);
