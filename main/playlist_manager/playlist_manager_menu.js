@@ -935,6 +935,30 @@ function createMenuRight() {
 				});
 			}});
 		}
+		{	// Subsong items
+			menu.newEntry({menuName: subMenuName, entryText: 'Subsong items...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.');}
+				findSubSongsAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+					pop.disable(true);
+				});
+			}});
+		}
+		{	// Format specific errors
+			menu.newEntry({menuName: subMenuName, entryText: 'Format specific errors...', func: () => {
+				let answer = WshShell.Popup('Scan all playlists to check for errors on playlist structure or format.', 0, window.Name, popup.question + popup.yes_no);
+				if (answer !== popup.yes) {return;}
+				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking fprmat errors...\nPanel will be disabled during the process.');}
+				findFormatErrorsAsync().then(({found, report}) => {
+					if (found.length) {list.filter({plsState: found});}
+					fb.ShowPopupMessage('Found these playlists with format errors:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+					pop.disable(true);
+				});
+			}});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Find selection
