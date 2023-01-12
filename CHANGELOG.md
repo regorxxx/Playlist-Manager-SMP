@@ -58,6 +58,7 @@
 - Playlists maintenance tools: added tool to check for subsong items (usually files from ISO files, etc.). They are fully supported within by the manager, but it's not guaranteed to work on other software.
 - Playlists maintenance tools: added tool to check for format specific errors (like XSP types not supported, wrong queries, etc.). The errors are shown on the report along the playlist name/path.
 ### Changed
+- Exporting Playlists: entry to copy playlist file will now ask to overwrite it, in case such file already exists, instead of failing.
 - Playlists maintenance tools: playlist consistency tools renamed to playlists maintenance tools.
 - Playlists maintenance tools: list is now filtered with the results found -if any- (in addition the popup showing the report). Makes much easier to work with the problematic playlists, not having to manually search them. Output also honors the current filtering configuration, so in case only M3U playlists are shown, the output will only show results being M3U (the report will list all results though).
 - Quick-search: added new settings for its behavior when a key is pressed multiple times and also to allow cycling between results.
