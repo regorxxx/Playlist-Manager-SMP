@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/22
+//12/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -701,6 +701,11 @@ function exportPlaylistFile(list, z, defPath = '') {
 	catch(e) {return bDone;}
 	if (!path.length) {return bDone;}
 	if (path === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone;}
+	if (_isFile(path)) {
+		let answer = WshShell.Popup('There is a file with same name. Overwrite?', 0, window.Name, popup.question + popup.yes_no);
+		if (answer === popup.no) {return bDone;}
+		bDone = _recycleFile(path);
+	}
 	bDone = _copyFile(playlistPath, path);
 	if (bDone) {
 		if (list.properties.bOpenOnExport[1]) {_explorer(path);} 
@@ -797,7 +802,7 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
+function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
@@ -880,7 +885,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', p
 	return bDone;
 }
 
-function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%filename%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
+function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) {fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name);}
 	let bDone = false;
