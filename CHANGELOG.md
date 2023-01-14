@@ -77,6 +77,7 @@
 - UI: tooltip now also shows Double L. Click action when 'Show usage info on tooltips' is enabled. The same applies to Single M. Click action. Actions not set are hidden to not clutter the UI.
 - UI: 'Send selection to playlist' renamed to 'Copy selection to playlist'. Reconfigure the shortcut on the menus before using.
 - UI: 'Send selection to playlist' now creates an undo backup point before inserting the new tracks if the playlist is loaded on UI.
+- UI: keyboard modifier on L. Click + Ctrl is now set by default to 'Copy selection to playlist'. Shift + L. Click to 'Load / show playlist'. i.e. they are swapped; this is done to be consistent with drag and drop modifiers, since Ctrl is associated to copy.
 - UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
 - UI: panel is now animated while performing asynchronous tasks on 'Playlist maintenance tools'.
 - UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/23
+//14/01/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -142,8 +142,8 @@ var properties = {
 	],
 	bDynamicMenus			: ['Show dynamic menus?', true, {func: isBoolean}, true],
 	lShortcuts				: ['L. click modifiers', JSON.stringify({
-		Ctrl:			'Load / show playlist',
-		Shift:			'Copy selection to playlist',
+		Ctrl:			'Copy selection to playlist',
+		Shift:			'Load / show playlist',
 		'Ctrl + Shift':	'Clone playlist in UI',
 		'Double Click':	'Load / show playlist'
 	})],
