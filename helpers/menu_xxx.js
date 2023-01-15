@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/12/22
+//15/01/22
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -15,6 +15,7 @@
 			-idxInitial:			Specifies an initial idx to create menus (useful to concatenate multiple menus objects)
 			-bAddInvisibleIds:		When trying to add multiple (sub)menus with same name (and different parent), an invisible ID 
 										may be added to allow it. .newMenu() will return the final name in such case.
+			-onBtnUp:				Callback called after processing mouse btn_up. Respects the value of this inside the function, if any.
 		
 		.btn_up(x, y, [object])
 			-NOTE: 					Called within callbacks to create the menu. Specifying an object or array of objects 
@@ -56,7 +57,13 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true} = {}) {
+function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null} = {}) {
+	// Checks
+	if (onBtnUp && !isFunction(onBtnUp)) {throw new Error('onBtnUp is not a function');}
+	if (iMaxEntryLen <= 0) {throw new Error('iMaxEntryLen can not be <= 0');}
+	if (iMaxTabLen <= 0) {throw new Error('iMaxTabLen can not be <= 0');}
+	
+	// Globals
 	let menuArrTemp = [];
 	let menuArr = [];
 	let menuMap = new Map();
@@ -330,6 +337,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		} else if (forcedEntry.length) {
 			console.log('menu_xxx: Tried to call a menu with forced entry (\'' + forcedEntry + '\') but it doesn\'t exist. It may point to a bug or error.');
 		}
+		if (onBtnUp) {onBtnUp();}
 		// Clear all
 		this.clear();
 		return bSupressDefaultMenu;
