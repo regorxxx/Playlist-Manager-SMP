@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/01/23
+//16/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -997,7 +997,7 @@ function createMenuRightTop() {
 	{	// Playlist folder
 		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
 			let input = '';
-			try {input = sanitizePath(utils.InputBox(window.ID, 'Enter path', window.Name, list.properties['playlistPath'][1], true));}
+			try {input = sanitizePath(utils.InputBox(window.ID, 'Enter path of tracked folder:', window.Name, list.properties['playlistPath'][1], true));}
 			catch (e) {return;}
 			if (!input.length) {return;}
 			if (input === list.playlistsPath) {return;}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/23
+//16/01/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -27,7 +27,7 @@ include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
 checkCompatible('1.6.1', 'smp');
 
 // Cache
-let plmInit = {};
+let plmInit = {interval: null, lastUpdate: 0};
 const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.', bForce = false) => {
 	const plmInstances = [...getInstancesByKey('Playlist Manager')]; // First look if there are other panels already loaded
 	if (plmInstances[0] === window.ID || bForce) { // Only execute once per Foobar2000 instance
@@ -193,7 +193,25 @@ setProperties(properties, 'plm_');
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
-		if (readme.length) {fb.ShowPopupMessage(readme, window.Name);}
+		if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager: introduction');}
+		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
+		const callback = () => !pop.isEnabled() ? window.NotifyOthers('Playlist manager: playlistPath', null) : setTimeout(callback, 3000);
+		setTimeout(callback, 6000);
+		const id = addEventListener('on_notify_data', (name, info) => {
+			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev') {return;}
+			switch (name) {
+				case 'Playlist manager: playlistPath': {
+					if (info) {
+						if (info === list.playlistsPath) {
+							fb.ShowPopupMessage('There is another Playlist Manager panel tracking the same folder (which is usually undesired), you may want to configure this panel to track a different playlist folder.\n\nIn case you want to track the same folder with multiple panels, read the \'Advanced Tips\' section at the PDF readme first. Don\'t forget to disable auto-saving, auto-updating and auto-backup on all but one of the panels if needed (to not process multiple times the same files).', 'Playlist Manager: found same tracked folder');
+							removeEventListenerSelf();
+						}
+					}
+					break;
+				}
+			}
+		});
+		setTimeout(() => removeEventListener('on_notify_data', null, id), 20000);
 	}
 }
 
@@ -367,6 +385,8 @@ addEventListener('on_notify_data', (name, info) => {
 			if (!info) {
 				cacheLib(void(0), void(0), void(0), true);
 			} else {
+				const now = Date.now();
+				if (Date.now() - plmInit.lastUpdate > 1000) {plmInit.lastUpdate = now;} else {plmInit.lastUpdate = now; return;} // Update once per time needed...
 				libItemsAbsPaths = [...info];
 				if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
 				console.log('precacheLibraryPaths: using paths from another instance.');
