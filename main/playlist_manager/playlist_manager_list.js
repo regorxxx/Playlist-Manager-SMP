@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/23
+//16/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -119,7 +119,7 @@ function _list(x, y, w, h) {
 			if (this.itemsAll !== 0) {
 				emptyText = 'No matches for the current filters.';
 			} else {
-				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them from json (right button).' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
+				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them.'+ '\n\nSet the tracked folder at header: \'Set playlists folder...\'.' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
 			}
 			const cache = this.rows;
 			this.rows = (emptyText.match(/\n/g) || []).length; // # lines of previous text = # \n
