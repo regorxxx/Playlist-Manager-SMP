@@ -82,6 +82,7 @@
 - UI: panel is now animated while performing asynchronous tasks on 'Playlist maintenance tools'.
 - UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.
 - UI: quick-search color is now inverted when no result is found.
+- UI: initial popup and panel text (with empty tracked folder) now points more clearly to set the tracked folder as needed.
 - Dynamic menus: dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
 - Dynamic menus: the panel warns about other panels having the same name if the feature is enabled at startup or when enabling it. Panel flashes for some seconds while the popup is shown.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
