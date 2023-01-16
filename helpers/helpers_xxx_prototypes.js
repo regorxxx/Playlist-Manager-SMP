@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/23
+//16/01/23
 
 /* 
 	Objects
@@ -393,7 +393,7 @@ function cyclicOffset(reference, offset, limits) {
 		return reference;
 }
 
-const range = (start, stop, step) => new Array((stop - start) / step + 1).fill(void(0)).map((_, i) => start + (i * step));
+const range = (start, stop, step) => new Array(Math.round((stop - start) / step + 1)).fill(void(0)).map((_, i) => start + (i * step));
 
 function round(floatnum, decimals, eps = 10**-14){
 	let result;
