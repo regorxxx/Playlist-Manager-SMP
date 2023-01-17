@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/01/23
+//16/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1578,18 +1578,18 @@ function findFormatErrors() {
 				setTimeout(() => {
 					let bDone = false;
 					const errors = [];
-					if (playlist.isAutoPlaylist || playlist.query) {
+					if (playlist.isAutoPlaylist || playlist.query) { // Invalid queries
 						if (!checkQuery(playlist.query, true, true, playlist.extension === '.xsp')) { // Allow #PLAYLIST# on XSP
 							bDone = true;
 							errors.push('Invalid query');
 						}
 					}
 					if (playlist.extension === '.xsp') {
-						if (playlist.hasOwnProperty('type') && playlist.type !== 'songs') {
+						if (playlist.hasOwnProperty('type') && playlist.type !== 'songs') { // Type on XSP playlists
 							bDone = true;
 							errors.push('Invalid type');
 						}
-					} else if (playlist.extension === '.strm') {
+					} else if (playlist.extension === '.strm') { // STRM with multiple lines
 						let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 						let size, lines;
 						if (typeof text !== 'undefined' && text.length) {
