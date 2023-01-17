@@ -9,8 +9,9 @@ Autoplaylist json files are stored in your foobar profile folder:
 	.\js_data\...
 
 Multiple panels are allowed but usually 2 panels should not point to
-the same tracked folder, unless auto-saving is disabled on one of them,
-otherwise there could be conflicts accessing to the same file.
+the same tracked folder, unless auto-saving and auto-backups are 
+disabled on one of them, otherwise there could be conflicts accessing
+to the same file.
 
 Playlists are saved with (tracks) absolute paths by default, you can 
 change that behavior on the menus. When using relative paths, the tracks'
