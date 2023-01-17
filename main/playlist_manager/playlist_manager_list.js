@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/23
+//17/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -133,8 +133,6 @@ function _list(x, y, w, h) {
 			return;
 		}
 		// List
-		const playingChar = String.fromCharCode(9654);
-		const loadedChar = String.fromCharCode(9644);
 		const standardPlaylistIconColor = blendColors(panel.colors.highlight, panelBgColor, 0.1);
 		const lockedPlaylistIconColor = blendColors(standardPlaylistIconColor, this.colors.lockedPlaylistColor, 0.8);
 		const autoPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.autoPlaylistColor, 0.8);
@@ -171,6 +169,8 @@ function _list(x, y, w, h) {
 		} else {animation.bHighlight = false;}
 		// Rows
 		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
+		let cacheLen = 0;
+		const ellipisisW = this.bShowSize ? gr.CalcTextWidth('...', panel.fonts.normal) : 0;
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -223,6 +223,17 @@ function _list(x, y, w, h) {
 			}
 			// Playlists
 			let playlistDataText =  pls.name + (this.bShowSize ? ' (' + pls.size + ')' : '');
+			// Adjust playlist name according to width available but always show the size if possible
+			if (this.bShowSize && playlistDataText.length > cacheLen) {
+				const w = gr.CalcTextWidth(playlistDataText, panel.fonts.normal);
+				if (w > this.text_width - 30) {
+					const size = ' (' + pls.size + ')';
+					const sizeW = gr.CalcTextWidth(size, panel.fonts.normal);
+					const plsW = w - sizeW;
+					const left = this.text_width - 30 - sizeW - ellipisisW - 2;
+					playlistDataText = pls.name.slice(0, Math.floor(left * pls.name.length / plsW)) + '...' + size;
+				} else {cacheLen = playlistDataText.length;}
+			}
 			const iconFont = gfontIconChar();
 			const iconFontAlt = gfontIconCharAlt();
 			// Set colors and icons according to playlist type
@@ -268,24 +279,33 @@ function _list(x, y, w, h) {
 					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 				}
 			}
-			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 25, panel.row_height, LEFT);
+			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 30, panel.row_height, LEFT);
 			// Add playing now indicator
-			let playlistDataTextRight = '';
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
 			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoplaylist) { // If missing it's false
-				if (fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist) {playlistDataTextRight += playingChar;}
-				// Add loaded indicator
-				else {playlistDataTextRight += loadedChar;}
+				const iconChars = {
+					playing: {s: String.fromCharCode(9654), offset: 0}, 
+					loaded: {s: String.fromCharCode(187) /* » */, offset: true}, 
+					loadedV2: {s: String.fromCharCode(9644) /* - */, offset: false},
+					loadedV3: {s: String.fromCharCode(126) /* ~ */, offset: false}
+				};
+				Object.keys(iconChars).forEach((k) => {
+					if (iconChars[k].offset) {
+						const sepLeterW = gr.CalcTextWidth('A', panel.fonts.small);
+						iconChars[k].offset = gr.CalcTextWidth(iconChars[k].s, panel.fonts.small) - sepLeterW;
+					} else {iconChars[k].offset = 0;}
+				});
+				const icon = iconChars[fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist ? 'playing' : 'loaded'];
+				// Draw
+				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 			}
-			// Draw
-			gr.GdiDrawText(playlistDataTextRight, panel.fonts.small, panel.colors.text, this.x, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
 			// Multiple selection
 			if (this.indexes.length) {
 				if (this.indexes.indexOf(this.offset + i) !== -1) {
-					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
+					const selWidth =  this.bShowSep ?  this.x + maxIconWidth + this.text_width - 30 :  this.x + this.w; // Adjust according to UI config
 					gr.DrawRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
-				}					
+				}
 			}
 		}
 		// Selection indicator
@@ -296,7 +316,7 @@ function _list(x, y, w, h) {
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
-					const selWidth =  this.bShowSep ?  this.x + this.w - 15 :  this.x + this.w; // Adjust according to UI config
+					const selWidth =  this.bShowSep ?  this.x + maxIconWidth + this.text_width - 30 :  this.x + this.w; // Adjust according to UI config
 					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylistColor);
 				}
 			}
@@ -375,6 +395,7 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	/* 	// Somewhat bugged
 	this.simulateWheelToIndex = ({toIndex, currentItemIndex = this.lastIndex, originalOffset = this.lastOffset} = {}) => {
 		if (this.items < this.rows) {this.offset = 0; return;} // Safecheck
 		this.index = toIndex;
@@ -394,6 +415,23 @@ function _list(x, y, w, h) {
 				if (this.offset <= 0) {this.offset = 0;}
 			}
 		}
+	} 
+	*/
+	
+	this.jumpToIndex = (idx) => { // Puts selected playlist in the middle of the window, if possible
+		const cache = {index: this.index, offset: this.offset}
+		this.index = idx;
+		// Safechecks
+		if (this.items < this.rows) {this.offset = 0;}
+		if (this.index >= this.items) {this.index = this.items - 1;}
+		// Jump
+		const row = Math.ceil(this.items / this.rows);
+		this.offset = this.index > this.rows / 2 
+			? Math.floor(this.index / this.rows) * this.rows + this.index % this.rows - Math.round(this.rows / 2 - 1) 
+			: 0;
+		if (this.offset + this.rows >= this.items) {this.offset = this.items - this.rows;}
+		if (cache.index !== this.index || cache.offset !== this.offset) {window.Repaint();}
+		return this.index;
 	}
 	
 	this.showCurrPls = ({bPlayingPls = false} = {}) => {
@@ -413,10 +451,8 @@ function _list(x, y, w, h) {
 			window.RepaintRect(0, this.y, window.Width, this.h);
 			return true;
 		} else {
-			idxHighlight = idx;
 			animation.bHighlight = true;
-			this.simulateWheelToIndex({toIndex: idx, currentItemIndex: currentItemIndex > 0 ? currentItemIndex : 1, originalOffset: this.lastOffset ? this.lastOffset : 1});
-			currentItemIndex = idx;
+			idxHighlight = currentItemIndex = this.jumpToIndex(idx);
 			window.RepaintRect(0, this.y, window.Width, this.h);
 			return true;
 		}
@@ -1686,11 +1722,11 @@ function _list(x, y, w, h) {
 					// Offset is calculated simulating the wheel, so it moves to the previous location
 					if (currentItemIsAutoPlaylist) { // AutoPlaylists
 						if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
-							this.simulateWheelToIndex({toIndex: i, currentItemIndex, originalOffset: this.lastOffset});
+							this.jumpToIndex(i);
 							break;
 						}
 					} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-						this.simulateWheelToIndex({toIndex: i, currentItemIndex, originalOffset: this.lastOffset});
+						this.jumpToIndex(i);
 						break;
 					}
 				}
@@ -1837,11 +1873,11 @@ function _list(x, y, w, h) {
 				// Offset is calculated simulating the wheel, so it moves to the previous location
 				if (currentItemIsAutoPlaylist) { // AutoPlaylists
 					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
-						this.simulateWheelToIndex({toIndex: i, currentItemIndex, originalOffset: this.lastOffset});
+						this.jumpToIndex(i);
 						break;
 					}
 				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.simulateWheelToIndex({toIndex: i, currentItemIndex, originalOffset: this.lastOffset});
+					this.jumpToIndex(i);
 					break;
 				}
 			}
@@ -2098,11 +2134,11 @@ function _list(x, y, w, h) {
 				// Offset is calculated simulating the wheel, so it moves to the previous location
 				if (currentItemIsAutoPlaylist) { // AutoPlaylists
 					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
-						this.simulateWheelToIndex({toIndex: i, currentItemIndex, originalOffset: this.lastOffset});
+						this.jumpToIndex(i);
 						break;
 					}
 				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.simulateWheelToIndex({toIndex: i, currentItemIndex, originalOffset: this.lastOffset});
+					this.jumpToIndex(i);
 					break;
 				}
 			}
