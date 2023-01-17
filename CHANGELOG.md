@@ -84,6 +84,7 @@
 - UI: quick-search color is now inverted when no result is found.
 - UI: initial popup and panel text (with empty tracked folder) now points more clearly to set the tracked folder as needed.
 - UI: on first installation, in case another panel has the same tracked folder, a popup is thrown warning about setting another folder for the new panel.
+- UI: loaded playlist indicator has been changed to '>>' which is adjusted better to different DPI settings.
 - Dynamic menus: dynamic menus no longer skip UI-only playlists by default unless they are not shown in the manager. 'Copy and move selection' menu entries are the only ones allowed for these playlists in any case.
 - Dynamic menus: the panel warns about other panels having the same name if the feature is enabled at startup or when enabling it. Panel flashes for some seconds while the popup is shown.
 - XSP: errors loading Smart Playlists are now both output to console and popups, instead of just popups.
@@ -114,6 +115,9 @@
 - UI: adding new files with new tags did not updated properly the current view, showing by default the new tags too. Similar to past bug with categories.
 - UI: after sending a track to a playlist(s), the UI was being repaint even if no changes were made (for ex. on duplicated track). Implies no change for final user.
 - UI: Tags entries were not properly shown with a check in the upper list of 'Set tag' submenu.
+- UI: fix to quick-searching / show active playlist not jumping to playlist in some cases (also appeared at [0.5.0-beta.8] and before). Method has been rewritten from scratch and now puts the result on the middle of the window whenever it's possible resulting a more natural behavior.
+- UI: selected and highlighted playlist rectangles did not match in size, neither were properly adjusted to playlist name text in some cases.
+- UI: size not being shown when playlist name was too long. Now the name is sliced to accommodate the available width after the size info is taken into account. Example: "My too long playlist..." is now displayed as "My too long pl... (100)"
 - Auto-Saving: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and vice-versa). Previously, it would ask to change the playlist format, which made no sense since no changes could be applied to those playlists.
 - Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
 - Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
