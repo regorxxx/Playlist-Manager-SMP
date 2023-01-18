@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/23
+//18/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -309,6 +309,7 @@ function createMenuLeft(forcedIndex = -1) {
 		}
 		{	// Export to ListenBrainz
 			const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
+			const consoleError = () => {fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.\n\nSome possible errors:\n\t- 12007: Network error and/or non reachable server.', window.Name);}
 			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 				if (!await checkLBToken()) {return false;}
 				let bUpdateMBID = false;
@@ -319,13 +320,13 @@ function createMenuLeft(forcedIndex = -1) {
 				if (pls.playlist_mbid.length) {
 					console.log('Syncing playlist with MusicBrainz: ' + pls.name);
 					playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
-					if (pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
+					if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
 				} else {
 					console.log('Exporting playlist to MusicBrainz: ' + pls.name);
 					playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 					if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 				}
-				if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+				if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {consoleError();}
 				if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
 			}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
@@ -358,7 +359,7 @@ function createMenuLeft(forcedIndex = -1) {
 						}
 					}
 				} else {console.log('Playlist file not found: ' + pls.path);}
-				if (!bDone) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+				if (!bDone) {consoleError();}
 				return bDone;
 			}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
