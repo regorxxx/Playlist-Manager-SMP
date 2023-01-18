@@ -1,7 +1,7 @@
 ﻿'use strict';
-//08/01/23
+//18/01/23
 
-include('..\\..\\helpers\\window_xxx.js');
+include('..\\window\\window_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
