@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/22
+//23/01/23
 
 // https://github.com/angus-c/just
 /*
@@ -72,6 +72,32 @@ function getRegExpFlags(regExp) {
 		regExp.unicode && flags.push('u');
 		return flags.join('');
 	}
+}
+
+function baseToString(value) {
+	if (typeof value == 'string') {
+		return value;
+	}
+	var result = (value + '');
+	return (result === '0' && (1 / value) === -Infinity) ? '-0' : result;
+}
+
+function toString(value) {
+  return value == null ? '' : baseToString(value);
+}
+
+const escapeRegExpCache = {};
+function escapeRegExp(s) {
+	s = toString(s);
+	if (s && !escapeRegExpCache.hasOwnProperty(s)) {escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1');}
+	return s ? escapeRegExpCache[s] : s; // Can not be safer than this
+}
+
+const reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
+const reHasRegExpChar = RegExp(reRegExpChar.source);
+function escapeRegExpV2(s) { // https://github.com/lodash/lodash/blob/4.1.2-npm-packages/lodash.escaperegexp/index.js
+	s = toString(s);
+	return (s && reHasRegExpChar.test(s) ? s.replace(s, '\\$&') : s);
 }
 
 function randomString(len, charSet) {

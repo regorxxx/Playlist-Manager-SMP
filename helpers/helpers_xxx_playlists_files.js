@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/23
+//23/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -498,7 +498,7 @@ function getRelPaths(pathArr, relPath = '') {
 function getRelPath(itemPath, relPathSplit) {
 	let cache = '';
 	relPathSplit.forEach((folder) => {
-		const level = new RegExp(folder + '\\\\', 'i');
+		const level = new RegExp(escapeRegExp(folder) + '\\\\', 'i');
 		cache = itemPath.replace(level, '');
 		if (itemPath === cache) {itemPath = '..\\' + cache;}
 		else {itemPath = cache;}
