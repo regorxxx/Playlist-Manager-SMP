@@ -71,6 +71,8 @@
 - Filter: tag playlist filter on header menu now allows directly selecting a single value by pressing shift.
 - Filter: count for tags and category entries for filters on header menu.
 - Cache: reworked path caching, now will process 100 items at the same time until all tracks are done instead of forcing an specific total startup time. Adjusted delays for Foobar 2000 2.0+ tag retrieval. It should lead to faster startups in both cases, specially for small libraries (< 70K tracks).
+- Backup: asynchronous on script unloading (at shutdown for example) and playlist loading.
+- UI: current view position will be maintained in most use-cases now (after updating a playlist, loading new files, manual refresh, ...) if possible.
 - UI: buttons' colors are now set by default according to the inverse of the background color. The same applies when applying presets, or changing the toolbar style.
 - UI: colours presets menu now show a check in case one of them is active.
 - UI: keyboard modifiers on L. Click are now fully configurable using the header menu. See 'UI\Shortcuts...'. Playlist's tooltip will reflect the config too.
@@ -80,6 +82,7 @@
 - UI: keyboard modifier on L. Click + Ctrl is now set by default to 'Copy selection to playlist'. Shift + L. Click to 'Load / show playlist'. i.e. they are swapped; this is done to be consistent with drag and drop modifiers, since Ctrl is associated to copy.
 - UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
 - UI: panel is now animated while performing asynchronous tasks on 'Playlist maintenance tools'.
+- UI: panel is now animated while saving a playlist or loading new playlist files, this makes easier to check changes (without looking at the console).
 - UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.
 - UI: quick-search color is now inverted when no result is found.
 - UI: initial popup and panel text (with empty tracked folder) now points more clearly to set the tracked folder as needed.
