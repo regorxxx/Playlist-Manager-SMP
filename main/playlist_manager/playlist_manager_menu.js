@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/01/23
+//24/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -981,7 +981,7 @@ function createMenuRight() {
 					found[i] = (found[i] || 'No category') + ':';
 				}
 			}
-			fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\nSelected tracks found on these playlists:\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+			fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
 		}});
 	}
 	return menu;

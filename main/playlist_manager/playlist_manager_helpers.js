@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/23
+//25/01/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1183,7 +1183,7 @@ function rewriteXSPLimit(pls, newLimit) {
 	return bDone;
 }
 
-function backup(n = 50) { // Backup playlist and json file
+function backup(n = 50, bAsync = false) { // Backup playlist and json file
 	let test = new FbProfiler('Playlist manager Backup');
 	if (n && n !== -1) {
 		const files = getFiles(list.playlistsPath + '_backup\\', new Set(['.zip'])).reverse();
@@ -1192,7 +1192,7 @@ function backup(n = 50) { // Backup playlist and json file
 		}
 	}
 	const playlistFilesMask = [...loadablePlaylistFormats].map((ext) => {return list.playlistsPath + '*' + ext;}); // Ext already has a .
-	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip');
+	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g,'_') + '.zip', bAsync);
 	test.Print();
 }
 
