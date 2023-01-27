@@ -256,6 +256,22 @@ function _save(file, value, bBOM = false) {
 	return false;
 }
 
+function _saveFSO(file, value, bUTF16) {
+	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
+	const filePath = utils.SplitFilePath(file)[0];
+	if (!_isFolder(filePath)) {_createFolder(filePath);}
+    if (_isFolder(filePath)) {
+        try {
+            const fileObj = fso.CreateTextFile(file, true, bUTF16);
+            fileObj.Write(value);
+            fileObj.Close();
+            return true;
+        } catch (e) {}
+    }
+    console.log('Error saving to ' + file); 
+    return false;
+}
+
 function _saveSplitJson(file, value, replacer = void(0), space = void(0), splitBy = 50000, bBOM = false) {
 	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 	const filePath = utils.SplitFilePath(file)[0];
