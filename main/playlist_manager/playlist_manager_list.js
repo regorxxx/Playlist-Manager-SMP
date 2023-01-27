@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/01/23
+//27/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -459,10 +459,9 @@ function _list(x, y, w, h) {
 	}
 	
 	this.onMouseLeaveList = () => {  // Removes selection indicator
-		this.cacheLastPosition(); // When pressing right button, the index gets cleared too... but we may want to use it on the menus
+		this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1)); // When pressing right button, the index gets cleared too... but we may want to use it on the menus
 		this.index = -1;
 		this.bMouseOver = false;
-		// this.offset = 0;
 		this.clearSelPlaylistCache();
 		this.up_btn.hover = false;
 		this.down_btn.hover = false;
@@ -659,14 +658,15 @@ function _list(x, y, w, h) {
 		}
 	}
 	
-	this.cacheLastPosition = () => { // Saves info to restore position later!
-		if (this.inRange && this.index !== -1) {
-			this.lastIndex = this.index;
-			this.lastOffset = this.offset;
+	this.cacheLastPosition = (z = this.index) => { // Saves info to restore position later!
+		if (this.inRange && z !== -1) {
+			this.lastIndex = z;
+			this.lastOffset = z;
 		}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.items) {currentItemIndex = this.items - 1;}
-		const item = (currentItemIndex !== -1) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
+		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
+		const item = (bMaintainFocus) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
 		currentItemPath = item ? item.path : null;
 		currentItemNameId = item ? item.nameId : null;
 		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
@@ -1511,8 +1511,11 @@ function _list(x, y, w, h) {
 					clearInterval(delay);
 					console.log('Playlist Manager: done.');
 				}
-				this.update(true, true); // We have already updated data before only for the variables changed
+				this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
+				if (!pop.isEnabled()) {pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.'); window.Repaint()}
+				this.update(true, true, currentItemIndex); // We have already updated data before only for the variables changed
 				this.filter();
+				setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
 				return true;
 			}
 		}
@@ -1731,7 +1734,7 @@ function _list(x, y, w, h) {
 					}
 				}
 			} else {
-				this.clearLastPosition();
+				this.clearLastPosition(); currentItemIndex = -1;
 			}
 		}
 		// Update filters with current values
@@ -1780,7 +1783,7 @@ function _list(x, y, w, h) {
 		// Update header whenever it's needed
 		this.headerTextUpdate();
 		// Update offset!
-		this.offset = 0;
+		if (currentItemIndex === -1) {this.offset = 0;}
 		window.Repaint();
 	}
 	this.resetFilter = ({autoPlaylist = true, lock = true, ext = true, tag = true, category = true} = {}) => {
@@ -2583,6 +2586,7 @@ function _list(x, y, w, h) {
 				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 				return false;
 			} else {
+				if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1], true);} // Async backup before future changes
 				let [fbPlaylistIndex] = clearPlaylistByName(old_nameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 				if (pls.isAutoPlaylist) { // AutoPlaylist
 					if (!fbPlaylistIndex) {fbPlaylistIndex = plman.PlaylistCount;}
@@ -2623,7 +2627,6 @@ function _list(x, y, w, h) {
 					} else {fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false;}
 				}
 			}
-			if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1]);} // Backup before autosaving
 			this.lastPlsLoaded.push(pls);
 			return true;
 		}
@@ -3179,7 +3182,8 @@ function _list(x, y, w, h) {
 		this.manualRefresh = () => {
 			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 			this.loadConfigFile();
-			const z = (this.index !== -1) ? this.index : this.getCurrentItemIndex();
+			const z = this.offset + Math.round(this.rows / 2 - 1);
+			this.cacheLastPosition(z);
 			this.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
 			this.update(void(0), true, z);
 			this.filter();

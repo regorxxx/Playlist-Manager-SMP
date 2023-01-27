@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/01/23
+//27/01/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -643,8 +643,12 @@ function autoUpdate() {
 	const playlistPathArray = getFiles(list.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	if (playlistPathArrayLength !== (list.getPlaylistNum())) { // Most times that's good enough. Count total items minus virtual playlists
-		list.update(false, true, list.lastIndex);
+		if (!pop.isEnabled()) {pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.');}
+		const z = list.offset + Math.round(list.rows / 2 - 1);
+		list.cacheLastPosition(z);
+		list.update(false, true, z);
 		list.filter(); // Maintains focus on last selected item
+		setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
 		return true;
 	} else { // Otherwise check size
 		let totalFileSize = 0;
@@ -652,8 +656,12 @@ function autoUpdate() {
 			totalFileSize += utils.GetFileSize(playlistPathArray[i]);
 		}
 		if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar executed
-			list.update(false, true, list.lastIndex);
+			if (!pop.isEnabled()) {pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.');}
+			const z = list.offset + Math.round(list.rows / 2 - 1);
+			list.cacheLastPosition(z);
+			list.update(false, true, z);
 			list.filter(); // Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
+			setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
 			return true;
 		}
 	}
@@ -665,7 +673,7 @@ addEventListener('on_script_unload', () => {
 	removeInstance('Playlist Manager');
 	// Backup
 	if (autoBackTimer && list.playlistsPath.length && list.itemsAll) {
-		backup(list.properties.autoBackN[1]);
+		backup(list.properties.autoBackN[1], true);
 	}
 	// Clear timeouts
 	clearInterval(keyListener.fn);
