@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/23
+//30/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -309,7 +309,15 @@ function createMenuLeft(forcedIndex = -1) {
 		}
 		{	// Export to ListenBrainz
 			const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
-			const consoleError = () => {fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.\n\nSome possible errors:\n\t- 12007: Network error and/or non reachable server.', window.Name);}
+			const consoleError = () => {
+				fb.ShowPopupMessage(
+					'Playlist was not exported. Check console.\n\nSome possible errors:\n' + 
+					'\t- 12007: Network error and/or non reachable server.' +
+					'\t- 429: Too many requests on a short amount of time.'
+					, window.Name
+				);
+			}
+			// addPlaylist: 400 {"code":400,"error":"You may only add max 100 recordings per call."} TODO
 			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 				if (!await checkLBToken()) {return false;}
 				let bUpdateMBID = false;

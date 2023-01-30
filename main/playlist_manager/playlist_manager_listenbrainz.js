@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//30/01/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -119,7 +119,7 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 			if (reject.responseText.length) {
 				const response = JSON.parse(reject.responseText);
 				if (response.error === 'Failed to deleting recordings from the playlist. Please try again.') { // Playlist file was empty
-					const jspf = await importPlaylist(pls, token);
+					const jspf = await this.importPlaylist(pls, token);
 					if (jspf.playlist.track.length === 0) {
 						if (handleList.Count) {
 							return this.addPlaylist(pls, handleList, void(0), token, bLookupMBIDs);
@@ -138,8 +138,9 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 	);
 }
 
+/*{name, playlist_mbid}*/
 // Add handleList to given online playlist
-listenBrainz.addPlaylist = async function addPlaylist(pls /*{name, playlist_mbid}*/, handleList, offset, token, bLookupMBIDs = true) {
+listenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, token, bLookupMBIDs = true) {
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return '';}
 	if (!handleList || !handleList.Count) {return pls.playlist_mbid;}
 	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat();
@@ -147,42 +148,64 @@ listenBrainz.addPlaylist = async function addPlaylist(pls /*{name, playlist_mbid
 	const missingCount = handleList.Count - mbid.length;
 	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks on exporting');}
 	const track = mbid.map((tag) => {return {identifier: 'https://musicbrainz.org/recording/' + tag};});
-	// TODO slice handleList into parts to not reach max tracks count on server
-	const data = { // JSPF playlist with minimum data
-		playlist: {
-			extension: {
-				'https://musicbrainz.org/doc/jspf#playlist': {
-					'public': true
-				}
-			},
-			title: pls.name,
-			track,	
-		}
-	};
-	return send({
-		method: 'POST', 
-		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/item/add' + (typeof offset !== 'undefined' ? '/' + offset : ''),
-		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
-		body: JSON.stringify(data)
-	}).then(
-		(resolve) => {
-			console.log('addPlaylist: ' + resolve);
-			if (resolve) {
-				const response = JSON.parse(resolve);
-				if (response.status === 'ok') {
-					console.log('Playlist URL: ' + this.getPlaylistURL(pls));
-					return pls.playlist_mbid;
+	const addPlaylistSlice = (title, track, offset) => {
+		const data = { // JSPF playlist with minimum data
+			playlist: {
+				extension: {
+					'https://musicbrainz.org/doc/jspf#playlist': {
+						'public': true
+					}
+				},
+				title,
+				track,
+			}
+		};
+		return send({
+			method: 'POST', 
+			URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/item/add' + (typeof offset !== 'undefined' ? '/' + offset : ''),
+			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+			body: JSON.stringify(data)
+		}).then(
+			(resolve) => {
+				console.log('addPlaylist: ' + resolve);
+				if (resolve) {
+					const response = JSON.parse(resolve);
+					if (response.status === 'ok') {
+						console.log('Playlist URL: ' + this.getPlaylistURL(pls));
+						return pls.playlist_mbid;
+					}
+					return '';
 				}
 				return '';
+			},
+			(reject) => {
+				console.log('addPlaylist: ' + reject.status + ' ' + reject.responseText);
+				return '';
 			}
-			return '';
-		},
-		(reject) => {
-			console.log('addPlaylist: ' + reject.status + ' ' + reject.responseText);
-			return '';
+		);
+	};
+	return new Promise(async (resolve, reject) => {
+		let result;
+		const num = track.length;
+		for (let i = 0; i < num; i += 100) { // Add 100 tracks per call, server doesn't allow more
+			console.log('addPlaylist: tracks ' + (i + 1) + ' to ' + ((i + 101) > num ? num : i + 101));
+			result = await new Promise((res) => {
+				setTimeout(async () => { // Limit rate to 30 ms per call
+					res(await addPlaylistSlice(
+						pls.name,
+						track.slice(i, i + 100),
+						i === 0 
+							? offset 
+							: typeof offset !== 'undefined'
+								? offset + i
+								: i
+					));
+				}, 30);
+			});
 		}
-	);
-}
+		if (result) {resolve(result);} else {reject('');}
+	});
+} 
 
 // Import playlist metadata and track list from online playlist
 listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, token) {
