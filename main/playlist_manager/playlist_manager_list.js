@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/01/23
+//30/01/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -1512,10 +1512,12 @@ function _list(x, y, w, h) {
 					console.log('Playlist Manager: done.');
 				}
 				this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
-				if (!pop.isEnabled()) {pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.'); window.Repaint()}
+				if (plsData.extension !== '.ui' && !pop.isEnabled()) { // Display animation except for UI playlists
+					pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.'); window.Repaint()
+				}
 				this.update(true, true, currentItemIndex); // We have already updated data before only for the variables changed
 				this.filter();
-				setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
+				if (plsData.extension !== '.ui') {setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);}
 				return true;
 			}
 		}

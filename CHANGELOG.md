@@ -82,7 +82,7 @@
 - UI: keyboard modifier on L. Click + Ctrl is now set by default to 'Copy selection to playlist'. Shift + L. Click to 'Load / show playlist'. i.e. they are swapped; this is done to be consistent with drag and drop modifiers, since Ctrl is associated to copy.
 - UI: additional tips on 'edit sort' popup, and invalid sort expressions are now checked.
 - UI: panel is now animated while performing asynchronous tasks on 'Playlist maintenance tools'.
-- UI: panel is now animated while saving a playlist or loading new playlist files, this makes easier to check changes (without looking at the console).
+- UI: panel is now animated while saving a playlist or loading new playlist files, this makes easier to check changes (without looking at the console). Skipped for UI-only playlists.
 - UI: new config to lock the panel and animate it while checking AutoPlaylists on startup.
 - UI: quick-search color is now inverted when no result is found.
 - UI: initial popup and panel text (with empty tracked folder) now points more clearly to set the tracked folder as needed.
