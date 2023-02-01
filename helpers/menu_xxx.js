@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/01/23
+//01/02/23
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -198,8 +198,8 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 					entryTextSanitized += '\t' + entryTextTab.substring(0, iMaxTabLen) + '...' + bHasChar.map((b, i) => {return b ? chars[i] : '';}).filter(Boolean).join('');
 				} else {entryTextSanitized += '\t' + entryTextTab;}
 			}
-			// Create FB menu entry
-			menuMap.get(menuName).AppendMenuItem(flags, idx, entryTextSanitized);
+			// Create FB menu entry. Add proper error info
+			try {menuMap.get(menuName).AppendMenuItem(flags, idx, entryTextSanitized);} catch (e) {throw new Error(e.message + '\nmenuName: ' + menuName);}
 			// Add to index
 			const entryName = (menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText);
 			entryMap.set(entryName, idx);
