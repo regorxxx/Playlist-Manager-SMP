@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/22
+//06/02/23
 
 include('helpers_xxx.js');
 include('helpers_xxx_playlists.js');
@@ -16,10 +16,10 @@ function goPrevPls() {
 }
 
 function getPrevPls() {
-	const idx = plsHistory.length >= 2 ? getPlaylistIndexArray(plsHistory[1].name) : -1;
+	const idx = plsHistory.length >= 2 ? getPlaylistIndexArray(plsHistory[1].name) : [];
 	const len = idx.length;
 	let prevPls = -1;
-	if (idx !== -1 && len) {
+	if (len) {
 		if (len === 1 && idx[0] !== -1) {
 			prevPls = idx[0];
 		} else if (idx.indexOf(plsHistory[1].idx) !== -1) {
