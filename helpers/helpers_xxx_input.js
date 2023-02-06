@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/11/22
+//06/02/23
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
@@ -134,17 +134,24 @@ const Input = Object.seal(Object.freeze({
 		return newVal;
 	},
 	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false) {
-		const types = new Set(['string']);
+		const types = new Set(['string', 'unicode']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (!types.has(type)) {throw new Error('Invalid type: ' + type);}
 		let input, newVal;
+		let uOldVal = null;
+		if (type === 'unicode') {uOldVal = oldVal.codePointAt(0).toString(16);}
 		try {
-			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? oldVal : '', true);
+			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true);
 			if (input === null || typeof input === 'undefined') {throw new Error('Invalid type');}
 			else {newVal = String(input);}
 			switch (type) {
 				case 'string': {
 					if (bFilterEmpty && !newVal.length) {throw new Error('Empty')}
+					break;
+				}
+				case 'unicode': {
+					if (bFilterEmpty && !newVal.length) {throw new Error('Empty')}
+					newVal = String.fromCharCode(parseInt(newVal, 16));
 					break;
 				}
 			}

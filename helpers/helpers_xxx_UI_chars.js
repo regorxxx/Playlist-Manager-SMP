@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/21
+//06/02/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -60,6 +60,7 @@ const chars = {
 	play			: '\uf04B',
 	pause			: '\uf04C',
 	stop			: '\uf04D',
+	shuffle			: '\uf074',
 	// Carets
 	up 				: '\uf077',
 	down 			: '\uf078',
