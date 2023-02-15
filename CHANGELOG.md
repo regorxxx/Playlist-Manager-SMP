@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.13](#050-beta13---2023-02-15)
 - [0.5.0-beta.12](#050-beta12---2022-08-22)
 - [0.5.0-beta.11](#050-beta11---2022-08-21)
 - [0.5.0-beta.10](#050-beta10---2022-08-12)
@@ -24,6 +25,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.13] - 2023-02-15
 ### Added
 - Configuration: added user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' to edit default queries and tags for multiple tools. Usually used internally or on properties panel. Don't forget to reload the panels/restart foobar and restore defaults on all relevant buttons and menus to use the new values. For Playlist Manager, it's only used for the default values of Duplicates Removal feature, so only that sub-menu needs to be restored to defaults (not the entire panel).
 - Drag and Drop: tracks can now be sent to a playlist directly with Drag and Drop, instead of using key shortcuts + mouse. Both move and copy (pressing Control) are allowed. Only tracks within foobar2000 context can be drop, trying to drop any other thing, track from outside or file is not allowed. Pressing 'Alt' on drop will create a new playlist instead of sending it to the selected playlist. To warn about this behavior, no playlist is highlighted while pressing the key (contrary to the usual drag and drop). List can be scrolled up or down by moving the mouse to the arrow buttons while dragging.
@@ -564,7 +571,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.12...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.13...HEAD
+[0.5.0-beta.13]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.12...v0.5.0-beta.13
 [0.5.0-beta.12]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.11...v0.5.0-beta.12
 [0.5.0-beta.11]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.10...v0.5.0-beta.11
 [0.5.0-beta.10]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.9...v0.5.0-beta.10
