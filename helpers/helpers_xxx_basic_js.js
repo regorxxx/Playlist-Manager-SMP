@@ -65,7 +65,7 @@ function getNested(obj, ...args) {
 	return args.reduce((obj, level) => obj && obj[level], obj);
 }
 
-function setNested(obj, value, ...args) => {
+function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
 		if (obj && len === idx && obj.hasOwnProperty(level)) {obj[level] = value;}
