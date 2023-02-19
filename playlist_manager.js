@@ -6,7 +6,7 @@
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta14', features: {drag_n_drop: true, grab_focus: true}});
+window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta15', features: {drag_n_drop: true, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
