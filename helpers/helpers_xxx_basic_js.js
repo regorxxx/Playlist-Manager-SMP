@@ -1,12 +1,13 @@
 ﻿'use strict';
-//23/01/23
+//18/02/23
 
 // https://github.com/angus-c/just
 /*
   Deep clones all properties except functions
 */
 function clone(obj) {
-	if (typeof obj === 'function') {return obj;}
+	const raw = new Set(['function', 'number', 'boolean', 'string']);
+	if (raw.has(typeof obj)) {return obj;}
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();
@@ -60,6 +61,19 @@ function clone(obj) {
 	return result;
 }
 
+function getNested(obj, ...args) {
+	return args.reduce((obj, level) => obj && obj[level], obj);
+}
+
+function setNested(obj, value, ...args) => {
+	const len = args.length - 1;
+	return args.reduce((obj, level, idx) => {
+		if (obj && len === idx && obj.hasOwnProperty(level)) {obj[level] = value;}
+		return obj && obj[level];
+	}, obj);
+	return obj;
+}
+		
 function getRegExpFlags(regExp) {
 		if (typeof regExp.source.flags === 'string') {
 		return regExp.source.flags;

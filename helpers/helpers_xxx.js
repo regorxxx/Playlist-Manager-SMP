@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/22
+//19/02/23
 
 // Folders
 const folders = {};
@@ -36,8 +36,8 @@ const iDelayLibraryPLM = isFoobarV2 ? 40 : 25; // ms per step for whole handle p
 const iDelayPlaylists = 120; // ms per step for playlist processing: playlist manager
 
 // Console log file used at helpers_xxx_console.js
-conLog = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
-conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null disables logging too
+console.File = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
+console.MaxSize = 5000000; // File size, in bytes. Setting to zero or null disables logging too
 
 /* 
 	Global tags, queries, RegExp

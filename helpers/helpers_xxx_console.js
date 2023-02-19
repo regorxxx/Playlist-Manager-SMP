@@ -1,28 +1,32 @@
 ﻿'use strict';
-//08/01/23
+//19/02/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
 // Console log file
-let conLog = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
-let conLogMaxSize = 5000000; // File size, in bytes. Setting to zero or null disables logging too
-let conLogThrottling = 100; // Interval to flush to console, in ms. Setting to zero or null writes to console file on every call (not recommended)
+// Edit here to change logging file. Replace with '' or null to disable logging
+Object.defineProperty(console, 'File', {enumerable: false, configurable: false, writable: true, value: fb.ProfilePath + 'console.log'});
+// File size, in bytes. Setting to zero or null disables logging too
+Object.defineProperty(console, 'MaxSize', {enumerable: false, configurable: false, writable: true, value: 5000000});
+// Interval to flush to console, in ms. Setting to zero or null writes to console file on every call (not recommended)
+Object.defineProperty(console, 'Throttling', {enumerable: false, configurable: false, writable: true, value: 100});
+// Interval use
+Object.defineProperty(console, 'Timer', {enumerable: false, configurable: false, writable: true});
+Object.defineProperty(console, 'Cache', {enumerable: false, configurable: false, writable: true, value: []});
 
-let conLogTimer; // Interval use.
-let conLogCache = []; // Internal use.
 const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
 
 // Override logging
 function consoleLog() {
-	const bCache = conLogCache.length !== 0;
+	const bCache = console.Cache.length !== 0;
 	const today = new Date().toLocaleDateString();
 	let log = '';
 	let lastMod = null;
 	// Load previous log
 	console.checkSize();
-	if (utils.IsFile(conLog)) {
-		try {log += utils.ReadTextFile(conLog, convertCharsetToCodepage('UTF-8'));} catch (e) {/* continue regardless of error */}
-		lastMod = new Date(fsoCL.GetFile(conLog).DateLastModified).toLocaleDateString();
+	if (utils.IsFile(console.File)) {
+		try {log += utils.ReadTextFile(console.File, convertCharsetToCodepage('UTF-8'));} catch (e) {/* continue regardless of error */}
+		lastMod = new Date(fsoCL.GetFile(console.File).DateLastModified).toLocaleDateString();
 	}
 	// Add dd/mm/yyyy
 	if (lastMod !== today) {
@@ -32,8 +36,8 @@ function consoleLog() {
 	const stamp = bCache ? '' : '[' + new Date().toLocaleTimeString() + ']';
 	log += (log && log.length ? '\n' : '') + (bCache ? '' : stamp);
 	// Unpack args
-	const args = bCache ? conLogCache : [[...arguments]];
-	if (bCache) {conLogCache = [];}
+	const args = bCache ? console.Cache : [[...arguments]];
+	if (bCache) {console.Cache = [];}
 	args.forEach((call, j) => {
 		if (bCache && j !== 0) {log += '\n';}
 		call.forEach((arg, i) => {
@@ -86,17 +90,22 @@ function consoleLog() {
 		});
 	});
 	// Write
-	try {utils.WriteTextFile(conLog, log, false);} catch (e) {/* continue regardless of error */}
+	try {utils.WriteTextFile(console.File, log, false);} catch (e) {/* continue regardless of error */}
 }
 
 // Check file size doesn't exceed threshold or reset it
 console.checkSize = () => {
-	if (utils.IsFile(conLog) && utils.GetFileSize(conLog) > conLogMaxSize) {
-		try {utils.WriteTextFile(conLog, '', false);} catch (e) {/* continue regardless of error */}
-		console.log('helpers_xxx: console log file size exceeds ' + (conLogMaxSize / 1e7) + ' MB, creating new file: ' + conLog);
+	if (utils.IsFile(console.File) && utils.GetFileSize(console.File) > console.MaxSize) {
+		try {utils.WriteTextFile(console.File, '', false);} catch (e) {/* continue regardless of error */}
+		console.log('helpers_xxx: console log file size exceeds ' + (console.MaxSize / 1e7) + ' MB, creating new file: ' + console.File);
 		return true;
 	}
 	return false;
+};
+
+// Force writing cache to file (usually used at on_script_unload)
+console.flush = () => {
+	if (console.Cache.length) {consoleLog();}
 };
 
 // Send to popup and console
@@ -107,16 +116,16 @@ console.popup = (arg, popupName, bPopup = true) => {
 	});
 };
 
-if (conLog && conLog.length && conLogMaxSize && console.log) {
+if (console.File && console.File.length && console.MaxSize && console.log) {
 	console.logUI = console.log;
 	console.log = function() {
 		console.logUI(...arguments);
-		if (conLogThrottling) {
-			clearTimeout(conLogTimer);
+		if (console.Throttling) {
+			clearTimeout(console.Timer);
 			// Add HH:MM:SS
 			const stamp = '[' + new Date().toLocaleTimeString() + ']';
-			conLogCache.push([stamp, ...arguments]);
-			conLogTimer = setTimeout(consoleLog, conLogThrottling);
+			console.Cache.push([stamp, ...arguments]);
+			console.Timer = setTimeout(consoleLog, console.Throttling);
 		} else {
 			consoleLog(...arguments);
 		}

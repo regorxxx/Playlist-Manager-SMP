@@ -1,15 +1,17 @@
 ﻿'use strict';
-//06/02/23
+//17/02/23
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
 // Returns null when default value (oldVal) matches output
 // Ex input.json('array numbers', [0, 2], 'Input an Array of numbers:', 'Input', JSON.stringify([0, 2])),
 const Input = Object.seal(Object.freeze({
+	// Data validation
 	data: Object.seal({last: null, lastInput: null}),
 	get isLastEqual() {
 		return this.data.last === this.data.lastInput;
 	},
+	// Input methods
 	json: function (type, oldVal, message, title, example, checks = [], bFilterFalse = false) {
 		const types = new Set(['array', 'array numbers', 'array strings', 'array booleans', 'object']);
 		this.data.last = oldVal; this.data.lastInput = null;
@@ -71,7 +73,7 @@ const Input = Object.seal(Object.freeze({
 			if (e.message === 'Invalid type' || e.name === 'SyntaxError') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
 			} else if (e.message === 'Invalid checks') {
-				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.join('\n') + '\n\nExample:\n' + example, title);
+				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
 				fb.ShowPopupMessage(e.name + '\n\n' + e.message, title);
 			}
@@ -81,7 +83,7 @@ const Input = Object.seal(Object.freeze({
 		return newVal;
 	},
 	number: function (type, oldVal, message, title, example, checks = []) {
-		const types = new Set(['int', 'int positive', 'int negative', 'float', 'float positive', 'float negative']);
+		const types = new Set(['int', 'int positive', 'int negative', 'float', 'float positive', 'float negative', 'real', 'real positive', 'real negative']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (!types.has(type)) {throw new Error('Invalid type: ' + type);}
 		let input, newVal;
@@ -93,25 +95,20 @@ const Input = Object.seal(Object.freeze({
 			if (type.startsWith('int') && Number.isFinite(newVal) && !Number.isInteger(newVal)) {throw new Error('Invalid type');}
 			else if (type.startsWith('float') && Number.isFinite(newVal) && Number.isInteger(newVal)) {throw new Error('Invalid type');}
 			switch (type) {
+				case 'float':
+				case 'real':
 				case 'int': {
 					break;
 				}
+				case 'float positive':
+				case 'real positive':
 				case 'int positive': {
 					if (newVal < 0) {throw new Error('Invalid type');}
 					break;
 				}
+				case 'float negative':
+				case 'real negative':
 				case 'int negative': {
-					if (newVal > 0) {throw new Error('Invalid type');}
-					break;
-				}
-				case 'float': {
-					break;
-				}
-				case 'float positive': {
-					if (newVal < 0) {throw new Error('Invalid type');}
-					break;
-				}
-				case 'float negative': {
 					if (newVal > 0) {throw new Error('Invalid type');}
 					break;
 				}
@@ -124,7 +121,7 @@ const Input = Object.seal(Object.freeze({
 			if (e.message === 'Invalid type' || e.name === 'SyntaxError') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
 			} else if (e.message === 'Invalid checks') {
-				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.join('\n') + '\n\nExample:\n' + example, title);
+				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
 				fb.ShowPopupMessage(e.name + '\n\n' + e.message, title);
 			}
@@ -165,7 +162,7 @@ const Input = Object.seal(Object.freeze({
 			} else if (e.message === 'Empty') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be a non zero length string.\n\nExample:\n' + example, title);
 			} else if (e.message === 'Invalid checks') {
-				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.join('\n') + '\n\nExample:\n' + example, title);
+				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
 				fb.ShowPopupMessage(e.name + '\n\n' + e.message, title);
 			}
@@ -193,10 +190,18 @@ const Input = Object.seal(Object.freeze({
 				fb.ShowPopupMessage('Query not valid:\n' + input + '\n\nValue must follow query syntax:\nhttps://wiki.hydrogenaud.io/index.php?title=Foobar2000:Query_syntax', title);
 			} else if (e.message === 'Zero items query') {
 				fb.ShowPopupMessage('Query returns no items (on current library):\n' + input, title);
+			} else if (e.message === 'Invalid checks') {
+				fb.ShowPopupMessage('Query is not valid:\n' + input + '\n\nQuery must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
+			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
+				fb.ShowPopupMessage(e.name + '\n\n' + e.message, title);
 			}
 			return null;
 		}
 		if (oldVal === newVal) {this.data.lastInput = newVal; return null;}
 		return newVal;
+	},
+	// Internal helpers
+	cleanCheck: function (func) {
+		return func.toString().replace(/^[^{]*{\s*/, '').replace(/\s*}[^}]*$/,'').replace(/^.*=> /, '');
 	}
 }));

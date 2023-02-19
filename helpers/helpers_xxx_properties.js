@@ -49,7 +49,7 @@ function overwriteProperties(propertiesDescriptor) { // Equivalent to setPropert
 // Omits property checking so allows setting one to null and delete it, while overwriteProperties() will throw a checking popup
 function deleteProperties(propertiesDescriptor) { 
 	for (let k in propertiesDescriptor) {
-	if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
+		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		window.SetProperty(propertiesDescriptor[k][0], null);
 	}
 	return propertiesDescriptor;
