@@ -987,8 +987,24 @@ function _list(x, y, w, h) {
 	
 	this.executeAction = (z, shortcut, bMultiple = !!this.indexes.length) => {
 		if (shortcut.key !== 'Multiple selection' && shortcut.key !== 'Multiple selection (range)' && bMultiple) {
-			this.indexes.forEach((z) => {shortcut.func(z);});
-		} else {shortcut.func(z);}
+			this.indexes.forEach((zz) => {
+				const pls = this.data[zz];
+				if (pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
+					const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
+					shortcut.func(zz, remDupl, this.bAdvTitle);
+				} else {
+					shortcut.func(zz);
+				}
+			});
+		} else {
+			const pls = this.data[z];
+			if (pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
+				const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
+				shortcut.func(z, remDupl, this.bAdvTitle);
+			} else {
+				shortcut.func(z);
+			}
+		}
 	}
 	
 	this.getDefaultShortcuts = (mouseBtn = 'L', element = 'LIST') => {

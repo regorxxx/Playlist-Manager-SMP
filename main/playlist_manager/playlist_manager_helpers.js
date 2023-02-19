@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/01/23
+//19/02/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -594,7 +594,7 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 	return bDone;
 }
 
-function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -609,27 +609,31 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false) { // May b
 		const newIdx = plman.DuplicatePlaylist(plman.ActivePlaylist, plman.GetPlaylistName(plman.ActivePlaylist).replace(pls.name, playlistName));
 		if (newIdx !== -1) {plman.ActivePlaylist = newIdx;}
 		else {console.log('Error duplicating playlist'); return false;}
+		bDone = true;
 	} else if (idx && idx.length === 0) { // Not loaded? Load, duplicate it
 		list.loadPlaylist(z);
 		const newIdx = plman.DuplicatePlaylist(plman.ActivePlaylist, plman.GetPlaylistName(plman.ActivePlaylist).replace(pls.name, playlistName));
 		plman.RemovePlaylistSwitch(plman.ActivePlaylist);
 		if (newIdx !== -1) {plman.ActivePlaylist = newIdx - 1;}
 		else {console.log('Error duplicating playlist'); return false;}
+		bDone = true;
 	} else {
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
 	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
-	const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
-	bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
-	if (bDone) {
-		if (list.properties.bOpenOnExport[1]) {_explorer(objectPlaylist.path);}
-		console.log('Playlist Manager: cloning ' + playlistName + ' done.');
+	if (bAddToList) {
+		const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
+		bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
+		if (bDone) {
+			if (list.properties.bOpenOnExport[1]) {_explorer(objectPlaylist.path);}
+			console.log('Playlist Manager: cloning ' + playlistName + ' done.');
+		}
 	}
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z, bAlsoHidden = false) {
+function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden = false) {
 	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
@@ -642,17 +646,82 @@ function clonePlaylistInUI(list, z, bAlsoHidden = false) {
 		return bDone;
 	}
 	// Create new playlist and check paths
-	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = !bUI 
+			? pls.isAutoPlaylist 
+				? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
+				: getHandlesFromPlaylist(pls.path, list.playlistsPath, true) 
+			: getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList && handleList.Count) {
+		if (pls.isAutoPlaylist && pls.sort.length) {
+			const sort = getSortObj(pls.sort);
+			if (sort && sort.tf) {
+				handleList.OrderByFormat(sort.tf, sort.direction);
+			}
+		}
 		const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++;} return count;}, 0) + ')';
 		const idx = plman.CreatePlaylist(plman.PlaylistCount, playlistName);
 		if (idx !== -1) {
 			plman.ActivePlaylist = idx;
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+			if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
 			bDone = true;
 		}
 		if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');}
 	}
+	return bDone;
+}
+
+function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false,  bAlsoHidden = false) {
+	if (!Array.isArray(zArr)) {
+		console.log('Playlist Manager: Error merge-loading playlists. Index is not an array.');
+		return false;
+	}
+	for (let z of zArr) {
+		if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+			console.log('Playlist Manager: Error merge-loading playlists (merge). Index out of bounds.');
+			return false;
+		}
+	}
+	let bDone = true;
+	let handleList = new FbMetadbHandleList();
+	let names = [];
+	for (let z of zArr) {
+		const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
+		const bUI = pls.extension === '.ui';
+		if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+			return false;
+		}
+		// Create new playlist and check paths
+		const handleListZ = !bUI 
+			? pls.isAutoPlaylist 
+				? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
+				: getHandlesFromPlaylist(pls.path, list.playlistsPath, true) 
+			: getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+		if (bDone && handleListZ) {
+			bDone = true;
+			if (handleListZ.Count) {
+				if (pls.isAutoPlaylist && pls.sort.length) {
+					const sort = getSortObj(pls.sort);
+					if (sort && sort.tf) {
+						handleListZ.OrderByFormat(sort.tf, sort.direction);
+					}
+				}
+				handleList.AddRange(handleListZ);
+				names.push(pls.name);
+			}
+		} else {bDone = false;}
+	}
+	if (bDone && handleList && handleList.Count) {
+		const playlistName = 'Merge-load from ' + names[0] + ' - ' + names[names.length -1] + ' ' + _p(names.length);
+		const idx = plman.CreatePlaylist(plman.PlaylistCount, playlistName);
+		if (idx !== -1) {
+			plman.ActivePlaylist = idx;
+			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+			if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
+		} else {bDone = false;}
+		if (bDone) {console.log('Playlist Manager: merge-load ' + names.join(', ') + ' done.');}
+	} else {bDone = false;}
 	return bDone;
 }
 

@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.15](#050-beta15---2023-02-19)
 - [0.5.0-beta.14](#050-beta14---2023-02-19)
 - [0.5.0-beta.13](#050-beta13---2023-02-15)
 - [0.5.0-beta.12](#050-beta12---2022-08-22)
@@ -28,6 +29,15 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.15] - 2023-02-19
+### Added
+- Merge load: when selecting multiple playlists, it's now possible to load them merged in a single playlist within UI. There is also an additional option to remove duplicates. It also works for UI-only playlists, i.e. selecting and merge-loading them will simply join them (but along the remove duplicates option, it may be used to merge playlists without duplicates in a really fast way).
+### Changed
+- UI: 'Clone playlists in UI' multiple selection option now also works for AutoPlaylists.
+- UI: 'Clone playlist in UI' mouse shortcut now also works for AutoPlaylists.
 ### Removed
 ### Fixed
 
@@ -579,7 +589,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...HEAD
+[0.5.0-beta.15]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...v0.5.0-beta.15
 [0.5.0-beta.14]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.13...v0.5.0-beta.14
 [0.5.0-beta.13]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.12...v0.5.0-beta.13
 [0.5.0-beta.12]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.11...v0.5.0-beta.12
