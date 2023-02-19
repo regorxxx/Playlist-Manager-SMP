@@ -988,8 +988,8 @@ function _list(x, y, w, h) {
 	this.executeAction = (z, shortcut, bMultiple = !!this.indexes.length) => {
 		if (shortcut.key !== 'Multiple selection' && shortcut.key !== 'Multiple selection (range)' && bMultiple) {
 			this.indexes.forEach((zz) => {
-				const pls = this.data[zz];
-				if (pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
+				const pls = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
+				if (pls && pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
 					const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 					shortcut.func(zz, remDupl, this.bAdvTitle);
 				} else {
@@ -997,8 +997,8 @@ function _list(x, y, w, h) {
 				}
 			});
 		} else {
-			const pls = this.data[z];
-			if (pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
+			const pls = typeof z !== 'undefined' && z !== -1 ? this.data[z] : null;
+			if (pls && pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
 				const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 				shortcut.func(z, remDupl, this.bAdvTitle);
 			} else {
