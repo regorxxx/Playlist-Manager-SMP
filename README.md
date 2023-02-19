@@ -17,6 +17,9 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Works with shareable playlists (.xspf) and Kodi-like smart playlists (.xsp).
   * All playlist are loaded in cache once, filtering just changes the "painted" playlist on the list.
   * Paths within the playlist may be absolute or relative to a folder (configurable).
+  * Apply actions on batch to multiple playlists at once.
+  * Merge the content of different playlists and load them all into one with a few clicks.
+  * Remove duplicated tracks by TF and RegExp on loading.
 * **AutoPlaylists: contains all functionality on Auto-playlist Manager by marc2003 plus more.**
   * Create, rename, delete AutoPlaylists.
   * Edit query, sort pattern and sort forcing.
