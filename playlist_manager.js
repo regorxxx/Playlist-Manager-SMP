@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/02/23
+//22/02/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
