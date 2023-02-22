@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/02/23
+//22/02/23
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -198,6 +198,8 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 					entryTextSanitized += '\t' + entryTextTab.substring(0, iMaxTabLen) + '...' + bHasChar.map((b, i) => {return b ? chars[i] : '';}).filter(Boolean).join('');
 				} else {entryTextSanitized += '\t' + entryTextTab;}
 			}
+			// Delete invisible chars since they may appear as bugged chars with some fonts on Wine
+			entryTextSanitized = entryTextSanitized.replace(hiddenCharsRegEx, '');
 			// Create FB menu entry. Add proper error info
 			try {menuMap.get(menuName).AppendMenuItem(flags, idx, entryTextSanitized);} catch (e) {throw new Error(e.message + '\nmenuName: ' + menuName);}
 			// Add to index
@@ -281,7 +283,8 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 				if (subMenuName !== menuArr[0].menuName) {
 					const flags = isFunction(entry.flags) ? entry.flags() : entry.flags;
 					const subMenuFrom = isFunction(entry.subMenuFrom) ? entry.subMenuFrom() : entry.subMenuFrom;
-					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuName);
+					const subMenuNameSanitized = subMenuName.replace(hiddenCharsRegEx, ''); // Delete invisible chars since they may appear as bugged chars with some fonts on Wine
+					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuNameSanitized);
 				}
 			}
 		});
@@ -363,32 +366,64 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		checkMenuArrTemp = [];
 		idx = 0;
 	};
-}
-
-// Helpers
-function isFunction(obj) {
-  return !!(obj && obj.constructor && obj.call && obj.apply);
-}
-
-function compareKeys(a, b) {
-	const aKeys = Object.keys(a).sort();
-	const bKeys = Object.keys(b).sort();
-	return JSON.stringify(aKeys) === JSON.stringify(bKeys);
-}
-
-function isArray(checkKeys) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
-		return false; //Array was null or not an array
+	
+	// Helpers
+	const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
+	const hiddenCharsRegEx = /[\u200b\u200c\u200d\u200e]{1,5}$/g;
+	const invsId = (function() {
+			let nextIndex = [0,0,0,0,0];
+			const chars = hiddenChars;
+			const num = chars.length;
+			let prevId = nextIndex.length;
+			return function(bNext = true) {
+				if (!bNext) {return prevId;}
+				let a = nextIndex[0];
+				let b = nextIndex[1];
+				let c = nextIndex[2];
+				let d = nextIndex[3];
+				let e = nextIndex[4];
+				let id = chars[a] + chars[b] + chars[c] + chars[d] + chars[e];
+				a = ++a % num;
+				if (!a) {
+					b = ++b % num; 
+					if (!b) {
+						c = ++c % num;
+						if (!c) {
+							d = ++d % num;
+							if (!d) {e = ++e % num;}
+						}
+					}
+				}
+				nextIndex = [a, b, c, d, e];
+				prevId = id;
+				return id;
+			};
+	}());
+	
+	function isFunction(obj) {
+	  return !!(obj && obj.constructor && obj.call && obj.apply);
 	}
-	return true;
+	
+	function compareKeys(a, b) {
+		const aKeys = Object.keys(a).sort();
+		const bKeys = Object.keys(b).sort();
+		return JSON.stringify(aKeys) === JSON.stringify(bKeys);
+	}
+	
+	function isArray(checkKeys) {
+		if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
+			return false; //Array was null or not an array
+		}
+		return true;
+	}
+	
+	function menuError({} = {}) {
+		if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu');} 
+		else {Object.entries(...arguments).map((_) => {return _.join(': ');}).forEach((arg) => {console.log(arg);});}
+	}
 }
 
-function menuError({} = {}) {
-	if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu');} 
-	else {Object.entries(...arguments).map((_) => {return _.join(': ');}).forEach((arg) => {console.log(arg);});}
-}
-
-// Adds a created menu to an already existing object (which is suppposed to have a this.trace function
+// Adds a created menu to an already existing object (which is supposed to have a this.trace function
 // Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
 function _attachedMenu({rMenu = null, lMenu = null, popup = null} = {}) {
 	this.rMmenu = rMenu;
@@ -406,33 +441,3 @@ function _attachedMenu({rMenu = null, lMenu = null, popup = null} = {}) {
 		return false;
 	}
 }
-
-const invsId = (function() {
-		let nextIndex = [0,0,0,0,0];
-		const chars = hiddenChars;
-		const num = chars.length;
-		let prevId = nextIndex.length;
-		return function(bNext = true) {
-			if (!bNext) {return prevId;}
-			let a = nextIndex[0];
-			let b = nextIndex[1];
-			let c = nextIndex[2];
-			let d = nextIndex[3];
-			let e = nextIndex[4];
-			let id = chars[a] + chars[b] + chars[c] + chars[d] + chars[e];
-			a = ++a % num;
-			if (!a) {
-				b = ++b % num; 
-				if (!b) {
-					c = ++c % num;
-					if (!c) {
-						d = ++d % num;
-						if (!d) {e = ++e % num;}
-					}
-				}
-			}
-			nextIndex = [a, b, c, d, e];
-			prevId = id;
-			return id;
-		};
-}());
