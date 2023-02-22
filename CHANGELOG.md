@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.15](#050-beta16---2023-02-22)
 - [0.5.0-beta.15](#050-beta15---2023-02-19)
 - [0.5.0-beta.14](#050-beta14---2023-02-19)
 - [0.5.0-beta.13](#050-beta13---2023-02-15)
@@ -31,6 +32,16 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.5.0-beta.16] - 2023-02-22
+### Added
+- UI: default fonts (buttons and tooltip) may now be changed at '[foobar profile]\js_data\presets\global\globFonts.json'.
+### Changed
+- UI: improved compatibility with some fonts under Unix systems (using Wine). Sometimes weird chars appeared on menu entries.
+### Removed
+### Fixed
+- UI: header text did not respect the right margin when the tracked folder name was too long, now it's. Now the name is sliced to accommodate the available width after the extra info is taken into account. Example: "Playlists: My folder is too long..." is now displayed as "Playlists: My folder... (10 pls.)" or "My folder... (10 pls.)". If the text is too long, it will also respect the margin, not using the full panel width.
+- Crash at multiple points when number of playlists shown was lower than available rows on panel (due to a UI change on [0.5.0-beta.13](#050-beta13---2023-02-15)).
 
 ## [0.5.0-beta.15] - 2023-02-19
 ### Added
@@ -146,7 +157,7 @@
 - UI: Tags entries were not properly shown with a check in the upper list of 'Set tag' submenu.
 - UI: fix to quick-searching / show active playlist not jumping to playlist in some cases (also appeared at [0.5.0-beta.8] and before). Method has been rewritten from scratch and now puts the result on the middle of the window whenever it's possible resulting in a more natural behavior.
 - UI: selected and highlighted playlist rectangles did not match in size, neither were properly adjusted to playlist name text in some cases.
-- UI: size not being shown when playlist name was too long. Now the name is sliced to accommodate the available width after the size info is taken into account. Example: "My too long playlist..." is now displayed as "My too long pl... (100)"
+- UI: size not being shown when playlist name was too long. Now the name is sliced to accommodate the available width after the size info is taken into account. Example: "My too long playlist..." is now displayed as "My too long pl... (100)".
 - Auto-Saving: panel will not consider a playlist bound to a playlist file when the playlist type does not match (i.e. AutoPlaylists to standard playlists and vice-versa). Previously, it would ask to change the playlist format, which made no sense since no changes could be applied to those playlists.
 - Track Auto-tagging: crash when applying Tracks AutoTags on init due to typo.
 - Playlist formats: fixed some internal inconsistencies about multiple format files and actions available for them which did not translate into bugs reachable by regular users.
@@ -589,7 +600,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...HEAD
+[0.5.0-beta.16]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...v0.5.0-beta.16
 [0.5.0-beta.15]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...v0.5.0-beta.15
 [0.5.0-beta.14]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.13...v0.5.0-beta.14
 [0.5.0-beta.13]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.12...v0.5.0-beta.13
