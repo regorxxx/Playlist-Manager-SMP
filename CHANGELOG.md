@@ -2,7 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.5.0-beta.15](#050-beta16---2023-02-22)
+- [0.5.0-beta.16](#050-beta16---2023-02-22)
 - [0.5.0-beta.15](#050-beta15---2023-02-19)
 - [0.5.0-beta.14](#050-beta14---2023-02-19)
 - [0.5.0-beta.13](#050-beta13---2023-02-15)
@@ -40,7 +40,7 @@
 - UI: improved compatibility with some fonts under Unix systems (using Wine). Sometimes weird chars appeared on menu entries.
 ### Removed
 ### Fixed
-- UI: header text did not respect the right margin when the tracked folder name was too long, now it's. Now the name is sliced to accommodate the available width after the extra info is taken into account. Example: "Playlists: My folder is too long..." is now displayed as "Playlists: My folder... (10 pls.)" or "My folder... (10 pls.)". If the text is too long, it will also respect the margin, not using the full panel width.
+- UI: header text did not respect the right margin when the tracked folder name was too long. Now the name is sliced to accommodate the available width after the extra info is taken into account. Example: "Playlists: My folder is too long..." is now displayed as "Playlists: My folder... (10 pls.)" or "My folder... (10 pls.)". If the text is too long, it will also respect the margin, not using the full panel width.
 - Crash at multiple points when number of playlists shown was lower than available rows on panel (due to a UI change on [0.5.0-beta.13](#050-beta13---2023-02-15)).
 
 ## [0.5.0-beta.15] - 2023-02-19
@@ -600,7 +600,7 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.16...HEAD
 [0.5.0-beta.16]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...v0.5.0-beta.16
 [0.5.0-beta.15]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...v0.5.0-beta.15
 [0.5.0-beta.14]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.13...v0.5.0-beta.14
