@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/01/23
+//22/02/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -84,7 +84,19 @@ function _list(x, y, w, h) {
 	
 	this.headerTextUpdate = () => {
 		const bCategoryFilter = !isArrayEqual(this.categoryState, this.categories());
-		this.headerText = (this.playlistsPath && this.itemsAll) ? 'Playlists: ' + this.playlistsPathDirName + ' (' + this.itemsAll + ' pls.)' + (bCategoryFilter ? '[*]' : '') : 'Playlist Manager: empty folder';
+		if (this.playlistsPath && this.itemsAll) {
+			const info = ' (' + this.itemsAll + ' pls.)' + (bCategoryFilter ? '[*]' : '');
+			const sizeInfo = _gr.CalcTextWidth(info, panel.fonts.title);
+			const sizeName = _gr.CalcTextWidth(this.playlistsPathDirName, panel.fonts.title);
+			const sizeEllipsis = _gr.CalcTextWidth('...', panel.fonts.title);
+			const left = this.w - 15 - sizeInfo - sizeEllipsis - 2;
+			const name = sizeName + sizeInfo + 15 > this.w
+				? this.playlistsPathDirName.slice(0, Math.floor(left * this.playlistsPathDirName.length / (sizeName - sizeInfo)) - Math.ceil(left * this.playlistsPathDirName.length / (sizeName - sizeEllipsis - 7))) + '...'
+				: this.playlistsPathDirName;
+			this.headerText = 'Playlists: ' + name + info;
+		} else {
+			this.headerText = 'Playlist Manager: empty folder';
+		}
 		if (this.w < _gr.CalcTextWidth(this.headerText, panel.fonts.title) + 15) {
 			this.headerText = this.headerText.replace('Playlists: ','').replace('Playlist Manager: ','');
 		}
@@ -105,7 +117,7 @@ function _list(x, y, w, h) {
 		const maxHeaderH = Math.max(iconH, headerTextH);
 		[this.headerButton.x, this.headerButton.y, this.headerButton.w, this.headerButton.h] = [LM, (maxHeaderH - iconH) / 2, iconW, iconH] // Update button coords
 		gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colors.highlight, LM + iconW + 5, 0, panel.w - (LM * 2), TM, LEFT);
+		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colors.highlight, LM + iconW + 5, 0, panel.w - (LM * 2) - iconW - 5, TM, LEFT);
 		let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
 		lineY += offsetHeader;
 		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colors.highlight);
@@ -429,7 +441,7 @@ function _list(x, y, w, h) {
 		this.offset = this.index > this.rows / 2 
 			? Math.floor(this.index / this.rows) * this.rows + this.index % this.rows - Math.round(this.rows / 2 - 1) 
 			: 0;
-		if (this.offset + this.rows >= this.items) {this.offset = this.items - this.rows;}
+		if (this.offset + this.rows >= this.items) {this.offset = this.items > this.rows ? this.items - this.rows : 0;}
 		if (cache.index !== this.index || cache.offset !== this.offset) {window.Repaint();}
 		return this.index;
 	}
