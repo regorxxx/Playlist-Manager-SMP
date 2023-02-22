@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/23
+//22/02/23
 
 /* 
 	Global tags, queries, RegExp
@@ -9,7 +9,7 @@ function loadUserDefFile(def) {
 	if (_isFile(def._file)) {
 		const data = _jsonParseFileCheck(def._file, 'User definition file', window.Name, utf8);
 		if (data) {
-			if (def._type === 'TF' || def._type === 'Query') {
+			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font') {
 				for (let key in data) {
 					if (def.hasOwnProperty(key)) {
 						def[key] = data[key];
@@ -124,3 +124,18 @@ const globRegExp = {
 	}
 };
 Object.keys(globRegExp).filter((k) => !k.startsWith('_')).forEach((k) => globRegExp[k].default = globRegExp[k].re); // Add default values
+
+// Fonts: user replaceable with a presets file at folders.data
+const globFonts = {
+	_type: 'Font',
+	_file: folders.userPresetsGlobal + 'globFonts.json',
+	_description: 'Fonts used by scripts at multiple places on UI. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values). The fallback font can not be changed, is forced by SMP/Foobar.',
+	_usage: 'Most users will probably not need to touch these. Adding a not-installed font should fallback into the default one (Segoe UI). Special characters like single quotes (\') or backslash (\\) must be properly escaped.',
+	_fallback: {name: 'Segoe UI', size: 10},
+	tooltip: {name: !soFeat.popup ? 'Arial Unicode MS' : 'Tahoma', size: 10},
+	button: {name: 'Segoe UI', size: 12},
+	buttonIcon: {name: 'FontAwesome', size: 12},
+	standard: {name: 'Segoe UI', size: 10},
+	standardMedium: {name: 'Segoe UI', size: 12},
+	standardBig: {name: 'Segoe UI', size: 15}
+};

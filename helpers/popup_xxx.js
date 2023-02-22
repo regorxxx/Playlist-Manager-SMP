@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/11/22
+//22/02/23
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -59,7 +59,7 @@ function _popup({
 		}
 	}
 	this.fontSize *= scale;
-	this.gFont = _gdiFont('Segoe UI', this.fontSize, FontStyle.Bold);
+	this.gFont = _gdiFont(globFonts.standard.name, this.fontSize, FontStyle.Bold);
 	
 	// Paint
 	this.paint = (gr) => { // on_paint

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/02/23
+//22/02/23
 
 // Folders
 const folders = {};
@@ -21,7 +21,6 @@ include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_basic_js.js');
 include('helpers_xxx_console.js');
 include('helpers_xxx_foobar.js');
-include('helpers_xxx_global.js');
 include('helpers_xxx_so.js');
 
 /* 
@@ -40,18 +39,32 @@ console.File = fb.ProfilePath + 'console.log'; // Edit here to change logging fi
 console.MaxSize = 5000000; // File size, in bytes. Setting to zero or null disables logging too
 
 /* 
-	Global tags, queries, RegExp
-*/
-// Load user files used at helpers_xxx_global.js
-loadUserDefFile(globTags);
-loadUserDefFile(globQuery);
-loadUserDefFile(globRegExp);
-addGlobTags();
-
-/* 
 	SO features
 */
 const soFeat = getSoFeatures();
 if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry once if something fails
 	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then((resolve) => {initCheckFeatures(soFeat);});
 } else {initCheckFeatures(soFeat);}
+
+/* 
+	Global tags, queries, RegExp, Fonts
+*/
+include('helpers_xxx_global.js');
+// Load user files used at helpers_xxx_global.js
+loadUserDefFile(globTags);
+loadUserDefFile(globQuery);
+loadUserDefFile(globRegExp);
+loadUserDefFile(globFonts);
+addGlobTags();
+
+// Check user-set fonts
+Object.keys(globFonts).forEach((key) => {
+	if (!key.startsWith('_') && !utils.CheckFont(globFonts[key].name)) {
+		fb.ShowPopupMessage(
+			'Missing font set at:' +
+			'\n' + globFonts._file +
+			'\n\n\t-' + key + ':\t' + globFonts[key].name
+			, 'Global fonts'
+		);
+	}
+});

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/22
+//22/02/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -51,8 +51,8 @@ function _panel(customBackground = false) {
 		if (font) {
 			name = font.Name;
 		} else {
-			name = 'Segoe UI';
-			console.log(N, 'Unable to use default font. Using', name, 'instead.');
+			name = globFonts.standard.name;
+			console.log('Unable to use default font. Using', name, 'instead.');
 		}
 		this.fonts.title = _gdiFont(name, (this.fonts.size + 2 <= 16) ? this.fonts.size + 2 : this.fonts.size, 1);
 		this.fonts.normal = _gdiFont(name, this.fonts.size);

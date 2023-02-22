@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/06/22
+//22/02/23
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -77,7 +77,18 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	return newCoordinates;
 }
 
-function themedButton(x, y, w, h, text, func, state, gFont = _gdiFont('Segoe UI', 12), description, prefix = '', buttonsProperties = {}, icon = null, gFontIcon = _gdiFont('FontAwesome', 12)) {
+function themedButton(
+		x, y, w, h, 
+		text, 
+		func, 
+		state, 
+		gFont = _gdiFont(globFonts.button.name, globFonts.button.size), 
+		description, 
+		prefix = '', 
+		buttonsProperties = {}, 
+		icon = null, 
+		gFontIcon = _gdiFont(globFonts.buttonIcon.name, globFonts.buttonIcon.size)
+	) {
 	this.state = state ? state : buttonStates.normal;
 	this.x = x;
 	this.y = y;

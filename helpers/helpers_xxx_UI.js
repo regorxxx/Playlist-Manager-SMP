@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/22
+//22/02/23
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -79,12 +79,12 @@ function _scale(size, bRound = true) {
 	IDs
 */
 
-function nextId(method, bNext = true, bCharsForced = true) {
+function nextId(method, bNext = true, bCharsForced = true, bReset = false) {
 	switch (true) {
 		case method === 'invisible':
-			return nextIdInvisible(bNext, bCharsForced);
+			return nextIdInvisible(bNext, bCharsForced, bReset);
 		case method === 'letters':
-			return nextIdLetters(bNext, bCharsForced);
+			return nextIdLetters(bNext, bCharsForced, bReset);
 		case method === 'indicator':
 			return nextIdIndicator(bNext);
 		default:
@@ -112,7 +112,8 @@ const nextIdInvisible = (function() {
 		const num = chars.length;
 		let prevId = nextIndex.length + charsForced.join('').length;
 
-		return function(bNext = true, bCharsForced = true) {
+		return function(bNext = true, bCharsForced = true, bReset = false) {
+			if (bReset) {nextIndex = [0,0,0,0,0]; return nextIndex;}
 			if (!bNext) {return prevId;}
 			let a = nextIndex[0];
 			let b = nextIndex[1];
@@ -148,7 +149,8 @@ const nextIdLetters = (function() {
 		const num = chars.length;
 		let prevId = nextIndex.length + charsForced.join('').length;
 
-		return function(bNext = true, bCharsForced = true) {
+		return function(bNext = true, bCharsForced = true, bReset = false) {
+			if (bReset) {nextIndex = [0,0,0,0,0]; return;}
 			if (!bNext) {return prevId;}
 			let a = nextIndex[0];
 			let b = nextIndex[1];
@@ -195,7 +197,7 @@ function removeIdFromStr(nameId) {
 	Tooltip
 */
 
-function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
+function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.tooltip.size), width = 600) {
 	this.SetValue = (value,  bForceActivate = false) => {
 		if (!this.tooltip && !this.init()) {return;}
 		if (value === null) {
