@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/02/23
+//23/02/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -202,19 +202,17 @@ function createMenuLeft(forcedIndex = -1) {
 				setTag(input, list, z);
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
-			let bAddId = false;
-			const invId = nextId('invisible', true, false);
+			let bAddInvisibleIds = false;
 			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
-				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddId = true; return;}
-				const entryText = tag + (bAddId ? invId : ''); // Add invisible id for entries after separator to duplicate check marks
-				menu.newEntry({menuName, entryText, func: () => {
+				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddInvisibleIds = true; return;} // Add invisible id for entries after separator to duplicate check marks
+				const entry = menu.newEntry({menuName, entryText: tag, func: () => {
 					let tags;
 					if (i === 0) {tags = [];}
 					else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
 					else {tags = [...pls.tags, tag];}
 					setTag(tags, list, z);
-				}});
-				menu.newCheckMenu(menuName, entryText, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
+				}, bAddInvisibleIds});
+				menu.newCheckMenu(menuName, entry.entryText, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
 			});
 		}
 		// Adds track tag(s)
@@ -552,13 +550,11 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 			}});
 			menu.newEntry({menuName, entryText: 'sep'});
-			let bAddId = false;
-			const invId = nextId('invisible', true, false);
+			let bAddInvisibleIds = false;
 			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
 				const count =  playlists.reduce((total, pls) => {return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(tag)) ? total + 1 : total);}, 0);
-				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddId = true; return;}
-				const entryText = tag + '\t' + _b(count) + (bAddId ? invId : ''); // Add invisible id for entries after separator to duplicate check marks
-				menu.newEntry({menuName, entryText, func: () => {
+				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddInvisibleIds = true; return;} // Add invisible id for entries after separator to duplicate check marks
+				const entry = menu.newEntry({menuName, entryText: tag + '\t' + _b(count), func: () => {
 					let tags;
 					indexes.forEach((z, j) => {
 						const pls = playlists[j];
@@ -569,8 +565,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 							setTag(tags, list, z);
 						}
 					});
-				}});
-				menu.newCheckMenu(menuName, entryText, void(0), () => {return (playlists.length === count);});
+				}, bAddInvisibleIds});
+				menu.newCheckMenu(menuName, entry.entryText, void(0), () => {return (playlists.length === count);});
 			});
 		}
 		{	// Adds track tag(s)
@@ -1604,7 +1600,7 @@ function createMenuRightTop() {
 						}
 					}});
 					{
-						const subMenuNameThree = menu.newMenu('Set playlist format...' + nextId('invisible', true, false), subMenuNameTwo);
+						const subMenuNameThree = menu.newMenu('Set playlist format...', subMenuNameTwo);
 						const options = ['', ...writablePlaylistFormats];
 						options.forEach((extension) => {
 							menu.newEntry({menuName: subMenuNameThree, entryText: extension.length ? extension : '(original)', func: () => {
@@ -2076,7 +2072,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameL);
+					const subMenuOption = menu.newMenu(modifier, subMenuNameL);
 					actions.forEach((action) => {
 						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
 						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
@@ -2108,7 +2104,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameM);
+					const subMenuOption = menu.newMenu(modifier, subMenuNameM);
 					actions.forEach((action) => {
 						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
 							list.mShortcuts[modifier] = action;
@@ -2140,7 +2136,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameL);
+					const subMenuOption = menu.newMenu(modifier, subMenuNameL);
 					actions.forEach((action) => {
 						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
 						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
@@ -2172,7 +2168,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier + nextId('invisible', true, false), subMenuNameM);
+					const subMenuOption = menu.newMenu(modifier, subMenuNameM);
 					actions.forEach((action) => {
 						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
 							list.mShortcutsHeader[modifier] = action;

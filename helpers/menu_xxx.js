@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/23
+//23/02/23
 
 /* 
 	Contextual Menu helper v2.1.0
@@ -94,6 +94,10 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	this.getMenus = () => {return [...menuArr];};
 	this.getMainMenuName = () => {return menuArr[0].menuName;};
 	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true);}) !== -1);};
+	this.getMenuNameFrom = (menuName, subMenuFrom) => {
+		const found = menuArr.find((menu) => menu.menuName.replace(hiddenCharsRegEx, '') === menuName && menu.subMenuFrom.replace(hiddenCharsRegEx, '') === subMenuFrom);
+		return found ? found.menuName : null;
+	};
 	
 	// To create new elements
 	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
@@ -108,12 +112,13 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		if (bAddInvisibleIds) {
 			if (this.hasMenu(menuName, subMenuFrom)) {
 				menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); 
-				throw 'There is already another menu with same name';
+				throw 'There is already another menu with same name and same root';
 			} else if (this.hasMenu(menuName)) {
-				menuName = menuName + invsId(true); // At this point don't use other name than this!
+				menuName += invsId(true); // At this point don't use other name than this!
 			}
 		} else if (this.hasMenu(menuName)) {
-			menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); throw 'There is already another menu with same name';
+			menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); 
+			throw 'There is already another menu with same name';
 		}
 		menuArr.push({menuName, subMenuFrom});
 		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
@@ -121,7 +126,11 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	};
 	this.newMenu(); // Default menu
 	
-	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING, data = null}) => {
+	this.findOrNewMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => { // Used when invisible IDs are used, so there is no need to check if the menu already exists...
+		return this.getMenuNameFrom(menuName, subMenuFrom) || this.newMenu(menuName, subMenuFrom, flags);
+	}
+	
+	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING, data = null, bAddInvisibleIds = false}) => {
 		const eType = typeof entryText, mType = typeof menuName;
 		if (eTypeToStr.indexOf(eType) !== -1) {	entryText = entryText.toString();}
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
@@ -130,6 +139,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			if (separator.test(entryText)) {func = null; flags = MF_GRAYED;}
 		}
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (bAddInvisibleIds) {entryText += invsId(true);} // At this point don't use other name than this!
 		entryArr.push({entryText, func, menuName, flags, bIsMenu: false, data});
 		return entryArr[entryArr.length -1];
 	};
@@ -160,6 +170,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	this.getEntry = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);};
 	this.getEntryFunc = (idx) => {return (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx);};
 	this.getCheckMenu = (menuName) => {return (!menuName) ? checkMenuMap : checkMenuMap.get(menuName);};
+	this.resetIds = () => {return invsId(void(0), true);}
 	
 	this.createMenu = (menuName = menuArr[0].menuName) => {
 		if (isFunction(menuName)) {menuName = menuName();}
@@ -353,6 +364,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		entryMapInverted.clear();
 		idxMap.clear();
 		checkMenuMap.clear();
+		if (bAddInvisibleIds) {this.resetIds();}
 		// Since menu is cleared on every call too, entry arrays are cleared whenever this.clear is called from the outside
 		// Otherwise they are reused on next call
 		if (entryArrTemp.length) {entryArr = [...entryArrTemp];}
@@ -368,36 +380,38 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	};
 	
 	// Helpers
+	this.getHiddenCharsRegEx = () => {return hiddenCharsRegEx;}
 	const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 	const hiddenCharsRegEx = /[\u200b\u200c\u200d\u200e]{1,5}$/g;
 	const invsId = (function() {
-			let nextIndex = [0,0,0,0,0];
-			const chars = hiddenChars;
-			const num = chars.length;
-			let prevId = nextIndex.length;
-			return function(bNext = true) {
-				if (!bNext) {return prevId;}
-				let a = nextIndex[0];
-				let b = nextIndex[1];
-				let c = nextIndex[2];
-				let d = nextIndex[3];
-				let e = nextIndex[4];
-				let id = chars[a] + chars[b] + chars[c] + chars[d] + chars[e];
-				a = ++a % num;
-				if (!a) {
-					b = ++b % num; 
-					if (!b) {
-						c = ++c % num;
-						if (!c) {
-							d = ++d % num;
-							if (!d) {e = ++e % num;}
-						}
+		let nextIndex = [0,0,0,0,0];
+		const chars = hiddenChars;
+		const num = chars.length;
+		let prevId = nextIndex.length;
+		return function(bNext = true, bReset = false) {
+			if (bReset) {nextIndex = [0,0,0,0,0]; return nextIndex;}
+			if (!bNext) {return prevId;}
+			let a = nextIndex[0];
+			let b = nextIndex[1];
+			let c = nextIndex[2];
+			let d = nextIndex[3];
+			let e = nextIndex[4];
+			let id = chars[a] + chars[b] + chars[c] + chars[d] + chars[e];
+			a = ++a % num;
+			if (!a) {
+				b = ++b % num; 
+				if (!b) {
+					c = ++c % num;
+					if (!c) {
+						d = ++d % num;
+						if (!d) {e = ++e % num;}
 					}
 				}
-				nextIndex = [a, b, c, d, e];
-				prevId = id;
-				return id;
-			};
+			}
+			nextIndex = [a, b, c, d, e];
+			prevId = id;
+			return id;
+		};
 	}());
 	
 	function isFunction(obj) {
