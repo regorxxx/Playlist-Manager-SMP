@@ -30,8 +30,10 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Internal code cleanup of menus.
 ### Removed
 ### Fixed
+- Console: logging of null value not working properly (totally irrelevant except for debug purposes).
 
 ## [0.5.0-beta.16] - 2023-02-22
 ### Added
