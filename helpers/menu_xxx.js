@@ -1,8 +1,8 @@
 ﻿'use strict';
-//23/02/23
+//01/03/23
 
 /* 
-	Contextual Menu helper v2.1.0
+	Contextual Menu helper v2.3.0
 	Helper to create contextual menus on demand on panels without needing to create specific methods for
 	every script, calculate IDs, etc. Menus are pushed to a list and created automatically, linking the entries
 	to their idx without needing a 'switch' block or leaving holes to ensure idx get enough numbers to expand the script.
@@ -351,7 +351,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		} else if (forcedEntry.length) {
 			console.log('menu_xxx: Tried to call a menu with forced entry (\'' + forcedEntry + '\') but it doesn\'t exist. It may point to a bug or error.');
 		}
-		if (onBtnUp) {onBtnUp();}
+		if (onBtnUp) {onBtnUp(x, y, object ,bExecute, replaceFunc, flag, bindArgs);}
 		// Clear all
 		this.clear();
 		return bSupressDefaultMenu;
