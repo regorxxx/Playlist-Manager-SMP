@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/23
+//01/03/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -71,7 +71,7 @@ plmInit.interval = setInterval(cacheLib, 500, true);
 
 var properties = {
 	playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
-	autoSave				: ['Auto-save delay with loaded foobar playlists (in ms). Forced > 1000. 0 disables it.', 3000, {func: isInt, range: [[0,0],[1000, Infinity]]}, 3000], // Safety limit 0 or > 1000
+	autoSave				: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, {func: isInt, range: [[0,0],[1000, Infinity]]}, 3000], // Safety limit 0 or > 1000
 	bFplLock				: ['Load .fpl native playlists as read only?' , true, {func: isBoolean}, true],
 	extension				: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8', {func: (val) => {return writablePlaylistFormats.has(val);}}, '.m3u8'],
 	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000, {func: isInt, range: [[0,0],[200, Infinity]]}, 5000], // Safety limit 0 or > 200
@@ -566,9 +566,9 @@ addEventListener('on_playlists_changed', () => {
 	}
 });
 
-// Drag n drop to copy/move tracks to playlists (only files from foobar)
+// Drag n drop to copy/move tracks to playlists (only files from foobar2000)
 addEventListener('on_drag_enter', (action, x, y, mask) => {
-	// Avoid things outside foobar
+	// Avoid things outside foobar2000
 	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 });
@@ -578,7 +578,7 @@ addEventListener('on_drag_leave', (action, x, y, mask) => {
 });
 
 addEventListener('on_drag_over', (action, x, y, mask) => {
-	// Avoid things outside foobar
+	// Avoid things outside foobar2000
 	if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 	// Move playlist index only while not pressing alt
@@ -599,7 +599,7 @@ addEventListener('on_drag_over', (action, x, y, mask) => {
 });
 
 addEventListener('on_drag_drop', (action, x, y, mask) => {
-	// Avoid things outside foobar
+	// Avoid things outside foobar2000
 	if (action.Effect === dropEffect.none) {return;}
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 	if (plman.ActivePlaylist !== -1) {
@@ -655,7 +655,7 @@ function autoUpdate() {
 		for (let i = 0; i < playlistPathArrayLength; i++) {
 			totalFileSize += utils.GetFileSize(playlistPathArray[i]);
 		}
-		if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar executed
+		if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar2000 executed
 			if (!pop.isEnabled()) {pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.');}
 			const z = list.offset + Math.round(list.rows / 2 - 1);
 			list.cacheLastPosition(z);
