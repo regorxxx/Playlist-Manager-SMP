@@ -31,6 +31,8 @@
 ### Added
 ### Changed
 - Internal code cleanup of menus.
+- UI: popup when cloning an Auto-playlist now adds a tip to cancel, thus skipping playlist file creation.
+- Autosave: renamed property, config will be reset on update (this doesn't affect to most users since this config is usually not touched).
 ### Removed
 ### Fixed
 - Console: logging of null value not working properly (totally irrelevant except for debug purposes).
