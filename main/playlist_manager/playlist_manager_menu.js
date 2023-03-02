@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/02/23
+//01/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -60,7 +60,7 @@ function createMenuLeft(forcedIndex = -1) {
 	}
 	// Entries
 	{	// Load
-		// Load playlist within foobar. Only 1 instance allowed
+		// Load playlist within foobar2000. Only 1 instance allowed
 		menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING});
 		// Show binded playlist
 		menu.newEntry({entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED});
@@ -72,7 +72,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}
 		}, flags: !bIsAutoPls && !bIsLockPls && (bWritableFormat || bIsPlsUI) && selItems.Count ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
-		// Renames both playlist file and playlist within foobar. Only 1 instance allowed
+		// Renames both playlist file and playlist within foobar2000. Only 1 instance allowed
 		menu.newEntry({entryText: (!bIsLockPls) ? 'Rename...' : (bIsAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
 			const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
 			if (input === null) {return;}
@@ -142,7 +142,7 @@ function createMenuLeft(forcedIndex = -1) {
 				}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			}
 		} else {
-			// Updates playlist file with any new changes on the playlist binded within foobar
+			// Updates playlist file with any new changes on the playlist binded within foobar2000
 			menu.newEntry({entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
 				if (_isFile(pls.path)) {
 					const oldNameId = pls.nameId;
@@ -167,7 +167,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const newName = pls.name;
 					var duplicated = plman.FindPlaylist(newNameId);
 					if (duplicated !== -1) {
-						fb.ShowPopupMessage('You already have a playlist loaded on foobar binded to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+						fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 binded to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 					} else {
 						list.updatePlman(newNameId, oldNameId);
 						const bDone = list.updatePlaylist({playlistIndex: z});
@@ -237,7 +237,7 @@ function createMenuLeft(forcedIndex = -1) {
 				const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 				cloneAsStandardPls(list, z, remDupl, list.bAdvTitle);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
-			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => { // Here creates a foobar autoplaylist no matter the original format
+			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
 				cloneAsAutoPls(list, z);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export as json file...', func: () => {
@@ -467,7 +467,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	}
 	// Entries
 	{	// Load
-		// Load playlist within foobar. Only 1 instance allowed
+		// Load playlist within foobar2000. Only 1 instance allowed
 		menu.newEntry({entryText: 'Load playlists', func: () => {
 			indexes.forEach((z, i) => {
 				const pls = playlists[i];
@@ -1313,7 +1313,7 @@ function createMenuRightTop() {
 		{	// Auto-Saving
 			menu.newEntry({menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + ' ms)', func: () => {
 				let input = 0;
-				try {input = Number(utils.InputBox(window.ID, 'Save changes within foobar playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoSave'][1]), true));}
+				try {input = Number(utils.InputBox(window.ID, 'Save changes within foobar2000 playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoSave'][1]), true));}
 				catch(e) {return;}
 				if (isNaN(input)) {return;}
 				if (!checkProperty(list.properties['autoSave'], input)) {return;}
@@ -1511,19 +1511,19 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
-					if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
+					if (!list.bAutoTrackTagLockPls) {fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar2000) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name);}
 					list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
 					list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
-					if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar are omitted.\n\nAlternatively, using the manual refresh menu entry will force AutoPlaylists tagging (and size updating) on all of them.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
+					if (!list.bAutoTrackTagAutoPls) {fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar2000, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar2000 are omitted.\n\nAlternatively, using the manual refresh menu entry will force AutoPlaylists tagging (and size updating) on all of them.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name);}
 					list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
 					list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTag ? MF_STRING: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
+					if (!list.bAutoTrackTagAutoPlsInit) {fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name);}
 					list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
 					list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
 					overwriteProperties(list.properties);
@@ -1548,7 +1548,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
-					if (!list.bAutoTrackTagAlways) {fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name);}
+					if (!list.bAutoTrackTagAlways) {fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar2000 and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name);}
 					list.bAutoTrackTagAlways = !list.bAutoTrackTagAlways;
 					list.properties['bAutoTrackTagAlways'][1] = list.bAutoTrackTagAlways;
 					overwriteProperties(list.properties);

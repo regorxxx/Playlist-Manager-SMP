@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/10/22
+//01/03/23
 include('helpers_xxx.js');
 include('helpers_xxx_file.js');
 
@@ -8,8 +8,8 @@ include('helpers_xxx_file.js');
 	Workaround to using window.notifyOthers with other panels. Functions on intervals/timeouts don't update 
 	properly variables modified via callbacks, so the actual panels IDs must be read from files. 
 	'removeInstance' must be called via 'on_script_unload' on every panel whenever a instance is logged
-	using 'addInstance'. This ensures the file is empty of IDs when Foobar closes. Otherwise, the file
-	is cleared on consecutive Foobar startups.
+	using 'addInstance'. This ensures the file is empty of IDs when foobar2000 closes. Otherwise, the file
+	is cleared on consecutive foobar2000 startups.
 */
 folders.xxxInstances = folders.temp + 'xxxInstances.json';
 const instances = {};

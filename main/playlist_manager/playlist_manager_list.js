@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/23
+//01/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -1226,7 +1226,7 @@ function _list(x, y, w, h) {
 				// Add to pls
 				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
 				const index = plman.FindPlaylist(pls.nameId);
-				// Add items to chosen playlist too if it's loaded within foobar unless it's the current playlist
+				// Add items to chosen playlist too if it's loaded within foobar2000 unless it's the current playlist
 				if (index !== -1 && plman.ActivePlaylist !== index) {
 					plman.UndoBackup(index);
 					plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
@@ -1357,7 +1357,7 @@ function _list(x, y, w, h) {
 		if (!this.bAutoTrackTag) {return;}
 		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) {return;}
 		if (playlistIndex >= plman.PlaylistCount) {return;} //May have deleted a playlist before delaying the update... so there is nothing to update
-		if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar playlists when auto-saving...	
+		if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar2000 playlists when auto-saving...	
 			const plmanDuplicates = findPlaylistNamesDuplicated();
 			let duplicates = [];
 			this.dataAll.forEach((item) => { // But only if those names are being used by playlist at the manager
@@ -1433,8 +1433,8 @@ function _list(x, y, w, h) {
 	}
 	
 	this.updatePlaylist = ({playlistIndex, bCallback = false, bForceLocked = false} = {}) => { // Only changes total size
-		// playlistIndex: We have a foobar playlist and we iterate over playlist files
-		// Or we have the playlist file and we iterate over foobar playlists
+		// playlistIndex: We have a foobar2000 playlist and we iterate over playlist files
+		// Or we have the playlist file and we iterate over foobar2000 playlists
 		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) {return false;}
 		if (bCallback) {
 			if (playlistIndex >= plman.PlaylistCount) {return false;} //May have deleted a playlist before delaying the update... so there is nothing to update
@@ -1449,7 +1449,7 @@ function _list(x, y, w, h) {
 					else if (pls.size === plman.PlaylistItemCount(playlistIndex)) {return false;} // And skip update if no change was made (omits reordering before autosave fires!)
 				}
 			}
-			if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar playlists when auto-saving...	
+			if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar2000 playlists when auto-saving...	
 				const plmanDuplicates = findPlaylistNamesDuplicated();
 				let duplicates = [];
 				this.dataAll.forEach((item) => { // But only if those names are being used by playlist at the manager
@@ -2117,7 +2117,7 @@ function _list(x, y, w, h) {
 					} else {bDone = true;} // Another format? Skip
 					if (!bDone) {
 						_renameFile(backPath, path); // Restore backup in case something goes wrong
-						console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar and force and update to save it with the required format.');
+						console.log('Error writing Auto-Tag(s) to playlist file: ' + item.name + '(' + path + ')\nThis usually happens when the playlist has been created by an external program. Load the playlist within foobar2000 and force and update to save it with the required format.');
 						console.log('Playlist manager: Restoring backup...');
 					} else if (backPath.length && _isFile(backPath)) {_deleteFile(backPath);}
 				}
@@ -2223,8 +2223,8 @@ function _list(x, y, w, h) {
 			playlistObj.id = new_id;
 			playlistObj.nameId = new_nameId;
 			let duplicated = plman.FindPlaylist(new_nameId);
-			if (duplicated !== -1) { // Playlist already exists on foobar...
-				fb.ShowPopupMessage('Duplicated playlist names within foobar are not allowed: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+			if (duplicated !== -1) { // Playlist already exists on foobar2000...
+				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
 			} else {
 				const plsIdx = plman.FindPlaylist(old_nameId);
 				if (plsIdx !== -1) {
@@ -2510,7 +2510,7 @@ function _list(x, y, w, h) {
 			const oldName = removeIdFromStr(oldNameId);
 			let input = name || '';
 			if (!input.length) {
-				let boxText = bEmpty ? 'Enter playlist name' : 'Enter playlist name.\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
+				let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
 				try {input = utils.InputBox(window.ID, boxText, window.Name, bEmpty ? '' : oldName, true);} 
 				catch(e) {return false;}
 				if (!input.length) {return false;}
@@ -2613,7 +2613,7 @@ function _list(x, y, w, h) {
 			const old_name = pls.name;
 			const duplicated = getPlaylistIndexArray(old_nameId);
 			if (duplicated && duplicated.length > 1) {
-				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 				return false;
 			} else {
 				if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1], true);} // Async backup before future changes
@@ -2633,7 +2633,7 @@ function _list(x, y, w, h) {
 					}
 				} else { // Or file
 					if (_isFile(pls.path)) {
-						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar, then create a new one
+						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar2000, then create a new one
 						plman.ActivePlaylist = fbPlaylistIndex;
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
 						// But it will fail as soon as any track is not found on library
@@ -2785,7 +2785,7 @@ function _list(x, y, w, h) {
 			}
 			clearInterval(delay);
 			if (duplicated !== -1) {
-				let answer = bUI ? popup.yes : WshShell.Popup('Delete also the playlist loaded within foobar?', 0, window.Name, popup.question + popup.yes_no);
+				let answer = bUI ? popup.yes : WshShell.Popup('Delete also the playlist loaded within foobar2000?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					plman.RemovePlaylistSwitch(duplicated);
 				}
@@ -2812,7 +2812,7 @@ function _list(x, y, w, h) {
 			if (!this.properties['bFirstPopupXsp'][1] || bForce) {
 				this.properties['bFirstPopupXsp'][1] = true;
 				overwriteProperties(this.properties); // Updates panel
-				fb.ShowPopupMessage('Playlist manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager');
+				fb.ShowPopupMessage('Playlist manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager');
 			}
 			return;
 		}
@@ -2836,7 +2836,7 @@ function _list(x, y, w, h) {
 			if (!this.properties['bFirstPopupFpl'][1]) {
 				this.properties['bFirstPopupFpl'][1] = true;
 				overwriteProperties(this.properties); // Updates panel
-				fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
+				fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
 			}
 			return;
 		}
@@ -3167,7 +3167,7 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = []; // Only autoplaylists to save to json
 			this.dataFpl = []; // Only fpl playlists to save to json
 			this.dataXsp = []; // Only xsp playlists to save to json
-			this.dataFoobar = []; // Only foobar playlists on UI
+			this.dataFoobar = []; // Only foobar2000 playlists on UI
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
 			this.clearSelPlaylistCache();

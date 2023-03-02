@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/23
+//01/03/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -135,7 +135,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 						return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
 					});
 				}
-				//Fix file numbering since foobar doesn't output list index...
+				//Fix file numbering since foobar2000 doesn't output list index...
 				let trackTextLength = trackText.length;
 				for (let i = 0; i < trackTextLength; i++) { // It appears 3 times...
 					trackText[i] = trackText[i].replace('#placeholder#', i + 1).replace('#placeholder#', i + 1).replace('#placeholder#', i + 1);
@@ -327,7 +327,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				});
 			}
 			trackText = [...newTrackText, ...trackText];
-			//Fix file numbering since foobar doesn't output list index...
+			//Fix file numbering since foobar2000 doesn't output list index...
 			let trackTextLength = trackText.length;
 			for (let i = 0; i < trackTextLength - 2; i++) { // It appears 3 times per track...
 				trackText[i] = trackText[i].replace('#placeholder#', size + 1).replace('#placeholder#', size + 1).replace('#placeholder#', size + 1);

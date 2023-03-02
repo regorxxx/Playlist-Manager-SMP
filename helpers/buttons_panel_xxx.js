@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/23
+//01/03/23
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -8,7 +8,7 @@ include('helpers_xxx_flags.js');
 /* 
 	This is the framework to create buttons as new objects with its own properties and tooltips. They can be merged and loaded multiple times
 	as new buttons instances on the same toolbar. Coordinates get updated when loading multiple buttons, removing the need to manually set them.
-	Check '_buttons_panel_blank.js' to see the universal buttons structure. It loads on foobar but does nothing, it's just empty. Callbacks are missing too.
+	Check '_buttons_panel_blank.js' to see the universal buttons structure. It loads on foobar2000 but does nothing, it's just empty. Callbacks are missing too.
 	
 	NOTE REGARDING CHANGES TO buttons_xxx.js and USE:
 		- Callbacks: The standard file is meant to be used along a standalone panel/bar with only buttons. Contains the callbacks to draw all the buttons.

@@ -257,7 +257,7 @@ listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 				if (list.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 				if (list.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
 				if (list.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
-				if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}	
+				if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
 				bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
 				// Restore backup in case something goes wrong
 				if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/23
+//01/03/23
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
@@ -199,8 +199,8 @@ XSP.getFbTag = function(tag) {
 		case 'lastplayed': {fbTag = XSP.isFoec ? '%LAST_PLAYED_ENHANCED%' : '%LAST_PLAYED%'; break;} // Requires foo_enhanced_playcount or foo_playcount
 		// Special Tags
 		case 'virtualfolder': // Remap to playlist which is the most similar thing...
-		case 'playlist': {fbTag = '#PLAYLIST#'; break;} // Does not work in foobar queries
-		case 'random': {fbTag = '$rand()'; break;} // Does not work in foobar queries
+		case 'playlist': {fbTag = '#PLAYLIST#'; break;} // Does not work in foobar2000 queries
+		case 'random': {fbTag = '$rand()'; break;} // Does not work in foobar2000 queries
 		default: {
 			console.log('Tag not recognized: ' + tag);
 		}
@@ -235,8 +235,8 @@ XSP.getTag = function(fbTag) {
 		case 'LAST_PLAYED_ENHANCED': // Requires foo_enhanced_playcount
 		case 'LAST_PLAYED': {tag = 'lastplayed'; break;} // Requires foo_playcount
 		// Special tags
-		case '#PLAYLIST#': {tag = 'playlist'; break;} // Does not work in foobar queries, virtualfolder will never be used here
-		case '$RAND()': {tag = 'random'; break;} // Does not work in foobar queries
+		case '#PLAYLIST#': {tag = 'playlist'; break;} // Does not work in foobar2000 queries, 'virtualfolder' will never be used here
+		case '$RAND()': {tag = 'random'; break;} // Does not work in foobar2000 queries
 		default: {
 			console.log('Tag not recognized: ' + fbTag);
 		}

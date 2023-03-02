@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/02/23
+//01/03/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -56,7 +56,7 @@ function loadPlaylistsFromFolder(folderPath = '') {
 		let playlist_mbid = '';
 		let type = null;
 		const fileSize = utils.GetFileSize(file);
-		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar native playlist format
+		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar2000 native playlist format
 			let text = _open(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
 				// Safe checks to ensure proper UTF-8 and codepage detection
@@ -618,7 +618,7 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList
 		else {console.log('Error duplicating playlist'); return false;}
 		bDone = true;
 	} else {
-		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
 	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
@@ -1028,8 +1028,8 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 	const newId = (list.bUseUUID && oldId.length) ? oldId : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
 	var duplicated = plman.FindPlaylist(newNameId);
 	let bRenamedSucessfully = false;
-	if (bUpdatePlman && duplicated !== -1 || !bUpdatePlman && duplicated !== plman.ActivePlaylist) { // Playlist already exists on foobar...
-		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name);
+	if (bUpdatePlman && duplicated !== -1 || !bUpdatePlman && duplicated !== plman.ActivePlaylist) { // Playlist already exists on foobar2000...
+		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name);
 	} else {
 		delayAutoUpdate();
 		if (newName.length && newName !== oldName) {

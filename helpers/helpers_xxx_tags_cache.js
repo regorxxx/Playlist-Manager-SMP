@@ -1,14 +1,14 @@
 ﻿'use strict';
-//06/12/22
+//01/03/23
 
 include('callbacks_xxx.js');
 include('helpers_xxx.js');
 include('helpers_xxx_file.js');
 include('helpers_xxx_crc.js');
-if (!isFoobarV2) {console.log('Tags Cache is being used on foobar <2.0. This is not recommended.');}
+if (!isFoobarV2) {console.log('Tags Cache is being used on foobar2000 <2.0. This is not recommended.');}
 
 // Tags cache
-// Tag retrieval is too slow when retrieving tags on Foobar 2.0+
+// Tag retrieval is too slow when retrieving tags on foobar2000 2.0+
 const tagsCache = {
 	files: {}, // one per tag
 	folder: fb.ProfilePath + 'js_data\\tagsCache\\',
