@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.17](#050-beta17---2023-03-04)
 - [0.5.0-beta.16](#050-beta16---2023-02-22)
 - [0.5.0-beta.15](#050-beta15---2023-02-19)
 - [0.5.0-beta.14](#050-beta14---2023-02-19)
@@ -30,9 +31,15 @@
 ## [Unreleased][]
 ### Added
 ### Changed
-- Internal code cleanup of menus.
+### Removed
+### Fixed
+
+## [0.5.0-beta.17] - 2023-03-04
+### Added
+### Changed
 - UI: popup when cloning an Auto-playlist now adds a tip to cancel, thus skipping playlist file creation.
 - Autosave: renamed property, config will be reset on update (this doesn't affect to most users since this config is usually not touched).
+- Internal code cleanup of menus.
 ### Removed
 ### Fixed
 - Console: logging of null value not working properly (totally irrelevant except for debug purposes).
@@ -604,7 +611,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.16...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.17...HEAD
+[0.5.0-beta.17]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.16...v0.5.0-beta.17
 [0.5.0-beta.16]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...v0.5.0-beta.16
 [0.5.0-beta.15]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...v0.5.0-beta.15
 [0.5.0-beta.14]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.13...v0.5.0-beta.14
