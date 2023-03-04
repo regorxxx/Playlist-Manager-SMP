@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/02/23
+//03/03/23
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
@@ -9,7 +9,11 @@ const Input = Object.seal(Object.freeze({
 	// Data validation
 	data: Object.seal({last: null, lastInput: null}),
 	get isLastEqual() {
-		return this.data.last === this.data.lastInput;
+		if (typeof this.data.last === 'object') {
+			return (JSON.stringify(this.data.last) === JSON.stringify(this.data.lastInput));
+		} else {
+			return (this.data.last === this.data.lastInput);
+		}
 	},
 	// Input methods
 	json: function (type, oldVal, message, title, example, checks = [], bFilterFalse = false) {
@@ -79,7 +83,8 @@ const Input = Object.seal(Object.freeze({
 			}
 			return null;
 		}
-		if (oldValStr === JSON.stringify(newVal)) {this.data.lastInput = newVal; return null;}
+		this.data.lastInput = newVal;
+		if (oldValStr === JSON.stringify(newVal)) {return null;}
 		return newVal;
 	},
 	number: function (type, oldVal, message, title, example, checks = []) {
@@ -127,7 +132,8 @@ const Input = Object.seal(Object.freeze({
 			}
 			return null;
 		}
-		if (oldVal === newVal) {this.data.lastInput = newVal; return null;}
+		this.data.lastInput = newVal;
+		if (oldVal === newVal) {return null;}
 		return newVal;
 	},
 	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false) {
@@ -168,7 +174,8 @@ const Input = Object.seal(Object.freeze({
 			}
 			return null;
 		}
-		if (oldVal === newVal) {this.data.lastInput = newVal; return null;}
+		this.data.lastInput = newVal;
+		if (oldVal === newVal) {return null;}
 		return newVal;
 	},
 	query: function (oldVal, message, title, example, checks = [], bFilterEmpty = false) {
@@ -197,7 +204,8 @@ const Input = Object.seal(Object.freeze({
 			}
 			return null;
 		}
-		if (oldVal === newVal) {this.data.lastInput = newVal; return null;}
+		this.data.lastInput = newVal;
+		if (oldVal === newVal) {return null;}
 		return newVal;
 	},
 	// Internal helpers
