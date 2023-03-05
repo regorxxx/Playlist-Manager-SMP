@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//05/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -3235,8 +3235,11 @@ function _list(x, y, w, h) {
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-		if (this.bDynamicMenus) { // Init menus unless they will be init later after autoplaylists processing
-			if (!(this.properties['bUpdateAutoplaylist'][1] && this.bShowSize) && !(this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit)) {
+		if (this.bDynamicMenus) { // Init menus unless they will be init later after Autoplaylists processing
+			const queryItems = this.itemsAutoplaylist + this.itemsXsp;
+			const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && this.bShowSize;
+			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
+			if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
 				this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
 			}
 		} else {this.deleteExportInfo();}
