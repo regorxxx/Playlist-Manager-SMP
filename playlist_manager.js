@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//04/03/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -198,7 +198,7 @@ setProperties(properties, 'plm_');
 		const callback = () => !pop.isEnabled() ? window.NotifyOthers('Playlist manager: playlistPath', null) : setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
 		const id = addEventListener('on_notify_data', (name, info) => {
-			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev') {return;}
+			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') {return;}
 			switch (name) {
 				case 'Playlist manager: playlistPath': {
 					if (info) {
@@ -354,7 +354,7 @@ addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist
 });
 
 addEventListener('on_notify_data', (name, info) => {
-	if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev') {return;}
+	if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') {return;}
 	switch (name) {
 		case 'Playlist manager: playlistPath': {
 			if (!info) {window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath);} // Share paths
