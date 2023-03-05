@@ -33,6 +33,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- Dynamic menus: not being created on init when the manager had no Auto-playlists and Auto-playlist size updating was enabled.
 
 ## [0.5.0-beta.17] - 2023-03-04
 ### Added
