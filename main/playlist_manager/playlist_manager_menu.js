@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//08/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -53,6 +53,8 @@ function createMenuLeft(forcedIndex = -1) {
 	const bIsPlsUI = isPlsUI();
 	const bWritableFormat = writablePlaylistFormats.has(pls.extension);
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
+	// Enabled menus
+	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
 	if (list.bShowMenuHeader) {
 		menu.newEntry({entryText: '--- ' + (bIsAutoPls ? (pls.extension === '.xsp' ? 'Smart Playlist' :'AutoPlaylist'): pls.extension + ' Playlist') + ': ' + pls.name + ' ---' + (bIsValidXSP ? '' : ' (invalid type)'), flags: MF_GRAYED});
@@ -64,6 +66,10 @@ function createMenuLeft(forcedIndex = -1) {
 		menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING});
 		// Show binded playlist
 		menu.newEntry({entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED});
+		// Contextual menu
+		if (bIsPlsLoaded && showMenus['Contextual menus']) {
+			menu.newMenu('Items...', void(0), void(0), {type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId)});
+		}
 		menu.newEntry({entryText: 'sep'});
 		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 		menu.newEntry({entryText: 'Copy selection to playlist', func: () => {
@@ -177,57 +183,63 @@ function createMenuLeft(forcedIndex = -1) {
 			}, flags: bIsPlsActive  && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED});
 		}
 	}
-	menu.newEntry({entryText: 'sep'});
+	if (showMenus['Category'] || showMenus['Tags']) {
+		menu.newEntry({entryText: 'sep'});
+	}
 	{	// Tags and category
-		{	// Set category
-			const menuName = menu.newMenu('Set category...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
-			menu.newEntry({menuName, entryText: 'New category...', func: () => {
-				const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name, 'My category');
-				if (input === null) {return;}
-				setCategory(input, list, z);
-			}});
-			menu.newEntry({menuName, entryText: 'sep'});
-			list.categories().forEach((category, i) => {
-				menu.newEntry({menuName, entryText: category, func: () => {
-					if (pls.category !== category) {setCategory(i ? category : '', list, z);}
+		if (showMenus['Category']) {
+			{	// Set category
+				const menuName = menu.newMenu('Set category...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+				menu.newEntry({menuName, entryText: 'New category...', func: () => {
+					const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name, 'My category');
+					if (input === null) {return;}
+					setCategory(input, list, z);
 				}});
-				menu.newCheckMenu(menuName, category, void(0), () => {return (pls.category === (i ? category : ''));});
-			});
-		}
-		{	// Set tag(s)
-			const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
-			menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
-				const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name, '["TagA","TagB"]', void(0), true);
-				if (input === null) {return;}
-				setTag(input, list, z);
-			}});
-			menu.newEntry({menuName, entryText: 'sep'});
-			let bAddInvisibleIds = false;
-			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
-				if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddInvisibleIds = true; return;} // Add invisible id for entries after separator to duplicate check marks
-				const entry = menu.newEntry({menuName, entryText: tag, func: () => {
-					let tags;
-					if (i === 0) {tags = [];}
-					else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
-					else {tags = [...pls.tags, tag];}
-					setTag(tags, list, z);
-				}, bAddInvisibleIds});
-				menu.newCheckMenu(menuName, entry.entryText, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
-			});
-		}
-		// Adds track tag(s)
-		menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
-			let tags = '';
-			const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
-			try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);} 
-			catch(e) {return;}
-			const tagsString = tags;
-			if (tags.length) {
-				tags = tags.replaceAll('\'\'','"'); // Replace quotes
-				try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
+				menu.newEntry({menuName, entryText: 'sep'});
+				list.categories().forEach((category, i) => {
+					menu.newEntry({menuName, entryText: category, func: () => {
+						if (pls.category !== category) {setCategory(i ? category : '', list, z);}
+					}});
+					menu.newCheckMenu(menuName, category, void(0), () => {return (pls.category === (i ? category : ''));});
+				});
 			}
-			if (tagsString !== currValue) {setTrackTags(tags, list, z);}
-		}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP ? MF_STRING : MF_GRAYED});
+		}
+		if (showMenus['Tags']) {
+			{	// Set tag(s)
+				const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+				menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
+					const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name, '["TagA","TagB"]', void(0), true);
+					if (input === null) {return;}
+					setTag(input, list, z);
+				}});
+				menu.newEntry({menuName, entryText: 'sep'});
+				let bAddInvisibleIds = false;
+				list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
+					if (tag === 'sep') {menu.newEntry({menuName, entryText: 'sep'}); bAddInvisibleIds = true; return;} // Add invisible id for entries after separator to duplicate check marks
+					const entry = menu.newEntry({menuName, entryText: tag, func: () => {
+						let tags;
+						if (i === 0) {tags = [];}
+						else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
+						else {tags = [...pls.tags, tag];}
+						setTag(tags, list, z);
+					}, bAddInvisibleIds});
+					menu.newCheckMenu(menuName, entry.entryText, void(0), () => {return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0);});
+				});
+			}
+			// Adds track tag(s)
+			menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
+				let tags = '';
+				const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
+				try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);} 
+				catch(e) {return;}
+				const tagsString = tags;
+				if (tags.length) {
+					tags = tags.replaceAll('\'\'','"'); // Replace quotes
+					try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
+				}
+				if (tagsString !== currValue) {setTrackTags(tags, list, z);}
+			}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP ? MF_STRING : MF_GRAYED});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Export and clone
@@ -251,10 +263,12 @@ function createMenuLeft(forcedIndex = -1) {
 				}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 			}
 		} else {	// Export and Rel. Paths handling
-			// Rel Paths
-			menu.newEntry({entryText: 'Force relative paths...', func: () => {
-				convertToRelPaths(list, z);
-			}, flags: bWritableFormat && !bIsLockPls ? MF_STRING : MF_GRAYED});
+			if (showMenus['Relative paths handling']) {
+				// Rel Paths
+				menu.newEntry({entryText: 'Force relative paths...', func: () => {
+					convertToRelPaths(list, z);
+				}, flags: bWritableFormat && !bIsLockPls ? MF_STRING : MF_GRAYED});
+			}
 			// Clone as
 			{
 				const presets = [...writablePlaylistFormats, 'sep', '.ui'];
@@ -269,114 +283,120 @@ function createMenuLeft(forcedIndex = -1) {
 					}});
 				});
 			}
-			// Copy
-			menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
-				exportPlaylistFile(list, z);
-			}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
-			// Export and copy
-			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
-				exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
-			}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
-		}
-		{	// Export and Convert
-			const presets = JSON.parse(list.properties.converterPreset[1]);
-			const flags = bWritableFormat || bIsPlsUI || bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED;
-			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
-			menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			presets.forEach((preset) => {
-				const path = preset.path;
-				let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
-				const dsp = preset.dsp;
-				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-				const tf = preset.tf;
-				let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
-				const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
-				const extensionName = extension.length ? '[' + extension + ']' : '';
-				if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
-				if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
-				if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
-				menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-					const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-					if (!pls.isAutoPlaylist) {
-						exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); // Include remDupl for XSP playlists
-					} else {
-						exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);
-					}
-				}, flags});
-			});
-		}
-		{	// Export to ListenBrainz
-			const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
-			const consoleError = () => {
-				fb.ShowPopupMessage(
-					'Playlist was not exported. Check console.\n\nSome possible errors:\n' + 
-					'\t- 12007: Network error and/or non reachable server.' +
-					'\t- 429: Too many requests on a short amount of time.'
-					, window.Name
-				);
+			if (showMenus['Export and copy']) {
+				// Copy
+				menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
+					exportPlaylistFile(list, z);
+				}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+				// Export and copy
+				menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
+					exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
+				}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
 			}
-			// addPlaylist: 400 {"code":400,"error":"You may only add max 100 recordings per call."} TODO
-			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-				if (!await checkLBToken()) {return false;}
-				let bUpdateMBID = false;
-				let playlist_mbid = '';
-				const bLookupMBIDs = list.properties.bLookupMBIDs[1];
-				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
-				if (!token) {return false;}
-				if (pls.playlist_mbid.length) {
-					console.log('Syncing playlist with MusicBrainz: ' + pls.name);
-					playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
-					if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
-				} else {
-					console.log('Exporting playlist to MusicBrainz: ' + pls.name);
-					playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
-					if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
+		}
+		if (showMenus['Export and copy']) {
+			{	// Export and Convert
+				const presets = JSON.parse(list.properties.converterPreset[1]);
+				const flags = bWritableFormat || bIsPlsUI || bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED;
+				const subMenuName = menu.newMenu('Export and Convert Tracks to...', void(0), presets.length ? flags : MF_GRAYED);
+				menu.newEntry({menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				presets.forEach((preset) => {
+					const path = preset.path;
+					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
+					const dsp = preset.dsp;
+					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
+					const tf = preset.tf;
+					let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+					const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+					const extensionName = extension.length ? '[' + extension + ']' : '';
+					if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
+					if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
+					if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
+					menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
+						if (!pls.isAutoPlaylist) {
+							exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); // Include remDupl for XSP playlists
+						} else {
+							exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);
+						}
+					}, flags});
+				});
+			}
+		}
+		if (showMenus['Online sync']) {
+			{	// Export to ListenBrainz
+				const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
+				const consoleError = () => {
+					fb.ShowPopupMessage(
+						'Playlist was not exported. Check console.\n\nSome possible errors:\n' + 
+						'\t- 12007: Network error and/or non reachable server.' +
+						'\t- 429: Too many requests on a short amount of time.'
+						, window.Name
+					);
 				}
-				if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {consoleError();}
-				if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
-			}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-				if (!await checkLBToken()) {return false;}
-				let bDone = false;
-				if (_isFile(pls.path)) {
+				// addPlaylist: 400 {"code":400,"error":"You may only add max 100 recordings per call."} TODO
+				menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
+					if (!await checkLBToken()) {return false;}
+					let bUpdateMBID = false;
+					let playlist_mbid = '';
+					const bLookupMBIDs = list.properties.bLookupMBIDs[1];
 					const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
 					if (!token) {return false;}
-					const jspf = await lb.importPlaylist(pls, token);
-					if (jspf) {
-						const handleList = lb.contentResolver(jspf);
-						if (handleList) {
-							if (jspf.playlist.track.length !== handleList.Count) {
-								const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
-								if (answer === popup.no) {return false;}
-							}
-							if (pls.isLocked) { // Safety check for locked files (but can be overridden)
-								let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
-								if (answer === popup.no) {return false;}
-							}
-							const backPath = pls.path + '.back';
-							_renameFile(pls.path, backPath);
-							const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-							bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
-							// Restore backup in case something goes wrong
-							if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
-							else if (_isFile(backPath)) {_deleteFile(backPath);}
-							if (bDone && bIsPlsLoaded) {sendToPlaylist(handleList, pls.name);}
-							clearInterval(delay);
-						}
+					if (pls.playlist_mbid.length) {
+						console.log('Syncing playlist with MusicBrainz: ' + pls.name);
+						playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
+						if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
+					} else {
+						console.log('Exporting playlist to MusicBrainz: ' + pls.name);
+						playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
+						if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 					}
-				} else {console.log('Playlist file not found: ' + pls.path);}
-				if (!bDone) {consoleError();}
-				return bDone;
-			}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
-				console.popup('Playlist URL: \n' + lb.getPlaylistURL(pls), window.Name);
-			}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'Open on Web...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
-				const url = lb.getPlaylistURL(pls);
-				if (regExListenBrainz.test(url)) {_run(lb.getPlaylistURL(pls));}
-			}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
+					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {consoleError();}
+					if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
+				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
+					if (!await checkLBToken()) {return false;}
+					let bDone = false;
+					if (_isFile(pls.path)) {
+						const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+						if (!token) {return false;}
+						const jspf = await lb.importPlaylist(pls, token);
+						if (jspf) {
+							const handleList = lb.contentResolver(jspf);
+							if (handleList) {
+								if (jspf.playlist.track.length !== handleList.Count) {
+									const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
+									if (answer === popup.no) {return false;}
+								}
+								if (pls.isLocked) { // Safety check for locked files (but can be overridden)
+									let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+									if (answer === popup.no) {return false;}
+								}
+								const backPath = pls.path + '.back';
+								_renameFile(pls.path, backPath);
+								const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+								bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+								// Restore backup in case something goes wrong
+								if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
+								else if (_isFile(backPath)) {_deleteFile(backPath);}
+								if (bDone && bIsPlsLoaded) {sendToPlaylist(handleList, pls.name);}
+								clearInterval(delay);
+							}
+						}
+					} else {console.log('Playlist file not found: ' + pls.path);}
+					if (!bDone) {consoleError();}
+					return bDone;
+				}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
+					console.popup('Playlist URL: \n' + lb.getPlaylistURL(pls), window.Name);
+				}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'Open on Web...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
+					const url = lb.getPlaylistURL(pls);
+					if (regExListenBrainz.test(url)) {_run(lb.getPlaylistURL(pls));}
+				}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
+			}
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -407,13 +427,15 @@ function createMenuLeft(forcedIndex = -1) {
 				if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
 			}, flags});
 		}
-		menu.newEntry({entryText: 'sep'});
-		// Deletes playlist file and playlist loaded
-		menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
-		menu.newEntry({entryText: 'Open file on explorer', func: () => {
-			if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
-			else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
-		}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED});
+		if (showMenus['File management']) {
+			menu.newEntry({entryText: 'sep'});
+			// Deletes playlist file and playlist loaded
+			menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
+			menu.newEntry({entryText: 'Open file on explorer', func: () => {
+				if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
+				else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
+			}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED});
+		}
 	}
 	return menu;
 }
@@ -656,6 +678,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				const z = list.data.indexOf(pls);
 				if (z !== -1) {list.removePlaylist(z);}
 			});
+			this.indexes.length = 0; // Reset selection since there is no playlists now
 		}});
 	}
 	return menu;
@@ -2197,6 +2220,25 @@ function createMenuRightTop() {
 					list.properties[key][1] = list.defaultProperties[key][3];
 					list[key] = JSON.parse(list.properties[key][1]);
 				});
+				overwriteProperties(list.properties);
+			}});
+		}
+		{	// Enabled menus
+			const showMenus = JSON.parse(list.properties.showMenus[1]);
+			const subMenuName = menu.newMenu('Playlist menus...', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Playlist menu entries shown:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			Object.keys(showMenus).forEach((key) => {
+				menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
+					showMenus[key] = !showMenus[key];
+					list.properties.showMenus[1] = JSON.stringify(showMenus);
+					overwriteProperties(list.properties);
+				}});
+				menu.newCheckMenu(subMenuName, key, void(0), () => showMenus[key]);
+			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
+				list.properties.showMenus[1] = list.properties.showMenus[3];
 				overwriteProperties(list.properties);
 			}});
 		}
