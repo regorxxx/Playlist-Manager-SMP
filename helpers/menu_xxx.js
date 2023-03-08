@@ -1,8 +1,8 @@
 ﻿'use strict';
-//01/03/23
+//08/03/23
 
 /* 
-	Contextual Menu helper v2.3.0
+	Contextual Menu helper v2.4.0
 	Helper to create contextual menus on demand on panels without needing to create specific methods for
 	every script, calculate IDs, etc. Menus are pushed to a list and created automatically, linking the entries
 	to their idx without needing a 'switch' block or leaving holes to ensure idx get enough numbers to expand the script.
@@ -10,12 +10,15 @@
 	and the menus' functions on the same place. Creation order is done following entry/menus addition.
 	
 	Methods:
-		_menu({bSupressDefaultMenu: true, idxInitial: 0})
+		_menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000})
 			-bSupressDefaultMenu:	Suppress the default context menu. left shift + left windows key will bypass it. 
-			-idxInitial:			Specifies an initial idx to create menus (useful to concatenate multiple menus objects)
 			-bAddInvisibleIds:		When trying to add multiple (sub)menus with same name (and different parent), an invisible ID 
 										may be added to allow it. .newMenu() will return the final name in such case.
 			-onBtnUp:				Callback called after processing mouse btn_up. Respects the value of this inside the function, if any.
+			-contextIdxInitial:		Initial id for Context Menu manager
+			-mainIdxInitial:		Initial id for Main Menu manager
+			-idxInitialOffset:		Every new context/main menu will be set at initial id + offset (i.e. by default 10 context menus are
+										allowed without clashing)
 		
 		.btn_up(x, y, [object])
 			-NOTE: 					Called within callbacks to create the menu. Specifying an object or array of objects 
@@ -25,7 +28,7 @@
 		.getMainMenuName()
 			-NOTE:					Used to get the key of the main menu. Useful to concatenate multiple menus.
 	
-		.newMenu(menuName = 'main', subMenuFrom = 'main', flags = MF_STRING)
+		.newMenu(menuName = 'main', subMenuFrom = 'main', flags = MF_STRING, context = null, main = null)
 			-menuName:				Specifies the menu name or submenus names. 
 			-NOTE:					Menu is called 'main' when it's called without an argument.
 			-NOTE:					Every menu created will be appended to the main menu, unless provided another 'subMenuFrom' value.
@@ -57,7 +60,7 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null} = {}) {
+function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000} = {}) {
 	// Checks
 	if (onBtnUp && !isFunction(onBtnUp)) {throw new Error('onBtnUp is not a function');}
 	if (iMaxEntryLen <= 0) {throw new Error('iMaxEntryLen can not be <= 0');}
@@ -67,6 +70,9 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	let menuArrTemp = [];
 	let menuArr = [];
 	let menuMap = new Map();
+	
+	let contextMenuMap = new Map();
+	let mainMenuMap = new Map();
 	
 	let entryArrTemp = [];
 	let entryArr = [];
@@ -100,7 +106,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	};
 	
 	// To create new elements
-	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => {
+	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING, context = null /*{type, playlistIdx}*/, main = null /*{type}*/) => {
 		const mType = typeof menuName, smType = typeof subMenuFrom;
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
 		if (eTypeToStr.indexOf(smType) !== -1) {subMenuFrom = subMenuFrom.toString();}
@@ -109,6 +115,10 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
 		if (mType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (smType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (context && main) {
+			menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags, context, main});
+			throw 'A menu can not be a contextual menu and main menu at the same time';
+		}
 		if (bAddInvisibleIds) {
 			if (this.hasMenu(menuName, subMenuFrom)) {
 				menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags}); 
@@ -121,7 +131,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			throw 'There is already another menu with same name';
 		}
 		menuArr.push({menuName, subMenuFrom});
-		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true});}
+		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true, context, main});}
 		return menuName;
 	};
 	this.newMenu(); // Default menu
@@ -193,7 +203,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			else if (mType !== 'string') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'menuName type is not recognized';}
 			if (eType === 'undefined') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'entryText is not defined!';}
 			else if (eTypeToStr.indexOf(eType) !== -1) {entryText = entryText.toString();}
-			else if (eType === 'function') {menuName = menuName.name;}
+			else if (eType === 'function') {entryText = entryText.name;}
 			else if (eType !== 'string') {menuError({'function': 'addToMenu\n', menuName, entryText, flags}); throw 'entryText type is not recognized';}
 			// Cut len
 			let [entryTextName, entryTextTab] = entryText.split('\t');
@@ -285,7 +295,9 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 			this.createMenu(menu.menuName);
 		});
 		// Init entries
-		entryArr.forEach( (entry) => {
+		let contextIdx = contextIdxInitial;
+		let mainIdx = mainIdxInitial;
+		entryArr.forEach((entry) => {
 			if (entry.hasOwnProperty('condFunc')) {return;} // Skip conditional entries (they are already done)
 			if (!entry.bIsMenu) { // To main menu
 				this.addToMenu({entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags});
@@ -295,12 +307,55 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 					const flags = isFunction(entry.flags) ? entry.flags() : entry.flags;
 					const subMenuFrom = isFunction(entry.subMenuFrom) ? entry.subMenuFrom() : entry.subMenuFrom;
 					const subMenuNameSanitized = subMenuName.replace(hiddenCharsRegEx, ''); // Delete invisible chars since they may appear as bugged chars with some fonts on Wine
+					// Fb especial menus
+					const context = isFunction(entry.context) ? entry.context() : entry.context;
+					const main = isFunction(entry.main) ? entry.main() : entry.main;
+					if (context && context.type) {
+						const type = ((isFunction(context.type) ? context.type() : context.type) || '').toLowerCase();
+						let contextMenu;
+						if (type === 'handlelist') { // InitContext()
+							const idx = context.hasOwnProperty('playlistIdx') ? context.playlistIdx : plman.ActivePlaylist;
+							if (idx === -1) {return;}
+							const playlistItems = plman.GetPlaylistItems(idx);
+							if (playlistItems.Count > 0) {
+								contextMenu = fb.CreateContextMenuManager();
+								contextMenu.InitContext(playlistItems);
+								contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
+							}
+						} else if (type === 'playlist') { // InitContextPlaylist()
+							contextMenu = fb.CreateContextMenuManager();
+							contextMenu.InitContextPlaylist();
+							contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
+						} else if (type === 'nowplaying') { // InitContextPlaylist()
+							contextMenu = fb.CreateContextMenuManager();
+							contextMenu.InitContextPlaylist();
+							contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
+						}
+						if (contextMenu) {
+							contextIdx += idxInitialOffset;
+							contextMenuMap.set(subMenuName, contextMenu);
+						}
+					}
+					if (main && main.type) {
+						const type = ((isFunction(main.type) ? main.type() : main.type) || '').toLowerCase();
+						const mainAllowed = new Set(['file', 'view', 'edit', 'playback', 'library', 'help']);
+						let mainMenu;
+						if (mainAllowed.has(type)) {
+							mainMenu = fb.CreateMainMenuManager();
+							mainMenu.Init(type);
+							mainMenu.BuildMenu(this.getMenu(subMenuName), mainIdx, idxInitialOffset);
+						}
+						if (mainMenu) {
+							mainIdx += idxInitialOffset;
+							mainMenuMap.set(subMenuName, mainMenu);
+						}
+					}
 					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuNameSanitized);
 				}
 			}
 		});
 		// Init checks
-		checkMenuArr.forEach( (check) => {
+		checkMenuArr.forEach((check) => {
 			this.checkMenu(check.menuName, check.entryTextA, check.entryTextB, check.idxFun);
 		});
 		this.getCheckMenu().forEach( (func) => {
@@ -325,7 +380,7 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		const currIdx = forcedEntry.length ? this.getIdx(forcedEntry) : this.getMenu(menuArr[0].menuName).TrackPopupMenu(x, y, flag);
 		let bDone;
 		if (typeof currIdx !== 'undefined' && currIdx !== -1) {
-			this.getEntryFunc().forEach( (func, entryIdx) => {
+			this.getEntryFunc().forEach((func, entryIdx) => {
 				if (bDone) {return;}
 				if (entryIdx === currIdx) {
 					this.lastCall = forcedEntry.length ? forcedEntry : this.getEntry(currIdx);
@@ -348,6 +403,24 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 					objectMenu.btn_up_done(currIdx);
 				}
 			}
+			// Contextual menus
+			if (!bDone && currIdx >= contextIdxInitial) {
+				let contextIdx = contextIdxInitial;
+				contextMenuMap.forEach((contextMenu, entryIdx) => {
+					if (bDone) {return;}
+					bDone = contextMenu.ExecuteByID(currIdx - contextIdx);
+					contextIdx += idxInitialOffset;
+				});
+			}
+			// Contextual menus
+			if (!bDone && currIdx >= mainIdxInitial) {
+				let mainIdx = mainIdxInitial;
+				mainMenuMap.forEach((mainMenu, entryIdx) => {
+					if (bDone) {return;}
+					bDone = mainMenu.ExecuteByID(currIdx - mainIdx);
+					mainIdx += idxInitialOffset;
+				});
+			}
 		} else if (forcedEntry.length) {
 			console.log('menu_xxx: Tried to call a menu with forced entry (\'' + forcedEntry + '\') but it doesn\'t exist. It may point to a bug or error.');
 		}
@@ -364,6 +437,8 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 		entryMapInverted.clear();
 		idxMap.clear();
 		checkMenuMap.clear();
+		contextMenuMap.clear();
+		mainMenuMap.clear();
 		if (bAddInvisibleIds) {this.resetIds();}
 		// Since menu is cleared on every call too, entry arrays are cleared whenever this.clear is called from the outside
 		// Otherwise they are reused on next call
@@ -425,15 +500,25 @@ function _menu({bSupressDefaultMenu = true, /*idxInitial = 0,*/ properties = nul
 	}
 	
 	function isArray(checkKeys) {
-		if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
+		if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
 			return false; //Array was null or not an array
 		}
 		return true;
 	}
 	
 	function menuError({} = {}) {
-		if (console.popup) {console.popup(Object.entries(...arguments).map((_) => {return _.join(': ');}).join('\n'), 'Menu');} 
-		else {Object.entries(...arguments).map((_) => {return _.join(': ');}).forEach((arg) => {console.log(arg);});}
+		if (console.popup) {
+			console.popup(
+				Object.entries(...arguments)
+					.map((arg) => {return (typeof arg[1] === 'object' ? [arg[0], JSON.stringify(arg[1])] : arg).join(': ');})
+					.join('\n')
+				, 'Menu'
+			);
+		} else {
+			Object.entries(...arguments)
+				.map((arg) => {return (typeof arg[1] === 'object' ? [arg[0], JSON.stringify(arg[1])] : arg).join(': ');})
+				.forEach((arg) => {console.log(arg);});
+		}
 	}
 }
 
