@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.18](#050-beta18---2023-03-08)
 - [0.5.0-beta.17](#050-beta17---2023-03-04)
 - [0.5.0-beta.16](#050-beta16---2023-02-22)
 - [0.5.0-beta.15](#050-beta15---2023-02-19)
@@ -33,7 +34,18 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.5.0-beta.18] - 2023-03-08
+### Added
+- UI: native contextual menu for items within loaded or UI-only playlists.
+- UI: configurable playlist menus. Multiple entries may be hidden if not used, thus making it easier for users without more advanced needs.
+### Changed
+- UI: on first init, advanced features will be hidden by default.
+- UI: focus is now set on new playlist after playlist creation.
+### Removed
+### Fixed
 - Dynamic menus: not being created on init when the manager had no Auto-playlists and Auto-playlist size updating was enabled.
+- Crash after deleting playlists using multiple selection actions, since the selection was not being reset.
 
 ## [0.5.0-beta.17] - 2023-03-04
 ### Added
@@ -613,7 +625,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.17...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.18...HEAD
+[0.5.0-beta.18]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.17...v0.5.0-beta.18
 [0.5.0-beta.17]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.16...v0.5.0-beta.17
 [0.5.0-beta.16]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...v0.5.0-beta.16
 [0.5.0-beta.15]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.14...v0.5.0-beta.15
