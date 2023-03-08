@@ -1,12 +1,12 @@
 ﻿'use strict';
-//04/03/23
+//08/03/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta16', features: {drag_n_drop: true, grab_focus: true}});
+window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta18', features: {drag_n_drop: true, grab_focus: true}});
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -174,6 +174,15 @@ var properties = {
 		'Ctrl + Shift':	'- None -',
 		'Single Click':	'Show current / playing playlist',
 		'Double Click':	'Cycle categories'
+	})],
+	showMenus			: ['Show menus configuration', JSON.stringify({
+		'Contextual menus':			true,
+		'Category':					true,
+		'Tags':						true,
+		'Relative paths handling':	true,
+		'Export and copy':			true,
+		'Online sync':				true,
+		'File management':			true
 	})]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
@@ -183,17 +192,28 @@ properties['mShortcuts'].push({func: isJSON}, properties['mShortcuts'][1]);
 properties['lShortcuts'].push({func: isJSON}, properties['lShortcuts'][1]);
 properties['lShortcutsHeader'].push({func: isJSON}, properties['lShortcutsHeader'][1]);
 properties['mShortcutsHeader'].push({func: isJSON}, properties['mShortcutsHeader'][1]);
+properties['showMenus'].push({func: isJSON}, properties['showMenus'][1]);
 setProperties(properties, 'plm_');
 
 { // Info Popup
 	let prop = getPropertiesPairs(properties, 'plm_');
 	if (!prop['bFirstPopup'][1]) {
 		prop['bFirstPopup'][1] = true;
-		overwriteProperties(prop); // Updates panel
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
 		if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager: introduction');}
+		// Simple mode
+		const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'];
+		const answer = WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + features.join(', '), 0, window.Name, popup.question + popup.yes_no);
+		if (answer === popup.no) {
+			const showMenus = JSON.parse(prop.showMenus[1]);
+			features.forEach((key) => {
+				showMenus[key] = false;
+			});
+			prop.showMenus[1] = JSON.stringify(showMenus);
+		}
+		overwriteProperties(prop); // Updates panel
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
 		const callback = () => !pop.isEnabled() ? window.NotifyOthers('Playlist manager: playlistPath', null) : setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
