@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/03/23
+//08/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -2316,8 +2316,14 @@ function _list(x, y, w, h) {
 		this.addToData = (objectPlaylist) => {
 			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (isArray(objectPlaylist)) {
-				for (const objectPlaylist_i of objectPlaylist) {this.addToData(objectPlaylist_i);}
-				return;
+				const dataIdx = [];
+				const dataAllIdx = [];
+				for (const objectPlaylist_i of objectPlaylist) {
+					const newIdx = this.addToData(objectPlaylist_i);
+					dataIdx.push(newIdx.dataIdx);
+					dataAllIdx.push(newIdx.dataAllIdx);
+				}
+				return {dataIdx, dataAllIdx};
 			}
 			if (objectPlaylist.isAutoPlaylist) {
 				this.dataAutoPlaylists.push(objectPlaylist);
@@ -2329,11 +2335,12 @@ function _list(x, y, w, h) {
 				this.dataXsp.push(objectPlaylist);
 				this.itemsXsp++;
 			}
-			this.data.push(objectPlaylist);
+			const dataIdx = this.data.push(objectPlaylist) - 1;
 			this.items++;
-			this.dataAll.push(objectPlaylist);
+			const dataAllIdx = this.dataAll.push(objectPlaylist) - 1;
 			this.itemsAll++;
 			clearInterval(delay);
+			return {dataIdx, dataAllIdx}
 		}
 		
 		this.editData = (objectPlaylist, properties, bSave = false) => {
@@ -2431,9 +2438,13 @@ function _list(x, y, w, h) {
 			// Add Category of current view if none was forced
 			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) {objectPlaylist.category = this.categoryState[0];} 
 			// Save
-			this.addToData(objectPlaylist);
+			const idx = this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
+			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+			if (idx && idx.dataIdx === this.data.findIndex((pls) => {return pls === objectPlaylist;})) {
+				this.showPlsByIdx(idx.dataIdx);
+			}
 			return objectPlaylist;
 		}
 		
@@ -2498,9 +2509,13 @@ function _list(x, y, w, h) {
 				if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
 			} else {return false;}
 			// Save
-			this.addToData(objectPlaylist);
+			const idx = this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
+			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+			if (idx && idx.dataIdx === this.data.findIndex((pls) => {return pls === objectPlaylist;})) {
+				this.showPlsByIdx(idx.dataIdx);
+			}
 			return objectPlaylist;
 		}
 		
@@ -2520,6 +2535,7 @@ function _list(x, y, w, h) {
 			// Auto-Tags
 			const oPlaylistTags = [];
 			let objectPlaylist = null;
+			let idx = null;
 			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
 			if (this.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
@@ -2539,7 +2555,7 @@ function _list(x, y, w, h) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
 					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags, void(0), void(0), bEmpty ? void(0) : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration());
 					// Adds to list of objects and update variables
-					this.addToData(objectPlaylist);
+					idx = this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
 						let indexFound = plman.FindPlaylist(new_name);
 						if (indexFound === -1) { 
@@ -2579,6 +2595,10 @@ function _list(x, y, w, h) {
 			} else {console.popup('Playlist \'' + new_name + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups); return false;}
 			this.update(true, true); // We have already updated data
 			this.filter();
+			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+			if (idx && idx.dataIdx === this.data.findIndex((pls) => {return pls === objectPlaylist;})) {
+				this.showPlsByIdx(idx.dataIdx);
+			}
 			return objectPlaylist;
 		}
 		
@@ -2790,11 +2810,16 @@ function _list(x, y, w, h) {
 					plman.RemovePlaylistSwitch(duplicated);
 				}
 			}
+			// Needed after removing the playlist on UI
 			if (bUI) {
 				this.update(true, true);
 				const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
 				this.filter({categoryState});
-			} // Needed after removing the playlist on UI
+			}
+			// Remove item from current selection (otherwise it would crash)
+			if (!bAlsoHidden && this.indexes.length && this.indexes.indexOf(idx) !== -1) {
+				this.multSelect(idx);
+			}
 		}
 		
 		this.updatePlman = (name, oldName) => {
