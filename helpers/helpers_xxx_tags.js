@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/23
+//10/03/23
 
 include('helpers_xxx.js');
 
@@ -58,8 +58,11 @@ function sanitizeQueryVal(val) {
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
 function queryReplaceWithCurrent(query, handle) {
-	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return;}
-	else if (!handle) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
+	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return '';}
+	else if (!handle) {
+		if ((query.match(/#/g) || []).length >= 2) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
+		else {return query;}
+	}
 	if (query.indexOf('#') !== -1) {
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
@@ -204,7 +207,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 
 function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
-	if (!bAllowEmpty && !query.length) {return false;}
+	if (!bAllowEmpty && (!query || !query.length)) {return false;}
 	let queryNoSort = query;
 	if (bAllowSort) {
 		queryNoSort = stripSort(query);
@@ -212,7 +215,7 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	}
 	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}  // Test query against empty handle list since it's much faster!
 	catch (e) {bPass = false;}
-	if (!bAllowPlaylist && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
+	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
 	return bPass;
 }
 

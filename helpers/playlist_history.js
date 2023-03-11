@@ -1,113 +1,119 @@
 ﻿'use strict';
-//06/02/23
+//11/03/23
 
 include('helpers_xxx.js');
 include('helpers_xxx_playlists.js');
 include('menu_xxx.js');
+include('callbacks_xxx.js');
 
-const plsHistory = [];
-const plsHistoryMax = 11; // -1 for the head (active playlist)
-
-// Utilities
-function goPrevPls() {
-	const prevPls = getPrevPls();
-	if (prevPls !== -1 && prevPls!== plman.ActivePlaylist) {plman.ActivePlaylist = prevPls;}
-	return prevPls;
-}
-
-function getPrevPls() {
-	const idx = plsHistory.length >= 2 ? getPlaylistIndexArray(plsHistory[1].name) : [];
-	const len = idx.length;
-	let prevPls = -1;
-	if (len) {
-		if (len === 1 && idx[0] !== -1) {
-			prevPls = idx[0];
-		} else if (idx.indexOf(plsHistory[1].idx) !== -1) {
-			prevPls = plsHistory[1].idx;
+function PlsHistory({size = 11, bAutoInit = true} = {}) {
+	this.pls = [];
+	
+	this.init = delayFn(() => {
+		if (plman.ActivePlaylist !== -1) {
+			this.pls.push({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
 		}
+		addEventListener('on_playlist_switch', this.onPlaylistSwitch);
+		addEventListener('on_playlists_changed', this.onPlaylistsChanged);
+		addEventListener('on_selection_changed', this.onSelectionChanged);
+	}, 300);
+	
+	// Utilities
+	this.getPrevPls = () => {
+		const idx = this.pls.length >= 2 ? getPlaylistIndexArray(this.pls[1].name) : [];
+		const len = idx.length;
+		let prevPls = -1;
+		if (len) {
+			if (len === 1 && idx[0] !== -1) {
+				prevPls = idx[0];
+			} else if (idx.indexOf(this.pls[1].idx) !== -1) {
+				prevPls = this.pls[1].idx;
+			}
+		}
+		return prevPls;
+	};
+	
+	this.goPrevPls = () => {
+		const prevPls = this.getPrevPls();
+		if (prevPls !== -1 && prevPls!== plman.ActivePlaylist) {plman.ActivePlaylist = prevPls;}
+		return prevPls;
+	};
+	
+	
+	this.getPrevPlsName = () => {
+		const prevPls = this.getPrevPls();
+		return prevPls !== -1 ? plman.GetPlaylistName(prevPls) : '-None-';
 	}
-	return prevPls;
-}
+	
+	this.getAll = () => {
+		return this.pls;
+	}
+	
+	this.getLast = () => {
+		return this.pls[0];
+	}
 
-function getPrevPlsName() {
-	const prevPls = getPrevPls();
-	return prevPls !== -1 ? plman.GetPlaylistName(prevPls) : '-None-';
-}
-
-// Menus
-
-function createHistoryMenu() {
-	const menu = new _menu(); // To avoid collisions with other buttons and check menu
-	menu.newEntry({entryText: 'Switch to previous playlists:', func: null, flags: MF_GRAYED});
-	menu.newEntry({entryText: 'sep'});
-	menu.newEntry({entryText: 'Previous playlist', func: goPrevPls, flags: () => {return (plsHistory.length >= 2 ? MF_STRING : MF_GRAYED);}});
-	menu.newCondEntry({entryText: 'Playlist History... (cond)', condFunc: () => {
-		const [, ...list] = plsHistory;
+	this.getFirst = () => {
+		const len = this.size();
+		return len ? this.pls[len - 1] : null;
+	}
+	
+	this.size = () => {
+		return this.pls.length;
+	}
+	
+	// Callbacks: append to any previously existing callback
+	this.onPlaylistSwitch = () => {
+		if (this.pls.length) {
+			if (this.pls.length >= size) {this.pls.pop();}
+			this.pls.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
+		} else {initplsHistory();}
+	};
+	
+	this.onPlaylistsChanged = () => {
+		if (this.pls.length) {
+			// Track idx change for playlist already added (when reordering for ex.)
+			this.pls.forEach( (pls) => {
+				const idx = getPlaylistIndexArray(pls.name); // Only non duplicated playlists can be tracked
+				if (idx.length === 1 && idx[0] !== pls.idx) {pls.idx = idx[0];}
+			});
+			// Add new playlist if needed
+			if (plman.ActivePlaylist !== this.pls[0].idx) {
+				if (this.pls.length >= size) {this.pls.pop();}
+				this.pls.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
+			}
+		} else {initplsHistory();}
+	};
+	
+	this.onSelectionChanged =() => {
+		if (!this.pls.length) {initplsHistory();}
+	};
+	
+	// Menus
+	this.menu = () => {
+		const menu = new _menu(); // To avoid collisions with other buttons and check menu
+		menu.newEntry({entryText: 'Switch to previous playlists:', func: null, flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
-		if (!list.length) {menu.newEntry({entryText: '-None-', func: null, flags: MF_GRAYED});}
-		list.forEach( (pls, idx) => {
-			menu.newEntry({entryText: pls.name, func: () => {
-				const idx = getPlaylistIndexArray(pls.name);
-				if (idx.length) {
-					if (idx.length === 1 && idx[0] !== -1) {
-						plman.ActivePlaylist = idx[0];
-					} else if (idx.indexOf(pls.idx) !== -1) {
-						plman.ActivePlaylist = pls.idx;
+		menu.newEntry({entryText: 'Previous playlist', func: this.goPrevPls, flags: () => {return (this.size() >= 2 ? MF_STRING : MF_GRAYED);}});
+		menu.newCondEntry({entryText: 'Playlist History... (cond)', condFunc: () => {
+			const [, ...list] = this.pls;
+			menu.newEntry({entryText: 'sep'});
+			if (!list.length) {menu.newEntry({entryText: '-None-', func: null, flags: MF_GRAYED});}
+			list.forEach((pls, idx) => {
+				menu.newEntry({entryText: pls.name, func: () => {
+					const idx = getPlaylistIndexArray(pls.name);
+					if (idx.length) {
+						if (idx.length === 1 && idx[0] !== -1) {
+							plman.ActivePlaylist = idx[0];
+						} else if (idx.indexOf(pls.idx) !== -1) {
+							plman.ActivePlaylist = pls.idx;
+						}
 					}
-				}
-			}});
-		});
-	}, flags: () => {return (plsHistory.length >= 2 ? MF_STRING : MF_GRAYED);}});
-	return menu;
-}
-
-// Callbacks: append to any previously existing callback
-function onPlaylistSwitch() {
-	if (plsHistory.length) {
-		if (plsHistory.length >= plsHistoryMax) {plsHistory.pop();}
-		plsHistory.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
-	} else {initplsHistory();}
-}
-if (typeof on_playlist_switch !== 'undefined') {
-	const oldFunc = on_playlist_switch;
-	on_playlist_switch = function() {
-		oldFunc();
-		onPlaylistSwitch();
+				}});
+			});
+		}, flags: () => {return (this.size() >= 2 ? MF_STRING : MF_GRAYED);}});
+		return menu;
 	};
-} else {var on_playlist_switch = onPlaylistSwitch;}
-
-function onPlaylistsChanged() {
-	if (plsHistory.length) {
-		// Track idx change for playlist already added (when reordering for ex.)
-		plsHistory.forEach( (pls) => {
-			const idx = getPlaylistIndexArray(pls.name); // Only non duplicated playlists can be tracked
-			if (idx.length === 1 && idx[0] !== pls.idx) {pls.idx = idx[0];}
-		});
-		// Add new playlist if needed
-		if (plman.ActivePlaylist !== plsHistory[0].idx) {
-			if (plsHistory.length >= plsHistoryMax) {plsHistory.pop();}
-			plsHistory.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
-		}
-	} else {initplsHistory();}
+	
+	if (bAutoInit) {this.init();}
 }
-if (typeof on_playlists_changed !== 'undefined') {
-	const oldFunc = on_playlists_changed;
-	on_playlists_changed = function() {
-		oldFunc();
-		onPlaylistsChanged();
-	};
-} else {var on_playlists_changed = onPlaylistsChanged;}
-
-
-function onSelectionChanged() {
-	if (!plsHistory.length) {initplsHistory();}
-}
-if (typeof on_selection_changed !== 'undefined') {
-	const oldFunc = on_selection_changed;
-	on_selection_changed = function() {
-		oldFunc();
-		onSelectionChanged();
-	};
-} else {var on_selection_changed = onSelectionChanged;}
-
-const initplsHistory = delayFn(() => {plsHistory.push({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});}, 300);

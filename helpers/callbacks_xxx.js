@@ -1,5 +1,5 @@
 'use strict';
-//31/12/22
+//11/03/23
 
 /*
 	Usage:
@@ -144,6 +144,7 @@ const fireEvents = function(event) {
 		let bReturn = event === 'on_mouse_rbtn_up' && callbacks[event].listeners.length; // To be used by on_mouse_rbtn_up to disable default menu
 		callbacks[event].listeners.forEach((eventListener) => {
 			if (typeof this === 'undefined') {console.log(event); console.log(eventListener.listener.toString());}
+			if (!eventListener.listener) {console.log(event); console.log(JSON.stringify(eventListener));}
 			this.eventListener = {event, id: eventListener.id};
 			bReturn = eventListener.listener.apply(this, arguments);
 			this.eventListener = {event: null, id: null};
