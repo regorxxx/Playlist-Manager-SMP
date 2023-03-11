@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/23
+//11/03/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -248,6 +248,7 @@ const pop = new _popup({
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
 // List
 let list = new _list(LM, TM, 0, 0);
+const plsHistory = new PlsHistory();
 
 // Tracking a network drive?
 if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
@@ -562,7 +563,6 @@ addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
 	}
 });
 
-if (plman.ActivePlaylist !== -1) {initplsHistory();}
 addEventListener('on_playlists_changed', () => { 
 	if (list.bAllPls) { // For UI only playlists
 		list.update(true, true);
@@ -570,7 +570,7 @@ addEventListener('on_playlists_changed', () => {
 		list.filter({categoryState});
 	}
 	if (!list.bUseUUID && plman.ActivePlaylist !== -1) {
-		const lastPls = plsHistory[0];
+		const lastPls = plsHistory.getLast();
 		if (lastPls) {  // To rename bound playlist when UUIDs are not used
 			const oldName = lastPls.name;
 			if (lastPls.idx === plman.ActivePlaylist && !getPlaylistIndexArray(oldName).length) {
@@ -581,6 +581,7 @@ addEventListener('on_playlists_changed', () => {
 					if (bDone) {console.log('Playlist manager: renamed playlist ' + oldName + ' --> ' + newName);}
 					else {console.log('Playlist manager: failed renaming playlist ' + oldName + ' -\-> ' + newName);}
 				}
+				plsHistory.onPlaylistSwitch();
 			}
 		}
 	}
