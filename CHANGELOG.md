@@ -32,8 +32,11 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
+- Helpers: updated helpers
 ### Removed
 ### Fixed
+- Renaming: auto-renaming of playlist tracked on manager if renaming was done within playlists tabs not working on some cases (still only possible for active playlist).
 
 ## [0.5.0-beta.18] - 2023-03-08
 ### Added
