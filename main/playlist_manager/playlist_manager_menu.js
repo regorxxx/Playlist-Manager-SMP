@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/23
+//11/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -848,21 +848,27 @@ function createMenuRight() {
 		}
 		{	// Restore
 			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
-			const subMenuName = menu.newMenu('Restore...' + (!bBin ? ' [missing recycle bin]' : ''), void(0), list.deletedItems.length ? MF_STRING : MF_GRAYED);
-			if (list.deletedItems.length && bBin) {
+			const bItems = (list.deletedItems.length + plman.PlaylistRecycler.Count) > 0;
+			const subMenuName = menu.newMenu('Restore...' + (!bBin ? ' [missing recycle bin]' : ''), void(0), bItems ? MF_STRING : MF_GRAYED);
+			if (bItems) {
+				menu.newEntry({menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			}
+			if (list.deletedItems.length > 0 && bBin) {
 				list.deletedItems.slice(0, 8).forEach((item, i) => {
-					menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
-						list.addToData(list.deletedItems[i]);
+					if (item.extension === '.ui') {return;}
+					menu.newEntry({menuName: subMenuName, entryText: item.name + '\t(file)', func: () => {
+						list.addToData(item);
 						// Add new category to current view! (otherwise it gets filtered)
 						// Easy way: intersect current view + new one with refreshed list
-						const categoryState = [...new Set(list.categoryState.concat(list.deletedItems[i].category)).intersection(new Set(list.categories()))];
-						if (list.deletedItems[i].isAutoPlaylist) {
+						const categoryState = [...new Set(list.categoryState.concat(item.category)).intersection(new Set(list.categories()))];
+						if (item.isAutoPlaylist) {
 							list.update(true, true); // Only paint and save to json
-						} else if(list.deletedItems[i].extension === '.ui') {
+						} else if(item.extension === '.ui') {
 							for (let j = 0; j < plman.PlaylistRecycler.Count; j++) { // First pls is the last one deleted
-								if (plman.PlaylistRecycler.GetName(j) === list.deletedItems[i].nameId) {
+								if (plman.PlaylistRecycler.GetName(j) === item.nameId) {
 									const size = plman.PlaylistRecycler.GetContent(j).Count;
-									if (size === list.deletedItems[i].size) { // Must match on size and name to avoid restoring another pls with same name
+									if (size === item.size) { // Must match on size and name to avoid restoring another pls with same name
 										plman.PlaylistRecycler.Restore(j);
 										break;
 									}
@@ -870,16 +876,26 @@ function createMenuRight() {
 							}
 							list.update(true, true); // Only paint and save to json
 						} else {
-							_restoreFile(list.deletedItems[i].path);
+							_restoreFile(item.path);
 							// Revert timestamps
-							let newPath = list.deletedItems[i].path.split('.').slice(0,-1).join('.').split('\\');
+							let newPath = item.path.split('.').slice(0,-1).join('.').split('\\');
 							const newName = newPath.pop().split('_ts_')[0];
-							newPath = newPath.concat([newName]).join('\\') + list.deletedItems[i].extension;
-							_renameFile(list.deletedItems[i].path, newPath);
+							newPath = newPath.concat([newName]).join('\\') + item.extension;
+							_renameFile(item.path, newPath);
 							list.update(false, true); // Updates path..
 						}
 						list.filter({categoryState});
 						list.deletedItems.splice(i, 1);
+					}});
+				});
+			}
+			if (bItems) {menu.newEntry({menuName: subMenuName, entryText: 'sep'});}
+			if (plman.PlaylistRecycler.Count > 0) {
+				const deletedItems = [];
+				for (let i = 0; i < plman.PlaylistRecycler.Count; i++) {deletedItems.push(plman.PlaylistRecycler.GetName(i));}
+				deletedItems.slice(0, 8).forEach((entryText, i) => {
+					menu.newEntry({menuName: subMenuName, entryText: entryText + '\t(UI)', func: () => {
+						plman.PlaylistRecycler.Restore(i);
 					}});
 				});
 			}
