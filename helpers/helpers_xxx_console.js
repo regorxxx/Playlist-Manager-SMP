@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/02/23
+//13/03/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -60,19 +60,25 @@ function consoleLog() {
 					if (arg !== null) {
 						let instance = null;
 						switch (true) {	// Get object types
-							case arg instanceof Set: {instance = 'Set '; break;}
-							case arg instanceof Map: {instance = 'Map '; break;}
-							case arg instanceof WeakMap: {instance = 'WeakMap '; break;}
-							case arg instanceof WeakSet: {instance = 'WeakSet '; break;}
+							case arg instanceof Set: {instance = {name: 'Set', type: 'array'}; break;}
+							case arg instanceof Map: {instance = {name: 'Map', type: 'array'}; break;}
+							case arg instanceof WeakMap: {instance = {name: 'WeakMap', type: 'array'}; break;}
+							case arg instanceof WeakSet: {instance = {name: 'WeakSet', type: 'array'}; break;}
+							case arg instanceof Error: {instance = {name: 'Error', type: 'error'}; break;}
 						}
-						if (instance) {val = [...arg];} // Convert to array objects if possible and stringify
+						if (instance) {  // Convert to array objects if possible and stringify
+							switch (instance.type) {
+								case 'array': {val = [...arg]; break;}
+								case 'error': {val = arg.toString(); break;}
+							}
+						}
 						try {
-							val = (instance ? instance : 'Object ') + JSON.stringify(val ? val : arg, (k, v) => {
-								if (v.hasOwnProperty('RawPath')) {
-									return "FbMetadbHandle " + JSON.stringify({FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong});
+							val = (instance ? instance.name + ' ' : 'Object ') + JSON.stringify(val ? val : arg, (k, v) => {
+								if (v.RawPath && v.Path) {
+									return "FbMetadbHandle " + JSON.stringify({FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong}, null, ' ').replace(/{\n /,'{').replace(/"|\n/g,'').replace(/\\\\/g, '\\');
 								} 
 								else if (v instanceof FbMetadbHandleList) {
-									return "FbMetadbHandleList " + JSON.stringify({Count: v.Count});
+									return "FbMetadbHandleList " + JSON.stringify({Count: v.Count}, null, ' ').replace(/{\n /,'{').replace(/"|\n/g,'');
 								}
 								return v;
 							});
@@ -80,8 +86,9 @@ function consoleLog() {
 							if (e.message === 'can\'t access dead object') {
 								console.logUI('Console.log: can\'t access dead object: ', type);
 							} else {
-								val = '--error type--'; 
-								console.logUI('Console.log: argument type not recognized: ', type, val ? val : arg);
+								try {val = arg.constructor.name || (arg.constructor.toString().match(/function (\w*)/) || [ , ])[1];} catch (e) {}
+								if (!val) {val = '--unknown type--';}
+								console.logUI('Console.log: argument type not recognized: ', type, val);
 							}
 						}
 					}
