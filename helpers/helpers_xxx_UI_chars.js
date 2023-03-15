@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/02/23
+//15/03/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -26,9 +26,25 @@ const chars = {
 	calendar		: '\uf073',
 	bolt			: '\uf0e7',
 	dotCircle		: '\uf192',
+	hourglassStart	: '\uf251',
+	hourglassHalf	: '\uf252',
+	hourglassEnd	: '\uf253',
 	hourglass		: '\uf254',
+	hourglassAlt	: '\uf250',
 	lock			: '\uf023',
 	unlock			: '\uf09c',
+	unlockAlt		: '\uf13e',
+	cut				: '\uf0c4',
+	sitemap			: '\uf0e8',
+	close			: '\uf00d',
+	closeAlt		: '\uf2d4',
+	expand			: '\uf065',
+	exchange		: '\uf0ec',
+	ban 			: '\uf05e',
+	recycle			: '\uf1b8',
+	puzzle			: '\uf12e',
+	moon			: '\uf186',
+	lighbulb		: '\uf0eb',
 	// Files
 	folderOpenBlack	: '\uf07c',
 	folderOpenWhite	: '\uf115',
@@ -39,6 +55,7 @@ const chars = {
 	fileBlack		: '\uf15c',
 	save 			: '\uf0c7',
 	fileCode		: '\uf1c9',
+	fileSound		: '\uf1c7',
 	// Utilities
 	search			: '\uf002',
 	menu			: '\uf0C9',
@@ -51,9 +68,12 @@ const chars = {
 	duplicates 		: '\uf0c5',
 	filter 			: '\uf0b0',
 	info 			: '\uf05A',
+	question		: '\uf29c',
 	tasks 			: '\uf0cb',
 	history			: '\uf1da',
 	bookmark		: '\uf02e',
+	send			: '\uf1d9',
+	eraser			: '\uf12d',
 	// Playback
 	prev			: '\uf049',
 	next			: '\uf050',
@@ -74,6 +94,8 @@ const chars = {
 	prevCircle 		: '\uf0e2',
 	nextCircle 		: '\uf01e',
 	exchange		: '\uf0ec',
+	downOutline		: '\uf0d7',
+	leftOutline		: '\uf0d9',
 	// Sort
 	sortAlphaAsc	: '\uf15d',
 	sortAlphaDes	: '\uf15e',
@@ -81,4 +103,10 @@ const chars = {
 	sortBarsDes		: '\uf161',
 	sortNumAsc		: '\uf162',
 	sortNumDes		: '\uf163',
+	// Check
+	check			: '\uf00c',
+	checkCircle		: '\uf058',
+	checkCircleAlt	: '\uf05d',
+	checkSquare		: '\ud14a',
+	checkSquareAlt	: '\uf046',
 };
