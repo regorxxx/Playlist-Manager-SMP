@@ -32,9 +32,11 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other component.
 - Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
-- Helpers: updated helpers.
 - Console: multiple improvements when logging to file for FbMetadbHandle, FbMetadbHandleList, Error and unknown instances (totally irrelevant except for debug purposes).
+- Documentation: updated readme PDF to be up to date with all changes.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - Renaming: auto-renaming of playlist tracked on manager if renaming was done within playlists tabs not working on some cases (still only possible for active playlist).
@@ -200,7 +202,7 @@
 
 ## [0.5.0-beta.12] - 2022-08-22
 ### Added
-- Playlist locks: new menu entry to lock/unlock playlists (L. Click menu). Allows fine-grained control of lock types. Note playlist locked by other components or main program can not be edited via SMP.
+- Playlist locks: new menu entry to lock/unlock playlists (L. Click menu). Allows fine-grained control of lock types. Note playlists locked by other components or main program can not be edited via SMP.
 ### Changed
 - UI: minor improvements to word lists within popups in some instances. Now split in new lines after X elements.
 - Helpers: updated helpers.
