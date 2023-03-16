@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/23
+//16/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -409,23 +409,35 @@ function createMenuLeft(forcedIndex = -1) {
 		}
 		// Locks UI playlist
 		if (bIsPlsUI || bIsPlsLoaded) {
-			const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist', 'ExecuteDefaultAction'];
-			const defaultLockTypes = lockTypes.slice(0, 4);
+			const lockTypes = [
+				{type: 'AddItems', entryText: 'Adding items'},
+				{type: 'RemoveItems', entryText: 'Removing items'},
+				{type: 'ReplaceItems', entryText: 'Replacing items'},
+				{type: 'ReorderItems', entryText: 'Sorting items'},
+				{type: 'RenamePlaylist', entryText: 'Renaming playlist'},
+				{type: 'RemovePlaylist', entryText: 'Deleting playlist'},
+				{type: 'ExecuteDefaultAction', entryText: 'Default action'}
+			];
 			const index = plman.FindPlaylist(pls.nameId);
-			const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
+			const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 			const lockName = plman.GetPlaylistLockName(index);
 			const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
-			const bLocked = !bSMPLock || playlistLockTypes.size;
+			const bLocked = !bSMPLock || currentLocks.size;
 			const flags = bSMPLock ? MF_STRING: MF_GRAYED;
-			const entryText = 'Edit UI Playlist lock' + (!bSMPLock ? ' ' + _p(lockName) : '');
-			menu.newEntry({entryText, func: () => {
-				let newLock = '';
-				const oldLock = (bLocked ? [...playlistLockTypes] : []);
-				try {newLock = utils.InputBox(window.ID, 'Lock types, multiple values separated by \',\':\n\n' + _p(lockTypes.joinEvery(', ', 4)), window.Name, oldLock.join(','), true);} 
-				catch(e) {return;}
-				newLock = [...new Set(newLock.split(/;|,/g)).intersection(lockTypes)]; // This filters blank values
-				if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
-			}, flags});
+			const subMenuName = menu.newMenu('Edit UI Playlist lock...');
+			menu.newEntry({menuName: subMenuName, entryText: 'Lock by action:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			lockTypes.forEach((lock) => {
+				menu.newEntry({menuName: subMenuName, entryText: lock.entryText + (!bSMPLock ? '\t ' + _p(lockName) : ''), func: () => {
+					if (currentLocks.has(lock.type)) {
+						currentLocks.delete(lock.type);
+					} else {
+						currentLocks.add(lock.type);
+					}
+					plman.SetPlaylistLockedActions(index, [...currentLocks]);
+				}, flags});
+				menu.newCheckMenu(subMenuName, lock.entryText, void(0), () => {return currentLocks.has(lock.type);});
+			});
 		}
 		if (showMenus['File management']) {
 			menu.newEntry({entryText: 'sep'});
@@ -850,11 +862,9 @@ function createMenuRight() {
 			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
 			const bItems = (list.deletedItems.length + plman.PlaylistRecycler.Count) > 0;
 			const subMenuName = menu.newMenu('Restore...' + (!bBin ? ' [missing recycle bin]' : ''), void(0), bItems ? MF_STRING : MF_GRAYED);
-			if (bItems) {
-				menu.newEntry({menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			}
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED});
 			if (list.deletedItems.length > 0 && bBin) {
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				list.deletedItems.slice(0, 8).forEach((item, i) => {
 					if (item.extension === '.ui') {return;}
 					menu.newEntry({menuName: subMenuName, entryText: item.name + '\t(file)', func: () => {
