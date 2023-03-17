@@ -31,11 +31,12 @@
 
 ## [Unreleased][]
 ### Added
+- XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp) but 'source' tag which has no correspondence in foobar2000.
 ### Changed
 - Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other component.
 - Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
 - Console: multiple improvements when logging to file for FbMetadbHandle, FbMetadbHandleList, Error and unknown instances (totally irrelevant except for debug purposes).
-- Documentation: updated readme PDF to be up to date with all changes.
+- Documentation: updated readme PDF to be up to date with all latest changes. Added all XSP -> foobar2000 tag equivalences.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
