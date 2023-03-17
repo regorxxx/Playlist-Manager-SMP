@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/23
+//17/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -425,10 +425,10 @@ function createMenuLeft(forcedIndex = -1) {
 			const bLocked = !bSMPLock || currentLocks.size;
 			const flags = bSMPLock ? MF_STRING: MF_GRAYED;
 			const subMenuName = menu.newMenu('Edit UI Playlist lock...');
-			menu.newEntry({menuName: subMenuName, entryText: 'Lock by action:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			lockTypes.forEach((lock) => {
-				menu.newEntry({menuName: subMenuName, entryText: lock.entryText + (!bSMPLock ? '\t ' + _p(lockName) : ''), func: () => {
+				menu.newEntry({menuName: subMenuName, entryText: lock.entryText, func: () => {
 					if (currentLocks.has(lock.type)) {
 						currentLocks.delete(lock.type);
 					} else {
