@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/01/23
+//26/03/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -583,7 +583,7 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
 			return JSON.parse(resolve);
 		},
 		(reject) => {
-			console.log('retrieveUser: ' + reject);
+			console.log('retrieveUser: ' + JSON.stringify(reject));
 			return null;
 		}
 	);
@@ -603,7 +603,7 @@ listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token)
 			return Promise.all(jsfpArr);
 		},
 		(reject) => {
-			console.log('retrieveUserPlaylists: ' + reject);
+			console.log('retrieveUserPlaylists: ' + JSON.stringify(reject));
 			return null;
 		}
 	);
@@ -626,6 +626,5 @@ listenBrainz.decryptToken = function decryptToken({lBrainzToken, bEncrypted = tr
 
 listenBrainz.validateToken = async function validateToken(token) {
 	const response = await this.retrieveUserResponse(token);
-	console.log(response);
 	return (response && response.valid);
 };

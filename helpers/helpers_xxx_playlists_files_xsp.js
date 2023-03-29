@@ -1,9 +1,9 @@
 ﻿'use strict';
-//17/03/23
+//27/03/23
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 
-XSP.isFoec = typeof utils !== 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount');
+XSP.isFoec = (typeof isEnhPlayCount !== 'undefined' && isEnhPlayCount) || (typeof isEnhPlayCount === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount'));
 
 XSP.getQuerySort = function(jsp) {
 	let query = this.getQuery(jsp);
