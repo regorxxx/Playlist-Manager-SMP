@@ -1,7 +1,8 @@
 ﻿'use strict';
-//08/03/23
+//29/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
+include('..\\window\\window_xxx_input.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -102,27 +103,219 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.headerTooltip = (mask, bActions = true) => {
+		let headerText = this.playlistsPath;
+		headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
+		headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
+		const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum);}, 0); // Counts autoplaylists and smart playlists
+		headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
+		// Tips
+		if (bActions) {
+			const lShortcuts = this.getShortcuts('L', 'HEADER');
+			const mShortcuts = this.getShortcuts('M', 'HEADER');
+			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
+			const multSelAction = 'Multiple selection'; // All actions are shared for M or L mouse
+			if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
+				headerText += '\n----------------------------------------------';
+			}
+			if (mask === MK_CONTROL) {
+				headerText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+				headerText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+			} else if (mask === MK_SHIFT) {
+				headerText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+				headerText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+			} else if (mask === MK_SHIFT + MK_CONTROL) {
+				headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			} else if (this.bShowTips) {
+				if (this.modeUI === 'traditional') {
+					headerText += '\n(R. Click for config menus)';
+				}
+				// L. Click
+				headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
+				headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+				headerText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+				headerText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+				headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				// Middle button
+				headerText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
+				headerText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+				headerText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+				headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			}
+			if (headerRe.test(headerText)) { // If no shortcut was found, show default ones
+				headerText += '\n(R. Click for config menus)';
+				// L. Click
+				headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
+				headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+			}
+		}
+		let warningText = '';
+		if (this.bLibraryChanged) {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
+		if (warningText.length) {headerText += '\n' + warningText;}
+		return headerText;
+	}
+	
+	this.paintHeader = (gr, mode = 'traditional') => {
+		switch (mode.toLowerCase()) {
+			case 'traditional' : {
+				const panelBgColor = panel.getColorBackground();
+				const bCatIcon = this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]);
+				const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
+				const offsetHeader = yOffset / 10;
+				const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
+				const iconHeaderColor = this.headerButtons.folder.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
+				const iconW = gr.CalcTextWidth(catIcon, gfontHeader);
+				const iconH = gr.CalcTextHeight(catIcon, gfontHeader);
+				const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.normal);
+				const maxHeaderH = Math.max(iconH, headerTextH);
+				[this.headerButtons.folder.x, this.headerButtons.folder.y, this.headerButtons.folder.w, this.headerButtons.folder.h] = [LM, (maxHeaderH - iconH) / 2, iconW, iconH] // Update button coords
+				gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+				gr.GdiDrawText(this.headerText, panel.fonts.normal, panel.colors.highlight, LM + iconW + 5, 0, panel.w - (LM * 2) - iconW - 5, TM, LEFT);
+				let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
+				lineY += offsetHeader;
+				gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colors.highlight);
+				headerW = LM + iconW + 5;
+				headerH = lineY;
+				break;
+			}
+			case 'modern' : {
+				const panelBgColor = panel.getColorBackground();
+				const offsetHeader = yOffset / 10;
+				const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.normal);
+				// Buttons
+				const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
+				const buttons = [
+					{	// Search
+						parent: this.headerButtons.search,
+						icon: this.searchInput && this.searchInput.text.length ? chars.close : chars.search,
+						color: this.headerButtons.search.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.search.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'l',
+						x: (button, curr) => curr,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
+					{	// Folder
+						parent: this.headerButtons.folder,
+						icon: this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]) 
+							? this.configFile.ui.icons.category[this.categoryState[0]] 
+							: iconCharHeader, // Try setting customized button from json
+						color: this.headerButtons.folder.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.folder.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr) => curr - button.w,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
+					{	// Config
+						parent: this.headerButtons.settings,
+						icon: chars.cogs,
+						color: this.headerButtons.settings.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.settings.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr) => curr - button.w - LM / 2,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
+					{	// New
+						parent: this.headerButtons.newPls,
+						icon: chars.plus,
+						color: this.headerButtons.newPls.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.newPls.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr) => curr - button.w - LM / 2,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
+					{	// Poweraction
+						parent: this.headerButtons.action,
+						icon: chars.bolt,
+						color: this.headerButtons.action.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.action.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr) =>  curr - button.w - LM / 2,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
+				];
+				let maxHeaderH = headerTextH;
+				buttons.forEach((button) => {
+					button.w = gr.CalcTextWidth(button.icon, gfontHeader),
+					button.h = gr.CalcTextHeight(button.icon, gfontHeader);
+					maxHeaderH = Math.max(button.h, maxHeaderH);
+				})
+				let currLx = this.x;
+				let currRx = this.x + this.w;
+				buttons.forEach((button) => {
+					if (isFunction(button.x)) {
+						if (button.align === 'l') {button.x = button.x(button, currLx); currLx = button.x + button.w;}
+						if (button.align === 'r') {button.x = button.x(button, currRx); currRx = button.x;}
+					}
+					if (isFunction(button.y)) {button.y = button.y(button);}
+				})
+				let lineY = 0;
+				gr.SetSmoothingMode(SmoothingMode.HighQuality);
+				buttons.forEach((button) => {
+					[button.parent.x, button.parent.y, button.parent.w, button.parent.h] = [button.x, button.y, button.w, button.h] // Update button coords
+					if (button.bgColor !== null) {
+						gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2) , _scale(2), _scale(2), button.bgColor);
+					}
+					gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w, maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX);
+					lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1
+				})
+				// Text
+				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
+				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
+				if (!this.searchInput) {
+					this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 5, TM, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
+					this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
+				}
+				this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - 5 - iconOffsetRight - LM / 2, TM, panel.fonts.normal.size);
+				this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
+				// Lines
+				lineY += offsetHeader;
+				const lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
+				gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, lineColor);
+				gr.DrawLine(this.x + this.w - iconOffsetRight, this.y - lineY + 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);
+				gr.SetSmoothingMode(SmoothingMode.Default);
+				headerW = LM + iconOffsetLeft + 5;
+				headerH = lineY;
+				break;
+			}
+		}
+	}
+	
 	this.paint = (gr) => {
 		// Bg
 		const panelBgColor = panel.getColorBackground();
 		// HEADER
-		const bCatIcon = this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]);
-		const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
-		const offsetHeader = yOffset / 10;
-		const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
-		const iconHeaderColor = this.headerButton.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
-		const iconW = gr.CalcTextWidth(catIcon, gfontHeader);
-		const iconH = gr.CalcTextHeight(catIcon, gfontHeader);
-		const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.title);
-		const maxHeaderH = Math.max(iconH, headerTextH);
-		[this.headerButton.x, this.headerButton.y, this.headerButton.w, this.headerButton.h] = [LM, (maxHeaderH - iconH) / 2, iconW, iconH] // Update button coords
-		gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-		gr.GdiDrawText(this.headerText, panel.fonts.title, panel.colors.highlight, LM + iconW + 5, 0, panel.w - (LM * 2) - iconW - 5, TM, LEFT);
-		let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
-		lineY += offsetHeader;
-		gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colors.highlight);
-		headerW = LM + iconW + 5;
-		headerH = lineY;
+		this.paintHeader(gr, this.modeUI);
 		// Empty Panel
 		this.text_x = 0;
 		this.text_width = this.w;
@@ -373,7 +566,11 @@ function _list(x, y, w, h) {
 		this.up_btn.paint(gr, this.up_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
 		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
 	}
-
+	
+	this.repaint = () => {
+		window.Repaint();
+	}
+	
 	this.trace = (x, y) => { // On panel
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
 	}
@@ -382,8 +579,8 @@ function _list(x, y, w, h) {
 		return x > 0 && x < panel.w && y > 0 && y < headerH;
 	}
 	
-	this.traceHeaderButton = (x, y) => { // On Header
-		return x > this.headerButton.x && x < this.headerButton.x + this.headerButton.w && y > this.headerButton.y && y < this.headerButton.y + this.headerButton.h;
+	this.traceHeaderButton = (x, y, button) => { // On Header
+		return x > button.x && x < button.x + button.w && y > button.y && y < button.y + button.h;
 	}
 	
 	this.wheel = ({s, bPaint = true, bForce = false} = {}) => {
@@ -477,7 +674,9 @@ function _list(x, y, w, h) {
 		this.clearSelPlaylistCache();
 		this.up_btn.hover = false;
 		this.down_btn.hover = false;
-		this.headerButton.inFocus = false;
+		for (let key in this.headerButtons) {
+			this.headerButtons[key].inFocus = false;
+		}
 		window.Repaint();
 	}
 	
@@ -486,76 +685,54 @@ function _list(x, y, w, h) {
 		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
 		this.my = y;
-		if (bMoved) {window.SetCursor(IDC_ARROW);}
 		if (this.traceHeader(x,y)) { // Tooltip for header
-			if (this.traceHeaderButton(x,y)) {
-				window.SetCursor(IDC_HAND);
-				this.tooltip.SetValue('Open playlists folder', true);
-				this.headerButton.inFocus = true;
-			} else {
-				this.headerButton.inFocus = false;
-				let headerText = this.playlistsPath;
-				headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
-				headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
-				const autoPlsCount = this.data.reduce((sum, pls, idx) => {return (pls.query.length ? sum + 1 : sum);}, 0); // Counts autoplaylists and smart playlists
-				headerText += '\n' + 'Current view: '+ this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
-				// Tips
-				const lShortcuts = this.getShortcuts('L', 'HEADER');
-				const mShortcuts = this.getShortcuts('M', 'HEADER');
-				const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
-				const multSelAction = 'Multiple selection'; // All actions are shared for M or L mouse
-				if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
-					headerText += '\n----------------------------------------------';
+			let bButtonTrace = false;
+			for (let key in this.headerButtons) {
+				const button = this.headerButtons[key];
+				if (this.traceHeaderButton(x, y, button)) {
+					window.SetCursor(IDC_HAND);
+					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
+					button.inFocus = true;
+					bButtonTrace = true;
+				} else {
+					button.inFocus = false;
 				}
-				if (mask === MK_CONTROL) {
-					headerText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-					headerText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-				} else if (mask === MK_SHIFT) {
-					headerText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-					headerText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-				} else if (mask === MK_SHIFT + MK_CONTROL) {
-					headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-					headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-				} else if (this.bShowTips) {
-					headerText += '\n(R. Click for config menus)';
-					// L. Click
-					headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-					headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
-					headerText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-					headerText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-					headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-					// Middle button
-					headerText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
-					headerText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-					headerText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-					headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			}
+			if (!bButtonTrace) {
+				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
+					this.searchInput.check('move', x, y);
+					const headerText = this.headerTooltip(mask, false);
+					this.tooltip.SetValue(headerText, true);
+				} else {
+					if (bMoved) {window.SetCursor(IDC_ARROW);}
+					if (this.modeUI === 'traditional') {
+						const headerText = this.headerTooltip(mask);
+						this.tooltip.SetValue(headerText, true);
+					}
 				}
-				if (headerRe.test(headerText)) { // If no shortcut was found, show default ones
-					headerText += '\n(R. Click for config menus)';
-					// L. Click
-					headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-					headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
-				}
-				let warningText = '';
-				if (this.bLibraryChanged) {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
-				if (warningText.length) {headerText += '\n' + warningText;}
-				this.tooltip.SetValue(headerText, true);
 			}
 			this.index = -1;
 			this.inRange = false;
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
 			window.Repaint(); // Removes selection indicator
-		} else {this.headerButton.inFocus = false;}
+		} else {
+			for (let key in this.headerButtons) {
+				this.headerButtons[key].inFocus = false;
+			}
+		}
 		if (this.trace(x, y)) {
+			this.searchInput && this.searchInput.check('move', x, y);
 			this.cacheLastPosition();
 			this.index = Math.floor((y - this.y - yOffset) / panel.row_height) + this.offset;
 			this.inRange = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
 			switch (true) {
 				case this.up_btn.move(x, y):
 				case this.down_btn.move(x, y):
+					if (bMoved) {window.SetCursor(IDC_ARROW);}
 					break;
 				case !this.inRange: {
+					if (bMoved) {window.SetCursor(IDC_ARROW);}
 					this.tooltip.SetValue(null); // Removes tt when not over a list element
 					this.index = -1;
 					// this.lastOffset = 0;
@@ -699,9 +876,38 @@ function _list(x, y, w, h) {
 		this.offset = 0;
 	}
 	
+	this.on_focus = (bFocused) => {
+		if (this.searchInput) {
+			this.searchInput.check('down', -1, -1);
+			this.searchInput.check('up', -1, -1);
+		}
+	}
+	
+	this.rbtn_up = (x, y, mask) => {
+		if (this.searchInput && this.searchInput.trackCheck(x, y)) {
+			this.searchInput.show_context_menu(x, y, mask);
+		}
+		return true;
+	}
+	
+	this.lbtn_down = (x, y, mask) => {
+		if (this.searchInput) {
+			if (this.traceHeader(x, y)) {
+				this.searchInput.check('down', x, y);
+			} else {
+				this.searchInput.check('down', -1, -1);
+				this.searchInput.check('up', -1, -1);
+			}
+		}
+	}
+	
 	this.lbtn_up = (x, y, mask) => {
 		const shortcuts = this.getShortcuts('L');
 		if (this.trace(x, y)) {
+			if (this.searchInput && this.searchInput.select && this.searchInput.edit && !this.searchInput.trackCheck(x, y)) { // Allow finishing selection outside the input box
+				this.searchInput.check('up', x < this.searchInput.x ? this.searchInput.x + 1 : this.searchInput.x + this.searchInput.w, this.searchInput.y + 1);
+				return true;
+			}
 			this.cacheLastPosition();
 			switch (true) {
 				case this.up_btn.lbtn_up(x, y):
@@ -748,22 +954,45 @@ function _list(x, y, w, h) {
 					break;
 				}
 			}
+			this.searchInput && this.searchInput.check('up', -1, -1);
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
-			const shortcuts = this.getShortcuts('L', 'HEADER');
-			const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
-			// Select all from current view or clean selection
-			if (this.traceHeaderButton(x,y)) {
-				_explorer(this.playlistsPath);
-			} else if (sgShortcut) {
-				if (!this.bDoubleclick) { // It's not a second lbtn click
-					this.timeOut = delayFn(this.executeAction, 100)(void(0), sgShortcut, false);
-				} else {this.bDoubleclick = false;}
+			if (this.searchInput && this.searchInput.select && this.searchInput.edit && !this.searchInput.trackCheck(x, y)) { // Allow finishing selection outside the input box
+				this.searchInput.check('up', x < this.searchInput.x ? this.searchInput.x + 1 : this.searchInput.x + this.searchInput.w, this.searchInput.y + 1);
+				return true;
+			}
+			let bButtonTrace = false;
+			let bActionButton = false;
+			for (let key in this.headerButtons) {
+				const button = this.headerButtons[key];
+				if (this.traceHeaderButton(x, y, button)) {
+					if (button.func) {
+						button.func(x, y, mask);
+						bButtonTrace = true;
+					} else {
+						bActionButton = true;
+					}
+					break;
+				}
+			}
+			if (!bButtonTrace) {
+				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
+					this.searchInput.check('up', x, y);
+				} else if (bActionButton || this.modeUI === 'traditional') {
+					const shortcuts = this.getShortcuts('L', 'HEADER');
+					const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
+					if (sgShortcut) { // Select all from current view or clean selection
+						if (!this.bDoubleclick) { // It's not a second lbtn click
+							this.timeOut = delayFn(this.executeAction, 100)(void(0), sgShortcut, false);
+						} else {this.bDoubleclick = false;}
+					}
+				}
 			}
 			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
 			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
+			this.searchInput && this.searchInput.select && this.searchInput.edit && this.searchInput.check('up', this.searchInput.x + (x > (this.x + this.w) ? this.searchInput.w : 1), this.searchInput.y + 1); // Allow finishing selection outside panel
 			return false;
 		}
 	}
@@ -808,10 +1037,26 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) {
-			const shortcuts = this.getShortcuts('M', 'HEADER');
-			const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
-			if (sgShortcut) {
-				this.executeAction(void(0), sgShortcut, false);
+			let bButtonTrace = false;
+			let bActionButton = false;
+			for (let key in this.headerButtons) {
+				const button = this.headerButtons[key];
+				if (this.traceHeaderButton(x, y, button)) {
+					if (button.func) {
+						button.func(x, y, mask);
+						bButtonTrace = true;
+					} else {
+						bActionButton = true;
+					}
+					break;
+				}
+			}
+			if (!bButtonTrace && (bActionButton || this.modeUI === 'traditional')) {
+				const shortcuts = this.getShortcuts('M', 'HEADER');
+				const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
+				if (sgShortcut) {
+					this.executeAction(void(0), sgShortcut, false);
+				}
 			}
 			return false;
 		} else {
@@ -841,15 +1086,35 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else if (this.traceHeader(x, y)) {
-			clearTimeout(this.timeOut);
-			this.timeOut = null;
-			this.bDoubleclick = true;
-			const shortcuts = this.getShortcuts('L', 'HEADER');
-			const sgShortcut = shortcuts[mask];
-			if (sgShortcut) {
-				this.executeAction(void(0), sgShortcut, false);
+			let bButtonTrace = false;
+			let bActionButton = false;
+			for (let key in this.headerButtons) {
+				const button = this.headerButtons[key];
+				if (this.traceHeaderButton(x, y, button)) {
+					if (button.func) {
+						button.func(x, y, mask);
+						bButtonTrace = true;
+					} else {
+						bActionButton = true;
+					}
+					break;
+				}
 			}
-			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
+			if (!bButtonTrace) {
+				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
+					this.searchInput.check('dblclk', x, y);
+				} else if (bActionButton || this.modeUI === 'traditional') {
+					clearTimeout(this.timeOut);
+					this.timeOut = null;
+					this.bDoubleclick = true;
+					const shortcuts = this.getShortcuts('L', 'HEADER');
+					const sgShortcut = shortcuts[mask];
+					if (sgShortcut) {
+						this.executeAction(void(0), sgShortcut, false);
+					}
+					this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
+				}
+			}
 			return true;
 		} else {
 			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
@@ -857,7 +1122,18 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.on_char = (code) => {
+		if (this.searchInput && this.searchInput.active) {
+			this.searchInput.on_char(code); 
+		}
+		return;
+	}
+	
 	this.key_down = (k) => {
+		if (this.searchInput && this.searchInput.active) {
+			this.searchInput.on_key_down(k); 
+			return;
+		}
 		switch (k) {
 			// Scroll wheel
 			case VK_UP: {
@@ -908,6 +1184,11 @@ function _list(x, y, w, h) {
 			// Quick-search
 			default: { // Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				const keyChar = keyCode(k);
+				if (this.searchInput && keyChar === 'e' && getKeyboardMask() === kMask.ctrl) {
+					this.searchInput.check('down', this.searchInput.x + 1, this.searchInput.y + 1);
+					this.searchInput.check('up', this.searchInput.x + 1, this.searchInput.y + 1);
+					return true;
+				}
 				if (keyChar && keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
 					if (animation.fRepaint !== null) {clearTimeout(animation.fRepaint);}
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
@@ -955,6 +1236,46 @@ function _list(x, y, w, h) {
 				}
 			}
 		}
+	}
+	
+	this.search = (bFilter = true, str = this.searchInput ? this.searchInput.text : '') => {
+		if (this.searchInput.text.length && this.searhHistory.indexOf(this.searchInput.text) === -1) {this.searhHistory.push(this.searchInput.text);}
+		if (this.searhHistory.length > 10) {this.searhHistory.splice(10, Infinity);}
+		if (str.length) {
+			const found = [...this.dataAll].filter((pls) => {
+				let rgExp;
+				if (this.searchMethod.bRegExp) {
+					let re, flag;
+					try {
+						[, re, flag] = str.match(/\/(.*)\/([a-z]+)?/);
+						rgExp = re ? new RegExp(re, flag) : null;
+					} catch(e) {}
+				}
+				if (!rgExp) {rgExp =  new RegExp(escapeRegExp(str), 'gi');}
+				if (this.searchMethod.bName && rgExp.test(pls.name)) {return true;}
+				else if (this.searchMethod.bTags && pls.tags.some((tag) => rgExp.test(tag))) {return true;}
+				else if (this.searchMethod.bCategory && rgExp.test(pls.category)) {return true;}
+				else if (this.searchMethod.bPath && (pls.path.length || pls.extension === '.ui')) {
+					let paths;
+					if (pls.extension === '.ui') { // TODO match against meta found on M3U8 playlists...
+						const idx = plman.FindPlaylist(pls.nameId);
+						paths = idx !== -1 ? plman.GetPlaylistItems(idx).GetLibraryRelativePaths() : [];
+					} else {
+						paths = getFilePathsFromPlaylist(pls.path);
+					}
+					paths = paths.map((path) => path.split('\\').slice(- (this.searchMethod.pathLevel || Infinity)));
+					if (paths.some((path) => path.some((s) => rgExp.test(s)))) {return true;}
+				}
+				return false;
+			});
+			if (bFilter) { // Show found playlists or blank panel
+				this.filter({plsState: found.length ? found : [{}]});
+			}
+			return {plsState: found.length ? found : [{}]};
+		} else if (bFilter) {
+			this.filter({plsState: []});
+		}
+		return {plsState: []};
 	}
 	
 	this.multSelect = (playlistIndex = -1) => {
@@ -1695,6 +2016,9 @@ function _list(x, y, w, h) {
 		return (this.constLockStates()[0] !== this.lockStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0] || this.constExtStates()[0] !== this.extStates[0] || this.constMbidStates()[0] !== this.mbidStates[0]);
 	};
 	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = []} = {}) => {
+		if (!plsState.length && this.searchInput && this.searchInput.text) {
+			plsState = this.search(false).plsState;
+		}
 		// On first filter we use this.dataAll as origin
 		if (plsState.length) {
 			this.data = this.dataAll.filter((pls) => plsState.includes(pls));
@@ -2969,6 +3293,12 @@ function _list(x, y, w, h) {
 				if (!this.colors.uiPlaylistColor) {this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8);} // Blue
 				bDone = true;
 			}
+			if (this.searchInput) {
+				this.searchInput.textcolor = panel.colors.highlight;
+				this.searchInput.backcolor = panel.getColorBackground();
+				this.searchInput.bordercolor = panel.getColorBackground();
+				this.searchInput.backselectioncolor = this.colors.selectedPlaylistColor;
+			}
 			// Check Shortcuts
 			const shortcutsL = this.getDefaultShortcuts('L');
 			const shortcutsLKeys = shortcutsL.options.map((_) => {return _.key;});
@@ -3231,6 +3561,7 @@ function _list(x, y, w, h) {
 			this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
 			this.bAllPls = this.properties['bAllPls'][1];
 			this.activePlsStartup = this.properties['activePlsStartup'][1];
+			this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 			this.bTracking = true;
 		}
 		
@@ -3341,6 +3672,7 @@ function _list(x, y, w, h) {
 	this.mShortcuts = JSON.parse(this.properties['mShortcuts'][1]);
 	this.lShortcutsHeader = JSON.parse(this.properties['lShortcutsHeader'][1]);
 	this.mShortcutsHeader = JSON.parse(this.properties['mShortcutsHeader'][1]);
+	this.modeUI = 'modern'
 	// Panel behavior
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
@@ -3370,6 +3702,7 @@ function _list(x, y, w, h) {
 	this.bAllPls = this.properties['bAllPls'][1];
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
+	this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 	this.bTracking = true;
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
@@ -3380,7 +3713,33 @@ function _list(x, y, w, h) {
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel({s: 1}); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel({s: -1}); });
-	this.headerButton = {x: 0, y: 0, w: 0, h: 0, inFocus: false};
+	this.headerButtons = {
+		folder: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open playlists folder', func: (x, y, mask) => _explorer(this.playlistsPath)},
+		action: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+				return this.headerTooltip(mask);
+			}, func: null
+		},
+		search: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+					return this.searchInput.text.length
+						? 'Clear search\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)\n(Shift + L. Click to open search settings)'
+						: 'Search settings...\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)';
+			}, func: (x, y, mask) => {
+				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
+					this.searchInput.on_key_down(VK_ESCAPE); 
+					this.search();
+				} else {
+					createMenuSearch().btn_up(x, y);
+				}
+			}
+		},
+		settings: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Playlist Manager settings...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y)},
+		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask) => createMenuRight().btn_up(x, y)}
+	};
+	this.searchCurrent = '';
+	this.searhHistory = [];
+	this.searchInput = null;
 	callbacksListener.listenNames = this.bDynamicMenus;
 	this.init();
 }

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/03/23
+//28/03/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -45,6 +45,7 @@ const chars = {
 	puzzle			: '\uf12e',
 	moon			: '\uf186',
 	lighbulb		: '\uf0eb',
+	close			: '\uf00d',
 	// Files
 	folderOpenBlack	: '\uf07c',
 	folderOpenWhite	: '\uf115',

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/23
+//29/03/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -183,7 +183,16 @@ var properties = {
 		'Export and copy':			true,
 		'Online sync':				true,
 		'File management':			true
-	})]
+	})],
+	searchMethod		: ['Search settings', JSON.stringify({
+		bName:			true,
+		bTags:			true,
+		bCategory:		true,
+		bPath:			false,
+		pathLevel:		2,
+		bAutoSearch: 	true,
+		bRegExp:		false
+	})],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -193,6 +202,7 @@ properties['lShortcuts'].push({func: isJSON}, properties['lShortcuts'][1]);
 properties['lShortcutsHeader'].push({func: isJSON}, properties['lShortcutsHeader'][1]);
 properties['mShortcutsHeader'].push({func: isJSON}, properties['mShortcutsHeader'][1]);
 properties['showMenus'].push({func: isJSON}, properties['showMenus'][1]);
+properties['searchMethod'].push({func: isJSON}, properties['searchMethod'][1]);
 setProperties(properties, 'plm_');
 
 { // Info Popup
@@ -282,6 +292,11 @@ addEventListener('on_font_changed', () => {
 	window.Repaint();
 });
 
+addEventListener('on_char', (code) => {
+	if (pop.isEnabled()) {return;}
+	list.on_char(code);
+})
+
 addEventListener('on_key_down', (k) => {
 	if (pop.isEnabled()) {return;}
 	list.key_down(k);
@@ -302,8 +317,11 @@ addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
 	}
 });
 
-addEventListener('on_mouse_lbtn_down', (x, y) => {
+addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
 	if (pop.isEnabled()) {return;}
+	if (buttonsPanel.curBtn === null) {
+		list.lbtn_down(x, y, mask)
+	}
 	on_mouse_lbtn_down_buttn(x, y);
 });
 
@@ -333,16 +351,23 @@ addEventListener('on_mouse_leave', () => {
 
 addEventListener('on_mouse_rbtn_up', (x, y) => {
 	if (pop.isEnabled()) {return true;}
-	if (list.traceHeader(x, y)) { // Header menu
-		return createMenuRightTop().btn_up(x, y);
-	} else if (buttonsPanel.curBtn === null) { // List menu
-		return createMenuRight().btn_up(x, y);
-	} else if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
-		return createMenuRightSort().btn_up(x, y);
-	} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterOneButton) { // Filter button menus
-		return createMenuRightFilter('filterOneButton').btn_up(x, y);
-	} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterTwoButton) {
-		return createMenuRightFilter('filterTwoButton').btn_up(x, y);
+	if (list.modeUI === 'traditional' && buttonsPanel.curBtn === null) {
+		if (list.traceHeader(x, y)) { // Header menu
+			return createMenuRightTop().btn_up(x, y);
+		} else { // List menu
+			return createMenuRight().btn_up(x, y);
+		}
+	} else {
+		if (buttonsPanel.curBtn === null) {
+			return list.rbtn_up(x, y)
+		}
+		if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
+			return createMenuRightSort().btn_up(x, y);
+		} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterOneButton) { // Filter button menus
+			return createMenuRightFilter('filterOneButton').btn_up(x, y);
+		} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterTwoButton) {
+			return createMenuRightFilter('filterTwoButton').btn_up(x, y);
+		}
 	}
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 });
@@ -725,6 +750,10 @@ addEventListener('on_library_items_removed', () => {
 			list.clearSelPlaylistCache();
 		}
 	}
+});
+
+addEventListener('on_focus', (bFocused) => {
+	list.on_focus(bFocused);
 });
 
 // key listener (workaround for keys not working when focus is not on panel)

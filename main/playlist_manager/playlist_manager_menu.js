@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/23
+//29/03/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -15,6 +15,7 @@ const menuLbtn = new _menu();
 const menuLbtnMult = new _menu();
 const menuRbtnTop = new _menu();
 const menuRbtnSort = new _menu();
+const menuSearch = new _menu();
 
 // on callbacks
 function createMenuLeft(forcedIndex = -1) {
@@ -329,9 +330,10 @@ function createMenuLeft(forcedIndex = -1) {
 				const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
 				const consoleError = () => {
 					fb.ShowPopupMessage(
-						'Playlist was not exported. Check console.\n\nSome possible errors:\n' + 
-						'\t- 12007: Network error and/or non reachable server.' +
-						'\t- 429: Too many requests on a short amount of time.'
+						'Playlist was not exported. Check console.\n\nSome possible errors:' + 
+						'\n\t- 12007: Network error and/or non reachable server.' +
+						'\n\t- 429: Too many requests on a short amount of time.' +
+						'\n\t- 200: ListenBrainz Token not valid.'
 						, window.Name
 					);
 				}
@@ -2451,6 +2453,100 @@ function createMenuRightFilter(buttonKey) {
 	return menu;
 }
 
+function createMenuSearch() {
+	// Constants
+	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
+	const menu = menuSearch;
+	menu.clear(true); // Reset one every call
+	menu.newEntry({entryText: 'Search filter:', func: null, flags: MF_GRAYED});
+	menu.newEntry({entryText: 'sep'});
+	{
+		if (list.searhHistory.length) {
+			list.searhHistory.slice(-5).forEach((text) => {
+				menu.newEntry({entryText: text, func: () => {
+					list.searchCurrent = text;
+					window.Repaint();
+				}});
+			});
+			menu.newEntry({entryText: 'sep'});
+			menu.newEntry({entryText: 'Clear history', func: () => {
+				list.searhHistory.splice(0, Infinity);
+			}});
+		} else {
+			menu.newEntry({entryText: '- no search history -', func: null, flags: MF_GRAYED});
+		}
+	}
+	menu.newEntry({entryText: 'sep'});
+	// Settings
+	{	// Filter
+		const subMenu = menu.newMenu('Settings...');
+		const options = [
+			{entryText: 'By names', key: 'bName'},
+			{entryText: 'By tags', key: 'bTags'},
+			{entryText: 'By categories', key: 'bCategory'},
+			{entryText: 'By file and folder names', key: 'bPath'}
+		].sort();
+		const optionsLength = options.length;
+		menu.newEntry({menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		options.forEach((opt) => {
+			menu.newEntry({menuName: subMenu, entryText: opt.entryText, func: () => {
+				list.searchMethod[opt.key] = !list.searchMethod[opt.key];
+				// Save properties
+				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+				overwriteProperties(list.properties);
+				if (list.searchInput.text.length || list.searchInput.prev_text.length) {
+					list.search();
+				}
+				if (opt.key === 'bPath' && list.searchMethod[opt.key]) {
+					fb.ShowPopupMessage('This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.\n\nFor ex:\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.', window.Name);
+				}
+			}});
+			menu.newCheckMenu(subMenu, opt.entryText, void(0),  () => list.searchMethod[opt.key]);
+		});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		menu.newEntry({menuName: subMenu, entryText: 'Path level matching...' + '\t' + _b(list.searchMethod.pathLevel), func: () => {
+			let input = Input.number('int positive', list.searchMethod.pathLevel, 'Enter path level to search matches:', window.Name, 2);
+			if (input === null) {return;}
+			list.searchMethod.pathLevel = input;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			overwriteProperties(list.properties);
+		}});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		menu.newEntry({menuName: subMenu, entryText: 'Auto-search', func: () => {
+			list.searchMethod.bAutoSearch = !list.searchMethod.bAutoSearch;
+			list.searchInput.autovalidation = list.searchMethod.bAutoSearch;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			overwriteProperties(list.properties);
+			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prev_text.length) {
+				list.search();
+			}
+		}});
+		menu.newCheckMenu(subMenu, 'Auto-search', void(0),  () => list.searchMethod.bAutoSearch);
+		menu.newEntry({menuName: subMenu, entryText: 'Parse RegExp expressions', func: () => {
+			list.searchMethod.bRegExp = !list.searchMethod.bRegExp;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			overwriteProperties(list.properties);
+			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prev_text.length) {
+				list.search();
+			}
+			if (list.searchMethod.bRegExp) {
+				fb.ShowPopupMessage('This option will parse RegExp expressions on the input box and apply it to the list. For ex:\n\n/Top/ would match \'Top tracks\' but /top/ would not.\Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.\n\nFor more info see:\nhttps://regexr.com/', window.Name);
+			}
+		}});
+		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void(0),  () => list.searchMethod.bRegExp);
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		{	// Restore
+			menu.newEntry({menuName: subMenu, entryText: 'Restore defaults', func: () => {
+				list.properties.searchMethod[1] = list.properties.searchMethod[3];
+				list.searchMethod = JSON.parse(list.properties.searchMethod[1]);
+				overwriteProperties(list.properties);
+			}});
+		}
+	}
+	return menu;
+}
+
 async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 	if (!lBrainzToken.length) {
 		const lb = listenBrainz;
@@ -2460,7 +2556,16 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 		catch(e) {return false;}
 		if (lBrainzToken === currToken || lBrainzToken === encryptToken) {return false;}
 		if (lBrainzToken.length) {
-			if (!(await lb.validateToken(lBrainzToken))) {fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); return false;}
+			if (!(await lb.validateToken(lBrainzToken))) {
+				fb.ShowPopupMessage(
+					'Token can not be validated. Check console.\n\nSome possible errors:' + 
+					'\n\t- 12007: Network error and/or non reachable server.' +
+					'\n\t- 429: Too many requests on a short amount of time.' +
+					'\n\t- 200: ListenBrainz Token not valid.'
+					, window.Name
+				);
+				return false;
+			}
 			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				let pass = '';
