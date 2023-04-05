@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/03/23
+//04/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -181,6 +181,8 @@ function _list(x, y, w, h) {
 			}
 			case 'modern' : {
 				const panelBgColor = panel.getColorBackground();
+				const altColorBg = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
+				const altColorSearch = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 5 : 3);
 				const offsetHeader = yOffset / 10;
 				const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.normal);
 				// Buttons
@@ -278,7 +280,13 @@ function _list(x, y, w, h) {
 						if (button.align === 'r') {button.x = button.x(button, currRx); currRx = button.x;}
 					}
 					if (isFunction(button.y)) {button.y = button.y(button);}
-				})
+				});
+				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
+				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
+				// Background
+				gr.FillSolidRect(0, 0, this.x + LM / 2 + iconOffsetLeft, this.y, altColorSearch);
+				gr.FillSolidRect(this.x + this.w - iconOffsetRight, 0, panel.w, this.y, altColorBg);
+				// Buttons
 				let lineY = 0;
 				gr.SetSmoothingMode(SmoothingMode.HighQuality);
 				buttons.forEach((button) => {
@@ -290,18 +298,16 @@ function _list(x, y, w, h) {
 					lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1
 				})
 				// Text
-				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
-				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
 				if (!this.searchInput) {
-					this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 5, TM, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
+					this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, TM, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
 					this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
 				}
-				this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - 5 - iconOffsetRight - LM / 2, TM, panel.fonts.normal.size);
+				this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, TM, panel.fonts.normal.size);
 				this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
 				// Lines
 				lineY += offsetHeader;
 				const lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
-				gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, lineColor);
+				gr.DrawLine(0, lineY , panel.w, lineY, 1, lineColor);
 				gr.DrawLine(this.x + this.w - iconOffsetRight, this.y - lineY + 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);
 				gr.SetSmoothingMode(SmoothingMode.Default);
 				headerW = LM + iconOffsetLeft + 5;
@@ -680,7 +686,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	
-	this.move = (x, y, mask) => {
+	this.move = (x, y, mask, bDragDrop = false) => {
 		this.bMouseOver = true;
 		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
@@ -690,7 +696,7 @@ function _list(x, y, w, h) {
 			for (let key in this.headerButtons) {
 				const button = this.headerButtons[key];
 				if (this.traceHeaderButton(x, y, button)) {
-					window.SetCursor(IDC_HAND);
+					if (!bDragDrop) {window.SetCursor(IDC_HAND);}
 					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
 					button.inFocus = true;
 					bButtonTrace = true;
@@ -700,7 +706,7 @@ function _list(x, y, w, h) {
 			}
 			if (!bButtonTrace) {
 				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
-					this.searchInput.check('move', x, y);
+					this.searchInput.check('move', x, y, bDragDrop);
 					const headerText = this.headerTooltip(mask, false);
 					this.tooltip.SetValue(headerText, true);
 				} else {
