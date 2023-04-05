@@ -188,10 +188,10 @@ var properties = {
 		bName:			true,
 		bTags:			true,
 		bCategory:		true,
-		bPath:			false,
+		bPath:			true,
 		pathLevel:		2,
 		bAutoSearch: 	true,
-		bRegExp:		false
+		bRegExp:		true
 	})],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
@@ -215,13 +215,19 @@ setProperties(properties, 'plm_');
 		if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager: introduction');}
 		// Simple mode
 		const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'];
-		const answer = WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + features.join(', '), 0, window.Name, popup.question + popup.yes_no);
+		const otherFeatures = ['Advanced search tools'];
+		const answer = WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, window.Name, popup.question + popup.yes_no);
 		if (answer === popup.no) {
+			// Menus
 			const showMenus = JSON.parse(prop.showMenus[1]);
 			features.forEach((key) => {
 				showMenus[key] = false;
 			});
 			prop.showMenus[1] = JSON.stringify(showMenus);
+			// Other tools
+			const searchMethod = JSON.parse(prop.searchMethod[1]);
+			searchMethod.bPath = searchMethod.bRegExp = false;
+			prop.searchMethod[1] = JSON.stringify(searchMethod);
 		}
 		overwriteProperties(prop); // Updates panel
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
