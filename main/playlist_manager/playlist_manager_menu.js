@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/03/23
+//04/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -64,7 +64,15 @@ function createMenuLeft(forcedIndex = -1) {
 	// Entries
 	{	// Load
 		// Load playlist within foobar2000. Only 1 instance allowed
-		menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {list.loadPlaylist(z);}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING});
+		menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {
+			if (pls.isAutoPlaylist) {
+				const idx = getPlaylistIndexArray(pls.nameId);
+				if (idx.length) {
+					plman.RemovePlaylistSwitch(idx[0]);
+				}
+			}
+			list.loadPlaylist(z);
+		}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING});
 		// Show binded playlist
 		menu.newEntry({entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED});
 		// Contextual menu
@@ -1900,6 +1908,7 @@ function createMenuRightTop() {
 						panel.properties.bCustomText[1] = panel.colors.bCustomText;
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
+						list.checkConfig();
 						window.Repaint();
 					}});
 				});
@@ -1911,6 +1920,7 @@ function createMenuRightTop() {
 					panel.properties.customText[1] = panel.colors.customText;
 					overwriteProperties(panel.properties);
 					panel.colorsChanged();
+					list.checkConfig();
 					window.Repaint();
 				}, flags: panel.colors.bCustomText ? MF_STRING : MF_GRAYED,});
 			}
@@ -1927,6 +1937,7 @@ function createMenuRightTop() {
 						// Update property to save between reloads
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
+						list.checkConfig();
 						window.Repaint();
 					}});
 				});
@@ -1939,6 +1950,7 @@ function createMenuRightTop() {
 					// Update property to save between reloads
 					overwriteProperties(panel.properties);
 					panel.colorsChanged();
+					list.checkConfig();
 					window.Repaint();
 				}});
 			}
@@ -1954,6 +1966,7 @@ function createMenuRightTop() {
 						// Update property to save between reloads
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
+						list.checkConfig();
 						window.Repaint();
 					}});
 				});
@@ -1973,6 +1986,7 @@ function createMenuRightTop() {
 							panel.properties.colorsMode[1] = panel.colors.mode;
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
+							list.checkConfig();
 							// Set defaults again
 							if (panel.setDefault({oldColor: defaultButtonsCol})) {overwriteProperties(panel.properties);}
 							window.Repaint();
@@ -1986,6 +2000,7 @@ function createMenuRightTop() {
 						panel.properties.customBackground[1] = panel.colors.customBackground;
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
+						list.checkConfig();
 						// Set defaults again
 						if (panel.setDefault({oldColor: defaultButtonsCol})) {overwriteProperties(panel.properties);}
 						window.Repaint();
@@ -1997,6 +2012,7 @@ function createMenuRightTop() {
 					panel.properties['bAltRowsColor'][1] = panel.colors.bAltRowsColor;
 					overwriteProperties(panel.properties);
 					panel.colorsChanged();
+					list.checkConfig();
 					window.Repaint();
 				}});
 				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background colour', void(0), () => {return panel.colors.bAltRowsColor;});
@@ -2019,6 +2035,7 @@ function createMenuRightTop() {
 				presets.forEach((preset) => {
 					if (preset.name.toLowerCase() === 'sep') {menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'}); return;}
 					menu.newEntry({menuName: subMenuSecondName, entryText: preset.name, func: () => {
+						// Panel and list
 						if (preset.name.toLowerCase() === 'default') {
 							panel.properties.colorsMode[1] = panel.colors.mode = 0;
 							panel.properties.bCustomText[1] = panel.colors.bCustomText = false;
@@ -2034,10 +2051,11 @@ function createMenuRightTop() {
 							list.colors.uiPlaylistColor = preset.colors[2];
 							list.colors.lockedPlaylistColor = preset.colors[3];
 							list.colors.selectedPlaylistColor = preset.colors[4];
-						}				
+						}
 						list.properties.listColors[1] = convertObjectToString(list.colors);
 						panel.colorsChanged();
 						panel.setDefault({all: true});
+						// Buttons
 						if (preset.hasOwnProperty('buttonColors') && preset.buttonColors.length) {
 							if (preset.buttonColors[0] !== null) {panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor = preset.buttonColors[0];}
 							if (preset.buttonColors[1] !== null) {panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor = preset.buttonColors[1];}
@@ -2085,7 +2103,7 @@ function createMenuRightTop() {
 				list.colors = {};
 				list.properties.listColors[1] = convertObjectToString(list.colors);
 				panel.properties.colorsMode[1] = panel.colors.mode = 0;
-				panel.properties,bCustomText[1] = panel.colors.bCustomText = false;
+				panel.properties.bCustomText[1] = panel.colors.bCustomText = false;
 				panel.colorsChanged();
 				panel.setDefault({all: true});
 				overwriteProperties(list.properties);
@@ -2499,7 +2517,14 @@ function createMenuSearch() {
 					list.search();
 				}
 				if (opt.key === 'bPath' && list.searchMethod[opt.key]) {
-					fb.ShowPopupMessage('This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.\n\nFor ex:\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.', window.Name);
+					fb.ShowPopupMessage(
+						'This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.' + 
+						'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.' + 
+						'\n\nFor ex:' +
+						'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' + 
+						'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' + 
+						'\n\nDrag n\' drop integration:' + 
+						'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.', window.Name);
 				}
 			}});
 			menu.newCheckMenu(subMenu, opt.entryText, void(0),  () => list.searchMethod[opt.key]);
