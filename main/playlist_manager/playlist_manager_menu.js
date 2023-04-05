@@ -2481,7 +2481,7 @@ function createMenuSearch() {
 	{
 		if (list.searhHistory.length) {
 			list.searhHistory.slice(-5).forEach((text) => {
-				menu.newEntry({entryText: text, func: () => {
+				menu.newEntry({entryText: text.length > 20 ? text.substr(0, 20) + '...' : text, func: () => {
 					list.searchCurrent = text;
 					window.Repaint();
 				}});
@@ -2524,7 +2524,9 @@ function createMenuSearch() {
 						'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' + 
 						'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' + 
 						'\n\nDrag n\' drop integration:' + 
-						'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.', window.Name);
+						'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
+						, window.Name
+					);
 				}
 			}});
 			menu.newCheckMenu(subMenu, opt.entryText, void(0),  () => list.searchMethod[opt.key]);
@@ -2556,7 +2558,14 @@ function createMenuSearch() {
 				list.search();
 			}
 			if (list.searchMethod.bRegExp) {
-				fb.ShowPopupMessage('This option will parse RegExp expressions on the input box and apply it to the list. For ex:\n\n/Top/ would match \'Top tracks\' but /top/ would not.\Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.\n\nFor more info see:\nhttps://regexr.com/', window.Name);
+				fb.ShowPopupMessage(
+					'This option will parse RegExp expressions on the input box and apply it to the list. For ex:' +
+					'\n\n/Top/ would match \'Top tracks\' but /top/ would not.\Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.' + 
+					'\n\nFor more info see:' +
+					'\nhttps://regexr.com/' +
+					'\n\nDrag n\' drop integration:' + 
+					'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
+				, window.Name);
 			}
 		}});
 		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void(0),  () => list.searchMethod.bRegExp);
