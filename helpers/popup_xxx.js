@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/23
+//05/04/23
 
 include('helpers_xxx.js');
 include('helpers_xxx_UI.js');
@@ -28,7 +28,7 @@ function _popup({
 		default: () => {
 			this.color.panel = opaqueColor(0XFFCBC5C5, 30); // Grey tinted (r)
 			this.color.text = 0xFF000000; // Black
-			this.color.popup = opaqueColor(tintColor(this.color.panel || RGB(0, 0, 0), 20), 80);
+			this.color.popup = opaqueColor(lightenColor(this.color.panel || RGB(0, 0, 0), 20), 80);
 			this.color.border = opaqueColor(invert(this.color.popup), 50);
 			this.color.icon = this.color.text;
 		},

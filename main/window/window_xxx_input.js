@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/22
+//05/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -121,7 +121,7 @@ function _toggleControl({x, y, size = _scale(10) * 1.5, value = false, color = R
 	this.paint = (gr, x, y) => { // on_paint
 		if (this.w <= 0) {return;} 
 		gr.SetSmoothingMode(SmoothingMode.HighQuality);
-		let fillColor = this.value ? tintColor(this.fillColor, 35) : RGB(172, 172, 172);
+		let fillColor = this.value ? lightenColor(this.fillColor, 35) : RGB(172, 172, 172);
 		const fillY = this.y + this.slideH / 2;
 		const fillWidth = this.toggleW - this.h;
 		gr.FillEllipse(this.x + this.slideH * 0.5, fillY, this.slideH, this.slideH, fillColor);
@@ -675,7 +675,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							}
 						}
 					} else if (tmp > this.SelEnd) {
-						if (tmp_x + this.x > this.x + this.w) {
+						if ((tmp_x + this.x) > (this.x + this.w)) {
 							var len = (this.TWidth > this.w) ? this.TWidth - this.w : 0;
 							if (len > 0) {
 								this.offset++;
@@ -685,7 +685,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 					}
 					this.SelEnd = tmp;
 				} else if (tmp > this.SelBegin) {
-					if (tmp_x + this.x > this.x + this.w) {
+					if ((tmp_x + this.x) > (this.x + this.w)) {
 						var len = (this.TWidth > this.w) ? this.TWidth - this.w : 0;
 						if (len > 0) {
 							this.offset++;
@@ -815,8 +815,15 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			case VK_SHIFT:
 				break;
 			case VK_ESCAPE:
-				if (this.text.length) {this.text = '';}
-				else {this.check('down', -1, -1);}
+				if (this.text.length) {
+					this.text = '';
+					this.Cpos = 0;
+					this.SelBegin = 0;
+					this.SelEnd = 0;
+					this.select = false;
+					this.offset = 0;
+					this.text_selected = '';
+				} else {this.check('down', -1, -1);}
 			case VK_BACK:
 				//save text before update
 				this.stext = this.text;
@@ -1089,9 +1096,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				};
 				if (vkey == 88) { // CTRL+X
 					if (this.edit && this.select) {
-						//save text avant MAJ
 						this.stext = this.text;
-						//
 						utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 						var p1 = this.SelBegin;
 						var p2 = this.SelEnd;
@@ -1104,7 +1109,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						this.repaint();
 					}
 				};
-				if (vkey == 90) { // CTRL+Z (annulation saisie)
+				if (vkey == 90) { // CTRL+Z
 					if (this.edit) {
 						this.text = this.stext;
 						this.repaint();
@@ -1113,9 +1118,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				if (vkey == 86) { // CTRL+V
 					cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
 					if (this.edit && cInputbox.clipboard) {
-						//save text avant MAJ
 						this.stext = this.text;
-						//
 						if (this.select) {
 							var p1 = this.SelBegin;
 							var p2 = this.SelEnd;

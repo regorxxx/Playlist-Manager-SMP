@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/23
+//05/04/23
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -306,9 +306,21 @@ function getBlue(color) {
 	return (color & 0xff);
 }
 
-function tintColor(color, percent) {
+function lightenColor(color, percent) {
 	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
 	return RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color));
+}
+
+function darkenColor(color, percent) {
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+	return RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));
+}
+
+function tintColor(color, percent) {
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+	return isDark(r, g, b) 
+		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
+		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));;
 }
 
 function darkenColorVal(color, percent) {
