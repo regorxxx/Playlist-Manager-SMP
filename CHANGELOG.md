@@ -31,11 +31,12 @@
 
 ## [Unreleased][]
 ### Added
-- Search: search toolbar to filter the current view according to the input. Currently supports regexp matching by playlist name, tag, category or tracks' file or folder names (this one disabled by default). Works pretty similar to the search filters found on Library Tree or the album viewer (except no query support). Enabling the path searching allows to easily find tracks within playlists (both loaded and non loaded ones). Path level is configurable.
+- Search: search toolbar to filter the current view according to the input. Supports case insensitive matching by playlist name, tag, category or tracks' file or folder names (this one disabled by default). Works pretty similar to the search filters found on Library Tree or the album viewer (except no query support). Enabling the path searching allows to easily find tracks within playlists (both loaded and non loaded ones). Path level is configurable. There is also an additional setting to parse RegExp expressions (which allow more advanced searches).
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
 ### Changed
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
-- Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other component.
+- Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other components.
+- Drag and Drop: tracks can now be dropped to the search toolbar to parse their filenames for filtering (when file/folder searching is enabled). This is equivalent to the 'Find current selection...' menu entry, but direclty filtering the current view (instead of showing a report popup).
 - Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
 - Console: multiple improvements when logging to file for FbMetadbHandle, FbMetadbHandleList, Error and unknown instances (totally irrelevant except for debug purposes).
 - Documentation: updated readme PDF to be up to date with all latest changes. Added all XSP -> foobar2000 tag equivalences.
@@ -43,6 +44,9 @@
 ### Removed
 ### Fixed
 - Renaming: auto-renaming of playlist tracked on manager if renaming was done within playlists tabs not working on some cases (still only possible for active playlist).
+- AutoPlaylists: 'Reload playlist (overwrite)' was not working properly, creating a duplicated playlist instead of overwriting the existing one.
+- UI: selected and highlighted playlist rectangles did not match in size (again).
+- Crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
 
 ## [0.5.0-beta.18] - 2023-03-08
 ### Added
@@ -53,13 +57,13 @@
 - UI: focus is now set on new playlist after playlist creation.
 ### Removed
 ### Fixed
-- Dynamic menus: not being created on init when the manager had no Auto-playlists and Auto-playlist size updating was enabled.
+- Dynamic menus: not being created on init when the manager had no AutoPlaylists and AutoPlaylist size updating was enabled.
 - Crash after deleting playlists using multiple selection actions, since the selection was not being reset.
 
 ## [0.5.0-beta.17] - 2023-03-04
 ### Added
 ### Changed
-- UI: popup when cloning an Auto-playlist now adds a tip to cancel, thus skipping playlist file creation.
+- UI: popup when cloning an AutoPlaylist now adds a tip to cancel, thus skipping playlist file creation.
 - Autosave: renamed property, config will be reset on update (this doesn't affect to most users since this config is usually not touched).
 - Documentation: updated readme PDF to be up to date with all changes.
 - Internal code cleanup of menus.
@@ -449,7 +453,7 @@
 - UI: current selection rectangle now has its width adjusted according to 'Show name/category separators', so it doesn't overlap with the letters at the right when enabled.
 - UI: when opening the contextual menu for a playlist (L. Click) the selection rectangle will be shown until the menu gets closed. Previously it was cleared as soon as the menu was created or the mouse leave the panel. Opening menus for things not directly related to an specific playlist will maintain the previous behavior.
 - UI: entire panel is repaint when moving the mouse over it instead of currently selected playlist only to ensure selection is always properly drawn even with extreme movements.
-- UI: Auto-Playlists size now gets updated when loading them (since it's essentially performance free).
+- UI: AutoPlaylists size now gets updated when loading them (since it's essentially performance free).
 - UI: contextual menu for selected playlist can now be invoked on the entire selection rectangle (not only over the name).
 - UI: selection rectangle drawing is skipped if color matches the background color.
 - UI: sorting method configuration is now opened by R. Clicking directly on the sort button, following the same behavior thane the [new] filter configuration menus.
