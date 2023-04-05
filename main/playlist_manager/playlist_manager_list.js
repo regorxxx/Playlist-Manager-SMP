@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/23
+//05/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -355,20 +355,20 @@ function _list(x, y, w, h) {
 		const altColorRow = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
 		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // Compare to the next one or the previous one according to sort order
 		const rows = Math.min(this.items, this.rows);
+		const rowWidth =  this.x + this.w; // Ignore separator UI config
+		const selWidth =  this.bShowSep ? this.x + this.w - categoryHeaderOffset :  this.x + this.w; // Adjust according to UI config
 		// Highlight
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
 			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
-				const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
 				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
 				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 			}
 			if (this.lastCharsPressed.bDraw) {animation.bHighlight = false;}
 			if (animation.bHighlight) {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
 					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 				}
@@ -390,8 +390,7 @@ function _list(x, y, w, h) {
 			}
 			// Alternate row colors
 			if (panel.colors.bAltRowsColor && (i + this.offset) % 2) {
-				const selWidth =  this.x + this.w; // Ignore separator UI config
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, altColorRow);
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, rowWidth, panel.row_height, altColorRow);
 			}
 			const currIdx = i + this.offset;
 			const pls = this.data[currIdx];
@@ -513,7 +512,6 @@ function _list(x, y, w, h) {
 			// Multiple selection
 			if (this.indexes.length) {
 				if (this.indexes.indexOf(this.offset + i) !== -1) {
-					const selWidth =  this.bShowSep ?  this.x + maxIconWidth + this.text_width - 30 :  this.x + this.w; // Adjust according to UI config
 					gr.DrawRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 				}
@@ -527,14 +525,13 @@ function _list(x, y, w, h) {
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
-					const selWidth =  this.bShowSep ?  this.x + maxIconWidth + this.text_width - 30 :  this.x + this.w; // Adjust according to UI config
 					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylistColor);
 				}
 			}
 		}
 		// Char popup as animation
 		if (this.lastCharsPressed.bDraw) {
-			const popupCol = opaqueColor(tintColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+			const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
 			const borderCol = opaqueColor(invert(popupCol), 50);
 			const textCol = panel.colors.text;
 			const scaleX = 0.75;
@@ -560,7 +557,6 @@ function _list(x, y, w, h) {
 				const currSelIdx = idxHighlight;
 				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					const selWidth =  this.bShowSep ?  this.x + this.w - 20 :  this.x + this.w; // Adjust according to UI config
 					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 80));
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 50));
 				}
@@ -705,8 +701,10 @@ function _list(x, y, w, h) {
 				}
 			}
 			if (!bButtonTrace) {
-				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
+				if (this.searchInput) { // Apart to correctly select the end of string on move
 					this.searchInput.check('move', x, y, bDragDrop);
+				}
+				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
 					const headerText = this.headerTooltip(mask, false);
 					this.tooltip.SetValue(headerText, true);
 				} else {
@@ -3728,9 +3726,11 @@ function _list(x, y, w, h) {
 		},
 		search: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
-					return this.searchInput.text.length
-						? 'Clear search\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)\n(Shift + L. Click to open search settings)'
-						: 'Search settings...\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)';
+					return (this.searchInput.text.length
+						? 'Clear search\n(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
+						: 'Search settings...\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)') + (this.searchMethod.bPath 
+								? '\n(Drag n\' drop track(s) to copy filename(s))' 
+								: '');
 			}, func: (x, y, mask) => {
 				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
 					this.searchInput.on_key_down(VK_ESCAPE); 
