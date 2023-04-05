@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/03/22
+//04/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -608,7 +608,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 
 	this.trackCheck = (x,y) => {return (x >= this.x - 2 && x <= (this.x + this.w + 1) && y > this.y && y < (this.y + this.h));}
 
-	this.check = function (callback, x, y) {
+	this.check = function (callback, x, y, bDragDrop = false) {
 		this.hover = this.trackCheck(x,y) ? true : false;
 		switch (callback) {
 		case 'down':
@@ -698,7 +698,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				this.repaint();
 			}
 			// Set Mouse Cursor Style
-			if (this.hover || this.drag) {
+			if ((this.hover || this.drag) && !bDragDrop) {
 				window.SetCursor(IDC_IBEAM);
 			} else if (this.ibeam_set) {
 				window.SetCursor(IDC_ARROW);
