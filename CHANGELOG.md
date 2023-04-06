@@ -35,6 +35,8 @@
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
 ### Changed
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
+- UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden.
+- UI: up/down buttons are now only shown while drag n' dropping to easily scroll the list.
 - Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other components.
 - Drag and Drop: tracks can now be dropped to the search toolbar to parse their filenames for filtering (when file/folder searching is enabled). This is equivalent to the 'Find current selection...' menu entry, but direclty filtering the current view (instead of showing a report popup).
 - Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.

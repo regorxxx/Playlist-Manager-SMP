@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/23
+//06/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -23,6 +23,7 @@ include('main\\playlist_manager\\playlist_manager_buttons.js');
 include('main\\playlist_manager\\playlist_manager_menu.js');
 include('main\\playlist_manager\\playlist_manager_helpers.js');
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
+include('main\\window\\window_xxx_scrollbar.js');
 
 checkCompatible('1.6.1', 'smp');
 
@@ -252,7 +253,7 @@ setProperties(properties, 'plm_');
 }
 
 // Panel
-let panel = new _panel(true);
+const panel = new _panel(true);
 // Popups
 const pop = new _popup({
 	configuration: {
@@ -263,8 +264,19 @@ const pop = new _popup({
 });
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
 // List
-let list = new _list(LM, TM, 0, 0);
+const list = new _list(LM, TM, 0, 0);
 const plsHistory = new PlsHistory();
+// Scroll bar
+const scroll = new _scrollBar({
+	w: _scale(5), 
+	size: _scale(14),
+	bgColor: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.3 : 0.8),
+	color: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.1 : 0.6),
+	scrollFunc: (s) => {
+		s = Math.round(s);
+		list.jumpToIndex(s > 0 ? list.rows + s : 0, true); // Upper limits are checked at func
+	}
+});
 
 // Tracking a network drive?
 if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
@@ -311,6 +323,7 @@ addEventListener('on_key_down', (k) => {
 addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 	if (pop.isEnabled()) {return;}
 	if (buttonsPanel.curBtn === null) {
+		if (scroll && scroll.btn_up(x, y)) {return;}
 		list.lbtn_up(x, y, mask);
 	}
 	on_mouse_lbtn_up_buttn(x, y);
@@ -326,6 +339,7 @@ addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
 addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
 	if (pop.isEnabled()) {return;}
 	if (buttonsPanel.curBtn === null) {
+		if (scroll && scroll.btn_down(x, y)) {return;}
 		list.lbtn_down(x, y, mask)
 	}
 	on_mouse_lbtn_down_buttn(x, y);
@@ -340,6 +354,7 @@ addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
 
 addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
 	if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
+	if (scroll && scroll.move(x, y)) {list.move(-1, -1); return;}
 	if (!bDragDrop) {on_mouse_move_buttn(x, y, mask);}
 	if (buttonsPanel.curBtn === null) {
 		list.move(x, y, mask, bDragDrop);
@@ -386,6 +401,13 @@ addEventListener('on_mouse_wheel', (s) => {
 addEventListener('on_paint', (gr) => {
 	panel.paint(gr);
 	list.paint(gr);
+	if (scroll) {
+		scroll.rows = Math.max(list.items - list.rows, 1);
+		scroll.rowsPerPage = list.rows;
+		scroll.size = Math.max(Math.round(scroll.h / (scroll.rows || 1)), _scale(14));
+		scroll.currRow = list.offset;
+		if (scroll.rows > 1) {scroll.paint(gr);}
+	}
 	on_paint_buttn(gr);
 	pop.paint(gr);
 });
@@ -395,6 +417,13 @@ addEventListener('on_size', () => {
 	list.size();
 	on_size_buttn();
 	pop.resize();
+	if (scroll) {
+		scroll.x = window.Width - scroll.w,
+		scroll.y = list.getHeaderSize().h;
+		scroll.h = list.h - (scroll.y - list.y) - buttonCoordinatesOne.h - _scale(1);
+		scroll.rows = Math.max(list.items - list.rows, 0);
+		scroll.rowsPerPage = list.rows;
+	}
 });
 
 addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...

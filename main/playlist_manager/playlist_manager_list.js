@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/23
+//06/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -72,7 +72,7 @@ function _list(x, y, w, h) {
 		this.index = 0;
 		this.offset = 0;
 		if (oldH > 0 && this.h > 0) {yOffset = (_scale(6) + panel.row_height / 4) * (this.h / oldH);}
-		this.rows = Math.floor((this.h - _scale(24) - yOffset) / panel.row_height); // 24
+		this.rows = Math.floor((this.h - _scale(scroll ? 12 : 24) - yOffset) / panel.row_height); // 24
 		this.up_btn.x = this.x + Math.round((this.w - _scale(12)) / 2);
 		this.down_btn.x = this.up_btn.x;
 		this.up_btn.y = this.y + _scale(1);
@@ -80,6 +80,8 @@ function _list(x, y, w, h) {
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
 	}
+	
+	this.getHeaderSize = () => {return {h: Math.max(headerH, this.y), w: headerW};}
 	
 	this.headerText = window.Name;
 	
@@ -284,10 +286,10 @@ function _list(x, y, w, h) {
 				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
 				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
 				// Background
-				gr.FillSolidRect(0, 0, this.x + LM / 2 + iconOffsetLeft, this.y, altColorSearch);
-				gr.FillSolidRect(this.x + this.w - iconOffsetRight, 0, panel.w, this.y, altColorBg);
+				let lineY =  maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1 + offsetHeader;
+				gr.FillSolidRect(0, 0, this.x + LM / 2 + iconOffsetLeft, lineY, altColorSearch);
+				gr.FillSolidRect(this.x + this.w - iconOffsetRight, 0, panel.w, lineY, altColorBg);
 				// Buttons
-				let lineY = 0;
 				gr.SetSmoothingMode(SmoothingMode.HighQuality);
 				buttons.forEach((button) => {
 					[button.parent.x, button.parent.y, button.parent.w, button.parent.h] = [button.x, button.y, button.w, button.h] // Update button coords
@@ -295,17 +297,15 @@ function _list(x, y, w, h) {
 						gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2) , _scale(2), _scale(2), button.bgColor);
 					}
 					gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w, maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX);
-					lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1
 				})
 				// Text
 				if (!this.searchInput) {
-					this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, TM, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
+					this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
 					this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
 				}
-				this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, TM, panel.fonts.normal.size);
+				this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
 				this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
 				// Lines
-				lineY += offsetHeader;
 				const lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
 				gr.DrawLine(0, lineY , panel.w, lineY, 1, lineColor);
 				gr.DrawLine(this.x + this.w - iconOffsetRight, this.y - lineY + 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);
@@ -586,8 +586,9 @@ function _list(x, y, w, h) {
 	}
 	
 	this.wheel = ({s, bPaint = true, bForce = false} = {}) => {
-			if (this.trace(this.mx, this.my) || !bPaint || bForce) {
+		if (this.trace(this.mx, this.my) || !bPaint || bForce) {
 			if (this.items > this.rows) {
+				if (!Number.isInteger(s)) {s = Math.round(s);}
 				let offset = this.offset - (s * 3); // Offset changes by 3 on every step
 				if (offset < 0) {
 					offset = 0;
@@ -629,7 +630,7 @@ function _list(x, y, w, h) {
 	} 
 	*/
 	
-	this.jumpToIndex = (idx) => { // Puts selected playlist in the middle of the window, if possible
+	this.jumpToIndex = (idx, bScroll = false) => { // Puts selected playlist in the middle of the window, if possible
 		const cache = {index: this.index, offset: this.offset}
 		this.index = idx;
 		// Safechecks
@@ -641,6 +642,7 @@ function _list(x, y, w, h) {
 			? Math.floor(this.index / this.rows) * this.rows + this.index % this.rows - Math.round(this.rows / 2 - 1) 
 			: 0;
 		if (this.offset + this.rows >= this.items) {this.offset = this.items > this.rows ? this.items - this.rows : 0;}
+		if (bScroll) {this.index = -1;}
 		if (cache.index !== this.index || cache.offset !== this.offset) {window.Repaint();}
 		return this.index;
 	}
@@ -676,6 +678,7 @@ function _list(x, y, w, h) {
 		this.clearSelPlaylistCache();
 		this.up_btn.hover = false;
 		this.down_btn.hover = false;
+		this.bIsDragDrop = false;
 		for (let key in this.headerButtons) {
 			this.headerButtons[key].inFocus = false;
 		}
@@ -683,6 +686,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.move = (x, y, mask, bDragDrop = false) => {
+		this.bIsDragDrop = bDragDrop;
 		this.bMouseOver = true;
 		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
@@ -847,6 +851,9 @@ function _list(x, y, w, h) {
 		} else {
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
+			this.tooltip.SetValue(null); // Removes tt when not over a list element
+			this.index = -1;
+			window.Repaint(); // Removes selection indicator
 			return false;
 		}
 	}
@@ -3711,12 +3718,13 @@ function _list(x, y, w, h) {
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
 	// Other
+	this.bIsDragDrop = false;
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
-	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0; }, () => { this.wheel({s: 1}); });
-	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return this.offset < this.items - this.rows; }, () => { this.wheel({s: -1}); });
+	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0 && (!scroll || this.bIsDragDrop); }, () => { this.wheel({s: 1}); });
+	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (!scroll || this.bIsDragDrop); }, () => { this.wheel({s: -1}); });
 	this.headerButtons = {
 		folder: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open playlists folder', func: (x, y, mask) => _explorer(this.playlistsPath)},
 		action: {
