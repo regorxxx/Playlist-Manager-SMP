@@ -17,7 +17,8 @@ function _scrollBar({
 			timer = 1500,
 			visibleFunc = (time) => Date.now() - time < this.timer || this.bHovered || this.bDrag,
 			scrollFunc = () => void(0),
-			scrollSpeed = 60 // ms
+			scrollSpeed = 60, // ms
+			dblclkFunc = () => void(0)
 		} = {}) {
 	this.tt = '';
 	this.x = x;
@@ -43,6 +44,7 @@ function _scrollBar({
 	this.visibleFunc = visibleFunc;
 	this.scrollFunc = scrollFunc;
 	this.scrollSpeed = scrollSpeed;
+	this.dblclkFunc = dblclkFunc;
 	this.visible = true;
 	this.barLength = this.h;
 	this.buttonHeight = 0;
@@ -223,6 +225,19 @@ function _scrollBar({
 			this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bDrag = this.bDragUp = this.bDragDown = false;
 		}
 		return false;
+	};
+	
+	this.lbtn_dblclk = (x, y) => {
+		if (!this.bHovered || !this.visible) {return false;}
+		if (this.bHoveredCurr) {
+			if (this.dblclkFunc) {this.dblclkFunc(this.currRow);}
+		} else if (this.bHoveredDown || this.bHoveredUp) {
+			const oldRow = this.currRow;
+			this.currRow = this.bHoveredUp ? 0 : this.rows;
+			if (oldRow !== this.currRow) {this.scrollFunc({current: this.currRow, delta: oldRow - this.currRow});}
+			this.repaint();
+		}
+		return true;
 	};
 	
 	this.move = (x, y) => {

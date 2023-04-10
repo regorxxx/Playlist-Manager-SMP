@@ -274,6 +274,9 @@ const scroll = new _scrollBar({
 	color: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.1 : 0.6),
 	scrollFunc: ({current, delta}) => {
 		list.wheel({s: delta, bPaint: true, bForce: true, scrollDelta: 1});
+	},
+	dblclkFunc: (current) => {
+		list.showCurrPls() || list.showCurrPls({bPlayingPls: true});
 	}
 });
 
@@ -347,6 +350,7 @@ addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
 addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
 	if (pop.isEnabled()) {return;}
 	if (buttonsPanel.curBtn === null) {
+		if (scroll && scroll.lbtn_dblclk(x, y)) {return;}
 		list.lbtn_dblclk(x, y);
 	}
 });
