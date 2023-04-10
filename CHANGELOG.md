@@ -49,7 +49,7 @@
 - Renaming: auto-renaming of playlist tracked on manager if renaming was done within playlists tabs not working on some cases (still only possible for active playlist).
 - AutoPlaylists: 'Reload playlist (overwrite)' was not working properly, creating a duplicated playlist instead of overwriting the existing one.
 - UI: selected and highlighted playlist rectangles did not match in size (again).
-- Crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
+- UI: Crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
 
 ## [0.5.0-beta.18] - 2023-03-08
 ### Added
