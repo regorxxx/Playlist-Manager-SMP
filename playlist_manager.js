@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/04/23
+//10/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -272,9 +272,8 @@ const scroll = new _scrollBar({
 	size: _scale(14),
 	bgColor: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.3 : 0.8),
 	color: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.1 : 0.6),
-	scrollFunc: (s) => {
-		s = Math.round(s);
-		list.jumpToIndex(s > 0 ? list.rows + s : 0, true); // Upper limits are checked at func
+	scrollFunc: ({current, delta}) => {
+		list.wheel({s: delta, bPaint: true, bForce: true, scrollDelta: 1});
 	}
 });
 

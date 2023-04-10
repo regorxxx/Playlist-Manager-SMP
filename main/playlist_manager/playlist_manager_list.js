@@ -585,11 +585,11 @@ function _list(x, y, w, h) {
 		return x > button.x && x < button.x + button.w && y > button.y && y < button.y + button.h;
 	}
 	
-	this.wheel = ({s, bPaint = true, bForce = false} = {}) => {
+	this.wheel = ({s, bPaint = true, bForce = false, scrollDelta = 3} = {}) => {
 		if (this.trace(this.mx, this.my) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				if (!Number.isInteger(s)) {s = Math.round(s);}
-				let offset = this.offset - (s * 3); // Offset changes by 3 on every step
+				let offset = this.offset - (s * scrollDelta); // Offset changes by 3 on every step
 				if (offset < 0) {
 					offset = 0;
 				}
@@ -606,29 +606,6 @@ function _list(x, y, w, h) {
 			return false;
 		}
 	}
-	
-	/* 	// Somewhat bugged
-	this.simulateWheelToIndex = ({toIndex, currentItemIndex = this.lastIndex, originalOffset = this.lastOffset} = {}) => {
-		if (this.items < this.rows) {this.offset = 0; return;} // Safecheck
-		this.index = toIndex;
-		let iDifference = currentItemIndex - originalOffset;
-		this.offset = 0;
-		if (iDifference >= 0 && iDifference < currentItemIndex) {
-			if (iDifference === 0 && this.index) {this.offset = originalOffset;}
-			let cache = 0;
-			while (this.index - this.offset > iDifference) {
-				this.wheel({s: -1, bPaint: false});
-				if (cache === this.offset) {break;}
-				cache = this.offset;
-			}
-			// Move a bit the list to center the search if possible....
-			if (this.index < (this.items - this.rows) && (this.offset + this.rows) >= this.index) {
-				this.offset -= 3;
-				if (this.offset <= 0) {this.offset = 0;}
-			}
-		}
-	} 
-	*/
 	
 	this.jumpToIndex = (idx, bScroll = false) => { // Puts selected playlist in the middle of the window, if possible
 		const cache = {index: this.index, offset: this.offset}

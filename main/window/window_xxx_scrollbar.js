@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/04/22
+//10/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -16,7 +16,8 @@ function _scrollBar({
 			color = RGB(210, 210, 210),
 			timer = 1500,
 			visibleFunc = (time) => Date.now() - time < this.timer || this.bHovered || this.bDrag,
-			scrollFunc = () => void(0)
+			scrollFunc = () => void(0),
+			scrollSpeed = 60 // ms
 		} = {}) {
 	this.tt = '';
 	this.x = x;
@@ -41,6 +42,7 @@ function _scrollBar({
 	this.timer = timer;
 	this.visibleFunc = visibleFunc;
 	this.scrollFunc = scrollFunc;
+	this.scrollSpeed = scrollSpeed;
 	this.visible = true;
 	this.barLength = this.h;
 	this.buttonHeight = 0;
@@ -48,17 +50,17 @@ function _scrollBar({
 	this.calcCurrRow = (y) => {
 		return y <= (this.y + this.buttonHeight)
 			? 0
-			: y >= (this.y + this.buttonHeight + this.barLength)
+			: y >= (this.y + this.buttonHeight + this.barLength - this.size)
 				? this.rows
-				: (y - this.y - this.buttonHeight) / this.barLength * this.rows;
+				: (y - this.y - this.buttonHeight) / (this.barLength - this.size) * this.rows;
 	};
 	
 	this.calcCurrPos = (row = this.currRow) => {
 		return row <= 0
 			? this.y + this.buttonHeight 
 			: row >= this.rows
-				? this.y + this.buttonHeight + this.barLength
-				: row / this.rows * (this.y + this.buttonHeight + this.barLength);
+				? this.y + this.buttonHeight + this.barLength - this.size
+				: this.y + this.buttonHeight + row / this.rows * (this.barLength - this.size);
 	};
 	
 	this.paint = (gr, x, y) => { // on_paint
@@ -69,9 +71,7 @@ function _scrollBar({
 			else { // Small bar when not shown
 				gr.SetSmoothingMode(SmoothingMode.HighQuality);
 				const w = Math.max(this.w / 10, _scale(2));
-				let currY = Math.min(Math.max(this.calcCurrPos() - this.size / 2, this.y), this.y + this.h);
-				const offset = currY + this.size - (this.y + this.h);
-				if (offset > 0) {currY -= offset;}
+				const currY = Math.min(Math.max(this.calcCurrPos(), this.y), this.y + this.h - this.size);
 				const currX = this.x + this.w * 2 / 3 - w;
 				try {gr.FillRoundRect(currX, currY, w, this.size, w / 2, w / 2, this.color);} 
 				catch (e) {gr.FillSolidRect(currX, currY, w, this.size, this.color);}
@@ -108,8 +108,8 @@ function _scrollBar({
 			bg: (this.visible ? (this.bHoveredDown ? buttonBgColor.bHovered : buttonBgColor.visible) : buttonBgColor.notVisible),
 			button: (this.visible ? (this.bHoveredDown ? buttonColor.bHovered : buttonColor.visible) : buttonColor.notVisible)
 		};
-		if (this.bDragUp) {tintColor(up.button, 20);}
-		if (this.bDragDown) {tintColor(down.button, 20);}
+		if (this.bDragUp) {up.button = tintColor(up.button, -20);}
+		if (this.bDragDown) {down.button = tintColor(down.button, -20);}
 		// Bg
 		gr.SetSmoothingMode(SmoothingMode.HighQuality);
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, bgColor);
@@ -124,9 +124,7 @@ function _scrollBar({
 		// Curr position
 		this.barLength = this.h - buttonHeight * 2;
 		this.buttonHeight = buttonHeight;
-		let currY = Math.min(Math.max(this.calcCurrPos() - this.size / 2, this.y + buttonHeight), this.y + this.buttonHeight + this.barLength);
-		const offset = currY + this.size - (this.y + this.buttonHeight + this.barLength);
-		if (offset > 0) {currY -= offset;}
+		const currY = Math.min(Math.max(this.calcCurrPos(), this.y + buttonHeight), this.y + this.buttonHeight + this.barLength - this.size);
 		const currColor = this.bDrag
 			? tintColor(color, 20) 
 			: this.bHoveredCurr 
@@ -153,7 +151,7 @@ function _scrollBar({
 	};
 	
 	this.tracePos = (x, y) => {
-		const currY = Math.min(Math.max(this.calcCurrPos() - this.size / 2, this.y + this.buttonHeight), this.y + this.buttonHeight + this.barLength);
+		const currY = Math.min(Math.max(this.calcCurrPos(), this.y + this.buttonHeight), this.y + this.buttonHeight + this.barLength);
 		const top = Math.min(currY + this.size, this.y + this.buttonHeight + this.barLength);
 		return y >= currY && y <= top && x >= this.x && x <= (this.x + this.w);
 	};
@@ -166,8 +164,8 @@ function _scrollBar({
 	
 	this.btn_up = (x, y) => {
 		this.bDrag = this.bDragUp = this.bDragDown = false;
-		if (dragUpFunc) {clearInterval(dragUpFunc); dragUpFunc = null; prev = null;}
-		if (dragUpFunc) {clearInterval(dragDownFunc); dragDownFunc = null; prev = null;}
+		if (dragUpFunc) {clearInterval(dragUpFunc); dragUpFunc = null; draggingTime = 0;}
+		if (dragDownFunc) {clearInterval(dragDownFunc); dragDownFunc = null; draggingTime = 0;}
 		if (this.trace(x, y)) {
 			this.repaint();
 			return true;
@@ -177,7 +175,7 @@ function _scrollBar({
 	
 	let dragUpFunc = null;
 	let dragDownFunc = null;
-	let prev = null;
+	let draggingTime = 0;
 	this.btn_down = (x, y) => {
 		if (this.trace(x, y)) {
 			this.bHoveredCurr = this.tracePos(x, y);
@@ -187,43 +185,37 @@ function _scrollBar({
 				this.bDrag = true;
 				this.bDragUp = this.bDragDown = false;
 			} else if (this.bHoveredUp) {
+				draggingTime = 0;
 				this.bDragUp = true;
 				this.bDrag = this.bDragDown = false;
 				dragUpFunc = setInterval(() => {
 					if (this.bDragUp && this.currRow > 0) {
-						const currY = Math.min(Math.max(this.calcCurrPos() - this.size / 2, this.y + this.buttonHeight), this.y + this.buttonHeight + this.barLength);
-						const oldRow = this.currRow;
-						const add = _scale(2);
-						let i = add;
-						while (oldRow === this.currRow) {
-							this.currRow = Math.round(this.calcCurrRow(currY - i));
-							i += add;
-						}
-						if (prev === this.currRow) {this.currRow--;}
-						prev = this.currRow;
-						this.scrollFunc(this.currRow);
+						const delta = draggingTime >= this.scrollSpeed * 9 
+							? 4
+							: draggingTime >= this.scrollSpeed * 6 
+								? 2
+								: 1;
+						this.scrollFunc({current: --this.currRow, delta});
 						this.repaint();
 					}
-				}, 80);
+					draggingTime += this.scrollSpeed;
+				}, this.scrollSpeed);
 			} else if (this.bHoveredDown) {
+				draggingTime = 0;
 				this.bDragDown = true;
 				this.bDrag = this.bDragUp = false;
 				dragDownFunc = setInterval(() => {
 					if (this.bDragDown && this.currRow < this.rows) {
-						const currY = Math.min(Math.max(this.calcCurrPos() + this.size, this.y + this.buttonHeight), this.y + this.buttonHeight + this.barLength);
-						const oldRow = this.currRow;
-						const add = _scale(2);
-						let i = add;
-						while (oldRow === this.currRow) {
-							this.currRow = Math.round(this.calcCurrRow(currY + i));
-							i += add;
-						}
-						if (prev === this.currRow) {this.currRow++;}
-						prev = this.currRow;
-						this.scrollFunc(this.currRow);
+						const delta = draggingTime >= this.scrollSpeed * 9 
+							? -4
+							: draggingTime >= this.scrollSpeed * 6 
+								? -2
+								: -1;
+						this.scrollFunc({current: ++this.currRow, delta});
 						this.repaint();
 					}
-				}, 80);
+					draggingTime += this.scrollSpeed;
+				}, this.scrollSpeed);
 			}
 			this.repaint();
 			return true;
@@ -244,7 +236,7 @@ function _scrollBar({
 			if (this.bDrag) {
 				const oldRow = this.currRow;
 				this.currRow = this.calcCurrRow(y);
-				if (oldRow !== this.currRow) {this.scrollFunc(this.currRow);}
+				if (oldRow !== this.currRow) {this.scrollFunc({current: this.currRow, delta: oldRow - this.currRow});}
 			}
 			this.repaint();
 			return true;
