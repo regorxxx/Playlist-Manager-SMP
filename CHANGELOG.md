@@ -42,6 +42,7 @@
 - Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
 - Console: multiple improvements when logging to file for FbMetadbHandle, FbMetadbHandleList, Error and unknown instances (totally irrelevant except for debug purposes).
 - Documentation: updated readme PDF to be up to date with all latest changes. Added all XSP -> foobar2000 tag equivalences.
+- Console: menu entries are no longer logged to console after clicking.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
@@ -225,7 +226,7 @@
 ### Removed
 ### Fixed
 - UI: left click actions not working (playlists, buttons, etc). Present on [0.5.0-beta.10](#050-beta10---2022-08-12).
-- Logging: fixed console logging to file (lines were not being split properly).
+- Console: fixed console logging to file (lines were not being split properly).
 
 ## [0.5.0-beta.10] - 2022-08-12
 ### Added
@@ -320,7 +321,7 @@
 - XSP: can now be exported and tracks converted directly without having to clone them as standard playlists first. See previous comment.
 - UI: disabled warnings about having duplicated names on UI-only playlists.
 - UI: only one entry is shown for UI-only playlists with duplicated names (instead of multiple entries). The entry is linked to the first found playlist (by index) for all purposes (adding tracks, size, etc.). Double clicking on a UI-only playlist which has a name shared by multiple playlists now cycles through them.
-- Logging: removed non needed instances of logging related to UI-only playlists (like refreshing size).
+- Console: removed non needed instances of logging related to UI-only playlists (like refreshing size).
 - Existence of tracked folder drive is now checked on startup. A popup is shown if it is not found (for ex. a missing network drive).
 ### Removed
 ### Fixed
@@ -342,7 +343,7 @@
 - Export: modified the default export presets to use track's artist, album and title instead of filenames. Only the first artist is used for the folder name and now it also forces ASCII chars in the path to ensure max. compatibility. This change is made having in mind that now subsongs on playlists are allowed, so the converted tracks use sensible filename instead of repeating the filename of the original .iso file everytime ('my iso (1).flac', 'my iso (2).flac', ...). If updating from a previous release, restoring defaults in the appropriate submenu is required to see the changes.
 - Helpers: improved sort and query expressions validity checks.
 ### Removed
-- Logging: non needed profiler logs for sorting/filtering.
+- Console: non needed profiler logs for sorting/filtering.
 ### Fixed
 - Renaming: error on playlist renaming when trying to rename a file with exotic chars. Now path is sanitized before renaming (so filename and playlist name may not match 100%).
 - Skip duplicates: rare error when trying to add a non-duplicated track, marked as duplicated, needed a second try to actually add the track successfully.
@@ -351,8 +352,8 @@
 - Dead items: playlists with tracks pointing to subsongs (iso files) were incorrectly reported as dead items. Happened in multiple playlist consistency tools and exporting.
 - Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
 - Auto-Functions: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.
-- Logging: removed non needed log warning about sorting direction not being available when a Smart Playlist (.xsp) playlist had no sort tag (since it's optional).
-- Logging: Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
+- Console: removed non needed log warning about sorting direction not being available when a Smart Playlist (.xsp) playlist had no sort tag (since it's optional).
+- Console: Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
 - Helpers: rewritten sorting analysis to account for quotes not being needed at sorting for functions.
 - Helpers: avoid file reading crashing in any case (even if it's locked by another process).
 - Helpers: fixed query checking not working due to upper/lower case mixing in some cases, should now be pretty robust with RegEx.

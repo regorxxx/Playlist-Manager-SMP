@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/23
+//10/04/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -60,7 +60,7 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000} = {}) {
+function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false} = {}) {
 	// Checks
 	if (onBtnUp && !isFunction(onBtnUp)) {throw new Error('onBtnUp is not a function');}
 	if (iMaxEntryLen <= 0) {throw new Error('iMaxEntryLen can not be <= 0');}
@@ -384,7 +384,7 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 				if (bDone) {return;}
 				if (entryIdx === currIdx) {
 					this.lastCall = forcedEntry.length ? forcedEntry : this.getEntry(currIdx);
-					console.log('Called: ' + this.lastCall);
+					if (bLogEntries) {console.log('Called: ' + this.lastCall);}
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
 					if (bExecute) {
 						if (bindArgs !== null) {
