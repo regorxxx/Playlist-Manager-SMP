@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/04/23
+//10/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -724,6 +724,7 @@ function _list(x, y, w, h) {
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
 			window.Repaint(); // Removes selection indicator
+			return true;
 		} else {
 			for (let key in this.headerButtons) {
 				this.headerButtons[key].inFocus = false;
