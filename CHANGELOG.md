@@ -36,7 +36,8 @@
 ### Changed
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
 - UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden when the mouse is not over. Double clicking on the bar will jump to the active/playing playlist. Double clicking on the up/down bar buttons will jump to the top/bottom of the list.
-- UI: up/down buttons are now only shown while drag n' dropping to easily scroll the list.
+- UI: -by default- up/down buttons are now only shown while drag n' dropping to easily scroll the list.
+- UI: main UI elements can now be enabled/disabled via the settings menu. i.e. it's possible to revert all new UI additions by disabling them, showing only a header with the tracked folder.
 - Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other components.
 - Drag and Drop: tracks can now be dropped to the search toolbar to parse their filenames for filtering (when file/folder searching is enabled). This is equivalent to the 'Find current selection...' menu entry, but direclty filtering the current view (instead of showing a report popup).
 - Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.

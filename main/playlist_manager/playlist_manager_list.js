@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/04/23
+//11/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -52,6 +52,17 @@ function _list(x, y, w, h) {
 	// Global tooltip
 	this.tooltip = new _tt(null, void(0), void(0), 600); 
 	
+	this.updateUIElements = () => {
+		if (!!scroll !== this.uiElements['Scrollbar'].enabled) {window.Reload();}
+		if (!this.uiElements['Search filter'].enabled) {this.searchInput = null;}
+		for (let key in this.headerButtons) {
+			const button = this.headerButtons[key];
+			button.x = button.y = button.w = button.h = 0;
+		}
+		this.size();
+		window.Repaint();
+	}
+	
 	this.updatePlaylistIcons = () => {
 		for (let key in iconCharPlaylistWidth) {
 			let icon = playlistDescriptors[key].icon;
@@ -72,7 +83,7 @@ function _list(x, y, w, h) {
 		this.index = 0;
 		this.offset = 0;
 		if (oldH > 0 && this.h > 0) {yOffset = (_scale(6) + panel.row_height / 4) * (this.h / oldH);}
-		this.rows = Math.floor((this.h - _scale(scroll ? 12 : 24) - yOffset) / panel.row_height); // 24
+		this.rows = Math.floor((this.h - _scale(this.uiElements['Up/down buttons'].enabled ? 24 : 12) - yOffset) / panel.row_height); // 24
 		this.up_btn.x = this.x + Math.round((this.w - _scale(12)) / 2);
 		this.down_btn.x = this.up_btn.x;
 		this.up_btn.y = this.y + _scale(1);
@@ -191,7 +202,8 @@ function _list(x, y, w, h) {
 				const gfontHeader= _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
 				const buttons = [
 					{	// Search
-						parent: this.headerButtons.search,
+						parent: this.uiElements['Search filter'].enabled ? this.headerButtons.search : null,
+						position: 0,
 						icon: this.searchInput && this.searchInput.text.length ? chars.close : chars.search,
 						color: this.headerButtons.search.inFocus 
 							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
@@ -206,7 +218,8 @@ function _list(x, y, w, h) {
 						h: 0
 					},
 					{	// Folder
-						parent: this.headerButtons.folder,
+						parent: this.uiElements['Header buttons'].elements['Folder'].enabled ? this.headerButtons.folder : null,
+						position: this.uiElements['Header buttons'].elements['Folder'].position,
 						icon: this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]) 
 							? this.configFile.ui.icons.category[this.categoryState[0]] 
 							: iconCharHeader, // Try setting customized button from json
@@ -223,7 +236,8 @@ function _list(x, y, w, h) {
 						h: 0
 					},
 					{	// Config
-						parent: this.headerButtons.settings,
+						parent: this.uiElements['Header buttons'].elements['Settings menu'].enabled ? this.headerButtons.settings : null,
+						position: this.uiElements['Header buttons'].elements['Settings menu'].position,
 						icon: chars.cogs,
 						color: this.headerButtons.settings.inFocus 
 							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
@@ -238,7 +252,8 @@ function _list(x, y, w, h) {
 						h: 0
 					},
 					{	// New
-						parent: this.headerButtons.newPls,
+						parent: this.uiElements['Header buttons'].elements['List menu'].enabled ? this.headerButtons.newPls : null,
+						position: this.uiElements['Header buttons'].elements['List menu'].position,
 						icon: chars.plus,
 						color: this.headerButtons.newPls.inFocus 
 							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
@@ -253,7 +268,8 @@ function _list(x, y, w, h) {
 						h: 0
 					},
 					{	// Poweraction
-						parent: this.headerButtons.action,
+						parent: this.uiElements['Header buttons'].elements['Power actions'].enabled ? this.headerButtons.action : null,
+						position: this.uiElements['Header buttons'].elements['Power actions'].position,
 						icon: chars.bolt,
 						color: this.headerButtons.action.inFocus 
 							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
@@ -267,48 +283,63 @@ function _list(x, y, w, h) {
 						w: 0,
 						h: 0
 					},
-				];
+				].filter((button) => button.parent).sort((a, b) => a.align === 'l' ? a.position - b.position : b.position - a.position);
 				let maxHeaderH = headerTextH;
-				buttons.forEach((button) => {
-					button.w = gr.CalcTextWidth(button.icon, gfontHeader),
-					button.h = gr.CalcTextHeight(button.icon, gfontHeader);
-					maxHeaderH = Math.max(button.h, maxHeaderH);
-				})
-				let currLx = this.x;
-				let currRx = this.x + this.w;
-				buttons.forEach((button) => {
-					if (isFunction(button.x)) {
-						if (button.align === 'l') {button.x = button.x(button, currLx); currLx = button.x + button.w;}
-						if (button.align === 'r') {button.x = button.x(button, currRx); currRx = button.x;}
-					}
-					if (isFunction(button.y)) {button.y = button.y(button);}
-				});
+				if (buttons.length) {
+					buttons.forEach((button) => {
+						button.w = gr.CalcTextWidth(button.icon, gfontHeader),
+						button.h = gr.CalcTextHeight(button.icon, gfontHeader);
+						maxHeaderH = Math.max(button.h, maxHeaderH);
+					})
+					let currLx = this.x;
+					let currRx = this.x + this.w;
+					buttons.forEach((button) => {
+						if (isFunction(button.x)) {
+							if (button.align === 'l') {button.x = button.x(button, currLx); currLx = button.x + button.w;}
+							if (button.align === 'r') {button.x = button.x(button, currRx); currRx = button.x;}
+						}
+						if (isFunction(button.y)) {button.y = button.y(button);}
+					});
+				}
 				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
 				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
-				// Background
-				let lineY =  maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1 + offsetHeader;
-				gr.FillSolidRect(0, 0, this.x + LM / 2 + iconOffsetLeft, lineY, altColorSearch);
-				gr.FillSolidRect(this.x + this.w - iconOffsetRight, 0, panel.w, lineY, altColorBg);
-				// Buttons
-				gr.SetSmoothingMode(SmoothingMode.HighQuality);
-				buttons.forEach((button) => {
-					[button.parent.x, button.parent.y, button.parent.w, button.parent.h] = [button.x, button.y, button.w, button.h] // Update button coords
-					if (button.bgColor !== null) {
-						gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2) , _scale(2), _scale(2), button.bgColor);
-					}
-					gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w, maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX);
-				})
-				// Text
-				if (!this.searchInput) {
-					this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
-					this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
+				let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1 + offsetHeader;;
+				if (buttons.length) {
+					// Background
+					gr.FillSolidRect(0, 0, this.x + LM / 2 + iconOffsetLeft, lineY, altColorSearch);
+					gr.FillSolidRect(this.x + this.w - iconOffsetRight, 0, panel.w, lineY, altColorBg);
+					// Buttons
+					gr.SetSmoothingMode(SmoothingMode.HighQuality);
+					buttons.forEach((button) => {
+						[button.parent.x, button.parent.y, button.parent.w, button.parent.h] = [button.x, button.y, button.w, button.h] // Update button coords
+						if (button.bgColor !== null) {
+							gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2) , _scale(2), _scale(2), button.bgColor);
+						}
+						gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w, maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX);
+					})
 				}
-				this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
-				this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
+				// Text
+				if (this.uiElements['Search filter'].enabled) {
+					if (!this.searchInput) {
+						this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
+						this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
+					}
+					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
+					this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
+				} else {
+					const bCatIcon = this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]);
+					const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : null; // Try setting customized button from json
+					const iconW = catIcon ? gr.CalcTextWidth(catIcon, gfontHeader) : 0;
+					if (catIcon) {
+						const iconHeaderColor = this.headerButtons.folder.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
+						gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+					}
+					gr.GdiDrawText(this.headerText, panel.fonts.normal, panel.colors.highlight, LM + iconW, 0, panel.w - (LM * 2) - iconW - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, TM, LEFT);
+				}
 				// Lines
 				const lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
 				gr.DrawLine(0, lineY , panel.w, lineY, 1, lineColor);
-				gr.DrawLine(this.x + this.w - iconOffsetRight, this.y - lineY + 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);
+				if (buttons.length) {gr.DrawLine(this.x + this.w - iconOffsetRight, this.y - lineY + 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);}
 				gr.SetSmoothingMode(SmoothingMode.Default);
 				headerW = LM + iconOffsetLeft + 5;
 				headerH = lineY;
@@ -582,7 +613,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.traceHeaderButton = (x, y, button) => { // On Header
-		return x > button.x && x < button.x + button.w && y > button.y && y < button.y + button.h;
+		return x > button.x && x < (button.x + button.w) && y > button.y && y < (button.y + button.h);
 	}
 	
 	this.wheel = ({s, bPaint = true, bForce = false, scrollDelta = 3} = {}) => {
@@ -690,8 +721,8 @@ function _list(x, y, w, h) {
 					this.tooltip.SetValue(headerText, true);
 				} else {
 					if (bMoved) {window.SetCursor(IDC_ARROW);}
-					if (this.modeUI === 'traditional') {
-						const headerText = this.headerTooltip(mask);
+					if (this.modeUI === 'traditional' || !this.searchInput) {
+						const headerText = this.headerTooltip(mask, !this.uiElements['Header buttons'].elements['Power actions'].enabled);
 						this.tooltip.SetValue(headerText, true);
 					}
 				}
@@ -873,8 +904,31 @@ function _list(x, y, w, h) {
 	}
 	
 	this.rbtn_up = (x, y, mask) => {
-		if (this.searchInput && this.searchInput.trackCheck(x, y)) {
-			this.searchInput.show_context_menu(x, y, mask);
+		if (this.traceHeader(x, y)) {
+			if (this.searchInput && this.searchInput.trackCheck(x, y)) {
+				for (let key in this.headerButtons) {this.headerButtons[key].inFocus = false;} // Focus bug when alt+tab
+				return this.searchInput.show_context_menu(x, y, mask);
+			} else {
+				let bButtonTrace = false;
+				for (let key in this.headerButtons) {
+					const button = this.headerButtons[key];
+					if (this.traceHeaderButton(x, y, button)) {
+						if (button.func) {
+							bButtonTrace = true;
+						}
+						break;
+					}
+				}
+				if (!bButtonTrace) {
+					if (!this.uiElements['Header buttons'].elements['Settings menu'].enabled) {
+						return createMenuRightTop().btn_up(x, y);
+					}
+				}
+			}
+		} else {
+			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+				return createMenuRight().btn_up(x, y);
+			}
 		}
 		return true;
 	}
@@ -961,13 +1015,14 @@ function _list(x, y, w, h) {
 					} else {
 						bActionButton = true;
 					}
+					button.inFocus = false;
 					break;
 				}
 			}
 			if (!bButtonTrace) {
 				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
 					this.searchInput.check('up', x, y);
-				} else if (bActionButton || this.modeUI === 'traditional') {
+				} else if (bActionButton || this.modeUI === 'traditional' || !this.uiElements['Header buttons'].elements['Power actions'].enabled) {
 					const shortcuts = this.getShortcuts('L', 'HEADER');
 					const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 					if (sgShortcut) { // Select all from current view or clean selection
@@ -1040,7 +1095,7 @@ function _list(x, y, w, h) {
 					break;
 				}
 			}
-			if (!bButtonTrace && (bActionButton || this.modeUI === 'traditional')) {
+			if (!bButtonTrace && (bActionButton || this.modeUI === 'traditional' || !this.uiElements['Header buttons'].elements['Power actions'].enabled)) {
 				const shortcuts = this.getShortcuts('M', 'HEADER');
 				const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 				if (sgShortcut) {
@@ -1092,7 +1147,7 @@ function _list(x, y, w, h) {
 			if (!bButtonTrace) {
 				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
 					this.searchInput.check('dblclk', x, y);
-				} else if (bActionButton || this.modeUI === 'traditional') {
+				} else if (bActionButton || this.modeUI === 'traditional' || !this.uiElements['Header buttons'].elements['Power actions'].enabled) {
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
 					this.bDoubleclick = true;
@@ -3692,6 +3747,7 @@ function _list(x, y, w, h) {
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
 	this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
+	this.uiElements = JSON.parse(this.properties['uiElements'][1]);
 	this.bTracking = true;
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
@@ -3701,8 +3757,9 @@ function _list(x, y, w, h) {
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
-	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0 && (!scroll || this.bIsDragDrop); }, () => { this.wheel({s: 1}); });
-	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (!scroll || this.bIsDragDrop); }, () => { this.wheel({s: -1}); });
+	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0 && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop); }, () => { this.wheel({s: 1}); });
+	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop); }, () => { this.wheel({s: -1}); });
+	this.headerButtonsDef = {};
 	this.headerButtons = {
 		folder: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open playlists folder', func: (x, y, mask) => _explorer(this.playlistsPath)},
 		action: {

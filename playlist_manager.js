@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/04/23
+//11/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -194,6 +194,19 @@ var properties = {
 		bAutoSearch: 	true,
 		bRegExp:		true
 	})],
+	uiElements				: ['UI elements', JSON.stringify({
+		'Scrollbar':				{enabled: true},
+		'Search filter':			{enabled: true},
+		'Up/down buttons':			{enabled: false},
+		'Header buttons':			{enabled: true, elements: 
+			{
+				'Power actions':	{enabled: true, position: 0},
+				'List menu':		{enabled: true, position: 1},
+				'Settings menu':	{enabled: true, position: 2},
+				'Folder':			{enabled: true, position: 3}
+			}
+		}
+	})],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -204,6 +217,7 @@ properties['lShortcutsHeader'].push({func: isJSON}, properties['lShortcutsHeader
 properties['mShortcutsHeader'].push({func: isJSON}, properties['mShortcutsHeader'][1]);
 properties['showMenus'].push({func: isJSON}, properties['showMenus'][1]);
 properties['searchMethod'].push({func: isJSON}, properties['searchMethod'][1]);
+properties['uiElements'].push({func: isJSON}, properties['uiElements'][1]);
 setProperties(properties, 'plm_');
 
 { // Info Popup
@@ -267,7 +281,7 @@ if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\
 const list = new _list(LM, TM, 0, 0);
 const plsHistory = new PlsHistory();
 // Scroll bar
-const scroll = new _scrollBar({
+const scroll = list.uiElements['Scrollbar'].enabled ? new _scrollBar({
 	w: _scale(5), 
 	size: _scale(14),
 	bgColor: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.3 : 0.8),
@@ -278,20 +292,20 @@ const scroll = new _scrollBar({
 	dblclkFunc: (current) => {
 		list.showCurrPls() || list.showCurrPls({bPlayingPls: true});
 	}
-});
+}) : null;
 
 // Tracking a network drive?
 if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
 	console.log('Playlist manager: tracked folder is on a network drive.')
-	if (!list.properties['bNetworkPopup'][1]) {
-		list.properties['bNetworkPopup'][1] = true;
+	if (!list.properties.bNetworkPopup[1]) {
+		list.properties.bNetworkPopup[1] = true;
 		overwriteProperties(list.properties); // Updates panel
 		const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 		const readme = _open(file, utf8);
 		fb.ShowPopupMessage(readme, window.Name);
 	}
-} else if (list.properties['bNetworkPopup'][1]) {
-	list.properties['bNetworkPopup'][1] = false;
+} else if (list.properties.bNetworkPopup[1]) {
+	list.properties.bNetworkPopup[1] = false;
 	overwriteProperties(list.properties); // Updates panel
 }
 
@@ -383,7 +397,7 @@ addEventListener('on_mouse_rbtn_up', (x, y) => {
 		}
 	} else {
 		if (buttonsPanel.curBtn === null) {
-			return list.rbtn_up(x, y)
+			return list.rbtn_up(x, y);
 		}
 		if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
 			return createMenuRightSort().btn_up(x, y);

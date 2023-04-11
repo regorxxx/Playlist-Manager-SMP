@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/23
+//11/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2286,6 +2286,40 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 				list.properties.showMenus[1] = list.properties.showMenus[3];
 				overwriteProperties(list.properties);
+			}});
+		}
+		{	// Enabled UI elements
+			const subMenuName = menu.newMenu('UI elements...', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Elements shown:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			Object.keys(list.uiElements).forEach((key) => {
+				if (list.uiElements[key].hasOwnProperty('elements')) {
+					const subMenuNameTwo = menu.newMenu(key, subMenuName);
+					Object.keys(list.uiElements[key].elements).forEach((subKey) => {
+						menu.newEntry({menuName: subMenuNameTwo, entryText: subKey, func: () => {
+							list.uiElements[key].elements[subKey].enabled = !list.uiElements[key].elements[subKey].enabled;
+							list.properties.uiElements[1] = JSON.stringify(list.uiElements);
+							overwriteProperties(list.properties);
+							list.updateUIElements();
+						}});
+						menu.newCheckMenu(subMenuNameTwo, subKey, void(0), () => list.uiElements[key].elements[subKey].enabled);
+					});
+				} else {
+					menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
+						list.uiElements[key].enabled = !list.uiElements[key].enabled;
+						list.properties.uiElements[1] = JSON.stringify(list.uiElements);
+						overwriteProperties(list.properties);
+						list.updateUIElements();
+					}});
+					menu.newCheckMenu(subMenuName, key, void(0), () => list.uiElements[key].enabled);
+				}
+			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
+				list.properties.uiElements[1] = list.properties.uiElements[3];
+				list.uiElements = JSON.parse(list.properties.uiElements[1]);
+				overwriteProperties(list.properties);
+				list.updateUIElements();
 			}});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
