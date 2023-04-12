@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/22
+//12/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -953,7 +953,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				this.repaint();
 		} else {
 			switch (mask) {
-				case kMask.shift:
+				case kMask.shift: {
 					if (vkey == VK_HOME) { // SHIFT + HOME
 						if (this.edit) {
 							if (!this.select) {
@@ -1072,7 +1072,8 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						}
 					};
 					break;
-				case kMask.ctrl:
+				};
+				case kMask.ctrl: {
 					if (vkey == 65) { // CTRL + A
 						if (this.edit && this.text.length > 0) {
 							this.SelBegin = 0;
@@ -1226,8 +1227,50 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						this.select = false;
 						this.repaint();
 					}
+					if (vkey === VK_LEFT) { // CTRL + KEY LEFT
+						if (this.edit && this.Cpos > 0) {
+							let newSelIdx = 0;
+							if (this.Cpos <= this.text.length) {
+								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
+								const idx = leftTrim.search(/\b /);
+								newSelIdx = idx !== -1 
+									? newSelIdx = this.Cpos - idx
+									: 0;
+							}
+							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
+							this.select = false;
+							this.CalcText();
+							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+							this.repaint();
+						}
+					}
+					if (vkey === VK_RIGHT) { // CTRL + KEY RIGHT
+						if (this.edit && this.Cpos < this.text.length) {
+							let newSelIdx = this.text.length;
+							if (this.Cpos >= 0) {
+								const right = this.text.substring(this.Cpos);
+								const rightTrim = right.trimStart();
+								let idx = rightTrim.search(/ \b/);
+								if (idx !== -1) {
+									const offset = right.length - rightTrim.length;
+									if (this.Cpos === 0 && offset) {idx = offset;}
+									else {idx += offset;}
+									while (right[idx] === ' ') {idx++;}
+								}
+								newSelIdx = idx !== -1 
+									? this.Cpos + idx 
+									: this.text.length;
+							}
+							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
+							this.select = false;
+							this.CalcText();
+							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+							this.repaint();
+						}
+					}
 					break;
-				case kMask.ctrlShift:
+				};
+				case kMask.ctrlShift: {
 					if (vkey == VK_HOME) { // CTRL + SHIFT + HOME
 						this.on_key(VK_HOME, kMask.shift);
 					}
@@ -1286,6 +1329,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						}
 					}
 					break;
+				}
 			}
 		}
 
