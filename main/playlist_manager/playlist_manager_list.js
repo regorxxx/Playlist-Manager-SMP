@@ -907,7 +907,7 @@ function _list(x, y, w, h) {
 		if (this.traceHeader(x, y)) {
 			if (this.searchInput && this.searchInput.trackCheck(x, y)) {
 				for (let key in this.headerButtons) {this.headerButtons[key].inFocus = false;} // Focus bug when alt+tab
-				return this.searchInput.show_context_menu(x, y, mask);
+				return this.searchInput.check('right', x, y);
 			} else {
 				let bButtonTrace = false;
 				for (let key in this.headerButtons) {
