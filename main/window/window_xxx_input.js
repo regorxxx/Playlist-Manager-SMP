@@ -409,6 +409,7 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 }
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
+// Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
 function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
@@ -473,24 +474,24 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		// draw selection
 		if (this.SelBegin != this.SelEnd) {
 			this.select = true;
-			this.CalcText();
+			this.calcText();
 			if (this.SelBegin < this.SelEnd) {
 				if (this.SelBegin < this.offset) {
 					var px1 = this.x;
 				} else {
-					var px1 = this.x + this.GetCx(this.SelBegin);
+					var px1 = this.x + this.getCx(this.SelBegin);
 				}
-				var px1 = this.GetCx(this.SelBegin);
-				var px2 = this.GetCx(this.SelEnd);
+				var px1 = this.getCx(this.SelBegin);
+				var px2 = this.getCx(this.SelEnd);
 				this.text_selected = this.text.substring(this.SelBegin, this.SelEnd);
 			} else {
 				if (this.SelEnd < this.offset) {
 					var px1 = this.x;
 				} else {
-					var px1 = this.x - this.GetCx(this.SelBegin);
+					var px1 = this.x - this.getCx(this.SelBegin);
 				}
-				var px2 = this.GetCx(this.SelBegin);
-				var px1 = this.GetCx(this.SelEnd);
+				var px2 = this.getCx(this.SelBegin);
+				var px1 = this.getCx(this.SelEnd);
 				this.text_selected = this.text.substring(this.SelEnd, this.SelBegin);
 			}
 			if ((this.x + px1 + (px2 - px1)) > this.x + this.w) {
@@ -532,7 +533,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.drawcursor = function (gr) {
 		if (cInputbox.cursor_state) {
 			if (this.Cpos >= this.offset) {
-				this.Cx = this.GetCx(this.Cpos);
+				this.Cx = this.getCx(this.Cpos);
 				var x1 = this.x + this.Cx;
 				var x2 = x1;
 				var y1 = this.y + 1;
@@ -549,11 +550,11 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		else {console.log('oInputbox: parentObject has no repaint method.');}
 	}
 
-	this.CalcText = function () {
+	this.calcText = function () {
 		this.TWidth = _gr.CalcTextWidth(this.text.substr(this.offset), this.font);
 	}
 
-	this.GetCx = function (pos) {
+	this.getCx = function (pos) {
 		if (pos >= this.offset) {
 			var x = _gr.CalcTextWidth(this.text.substr(this.offset, pos - this.offset), this.font);
 		} else {
@@ -562,7 +563,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		return x;
 	}
 
-	this.GetCPos = function (x) {
+	this.getCPos = function (x) {
 		var tx = x - this.x;
 		var pos = 0;
 		for (var i = this.offset; i < this.text.length; i++) {
@@ -616,7 +617,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				this.dblclk = false;
 				this.drag = true;
 				this.edit = true;
-				this.Cpos = this.GetCPos(x);
+				this.Cpos = this.getCPos(x);
 				this.anchor = this.Cpos;
 				this.SelBegin = this.Cpos;
 				this.SelEnd = this.Cpos;
@@ -638,7 +639,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		case 'up':
 			this.active = this.hover;
 			if (!this.dblclk && this.drag) {
-				this.SelEnd = this.GetCPos(x);
+				this.SelEnd = this.getCPos(x);
 				if (this.select) {
 					if (this.SelBegin > this.SelEnd) {
 						this.sBeginSel = this.SelBegin;
@@ -663,9 +664,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			break;
 		case 'move':
 			if (this.drag) {
-				this.CalcText();
-				var tmp = this.GetCPos(x);
-				var tmp_x = this.GetCx(tmp);
+				this.calcText();
+				var tmp = this.getCPos(x);
+				var tmp_x = this.getCx(tmp);
 				if (tmp < this.SelBegin) {
 					if (tmp < this.SelEnd) {
 						if (tmp_x < this.x) {
@@ -733,74 +734,82 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		var idx;
 		var _menu = window.CreatePopupMenu();
 		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
+		_menu.AppendMenuItem(this.stext.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 0, 'Undo');
+		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Copy');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
-		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Paste');
-		if (getKeyboardMask() === kMask.shift) {
-			_menu.AppendMenuSeparator();
-			_menu.AppendMenuItem(MF_STRING, 20, 'Properties');
-			_menu.AppendMenuItem(MF_STRING, 21, 'Configure...');
-		}
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Delete');
+		_menu.AppendMenuSeparator();
+		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Select all');
 		idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
-		case 1:
-			if (this.edit && this.select) {
-				utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-			}
-			break;
-		case 2:
-			if (this.edit && this.select) {
-				utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-				var p1 = this.SelBegin;
-				var p2 = this.SelEnd;
-				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
-				this.select = false;
-				this.text_selected = '';
-				this.Cpos = this.SelBegin;
-				this.SelEnd = this.SelBegin;
-				this.text = this.text.slice(0, p1) + this.text.slice(p2);
-				this.CalcText();
-
-				this.repaint();
-			}
-			break;
-		case 3:
-			if (this.edit && cInputbox.clipboard) {
-				if (this.select) {
+			case 0:
+				if (this.edit && this.stext.length) {
+					this.on_key(90, kMask.ctrl);
+				}
+				break;
+			case 1:
+				if (this.edit && this.select) {
+					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
+				}
+				break;
+			case 2:
+				if (this.edit && this.select) {
+					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 					var p1 = this.SelBegin;
 					var p2 = this.SelEnd;
+					this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 					this.select = false;
 					this.text_selected = '';
 					this.Cpos = this.SelBegin;
 					this.SelEnd = this.SelBegin;
+					this.text = this.text.slice(0, p1) + this.text.slice(p2);
+					this.calcText();
 
-					if (this.Cpos < this.text.length) {
-						this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
-					} else {
-						this.text = this.text + cInputbox.clipboard;
-					}
-					this.Cpos += cInputbox.clipboard.length;
-					this.CalcText();
-					this.repaint();
-				} else {
-					if (this.Cpos > 0) { // cursor pos > 0
-						this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
-					} else {
-						this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
-					}
-					this.Cpos += cInputbox.clipboard.length;
-					this.CalcText();
 					this.repaint();
 				}
-			};
-			break;
-		case 20:
-			window.ShowProperties();
-			break;
-		case 21:
-			window.ShowConfigure();
-			break;
+				break;
+			case 3:
+				if (this.edit && cInputbox.clipboard) {
+					if (this.select) {
+						var p1 = this.SelBegin;
+						var p2 = this.SelEnd;
+						this.select = false;
+						this.text_selected = '';
+						this.Cpos = this.SelBegin;
+						this.SelEnd = this.SelBegin;
+
+						if (this.Cpos < this.text.length) {
+							this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
+						} else {
+							this.text = this.text + cInputbox.clipboard;
+						}
+						this.Cpos += cInputbox.clipboard.length;
+						this.calcText();
+						this.repaint();
+					} else {
+						if (this.Cpos > 0) { // cursor pos > 0
+							this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+						} else {
+							this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+						}
+						this.Cpos += cInputbox.clipboard.length;
+						this.calcText();
+						this.repaint();
+					}
+				};
+				break;
+			case 4:
+				if (this.edit && this.select) {
+					this.on_key(VK_DELETE, kMask.none);
+				}
+				break;
+			case 5:
+				if (this.edit && this.text.length) {
+					this.check('dblclk', x, y);
+				}
+				break;
 		}
 	}
 
@@ -855,7 +864,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						}
 					}
 				}
-				this.CalcText();
+				this.calcText();
 				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 				this.text_selected = '';
 				this.SelBegin = this.Cpos;
@@ -887,7 +896,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						}
 					}
 				}
-				this.CalcText();
+				this.calcText();
 				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 				this.text_selected = '';
 				this.SelBegin = this.Cpos;
@@ -1034,7 +1043,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							}
 							if (this.offset > 0) {
 								var tmp = this.Cpos;
-								var tmp_x = this.GetCx(tmp);
+								var tmp_x = this.getCx(tmp);
 								if (tmp < this.offset) {
 									this.offset--;
 								}
@@ -1064,7 +1073,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							}
 
 							// handle scroll text on cursor selection
-							var tmp_x = this.GetCx(this.Cpos);
+							var tmp_x = this.getCx(this.Cpos);
 							if (tmp_x > (this.w - this.right_margin)) {
 								this.offset++;
 							}
@@ -1099,7 +1108,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							this.Cpos = this.SelBegin;
 							this.SelEnd = this.SelBegin;
 							this.text = this.text.slice(0, p1) + this.text.slice(p2);
-							this.CalcText();
+							this.calcText();
 							this.repaint();
 						}
 					}
@@ -1126,7 +1135,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 									this.text = this.text + cInputbox.clipboard;
 								}
 								this.Cpos += cInputbox.clipboard.length;
-								this.CalcText();
+								this.calcText();
 								this.repaint();
 							} else {
 								if (this.Cpos > 0) { // cursor pos > 0
@@ -1135,7 +1144,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 									this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
 								}
 								this.Cpos += cInputbox.clipboard.length;
-								this.CalcText();
+								this.calcText();
 								this.repaint();
 							}
 						}
@@ -1175,7 +1184,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 								}
 							}
 						}
-						this.CalcText();
+						this.calcText();
 						this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 						this.text_selected = '';
 						this.SelBegin = this.Cpos;
@@ -1219,7 +1228,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 								}
 							}
 						}
-						this.CalcText();
+						this.calcText();
 						this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 						this.text_selected = '';
 						this.SelBegin = this.Cpos;
@@ -1239,7 +1248,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							}
 							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
 							this.select = false;
-							this.CalcText();
+							this.calcText();
 							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 							this.repaint();
 						}
@@ -1263,7 +1272,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							}
 							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
 							this.select = false;
-							this.CalcText();
+							this.calcText();
 							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 							this.repaint();
 						}
@@ -1294,7 +1303,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							} else {
 								this.anchor = this.Cpos = this.SelBegin = newSelIdx;
 							}
-							this.CalcText();
+							this.calcText();
 							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 							this.repaint();
 						}
@@ -1323,7 +1332,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							} else {
 								this.anchor = this.Cpos = this.SelEnd = newSelIdx;
 							}
-							this.CalcText();
+							this.calcText();
 							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 							this.repaint();
 						}
@@ -1370,7 +1379,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			}
 			this.Cpos++;
 			if (this.select) {
-				this.CalcText();
+				this.calcText();
 				if (this.TWidth <= (this.w)) {
 					this.offset = 0;
 				} else {
