@@ -736,12 +736,12 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
 		_menu.AppendMenuItem(this.stext.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 0, 'Undo');
 		_menu.AppendMenuSeparator();
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Copy');
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Cut');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Copy');
 		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Paste');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Delete');
 		_menu.AppendMenuSeparator();
-		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Select all');
+		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Select All');
 		idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
 			case 0:
@@ -750,11 +750,6 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				}
 				break;
 			case 1:
-				if (this.edit && this.select) {
-					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-				}
-				break;
-			case 2:
 				if (this.edit && this.select) {
 					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 					var p1 = this.SelBegin;
@@ -768,6 +763,11 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 					this.calcText();
 
 					this.repaint();
+				}
+				break;
+			case 2:
+				if (this.edit && this.select) {
+					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 				}
 				break;
 			case 3:
