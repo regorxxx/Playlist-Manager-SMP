@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/04/22
+//13/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -410,7 +410,7 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
 // Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
-function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject) {
+function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject, helpFile = null) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.font_italic = _gdiFont('Segoe UI', _scale(10), 2);
@@ -439,7 +439,8 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.right_margin = 2;
 	this.drag = false;
 	this.active = false;
-
+	this.helpFile = helpFile;
+	
 	this.setSize = function (w, h, font_size = 10) {
 		this.w = w;
 		this.h = h;
@@ -457,8 +458,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		}
 		// draw bg
 		gr.SetSmoothingMode(0);
-		if (this.bordercolor)
+		if (this.bordercolor) {
 			gr.FillSolidRect(x - 2, y + 0, (this.w + 4), this.h - 0, this.bordercolor);
+		}
 		gr.FillSolidRect(x - 1, y + 1, (this.w + 2), this.h - 2, this.backcolor);
 
 		// adjust offset to always see the cursor
@@ -523,11 +525,12 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				gr.GdiDrawText(this.text.substr(this.offset), this.font, this.edit ? this.textcolor : blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
 			}
 		} else {
-			gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
+			gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(this.textcolor, (this.backcolor === 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
 		}
 		// draw cursor
-		if (this.edit && !this.select)
+		if (this.edit && !this.select) {
 			this.drawcursor(gr);
+		}
 	};
 
 	this.drawcursor = function (gr) {
@@ -742,6 +745,10 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Delete');
 		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Select All');
+		if (this.helpFile && utils.FileExists(this.helpFile)) {
+			_menu.AppendMenuSeparator();
+			_menu.AppendMenuItem(MF_STRING, 6, 'Help...');
+		}
 		idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
 			case 0:
@@ -808,6 +815,12 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			case 5:
 				if (this.edit && this.text.length) {
 					this.check('dblclk', x, y);
+				}
+				break;
+			case 6:
+				if (this.helpFile && utils.FileExists(this.helpFile)) {
+					const readme = utils.ReadTextFile(this.helpFile, 65001);
+					readme && readme.length && fb.ShowPopupMessage(readme, 'Input box');
 				}
 				break;
 		}
