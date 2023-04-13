@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/04/23
+//13/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2296,12 +2296,15 @@ function createMenuRightTop() {
 				if (list.uiElements[key].hasOwnProperty('elements')) {
 					const subMenuNameTwo = menu.newMenu(key, subMenuName);
 					Object.keys(list.uiElements[key].elements).forEach((subKey) => {
+						const flags = subKey === 'Settings menu' && list.uiElements['Search filter'].enabled && !list.uiElements[key].elements['Power actions'].enabled
+							? MF_GRAYED
+							: MF_STRING;
 						menu.newEntry({menuName: subMenuNameTwo, entryText: subKey, func: () => {
 							list.uiElements[key].elements[subKey].enabled = !list.uiElements[key].elements[subKey].enabled;
 							list.properties.uiElements[1] = JSON.stringify(list.uiElements);
 							overwriteProperties(list.properties);
 							list.updateUIElements();
-						}});
+						}, flags});
 						menu.newCheckMenu(subMenuNameTwo, subKey, void(0), () => list.uiElements[key].elements[subKey].enabled);
 					});
 				} else {
@@ -2497,8 +2500,17 @@ function createMenuRightFilter(buttonKey) {
 		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1],  () => {return options.indexOf(buttonsPanel.buttons[buttonKey].method);});
 	}
 	menu.newEntry({entryText: 'sep'});
-	{	// Restore
-		menu.newEntry({entryText: 'Restore all filters', func: () => {
+	{
+		menu.newEntry({entryText: 'Also reset search filter', func: () => {
+			list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			overwriteProperties(list.properties);
+		}, flags: list.searchInput ? MF_STRING : MF_GRAYED});
+		menu.newCheckMenu(menu.getMainMenuName(), 'Also reset search filter', void(0),  () => list.searchMethod.bResetFilters);
+	}
+	menu.newEntry({entryText: 'sep'});
+	{	// Reset
+		menu.newEntry({entryText: 'Reset all filters', func: () => {
 			list.resetFilter();
 		}});
 	}
@@ -2603,6 +2615,12 @@ function createMenuSearch() {
 			}
 		}});
 		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void(0),  () => list.searchMethod.bRegExp);
+		menu.newEntry({menuName: subMenu, entryText: 'Reset along button filters', func: () => {
+			list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			overwriteProperties(list.properties);
+		}});
+		menu.newCheckMenu(subMenu, 'Reset along button filters', void(0),  () => list.searchMethod.bResetFilters);
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{	// Restore
 			menu.newEntry({menuName: subMenu, entryText: 'Restore defaults', func: () => {
