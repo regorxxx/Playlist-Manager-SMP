@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/04/23
+//13/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -217,6 +217,22 @@ function _list(x, y, w, h) {
 						w: 0,
 						h: 0
 					},
+					{	// Help
+						parent: this.uiElements['Header buttons'].elements['Help'].enabled ? this.headerButtons.help : null,
+						position: this.uiElements['Header buttons'].elements['Help'].position,
+						icon: chars.question,
+						color: this.headerButtons.help.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.help.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr) => curr - button.w,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
 					{	// Folder
 						parent: this.uiElements['Header buttons'].elements['Folder'].enabled ? this.headerButtons.folder : null,
 						position: this.uiElements['Header buttons'].elements['Folder'].position,
@@ -230,7 +246,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) => curr - button.w,
+						x: (button, curr) => curr - button.w - LM / 2,
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -321,7 +337,7 @@ function _list(x, y, w, h) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this);
+						this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
 						this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
 					}
 					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
@@ -2184,7 +2200,8 @@ function _list(x, y, w, h) {
 		if (currentItemIndex === -1) {this.offset = 0;}
 		window.Repaint();
 	}
-	this.resetFilter = ({autoPlaylist = true, lock = true, ext = true, tag = true, category = true} = {}) => {
+	this.resetFilter = () => {
+		if (this.searchInput && this.searchMethod.bResetFilters) {this.searchInput.on_key_down(VK_ESCAPE);}
 		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories()});
 	}
 	
@@ -3372,6 +3389,24 @@ function _list(x, y, w, h) {
 				this.properties['mShortcuts'][1] = JSON.stringify(this.mShortcuts);
 				bDone = true;
 			}
+			// Check UI elements
+			const uiELementsDef = JSON.parse(this.properties['uiElements'][3]);
+			if (!isArrayEqual(Object.keys(this.uiElements), Object.keys(uiELementsDef))) {
+				for (let key in uiELementsDef) {
+					this.uiElements[key] = uiELementsDef[key];
+				}
+				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
+				bDone = true;
+			}
+			const headerButtons = this.uiElements['Header buttons'].elements;
+			const headerButtonsDef = uiELementsDef['Header buttons'].elements;
+			if (!isArrayEqual(Object.keys(headerButtons), Object.keys(headerButtonsDef))) {
+				for (let key in headerButtonsDef) {
+					headerButtons[key] = headerButtonsDef[key];
+				}
+				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
+				bDone = true;
+			}
 			return bDone;
 		}
 		
@@ -3761,12 +3796,6 @@ function _list(x, y, w, h) {
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop); }, () => { this.wheel({s: -1}); });
 	this.headerButtonsDef = {};
 	this.headerButtons = {
-		folder: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open playlists folder', func: (x, y, mask) => _explorer(this.playlistsPath)},
-		action: {
-			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
-				return this.headerTooltip(mask);
-			}, func: null
-		},
 		search: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
 					return (this.searchInput.text.length
@@ -3783,8 +3812,15 @@ function _list(x, y, w, h) {
 				}
 			}
 		},
+		action: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+				return this.headerTooltip(mask);
+			}, func: null
+		},
+		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask) => createMenuRight().btn_up(x, y)},
 		settings: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Playlist Manager settings...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y)},
-		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask) => createMenuRight().btn_up(x, y)}
+		folder: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open playlists folder', func: (x, y, mask) => _explorer(this.playlistsPath)},
+		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...')},
 	};
 	this.searchCurrent = '';
 	this.searhHistory = [];
