@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/03/23
+//14/04/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -29,7 +29,18 @@ listenBrainz.getMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs 
 		}
 	}
 	return tags;
-}
+};
+
+listenBrainz.consoleError = (message = 'Token can not be validated.') => {
+	fb.ShowPopupMessage(
+		message.trim() + ' Check console.\n\nSome possible errors:' + 
+		'\n\t- 12007: Network error and/or non reachable server.' +
+		'\n\t- 429: Too many requests on a short amount of time.' +
+		'\n\t- 400: Only add max 100 recordings per call. (Bug at script level)' +
+		'\n\t- 200: ListenBrainz Token not valid.'
+		, window.Name
+	);
+};
 
 /*
 	Playlists
@@ -79,7 +90,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 			return '';
 		}
 	);
-}
+};
 
 // Delete all tracks on online playlist and then add all tracks again using the playlist file as reference
 // Easier than single edits, etc.
@@ -136,7 +147,7 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 			return '';
 		}
 	);
-}
+};
 
 /*{name, playlist_mbid}*/
 // Add handleList to given online playlist
@@ -205,7 +216,7 @@ listenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, t
 		}
 		if (result) {resolve(result);} else {reject('');}
 	});
-} 
+};
 
 // Import playlist metadata and track list from online playlist
 listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, token) {
@@ -231,7 +242,7 @@ listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, t
 			return null;
 		}
 	);
-}
+};
 
 listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 	if (!checkLBToken()) {return false;}
@@ -269,7 +280,7 @@ listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 	}
 	if (!bDone) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
 	return bDone;
-}
+};
 
 listenBrainz.getPlaylistURL = function getPlaylistURL(pls /*{playlist_mbid}*/) {
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return null;}
@@ -506,12 +517,12 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 /*
 	Content resolver by MBID
 */
-listenBrainz.contentResolver = function contentResolver(jspf, bHandleList = true) {
+listenBrainz.contentResolver = function contentResolver(jspf) {
 	if (!jspf) {return null;}
 	// Query cache (Library)
 	// Makes consecutive playlist loading by queries much faster (for ex. .xspf fuzzy matching)
 	const queryCache = new Map(); // {Query: handleList}
-	let handlePlaylist = [];
+	let handleArr = [];
 	const notFound = [];
 	let count = 0;
 	const playlist = jspf.playlist;
@@ -535,16 +546,16 @@ listenBrainz.contentResolver = function contentResolver(jspf, bHandleList = true
 				const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(fb.GetLibraryItems(), query) : null);
 				if (!queryCache.has(query)) {queryCache.set(query, matches);}
 				if (matches && matches.Count) {
-					handlePlaylist[i] = matches[0];
+					handleArr[i] = matches[0];
 					count++;
 					break;
 				}
 			}
 		}
-		if (!handlePlaylist[i]) {notFound.push(rows[i].creator + ' - ' + rows[i].title + ': ' + rows[i].identifier);}
+		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier: rows[i].identifier});}
 	}
-	if (notFound.length) {console.log('Some tracks have not been found on library:\n' + notFound.join('\n'));}
-	return (bHandleList ? new FbMetadbHandleList(handlePlaylist.filter((n) => n)) : handlePlaylist);
+	if (notFound.length) {console.log('Some tracks have not been found on library:\n' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n'));}
+	return {handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound};
 };
 
 listenBrainz.sanitizeQueryValue = function sanitizeQueryValue(value) {
