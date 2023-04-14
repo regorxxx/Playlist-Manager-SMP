@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/04/23
+//14/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -8,6 +8,7 @@ include('..\\..\\helpers\\menu_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_input.js');
 include('playlist_manager_helpers.js');
 include('playlist_manager_listenbrainz.js');
+include('playlist_manager_youtube.js');
 
 // Menus
 const menuRbtn = new _menu();
@@ -336,16 +337,6 @@ function createMenuLeft(forcedIndex = -1) {
 		if (showMenus['Online sync']) {
 			{	// Export to ListenBrainz
 				const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSP ? MF_STRING : MF_GRAYED);
-				const consoleError = () => {
-					fb.ShowPopupMessage(
-						'Playlist was not exported. Check console.\n\nSome possible errors:' + 
-						'\n\t- 12007: Network error and/or non reachable server.' +
-						'\n\t- 429: Too many requests on a short amount of time.' +
-						'\n\t- 200: ListenBrainz Token not valid.'
-						, window.Name
-					);
-				}
-				// addPlaylist: 400 {"code":400,"error":"You may only add max 100 recordings per call."} TODO
 				menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 					if (!await checkLBToken()) {return false;}
 					let bUpdateMBID = false;
@@ -362,7 +353,7 @@ function createMenuLeft(forcedIndex = -1) {
 						playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 						if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 					}
-					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {consoleError();}
+					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
 					if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
@@ -373,7 +364,8 @@ function createMenuLeft(forcedIndex = -1) {
 						if (!token) {return false;}
 						const jspf = await lb.importPlaylist(pls, token);
 						if (jspf) {
-							const handleList = lb.contentResolver(jspf);
+							const data = lb.contentResolver(jspf);
+							const handleList = data.handleList;
 							if (handleList) {
 								if (jspf.playlist.track.length !== handleList.Count) {
 									const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
@@ -395,7 +387,7 @@ function createMenuLeft(forcedIndex = -1) {
 							}
 						}
 					} else {console.log('Playlist file not found: ' + pls.path);}
-					if (!bDone) {consoleError();}
+					if (!bDone) {lb.consoleError('Playlist was not imported.');}
 					return bDone;
 				}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -744,7 +736,8 @@ function createMenuRight() {
 						if (answer === popup.yes) {bXSPF = true;}
 					} else {bXSPF = true;}
 					if (!bXSPF) {
-						const handleList = contentResolver(jspf);
+						const data = lb.contentResolver(jspf);
+						const handleList = data.handleList;
 						if (jspf.playlist.track.length !== handleList.Count) {
 							const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
 							if (answer === popup.no) {return false;}
@@ -774,7 +767,8 @@ function createMenuRight() {
 						if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
 						clearInterval(delay);
 					} else {
-						const handleList = contentResolver(jspf, false);
+						const data = lb.contentResolver(jspf);
+						const handleArr = data.handleArr;
 						const playlist = jspf.playlist;
 						const useUUID = list.optionsUUIDTranslate();
 						const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
@@ -795,7 +789,7 @@ function createMenuRight() {
 							{playlist_mbid}
 						];
 						// Tracks text
-						handleList.forEach((handle, i) => {
+						handleArr.forEach((handle, i) => {
 							if (!handle) {return;}
 							const relPath = '';
 							const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', 'PATH', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
@@ -853,13 +847,13 @@ function createMenuRight() {
 						const backPath = playlistPath + '.back';
 						if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 						else if (_isFile(backPath)) {_deleteFile(backPath);}
-						if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleList.filter((n) => n)), playlistNameId);}
+						if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId);}
 						if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
 						clearInterval(delay);
 					}
 				}
 			} else {bDone = true;}
-			if (!bDone) {fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name);}
+			if (!bDone) {lb.consoleError('Playlist was not imported.');}
 			return bDone;
 		}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 	}
@@ -2643,13 +2637,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 		if (lBrainzToken === currToken || lBrainzToken === encryptToken) {return false;}
 		if (lBrainzToken.length) {
 			if (!(await lb.validateToken(lBrainzToken))) {
-				fb.ShowPopupMessage(
-					'Token can not be validated. Check console.\n\nSome possible errors:' + 
-					'\n\t- 12007: Network error and/or non reachable server.' +
-					'\n\t- 429: Too many requests on a short amount of time.' +
-					'\n\t- 200: ListenBrainz Token not valid.'
-					, window.Name
-				);
+				lb.consoleError('Token can not be validated.');
 				return false;
 			}
 			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name, popup.question + popup.yes_no);

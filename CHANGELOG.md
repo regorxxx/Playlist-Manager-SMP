@@ -34,6 +34,7 @@
 - Search: search toolbar to filter the current view according to the input. Supports case insensitive matching by playlist name, tag, category or tracks' file or folder names (this one disabled by default). Works pretty similar to the search filters found on Library Tree or the album viewer (except no query support). Enabling the path searching allows to easily find tracks within playlists (both loaded and non loaded ones). Path level is configurable. There is also an additional setting to parse RegExp expressions (which allow more advanced searches).
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
 ### Changed
+- ListenBrainz: improvements to error handling and reports given to user.
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
 - UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden when the mouse is not over. Double clicking on the bar will jump to the active/playing playlist. Double clicking on the up/down bar buttons will jump to the top/bottom of the list.
 - UI: -by default- up/down buttons are now only shown while drag n' dropping to easily scroll the list.
@@ -49,8 +50,9 @@
 ### Fixed
 - Renaming: auto-renaming of playlist tracked on manager if renaming was done within playlists tabs not working on some cases (still only possible for active playlist).
 - AutoPlaylists: 'Reload playlist (overwrite)' was not working properly, creating a duplicated playlist instead of overwriting the existing one.
+- ListenBrainz: crash due to renamed 'contentResolver' function call.
 - UI: selected and highlighted playlist rectangles did not match in size (again).
-- UI: Crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
+- UI: crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
 
 ## [0.5.0-beta.18] - 2023-03-08
 ### Added
