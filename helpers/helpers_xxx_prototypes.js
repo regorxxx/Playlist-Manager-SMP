@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/01/23
+//14/04/23
 
 /* 
 	Objects
@@ -136,6 +136,55 @@ function isFunction(obj) {
 function isPromise(prom) {
 	return prom && Object.prototype.toString.call(prom) === '[object Promise]';
 }
+
+if (!Promise.allSettled) {
+	Object.defineProperty(Promise, 'allSettled', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: ((promises) => Promise.all(promises.map(p => p
+			.then(value => ({
+				status: 'fulfilled', value
+			}))
+			.catch(reason => ({
+				status: 'rejected', reason
+			}))
+		)))
+	});
+}
+
+// Promise.serial(['arg1', 'arg2',...], asyncFunc).then(...)
+Object.defineProperty(Promise, 'serial', {
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: (inputValues, mapper, timeout = 0) => {
+		const reducer = (acc$, inputValue) =>
+			acc$.then(acc => {
+				return (timeout
+						? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue)), timeout)})
+						: mapper(inputValue)
+					).then(result => acc.push(result) && acc);
+			});
+		return inputValues.reduce(reducer, Promise.resolve([]));
+	}
+});
+
+// Promise.parallel(['arg1', 'arg2',...], asyncFunc).then(...)
+Object.defineProperty(Promise, 'parallel', {
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: (inputValues, mapper, timeout = 0) => {
+		const reducer = (inputValue) => {
+			test.Print();
+			return timeout
+				? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue)), timeout)})
+				: mapper(inputValue);
+		};
+		return Promise.allSettled(inputValues.map(reducer));
+	}
+});
 
 /* 
 	Strings
