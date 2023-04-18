@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/04/23
+//18/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -331,7 +331,7 @@ function _list(x, y, w, h) {
 						if (button.bgColor !== null) {
 							gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2) , _scale(2), _scale(2), button.bgColor);
 						}
-						gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w, maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX);
+						gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w + _scale(1), maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX); // Add some extra width to avoid drawing bugs on small settings
 					})
 				}
 				// Text
