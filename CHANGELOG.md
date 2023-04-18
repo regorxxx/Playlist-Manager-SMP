@@ -35,6 +35,7 @@
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
 ### Changed
 - ListenBrainz: improvements to error handling and reports given to user.
+- ListenBrainz: playlist MBID is now cached on import menu entry (during same session).
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
 - UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden when the mouse is not over. Double clicking on the bar will jump to the active/playing playlist. Double clicking on the up/down bar buttons will jump to the top/bottom of the list.
 - UI: -by default- up/down buttons are now only shown while drag n' dropping to easily scroll the list.

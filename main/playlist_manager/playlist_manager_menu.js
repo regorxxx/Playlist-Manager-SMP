@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/04/23
+//17/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -12,6 +12,7 @@ include('playlist_manager_youtube.js');
 
 // Menus
 const menuRbtn = new _menu();
+menuRbtn.cache = {};
 const menuLbtn = new _menu();
 const menuLbtnMult = new _menu();
 const menuRbtnTop = new _menu();
@@ -722,10 +723,11 @@ function createMenuRight() {
 			if (!await checkLBToken()) {return false;}
 			let bDone = false;
 			let playlist_mbid = '';
-			try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, '', true);}
+			try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, menu.cache.playlist_mbid || '', true);}
 			catch (e) {bDone = true;}
 			playlist_mbid = playlist_mbid.replace(regExListenBrainz, ''); // Allow web link too
 			if (playlist_mbid.length) {
+				menu.cache.playlist_mbid = playlist_mbid;
 				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
 				if (!token) {return false;}
 				const jspf = await lb.importPlaylist({playlist_mbid}, token);
@@ -764,7 +766,7 @@ function createMenuRight() {
 						else if (_isFile(backPath)) {_deleteFile(backPath);}
 						const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
 						if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(handleList, playlistNameId);}
-						if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
+						if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
 						clearInterval(delay);
 					} else {
 						const data = lb.contentResolver(jspf);
