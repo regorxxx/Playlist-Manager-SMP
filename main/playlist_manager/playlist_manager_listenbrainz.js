@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/04/23
+//17/04/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -224,13 +224,14 @@ listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, t
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '?fetch_metadata=true',
-		requestHeader: [['Authorization', 'Token ' + token]]
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			if (resolve) { // Ensure it matches the ID
 				const jspf = JSON.parse(resolve);
 				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace(regExListenBrainz, '')) {
-					console.log('importPlaylist: ' + JSON.stringify({creator: jspf.playlist.creator, identifier: jspf.playlist.identifier}));
+					console.log('importPlaylist: ' + JSON.stringify({creator: jspf.playlist.creator, identifier: jspf.playlist.identifier, tracks: jspf.playlist.track.length}));
 					return jspf;
 				}
 			}
@@ -342,7 +343,8 @@ listenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback-for-recordings?recording_mbids=' + mbid.join(','),
-		requestHeader: [['Authorization', 'Token ' + token]]
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			if (resolve) {
@@ -366,7 +368,8 @@ listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback' + queryParams,
-		requestHeader: [['Authorization', 'Token ' + token]]
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			if (resolve) {
@@ -471,7 +474,8 @@ listenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', par
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/stats/' + (user.toLowerCase() === 'sitewide' ?  'sitewide' : 'user/' + user) + '/recordings' + queryParams,
-		requestHeader: [['Authorization', 'Token ' + token]]
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			if (resolve) {
@@ -495,7 +499,8 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/cf/recommendation/user/'+ user + '/recording' + queryParams,
-		requestHeader: [['Authorization', 'Token ' + token]]
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			if (resolve) {
@@ -533,11 +538,13 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 	for (let i = 0; i < rowsLength; i++) {
 		let query = '';
 		let lookup = {};
+		let identifier = '';
 		lookupKeys.forEach((look) => {
 			const key = look.xspfKey;
 			const queryKey = look.queryKey;
 			if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
-				lookup[queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz,'') : rows[i][key]);
+				if (key === 'identifier') {identifier = decodeURI(rows[i][key]).replace(regExListenBrainz,'');}
+				lookup[queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : rows[i][key]);
 			}
 		});
 		for (let condition of conditions) {
@@ -552,7 +559,7 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 				}
 			}
 		}
-		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier: rows[i].identifier});}
+		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier});}
 	}
 	if (notFound.length) {console.log('Some tracks have not been found on library:\n' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n'));}
 	return {handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound};
@@ -570,7 +577,8 @@ listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists',
-		requestHeader: [['Authorization', 'Token ' + token]]
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			const response = JSON.parse(resolve);
@@ -588,7 +596,8 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
 	if (!token || !token.length) {return null;}
 	return send({
 		method: 'GET', 
-		URL: 'https://api.listenbrainz.org/1/validate-token?token=' + token
+		URL: 'https://api.listenbrainz.org/1/validate-token?token=' + token,
+		bypassCache: true
 	}).then(
 		(resolve) => {
 			return JSON.parse(resolve);

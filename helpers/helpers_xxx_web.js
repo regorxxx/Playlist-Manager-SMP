@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/09/22
+//17/04/23
 
 function getText(link){
 	if (link.indexOf('http://') !== -1 || link.indexOf('https://') !== -1) {
@@ -38,15 +38,25 @@ function onStateChange(timer, resolve, reject, func = null) {
 }
 
 // May be used to async run a func for the response or as promise
-function send({method = 'GET', URL, body = void(0), func = null, requestHeader = [/*[header, type]*/]}) {
+// Add ('&' + new Date().getTime()) to URLS to avoid caching
+function send({method = 'GET', URL, body = void(0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false}) {
 	const p = new Promise((resolve, reject) => {
 		let timer = null;
 		const xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
-		xmlhttp.open(method, URL);
+		xmlhttp.open(
+			method, 
+			URL + (bypassCache 
+				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime() // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
+				: '')
+		);
 		requestHeader.forEach((pair) => {
 			if (!pair[0] || !pair[1]) {console.log('HTTP Headers missing: ' + pair); return;}
 			xmlhttp.setRequestHeader(...pair);
 		});
+		if (bypassCache) {
+			xmlhttp.setRequestHeader('Cache-Control', 'private');
+			xmlhttp.setRequestHeader('Pragma', 'no-cache');
+		}
 		timer = setTimeout((xmlhttp) => {
 			xmlhttp.abort();
 			timer = null;
