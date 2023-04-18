@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//17/04/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -97,7 +97,6 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
-				// const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()%path%');
 				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + pathTF);
 				trackText = tfo.EvalWithMetadbs(handleList);
 				if (relPath.length) { // Relative path conversion

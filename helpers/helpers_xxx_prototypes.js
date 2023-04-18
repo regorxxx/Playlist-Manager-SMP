@@ -177,7 +177,6 @@ Object.defineProperty(Promise, 'parallel', {
 	writable: false,
 	value: (inputValues, mapper, timeout = 0) => {
 		const reducer = (inputValue) => {
-			test.Print();
 			return timeout
 				? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue)), timeout)})
 				: mapper(inputValue);
