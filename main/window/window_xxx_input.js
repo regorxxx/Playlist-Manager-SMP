@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/04/22
+//18/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -734,29 +734,28 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	};
 
 	this.show_context_menu = function (x, y) {
-		var idx;
-		var _menu = window.CreatePopupMenu();
+		const _menu = window.CreatePopupMenu();
 		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
-		_menu.AppendMenuItem(this.stext.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 0, 'Undo');
+		_menu.AppendMenuItem(this.stext.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Undo');
 		_menu.AppendMenuSeparator();
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Cut');
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Copy');
-		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Paste');
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Delete');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Copy');
+		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Paste');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Delete');
 		_menu.AppendMenuSeparator();
-		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Select All');
+		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 6, 'Select All');
 		if (this.helpFile && utils.FileExists(this.helpFile)) {
 			_menu.AppendMenuSeparator();
-			_menu.AppendMenuItem(MF_STRING, 6, 'Help...');
+			_menu.AppendMenuItem(MF_STRING, 7, 'Help...');
 		}
-		idx = _menu.TrackPopupMenu(x, y);
+		const idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
-			case 0:
+			case 1:
 				if (this.edit && this.stext.length) {
 					this.on_key(90, kMask.ctrl);
 				}
 				break;
-			case 1:
+			case 2:
 				if (this.edit && this.select) {
 					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 					var p1 = this.SelBegin;
@@ -772,12 +771,12 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 					this.repaint();
 				}
 				break;
-			case 2:
+			case 3:
 				if (this.edit && this.select) {
 					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 				}
 				break;
-			case 3:
+			case 4:
 				if (this.edit && cInputbox.clipboard) {
 					if (this.select) {
 						var p1 = this.SelBegin;
@@ -807,17 +806,17 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 					}
 				};
 				break;
-			case 4:
+			case 5:
 				if (this.edit && this.select) {
 					this.on_key(VK_DELETE, kMask.none);
 				}
 				break;
-			case 5:
+			case 6:
 				if (this.edit && this.text.length) {
 					this.check('dblclk', x, y);
 				}
 				break;
-			case 6:
+			case 7:
 				if (this.helpFile && utils.FileExists(this.helpFile)) {
 					const readme = utils.ReadTextFile(this.helpFile, 65001);
 					readme && readme.length && fb.ShowPopupMessage(readme, 'Input box');
