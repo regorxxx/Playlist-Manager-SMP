@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/04/23
+//18/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -399,7 +399,8 @@ addEventListener('on_mouse_rbtn_up', (x, y) => {
 		}
 	} else {
 		if (buttonsPanel.curBtn === null) {
-			return list.rbtn_up(x, y);
+			if (scroll && scroll.trace(x, y)) {return scroll.rbtn_up(x, y);}
+			else {return list.rbtn_up(x, y);}
 		}
 		if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
 			return createMenuRightSort().btn_up(x, y);

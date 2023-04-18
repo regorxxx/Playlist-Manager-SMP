@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/04/22
+//18/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -263,4 +263,106 @@ function _scrollBar({
 		}
 		return false;
 	};
+	
+	this.rbtn_up = (x, y, mask) => {
+		if (this.trace(x, y)) {
+			this.contextMenu(x, y);
+		}
+		return true;
+	}
+	
+	this.key_down = (k) => {
+		switch (k) {
+			// Scroll wheel
+			case VK_UP: {
+				if (this.currRow > 0) {this.scrollFunc({current: --this.currRow, delta: 1}); this.repaint();}
+				return true;
+			}
+			case VK_DOWN: {
+				if (this.currRow < this.rows) {this.scrollFunc({current: ++this.currRow, delta: -1}); this.repaint();}
+				return true;
+			}
+			// Scroll entire pages
+			case VK_PGUP: {
+				if (this.currRow > 0) {
+					const delta = Math.min(this.currRow, this.rows / 3);
+					this.currRow -= delta;
+					this.scrollFunc({current: this.currRow, delta});
+					this.repaint();
+				}
+				return true;
+			}
+			case VK_PGDN: {
+				if (this.currRow < this.rows) {
+					const delta = - Math.min(this.rows - this.currRow, this.rows / 3);
+					this.currRow += delta;
+					this.scrollFunc({current: this.currRow, delta});
+					this.repaint();
+				}
+				return true;
+			}
+			// Go to top/bottom
+			case VK_HOME: {
+				if (this.currRow > 0) {
+					const delta = this.currRow;
+					this.currRow = 0;
+					this.scrollFunc({current: this.currRow, delta});
+					this.repaint();
+				}
+				return true;
+			}
+			case VK_END: {
+				if (this.currRow < this.rows) {
+					const delta = - (this.rows - this.currRow);
+					this.currRow = this.rows;
+					this.scrollFunc({current: this.currRow, delta});
+					this.repaint();
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	this.contextMenu = function (x, y) {
+		const _menu = window.CreatePopupMenu();
+		_menu.AppendMenuItem(MF_STRING, 1, 'Scroll here');
+		_menu.AppendMenuSeparator();
+		_menu.AppendMenuItem(this.currRow > 0 ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Top');
+		_menu.AppendMenuItem(this.currRow < this.rows ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Bottom');
+		_menu.AppendMenuSeparator();
+		_menu.AppendMenuItem(this.currRow > 0 ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Page Up');
+		_menu.AppendMenuItem(this.currRow < this.rows ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Page Down');
+		_menu.AppendMenuSeparator();
+		_menu.AppendMenuItem(this.currRow > 0 ? MF_STRING : MF_GRAYED | MF_DISABLED, 6, 'Scroll Up');
+		_menu.AppendMenuItem(this.currRow < this.rows ? MF_STRING : MF_GRAYED | MF_DISABLED, 7, 'Scroll Down');
+		const idx = _menu.TrackPopupMenu(x, y);
+		switch (idx) {
+			case 1:
+				const oldRow = this.currRow;
+				this.currRow = this.calcCurrRow(y);
+				if (oldRow !== this.currRow) {this.scrollFunc({current: this.currRow, delta: oldRow - this.currRow});}
+				break;
+			case 2:
+				this.key_down(VK_HOME);
+				break;
+			case 3:
+				this.key_down(VK_END);
+				break;
+			case 4:
+				this.key_down(VK_PGUP);
+				break;
+			case 5:
+				this.key_down(VK_PGDN);
+				break;
+			case 6:
+				this.key_down(VK_UP);
+				break;
+			case 7:
+				this.key_down(VK_DOWN);
+				break;
+			default: return false;
+		}
+		return true;
+	}
 }
