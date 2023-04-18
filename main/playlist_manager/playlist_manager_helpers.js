@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//14/04/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1313,7 +1313,7 @@ function findExternal() {
 							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 							const bDead = filePaths.map((path) => {return path.replace(subsongRegex,'');}).some((path) => {
 								// Skip streams & look for absolute and relative paths (with and without .\)
-								let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
+								let bCheck = !path.startsWith('http:') && !path.startsWith('https:') && !path.startsWith('youtube.');
 								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 								else {
 									let pathAbs = path;
@@ -1363,7 +1363,7 @@ function findDead() {
 						const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => {return path.replace(subsongRegex,'');});
 						const bDead = filePaths.some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
-							let bCheck = !path.startsWith('http:') && !path.startsWith('https:');
+							let bCheck = !path.startsWith('http:') && !path.startsWith('https:') && !path.startsWith('youtube.');
 							if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 							else {
 								let pathAbs = path;
