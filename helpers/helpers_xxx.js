@@ -1,14 +1,17 @@
 ﻿'use strict';
-//27/02/23
+//19/04/23
 
 // Folders
 const folders = {};
+folders.JsPackageDirs = (utils.GetPackageInfo(window.ScriptInfo.PackageId || -1) || {Directories: null}).Directories;
 folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install path (this is relative to the profile path)
 folders.dataName = 'js_data\\';
-folders.xxx = fb.ProfilePath + folders.xxxName; 
+folders.xxx = folders.JsPackageDirs ? folders.JsPackageDirs.Root : fb.ProfilePath + folders.xxxName; 
 folders.data = fb.ProfilePath + folders.dataName;
-folders.userHelpers = folders.data + 'helpers\\';
+folders.dataPackage = folders.JsPackageDirs ? folders.JsPackageDirs.Storage : fb.ProfilePath + folders.dataName;
 folders.temp = folders.data + 'temp\\';
+folders.tempPackage = folders.dataPackage + 'temp\\';
+folders.userHelpers = folders.data + 'helpers\\';
 folders.userPresets = folders.data + 'presets\\';
 folders.userPresetsGlobal = folders.userPresets + 'global\\';
 
