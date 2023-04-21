@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/22
+//20/04/23
 
 /* 
 	FbTitleFormat
@@ -30,10 +30,10 @@ FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(han
 
 // Add caching
 Object.defineProperty(fb, 'tfCache', {
-  enumerable: false,
-  configurable: false,
-  writable: false,
-  value: {}
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: {}
 });
 
 // Augment fb.TitleFormat() with 'Expression' property and add caching
@@ -65,10 +65,10 @@ Object.defineProperty(fb, 'tfCache', {
 */
 // Add caching
 Object.defineProperty(fb, 'queryCache', {
-  enumerable: false,
-  configurable: false,
-  writable: false,
-  value: {}
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: {}
 });
 
 fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query, bCache = false) => {
@@ -83,3 +83,76 @@ fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query, bCache = fals
 	}
 	return outputHandleList;
 }
+
+/* 
+	plman
+*/
+
+plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePath, ...]*/, bSync = false) => {
+	if (items.length === 0) {return bSync ? Promise.resolve(false) : false;}
+	if (plsIdx === -1) {return  bSync ? Promise.resolve(false) : false;}
+	let lastType = typeof items[0].RawPath !== 'undefined' ? 'handle' : typeof items[0].Count !== 'undefined' ? 'handleList' : 'path';
+	let queue = lastType === 'path' ? [] : new FbMetadbHandleList();
+	const sendQueue = (item, type) => {
+		switch (type) {
+			case 'path': {
+				plman.AddLocations(plsIdx, queue);
+				queue = new FbMetadbHandleList();
+				return bSync ? Promise.wait(25) : true;
+			}
+			case 'handle':
+			case 'handleList': {
+				plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);
+				queue = [];
+				return bSync ? Promise.resolve() : true;
+			}
+		}
+	};
+	const addToQueue = (item, type) => {
+		switch (type) {
+			case 'path': {queue.push(item); break;}
+			case 'handle': {queue.Insert(queue.Count, item); break;}
+			case 'handleList': {queue.InsertRange(queue.Count, item); break;}
+		}
+	};
+	const processItem = (item) => {
+		let type = typeof item.RawPath !== 'undefined'
+			? 'handle' 
+			: typeof item.Count !== 'undefined'
+				? 'handleList'
+				: 'path';
+		// Send queue
+		if (bSync) {
+			if (type !== lastType) { // Avoid crash if first item is a handle
+				return sendQueue(item, lastType).then(() => {
+					lastType = type;
+					addToQueue(item, type);
+				});
+			}
+			addToQueue(item, type);
+			return Promise.resolve();
+		} else {
+			if (type !== lastType) {
+				sendQueue(item, lastType); 
+				lastType = type;
+			}
+			addToQueue(item, type);
+			return true;
+		}
+	}
+	// Add items to playlist
+	if (bSync) {
+		return Promise.serial([...items], processItem).then(() => {
+			// Add last items
+			if (lastType === 'path') {plman.AddLocations(plsIdx, queue);}
+			else {plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);}
+			return true;
+		});
+	} else {
+		items.forEach(processItem);
+		// Add last items
+		if (lastType === 'path') {plman.AddLocations(plsIdx, queue);}
+		else {plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);}
+		return true;
+	}
+};

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/04/23
+//20/04/23
 
 /* 
 	Objects
@@ -182,6 +182,15 @@ Object.defineProperty(Promise, 'parallel', {
 				: mapper(inputValue);
 		};
 		return Promise.allSettled(inputValues.map(reducer));
+	}
+});
+
+Object.defineProperty(Promise, 'wait', {
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: (ms) => {
+		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 });
 
