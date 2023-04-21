@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/04/23
+//21/04/23
 
 // Folders
 const folders = {};
@@ -32,6 +32,7 @@ include('helpers_xxx_so.js');
 const isFoobarV2 = isCompatible('2.0', 'fb');
 const isEnhPlayCount = utils.CheckComponent('foo_enhanced_playcount');
 const isPlayCount = utils.CheckComponent('foo_playcount');
+const isYouTube = utils.CheckComponent('foo_youtube');
 
 // Async processing
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.
