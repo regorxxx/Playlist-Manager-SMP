@@ -1,14 +1,15 @@
 ﻿'use strict';
-//17/04/23
+//23/04/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 include('..\\..\\helpers\\helpers_xxx_web.js');
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
-var regExListenBrainz = /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 
-const listenBrainz = {};
+const listenBrainz = {
+	regEx: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g
+};
 
 /*
 	Helpers
@@ -230,7 +231,7 @@ listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, t
 		(resolve) => {
 			if (resolve) { // Ensure it matches the ID
 				const jspf = JSON.parse(resolve);
-				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace(regExListenBrainz, '')) {
+				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace(this.regEx, '')) {
 					console.log('importPlaylist: ' + JSON.stringify({creator: jspf.playlist.creator, identifier: jspf.playlist.identifier, tracks: jspf.playlist.track.length}));
 					return jspf;
 				}
@@ -543,7 +544,7 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 			const key = look.xspfKey;
 			const queryKey = look.queryKey;
 			if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
-				if (key === 'identifier') {identifier = decodeURI(rows[i][key]).replace(regExListenBrainz,'');}
+				if (key === 'identifier') {identifier = decodeURI(rows[i][key]).replace(this.regEx,'');}
 				lookup[queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : rows[i][key]);
 			}
 		});
@@ -619,7 +620,7 @@ listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token)
 	return this.retrieveUserPlaylistsNames(user, token).then(
 		(resolve) => {
 			const playlists = resolve.playlists;
-			const jsfpArr = playlists.map((pls) => {return this.importPlaylist(pls.identifier.replace(regExListenBrainz, ''));})
+			const jsfpArr = playlists.map((pls) => {return this.importPlaylist(pls.identifier.replace(this.regEx, ''));})
 			return Promise.all(jsfpArr);
 		},
 		(reject) => {

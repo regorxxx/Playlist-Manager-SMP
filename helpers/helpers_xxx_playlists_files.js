@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/23
+//23/04/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -9,7 +9,6 @@ include('helpers_xxx_tags.js');
 include('helpers_xxx_playlists.js');
 include('helpers_xxx_playlists_files_xspf.js');
 include('helpers_xxx_playlists_files_xsp.js');
-var regExListenBrainz = /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 
 /* 
 	Global Variables 
@@ -664,6 +663,9 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const rowsLength = rows.length;
 				const lookupKeys = [{xspfKey: 'title', queryKey: 'TITLE'}, {xspfKey: 'creator', queryKey: 'ARTIST'}, {xspfKey: 'album', queryKey: 'ALBUM'}, {xspfKey: 'trackNum', queryKey: 'TRACK'}, {xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}];
 				const conditions = [['TITLE','ARTIST','ALBUM','TRACK'], ['TITLE','ARTIST','ALBUM'], ['TRACK','ARTIST','ALBUM'], ['TITLE','ALBUM'],  ['TITLE','ARTIST'], ['IDENTIFIER']];
+				const regExListenBrainz = typeof listenBrainz !== 'undefined' 
+					? listenBrainz.regEx 
+					: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 				for (let i = 0; i < rowsLength; i++) {
 					if (!notFound.has(i)) {continue;}
 					let query = '';
