@@ -84,17 +84,17 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 						artist,
 						length: vid.length,
 						url: '3dydfy://www.youtube.com/watch?' + 
-							'fb2k_title=' + encodeURIComponent(track) + 
+							'v=' + vid.id + 
+							'&fb2k_title=' + encodeURIComponent(track) + 
 							'&fb2k_search_title=' + encodeURIComponent(vid.title) + 
 							'&fb2kx_length=' + encodeURIComponent(vid.length) + 
 							'&fb2kx_title=' + encodeURIComponent(track) + 
 							'&fb2k_artist=' + encodeURIComponent(artist) + 
 							(
 								tags 
-									? Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join()
+									? Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join('')
 									: ''
-							) +
-							'&v=' + vid.id,
+							),
 						...(tags || {})
 					};
 				}
@@ -102,7 +102,7 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 			return null
 		},
 		(reject) => { // Retry once
-			console.log('searchForYoutubeTrack: ' + reject.status + ' ' + reject.responseText);
+			// console.log('searchForYoutubeTrack: ' + reject.status + ' ' + reject.responseText);
 			if (reject.status === 401) {
 				try {
 					return searchForYoutubeTrackV3({title, creator, onAccountError: void(0)});

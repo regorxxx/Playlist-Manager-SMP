@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/23
+//23/04/23
 
 function getText(link){
 	if (link.indexOf('http://') !== -1 || link.indexOf('https://') !== -1) {
@@ -60,7 +60,11 @@ function send({method = 'GET', URL, body = void(0), func = null, requestHeader =
 		timer = setTimeout((xmlhttp) => {
 			xmlhttp.abort();
 			timer = null;
-			if (!func) {reject({status: this.status, responseText: ''});} // 408 Request Timeout
+			if (!func) { // 408 Request Timeout
+				let status = 408;
+				try {status = xmlhttp.status;} catch(e) {}
+				reject({status, responseText: 'Request Timeout'});
+			} 
 		}, 30000, xmlhttp);
 		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func);
 		xmlhttp.send(method === 'POST' ? body : void(0));

@@ -467,6 +467,64 @@ listenBrainz.lookupMBIDs = function lookupMBIDs(handleList, token) { // Shorthan
 	);
 }
 
+listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
+	const count = MBIds.length;
+	if (!count) {return [];}
+	const data = new Array(count).fill({});
+	data.forEach((_, i, thisArr) => {
+		thisArr[i] = {};
+		thisArr[i]['[recording_mbid]'] = MBIds[i];
+	});
+	return send({
+		method: 'POST', 
+		URL: 'https://labs.api.listenbrainz.org/recording-mbid-lookup/json',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) { // Ensure it matches the ID
+				const response  = JSON.parse(resolve);
+				console.log('lookupTracksByMBIDs: ' + response.length + '/' + count + ' found items');
+				return response; // Response should contain same items than original list
+			}
+			return []; 
+		},
+		(reject) => {
+			console.log('lookupTracksByMBIDs: ' + reject.status + ' ' + reject.responseText);
+			return [];
+		}
+	);
+}
+
+listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MBIds, infoNames = ['recording_mbid', 'recording_name', 'artist_credit_name'], token) {
+	const allInfo = [
+		'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 
+		'artist_credit_name', 'artist_credit_mbids', 
+		'canonical_recording_mbid', 'original_recording_mbid'
+	];
+	if (!infoNames || !infoNames.length) {infoNames = allInfo;}
+	return this.lookupTracksByMBIDs(MBIds, token).then(
+		(resolve) => {
+			const info = {};
+			infoNames.forEach((tag) => {info[tag] = new Array(MBIds.length).fill('');});
+			if (resolve.length) {
+				infoNames.forEach((tag) => {
+					if (allInfo.indexOf(tag) !== -1) {
+						resolve.forEach((obj, i) => {
+							info[tag][i] = obj[tag];
+						});
+					}
+				});
+			}
+			return info; // Response should contain same items than original list
+		},
+		(reject) => {
+			console.log('lookupRecordingInfoByMBIDs: ' + reject);
+			return null;
+		}
+	);
+}
+
 /*
 	Statistics
 */
