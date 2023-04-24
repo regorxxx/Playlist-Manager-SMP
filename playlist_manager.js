@@ -44,7 +44,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 		}, (error) => {
 			// Already using data from other instance. See on_notify_data
 			pop.disable(true);
-		}).finally(async () => {
+		}).finally(() => {
 			if (typeof list !== 'undefined' && list) {
 				if (list.bRelativePath && list.playlistsPath.length) {
 					if (!pop.isEnabled()) {pop.enable(true, message, tt);}
@@ -53,9 +53,9 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 					const lBrainzToken = list.properties.lBrainzToken[1];
 					const bEncrypted = list.properties.lBrainzEncrypt[1];
 					if (lBrainzToken.length && !bEncrypted) {
-						if (!(await listenBrainz.validateToken(listenBrainz.decryptToken({lBrainzToken, bEncrypted})))) {
-							fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); 
-						}
+						listenBrainz.validateToken(lBrainzToken).then((bValid) => {
+							if (!bValid) {fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name);}
+						});
 					}
 				}
 				list.cacheLibTimer = null;
