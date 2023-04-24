@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/23
+//24/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -397,7 +397,7 @@ function createMenuLeft(forcedIndex = -1) {
 				}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'Open on Web...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
 					const url = lb.getPlaylistURL(pls);
-					if (regExListenBrainz.test(url)) {_run(lb.getPlaylistURL(pls));}
+					if (lb.regEx.test(url)) {_run(lb.getPlaylistURL(pls));}
 				}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
 			}
 		}
@@ -725,7 +725,7 @@ function createMenuRight() {
 			let playlist_mbid = '';
 			try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, menu.cache.playlist_mbid || '', true);}
 			catch (e) {bDone = true;}
-			playlist_mbid = playlist_mbid.replace(regExListenBrainz, ''); // Allow web link too
+			playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
 			if (playlist_mbid.length) {
 				menu.cache.playlist_mbid = playlist_mbid;
 				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
@@ -2374,6 +2374,15 @@ function createMenuRightTop() {
 			const subMenuName = menu.newMenu('ListenBrainz...', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Set token...', func: async () => {return await checkLBToken('');}});
 			menu.newCheckMenu(subMenuName, 'Set token...', void(0), () => {return list.properties.lBrainzToken[1].length ? true : false;});
+			menu.newEntry({menuName: subMenuName, entryText: 'Retrieve token from other panels...', func: () => {
+				callbacksListener.lBrainzTokenListener = true;
+				let cache = {token: list.properties.lBrainzToken[1], encrypted: list.properties.lBrainzEncrypt[1]};
+				window.NotifyOthers('xxx-scripts: lb token', null);
+				setTimeout(() => {
+					callbacksListener.lBrainzTokenListener = false;
+					fb.ShowPopupMessage('ListenBrainz token report:\n\nOld value:  ' + cache.toStr(true) + '\nNew value:  ' + {token: list.properties.lBrainzToken[1], encrypted: list.properties.lBrainzEncrypt[1]}.toStr(true), window.Name);
+				}, 1500);
+			}});
 			menu.newEntry({menuName: subMenuName, entryText: 'Open user profile'  + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 				if (!await checkLBToken()) {return;}
 				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
