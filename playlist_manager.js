@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/04/23
+//24/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -247,6 +247,12 @@ setProperties(properties, 'plm_');
 			prop.searchMethod[1] = JSON.stringify(searchMethod);
 		}
 		overwriteProperties(prop); // Updates panel
+		// Share ListenBrainz Token
+		if (!list.properties.lBrainzToken[1].length) {
+			callbacksListener.lBrainzTokenListener = true;
+			setTimeout(() => window.NotifyOthers('xxx-scripts: lb token', null), 3000);
+			setTimeout(() => {callbacksListener.lBrainzTokenListener = false;}, 6000);
+		}
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
 		const callback = () => !pop.isEnabled() ? window.NotifyOthers('Playlist manager: playlistPath', null) : setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
@@ -490,7 +496,7 @@ addEventListener('on_notify_data', (name, info) => {
 				if (Date.now() - plmInit.lastUpdate > 1000) {plmInit.lastUpdate = now;} else {plmInit.lastUpdate = now; return;} // Update once per time needed...
 				libItemsAbsPaths = [...info];
 				if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
-				console.log('precacheLibraryPaths: using paths from another instance.');
+				console.log('precacheLibraryPaths: using paths from another instance.', window.Name);
 				// Update rel paths if needed with new data
 				if (list.bRelativePath && list.playlistsPath.length) {
 					if (libItemsRelPaths.hasOwnProperty(list.playlistsPath) && libItemsRelPaths[list.playlistsPath].length !== libItemsAbsPaths.length) {
@@ -509,6 +515,22 @@ addEventListener('on_notify_data', (name, info) => {
 				window.NotifyOthers('precacheLibraryPaths', null);
 			} else if (libItemsAbsPaths && libItemsAbsPaths.length) {
 				window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
+			}
+			break;
+		}
+		case 'xxx-scripts: lb token': {
+			if (list.properties.lBrainzToken[1].length) {
+				window.NotifyOthers('xxx-scripts: lb token reply', {lBrainzToken: list.properties.lBrainzToken[1], lBrainzEncrypt: list.properties.lBrainzEncrypt[1], name: window.Name});
+			}
+			break;
+		}
+		case 'xxx-scripts: lb token reply': {
+			if (callbacksListener.lBrainzTokenListener) {
+				console.log('lb token reply: using token from another instance.', window.Name, _p('from ' + info.name));
+				list.properties.lBrainzToken[1] = info.lBrainzToken;
+				list.properties.lBrainzEncrypt[1] = info.lBrainzEncrypt;
+				overwriteProperties(list.properties);
+				callbacksListener.lBrainzTokenListener = false;
 			}
 			break;
 		}

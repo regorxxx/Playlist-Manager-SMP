@@ -33,6 +33,8 @@
 ### Added
 - Search: search toolbar to filter the current view according to the input. Supports case insensitive matching by playlist name, tag, category or tracks' file or folder names (this one disabled by default). Works pretty similar to the search filters found on Library Tree or the album viewer (except no query support). Enabling the path searching allows to easily find tracks within playlists (both loaded and non loaded ones). Path level is configurable. There is also an additional setting to parse RegExp expressions (which allow more advanced searches).
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
+- ListenBrainz: on first init, panel will try to retrieve user token from other panels (like [ListenBrainz-SMP](https://github.com/regorxxx/ListenBrainz-SMP)).
+- ListenBrainz: new menu entry to retrieve user token on demand from other panels (like [ListenBrainz-SMP](https://github.com/regorxxx/ListenBrainz-SMP)).
 - Package: new installation method as package.
 ### Changed
 - ListenBrainz: improvements to error handling and reports given to user.

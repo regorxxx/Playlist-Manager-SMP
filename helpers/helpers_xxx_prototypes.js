@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/04/23
+//24/04/23
 
 /* 
 	Objects
@@ -95,6 +95,16 @@ function isDeepObject(obj) {
 // Throw errors when trying to get length from objects
 // Forces using typeof recipe === 'string' and similar but leads to cleaner code and no errors
 Object.defineProperty(Object.prototype, 'length', {get() {throw new Error('No length property on objects. Probably a coding error.');}});
+
+// Stringify without quotes
+Object.defineProperty(Object.prototype, 'toStr', {
+	configurable: false,
+	value: function toStr(bClosure = false) {
+		return (bClosure ? '{' : '') + Object.entries(this).map((entry) => {
+			return (typeof entry[0] === 'object' ? entry[0].toStr() : entry[0].toString()) + ': ' + (typeof entry[1] === 'object' ? entry[1].toStr() : entry[1].toString());
+		}).join(', ') + (bClosure ? '}' : '');
+	}
+});
 
 /* 
 	Maps
