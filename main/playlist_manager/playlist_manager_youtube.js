@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/23
+//25/04/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -83,7 +83,7 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 						title: track,
 						artist,
 						length: vid.length,
-						url: '3dydfy://www.youtube.com/watch?' + 
+						url: 'fy+//www.youtube.com/watch?' + 
 							'v=' + vid.id + 
 							'&fb2k_title=' + encodeURIComponent(track) + 
 							'&fb2k_search_title=' + encodeURIComponent(vid.title) + 
