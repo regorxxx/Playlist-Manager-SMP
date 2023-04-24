@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/23
+//24/04/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -705,5 +705,5 @@ listenBrainz.decryptToken = function decryptToken({lBrainzToken, bEncrypted = tr
 
 listenBrainz.validateToken = async function validateToken(token) {
 	const response = await this.retrieveUserResponse(token);
-	return (response && response.valid);
+	return response ? response.valid : null; // null | false | true
 };
