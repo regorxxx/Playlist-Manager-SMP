@@ -53,7 +53,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 					const lBrainzToken = list.properties.lBrainzToken[1];
 					const bEncrypted = list.properties.lBrainzEncrypt[1];
 					if (lBrainzToken.length && !bEncrypted) {
-						if (!(await validateToken(decryptToken({lBrainzToken, bEncrypted})))) {
+						if (!(await listenBrainz.validateToken(listenBrainz.decryptToken({lBrainzToken, bEncrypted})))) {
 							fb.ShowPopupMessage('ListenBrainz Token not valid.', window.Name); 
 						}
 					}
