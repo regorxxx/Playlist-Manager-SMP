@@ -28,8 +28,6 @@ function onStateChange(timer, resolve, reject, func = null) {
 				else {resolve(this.responseText);}
 				
 			} else {
-				// console.log('HTTP error: ' + this.status);
-				// console.log(this.responseText);
 				if (!func) {reject({status: this.status, responseText: this.responseText});}
 			}
 		}
@@ -38,15 +36,16 @@ function onStateChange(timer, resolve, reject, func = null) {
 }
 
 // May be used to async run a func for the response or as promise
-// Add ('&' + new Date().getTime()) to URLS to avoid caching
 function send({method = 'GET', URL, body = void(0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false}) {
 	const p = new Promise((resolve, reject) => {
 		let timer = null;
 		const xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
+		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
+		// Add ('&' + new Date().getTime()) to URLS to avoid caching
 		xmlhttp.open(
 			method, 
 			URL + (bypassCache 
-				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime() // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
+				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime()
 				: '')
 		);
 		requestHeader.forEach((pair) => {
