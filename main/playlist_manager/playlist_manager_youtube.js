@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/23
+//24/04/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -14,7 +14,7 @@ const youtube = {
 youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => {return void(0);}} = {}) {
 	return await send({ 
 		method: 'POST',
-		URL: 'https://www.youtube.com/youtubei/v1/search?',
+		URL: 'https://www.youtube.com/youtubei/v1/search?' + (youtube.key.length ? 'key=' + youtube.key : ''),
 		body: JSON.stringify({
 			'context': {
 				'client': {
@@ -105,7 +105,7 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 			// console.log('searchForYoutubeTrack: ' + reject.status + ' ' + reject.responseText);
 			if (reject.status === 401) {
 				try {
-					return searchForYoutubeTrackV3({title, creator, onAccountError: void(0)});
+					return searchForYoutubeTrack({title, creator, onAccountError: void(0)});
 				} catch (error) {
 					// Run onAccountError if we can't refresh the token
 					if (isFunction(onAccountError)) {
