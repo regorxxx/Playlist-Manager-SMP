@@ -83,7 +83,7 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 						title: track,
 						artist,
 						length: vid.length,
-						url: 'fy+//www.youtube.com/watch?' + 
+						url: 'fy+https://www.youtube.com/watch?' + 
 							'v=' + vid.id + 
 							'&fb2k_title=' + encodeURIComponent(track) + 
 							'&fb2k_search_title=' + encodeURIComponent(vid.title) + 
