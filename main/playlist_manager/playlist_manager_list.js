@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/04/23
+//25/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -1598,7 +1598,7 @@ function _list(x, y, w, h) {
 			if (selItems && selItems.Count) {
 				// Warn about dead items
 				selItems.Convert().some((handle, i) => {
-					if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
+					if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
 						fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name); 
 						return true;
 					}
@@ -1904,8 +1904,8 @@ function _list(x, y, w, h) {
 							const selItems = plman.GetPlaylistItems(fbPlaylistIndex).Convert();
 							if (selItems && selItems.length) {
 								selItems.some((handle, i) => {
-									if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
-										fb.ShowPopupMessage('Warning! There is at least one dead item amongst the tracks used to create the playlist, there may be more.\n\n(' + i + ') '+ handle.RawPath, window.Name); 
+									if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+										fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') '+ handle.RawPath, window.Name); 
 										return true;
 									}
 									return false;
@@ -2674,6 +2674,20 @@ function _list(x, y, w, h) {
 		return this.bTracking;
 	}
 	
+	this.backupRestore = () => {
+		const files = getFiles(this.playlistsPath, new Set(['.back']));
+		if (files.length) {
+			const answer = WshShell.Popup('Playlist(s) backup file(s) have been found.\nDo you want to restore them?\n(Pressing \'No\' will open the playlists folder)\n\n' + files.map((f) => f.replace(this.playlistsPath, '')).joinEvery(', ', 3), 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				files.forEach((file) => _renameFile(file, file.replace('.back', '')));
+				this.update(void(0), void(0), currentItemIndex);
+				return true;
+			}
+			_explorer(this.playlistsPath);
+		}
+		return false;
+	}
+	
 	this.init = () => {
 		
 		this.save = (bInit = false) => {
@@ -2966,7 +2980,7 @@ function _list(x, y, w, h) {
 					const selItems = plman.GetPlaylistItems(plman.ActivePlaylist).Convert();
 					if (selItems && selItems.length) {
 						selItems.some((handle, i) => {
-							if (!handle.Path.startsWith('http://') && !handle.Path.startsWith('https://') && !_isFile(handle.Path)) {
+							if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
 								console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name, bShowPopups); 
 								return true;
 							}

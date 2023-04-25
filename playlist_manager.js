@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/23
+//25/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -315,6 +315,16 @@ if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
 } else if (list.properties.bNetworkPopup[1]) {
 	list.properties.bNetworkPopup[1] = false;
 	overwriteProperties(list.properties); // Updates panel
+}
+
+{	// Check backup files after crash
+	const backupInit  = () => {
+		setTimeout(() => {
+			if (pop.isEnabled()) {backupInit(); return;}
+			list.backupRestore();
+		}, 1000);
+	}
+	backupInit();
 }
 
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
