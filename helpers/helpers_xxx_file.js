@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/01/23
+//25/04/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -86,6 +86,11 @@ function _isFolder(folder) {
 		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
 		return isString(folder) ? fso.FolderExists(folder) : false;
 	}
+}
+
+function _isLink(path) {
+	path = path.toLowerCase().replace(/\\\\/g, '//');
+	return ['http://', 'http://', 'https://', 'fy+', '3dydfy:', 'youtube.', 'www.'].some((prefix) => path.startsWith(prefix));
 }
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
