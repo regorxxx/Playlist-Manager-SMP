@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/04/23
+//25/04/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1289,11 +1289,10 @@ function findMixedPaths() {
 		});
 		Promise.all(promises).then(() => {
 			if (found.length && !report.length) {found.forEach((pls) => {report.push(pls.extension === '.ui' ? pls.nameId : pls.path);});}
-			resolve({found, report: []});
+			resolve({found, report});
 		});
 	});
 }
-async function findMixedPathsAsync() {return await findMixedPaths();}
 
 function findExternal() {
 	const found = [];
@@ -1308,17 +1307,16 @@ function findExternal() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs')) {
 						const bUI = playlist.extension === '.ui';
-						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
 						if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
-							const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
 							const bDead = filePaths.map((path) => {return path.replace(subsongRegex,'');}).some((path) => {
 								// Skip streams & look for absolute and relative paths (with and without .\)
-								let bCheck = !path.startsWith('http:') && !path.startsWith('https:') && !path.startsWith('youtube.');
+								let bCheck = !_isLink(path);
 								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 								else {
 									let pathAbs = path;
 									if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
-									else {relPathSplit.forEach((folder) => {pathAbs = pathAbs.replace('..\\', folder + '\\');});}
+									else {pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath);}
 									bCheck = bCheck && !_isFile(pathAbs);
 								}
 								return bCheck;
@@ -1342,7 +1340,6 @@ function findExternal() {
 		});
 	});
 }
-async function findExternalAsync() {return await findExternal();}
 
 function findDead() {
 	const found = [];
@@ -1359,19 +1356,15 @@ function findDead() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs')) {
 						const bUI = playlist.extension === '.ui';
-						const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
-						const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => {return path.replace(subsongRegex,'');});
+						const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => {return path.replace(subsongRegex,'');});
 						const bDead = filePaths.some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
-							let bCheck = !path.startsWith('http:') && !path.startsWith('https:') && !path.startsWith('youtube.');
+							let bCheck = !_isLink(path);
 							if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
 							else {
 								let pathAbs = path;
 								if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
-								else {
-									const relPathSplit = list.playlistsPath.length ? list.playlistsPath.split('\\').filter(Boolean) : null;
-									pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath);
-								}
+								else {pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath);}
 								bCheck = bCheck && !_isFile(pathAbs);
 							}
 							return bCheck;
@@ -1390,7 +1383,6 @@ function findDead() {
 		});
 	});
 }
-async function findDeadAsync() {return await findDead();}
 
 function findDuplicates() {
 	const found = [];
@@ -1404,7 +1396,7 @@ function findDuplicates() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs')) {
 						const bUI = playlist.extension === '.ui';
-						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
 						if (new Set(filePaths).size !== filePaths.length) {found.push(playlist);}
 					}
 					const progress = Math.round(i / total * 10) * 10;
@@ -1419,7 +1411,6 @@ function findDuplicates() {
 		});
 	});
 }
-async function findDuplicatesAsync() {return await findDuplicates();}
 
 function findSizeMismatch() {
 	const found = [];
@@ -1496,7 +1487,6 @@ function findSizeMismatch() {
 		});
 	});
 }
-async function findSizeMismatchAsync() {return await findSizeMismatch();}
 
 function findDurationMismatch() {
 	const found = [];
@@ -1558,7 +1548,6 @@ function findDurationMismatch() {
 		});
 	});
 }
-async function findDurationMismatchAsync() {return await findDurationMismatch();}
 
 function findBlank() {
 	const found = [];
@@ -1613,7 +1602,7 @@ function findSubSongs() {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs')) {
 						const bUI = playlist.extension === '.ui';
-						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat('%PATH%').EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+						const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
 						const count = filePaths.reduce((total, path) => (subsongRegex.test(path) ? total + 1 : total), 0);
 						if (count) {
 							found.push(playlist);
@@ -1631,7 +1620,6 @@ function findSubSongs() {
 		});
 	});
 }
-async function findSubSongsAsync() {return await findSubSongs();}
 
 function findFormatErrors() {
 	const found = [];
@@ -1686,4 +1674,3 @@ function findFormatErrors() {
 		});
 	});
 }
-async function findFormatErrorsAsync() {return await findFormatErrors();}

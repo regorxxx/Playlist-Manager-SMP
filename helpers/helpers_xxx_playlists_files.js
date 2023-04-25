@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/23
+//25/04/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -52,7 +52,7 @@ const xspCache = new Map(); // {PATH: JSP playlist}
 const queryCache = new Map(); // {Query: handleList}
 
 // Path TitleFormat to compare tracks against library
-const pathTF = '$put(path,%path%)$if($stricmp($ext($get(path)),iso),\',\'%subsong%,)';
+const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($get(path)),iso),\',\'%SUBSONG%,)';
 
 /* 
 	Playlist file manipulation 
@@ -63,7 +63,7 @@ const pathTF = '$put(path,%path%)$if($stricmp($ext($get(path)),iso),\',\'%subson
 //		... (set rules) ...
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
-function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', bBOM = false}) {
+function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = '', description = '', bBOM = false}) {
 	if (!playlistIndex && !handleList) {return false;}
 	const extension = ext.toLowerCase();
 	if (!writablePlaylistFormats.has(extension)){
@@ -84,7 +84,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			playlistText.push('#EXTM3U');
 			playlistText.push('#EXTENC:UTF-8');
 			playlistText.push('#PLAYLIST:' + playlistName);
-			const UUID = (useUUID) ? nextId(useUUID) : ''; // May be visible or invisible chars!
+			if (!UUID) {UUID = useUUID ? nextId(useUUID) : '';} // May be visible or invisible chars!
 			playlistText.push('#UUID:' + UUID);
 			playlistText.push('#LOCKED:' + bLocked);
 			playlistText.push('#CATEGORY:' + category);
@@ -96,14 +96,14 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
-				const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + pathTF);
+				const tfo = fb.TitleFormat('#EXTINF:%_LENGTH_SECONDS%\',\'%ARTIST% - %TITLE%$crlf()' + pathTF);
 				trackText = tfo.EvalWithMetadbs(handleList);
 				if (relPath.length) { // Relative path conversion
 					let trackPath = '';
 					let trackInfo = '';
 					trackText = trackText.map((item) => {
 						[trackInfo, trackPath] = item.split('\n');
-						trackPath = getRelPath(trackPath, relPathSplit);
+						trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 						return trackInfo + '\n' + trackPath;
 					});
 				}
@@ -122,14 +122,14 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
 				const trackInfoPre = 'File#placeholder#=';
-				const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%path%' + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
+				const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%PATH%' + '$crlf()Title#placeholder#=%TITLE%' + '$crlf()Length#placeholder#=%_LENGTH_SECONDS%');
 				trackText = tfo.EvalWithMetadbs(handleList);
 				if (relPath.length) { // Relative path conversion
 					let trackPath = '';
 					let trackInfo = '';
 					trackText = trackText.map((item) => {
 						[trackPath, ...trackInfo] = item.split('\n');
-						trackPath = getRelPath(trackPath, relPathSplit);
+						trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 						return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
 					});
 				}
@@ -150,12 +150,17 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 		} else if (extension === '.xspf') {
 			const jspf = XSPF.emptyJSPF();
 			const playlist = jspf.playlist;
+			const bHasAuthor = author && author.length;
+			const bHasAnnotation = description && description.length;
 			// Header text
 			let totalDuration = 0; // In s
 			playlist.title = playlistName;
-			playlist.creator = 'Playlist-Manager-SMP';
+			playlist.creator = (bHasAuthor ? author + ' - ' : '') + 'Playlist-Manager-SMP';
 			playlist.date = new Date().toISOString();
 			playlist.identifier = playlist_mbid.length ? 'https://listenbrainz.org/playlist/' + playlist_mbid : '';
+			playlist.location = playlist.identifier;
+			if (bHasAuthor) {playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';}
+			if (bHasAnnotation) {playlist.annotation = description;}
 			playlist.meta = [
 				{uuid: (useUUID ? nextId(useUUID) : '')},
 				{locked: bLocked},
@@ -168,7 +173,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			];
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
-				const tags = getTagsValuesV4(handleList, ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', 'PATH', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+				const tags = getTagsValuesV4(handleList, ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
 				for (let i = 0; i < itemsCount; i++) {
 					const title = tags[0][i][0];
 					const creator = tags[1][i].join(', ');
@@ -176,7 +181,13 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 					const trackNum = Number(tags[3][i][0]);
 					const duration = Math.round(Number(tags[4][i][0] * 1000)); // In ms
 					totalDuration += Math.round(Number(tags[4][i][0])); // In s
-					const location = [relPath.length ? getRelPath(tags[5][i][0], relPathSplit) : tags[5][i][0]].map((path) => {return 'file:///' + encodeURI(path.replace(/\\/g,'/').replace(/&/g,'%26'));});
+					const location = [
+						relPath.length && !_isLink(tags[5][i][0])
+							? getRelPath(tags[5][i][0], relPathSplit) 
+							: tags[5][i][0]
+					].map((path) => {
+						return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
+					});
 					const subSong = Number(tags[6][i][0]);
 					const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
 					const identifier = [tags[7][i][0]];
@@ -296,15 +307,14 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		// -------------- M3U
 		if (extension === '.m3u8' || extension === '.m3u') {
 			// Tracks text
-			// const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()%path%');
-			const tfo = fb.TitleFormat('#EXTINF:%_length_seconds%,%artist% - %title%$crlf()' + pathTF);
+			const tfo = fb.TitleFormat('#EXTINF:%_LENGTH_SECONDS%\',\'%ARTIST% - %TITLE%$crlf()' + pathTF);
 			let newTrackText = tfo.EvalWithMetadbs(handleList);
 			if (relPath.length) { // Relative path conversion
 				let trackPath = '';
 				let trackInfo = '';
 				newTrackText = newTrackText.map((item) => {
 					[trackInfo, trackPath] = item.split('\n');
-					trackPath = getRelPath(trackPath, relPathSplit);
+					trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 					return trackInfo + '\n' + trackPath;
 				});
 			}
@@ -313,14 +323,14 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			// Tracks text
 			const trackInfoPre = 'File#placeholder#=';
-			const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%path%' + '$crlf()Title#placeholder#=%title%' + '$crlf()Length#placeholder#=%_length_seconds%');
+			const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%PATH%' + '$crlf()Title#placeholder#=%TITLE%' + '$crlf()Length#placeholder#=%_LENGTH_SECONDS%');
 			let newTrackText = tfo.EvalWithMetadbs(handleList);
 			if (relPath.length) { // Relative path conversion
 				let trackPath = '';
 				let trackInfo = '';
 				newTrackText = newTrackText.map((item) => {
 					[trackPath, ...trackInfo] = item.split('\n');
-					trackPath = getRelPath(trackPath, relPathSplit);
+					trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 					return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
 				});
 			}
@@ -333,16 +343,16 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			}
 		// ---------------- XSPF
 		} else if (extension === '.xspf') {
-			const durationTF = '$puts(l,%length_seconds_fp%)$puts(d,$strchr($get(l),.))$puts(i,$substr($get(l),0,$sub($get(d),1)))$puts(f,$substr($get(l),$add($get(d),1),$add($get(d),3)))$add($mul($get(i),1000),$get(f))';
-			const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>$put(path,%PATH%)</location>$crlf()$tab(3)<title>%TITLE%</title>$crlf()$tab(3)<creator>%ARTIST%</creator>$crlf()$tab(3)<album>%ALBUM%</album>$crlf()$tab(3)<duration>' + durationTF + '</duration>$crlf()$tab(3)<trackNum>%TRACK%</trackNum>$crlf()$tab(3)<identifier>%MUSICBRAINZ_TRACKID%</identifier>$if($stricmp($ext($get(path)),iso),$crlf()$tab(3)<subSong>%subsong%<subSong>,)$crlf()$tab(2)</track>');
+			const durationTF = '$puts(l,%LENGTH_SECONDS_FP%)$puts(d,$strchr($get(l),.))$puts(i,$substr($get(l),0,$sub($get(d),1)))$puts(f,$substr($get(l),$add($get(d),1),$add($get(d),3)))$add($mul($get(i),1000),$get(f))';
+			const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>$put(path,%_PATH_RAW%)</location>$crlf()$tab(3)<title>%TITLE%</title>$crlf()$tab(3)<creator>%ARTIST%</creator>$crlf()$tab(3)<album>%ALBUM%</album>$crlf()$tab(3)<duration>' + durationTF + '</duration>$crlf()$tab(3)<trackNum>%TRACK%</trackNum>$crlf()$tab(3)<identifier>%MUSICBRAINZ_TRACKID%</identifier>$if($stricmp($ext($get(path)),iso),$crlf()$tab(3)<subSong>%subsong%<subSong>,)$crlf()$tab(2)</track>');
 			let newTrackText = tfo.EvalWithMetadbs(handleList);
 			const bRel = relPath.length ? true : false;
 			let trackPath = '';
 			let pre = '' , post = '';
 			newTrackText = newTrackText.map((item, i) => { // Encode file paths as URI
 				[pre, trackPath , post] = item.split(/<location>|<\/location>/);
-				trackPath = bRel ? getRelPath(trackPath, relPathSplit) : trackPath; // Relative path conversion
-				return pre + '<location>file:///' + encodeURI(trackPath.replace(/\\/g,'/').replace(/&/g,'%26')) + '</location>' + post;
+				trackPath = bRel && !_isLink(trackPath) ? getRelPath(trackPath, relPathSplit) : trackPath; // Relative path conversion
+				return pre + '<location>file:///' + encodeURI(trackPath.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26')) + '</location>' + post;
 			});
 			trackText = [...newTrackText, ...trackText];
 			// Update size
@@ -419,7 +429,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 				const rows = playlist.track;
 				const rowsLength = rows.length;
 				for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
-					if (rows[i].hasOwnProperty('location') && rows[i].location && rows[i].location.length) {
+					if (rows[i].hasOwnProperty('location') && rows[i].location && rows[i].location.length) { // TODO multiple locations allowed
 						let path = decodeURI(rows[i].location).replace('file:///','').replace(/\//g,'\\').replace(/%26/g,'&'); // file:///PATH/SUBPATH/...
 						if (rows[i].hasOwnProperty('meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
 							const metaSubSong = rows[i].meta.find((obj) => {return obj.hasOwnProperty('subSong');});
@@ -484,9 +494,9 @@ function getRelPaths(pathArr, relPath = '') {
 	let relPathArr = [];
 	if (isArrayStrings(pathArr)) {
 		if (relPath.length) { // Relative path conversion
-			const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
+			const relPathSplit = relPath.split('\\').filter(Boolean);
 			relPathArr = pathArr.map((item) => {
-				return getRelPath(item, relPathSplit);
+				return _isLink(item) ? item : getRelPath(item, relPathSplit);
 			});
 		}
 	}
@@ -523,15 +533,20 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		plman.AddLocations(playlistIndex, stream, true);
 		bDone = true;
 	} else if (extension === '.fpl') { // TODO: add query matching
-		plman.AddLocations(playlistIndex, playlistPath, true);
+		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {
 		const {handlePlaylist, pathsNotFound} = getHandlesFromPlaylist(playlistPath, relPath, void(0), remDupl, true);
 		if (handlePlaylist) {
-			plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
-			bDone = true;
-			if (pathsNotFound && pathsNotFound.length && extension === '.xspf') {
-				// plman.AddLocations(playlistIndex, pathsNotFound);
+			if (pathsNotFound && pathsNotFound.length) {
+				if (extension === '.xspf') {
+					// plman.AddLocations(playlistIndex, pathsNotFound);
+				} else {
+				
+				}
+			} else {
+				plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
+				bDone = true;
 			}
 		}
 	}
@@ -592,7 +607,6 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		handlePlaylist = [...Array(playlistLength)];
 		const poolItems = fb.GetLibraryItems();
 		const poolItemsCount = poolItems.Count;
-		// const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat('%path%').EvalWithMetadbs(poolItems);
 		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
 		const newLibItemsRelPaths = relPath.length 
 			? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count 
@@ -606,29 +620,35 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			for (let i = 0; i < poolItemsCount; i++) {
 				path = newLibItemsAbsPaths[i].toLowerCase();
 				if (filePool.has(path)) {
+					filePool.delete(path);
 					pathPool.set(path, i);
 					continue;
 				}
 				path = newLibItemsRelPaths[i].toLowerCase();
 				if (filePool.has(path)) {
+					filePool.delete(path);
 					pathPool.set(path, i);
 					continue;
 				}
 				if (path.startsWith('.\\')) {
 					path = path.replace('.\\', '');
 					if (filePool.has(path)) {
+						filePool.delete(path);
 						pathPool.set(path, i);
 						continue;
 					}
 				}
+				if (filePool.size === 0) {break;}
 			}
 		} else {
 			for (let i = 0; i < poolItemsCount; i++) {
 				path = newLibItemsAbsPaths[i].toLowerCase();
 				if (filePool.has(path)) {
+					filePool.delete(path);
 					pathPool.set(path, i);
 					continue;
 				}
+				if (filePool.size === 0) {break;}
 			}
 		}
 		let count = 0;
@@ -721,7 +741,7 @@ function arePathsInMediaLibrary(filePaths, relPath = '') {
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
-	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItemsCount ? libItemsAbsPaths : fb.TitleFormat('%path%$ifgreater(%subsong%,0,\',\'%subsong%,)').EvalWithMetadbs(poolItems);
+	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItemsCount ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
 	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((path) => {return path.toLowerCase();}));
 	const newLibItemsRelPaths = relPath.length ? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItemsCount ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than tf again
 	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((path) => {return path.toLowerCase();})) : null;
