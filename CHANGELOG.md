@@ -35,17 +35,21 @@
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
 - ListenBrainz: on first init, panel will try to retrieve user token from other panels (like [ListenBrainz-SMP](https://github.com/regorxxx/ListenBrainz-SMP)).
 - ListenBrainz: new menu entry to retrieve user token on demand from other panels (like [ListenBrainz-SMP](https://github.com/regorxxx/ListenBrainz-SMP)).
+- ListenBrainz: new option to look for not found tracks on library at YouTube when retrieving playlists from ListenBrainz. Requires 'foo_youtube' component installed. When links are loaded, the entire process is asynchronous and playlist filling may take some seconds. Track order is ensured in the process (contrary to other scripts relying on foobar path loading).
+- Backup: in case a playlist backup file is found on startup, panel asks to restore it. This usually happens if the panel crashes while editing a playlist file.
 - Package: new installation method as package.
 ### Changed
 - ListenBrainz: improvements to error handling and reports given to user.
 - ListenBrainz: playlist MBID is now cached on import menu entry (during same session).
+- ListenBrainz: .xspf playlist now save user-name at 'creator' tag, user's web page at 'info' tag and playlist's web page at 'location' tag.
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
 - UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden when the mouse is not over. Double clicking on the bar will jump to the active/playing playlist. Double clicking on the up/down bar buttons will jump to the top/bottom of the list.
 - UI: -by default- up/down buttons are now only shown while drag n' dropping to easily scroll the list.
 - UI: main UI elements can now be enabled/disabled via the settings menu. i.e. it's possible to revert all new UI additions by disabling them, showing only a header with the tracked folder.
 - Playlist locks: locks are now easily switched in a submenu list, showing action descriptions, instead of using popups. It will also state when the lock is applied by other components.
 - Drag and Drop: tracks can now be dropped to the search toolbar to parse their filenames for filtering (when file/folder searching is enabled). This is equivalent to the 'Find current selection...' menu entry, but direclty filtering the current view (instead of showing a report popup).
-- Restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
+- Menus: restore feature also supports playlists closed outside the panel (i.e. UI-only playlists even if they are not tracked). Name also shows if it's assigned to a file or UI.
+- Playlist loading: some minor optimizations.
 - Console: multiple improvements when logging to file for FbMetadbHandle, FbMetadbHandleList, Error and unknown instances (totally irrelevant except for debug purposes).
 - Documentation: updated readme PDF to be up to date with all latest changes. Added all XSP -> foobar2000 tag equivalences.
 - Console: menu entries are no longer logged to console after clicking.
@@ -58,6 +62,12 @@
 - ListenBrainz: workaround for windows caching of server requests (so sometimes playlists were not updated with changes on real time).
 - UI: selected and highlighted playlist rectangles did not match in size (again).
 - UI: crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
+- Links: multiple fixes to web links handling, specially for YouTube links (which should now properly use the 'fy+' scheme in all cases).
+- Links: fix web links identification, using '\\' or '//' convention.
+- Paths: multiple fixes to inconsistent path handling, specially for items with subsong indexes or links (at the playlist maintenance tools).
+- Playlists maintenance tools: fixed relative path handling for 'Duplicated items...' tool when there were multiple relative levels.
+- Playlists maintenance tools: fixed report for 'Absolute/relative paths...' tool; displaying always none even when results where found.
+- Playlists maintenance tools: fixed report for 'Duplicated items...' tool; popup said 'dead items' instead of 'duplicated items'.
 
 ## [0.5.0-beta.18] - 2023-03-08
 ### Added
