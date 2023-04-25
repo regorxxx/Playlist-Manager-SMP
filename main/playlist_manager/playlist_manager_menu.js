@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/23
+//25/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -358,38 +358,161 @@ function createMenuLeft(forcedIndex = -1) {
 					if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-					if (!await checkLBToken()) {return false;}
+					if (!pls.playlist_mbid.length) {return Promise.resolve(false);}
+					if (!await checkLBToken()) {return Promise.resolve(false);}
 					let bDone = false;
 					if (_isFile(pls.path)) {
 						const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
 						if (!token) {return false;}
-						const jspf = await lb.importPlaylist(pls, token);
-						if (jspf) {
-							const data = lb.contentResolver(jspf);
-							const handleList = data.handleList;
-							if (handleList) {
-								if (jspf.playlist.track.length !== handleList.Count) {
-									const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
-									if (answer === popup.no) {return false;}
-								}
-								if (pls.isLocked) { // Safety check for locked files (but can be overridden)
-									let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
-									if (answer === popup.no) {return false;}
-								}
-								const backPath = pls.path + '.back';
-								_renameFile(pls.path, backPath);
-								const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-								bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
-								// Restore backup in case something goes wrong
-								if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
-								else if (_isFile(backPath)) {_deleteFile(backPath);}
-								if (bDone && bIsPlsLoaded) {sendToPlaylist(handleList, pls.name);}
-								clearInterval(delay);
-							}
-						}
-					} else {console.log('Playlist file not found: ' + pls.path);}
-					if (!bDone) {lb.consoleError('Playlist was not imported.');}
-					return bDone;
+						lb.importPlaylist(pls, token)
+							.then((jspf) => {
+								if (jspf) {
+									const data = lb.contentResolver(jspf);
+									const handleArr = data.handleArr;
+									const notFound = data.notFound;
+									const bXSPF = pls.extension === '.xspf';
+									if (!bXSPF) {
+										let bYouTube = false;
+										if (notFound.length && isYouTube) {
+											const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+											if (answer === popup.yes) {bYouTube = true;}
+										}
+										if (pls.isLocked) { // Safety check for locked files (but can be overridden)
+											let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+											if (answer === popup.no) {return false;}
+										}
+										const backPath = pls.path + '.back';
+										// Find missing tracks on youtube
+										if (bYouTube) {
+											// Add MBIDs to youtube track metadata
+											notFound.forEach((track) => track.tags = {musicbrainz_trackid: track.identifier});
+											// Send request in parallel every x ms and process when all are done
+											return Promise.parallel(notFound, youtube.searchForYoutubeTrack, 5).then((results) => {
+												let j = 0;
+												const itemsLen = handleArr.length;
+												let foundLinks = 0;
+												results.forEach((result, i) => {
+													for (void(0); j <= itemsLen; j++) {
+														if (result.status !== 'fulfilled') {break;}
+														const link = result.value;
+														if (!link || !link.length) {break;}
+														if (!handleArr[j]) {
+															handleArr[j] = link.url;
+															foundLinks++;
+															break;
+														}
+													}
+												});
+												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+												const idx = plman.FindOrCreatePlaylist(pls.nameId, true);
+												plman.ClearPlaylist(idx);
+												plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true);
+												plman.ActivePlaylist = idx;
+												const handleList = plman.GetPlaylistItems(idx);
+												console.log('Found ' + foundLinks + ' tracks on YouTube');
+												if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
+												bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+												// Restore backup in case something goes wrong
+												if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
+												else if (_isFile(backPath)) {_deleteFile(backPath);}
+												if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+												clearInterval(delay);
+												return bDone;
+											});
+										} else {
+											const handleList = data.handleList;
+											const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+											if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
+											bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+											// Restore backup in case something goes wrong
+											if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
+											else if (_isFile(backPath)) {_deleteFile(backPath);}
+											if (bDone && bIsPlsLoaded) {sendToPlaylist(handleList, pls.nameId);}
+											clearInterval(delay);
+										}
+									} else {
+										const playlist = jspf.playlist;
+										const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
+										let totalDuration = 0;
+										playlist.creator = author + ' - Playlist-Manager-SMP';
+										playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
+										playlist.location = playlist.identifier;
+										playlist.meta = [
+											{uuid: pls.id},
+											{locked: pls.isLocked},
+											{category: pls.category},
+											{tags: (isArrayStrings(pls.tags) ? pls.tags.join(';') : '')},
+											{trackTags: (isArrayStrings(pls.trackTags) ? pls.tags.join(';') : '')},
+											{playlistSize: playlist.track.length},
+											{duration: totalDuration},
+											{playlist_mbid: pls.playlist_mbid}
+										];
+										// Tracks text
+										handleArr.forEach((handle, i) => {
+											if (!handle) {return;}
+											const relPath = '';
+											const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+											const title = tags[0][0][0];
+											const creator = tags[1][0].join(', ');
+											const album = tags[2][0][0];
+											const trackNum = Number(tags[3][0][0]);
+											const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
+											totalDuration += Math.round(Number(tags[4][0][0])); // In s
+											const location = [relPath.length && !_isLink(tags[5][0][0]) ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]]
+												.map((path) => {
+													return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
+												});
+											const subSong = Number(tags[6][0][0]);
+											const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
+											const identifier = [tags[7][0][0]];
+											playlist.track[i] = {
+												location,
+												annotation: void(0),
+												title,
+												creator,
+												info: void(0),
+												image: void(0),
+												album,
+												duration,
+												trackNum,
+												identifier,
+												extension: {},
+												link: [],
+												meta
+											};
+										});
+										// Fix JSPF identifiers as array
+										playlist.track.forEach((track) => {
+											if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
+										});
+										// Update total duration of playlist
+										playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
+										const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
+										const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
+										let xspf = XSPF.toXSPF(jspf);
+										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+										xspf = xspf.join('\r\n');
+										bDone = _save(pls.path, xspf, list.bBOM);
+										// Check
+										if (_isFile(pls.path) && bDone) {bDone = (_open(pls.path, utf8) === xspf);}
+										// Restore backup in case something goes wrong
+										if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
+										else if (_isFile(backPath)) {_deleteFile(backPath);}
+										if (bDone && plman.FindPlaylist(pls.nameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), pls.nameId);}
+										if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
+										clearInterval(delay);
+										return bDone;
+									}
+								} else {return bDone;}
+							})
+							.finally(() => {
+								if (!bDone) {lb.consoleError('Playlist was not imported.');}
+								return bDone;
+							});
+					} else {
+						console.log('Playlist file not found: ' + pls.path); 
+						return Promise.resolve(bDone);
+					}
 				}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
@@ -720,7 +843,7 @@ function createMenuRight() {
 			}});
 		}
 		menu.newEntry({entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-			if (!await checkLBToken()) {return false;}
+			if (!await checkLBToken()) {return Promise.resolve(false);}
 			let bDone = false;
 			let playlist_mbid = '';
 			try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, menu.cache.playlist_mbid || '', true);}
@@ -729,134 +852,175 @@ function createMenuRight() {
 			if (playlist_mbid.length) {
 				menu.cache.playlist_mbid = playlist_mbid;
 				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
-				if (!token) {return false;}
-				const jspf = await lb.importPlaylist({playlist_mbid}, token);
-				if (jspf) {
-					let bXSPF = false;
-					if (list.playlistsExtension !== '.xspf') {
-						const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.Name, popup.question + popup.yes_no);
-						if (answer === popup.yes) {bXSPF = true;}
-					} else {bXSPF = true;}
-					if (!bXSPF) {
-						const data = lb.contentResolver(jspf);
-						const handleList = data.handleList;
-						if (jspf.playlist.track.length !== handleList.Count) {
-							const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to continue (omitting not found items)?', 0, window.Name, popup.question + popup.yes_no);
-							if (answer === popup.no) {return false;}
-						}
-						const playlistName = jspf.playlist.title;
-						const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
-						const backPath = playlistPath + '.back';
-						if (_isFile(playlistPath)) {
-							let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
-							if (answer === popup.no) {return false;}
-							_renameFile(playlistPath, backPath);
-						}
-						const useUUID = list.optionsUUIDTranslate();
-						const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
-						const tags = ['ListenBrainz'];
-						if (list.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
-						if (list.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
-						if (list.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
-						if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
-						const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-						bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
-						// Restore backup in case something goes wrong
-						if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
-						else if (_isFile(backPath)) {_deleteFile(backPath);}
-						const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
-						if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(handleList, playlistNameId);}
-						if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
-						clearInterval(delay);
-					} else {
-						const data = lb.contentResolver(jspf);
-						const handleArr = data.handleArr;
-						const playlist = jspf.playlist;
-						const useUUID = list.optionsUUIDTranslate();
-						const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
-						const tags = ['ListenBrainz'];
-						if (list.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
-						if (list.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
-						if (list.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
-						let totalDuration = 0;
-						playlist.creator = 'Playlist-Manager-SMP';
-						playlist.meta = [
-							{uuid: (useUUID ? nextId(useUUID) : '')},
-							{locked: true},
-							{category},
-							{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
-							{trackTags: ''},
-							{playlistSize: playlist.track.length},
-							{duration: totalDuration},
-							{playlist_mbid}
-						];
-						// Tracks text
-						handleArr.forEach((handle, i) => {
-							if (!handle) {return;}
-							const relPath = '';
-							const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', 'PATH', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
-							const title = tags[0][0][0];
-							const creator = tags[1][0].join(', ');
-							const album = tags[2][0][0];
-							const trackNum = Number(tags[3][0][0]);
-							const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
-							totalDuration += Math.round(Number(tags[4][0][0])); // In s
-							const location = [relPath.length ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]].map((path) => {return 'file:///' + encodeURI(path.replace(/\\/g,'/').replace(/&/g,'%26'));});
-							const subSong = Number(tags[6][0][0]);
-							const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
-							const identifier = [tags[7][0][0]];
-							playlist.track[i] = {
-								location,
-								annotation: void(0),
-								title,
-								creator,
-								info: void(0),
-								image: void(0),
-								album,
-								duration,
-								trackNum,
-								identifier,
-								extension: {},
-								link: [],
-								meta
-							};
-						});
-						// Fix JSPF identifiers as array
-						playlist.track.forEach((track) => {
-							if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
-						});
-						// YouTube source for missing files
-						playlist.track.forEach((track) => {
-							if (!track.hasOwnProperty('location')) {
-								const uri = 'youtube.api.video?query=' + track.creator.replaceAll(' ','+') + '+-+' + track.title.replaceAll(' ','+') + '&skip_next=1&ssc=mAEB';
-								track.location = [encodeURI(uri.replace(/&/g,'%26'))];
+				if (!token) {return Promise.resolve(false);}
+				lb.importPlaylist({playlist_mbid}, token)
+					.then((jspf) => {
+						if (jspf) {
+							let bXSPF = false;
+							if (list.playlistsExtension !== '.xspf') {
+								const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.Name, popup.question + popup.yes_no);
+								if (answer === popup.yes) {bXSPF = true;}
+							} else {bXSPF = true;}
+							const data = lb.contentResolver(jspf);
+							const handleArr = data.handleArr;
+							const notFound = data.notFound;
+							const playlist = jspf.playlist;
+							const useUUID = list.optionsUUIDTranslate();
+							const playlistName = playlist.title;
+							const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
+							const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
+							const tags = ['ListenBrainz'];
+							if (list.bAutoLoadTag) {tags.push('bAutoLoad');}
+							if (list.bAutoLockTag) {tags.push('bAutoLock');}
+							if (list.bMultMenuTag) {tags.push('bMultMenu');}
+							if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(tags).has(tag)) {tags.push(tag);}});}
+							if (!bXSPF) {
+								let bYouTube = false;
+								if (notFound.length && isYouTube) {
+									const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+									if (answer === popup.yes) {bYouTube = true;}
+								}
+								const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
+								const backPath = playlistPath + '.back';
+								// Find missing tracks on youtube
+								if (bYouTube) {
+									// Add MBIDs to youtube track metadata
+									notFound.forEach((track) => track.tags = {musicbrainz_trackid: track.identifier});
+									// Send request in parallel every x ms and process when all are done
+									return Promise.parallel(notFound, youtube.searchForYoutubeTrack, 5).then((results) => {
+										let j = 0;
+										const itemsLen = handleArr.length;
+										let foundLinks = 0;
+										results.forEach((result, i) => {
+											for (void(0); j <= itemsLen; j++) {
+												if (result.status !== 'fulfilled') {break;}
+												const link = result.value;
+												if (!link || !link.length) {break;}
+												if (!handleArr[j]) {
+													handleArr[j] = link.url;
+													foundLinks++;
+													break;
+												}
+											}
+										});
+										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+										const idx = plman.FindOrCreatePlaylist(playlistNameId, true);
+										plman.ClearPlaylist(idx);
+										plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true);
+										plman.ActivePlaylist = idx;
+										const handleList = plman.GetPlaylistItems(idx);
+										console.log('Found ' + foundLinks + ' tracks on YouTube');
+										if (_isFile(playlistPath)) {
+											let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+											if (answer === popup.no) {return false;}
+											_renameFile(playlistPath, backPath);
+										}
+										bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+										// Restore backup in case something goes wrong
+										if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+										else if (_isFile(backPath)) {_deleteFile(backPath);}
+										if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+										clearInterval(delay);
+										return bDone;
+									});
+								} else {
+									const handleList = data.handleList;
+									const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+									if (_isFile(playlistPath)) {
+										let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+										if (answer === popup.no) {return false;}
+										_renameFile(playlistPath, backPath);
+									}
+									bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+									// Restore backup in case something goes wrong
+									if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+									else if (_isFile(backPath)) {_deleteFile(backPath);}
+									const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
+									if (bDone && idx !== -1) {sendToPlaylist(handleList, playlistNameId);}
+									if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+									clearInterval(delay);
+									return bDone;
+								}
+							} else {
+								let totalDuration = 0;
+								const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
+								playlist.creator = author + ' - Playlist-Manager-SMP';
+								playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
+								playlist.location = playlist.identifier;
+								playlist.meta = [
+									{uuid: (useUUID ? nextId(useUUID) : '')},
+									{locked: true},
+									{category},
+									{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
+									{trackTags: ''},
+									{playlistSize: playlist.track.length},
+									{duration: totalDuration},
+									{playlist_mbid}
+								];
+								// Tracks text
+								handleArr.forEach((handle, i) => {
+									if (!handle) {return;}
+									const relPath = '';
+									const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+									const title = tags[0][0][0];
+									const creator = tags[1][0].join(', ');
+									const album = tags[2][0][0];
+									const trackNum = Number(tags[3][0][0]);
+									const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
+									totalDuration += Math.round(Number(tags[4][0][0])); // In s
+									const location = [relPath.length && !_isLink(tags[5][0][0]) ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]]
+										.map((path) => {
+											return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
+										});
+									const subSong = Number(tags[6][0][0]);
+									const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
+									const identifier = [tags[7][0][0]];
+									playlist.track[i] = {
+										location,
+										annotation: void(0),
+										title,
+										creator,
+										info: void(0),
+										image: void(0),
+										album,
+										duration,
+										trackNum,
+										identifier,
+										extension: {},
+										link: [],
+										meta
+									};
+								});
+								// Fix JSPF identifiers as array
+								playlist.track.forEach((track) => {
+									if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
+								});
+								// Update total duration of playlist
+								playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
+								const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
+								const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
+								let xspf = XSPF.toXSPF(jspf);
+								const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+								xspf = xspf.join('\r\n');
+								bDone = _save(playlistPath, xspf, list.bBOM);
+								// Check
+								if (_isFile(playlistPath) && bDone) {bDone = (_open(playlistPath, utf8) === xspf);}
+								// Restore backup in case something goes wrong
+								const backPath = playlistPath + '.back';
+								if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+								else if (_isFile(backPath)) {_deleteFile(backPath);}
+								if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId);}
+								if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
+								clearInterval(delay);
+								return bDone;
 							}
-						});
-						// Update total duration of playlist
-						playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
-						const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
-						const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
-						let xspf = XSPF.toXSPF(jspf);
-						const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-						xspf = xspf.join('\r\n');
-						bDone = _save(playlistPath, xspf, list.bBOM);
-						// Check
-						if (_isFile(playlistPath) && bDone) {
-							let check = _open(playlistPath, utf8);
-							bDone = (check === xspf);
-						}
-						// Restore backup in case something goes wrong
-						const backPath = playlistPath + '.back';
-						if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
-						else if (_isFile(backPath)) {_deleteFile(backPath);}
-						if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId);}
-						if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
-						clearInterval(delay);
-					}
-				}
-			} else {bDone = true;}
-			if (!bDone) {lb.consoleError('Playlist was not imported.');}
-			return bDone;
+						} else {return bDone;}
+					})
+					.finally(() => {
+						if (!bDone) {lb.consoleError('Playlist was not imported.');}
+						return bDone;
+					});
+			} else {return Promise.resolve(true);}
 		}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -940,7 +1104,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other enviroments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking absolute/relative paths...\nPanel will be disabled during the process.');}
-				findMixedPathsAsync().then(({found, report}) => {
+				findMixedPaths().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -952,7 +1116,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Searching...', 'Searching external items...\nPanel will be disabled during the process.');}
-				findExternalAsync().then(({found, report}) => {
+				findExternal().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -964,7 +1128,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for dead items (i.e. items that don\'t exist in their path).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Searching...', 'Searching dead items...\nPanel will be disabled during the process.');}
-				findDeadAsync().then(({found, report}) => {
+				findDead().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -976,9 +1140,9 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.');}
-				findDuplicatesAsync().then(({found, report}) => {
+				findDuplicates().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
-					fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+					fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
 				});
 			}});
@@ -988,7 +1152,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking playlist size mismatch...\nPanel will be disabled during the process.');}
-				findSizeMismatchAsync().then(({found, report}) => {
+				findSizeMismatch().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -1000,7 +1164,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist duration not matching duration of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking playlist duration mismatch...\nPanel will be disabled during the process.');}
-				findDurationMismatchAsync().then(({found, report}) => {
+				findDurationMismatch().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -1012,7 +1176,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for blank lines (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking blank lines...\nPanel will be disabled during the process.');}
-				findBlankAsync().then(({found, report}) => {
+				findBlank().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with blank lines:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -1024,7 +1188,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.');}
-				findSubSongsAsync().then(({found, report}) => {
+				findSubSongs().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
@@ -1036,7 +1200,7 @@ function createMenuRight() {
 				let answer = WshShell.Popup('Scan all playlists to check for errors on playlist structure or format.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking fprmat errors...\nPanel will be disabled during the process.');}
-				findFormatErrorsAsync().then(({found, report}) => {
+				findFormatErrors().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
 					fb.ShowPopupMessage('Found these playlists with format errors:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 					pop.disable(true);
