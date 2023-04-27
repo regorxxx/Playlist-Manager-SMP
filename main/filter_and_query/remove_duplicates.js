@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//26/04/23
 
 /*
 	Remove duplicates
@@ -50,6 +50,7 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 	// Active playlist or input list
 	let bActivePlaylist = false;
 	if (handleList === null) {
+		if (plman.ActivePlaylist === -1) {console.log('removeDuplicates: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} 
@@ -151,6 +152,7 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
+		if (plman.ActivePlaylist === -1) {console.log('removeDuplicatesV2: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} 
@@ -241,6 +243,7 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
+		if (plman.ActivePlaylist === -1) {console.log('removeDuplicatesV3: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} 
@@ -337,6 +340,7 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
+		if (plman.ActivePlaylist === -1) {console.log('showDuplicates: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} 
