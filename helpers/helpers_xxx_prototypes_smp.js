@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/04/23
+//27/04/23
 
 /* 
 	FbTitleFormat
@@ -93,12 +93,13 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 	if (plsIdx === -1) {return  bSync ? Promise.resolve(false) : false;}
 	let lastType = typeof items[0].RawPath !== 'undefined' ? 'handle' : typeof items[0].Count !== 'undefined' ? 'handleList' : 'path';
 	let queue = lastType === 'path' ? [] : new FbMetadbHandleList();
+	const timer = bSync ? 25 : null;
 	const sendQueue = (item, type) => {
 		switch (type) {
 			case 'path': {
 				plman.AddLocations(plsIdx, queue);
 				queue = new FbMetadbHandleList();
-				return bSync ? Promise.wait(25) : true;
+				return bSync ? Promise.wait(timer) : true;
 			}
 			case 'handle':
 			case 'handleList': {
@@ -144,8 +145,14 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 	if (bSync) {
 		return Promise.serial([...items], processItem).then(() => {
 			// Add last items
-			if (lastType === 'path') {plman.AddLocations(plsIdx, queue);}
-			else {plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);}
+			if (lastType === 'path') {
+				plman.AddLocations(plsIdx, queue);
+				return Promise.wait(timer);
+			} else {
+				plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);
+				return true;
+			}
+		}).then(() => {
 			return true;
 		});
 	} else {
