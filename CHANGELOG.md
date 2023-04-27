@@ -42,6 +42,7 @@
 - ListenBrainz: improvements to error handling and reports given to user.
 - ListenBrainz: playlist MBID is now cached on import menu entry (during same session).
 - ListenBrainz: .xspf playlist now save user-name at 'creator' tag, user's web page at 'info' tag and playlist's web page at 'location' tag.
+- ListenBrainz: panel is now blocked with an animation while retrieving playlists.
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
 - UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden when the mouse is not over. Double clicking on the bar will jump to the active/playing playlist. Double clicking on the up/down bar buttons will jump to the top/bottom of the list.
 - UI: -by default- up/down buttons are now only shown while drag n' dropping to easily scroll the list.
