@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//27/04/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -202,10 +202,11 @@ var properties = {
 		'Header buttons':			{enabled: true, elements: 
 			{
 				'Power actions':	{enabled: true, position: 0},
-				'List menu':		{enabled: true, position: 1},
-				'Settings menu':	{enabled: true, position: 2},
-				'Folder':			{enabled: true, position: 3},
-				'Help':				{enabled: true, position: 4},
+				'Reset filters':	{enabled: true, position: 1},
+				'List menu':		{enabled: true, position: 2},
+				'Settings menu':	{enabled: true, position: 3},
+				'Folder':			{enabled: true, position: 4},
+				'Help':				{enabled: true, position: 5},
 			}
 		}
 	})],
@@ -645,26 +646,32 @@ addEventListener('on_main_menu_dynamic', (id) => {
 // Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
 // if Autosave === 0, then it does nothing...
 var debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
-addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) => { 
+addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) => {
+	const name = plman.GetPlaylistName(playlistIndex);
+	if (!list.isAutosave(name)) {return;}
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
-	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_reordered, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
-	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
+	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_reordered, autoSaveTimer, playlistIndex, name); return;}
+	if (oldName && oldName.length && name !== oldName) {return;}
 	// Update
 	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
 });
 
-addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => { 
+addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
+	const name = plman.GetPlaylistName(playlistIndex);
+	if (!list.isAutosave(name)) {return;}
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
-	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
-	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
+	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, name); return;}
+	if (oldName && oldName.length && name !== oldName) {return;}
 	// Update
 	debouncedUpdate ? debouncedUpdate({playlistIndex, bCallback: true}) : null;
 });
 
-addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => { 
+addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
+	const name = plman.GetPlaylistName(playlistIndex);
+	if (!list.isAutosave(name)) {return;}
 	// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
-	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, plman.GetPlaylistName(playlistIndex)); return;}
-	if (oldName && oldName.length && plman.GetPlaylistName(playlistIndex) !== oldName) {return;}
+	if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, name); return;}
+	if (oldName && oldName.length && name !== oldName) {return;}
 	// Update
 	if (debouncedUpdate) {debouncedUpdate({playlistIndex, bCallback: true});}
 	else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
@@ -675,7 +682,7 @@ addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
 	}
 });
 
-addEventListener('on_playlists_changed', () => { 
+addEventListener('on_playlists_changed', () => {
 	if (list.bAllPls) { // For UI only playlists
 		list.update(true, true);
 		const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];

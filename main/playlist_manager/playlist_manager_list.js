@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//27/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -279,6 +279,22 @@ function _list(x, y, w, h) {
 							: null,
 						align: 'r',
 						x: (button, curr) => curr - button.w - LM / 2,
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
+					{	// Reset Filters
+						parent: this.uiElements['Header buttons'].elements['Reset filters'].enabled ? this.headerButtons.resetFilters : null,
+						position: this.uiElements['Header buttons'].elements['Reset filters'].position,
+						icon: chars.close,
+						color: this.headerButtons.resetFilters.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.resetFilters.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr) =>  curr - button.w - LM / 2,
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -710,6 +726,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.move = (x, y, mask, bDragDrop = false) => {
+		if (!window.IsVisible) {console.log('cancel move'); return false;}
 		this.bIsDragDrop = bDragDrop;
 		this.bMouseOver = true;
 		const bMoved = this.mx !== x || this.my !== y;
@@ -721,8 +738,10 @@ function _list(x, y, w, h) {
 				const button = this.headerButtons[key];
 				if (this.traceHeaderButton(x, y, button)) {
 					if (!bDragDrop) {window.SetCursor(IDC_HAND);}
-					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
-					button.inFocus = true;
+					if (bMoved) { // Fix for move callback firing after alt-tab when a menu is opened
+						this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
+						button.inFocus = true;
+					}
 					bButtonTrace = true;
 				} else {
 					button.inFocus = false;
@@ -2688,6 +2707,32 @@ function _list(x, y, w, h) {
 		return false;
 	}
 	
+	this.disableAutosaveForPls = (nameId) => {
+		if (this.disableAutosave.indexOf(nameId) === -1) {
+			this.disableAutosave.push(nameId);
+			return true;
+		}
+		return salse;
+	}
+	
+	this.enableAutosaveForPls = (nameId) => {
+		const idx = this.disableAutosave.indexOf(nameId);
+		if (idx !== -1) {
+			this.disableAutosave.splice(idx, 1);
+			return true;
+		}
+		return false;
+	}
+	
+	this.enableAutosave = () => {
+		this.disableAutosave.length = 0;
+		return true;
+	}
+	
+	this.isAutosave = (nameId) => {
+		return this.disableAutosave.indexOf(nameId) === -1;
+	}
+	
 	this.init = () => {
 		
 		this.save = (bInit = false) => {
@@ -3618,6 +3663,7 @@ function _list(x, y, w, h) {
 			this.dataFoobar = []; // Only foobar2000 playlists on UI
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
+			this.disableAutosave = [];
 			this.clearSelPlaylistCache();
 			this.deleteMainMenuDynamic();
 			this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
@@ -3741,6 +3787,7 @@ function _list(x, y, w, h) {
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
 	this.lastPlsLoaded = [];
 	this.mainMenuDynamic = [];
+	this.disableAutosave = [];
 	// Properties
 	this.defaultProperties = clone(properties); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.properties = getPropertiesPairs(properties, 'plm_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
@@ -3830,6 +3877,9 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
 				return this.headerTooltip(mask);
 			}, func: null
+		},
+		resetFilters: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Reset all filters...', func: this.resetFilter
 		},
 		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask) => createMenuRight().btn_up(x, y)},
 		settings: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Playlist Manager settings...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y)},
