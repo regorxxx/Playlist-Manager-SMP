@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//27/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -403,13 +403,14 @@ function createMenuLeft(forcedIndex = -1) {
 														}
 													}
 												});
-												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+												list.disableAutosaveForPls(playlistNameId);
 												const idx = plman.FindOrCreatePlaylist(pls.nameId, true);
 												plman.ClearPlaylist(idx);
 												plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true);
 												plman.ActivePlaylist = idx;
 												const handleList = plman.GetPlaylistItems(idx);
 												console.log('Found ' + foundLinks + ' tracks on YouTube');
+												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 												if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
 												bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
 												// Restore backup in case something goes wrong
@@ -417,6 +418,7 @@ function createMenuLeft(forcedIndex = -1) {
 												else if (_isFile(backPath)) {_deleteFile(backPath);}
 												if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
 												clearInterval(delay);
+												list.enableAutosaveForPls(playlistNameId);
 												return bDone;
 											});
 										} else {
@@ -427,7 +429,11 @@ function createMenuLeft(forcedIndex = -1) {
 											// Restore backup in case something goes wrong
 											if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
 											else if (_isFile(backPath)) {_deleteFile(backPath);}
-											if (bDone && bIsPlsLoaded) {sendToPlaylist(handleList, pls.nameId);}
+											if (bDone && bIsPlsLoaded) {
+												list.disableAutosaveForPls(playlistNameId);
+												sendToPlaylist(handleList, pls.nameId);
+												list.enableAutosaveForPls(playlistNameId);
+											}
 											clearInterval(delay);
 										}
 									} else {
@@ -853,6 +859,7 @@ function createMenuRight() {
 				menu.cache.playlist_mbid = playlist_mbid;
 				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
 				if (!token) {return Promise.resolve(false);}
+				pop.enable(true, 'Importing...', 'Importing tracks from ListenBrainz...\nPanel will be disabled during the process.');
 				lb.importPlaylist({playlist_mbid}, token)
 					.then((jspf) => {
 						if (jspf) {
@@ -884,6 +891,8 @@ function createMenuRight() {
 								const backPath = playlistPath + '.back';
 								// Find missing tracks on youtube
 								if (bYouTube) {
+									pop.enable(false, 'YouTube...', 'Importing tracks from YouTube...\nPanel will be disabled during the process.');
+									list.disableAutosaveForPls(playlistNameId);
 									// Add MBIDs to youtube track metadata
 									notFound.forEach((track) => track.tags = {musicbrainz_trackid: track.identifier});
 									// Send request in parallel every x ms and process when all are done
@@ -903,25 +912,28 @@ function createMenuRight() {
 												}
 											}
 										});
-										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 										const idx = plman.FindOrCreatePlaylist(playlistNameId, true);
 										plman.ClearPlaylist(idx);
-										plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true);
-										plman.ActivePlaylist = idx;
-										const handleList = plman.GetPlaylistItems(idx);
-										console.log('Found ' + foundLinks + ' tracks on YouTube');
-										if (_isFile(playlistPath)) {
-											let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
-											if (answer === popup.no) {return false;}
-											_renameFile(playlistPath, backPath);
-										}
-										bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
-										// Restore backup in case something goes wrong
-										if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
-										else if (_isFile(backPath)) {_deleteFile(backPath);}
-										if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
-										clearInterval(delay);
-										return bDone;
+										return plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true)
+											.finally(() => {
+												plman.ActivePlaylist = idx;
+												const handleList = plman.GetPlaylistItems(idx);
+												console.log('Found ' + foundLinks + ' tracks on YouTube');
+												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+												if (_isFile(playlistPath)) {
+													let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+													if (answer === popup.no) {return false;}
+													_renameFile(playlistPath, backPath);
+												}
+												bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+												// Restore backup in case something goes wrong
+												if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+												else if (_isFile(backPath)) {_deleteFile(backPath);}
+												if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+												clearInterval(delay);
+												list.enableAutosaveForPls(playlistNameId);
+												return bDone;
+											});
 									});
 								} else {
 									const handleList = data.handleList;
@@ -935,10 +947,12 @@ function createMenuRight() {
 									// Restore backup in case something goes wrong
 									if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 									else if (_isFile(backPath)) {_deleteFile(backPath);}
+									list.disableAutosaveForPls(playlistNameId);
 									const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
 									if (bDone && idx !== -1) {sendToPlaylist(handleList, playlistNameId);}
 									if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
 									clearInterval(delay);
+									list.enableAutosaveForPls(playlistNameId);
 									return bDone;
 								}
 							} else {
@@ -1018,6 +1032,7 @@ function createMenuRight() {
 					})
 					.finally(() => {
 						if (!bDone) {lb.consoleError('Playlist was not imported.');}
+						if (pop.isEnabled()) {pop.disable(true);}
 						return bDone;
 					});
 			} else {return Promise.resolve(true);}
