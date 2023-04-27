@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/23
+//26/04/23
 
 include('helpers_xxx.js');
 include('helpers_xxx_playlists.js');
@@ -67,7 +67,7 @@ function PlsHistory({size = 11, bAutoInit = true} = {}) {
 		if (this.pls.length) {
 			if (this.pls.length >= size) {this.pls.pop();}
 			this.pls.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
-		} else {initplsHistory();}
+		} else {this.init();}
 	};
 	
 	this.onPlaylistsChanged = () => {
@@ -82,11 +82,11 @@ function PlsHistory({size = 11, bAutoInit = true} = {}) {
 				if (this.pls.length >= size) {this.pls.pop();}
 				this.pls.unshift({name: plman.GetPlaylistName(plman.ActivePlaylist), idx: plman.ActivePlaylist});
 			}
-		} else {initplsHistory();}
+		} else {this.init();}
 	};
 	
 	this.onSelectionChanged =() => {
-		if (!this.pls.length) {initplsHistory();}
+		if (!this.pls.length) {this.init();}
 	};
 	
 	// Menus
