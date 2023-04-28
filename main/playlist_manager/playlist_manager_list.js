@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/23
+//28/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -204,7 +204,7 @@ function _list(x, y, w, h) {
 					{	// Search
 						parent: this.uiElements['Search filter'].enabled ? this.headerButtons.search : null,
 						position: 0,
-						icon: this.searchInput && this.searchInput.text.length ? chars.close : chars.search,
+						icon: this.searchInput && this.searchInput.text.length || this.plsState.length ? chars.close : chars.search,
 						color: this.headerButtons.search.inFocus 
 							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
 							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
@@ -356,6 +356,7 @@ function _list(x, y, w, h) {
 						this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
 						this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
 					}
+					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
 					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
 					this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
 				} else {
@@ -726,7 +727,6 @@ function _list(x, y, w, h) {
 	}
 	
 	this.move = (x, y, mask, bDragDrop = false) => {
-		if (!window.IsVisible) {console.log('cancel move'); return false;}
 		this.bIsDragDrop = bDragDrop;
 		this.bMouseOver = true;
 		const bMoved = this.mx !== x || this.my !== y;
@@ -738,10 +738,8 @@ function _list(x, y, w, h) {
 				const button = this.headerButtons[key];
 				if (this.traceHeaderButton(x, y, button)) {
 					if (!bDragDrop) {window.SetCursor(IDC_HAND);}
-					if (bMoved) { // Fix for move callback firing after alt-tab when a menu is opened
-						this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
-						button.inFocus = true;
-					}
+					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
+					button.inFocus = true;
 					bButtonTrace = true;
 				} else {
 					button.inFocus = false;
@@ -1065,9 +1063,9 @@ function _list(x, y, w, h) {
 							this.timeOut = delayFn(this.executeAction, 100)(void(0), sgShortcut, false);
 						} else {this.bDoubleclick = false;}
 					}
+					this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 				}
 			}
-			this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 			return true;
 		} else {
 			if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
@@ -2080,6 +2078,8 @@ function _list(x, y, w, h) {
 		return idx ? [defTag, ...[...tags].sort()][idx] : [defTag, ...[...tags].sort()];
 	}
 	this.tagState = [];
+	// By pls
+	this.plsState = [];
 	// These are constant
 	this.constLockStates = () => {return ['All','Not locked','Locked'];};
 	this.constAutoPlaylistStates = (bUI = this.bAllPls) => {return bUI ? this.constAutoPlaylistStates(false).concat(['UI-only Playlists']): ['All','AutoPlaylists && Smart Playlists','Standard Playlists'];};
@@ -2091,11 +2091,26 @@ function _list(x, y, w, h) {
 	this.extStates = this.constExtStates();
 	this.mbidStates = this.constMbidStates();
 	
-	this.isFilterActive = () => {
-		return (this.constLockStates()[0] !== this.lockStates[0] || this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0] || this.constExtStates()[0] !== this.extStates[0] || this.constMbidStates()[0] !== this.mbidStates[0]);
+	this.getFilter = (bActiveOnly = false) => {
+		const filter = {
+			Category: !isArrayEqual(this.categoryState, this.categories()),
+			Extension: this.constExtStates()[0] !== this.extStates[0],
+			'Lock state': this.constLockStates()[0] !== this.lockStates[0],
+			MBID: this.constMbidStates()[0] !== this.mbidStates[0],
+			Playlist: this.plsState.length !== 0 && (this.searchInput === null || this.searchInput.text.length === 0),
+			'Playlist type': this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0],
+			Search: this.plsState.length !== 0 && this.searchInput !== null && this.searchInput.text.length !== 0,
+			Tag: !isArrayEqual(this.tagState, this.tags())
+		};
+		return bActiveOnly 
+			? Object.fromEntries(Object.entries(filter).filter((entry) => entry[1] === true))
+			: filter;
 	};
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = []} = {}) => {
-		if (!plsState.length && this.searchInput && this.searchInput.text) {
+	this.isFilterActive = (filter = null) => {
+		return filter ? this.getFilter()[filter] : Object.values(this.getFilter()).some(Boolean);
+	};
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState} = {}) => {
+		if (!plsState.length && this.searchInput && this.searchInput.text.length) {
 			plsState = this.search(false).plsState;
 		}
 		// On first filter we use this.dataAll as origin
@@ -2198,6 +2213,14 @@ function _list(x, y, w, h) {
 				break;
 			}
 		}
+		for (let i = 0; i < this.constMbidStates().length; i++) {
+			const newState = this.constMbidStates().rotate(i);
+			if (mbidState === newState[0]) {
+				this.mbidStates = newState;
+				rotations[3] = i;
+				break;
+			}
+		}
 		// Categories
 		if (!isArrayEqual(categoryState, this.categoryState)) {
 			this.categoryState = categoryState;
@@ -2205,6 +2228,10 @@ function _list(x, y, w, h) {
 		// Tags
 		if (!isArrayEqual(tagState, this.tagState)) {
 			this.tagState = tagState;
+		}
+		// By pls
+		if (!isArrayEqual(plsState, this.plsState)) {
+			this.plsState = plsState;
 		}
 		// Save current view filters on properties
 		if (this.bSaveFilterStates) {
@@ -2221,7 +2248,7 @@ function _list(x, y, w, h) {
 	}
 	this.resetFilter = () => {
 		if (this.searchInput && this.searchMethod.bResetFilters) {this.searchInput.on_key_down(VK_ESCAPE);}
-		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories()});
+		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories(), mbidState: this.constMbidStates()[0], plsState: []});
 	}
 	
 	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
@@ -3394,6 +3421,7 @@ function _list(x, y, w, h) {
 				this.autoPlaylistStates = this.constAutoPlaylistStates().rotate(rotations[0]);
 				this.lockStates = this.constLockStates().rotate(rotations[1]);
 				this.extStates = this.constExtStates().rotate(rotations[2]);
+				this.mbidStates = this.constMbidStates().rotate(rotations[3]);
 			}
 			// Check colors
 			if (!this.colors || !Object.keys(this.colors).length) { // Sets default colors
@@ -3859,15 +3887,17 @@ function _list(x, y, w, h) {
 	this.headerButtons = {
 		search: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
-					return (this.searchInput.text.length
-						? 'Clear search\n(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
-						: 'Search settings...\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)') + (this.searchMethod.bPath 
+					return (this.searchInput.text.length || this.isFilterActive('Playlist')
+						? 'Clear search\n----------------------------------------------\n(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
+						: 'Search settings...\n----------------------------------------------\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)') + (this.searchMethod.bPath 
 								? '\n(Drag n\' drop track(s) to copy filename(s))' 
 								: '');
 			}, func: (x, y, mask) => {
 				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
 					this.searchInput.on_key_down(VK_ESCAPE); 
 					this.search();
+				} else if (this.isFilterActive('Playlist')) {
+					this.filter({plsState: []});
 				} else {
 					createMenuSearch().btn_up(x, y);
 				}
@@ -3879,7 +3909,18 @@ function _list(x, y, w, h) {
 			}, func: null
 		},
 		resetFilters: {
-			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Reset all filters...', func: this.resetFilter
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+				const filters = this.getFilter(true);
+				let info = 'Reset all filters...';
+				info += '\n----------------------------------------------\n';
+				info += Object.values(filters).some(Boolean) 
+					? 'Active:\t' + Object.keys(filters).joinEvery(', ', 3, '\n\t')
+					: 'No active filters.'
+				if (filters.Search && !list.searchMethod.bResetFilters) {
+					info += '\nSearch filter set to be ommited.';
+				}
+				return info;
+			}, func: this.resetFilter
 		},
 		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask) => createMenuRight().btn_up(x, y)},
 		settings: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Playlist Manager settings...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y)},
