@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/23
+//28/04/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -403,23 +403,27 @@ function createMenuLeft(forcedIndex = -1) {
 														}
 													}
 												});
-												list.disableAutosaveForPls(playlistNameId);
+												list.disableAutosaveForPls(pls.nameId);
+												const bLoaded = plman.FindPlaylist(pls.nameId) !== -1;
 												const idx = plman.FindOrCreatePlaylist(pls.nameId, true);
 												plman.ClearPlaylist(idx);
-												plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true);
-												plman.ActivePlaylist = idx;
-												const handleList = plman.GetPlaylistItems(idx);
-												console.log('Found ' + foundLinks + ' tracks on YouTube');
-												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-												if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
-												bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
-												// Restore backup in case something goes wrong
-												if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
-												else if (_isFile(backPath)) {_deleteFile(backPath);}
-												if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
-												clearInterval(delay);
-												list.enableAutosaveForPls(playlistNameId);
-												return bDone;
+												return plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true)
+													.then(() => {
+														plman.ActivePlaylist = idx;
+														const handleList = plman.GetPlaylistItems(idx);
+														console.log('Found ' + foundLinks + ' tracks on YouTube');
+														const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+														if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
+														bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+														// Restore backup in case something goes wrong
+														if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
+														else if (_isFile(backPath)) {_deleteFile(backPath);}
+														if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+														if (bDone && !bLoaded) {plman.RemovePlaylist(idx);}
+														clearInterval(delay);
+														list.enableAutosaveForPls(pls.nameId);
+														return bDone;
+													});
 											});
 										} else {
 											const handleList = data.handleList;
@@ -429,10 +433,11 @@ function createMenuLeft(forcedIndex = -1) {
 											// Restore backup in case something goes wrong
 											if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
 											else if (_isFile(backPath)) {_deleteFile(backPath);}
-											if (bDone && bIsPlsLoaded) {
-												list.disableAutosaveForPls(playlistNameId);
+											const bLoaded = plman.FindPlaylist(pls.nameId) !== -1;
+											if (bDone && bLoaded) {
+												list.disableAutosaveForPls(pls.nameId);
 												sendToPlaylist(handleList, pls.nameId);
-												list.enableAutosaveForPls(playlistNameId);
+												list.enableAutosaveForPls(pls.nameId);
 											}
 											clearInterval(delay);
 										}
@@ -494,7 +499,6 @@ function createMenuLeft(forcedIndex = -1) {
 										// Update total duration of playlist
 										playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
 										const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
-										const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
 										let xspf = XSPF.toXSPF(jspf);
 										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 										xspf = xspf.join('\r\n');
@@ -912,6 +916,7 @@ function createMenuRight() {
 												}
 											}
 										});
+										const bLoaded = plman.FindPlaylist(pls.nameId) !== -1;
 										const idx = plman.FindOrCreatePlaylist(playlistNameId, true);
 										plman.ClearPlaylist(idx);
 										return plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true)
@@ -930,6 +935,7 @@ function createMenuRight() {
 												if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 												else if (_isFile(backPath)) {_deleteFile(backPath);}
 												if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+												if (bDone && !bLoaded) {plman.RemovePlaylist(idx);}
 												clearInterval(delay);
 												list.enableAutosaveForPls(playlistNameId);
 												return bDone;
@@ -2559,7 +2565,7 @@ function createMenuRightTop() {
 				window.NotifyOthers('xxx-scripts: lb token', null);
 				setTimeout(() => {
 					callbacksListener.lBrainzTokenListener = false;
-					fb.ShowPopupMessage('ListenBrainz token report:\n\nOld value:  ' + cache.toStr(true) + '\nNew value:  ' + {token: list.properties.lBrainzToken[1], encrypted: list.properties.lBrainzEncrypt[1]}.toStr(true), window.Name);
+					fb.ShowPopupMessage('ListenBrainz token report:\n\nOld value:  ' + cache.toStr({bClosure: true}) + '\nNew value:  ' + {token: list.properties.lBrainzToken[1], encrypted: list.properties.lBrainzEncrypt[1]}.toStr({bClosure: true}), window.Name);
 				}, 1500);
 			}});
 			menu.newEntry({menuName: subMenuName, entryText: 'Open user profile'  + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
