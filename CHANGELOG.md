@@ -61,6 +61,8 @@
 - AutoPlaylists: 'Reload playlist (overwrite)' was not working properly, creating a duplicated playlist instead of overwriting the existing one.
 - ListenBrainz: crash due to renamed 'contentResolver' function call.
 - ListenBrainz: workaround for windows caching of server requests (so sometimes playlists were not updated with changes on real time).
+- UI: MBIDs filtering not being saved between sessions.
+- UI: resetting all filters did not reset MBID filtering.
 - UI: selected and highlighted playlist rectangles did not match in size (again).
 - UI: crash when using 'UI\Set custom colours...\Reset all to default' menu entry.
 - Links: multiple fixes to web links handling, specially for YouTube links (which should now properly use the 'fy+' scheme in all cases).
