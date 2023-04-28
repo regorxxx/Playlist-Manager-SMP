@@ -410,7 +410,7 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
 // Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
-function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject, helpFile = null) {
+function _inputbox(w, h, defaultText, emptyText, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject, helpFile = null) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.font_italic = _gdiFont('Segoe UI', _scale(10), 2);
@@ -420,9 +420,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.backcolor = backcolor;
 	this.bordercolor = bordercolor;
 	this.backselectioncolor = backselectioncolor;
-	this.default_text = default_text;
-	this.text = default_text;
-	this.empty_text = empty_text;
+	this.defaultText = defaultText;
+	this.text = defaultText;
+	this.emptyText = emptyText;
 	this.stext = '';
 	this.prev_text = '';
 	this.func = func;
@@ -525,7 +525,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				gr.GdiDrawText(this.text.substr(this.offset), this.font, this.edit ? this.textcolor : blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
 			}
 		} else {
-			gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(this.textcolor, (this.backcolor === 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
+			gr.GdiDrawText(this.emptyText, this.font_italic, blendColors(this.textcolor, (this.backcolor === 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
 		}
 		// draw cursor
 		if (this.edit && !this.select) {
@@ -581,7 +581,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.on_focus = function (is_focused) {
 		if (!is_focused && this.edit) {
 			if (this.text.length == 0) {
-				this.text = this.default_text;
+				this.text = this.defaultText;
 			};
 			this.edit = false;
 			// clear timer
