@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/23
+//28/04/23
 
 /* 
 	Objects
@@ -99,10 +99,10 @@ Object.defineProperty(Object.prototype, 'length', {get() {throw new Error('No le
 // Stringify without quotes
 Object.defineProperty(Object.prototype, 'toStr', {
 	configurable: false,
-	value: function toStr(bClosure = false) {
+	value: function toStr({bClosure = false, bCapitalizeKeys = false, separator = ', '} = {}) {
 		return (bClosure ? '{' : '') + Object.entries(this).map((entry) => {
-			return (typeof entry[0] === 'object' ? entry[0].toStr() : entry[0].toString()) + ': ' + (typeof entry[1] === 'object' ? entry[1].toStr() : entry[1].toString());
-		}).join(', ') + (bClosure ? '}' : '');
+			return (typeof entry[0] === 'object' ? entry[0].toStr() : bCapitalizeKeys ? capitalize(entry[0].toString()) : entry[0].toString()) + ': ' + (typeof entry[1] === 'object' ? entry[1].toStr() : entry[1].toString());
+		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
 
