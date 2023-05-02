@@ -2,7 +2,12 @@
 REM ------------------------------------------------------------------
 REM Create packages (zip file) from js files
 REM Requires tar.exe on windows to compress (otherwise do it manually)
-REM tar.exe is provide on Windows 10 (1803) build 17063 onwards
+REM tar.exe is provide on Windows 10 (1803) build 17063 onward
+REM Alternatively, can also be downloaded from:
+REM 	https://libarchive.org/
+REM			Decompress anywhere
+REM			Rename bsdtar.exe to tar.exe (at 'libarchive\bin')
+REM 		Move 'tar.exe' and 'archive.dll' to 'C:\Windows\'
 REM bat file must be placed at the root of the js files
 REM Usage:
 REM 	_createPackage.bat [Number]
@@ -271,6 +276,7 @@ CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_properties.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
