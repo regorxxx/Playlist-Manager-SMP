@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/23
+//02/05/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -249,7 +249,7 @@ setProperties(properties, 'plm_');
 		}
 		overwriteProperties(prop); // Updates panel
 		// Share ListenBrainz Token
-		if (!list.properties.lBrainzToken[1].length) {
+		if (!prop.lBrainzToken[1].length) {
 			callbacksListener.lBrainzTokenListener = true;
 			setTimeout(() => window.NotifyOthers('xxx-scripts: lb token', null), 3000);
 			setTimeout(() => {callbacksListener.lBrainzTokenListener = false;}, 6000);
