@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//02/05/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -63,7 +63,7 @@ const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($
 //		... (set rules) ...
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
-function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = '', description = '', bBOM = false}) {
+function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false}) {
 	if (!playlistIndex && !handleList) {return false;}
 	const extension = ext.toLowerCase();
 	if (!writablePlaylistFormats.has(extension)){
@@ -93,6 +93,8 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			playlistText.push('#PLAYLISTSIZE:');
 			playlistText.push('#DURATION:');
 			playlistText.push('#PLAYLIST_MBID:' + playlist_mbid);
+			playlistText.push('#AUTHOR:' + author);
+			playlistText.push('#DESCRIPTION:' + description);
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
