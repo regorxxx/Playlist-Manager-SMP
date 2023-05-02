@@ -233,6 +233,10 @@ listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, t
 				const jspf = JSON.parse(resolve);
 				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace(this.regEx, '')) {
 					console.log('importPlaylist: ' + JSON.stringify({creator: jspf.playlist.creator, identifier: jspf.playlist.identifier, tracks: jspf.playlist.track.length}));
+					Object.defineProperty(jspf.playlist, 'description', { // Remap description to annotation
+					  set: function (x) {this.annotation = x;},
+					  get: function () {return this.annotation;}
+					});
 					return jspf;
 				}
 			}
@@ -249,7 +253,7 @@ listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, t
 listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 	if (!checkLBToken()) {return false;}
 	let bDone = false;
-	const jspf = await this.retrieveUserPlaylists(user, this.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
+	const jsfpArr = await this.retrieveUserPlaylists(user, this.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
 	if (jsfpArr && jsfpArr.length) {
 		const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 		jsfpArr.forEach((jspf) => {
@@ -267,11 +271,14 @@ listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 				const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
 				const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
 				const tags = ['ListenBrainz'];
+				const playlist_mbid = jspf.playlist.identifier.replace(this.regEx, '');
+				const author =  jspf.playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
+				const description = jspf.playlist.description;
 				if (list.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 				if (list.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
 				if (list.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
 				if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(oPlaylistTags).has(tag)) {oPlaylistTags.push(tag);}});}
-				bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+				bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author, description, useUUID, bBOM: list.bBOM});
 				// Restore backup in case something goes wrong
 				if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 				else if (_isFile(backPath)) {_deleteFile(backPath);}
