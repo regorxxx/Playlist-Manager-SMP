@@ -41,8 +41,10 @@
 ### Changed
 - ListenBrainz: improvements to error handling and reports given to user.
 - ListenBrainz: playlist MBID is now cached on import menu entry (during same session).
-- ListenBrainz: .xspf playlist now save user-name at 'creator' tag, user's web page at 'info' tag and playlist's web page at 'location' tag.
+- ListenBrainz: .xspf playlists now save user-name at 'creator' tag, user's web page at 'info' tag, playlist's web page at 'location' tag and description metadata.
+- ListenBrainz: .m3u8 playlists now save user-name at 'author' tag and description metadata.
 - ListenBrainz: panel is now blocked with an animation while retrieving playlists.
+- Playlist formats: all playlists created by the manager will now have 'author' metadata present and set to 'Playlist-Manager-SMP'.
 - UI: revamp of UI, moving list and header menus to buttons at the header along a more modern look. Header actions (and tooltip info) are now available at the bolt button.
 - UI: up/down buttons are replaced by a smart scroll bar which is automatically hidden when the mouse is not over. Double clicking on the bar will jump to the active/playing playlist. Double clicking on the up/down bar buttons will jump to the top/bottom of the list.
 - UI: -by default- up/down buttons are now only shown while drag n' dropping to easily scroll the list.
@@ -61,6 +63,9 @@
 - AutoPlaylists: 'Reload playlist (overwrite)' was not working properly, creating a duplicated playlist instead of overwriting the existing one.
 - ListenBrainz: crash due to renamed 'contentResolver' function call.
 - ListenBrainz: workaround for windows caching of server requests (so sometimes playlists were not updated with changes on real time).
+- ListenBrainz: relative paths not being used -if configured to do so- when importing playlists from ListenBrainz.
+- Clone: relative paths not being used -if configured to do so- when cloning a playlist file.
+- Clone: links being reported as non found when cloning a playlist file. Now they are silently omitted. Non found paths are still reported.
 - UI: MBIDs filtering not being saved between sessions.
 - UI: resetting all filters did not reset MBID filtering.
 - UI: selected and highlighted playlist rectangles did not match in size (again).
@@ -71,6 +76,8 @@
 - Playlists maintenance tools: fixed relative path handling for 'Duplicated items...' tool when there were multiple relative levels.
 - Playlists maintenance tools: fixed report for 'Absolute/relative paths...' tool; displaying always none even when results where found.
 - Playlists maintenance tools: fixed report for 'Duplicated items...' tool; popup said 'dead items' instead of 'duplicated items'.
+- XSP: sorting not properly saved on smart playlist creation.
+- XSP: type ('songs') not properly set on smart playlist creation.
 
 ## [0.5.0-beta.18] - 2023-03-08
 ### Added
