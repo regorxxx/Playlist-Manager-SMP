@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/04/23
+//02/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -844,7 +844,7 @@ function _list(x, y, w, h) {
 								} else if (this.bShowTips) { // All Tips
 									playlistDataText += '\n(L. Click to manage playlist)';
 									playlistDataText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
-									playlistDataText += '\n(R. Click for other tools / new playlists)';
+									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {playlistDataText += '\n(R. Click for other tools / new playlists)';}
 									playlistDataText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
 									playlistDataText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
 									playlistDataText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
@@ -855,9 +855,8 @@ function _list(x, y, w, h) {
 									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 								}
 								if (headerRe.test(playlistDataText)) { // If no shortcut was found, show default ones
-									playlistDataText += '\n(R. Click for config menus)';
 									playlistDataText += '\n(L. Click to manage playlist)';
-									playlistDataText += '\n(R. Click for other tools / new playlists)';
+									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {playlistDataText += '\n(R. Click for other tools / new playlists)';}
 								}
 								// Adding Duplicates on selection hint
 								let warningText = '';
@@ -1270,7 +1269,7 @@ function _list(x, y, w, h) {
 					if (animation.fRepaint !== null) {clearTimeout(animation.fRepaint);}
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
 					let method = this.methodState.split('\t')[0].replace('By ', '');
-					if (method === 'name' || !(new oPlaylist('', '')).hasOwnProperty(method)) {method = 'nameId';} // Fallback to name for sorting methods associated to non tracked variables
+					if (method === 'name' || !(new oPlaylist()).hasOwnProperty(method)) {method = 'nameId';} // Fallback to name for sorting methods associated to non tracked variables
 					let bNext = false;
 					const bCycle = this.properties.bQuicSearchCycle[1];
 					if (!this.properties.bQuicSearchNext[1]) {
@@ -1898,7 +1897,7 @@ function _list(x, y, w, h) {
 					} else {bDeleted = true;}
 					if (bDeleted) {
 						const extension = this.bSavingDefExtension || plsData.extension === '.fpl' ? this.playlistsExtension : plsData.extension;
-						let done = savePlaylist({playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, bBom: this.bBOM});
+						let done = savePlaylist({playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, author: plsData.author, description: plsData.description, bBom: this.bBOM});
 						if (!done) {
 							fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 							_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -2026,7 +2025,13 @@ function _list(x, y, w, h) {
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
-				const oAutoPlaylistItem = new oPlaylist('', '', item.name, '', size, 0, false, true, {query: item.query, sort: item.sort, bSortForced: item.forced}, '', [], [], 0, duration, '');
+				const oAutoPlaylistItem = new oPlaylist({
+					name: item.name,
+					size,
+					bAutoPlaylist: true,
+					queryObj: {query: item.query, sort: item.sort, bSortForced: item.forced},
+					duration
+				});
 				const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
 				if (diffKeys.size) {diffKeys.forEach((key) => {item[key] = defPls[key];});}
 				// width is done along all playlist internally later...
@@ -2491,6 +2496,8 @@ function _list(x, y, w, h) {
 							item.tags = fplPlaylist.tags;
 							item.size = fplPlaylist.size;
 							item.duration = fplPlaylist.duration;
+							item.author = fplPlaylist.author;
+							item.description = fplPlaylist.description;
 						}
 						this.fplPopup();
 					} else if (item.extension === '.pls') {
@@ -2505,6 +2512,8 @@ function _list(x, y, w, h) {
 							item.size = xspPlaylist.size;
 							item.duration = xspPlaylist.duration;
 							item.isLocked = xspPlaylist.isLocked;
+							item.author = xspPlaylist.author;
+							item.description = xspPlaylist.description;
 						}
 						this.xspPopup();
 					}
@@ -2572,7 +2581,15 @@ function _list(x, y, w, h) {
 			fooPls.forEach((pls) => {
 				if (!this.dataAll.some((dataPls) => {return dataPls.nameId === pls.name;})) {
 					if (!this.dataFoobar.some((dataPls) => {return dataPls.nameId === pls.name;})) { // Remove duplicates
-						this.dataFoobar.push(new oPlaylist('', '', pls.name, '.ui', plman.PlaylistItemCount(pls.idx), 0, plman.IsPlaylistLocked(pls.idx), false, {query: '', sort: '', bSortForced: false}, 'fooPls', void(0), void(0), void(0), plman.GetPlaylistItems(pls.idx).CalcTotalDuration(), ''));
+						this.dataFoobar.push(new oPlaylist({
+							name: pls.name,
+							extension: '.ui',
+							size: plman.PlaylistItemCount(pls.idx),
+							bLocked: plman.IsPlaylistLocked(pls.idx),
+							category: 'fooPls',
+							duration: plman.GetPlaylistItems(pls.idx).CalcTotalDuration(),
+							author: 'Foobar2000'
+						}));
 					}
 				}
 			});
@@ -2897,7 +2914,17 @@ function _list(x, y, w, h) {
 			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : handleList.Count;
 			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : handleList.CalcTotalDuration();
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-			const objectPlaylist = new oPlaylist(UUID, '', newName, '', queryCount, 0, false, true, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], 0, duration, '');
+			const objectPlaylist = new oPlaylist({
+				id: UUID,
+				name: newName,
+				size: queryCount,
+				bAutoPlaylist: true,
+				queryObj: newQueryObj, 
+				category: hasCategory ? pls.category : '',
+				tags: hasTags ? pls.tags : [],
+				trackTags: hasTrackTags ? pls.trackTags : [],
+				duration
+			});
 			// Auto-Tags
 			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
@@ -2957,7 +2984,19 @@ function _list(x, y, w, h) {
 				if (!Number.isFinite(newLimit)) {newLimit = 0;}
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
-			const objectPlaylist = new oPlaylist('', playlistPath, newName, '.xsp', queryCount, 0, false, false, newQueryObj, hasCategory ? pls.category : '', hasTags ? pls.tags : [], hasTrackTags ? pls.trackTags : [], newLimit, duration, '');
+			const objectPlaylist = new oPlaylist({
+				path: playlistPath,
+				name: newName,
+				extension: '.xsp',
+				size: queryCount,
+				queryObj: newQueryObj,
+				category: hasCategory ? pls.category : '',
+				tags: hasTags ? pls.tags : [],
+				trackTags: hasTrackTags ? pls.trackTags : [],
+				limit: newLimit,
+				duration,
+				type: 'songs'
+			});
 			// Auto-Tags
 			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) {objectPlaylist.tags.push('bAutoLock');}
 			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) {objectPlaylist.tags.push('bAutoLoad');}
@@ -3001,8 +3040,8 @@ function _list(x, y, w, h) {
 				catch(e) {return false;}
 				if (!input.length) {return false;}
 			}
-			const new_name = input;
-			const oPlaylistPath = this.playlistsPath + sanitize(new_name) + this.playlistsExtension;
+			const newName = input;
+			const oPlaylistPath = this.playlistsPath + sanitize(newName) + this.playlistsExtension;
 			// Auto-Tags
 			const oPlaylistTags = [];
 			let objectPlaylist = null;
@@ -3021,31 +3060,41 @@ function _list(x, y, w, h) {
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
-				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: new_name, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
+				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
-					objectPlaylist = new oPlaylist(UUID, oPlaylistPath, new_name, this.playlistsExtension, bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist), utils.GetFileSize(done), void(0), void(0), void(0), oPlaylistCategory, oPlaylistTags, void(0), void(0), bEmpty ? void(0) : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration());
+					objectPlaylist = new oPlaylist({
+						id: UUID,
+						path: oPlaylistPath,
+						name: newName,
+						extension: this.playlistsExtension,
+						size: bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist),
+						fileSize: utils.GetFileSize(done),
+						category: oPlaylistCategory,
+						tags: oPlaylistTags,
+						duration: bEmpty ? -1 : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration()
+					});
 					// Adds to list of objects and update variables
 					idx = this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
-						let indexFound = plman.FindPlaylist(new_name);
+						let indexFound = plman.FindPlaylist(newName);
 						if (indexFound === -1) { 
-							let new_playlist = plman.CreatePlaylist(plman.PlaylistCount, new_name + UUID);
+							let new_playlist = plman.CreatePlaylist(plman.PlaylistCount, newName + UUID);
 							plman.ActivePlaylist = new_playlist;
 						} else { // If there is a playlist with the same name, ask to bind
-							let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + new_name + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, window.Name, popup.question + popup.yes_no) : popup.no;
+							let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + newName + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, window.Name, popup.question + popup.yes_no) : popup.no;
 							if (answer === popup.yes) {
 								plman.ActivePlaylist = indexFound;
-								plman.RenamePlaylist(indexFound, new_name + UUID);
+								plman.RenamePlaylist(indexFound, newName + UUID);
 								this.updatePlaylist({playlistIndex: plman.ActivePlaylist, bCallback: true}); // This updates size too. Must replicate callback call since the playlist may not be visible on the current filter view!
 							}
 						}
 					} else { // If we changed the name of the playlist but created it using the active playlist, then clone with new name
-						if (new_name !== oldName) {
-							let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, new_name + UUID);
+						if (newName !== oldName) {
+							let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, newName + UUID);
 							plman.ActivePlaylist = new_playlist;
 						} else {
-							plman.RenamePlaylist(plman.ActivePlaylist, new_name + UUID);
+							plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID);
 						}
 					}
 					// Warn about dead items
@@ -3063,7 +3112,7 @@ function _list(x, y, w, h) {
 					console.popup('Playlist generation failed while writing file \'' + oPlaylistPath + '\'.', window.Name, bShowPopups);
 					return false;
 				}
-			} else {console.popup('Playlist \'' + new_name + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups); return false;}
+			} else {console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups); return false;}
 			this.update(true, true); // We have already updated data
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
@@ -3235,8 +3284,8 @@ function _list(x, y, w, h) {
 			if (!pls.isAutoPlaylist && !bUI) { // Only for not AutoPlaylists
 				if (_isFile(pls.path)) {
 					let newPath = pls.path.split('.').slice(0,-1).join('.').split('\\');
-					const new_name = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
-					newPath = newPath.concat([new_name]).join('\\') + pls.extension;
+					const newName = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
+					newPath = newPath.concat([newName]).join('\\') + pls.extension;
 					_renameFile(pls.path, newPath);
 					// And delete it
 					// Beware of calling this while pressing shift. File will be removed without sending to recycle bin!
