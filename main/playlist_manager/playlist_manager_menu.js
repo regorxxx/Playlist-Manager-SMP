@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/04/23
+//02/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -414,7 +414,7 @@ function createMenuLeft(forcedIndex = -1) {
 														console.log('Found ' + foundLinks + ' tracks on YouTube');
 														const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 														if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
-														bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+														bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
 														// Restore backup in case something goes wrong
 														if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
 														else if (_isFile(backPath)) {_deleteFile(backPath);}
@@ -429,7 +429,7 @@ function createMenuLeft(forcedIndex = -1) {
 											const handleList = data.handleList;
 											const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 											if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
-											bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+											bDone = savePlaylist({handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
 											// Restore backup in case something goes wrong
 											if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
 											else if (_isFile(backPath)) {_deleteFile(backPath);}
@@ -881,6 +881,7 @@ function createMenuRight() {
 							const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
 							const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
 							const tags = ['ListenBrainz'];
+							const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
 							if (list.bAutoLoadTag) {tags.push('bAutoLoad');}
 							if (list.bAutoLockTag) {tags.push('bAutoLock');}
 							if (list.bMultMenuTag) {tags.push('bMultMenu');}
@@ -916,7 +917,7 @@ function createMenuRight() {
 												}
 											}
 										});
-										const bLoaded = plman.FindPlaylist(pls.nameId) !== -1;
+										const bLoaded = plman.FindPlaylist(playlistNameId) !== -1;
 										const idx = plman.FindOrCreatePlaylist(playlistNameId, true);
 										plman.ClearPlaylist(idx);
 										return plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true)
@@ -930,7 +931,7 @@ function createMenuRight() {
 													if (answer === popup.no) {return false;}
 													_renameFile(playlistPath, backPath);
 												}
-												bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+												bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
 												// Restore backup in case something goes wrong
 												if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 												else if (_isFile(backPath)) {_deleteFile(backPath);}
@@ -949,7 +950,7 @@ function createMenuRight() {
 										if (answer === popup.no) {return false;}
 										_renameFile(playlistPath, backPath);
 									}
-									bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, useUUID, bBOM: list.bBOM});
+									bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
 									// Restore backup in case something goes wrong
 									if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 									else if (_isFile(backPath)) {_deleteFile(backPath);}
@@ -963,7 +964,6 @@ function createMenuRight() {
 								}
 							} else {
 								let totalDuration = 0;
-								const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
 								playlist.creator = author + ' - Playlist-Manager-SMP';
 								playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
 								playlist.location = playlist.identifier;
