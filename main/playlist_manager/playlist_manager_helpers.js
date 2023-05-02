@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//02/05/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -10,14 +10,17 @@ include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 
-function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', type = '') {
-	if (typeof extension === 'undefined') {extension = utils.SplitFilePath(path)[2];}
-	if (typeof name === 'undefined') {name = utils.SplitFilePath(path)[1];}
-	this.id = id;
-	this.name = name;
-	this.nameId = (id) ? name + id : name;
-	this.extension = extension.toLowerCase();
-	this.path = path;
+function oPlaylist({id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description= '', type = ''} = {}) {
+	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
+		const sfp = utils.SplitFilePath(path);
+		if (typeof extension === 'undefined') {extension = sfp[2];}
+		if (typeof name === 'undefined') {name = sfp[1];}
+	}
+	this.id = id || '';
+	this.name = name || '';
+	this.nameId = (id) ? this.name + id : this.name;
+	this.extension = (extension || '').toLowerCase();
+	this.path = path || '';
 	this.size = size;
 	this.fileSize = fileSize;
 	this.isLocked = bLocked;
@@ -31,6 +34,8 @@ function oPlaylist(id, path, name = void(0), extension = void(0), size = '?', fi
 	this.limit = Number.isFinite(limit) ? limit : 0;
 	this.duration = Number.isFinite(duration) ? duration : -1;
 	this.playlist_mbid = playlist_mbid;
+	this.author = author;
+	this.description = description;
 	if (this.extension === '.xsp') {this.type = type || ''}
 }
 
@@ -54,6 +59,8 @@ function loadPlaylistsFromFolder(folderPath = '') {
 		let limit = null;
 		let duration = null;
 		let playlist_mbid = '';
+		let author = '';
+		let description = '';
 		let type = null;
 		const fileSize = utils.GetFileSize(file);
 		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar2000 native playlist format
@@ -108,11 +115,19 @@ function loadPlaylistsFromFolder(folderPath = '') {
 							iFound++;
 							playlist_mbid = lineText.split(':').slice(1).join(':');
 						}
-						if (iFound === 9) {break;}
+						if (lineText.startsWith('#AUTHOR:')) {
+							iFound++;
+							author = lineText.split(':').slice(1).join(':');
+						}
+						if (lineText.startsWith('#DESCRIPTION:')) {
+							iFound++;
+							description = lineText.split(':').slice(1).join(':');
+						}
+						if (iFound === 11) {break;}
 						j++;
 					}
 				}
-			}			
+			}
 			if (size === null) { // Or count tracks
 				const filteredText = text.filter(function(e) {return !e.startsWith('#');});
 				size = filteredText.length;
@@ -166,6 +181,8 @@ function loadPlaylistsFromFolder(folderPath = '') {
 					else if (jPls.hasOwnProperty('identifier') && jPls.identifier && jPls.identifier.startsWith('https://listenbrainz.org/playlist/')) {
 						playlist_mbid = jPls.identifier.replace('https://listenbrainz.org/playlist/', ''); // MBID for playlists retrieved from ListenBrainz
 					}
+					if (jPls.hasOwnProperty('author')) {author = jPls.author;}
+					if (jPls.hasOwnProperty('annotation')) {description = jPls.description;}
 					if (size === null) {size = jPls.hasOwnProperty('track') && jPls.track ? jPls.track.length : null;} // Prefer playlist info over track count
 					else if (jPls.hasOwnProperty('track') && jPls.track && size !== jPls.track.length) {fb.ShowPopupMessage('.xspf playlist size mismatch: ' + file + '\nReported size (' + size +') is not equal to track count (' + jPls.track.length +')', window.Name);}
 				}
@@ -187,24 +204,26 @@ function loadPlaylistsFromFolder(folderPath = '') {
 				}
 			}
 		}
-		playlistArray[i] = new oPlaylist(
-			uuid,
-			file,
-			name.length ? name : void(0),
+		playlistArray[i] = new oPlaylist({
+			id: uuid,
+			path: file,
+			name: name.length ? name : void(0), // Pass undefined to retrieve from path
 			extension,
-			size !== null ? size : void(0),
+			size: size !== null ? size : void(0),
 			fileSize,
 			bLocked,
-			void(0),
-			queryObj ? queryObj : void(0),
-			category.length ? category : void(0),
-			isArrayStrings(tags) ? tags : void(0),
-			isArray(trackTags) ? trackTags : void(0),
-			Number.isFinite(limit) ? limit : void(0),
-			Number.isFinite(duration) ? duration : void(0),
-			playlist_mbid.length ? playlist_mbid : void(0),
-			extension === '.xsp' && type !== null ? type : void(0)
-		);
+			bAutoPlaylist: false,
+			queryObj: queryObj ? queryObj : void(0),
+			category,
+			tags: isArrayStrings(tags) ? tags : void(0),
+			trackTags: isArray(trackTags) ? trackTags : void(0),
+			limit: Number.isFinite(limit) ? limit : void(0),
+			duration: Number.isFinite(duration) ? duration : void(0),
+			playlist_mbid,
+			author,
+			description,
+			type: extension === '.xsp' && type !== null ? type : void(0)
+		});
 	}
 	return playlistArray;
 }
@@ -737,12 +756,12 @@ function clonePlaylistFile(list, z, ext) {
 	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
-	paths.forEach((trackPath, i) => {if (!_isFile(trackPath)) {report.push(trackPath);}});
+	paths.forEach((trackPath, i) => {if (!_isLink(trackPath) && !_isFile(trackPath)) {report.push(trackPath);}});
 	if (handleList) {
 		if (report.length) {fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
 		if (handleList.Count) {
 			// Retrieve new paths
-			bDone = savePlaylist({handleList, playlistPath, ext, playlistName, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, bBOM: list.bBOM});
+			bDone = savePlaylist({handleList, playlistPath, ext, playlistName, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
 		}
 	}
 	bDone = bDone && _isFile(playlistPath); // Debug popups are already handled at prev line
@@ -933,7 +952,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\%FILENAME%.mp3', p
 				file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 				paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 			} else { // Or create new playlist file when translating between different formats
-				savePlaylist({handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+				savePlaylist({handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM});
 				file = _open(newPath, utf8);
 				paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 			}
@@ -1000,7 +1019,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%FILENAME%.mp3
 		let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
 		if (_isFile(newPath)) {bDeleted = _recycleFile(newPath, true);}
 		// Create new playlist file when translating between different formats
-		savePlaylist({handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, bBOM: list.bBOM});
+		savePlaylist({handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM});
 		let file = _open(newPath, utf8);
 		paths.forEach((path, i) => {file = file.replace(path, fileNames[i]);});
 		if (bDeleted !== false) {
