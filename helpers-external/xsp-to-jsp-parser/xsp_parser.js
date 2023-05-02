@@ -1,6 +1,6 @@
 ﻿'use strict';
-// 27/04/22
-// Copyright Regorxxx 2022
+// 02/05/23
+// Copyright Regorxxx 2023
 // Based on works by J. Chris Anderson 2007 
 // https://github.com/jchris/xspf-to-jspf-parser
 // Retain this notice. 
@@ -86,6 +86,10 @@ const XSP = {
 		const order = this.getDirectChildrenByTagName(xsp_playlist,['order']);
 		if (order && order[0]) {playlist.order = this.getRelValuePairs(order[0],true,'direction');}
 		if (!playlist.order || !playlist.order.length) {playlist.order = [{}];}
+		Object.defineProperty(playlist, 'sort', { // Remap sort to order
+		  set: function (x) {this.order = x;},
+		  get: function () {return this.order;}
+		});
 		
 		playlist.rules = this.parse_rules(xsp_playlist);
 		

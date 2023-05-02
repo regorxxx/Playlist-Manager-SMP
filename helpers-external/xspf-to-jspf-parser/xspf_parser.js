@@ -1,6 +1,6 @@
 ﻿'use strict';
-// 15/09/22
-// Copyright Regorxxx 2022
+// 02/05/23
+// Copyright Regorxxx 2023
 // Based on works by J. Chris Anderson 2007 
 // https://github.com/jchris/xspf-to-jspf-parser
 // Retain this notice. 
@@ -38,6 +38,10 @@ const XSPF = {
 		playlist.title = playlist.title[0];
 		playlist.creator = playlist.creator[0];
 		playlist.annotation = playlist.annotation[0];
+		Object.defineProperty(playlist, 'description', { // Remap description to annotation
+		  set: function (x) {this.annotation = x;},
+		  get: function () {return this.annotation;}
+		});
 		playlist.info = this.strWh(playlist.info[0]);
 		playlist.location = this.strWh(playlist.location[0]);
 		playlist.identifier = this.strWh(playlist.identifier[0]);
