@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/23
+//03/05/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -226,6 +226,12 @@ setProperties(properties, 'plm_');
 { // Info Popup
 	let prop = getPropertiesPairs(properties, 'plm_');
 	if (!prop['bFirstPopup'][1]) {
+		if (folders.JsPackageDirs) { // Workaround for https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210
+			const infoPopup = WshShell.Popup('This script has been installed as a package.\nBefore closing the \'Spider Monkey Panel configuration window\' all popups must be closed, take your time reading them and following their instructions.\nAfterwards, close the SMP window. Panel will be reloaded.', 0, window.Name, popup.info + popup.ok);
+			if (getPropertiesValues(properties, 'plm_').filter(Boolean).length === 0) { // At this point nothing works properly so just throw
+				throw new Error('READ THE POPUPS AND STOP CLICKING ON BUTTONS WITHOUT READING!!!\nOtherwise TT, aka GeoRrGiA-ReBorN\'s master, will try\nto kill you with their good jokes.\n\nReally, read the popups and make our lives easier. Try reinstalling the script.\n\nThanks :)');
+			}
+		}
 		prop['bFirstPopup'][1] = true;
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
