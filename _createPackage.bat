@@ -1,14 +1,13 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files
-REM Requires tar.exe on windows to compress (otherwise do it manually)
-REM tar.exe is provide on Windows 10 (1803) build 17063 onward
-REM Alternatively, can also be downloaded from:
-REM 	https://libarchive.org/
-REM			Decompress anywhere
-REM			Rename bsdtar.exe to tar.exe (at 'libarchive\bin')
-REM 		Move 'tar.exe' and 'archive.dll' to 'C:\Windows\'
-REM bat file must be placed at the root of the js files
+REM Create packages (zip file) from js files v.03/05/23
+REM Requires 7za.exe on windows to compress (otherwise do it manually)
+REM If it's not provided, can be downloaded from:
+REM 	https://www.7-zip.org/download.html
+REM 		Download 7-Zip Extra: standalone console version...
+REM 		Move '7za.exe' to 'C:\Windows\' (or equivalent path)
+REM 		Alternatively set path at zipExec variable
+REM Bat file must be placed at the root of the js files
 REM Usage:
 REM 	_createPackage.bat [Number]
 REM Key:
@@ -17,6 +16,7 @@ REM					user input
 REM ------------------------------------------------------------------
 SETLOCAL
 SET packagesFolder=packages
+SET zipExec=helpers-external\7z\7za_32.exe
 ECHO ---------------------------------
 ECHO ^|	Package creator:	^|
 ECHO ---------------------------------
@@ -124,15 +124,10 @@ CALL :copy_file presets\AutoHotkey\foobar_preview_play.ahk
 CALL :copy_file presets\AutoHotkey\foobar_preview_sel.ahk
 CALL :copy_file presets\AutoHotkey\readme.txt
 CALL :copy_folder presets\"World Map"
-REM package info
+REM package info, zip and report
 CALL :create_package_info
-REM zip
-call :compress %name% %version%
-REM Report
-ECHO.
-ECHO Done. Check file at: %root%
-ECHO.
-PAUSE
+CALL :compress %name% %version%
+CALL :report
 GOTO:EOF
 
 :playlist_manager
@@ -239,15 +234,10 @@ CALL :copy_file examples\playlist_xspf_example.xspf
 CALL :copy_file examples\playlist_codepages.zip
 CALL :check_folder presets
 CALL :copy_folder presets\Network
-REM package info
+REM package info, zip and report
 CALL :create_package_info
-REM zip
-call :compress %name% %version%
-REM Report
-ECHO.
-ECHO Done. Check file at: %root%
-ECHO.
-PAUSE
+CALL :compress %name% %version%
+CALL :report
 GOTO:EOF
 
 :not_a_waveform_seekbar
@@ -288,20 +278,10 @@ REM helpers external
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
-REM package info
+REM package info, zip and report
 CALL :create_package_info
-REM zip
-call :compress %name% %version%
-REM Report
-ECHO.
-ECHO.
-IF ERRORLEVEL 1 (
-	ECHO tar.exe not found, you must manually create a zip from the folder. ^(requires Windows 10 ^(1803^) build 17063^)
-	ECHO Check folder at: %root%
-) ELSE (
-	ECHO Done. Check zip file at: %packagesFolder%\%name%-%version:.=-%.zip
-)
-PAUSE>nul
+CALL :compress %name% %version%
+CALL :report
 GOTO:EOF
 
 REM ------------------------------
@@ -309,7 +289,7 @@ REM Internals
 REM ------------------------------
 :delete_file
 SET filePath=%1
-IF EXIST %root%\%filePath% DEL /Q %root%\%filePath%
+IF EXIST %root%\%filePath% DEL /Q /F %root%\%filePath%
 GOTO:EOF
 
 :copy_main
@@ -334,12 +314,35 @@ IF NOT EXIST %root%\%folderPath% MD %root%\%folderPath%
 GOTO:EOF
 
 :check_root
-IF NOT EXIST %root% MD %root%
+IF EXIST %root% (
+	DEL /Q /F /S %root%\*.* >NUL
+	RD /Q /S %root% >NUL
+)
+MD %root%
+GOTO:EOF
+
+:copy_files
+SET folder=%1
+SET files=%~2
+CALL :check_folder %folder%
+FOR %%f in (%files%) do (
+	ECHO %folder%\%%f
+	CALL :copy_file %folder%\%%f
+)
+GOTO:EOF
+
+:copy_folders
+SET folder=%1
+SET folders=%~2
+CALL :check_folder %folder%
+FOR %%f in (%folders%) do (
+	CALL :copy_folder %folder%\%%f
+)
 GOTO:EOF
 
 :create_package_info
 SET filePath=package.json
-IF EXIST %root%\%filePath% DEL /Q %root%\%filePath%
+IF EXIST %root%\%filePath% DEL /Q /F %root%\%filePath%
 REM add bom EF BB BF bytes in HEX-editor
 ECHO | SET /P dummyName="﻿"> %root%\%filePath%
 ECHO {>> %root%\%filePath%
@@ -358,14 +361,28 @@ GOTO:EOF
 :compress
 SET fileName=%1-%version:.=-%.zip
 SET version=%2
-IF EXIST %packagesFolder%\fileName DEL /Q %packagesFolder%\fileName
-TAR --help >nul 2>&1 && (
-	TAR -c -C %root% -f %packagesFolder%\%fileName% *.*
+IF EXIST %packagesFolder%\fileName DEL /Q /F  %packagesFolder%\fileName
+7za --help >nul 2>&1 && (
+	ECHO Compressing...
+	7za a -aoa -mx=7 -bso0 -bsp0 -bb0 -y -bd %packagesFolder%\%fileName% .\%root%\*
 ) || (
-	IF EXIST helpers-external\tar\tar.exe (
-		.\helpers-external\tar\tar.exe  -c -C %root% -f %packagesFolder%\%fileName% *.*
+	IF EXIST %zipExec% (
+		ECHO Compressing...
+		%zipExec% a -aoa -mx=7 -bso0 -bsp0 -bb0 -y -bd %packagesFolder%\%fileName% .\%root%\*
 	) ELSE (
 		EXIT /B 1
 	)
 )
+GOTO:EOF
+
+:report
+ECHO.
+ECHO.
+IF ERRORLEVEL 1 (
+	ECHO 7z.exe not found, you must manually create a zip from the folder.
+	ECHO Check folder at: %root%
+) ELSE (
+	ECHO Done. Check zip file at: %packagesFolder%\%name%-%version:.=-%.zip
+)
+PAUSE>NUL
 GOTO:EOF
