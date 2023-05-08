@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.19](#050-beta19---2023-05-08)
 - [0.5.0-beta.18](#050-beta18---2023-03-08)
 - [0.5.0-beta.17](#050-beta17---2023-03-04)
 - [0.5.0-beta.16](#050-beta16---2023-02-22)
@@ -30,6 +31,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.19] - 2023-05-08
 ### Added
 - Search: search toolbar to filter the current view according to the input. Supports case insensitive matching by playlist name, tag, category or tracks' file or folder names (this one disabled by default). Works pretty similar to the search filters found on Library Tree or the album viewer (except no query support). Enabling the path searching allows to easily find tracks within playlists (both loaded and non loaded ones). Path level is configurable. There is also an additional setting to parse RegExp expressions (which allow more advanced searches).
 - XSP: 'datemodified', 'dateadded', 'datenew', 'noofchannels', 'samplerate', 'musicbitrate', 'time', 'origyear' and 'bpm' support. This covers all tags on the [specs](https://github.com/xbmc/xbmc/blob/master/xbmc/playlists/SmartPlayList.cpp), except 'source' tag which has no correspondence in foobar2000.
@@ -669,7 +676,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.18...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.19...HEAD
+[0.5.0-beta.19]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.18...v0.5.0-beta.19
 [0.5.0-beta.18]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.17...v0.5.0-beta.18
 [0.5.0-beta.17]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.16...v0.5.0-beta.17
 [0.5.0-beta.16]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.15...v0.5.0-beta.16
