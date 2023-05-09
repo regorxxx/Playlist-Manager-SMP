@@ -244,7 +244,7 @@ GOTO:EOF
 REM package variables
 REM usually only version needs to be changed
 REM any text must be JSON encoded
-SET version=1.0.0
+SET version=1.0.0-beta.2
 SET name=Not-A-Waveform-Seekbar-SMP
 SET id=293B12D8-CC8B-4D21-8883-1A29EAFC4074
 SET description=https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP\r\n\r\nA seekbar for foobar2000, using Spider Monkey Panel, audiowaveform or ffprobe. It's based on RMS, peak levels, the actual waveform or visualization presets.\r\n\r\n• Uses audiowaveform by default (included).\r\n• ffprobe can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\\ffprobe'.\r\n• Visualizer mode to simply show an animation which changes according to BPM (if tag exists).\r\n• Fully configurable using the R. Click menu:\r\n   - Colors\r\n   - Waveform modes\r\n   - Analysis modes\r\n   - Animations\r\n   - Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
@@ -382,7 +382,7 @@ IF ERRORLEVEL 1 (
 	ECHO 7z.exe not found, you must manually create a zip from the folder.
 	ECHO Check folder at: %root%
 ) ELSE (
-	ECHO Done. Check zip file at: %packagesFolder%\%name%-%version:.=-%.zip
+	ECHO Done. Check zip file at: %packagesFolder%\%name%-%version:.=-%-package.zip
 )
 PAUSE>NUL
 GOTO:EOF
