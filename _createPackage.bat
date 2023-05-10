@@ -359,7 +359,7 @@ REM https://stackoverflow.com/questions/7105433/windows-batch-echo-without-new-l
 GOTO:EOF
 
 :compress
-SET fileName=%1-%version:.=-%.zip
+SET fileName=%1-%version:.=-%-package.zip
 SET version=%2
 IF EXIST %packagesFolder%\fileName DEL /Q /F  %packagesFolder%\fileName
 7za --help >nul 2>&1 && (
