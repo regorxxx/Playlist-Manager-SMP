@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/23
+//10/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -323,7 +323,6 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 					(resolve) => {
 						if (resolve) {
 							const response = JSON.parse(resolve);
-							console.log(response);
 							if (response.status === 'ok') {
 								return true;
 							}
@@ -340,7 +339,8 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 		});
 		Promise.all(promises).then(() => {
 			console.log('sendFeedback: ' + mbid.length + ' tracks');
-		}, (error) => {new Error(error);});
+			resolve(true);
+		}, (error) => {console.log(error.message); resolve(false);});
 	});
 }
 

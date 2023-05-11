@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/04/23
+//11/05/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -452,6 +452,10 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 		if (bForce) {checkMenuArr = [];}
 		checkMenuArrTemp = [];
 		idx = 0;
+	};
+	
+	this.retry = (bindArgs = null /*{pos: -1, args: null}*/) => {
+		this.btn_up(void(0), void(0), void(0), this.lastCall, true, void(0), void(0), bindArgs);
 	};
 	
 	// Helpers
