@@ -33,6 +33,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- ListenBrainz: network errors when caching library paths (usually at startup) are not reported anymore (since they don't give useful info on real use-cases).
 ### Removed
 ### Fixed
 

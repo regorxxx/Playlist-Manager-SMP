@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/05/23
+//15/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -710,7 +710,9 @@ listenBrainz.decryptToken = function decryptToken({lBrainzToken, bEncrypted = tr
 	return (bEncrypted ? key.decrypt(lBrainzToken) : lBrainzToken);
 }
 
-listenBrainz.validateToken = async function validateToken(token) {
+listenBrainz.validateToken = async function validateToken(token, bOmitNetworError = false) {
 	const response = await this.retrieveUserResponse(token);
-	return response ? response.valid : null; // null | false | true
+	return response // null | false | true
+		? response.valid || bOmitNetworError && response.code === 12007 
+		: null;
 };

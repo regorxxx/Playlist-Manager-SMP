@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/05/23
+//15/05/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -53,7 +53,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 					const lBrainzToken = list.properties.lBrainzToken[1];
 					const bEncrypted = list.properties.lBrainzEncrypt[1];
 					if (lBrainzToken.length && !bEncrypted) {
-						listenBrainz.validateToken(lBrainzToken).then((bValid) => {
+						listenBrainz.validateToken(lBrainzToken, true).then((bValid) => { // Omit network errors
 							if (!bValid) {listenBrainz.consoleError('Token can not be validated.');}
 						});
 					}
