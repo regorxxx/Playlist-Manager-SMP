@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.20](#050-beta20---2023-05-16)
 - [0.5.0-beta.19](#050-beta19---2023-05-08)
 - [0.5.0-beta.18](#050-beta18---2023-03-08)
 - [0.5.0-beta.17](#050-beta17---2023-03-04)
@@ -31,6 +32,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.20] - 2023-05-16
 ### Added
 ### Changed
 - ListenBrainz: network errors when caching library paths (usually at startup) are not reported anymore (since they don't give useful info on real use-cases).
@@ -677,7 +684,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.19...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.20...HEAD
+[0.5.0-beta.20]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.19...v0.5.0-beta.20
 [0.5.0-beta.19]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.18...v0.5.0-beta.19
 [0.5.0-beta.18]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.17...v0.5.0-beta.18
 [0.5.0-beta.17]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.16...v0.5.0-beta.17
