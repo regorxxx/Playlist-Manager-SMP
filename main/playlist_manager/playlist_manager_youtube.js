@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//17/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -12,7 +12,16 @@ const youtube = {
 };
 
 youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => {return void(0);}} = {}) {
-	return await send({ 
+	const id = creator.toLowerCase() + ' ' + title.toLowerCase();
+	const mbid = tags && tags.hasOwnProperty('MUSICBRAINZ_TRACKID') ? tags.MUSICBRAINZ_TRACKID : null;
+	const ytItem = youtube.cache.get(mbid || id) || null;
+	// Add tags from input
+	if (tags && ytItem) {
+		ytItem.url += Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join('');
+		for (let key in tags) {ytItem[key] = tags[key];}
+	}
+	// Retrieve cached item or new one
+	return ytItem || await send({ 
 		method: 'POST',
 		URL: 'https://www.youtube.com/youtubei/v1/search?' + (youtube.key.length ? 'key=' + youtube.key : ''),
 		body: JSON.stringify({
@@ -79,24 +88,30 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 					const vid = videos[0];
 					const track = capitalize(title);
 					const artist = capitalizeAll(creator);
-					return {
+					const url = 'fy+https://www.youtube.com/watch?' + 
+						'v=' + vid.id + 
+						'&fb2k_title=' + encodeURIComponent(track) + 
+						'&fb2k_search_title=' + encodeURIComponent(vid.title) + 
+						'&fb2kx_length=' + encodeURIComponent(vid.length) + 
+						'&fb2kx_title=' + encodeURIComponent(track) + 
+						'&fb2k_artist=' + encodeURIComponent(artist);
+					const ytItem = {
 						title: track,
 						artist,
 						length: vid.length,
-						url: 'fy+https://www.youtube.com/watch?' + 
-							'v=' + vid.id + 
-							'&fb2k_title=' + encodeURIComponent(track) + 
-							'&fb2k_search_title=' + encodeURIComponent(vid.title) + 
-							'&fb2kx_length=' + encodeURIComponent(vid.length) + 
-							'&fb2kx_title=' + encodeURIComponent(track) + 
-							'&fb2k_artist=' + encodeURIComponent(artist) + 
-							(
-								tags 
-									? Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join('')
-									: ''
-							),
-						...(tags || {})
+						url
 					};
+					// Add to cache, without the input tags (which may change)
+					if (!youtube.cache.has(id)) {youtube.cache.set(id, ytItem);}
+					if (mbid && !youtube.cache.has(mbid)) {youtube.cache.set(mbid, ytItem);}
+					// Add tags from input
+					if (tags) {
+						ytItem.url += Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join('');
+						for (let key in tags) {
+							ytItem[key] = tags[key];
+						}
+					}
+					return ytItem;
 				}
 			}
 			return null
@@ -121,3 +136,9 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 youtube.cleanTitle = function cleanTitle(title) {
 	return n.replace(/&amp(;|)/g, '&').replace(/&quot(;|)/g, '"').replace(/&#39(;|)/g, "'").replace(/&gt(;|)/g, '>').replace(/&nbsp(;|)/g, '').replace(/(\.mv4|1080p|1080i|1080|\d(\d|)(\.|\s-)|explicit( version|)|full HD|HD full|full HQ|full song|(high |HD - |HD-|HD )quality|(| |with |& |w( |)\/( |)|\+ )lyric(s(!|) on Screen|s|)|(official |)music video( |)|official (music|version|video)( |)|(song |official (fan |)|)audio( version| only| clean|)|(| |\+ )official( solo| |)|uncensored|vevo presents|video( |))|\.wmv/gi, '').replace(/(HD|HQ)(\s-\s|)/g, '').replace(/\((|\s+)\)/g, '').replace(/\[(|\s+)\]/g, '').replace(/\(\)/g, '').replace(/\[\]/g, '').replace(/\s+/g, ' ').replace(/[\s-/\\+]+$/g, '').trim();
 };
+
+youtube.cache = new Map(
+	/* 
+		[creator + ' ' + title, {title, artist, length, url}] 
+	*/
+);
