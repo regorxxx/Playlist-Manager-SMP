@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/05/23
+//17/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -234,8 +234,8 @@ listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, t
 				if (jspf && jspf.playlist && jspf.playlist.identifier && pls.playlist_mbid === jspf.playlist.identifier.replace(this.regEx, '')) {
 					console.log('importPlaylist: ' + JSON.stringify({creator: jspf.playlist.creator, identifier: jspf.playlist.identifier, tracks: jspf.playlist.track.length}));
 					Object.defineProperty(jspf.playlist, 'description', { // Remap description to annotation
-					  set: function (x) {this.annotation = x;},
-					  get: function () {return this.annotation;}
+						set: function (x) {this.annotation = x;},
+						get: function () {return this.annotation;}
 					});
 					return jspf;
 				}
@@ -554,7 +554,7 @@ listenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', par
 			return [];
 		},
 		(reject) => {
-			console.log('getFeedback: ' + reject.status + ' ' + reject.responseText);
+			console.log('getTopRecordings: ' + reject.status + ' ' + reject.responseText);
 			return [];
 		}
 	);
@@ -579,7 +579,32 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 			return [];
 		},
 		(reject) => {
-			console.log('getFeedback: ' + reject.status + ' ' + reject.responseText);
+			console.log('getRecommendedRecordings: ' + reject.status + ' ' + reject.responseText);
+			return [];
+		}
+	);
+}
+
+listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecommendedPlaylistsNames(user, params = {/*count, offset*/}, token) {
+	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
+	return send({
+		method: 'GET', 
+		URL: 'https://api.listenbrainz.org/1/user/'+ user + '/playlists/createdfor' + queryParams,
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
+	}).then(
+		(resolve) => {
+			if (resolve) {
+				const response = JSON.parse(resolve);
+				if (response.hasOwnProperty('playlists')) {
+					return response.playlists;
+				}
+				return [];
+			}
+			return [];
+		},
+		(reject) => {
+			console.log('retrieveUserRecommendedPlaylistsNames: ' + reject.status + ' ' + reject.responseText);
 			return [];
 		}
 	);
@@ -627,7 +652,7 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 		}
 		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier});}
 	}
-	if (notFound.length) {console.log('Some tracks have not been found on library:\n' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n'));}
+	if (notFound.length) {console.log('Some tracks have not been found on library:\n\t' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t'));}
 	return {handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound};
 };
 
@@ -693,6 +718,29 @@ listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token)
 			return null;
 		}
 	);
+};
+
+listenBrainz.followUser = function followUser(userToFollow, token) {
+	if (!token || !token.length || !userToFollow || !userToFollow.length) {return null;}
+	return send({
+		method: 'POST', 
+		URL: 'https://api.listenbrainz.org//1/user/' + userToFollow + '/follow',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]]
+	}).then(
+		(resolve) => {
+			console.log('followUser: ' + userToFollow + ' -> ' + resolve);
+			if (resolve) {
+				return JSON.parse(resolve).status === 'ok';
+			}
+			return false;
+		},
+		(reject) => {
+			console.log('followUser: ' + userToFollow + ' -> ' + reject.status + ' ' + reject.responseText);
+			return reject.status === 400;
+		}
+	);
+	
+	
 };
 
 /*
