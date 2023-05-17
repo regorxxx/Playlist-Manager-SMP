@@ -34,6 +34,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- ListenBrainz: youtube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 ### Removed
 ### Fixed
 
