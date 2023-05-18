@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/05/23
+//18/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -8,7 +8,8 @@ include('..\\..\\helpers\\helpers_xxx_web.js');
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
 
 const listenBrainz = {
-	regEx: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g
+	regEx: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g,
+	bProfile: false
 };
 
 /*
@@ -613,8 +614,9 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 /*
 	Content resolver by MBID
 */
-listenBrainz.contentResolver = function contentResolver(jspf) {
+listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = '%RATING%|$strstr($lower(%GENRE%\', \'%STYLE%),live)') {
 	if (!jspf) {return null;}
+	const profiler = this.bProfile ? new FbProfiler('listenBrainz.contentResolver') : null;
 	// Query cache (Library)
 	// Makes consecutive playlist loading by queries much faster (for ex. .xspf fuzzy matching)
 	const queryCache = new Map(); // {Query: handleList}
@@ -626,6 +628,8 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 	const rowsLength = rows.length;
 	const lookupKeys = [{xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}, {xspfKey: 'title', queryKey: 'TITLE'}, {xspfKey: 'creator', queryKey: 'ARTIST'}];
 	const conditions = [['MUSICBRAINZ_TRACKID'], ['TITLE','ARTIST'], ['TITLE']];
+	const libItems = checkQuery(filter, false) ? fb.GetQueryItems(fb.GetLibraryItems(), filter) : fb.GetLibraryItems();
+	const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 	for (let i = 0; i < rowsLength; i++) {
 		let query = '';
 		let lookup = {};
@@ -641,9 +645,10 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 		for (let condition of conditions) {
 			if (condition.every((tag) => {return lookup.hasOwnProperty(tag);})) {
 				query = condition.map((tag) => {return lookup[tag];}).join(' AND ');
-				const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(fb.GetLibraryItems(), query) : null);
+				const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(libItems, query) : null);
 				if (!queryCache.has(query)) {queryCache.set(query, matches);}
 				if (matches && matches.Count) {
+					if (sortTF) {matches.OrderByFormat(sortTF, -1);}
 					handleArr[i] = matches[0];
 					count++;
 					break;
@@ -653,6 +658,7 @@ listenBrainz.contentResolver = function contentResolver(jspf) {
 		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier});}
 	}
 	if (notFound.length) {console.log('Some tracks have not been found on library:\n\t' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t'));}
+	if (this.bProfile) {profiler.Print('');}
 	return {handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound};
 };
 
