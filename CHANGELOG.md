@@ -35,6 +35,10 @@
 ### Added
 ### Changed
 - ListenBrainz: youtube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
+- ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
+- ListenBrainz: optimizations finding tracks on library.
+- XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
+- XSPF: optimizations finding tracks on library.
 ### Removed
 ### Fixed
 
