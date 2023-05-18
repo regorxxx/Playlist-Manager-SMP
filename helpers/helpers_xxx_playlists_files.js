@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/23
+//18/05/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -688,6 +688,8 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const regExListenBrainz = typeof listenBrainz !== 'undefined' 
 					? listenBrainz.regEx 
 					: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
+				const sort = '%RATING%|$strstr($lower(%GENRE%\', \'%STYLE%),live)'; // TODO: add as argument?
+				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
 					if (!notFound.has(i)) {continue;}
 					let query = '';
@@ -702,9 +704,10 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 					for (let condition of conditions) {
 						if (condition.every((tag) => {return lookup.hasOwnProperty(tag);})) {
 							query = condition.map((tag) => {return lookup[tag];}).join(' AND ');
-							const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(fb.GetLibraryItems(), query) : null);
+							const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(poolItems, query) : null);
 							if (!queryCache.has(query)) {queryCache.set(query, matches);}
 							if (matches && matches.Count) {
+								if (sortTF) {matches.OrderByFormat(sortTF, -1);}
 								handlePlaylist[i] = matches[0];
 								count++;
 								break;
