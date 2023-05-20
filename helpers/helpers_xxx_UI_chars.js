@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/03/23
+//19/05/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -110,4 +110,20 @@ const chars = {
 	checkCircleAlt	: '\uf05d',
 	checkSquare		: '\ud14a',
 	checkSquareAlt	: '\uf046',
+	// Others
+	sadEmoji		: '(◡︵◡)',
+	loveEmoji		: '(\u2764 ᵕ \u2764)',
+	loveEmojiV1		: '(\u2764 ᵕ \u2764)',
+	loveEmojiV2		: '\u2764\(˶˃ᆺ˂˶)',
+	loveEmojiV3		: '( ∩´ ᐜ `∩)\u2764',
+	loveEmojiV4		: '(ෆ˙ᵕ˙ෆ)\u2764',
+	loveEmojiCycle	: function (t = 10000) {
+		const now = Date.now();
+		if (Date.now() - this.loveEmojiCache.time > t) {
+			this.loveEmojiCache.id = Math.randomNum(1, 5, {integer: true});
+		}
+		this.loveEmojiCache.time = now;
+		return this['loveEmojiV' + this.loveEmojiCache.id];
+	},
+	loveEmojiCache: {time: Infinity, id: 1},
 };
