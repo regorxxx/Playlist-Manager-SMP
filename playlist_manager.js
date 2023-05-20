@@ -1,12 +1,12 @@
 ﻿'use strict';
-//15/05/23
+//20/05/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta19', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta20', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -223,6 +223,17 @@ properties['searchMethod'].push({func: isJSON}, properties['searchMethod'][1]);
 properties['uiElements'].push({func: isJSON}, properties['uiElements'][1]);
 setProperties(properties, 'plm_');
 
+// Panel
+const panel = new _panel(true);
+// Popups
+const pop = new _popup({
+	configuration: {
+		border: {enabled: false}, // Just overlay without a popup
+		icon: {enabled: true}, // Enable animation
+		color: {panel: opaqueColor(0xFF4354AF, 30), text: invert(panel.getColorBackground(), true)} // Blue overlay
+	}
+});
+
 { // Info Popup
 	let prop = getPropertiesPairs(properties, 'plm_');
 	if (!prop['bFirstPopup'][1]) {
@@ -281,17 +292,8 @@ setProperties(properties, 'plm_');
 	}
 }
 
-// Panel
-const panel = new _panel(true);
-// Popups
-const pop = new _popup({
-	configuration: {
-		border: {enabled: false}, // Just overlay without a popup
-		icon: {enabled: true}, // Enable animation
-		color: {panel: opaqueColor(0xFF4354AF, 30), text: invert(panel.getColorBackground(), true)} // Blue overlay
-	}
-});
-if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} // Disable panel on init until it's done
+// Disable panel on init until it's done
+if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');}
 // List
 const list = new _list(LM, TM, 0, 0);
 const plsHistory = new PlsHistory();
@@ -890,6 +892,8 @@ keyListener.fn = repeatFn(() => {
 		else {list.move(list.mx, list.my, null);}
 		keyListener.bShift = bShift;
 		keyListener.bCtrol = bCtrol;
+	} else {
+		keyListener.bShift = keyListener.bCtrol = false;
 	}
 }, 500)();
 
