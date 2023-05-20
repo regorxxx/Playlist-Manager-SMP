@@ -33,14 +33,18 @@
 
 ## [Unreleased][]
 ### Added
+- UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
 ### Changed
 - ListenBrainz: youtube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 - ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - ListenBrainz: optimizations finding tracks on library.
+- ListenBrainz: key for the token is cached during the same session.
+- ListenBrainz: user name is cached during same session.
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
 ### Removed
 ### Fixed
+- UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
 
 ## [0.5.0-beta.20] - 2023-05-16
 ### Added
