@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/23
+//20/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -715,6 +715,7 @@ function _list(x, y, w, h) {
 	this.onMouseLeaveList = () => {  // Removes selection indicator
 		this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1)); // When pressing right button, the index gets cleared too... but we may want to use it on the menus
 		this.index = -1;
+		this.mx = -1; this.my = -1;
 		this.bMouseOver = false;
 		this.clearSelPlaylistCache();
 		this.up_btn.hover = false;
@@ -737,7 +738,7 @@ function _list(x, y, w, h) {
 			for (let key in this.headerButtons) {
 				const button = this.headerButtons[key];
 				if (this.traceHeaderButton(x, y, button)) {
-					if (!bDragDrop) {window.SetCursor(IDC_HAND);}
+					if (!bDragDrop && bMoved) {window.SetCursor(IDC_HAND);}
 					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
 					button.inFocus = true;
 					bButtonTrace = true;
@@ -793,7 +794,7 @@ function _list(x, y, w, h) {
 					switch (true) {
 						case (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)):	{
 							// Cursor
-							window.SetCursor(IDC_HAND);
+							if (bMoved) {window.SetCursor(IDC_HAND);}
 							// Selection indicator
 							window.Repaint();
 							// Tooltip for playlists
@@ -3841,8 +3842,8 @@ function _list(x, y, w, h) {
 	this.y = y;
 	this.w = w;
 	this.h = h;
-	this.mx = 0;
-	this.my = 0;
+	this.mx = -1;
+	this.my = -1;
 	this.bMouseOver = false;
 	this.index = -1;
 	this.indexes = [];
