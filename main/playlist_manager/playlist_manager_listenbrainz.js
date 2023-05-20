@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/05/23
+//19/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -9,7 +9,11 @@ const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypt
 
 const listenBrainz = {
 	regEx: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g,
-	bProfile: false
+	bProfile: false,
+	cache: {
+		user: new Map(),
+		key: null,
+	}
 };
 
 /*
@@ -23,6 +27,24 @@ listenBrainz.getMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs 
 	if (bLookupMBIDs && missingCount) {
 		const missingHandleList = new FbMetadbHandleList(missingIds.map((idx) => {return handleList[idx];}));
 		const missingMBIDs = await this.lookupMBIDs(missingHandleList, token);
+		if (missingMBIDs.length) {
+			missingMBIDs.forEach((mbid, i) => {
+				const idx = missingIds[i];
+				tags[idx] = mbid;
+			});
+		}
+	}
+	return tags;
+};
+
+listenBrainz.getArtistMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs = true) {
+	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_ARTISTID'], true).flat();
+	// Try to retrieve missing MBIDs
+	const missingIds = tags.multiIndexOf('');
+	const missingCount = missingIds.length;
+	if (bLookupMBIDs && missingCount) {
+		const missingHandleList = new FbMetadbHandleList(missingIds.map((idx) => {return handleList[idx];}));
+		const missingMBIDs = await this.lookupArtistMBIDs(missingHandleList, token);
 		if (missingMBIDs.length) {
 			missingMBIDs.forEach((mbid, i) => {
 				const idx = missingIds[i];
@@ -475,6 +497,23 @@ listenBrainz.lookupMBIDs = function lookupMBIDs(handleList, token) { // Shorthan
 	);
 }
 
+listenBrainz.lookupArtistMBIDs = function lookupMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
+	return this.lookupTracks(handleList, token).then(
+		(resolve) => {
+			if (resolve.length) {
+				const MBIDs = new Array(handleList.Count).fill('');
+				resolve.forEach((obj, i) => {MBIDs[obj.index] = obj.artist_mbids;});
+				return MBIDs; // Response may contain fewer items than original list
+			}
+			return [];
+		},
+		(reject) => {
+			console.log('lookupArtistMBIDs: ' + reject);
+			return [];
+		}
+	);
+}
+
 listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 	const count = MBIds.length;
 	if (!count) {return [];}
@@ -612,6 +651,63 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 }
 
 /*
+	Similarity
+*/
+// Only default algorithm works
+listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30') {
+	const data = {
+		'[artist_mbid]': artistMbid,
+		'[algorithm]': algorithm
+	};
+	return send({
+		method: 'POST', 
+		URL: 'https://labs.api.listenbrainz.org/similar-artists/json',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) {
+				const response  = JSON.parse(resolve)[3];
+				console.log('retrieveSimilarArtists: ' + response.data.length + ' found items');
+				return response.data; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+			}
+			return []; 
+		},
+		(reject) => {
+			console.log('retrieveSimilarArtists: ' + reject.status + ' ' + reject.responseText);
+			return [];
+		}
+	);
+}
+
+// Only default algorithm works
+listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30') {
+	const data = {
+		'[recording_mbid]': recordingMBId,
+		'[algorithm]': algorithm
+	};
+	return send({
+		method: 'POST', 
+		URL: 'https://labs.api.listenbrainz.org/similar-recordings/json',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) {
+				const response  = JSON.parse(resolve)[3];
+				console.log('retrieveSimilarRecordings: ' + response.data.length + ' found items');
+				return response.data; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+			}
+			return []; 
+		},
+		(reject) => {
+			console.log('retrieveSimilarRecordings: ' + reject.status + ' ' + reject.responseText);
+			return [];
+		}
+	);
+}
+
+/*
 	Content resolver by MBID
 */
 listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = '%RATING%|$strstr($lower(%GENRE%\', \'%STYLE%),live)') {
@@ -707,8 +803,13 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
 };
 
 listenBrainz.retrieveUser = async function retrieveUser(token) {
-	const response = await this.retrieveUserResponse(token);
-	return response && response.valid ? response.user_name : '';
+	let user = this.cache.user.get(token);
+	if (!user) {
+		const response = await this.retrieveUserResponse(token);
+		user = response && response.valid ? response.user_name : '';
+		if (user.length) {this.cache.user.set(token, response.user_name);}
+	}
+	return user;
 };
 
 listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token) {
@@ -753,15 +854,14 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 	Token
 */
 listenBrainz.decryptToken = function decryptToken({lBrainzToken, bEncrypted = true}) {
-	let key = '';
 	if (bEncrypted) {
 		let pass = '';
 		try {pass = utils.InputBox(window.ID, 'Enter password:', window.Name, pass, true);} 
 		catch(e) {return null;}
 		if (!pass.length) {return null;}
-		key = new SimpleCrypto(pass);
+		this.cache.key = new SimpleCrypto(pass);
 	}
-	return (bEncrypted ? key.decrypt(lBrainzToken) : lBrainzToken);
+	return (bEncrypted ? this.cache.key.decrypt(lBrainzToken) : lBrainzToken);
 }
 
 listenBrainz.validateToken = async function validateToken(token, bOmitNetworError = false) {
