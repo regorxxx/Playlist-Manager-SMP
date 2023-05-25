@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/05/23
+//20/05/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -688,7 +688,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const regExListenBrainz = typeof listenBrainz !== 'undefined' 
 					? listenBrainz.regEx 
 					: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
-				const sort = '%RATING%|$strstr($lower(%GENRE%\', \'%STYLE%),live)'; // TODO: add as argument?
+				const sort = globQuery.remDuplBias; // TODO: add as argument?
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
 					if (!notFound.has(i)) {continue;}

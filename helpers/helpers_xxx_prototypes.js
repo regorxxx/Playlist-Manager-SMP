@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/04/23
+//24/05/23
 
 /* 
 	Objects
@@ -169,11 +169,11 @@ Object.defineProperty(Promise, 'serial', {
 	configurable: false,
 	writable: false,
 	value: (inputValues, mapper, timeout = 0) => {
-		const reducer = (acc$, inputValue) =>
+		const reducer = (acc$, inputValue, i) =>
 			acc$.then(acc => {
 				return (timeout
-						? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue)), timeout)})
-						: mapper(inputValue)
+						? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
+						: mapper(inputValue, i)
 					).then(result => acc.push(result) && acc);
 			});
 		return inputValues.reduce(reducer, Promise.resolve([]));
@@ -186,10 +186,10 @@ Object.defineProperty(Promise, 'parallel', {
 	configurable: false,
 	writable: false,
 	value: (inputValues, mapper, timeout = 0) => {
-		const reducer = (inputValue) => {
+		const reducer = (inputValue, i) => {
 			return timeout
-				? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue)), timeout)})
-				: mapper(inputValue);
+				? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
+				: mapper(inputValue, i);
 		};
 		return Promise.allSettled(inputValues.map(reducer));
 	}
@@ -542,7 +542,7 @@ Math.randomInt = function randomNum(min, max, includeMax = false) {
 
 // From Underscore 
 function isBoolean(obj) {
-   return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
+	return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
 }
 
 const regExBool = /^b[A-Z]\w*/;

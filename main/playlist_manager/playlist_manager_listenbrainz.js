@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/05/23
+//25/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -13,7 +13,13 @@ const listenBrainz = {
 	cache: {
 		user: new Map(),
 		key: null,
-	}
+	},
+	// API constants
+	// https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants
+	// https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/webserver/views/api_tools.py
+	MAX_ITEMS_PER_GET: 100,
+	MAX_LISTENS_PER_REQUEST: 1000,
+	DEFAULT_ITEMS_PER_GET: 25
 };
 
 /*
@@ -37,8 +43,8 @@ listenBrainz.getMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs 
 	return tags;
 };
 
-listenBrainz.getArtistMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs = true) {
-	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_ARTISTID'], true).flat();
+listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, bLookupMBIDs = true) {
+	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_ALBUMARTISTID'], true).flat();
 	// Try to retrieve missing MBIDs
 	const missingIds = tags.multiIndexOf('');
 	const missingCount = missingIds.length;
@@ -322,65 +328,88 @@ listenBrainz.getPlaylistURL = function getPlaylistURL(pls /*{playlist_mbid}*/) {
 /*
 	Feedback
 */
-listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = 'love', token, bLookupMBIDs = true) {
-	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
-	const missingCount = handleList.Count - mbid.length;
+listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = 'love', token, bLookupMBIDs = true, byMbid = false, bRetry = true) {
+	const mbid = (byMbid ? handleList : (await this.getMBIDs(handleList, token, bLookupMBIDs))).filter(Boolean);
+	const mbidLen = mbid.length;
+	const missingCount = byMbid ? 0 : handleList.Count - mbidLen;
 	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks while setting feedback');}
+	const rate = 100;
+	const retryMs = 500;
 	let score = 0;
 	switch (feedback.toLowerCase()) {
 		case 'love': {score = 1; break;}
 		case 'hate': {score = -1; break;}
 		default : {score = 0; break;}
 	}
-	return new Promise((resolve) => {
-		const promises = [];
-		mbid.forEach((recording_mbid) => {
-			promises.push(
-				// https://listenbrainz.readthedocs.io/en/production/dev/feedback-json/#feedback-json-doc
-				send({
-					method: 'POST', 
-					URL: 'https://api.listenbrainz.org/1/feedback/recording-feedback',
-					requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
-					body: JSON.stringify({"recording_mbid": recording_mbid, "score" : score})
-				}).then(
-					(resolve) => {
-						if (resolve) {
-							const response = JSON.parse(resolve);
-							if (response.status === 'ok') {
-								return true;
-							}
-							return false;
-						}
-						return false;
-					},
-					(reject) => {
-						console.log('sendFeedback: ' + reject.status + ' ' + reject.responseText);
-						return false;
+	return Promise.serial(mbid, 
+		(recording_mbid, i) => send({
+			method: 'POST', 
+			URL: 'https://api.listenbrainz.org/1/feedback/recording-feedback',
+			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+			body: JSON.stringify({"recording_mbid": recording_mbid, "score" : score})
+		}, rate).then(
+			(resolve) => {
+				if (resolve) {
+					const response = JSON.parse(resolve);
+					if (response.status === 'ok') {
+						return true;
 					}
-				)
-			);
-		});
-		Promise.all(promises).then(() => {
-			console.log('sendFeedback: ' + mbid.length + ' tracks');
-			resolve(true);
-		}, (error) => {console.log(error.message); resolve(false);});
-	});
+					return false;
+				}
+				return false;
+			},
+			(reject) => {
+				if (!bRetry) {console.log('sendFeedback: ' + reject.status + ' ' + reject.responseText);}
+				else {console.log('sendFeedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...');}
+				return bRetry ? Promise.wait(retryMs).then(() => listenBrainz.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, true, false)) : false;
+			}
+		)
+	).then((results) => {
+		if (results.length === 1 && !bRetry) {
+			return Promise.wait(retryMs).then(() => results[0]);
+		} else {
+			const passed = results.filter(Boolean).length;
+			const nError = mbidLen - passed;
+			console.log('sendFeedback: ' + mbidLen + ' tracks' + (nError ? ' (' + nError + ' failed)' : ''));
+			if (!missingCount && nError && !byMbid) {
+				let report = ['List of failed tracks:'];
+				results.forEach((result, i) => {
+					if (!result) {report.push(handleList[i].RawPath);}
+				});
+				console.log(report.join('\n\t'));
+			}
+			return results;
+		}
+	}, (error) => {console.log(error.message); return false;});
 }
 
-listenBrainz.getFeedback = async function getFeedback(handleList, user, token, bLookupMBIDs = true) {
-	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
-	const missingCount = handleList.Count - mbid.length;
-	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks while setting feedback');}
-	return send({
-		method: 'GET', 
-		URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback-for-recordings?recording_mbids=' + mbid.join(','),
-		requestHeader: [['Authorization', 'Token ' + token]],
-		bypassCache: true
-	}).then(
+listenBrainz.getFeedback = async function getFeedback(handleList, user, token, bLookupMBIDs = true, method = 'GET') {
+	const mbid = await this.getMBIDs(handleList, token, bLookupMBIDs);
+	const mbidSend = mbid.filter(Boolean);
+	const missingCount = handleList.Count - mbidSend.length;
+	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks while getting feedback');}
+	if (mbidSend.Count > 70) {method = 'POST';}
+	const noData = {created: null, recording_mbid: null, recording_msid: null, score: 0, track_metadata: null, user_id: user};
+	return (method === 'POST' 
+		? send({
+			method: 'POST', 
+			URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback-for-recordings',
+			requestHeader: [['Authorization', 'Token ' + token]],
+			body: JSON.stringify({recording_mbids: mbidSend.join(',')})
+		})
+		: send({ // 75 track limit
+			method: 'GET',
+			URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback-for-recordings?recording_mbids=' + mbid.join(','),
+			requestHeader: [['Authorization', 'Token ' + token]],
+			bypassCache: true
+		})
+	).then(
 		(resolve) => {
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response.hasOwnProperty('feedback')) {
+					// Add null data to holes, so response respects input length
+					mbid.forEach((m, i) => {if (!m) {response.feedback.splice(i, 0, {...noData});}});
 					return response.feedback;
 				}
 				return [];
@@ -389,34 +418,53 @@ listenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 		},
 		(reject) => {
 			console.log('getFeedback: ' + reject.status + ' ' + reject.responseText);
+			if (reject.status === 400 && new RegExp('No valid recording msid or recording mbid found').test(reject.responseText)) {
+				return mbid.map((m) => {return {...noData};});
+			}
 			return [];
 		}
 	);
 }
 
-listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*score, count, offset, metadata*/}, token) {
-	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
-	return send({
-		method: 'GET', 
-		URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback' + queryParams,
-		requestHeader: [['Authorization', 'Token ' + token]],
-		bypassCache: true
-	}).then(
-		(resolve) => {
-			if (resolve) {
-				const response = JSON.parse(resolve);
-				if (response.hasOwnProperty('feedback')) {
-					return response.feedback;
-				}
+listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*score, count, offset, metadata*/}, token, bPaginated = true) {
+	if (bPaginated) {
+		return paginatedFetch({
+			URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback',
+			queryParams: params,
+			keys: ['feedback'],
+			requestHeader: [['Authorization', 'Token ' + token]],
+			increment: params.count,
+		}).then(
+			(response) => response,
+			(reject) => {
+				console.log('getFeedback: ' + reject);
 				return [];
 			}
-			return [];
-		},
-		(reject) => {
-			console.log('getFeedback: ' + reject.status + ' ' + reject.responseText);
-			return [];
-		}
-	);
+		);
+	} else {
+		const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
+		return send({
+			method: 'GET', 
+			URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback' + queryParams,
+			requestHeader: [['Authorization', 'Token ' + token]],
+			bypassCache: true
+		}).then(
+			(resolve) => {
+				if (resolve) {
+					const response = JSON.parse(resolve);
+					if (response.hasOwnProperty('feedback')) {
+						return response.feedback;
+					}
+					return [];
+				}
+				return [];
+			},
+			(reject) => {
+				console.log('getFeedback: ' + reject.status + ' ' + reject.responseText);
+				return [];
+			}
+		);
+	}
 }
 
 /*
@@ -497,7 +545,7 @@ listenBrainz.lookupMBIDs = function lookupMBIDs(handleList, token) { // Shorthan
 	);
 }
 
-listenBrainz.lookupArtistMBIDs = function lookupMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
+listenBrainz.lookupArtistMBIDs = function getArtistMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
 	return this.lookupTracks(handleList, token).then(
 		(resolve) => {
 			if (resolve.length) {
@@ -655,10 +703,10 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 */
 // Only default algorithm works
 listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30') {
-	const data = {
-		'[artist_mbid]': artistMbid,
-		'[algorithm]': algorithm
-	};
+	const data = [{
+		'artist_mbid': artistMbid,
+		'algorithm': algorithm
+	}];
 	return send({
 		method: 'POST', 
 		URL: 'https://labs.api.listenbrainz.org/similar-artists/json',
@@ -667,9 +715,11 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 	}).then(
 		(resolve) => {
 			if (resolve) {
-				const response  = JSON.parse(resolve)[3];
-				console.log('retrieveSimilarArtists: ' + response.data.length + ' found items');
-				return response.data; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+				const response = (JSON.parse(resolve) || Array(4))[3];
+				if (response && response.hasOwnProperty('data')) {
+					console.log('retrieveSimilarArtists: ' + response.data.length + ' found items');
+					return response.data; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+				}
 			}
 			return []; 
 		},
@@ -682,10 +732,10 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 
 // Only default algorithm works
 listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30') {
-	const data = {
-		'[recording_mbid]': recordingMBId,
-		'[algorithm]': algorithm
-	};
+	const data = [{
+		'recording_mbid': recordingMBId,
+		'algorithm': algorithm
+	}];
 	return send({
 		method: 'POST', 
 		URL: 'https://labs.api.listenbrainz.org/similar-recordings/json',
@@ -710,7 +760,7 @@ listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
 /*
 	Content resolver by MBID
 */
-listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = '%RATING%|$strstr($lower(%GENRE%\', \'%STYLE%),live)') {
+listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = globQuery.remDuplBias) {
 	if (!jspf) {return null;}
 	const profiler = this.bProfile ? new FbProfiler('listenBrainz.contentResolver') : null;
 	// Query cache (Library)

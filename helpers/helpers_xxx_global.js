@@ -54,9 +54,11 @@ function loadUserDefFile(def) {
 function addGlobTags() { // Add calculated properties
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
+	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
+	globQuery.remDuplBias = globTags.rating + '|$strstr($lower(' + globTags.genreStyle.join('\', \'') + '),live)';
 }
 
 // Tags: user replaceable with a presets file at folders.data

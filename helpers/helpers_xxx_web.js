@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/23
+//24/05/23
 
 function getText(link){
 	if (link.indexOf('http://') !== -1 || link.indexOf('https://') !== -1) {
@@ -69,4 +69,32 @@ function send({method = 'GET', URL, body = void(0), func = null, requestHeader =
 		xmlhttp.send(method === 'POST' ? body : void(0));
 	});
 	return p;
+}
+
+// Send consecutive GET request, incrementing queryParams.offset or queryParams.page
+// Keys are the response object path, which point to an array, to concatenate for the final response
+function paginatedFetch({URL, queryParams = {}, requestHeader, keys = [], increment = 1, previousResponse = []}) {
+	const urlParams = Object.keys(queryParams).length ? '?' + Object.entries(queryParams).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
+	return send({method: 'GET', URL: URL + urlParams, requestHeader, bypassCache: true})
+		.then(
+			(resolve) => {
+				if (!keys.length) {
+					return resolve ? JSON.parse(resolve) : [];
+				} else {
+					return resolve 
+						? keys.reduce((acc, key) => {return acc && acc.hasOwnProperty(key) ? acc[key] : null;}, JSON.parse(resolve)) || []
+						: [];
+				}
+			},
+			(reject) => {return [];}
+		)
+		.then((newResponse) => {
+			const response = [...previousResponse, ...newResponse];
+			if (newResponse.length !== 0) {
+				if (queryParams.hasOwnProperty('offset')) {queryParams.offset += increment;}
+				else if (queryParams.hasOwnProperty('page')) {queryParams.page += increment;}
+				return paginatedFetch({URL, queryParams, requestHeader, keys, increment, previousResponse: response});
+			}
+			return response;
+		});
 }
