@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/23
+//26/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2384,6 +2384,7 @@ function createMenuRightTop() {
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
 				const actions = shortcuts.actions.map((_) => {return _.key;});
 				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameL, entryText: '(on Action Button)', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
 					const subMenuOption = menu.newMenu(modifier, subMenuNameL);
@@ -2416,6 +2417,7 @@ function createMenuRightTop() {
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
 				const actions = shortcuts.actions.map((_) => {return _.key;});
 				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameM, entryText: '(on Action Button)', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
 					const subMenuOption = menu.newMenu(modifier, subMenuNameM);
@@ -2474,30 +2476,127 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'Elements shown:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			Object.keys(list.uiElements).forEach((key) => {
-				if (list.uiElements[key].hasOwnProperty('elements')) {
+				const subElement = list.uiElements[key];
+				if (subElement.hasOwnProperty('elements')) {
 					const subMenuNameTwo = menu.newMenu(key, subMenuName);
-					Object.keys(list.uiElements[key].elements).forEach((subKey) => {
-						const flags = subKey === 'Settings menu' && list.uiElements['Search filter'].enabled && !list.uiElements[key].elements['Power actions'].enabled
-							? MF_GRAYED
-							: MF_STRING;
+					const keys = Object.keys(subElement.elements);
+					const bCanHideSettings = (subKey) => {
+						if (!list.uiElements['Search filter'].enabled) {return true;}
+						else if (subKey === 'Settings menu') {return subElement.elements.hasOwnProperty('Power actions') && subElement.elements['Power actions'].enabled;}
+						else if (subKey === 'Power actions') {return subElement.elements.hasOwnProperty('Settings menu') && subElement.elements['Settings menu'].enabled;}
+						else {return true;}
+					}
+					keys.forEach((subKey) => {
+						const flags = bCanHideSettings(subKey)
+							? MF_STRING
+							: MF_GRAYED;
 						menu.newEntry({menuName: subMenuNameTwo, entryText: subKey, func: () => {
-							list.uiElements[key].elements[subKey].enabled = !list.uiElements[key].elements[subKey].enabled;
+							subElement.elements[subKey].enabled = !subElement.elements[subKey].enabled;
 							list.properties.uiElements[1] = JSON.stringify(list.uiElements);
 							overwriteProperties(list.properties);
 							list.updateUIElements();
 						}, flags});
-						menu.newCheckMenu(subMenuNameTwo, subKey, void(0), () => list.uiElements[key].elements[subKey].enabled);
+						menu.newCheckMenu(subMenuNameTwo, subKey, void(0), () => subElement.elements[subKey].enabled);
 					});
-				} else {
-					menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
-						list.uiElements[key].enabled = !list.uiElements[key].enabled;
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					const bEnable = keys.some((subKey) => !subElement.elements[subKey].enabled);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: (bEnable ? 'Enable' : 'Disable') + ' all', func: () => {
+						keys.forEach((subKey) => {
+							if (!bEnable && !bCanHideSettings(subKey)) {return;}
+							subElement.elements[subKey].enabled = bEnable;
+						});
 						list.properties.uiElements[1] = JSON.stringify(list.uiElements);
 						overwriteProperties(list.properties);
 						list.updateUIElements();
 					}});
-					menu.newCheckMenu(subMenuName, key, void(0), () => list.uiElements[key].enabled);
+				} else {
+					menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
+						subElement.enabled = !subElement.enabled;
+						list.properties.uiElements[1] = JSON.stringify(list.uiElements);
+						overwriteProperties(list.properties);
+						const bReload = ['Scrollbar'].indexOf(key) !== -1;
+						list.updateUIElements(bReload);
+					}});
+					menu.newCheckMenu(subMenuName, key, void(0), () => subElement.enabled);
 				}
 			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{ // Presets
+				const options = [
+					{name: 'Full', elements: {
+						'Search filter':			{enabled: true},
+						'Header buttons':			{enabled: true, elements: 
+							{
+								'Power actions':	{enabled: true},
+								'Reset filters':	{enabled: true},
+								'List menu':		{enabled: true},
+								'Settings menu':	{enabled: true},
+								'Folder':			{enabled: true},
+								'Help':				{enabled: true},
+							}
+						}}
+					},
+					{name: 'Essential + Search', elements: {
+						'Search filter':			{enabled: true},
+						'Header buttons':			{enabled: true, elements: 
+							{
+								'Power actions':	{enabled: true},
+								'Reset filters':	{enabled: true},
+								'List menu':		{enabled: true},
+								'Settings menu':	{enabled: false},
+								'Folder':			{enabled: false},
+								'Help':				{enabled: false},
+							}
+						}}
+					},
+					{name: 'Essential', elements: {
+						'Search filter':			{enabled: false},
+						'Header buttons':			{enabled: true, elements: 
+							{
+								'Power actions':	{enabled: true},
+								'Reset filters':	{enabled: true},
+								'List menu':		{enabled: true},
+								'Settings menu':	{enabled: false},
+								'Folder':			{enabled: false},
+								'Help':				{enabled: false},
+							}
+						}}
+					},
+					{name: 'Simple header', elements: {
+						'Search filter':			{enabled: false},
+						'Header buttons':			{enabled: false, elements: 
+							{
+								'Power actions':	{enabled: false},
+								'Reset filters':	{enabled: false},
+								'List menu':		{enabled: false},
+								'Settings menu':	{enabled: false},
+								'Folder':			{enabled: false},
+								'Help':				{enabled: false},
+							}
+						}}
+					},
+				];
+				const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
+				options.forEach((preset) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: preset.name, func: () => {
+						Object.keys(preset.elements).forEach((key) => {
+							const subElement = preset.elements[key];
+							const subElementList = list.uiElements[key];
+							if (subElement.hasOwnProperty('elements')) {
+								const keys = Object.keys(subElement.elements);
+								keys.forEach((subKey) => {
+									subElementList.elements[subKey].enabled = subElement.elements[subKey].enabled;
+								});
+							} else {
+								subElementList.enabled = subElement.enabled;
+							}
+						});
+						list.properties.uiElements[1] = JSON.stringify(list.uiElements);
+						overwriteProperties(list.properties);
+						list.updateUIElements();
+					}});
+				});
+			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 				list.properties.uiElements[1] = list.properties.uiElements[3];
