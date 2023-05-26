@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/23
+//26/05/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -548,4 +548,18 @@ function UUID() {
 function lastModified(file, bParse = false) {
 	if (!_isFile(file)) {return -1;}
 	return bParse ? Date.parse(fso.GetFile(file).DateLastModified) : fso.GetFile(file).DateLastModified;
+}
+
+function created(file, bParse = false) {
+	if (!_isFile(file)) {return -1;}
+	return bParse ? Date.parse(fso.GetFile(file).DateCreated) : fso.GetFile(file).DateCreated;
+}
+
+function getFileMeta(file, bParse = false) {
+	if (!_isFile(file)) {return null;}
+	const fileObj = fso.GetFile(file);
+	return {
+		created: bParse ? Date.parse(fileObj.DateCreated) : fileObj.DateCreated,
+		modified: bParse ? Date.parse(fileObj.DateLastModified) : fileObj.DateLastModified
+	};
 }

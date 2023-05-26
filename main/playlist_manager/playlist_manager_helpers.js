@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/23
+//26/05/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -10,7 +10,7 @@ include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 
-function oPlaylist({id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description= '', type = ''} = {}) {
+function oPlaylist({id, path, name = void(0), extension = void(0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = {query: '', sort: '', bSortForced: false}, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description= '', type = '', created = -1, modified = -1} = {}) {
 	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
 		const sfp = utils.SplitFilePath(path);
 		if (typeof extension === 'undefined') {extension = sfp[2];}
@@ -36,10 +36,13 @@ function oPlaylist({id, path, name = void(0), extension = void(0), size = '?', f
 	this.playlist_mbid = playlist_mbid;
 	this.author = author;
 	this.description = description;
+	this.created = created;
+	this.modified = modified;
 	if (this.extension === '.xsp') {this.type = type || ''}
 }
 
-function loadPlaylistsFromFolder(folderPath = '') {
+function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
+	const test = bProfile ? new FbProfiler(window.Name + ': ' + 'loadPlaylistsFromFolder') : true;
 	if (!folderPath.length && typeof list !== 'undefined') {folderPath = list.playlistsPath;}
 	const playlistPathArray = getFiles(folderPath, loadablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
@@ -62,7 +65,14 @@ function loadPlaylistsFromFolder(folderPath = '') {
 		let author = '';
 		let description = '';
 		let type = null;
+		let created = -1;
+		let modified = -1;
 		const fileSize = utils.GetFileSize(file);
+		const fileMeta = getFileMeta(file, true);
+		if (fileMeta) {
+			created = fileMeta.created;
+			modified = fileMeta.modified;
+		}
 		if (extension === '.m3u8' || extension === '.m3u') { // Schema does not apply for foobar2000 native playlist format
 			let text = _open(file).split(/\r\n|\n\r|\n|\r/);
 			if (typeof text !== 'undefined' && text.length >= 1) {
@@ -222,9 +232,12 @@ function loadPlaylistsFromFolder(folderPath = '') {
 			playlist_mbid,
 			author,
 			description,
-			type: extension === '.xsp' && type !== null ? type : void(0)
+			type: extension === '.xsp' && type !== null ? type : void(0),
+			created,
+			modified
 		});
 	}
+	if (bProfile) {test.Print();}
 	return playlistArray;
 }
 

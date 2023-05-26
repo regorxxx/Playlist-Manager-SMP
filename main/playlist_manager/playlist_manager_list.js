@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/23
+//26/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -52,8 +52,8 @@ function _list(x, y, w, h) {
 	// Global tooltip
 	this.tooltip = new _tt(null, void(0), void(0), 600); 
 	
-	this.updateUIElements = () => {
-		if (!!scroll !== this.uiElements['Scrollbar'].enabled) {window.Reload();}
+	this.updateUIElements = (bReload = false) => {
+		if (bReload) {window.Reload();}
 		if (!this.uiElements['Search filter'].enabled) {this.searchInput = null;}
 		for (let key in this.headerButtons) {
 			const button = this.headerButtons[key];
@@ -116,7 +116,7 @@ function _list(x, y, w, h) {
 		}
 	}
 	
-	this.headerTooltip = (mask, bActions = true) => {
+	this.headerTooltip = (mask, bActions = true, bForceActions = false) => {
 		let headerText = this.playlistsPath;
 		headerText += '\n' + 'Categories: '+ (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)' );
 		headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ?  this.lockStates[0] : '(All)');
@@ -128,7 +128,7 @@ function _list(x, y, w, h) {
 			const mShortcuts = this.getShortcuts('M', 'HEADER');
 			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
 			const multSelAction = 'Multiple selection'; // All actions are shared for M or L mouse
-			if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
+			if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
 				headerText += '\n----------------------------------------------';
 			}
 			if (mask === MK_CONTROL) {
@@ -140,8 +140,8 @@ function _list(x, y, w, h) {
 			} else if (mask === MK_SHIFT + MK_CONTROL) {
 				headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 				headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-			} else if (this.bShowTips) {
-				if (this.modeUI === 'traditional') {
+			} else if (this.bShowTips || bForceActions) {
+				if (this.modeUI === 'traditional' || bForceActions) {
 					headerText += '\n(R. Click for config menus)';
 				}
 				// L. Click
@@ -228,7 +228,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) => curr - button.w,
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -246,7 +246,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) => curr - button.w - LM / 2,
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -262,7 +262,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) => curr - button.w - LM / 2,
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -278,7 +278,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) => curr - button.w - LM / 2,
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -294,7 +294,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) =>  curr - button.w - LM / 2,
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -310,7 +310,7 @@ function _list(x, y, w, h) {
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
 						align: 'r',
-						x: (button, curr) =>  curr - button.w - LM / 2,
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
 						y: (button) => (maxHeaderH - button.h) / 2,
 						w: 0,
 						h: 0
@@ -328,7 +328,7 @@ function _list(x, y, w, h) {
 					buttons.forEach((button) => {
 						if (isFunction(button.x)) {
 							if (button.align === 'l') {button.x = button.x(button, currLx); currLx = button.x + button.w;}
-							if (button.align === 'r') {button.x = button.x(button, currRx); currRx = button.x;}
+							if (button.align === 'r') {button.x = button.x(button, currRx, currRx === (this.x + this.w)); currRx = button.x;}
 						}
 						if (isFunction(button.y)) {button.y = button.y(button);}
 					});
@@ -943,17 +943,21 @@ function _list(x, y, w, h) {
 				return this.searchInput.check('right', x, y);
 			} else {
 				let bButtonTrace = false;
+				let bActionButton = false;
 				for (let key in this.headerButtons) {
 					const button = this.headerButtons[key];
 					if (this.traceHeaderButton(x, y, button)) {
 						if (button.func) {
 							bButtonTrace = true;
+						} else {
+							bActionButton = true;
 						}
 						break;
 					}
 				}
 				if (!bButtonTrace) {
-					if (!this.uiElements['Header buttons'].elements['Settings menu'].enabled) {
+					const buttons = this.uiElements['Header buttons'].elements;
+					if (!buttons['Settings menu'].enabled && !buttons['Power actions'].enabled || bActionButton) {
 						return createMenuRightTop().btn_up(x, y);
 					}
 				}
@@ -1669,6 +1673,7 @@ function _list(x, y, w, h) {
 			size: pls.size + handleList.Count,
 			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
 			fileSize: bUI ? 0 : utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
+			modified: Date.now(),
 		});
 		if (this.bAutoTrackTag) {this.updateTrackTags(handleUpdate, tagsUpdate);} // Apply tags from before
 		console.log('Playlist Manager: drag n drop done.');
@@ -1913,7 +1918,8 @@ function _list(x, y, w, h) {
 							extension, // May have forced saving on a fpl playlist
 							path: this.playlistsPath + sanitize(plsData.name) + extension,
 							fileSize: utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
-							duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration()
+							duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration(),
+							modified: Date.now(),
 						});
 						plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);
 						// Warn about dead items
@@ -1998,7 +2004,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.loadExternalJson = ({path = '', bOldVersion} = {}) => {
-		var test = new FbProfiler(window.Name + ': ' + 'Load json file');
+		const test = new FbProfiler(window.Name + ': ' + 'Load json file');
 		let externalPath = path;
 		if (!path || !path.length) {
 			try {externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', window.Name, '', true);}
@@ -2278,10 +2284,15 @@ function _list(x, y, w, h) {
 						'(T) Az': (a, b) => {return (a.tags[0] || '').localeCompare((b.tags[0] || ''));}, 
 						'(T) Za': (a, b) => {return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''));}
 					},
-				'By date': 
+				'By date\t-last modified-': 
 					{
-						'(D) Asc.': (a, b) => {return lastModified(a.path, true) - lastModified(b.path, true);}, // lastModified returns -1 when file does not exist
-						'(D) Des.': (a, b) => {return lastModified(b.path, true) - lastModified(a.path, true);}
+						'(D) Asc.': (a, b) => {return a.modified - b.modified;},
+						'(D) Des.': (a, b) => {return b.modified - a.modified;}
+					},
+				'By date\t-created-': 
+					{
+						'(D) Asc.': (a, b) => {return a.created - b.created;},
+						'(D) Des.': (a, b) => {return b.created - a.created;}
 					}
 		};
 	}
@@ -2379,6 +2390,7 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
+			this.dataUI = [];
 			this.indexes = [];
 			if (_isFile(this.filename)) {
 				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoplaylist || this.bAutoTrackTagAutoPlsInit && bInit);
@@ -2474,6 +2486,8 @@ function _list(x, y, w, h) {
 						if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
 						else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
 						this.dataFpl.push(item);
+					} else if (item.extension === '.ui') {
+						this.dataUI.push(item);
 					}
 				});
 				if (promises.length) { // Updates this.dataAutoPlaylists when all are processed
@@ -2582,19 +2596,29 @@ function _list(x, y, w, h) {
 			fooPls.forEach((pls) => {
 				if (!this.dataAll.some((dataPls) => {return dataPls.nameId === pls.name;})) {
 					if (!this.dataFoobar.some((dataPls) => {return dataPls.nameId === pls.name;})) { // Remove duplicates
-						this.dataFoobar.push(new oPlaylist({
+						const now = Date.now();
+						const item = new oPlaylist({
 							name: pls.name,
 							extension: '.ui',
 							size: plman.PlaylistItemCount(pls.idx),
 							bLocked: plman.IsPlaylistLocked(pls.idx),
 							category: 'fooPls',
 							duration: plman.GetPlaylistItems(pls.idx).CalcTotalDuration(),
-							author: 'Foobar2000'
-						}));
+							author: 'Foobar2000',
+							created: now,
+							modified: now
+						});
+						const cacheItem = this.dataUI.find((dataPls) => {return dataPls.nameId === item.name;});
+						if (cacheItem) {
+							item.created = cacheItem.created;
+							item.modified = cacheItem.modified;
+						}
+						this.dataFoobar.push(item);
 					}
 				}
 			});
 			if (this.dataFoobar.length) {
+				this.dataUI = [...this.dataFoobar];
 				this.dataAll = this.dataAll.concat(this.dataFoobar);
 				this.data = this.data.concat(this.dataFoobar);
 			}
@@ -2784,6 +2808,7 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
+			this.dataUI = [];
 			if (this.dataAll) {
 				this.dataAll.forEach((item) => {
 					if (item.isAutoPlaylist) { // Saves autoplaylists to json
@@ -2792,9 +2817,12 @@ function _list(x, y, w, h) {
 						this.dataFpl.push(item);
 					} else if (item.extension === '.xsp') { // Save xsp as autoplaylists
 						this.dataXsp.push(item);
+					} else if (item.extension === '.ui') { // Save UI creation and last modified
+						this.dataUI.push(item);
 					}
 				});
-				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp], this.replacer, '\t'), this.bBOM); // No BOM
+				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI], this.replacer, '\t'), this.bBOM); // No BOM
+				// _save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp], this.replacer, '\t'), this.bBOM); // No BOM
 			}
 			if (!bInit) {
 				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();}
@@ -3064,6 +3092,7 @@ function _list(x, y, w, h) {
 				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
+					const now = Date.now();
 					objectPlaylist = new oPlaylist({
 						id: UUID,
 						path: oPlaylistPath,
@@ -3073,7 +3102,9 @@ function _list(x, y, w, h) {
 						fileSize: utils.GetFileSize(done),
 						category: oPlaylistCategory,
 						tags: oPlaylistTags,
-						duration: bEmpty ? -1 : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration()
+						duration: bEmpty ? -1 : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration(),
+						created: now,
+						modified: now
 					});
 					// Adds to list of objects and update variables
 					idx = this.addToData(objectPlaylist);
@@ -3738,6 +3769,7 @@ function _list(x, y, w, h) {
 			this.dataAutoPlaylists = []; // Only autoplaylists to save to json
 			this.dataFpl = []; // Only fpl playlists to save to json
 			this.dataXsp = []; // Only xsp playlists to save to json
+			this.dataUI = []; // Only foobar2000 playlists on UI
 			this.dataFoobar = []; // Only foobar2000 playlists on UI
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
@@ -3783,7 +3815,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.manualRefresh = () => {
-			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+			const test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 			this.loadConfigFile();
 			const z = this.offset + Math.round(this.rows / 2 - 1);
 			this.cacheLastPosition(z);
@@ -3955,7 +3987,7 @@ function _list(x, y, w, h) {
 		},
 		action: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
-				return this.headerTooltip(mask);
+				return 'Action button...\n----------------------------------------------\n' + this.headerTooltip(mask, true, true);
 			}, func: null
 		},
 		resetFilters: {
