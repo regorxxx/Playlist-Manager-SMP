@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/05/23
+//26/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -698,11 +698,39 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 	);
 }
 
+// To use along listenBrainz.retrieveSimilarArtists
+listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtist(artist_mbids, token) {
+	const data = artist_mbids.map((mbid) => {return {"[artist_mbid]": mbid};}); // [{"[artist_mbid]": "69ec6867-bda0-404b-bac4-338df8d73723"}, ...]
+	return send({
+		method: 'POST', 
+		URL: 'https://datasets.listenbrainz.org/popular-recordings/json',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) {
+				const response = JSON.parse(resolve);
+				if (response) {
+					console.log('getPopularRecordingsByArtist: ' + response.length + ' found items');
+					return response; // [{artist_mbid, count, recording_mbid}, ...]
+				}
+			}
+			return []; 
+		},
+		(reject) => {
+			console.log('retrieveSimilarArtists: ' + reject.status + ' ' + reject.responseText);
+			return [];
+		}
+	);
+}
+
 /*
 	Similarity
 */
-// Only default algorithm works
-listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30') {
+// Only these algorithms work
+// session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30
+// session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30
+listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30') {
 	const data = [{
 		'artist_mbid': artistMbid,
 		'algorithm': algorithm
@@ -731,7 +759,7 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 }
 
 // Only default algorithm works
-listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30') {
+listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30') {
 	const data = [{
 		'recording_mbid': recordingMBId,
 		'algorithm': algorithm
@@ -744,9 +772,11 @@ listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
 	}).then(
 		(resolve) => {
 			if (resolve) {
-				const response  = JSON.parse(resolve)[3];
-				console.log('retrieveSimilarRecordings: ' + response.data.length + ' found items');
-				return response.data; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+				const response = (JSON.parse(resolve) || Array(4))[3];
+				if (response && response.hasOwnProperty('data')) {
+					console.log('retrieveSimilarRecordings: ' + response.data.length + ' found items');
+					return response.data; // [{recording_mbid, recording_name, artist_credit_name, [artist_credit_mbids], caa_id, caa_release_mbid, canonical_recording_mbid, score, reference_mbid}, ...]
+				}
 			}
 			return []; 
 		},
