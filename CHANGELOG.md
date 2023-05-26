@@ -34,17 +34,24 @@
 ## [Unreleased][]
 ### Added
 - UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
+- UI: added sorting by creation date.
+- Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
 ### Changed
-- ListenBrainz: youtube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
+- ListenBrainz: YouTube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 - ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - ListenBrainz: optimizations finding tracks on library.
 - ListenBrainz: key for the token is cached during the same session.
 - ListenBrainz: user name is cached during same session.
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
+- Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
+- UI: added presets to UI elements configuration menu. Fast settings to enable/disable search box and multiple buttons at the same time.
+- UI: improved checks to ensure there is at least one UI element able to open the settings menu.
+- UI: improved tooltip of power action button. Mouse shortcuts tips are always shown, including the settings menu by R. clicking.
 ### Removed
 ### Fixed
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
+- UI: settings menu opening when clicking at blank space within the buttons toolbar at header instead of just the settings and power action buttons.
 
 ## [0.5.0-beta.20] - 2023-05-16
 ### Added
