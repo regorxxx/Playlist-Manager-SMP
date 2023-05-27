@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/05/23
+//27/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -14,6 +14,7 @@ const listenBrainz = {
 		user: new Map(),
 		key: null,
 	},
+	algorithm: {},
 	// API constants
 	// https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants
 	// https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/webserver/views/api_tools.py
@@ -43,8 +44,8 @@ listenBrainz.getMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs 
 	return tags;
 };
 
-listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, bLookupMBIDs = true) {
-	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_ALBUMARTISTID'], true).flat();
+listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, bLookupMBIDs = true, bAlbumArtist = true, bRetry = true) {
+	const tags = getTagsValuesV3(handleList, [bAlbumArtist ? 'MUSICBRAINZ_ALBUMARTISTID' : 'MUSICBRAINZ_ARTISTID'], true).flat();
 	// Try to retrieve missing MBIDs
 	const missingIds = tags.multiIndexOf('');
 	const missingCount = missingIds.length;
@@ -56,6 +57,14 @@ listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, b
 				const idx = missingIds[i];
 				tags[idx] = mbid;
 			});
+		}
+	}
+	if (tags.length === 1 && bRetry) {
+		// https://musicbrainz.org/doc/Style/Unknown_and_untitled/Special_purpose_artist
+		// https://musicbrainz.org/artist/4e46dd54-81a6-4a75-a666-d0e447861e3f wrong VA
+		const specialIds = new Set(['f731ccc4-e22a-43af-a747-64213329e088', '33cf029c-63b0-41a0-9855-be2a3665fb3b', '314e1c25-dde7-4e4d-b2f4-0a7b9f7c56dc', 'eec63d3c-3b81-4ad4-b1e4-7c147d4d2b61', '9be7f096-97ec-4615-8957-8d40b5dcbc41', '125ec42a-7229-4250-afc5-e057484327fe', '89ad4ac3-39f7-470e-963a-56509c546377', '4e46dd54-81a6-4a75-a666-d0e447861e3f'])
+		if (specialIds.has(tags[0])) {
+			return this.getArtistMBIDs(handleList, token, bLookupMBIDs, !bAlbumArtist, false);
 		}
 	}
 	return tags;
@@ -564,7 +573,7 @@ listenBrainz.lookupArtistMBIDs = function getArtistMBIDs(handleList, token) { //
 
 listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 	const count = MBIds.length;
-	if (!count) {return [];}
+	if (!count) {return Promise.resolve([]);}
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
@@ -727,10 +736,13 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 /*
 	Similarity
 */
-// Only these algorithms work
-// session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30
-// session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30
-listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30') {
+// Only default algorithms work
+listenBrainz.algorithm.retrieveSimilarArtists = {
+	v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
+	v2: 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30',
+};
+listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'v1') { // May add algorithm directly or by key
+	if (this.algorithm.retrieveSimilarArtists.hasOwnProperty(algorithm)) {algorithm = this.algorithm.retrieveSimilarArtists[algorithm];}
 	const data = [{
 		'artist_mbid': artistMbid,
 		'algorithm': algorithm
@@ -759,7 +771,11 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 }
 
 // Only default algorithm works
-listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30') {
+listenBrainz.algorithm.retrieveSimilarRecordings = {
+	v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
+};
+listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'v1') {
+	if (this.algorithm.retrieveSimilarRecordings.hasOwnProperty(algorithm)) {algorithm = this.algorithm.retrieveSimilarRecordings[algorithm];}
 	const data = [{
 		'recording_mbid': recordingMBId,
 		'algorithm': algorithm
