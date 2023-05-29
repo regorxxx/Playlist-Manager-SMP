@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/05/23
+//29/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2514,11 +2514,11 @@ function _list(x, y, w, h) {
 							item.author = fplPlaylist.author;
 							item.description = fplPlaylist.description;
 						}
-						this.fplPopup();
+						if (!this.properties.bSetup[1]) {this.fplPopup();}
 					} else if (item.extension === '.pls') {
-						this.plsPopup();
+						if (!this.properties.bSetup[1]) {this.plsPopup();}
 					} else if (item.extension === '.xspf') {
-						this.xspfPopup();
+						if (!this.properties.bSetup[1]) {this.xspfPopup();}
 					} else if (item.extension === '.xsp') {
 						let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
 						if (xspPlaylist) {
@@ -2530,7 +2530,7 @@ function _list(x, y, w, h) {
 							item.author = xspPlaylist.author;
 							item.description = xspPlaylist.description;
 						}
-						this.xspPopup();
+						if (!this.properties.bSetup[1]) {this.xspPopup();}
 					}
 					if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
 					else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
@@ -3836,7 +3836,7 @@ function _list(x, y, w, h) {
 		this.initProperties(); // This only set properties if they have no values...
 		this.reset();
 		let bDone = this.checkConfig();
-		this.update(false, true, void(0), true); // bInit is true to avoid reloading all categories
+		if (!this.properties.bSetup[1]) {this.update(false, true, void(0), true);} // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
