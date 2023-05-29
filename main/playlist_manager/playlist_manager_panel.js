@@ -1,25 +1,26 @@
 ﻿'use strict';
-//22/02/23
+//29/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 
-function _panel(customBackground = false) {
+function _panel(customBackground = false, bSetup = false) {
 	
 	const panelProperties = {
-		fontSize 			: ['Font size', _scale(10)],
-		colorsMode			: ['Background colour mode', 0],
-		customBackground	: ['Custom background colour', RGB(30, 30, 30)], // Black
-		bCustomText			: ['Text custom colour mode', false],
-		customText			: ['Custom text colour', RGB(157, 158, 163)], // Gray
-		buttonsTextColor	: ['Buttons\' text colour', buttonsPanel.config.textColor],
-		bAltRowsColor		: ['Alternate rows background colour', true],
-		bToolbar			: ['Use toolbar mode?', true],
-		bButtonsBackground	: ['Use buttons background?', false],
-		buttonsToolbarColor	: ['Buttons\' toolbar colour', RGB(0,0,0)],
-		buttonsToolbarTransparency	: ['Buttons\' toolbar transparency', 5]
+		fontSize 			: ['Font size', _scale(10), {func: isInt}],
+		colorsMode			: ['Background colour mode', 0, {func: isInt, range: [[0,2]]}],
+		customBackground	: ['Custom background colour', RGB(30, 30, 30), {func: isInt}], // Black
+		bCustomText			: ['Text custom colour mode', false, {func: isBoolean}],
+		customText			: ['Custom text colour', RGB(157, 158, 163), {func: isInt}], // Gray
+		buttonsTextColor	: ['Buttons\' text colour', buttonsPanel.config.textColor, {func: isInt}],
+		bAltRowsColor		: ['Alternate rows background colour', true, {func: isBoolean}],
+		bToolbar			: ['Use toolbar mode?', true, {func: isBoolean}],
+		bButtonsBackground	: ['Use buttons background?', false, {func: isBoolean}],
+		buttonsToolbarColor	: ['Buttons\' toolbar colour', RGB(0,0,0), {func: isInt}],
+		buttonsToolbarTransparency	: ['Buttons\' toolbar transparency', 5, {func: isInt, range: [[0,100]]}]
 	};
+	for (let key in panelProperties) {panelProperties[key][3] = panelProperties[key][1];}
 	setProperties(panelProperties, 'panel_');
 	
 	this.colorsChanged = () => {
@@ -138,4 +139,11 @@ function _panel(customBackground = false) {
 	this.textObjects = [];
 	this.fontChanged();
 	this.colorsChanged();
+	if (bSetup) {
+		const defaultCol = invert(this.getColorBackground());
+		this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground ? this.colors.default.buttonsTextColor : defaultCol;
+		this.properties.buttonsToolbarColor[1] = this.colors.buttonsToolbarColor = defaultCol;
+		overwriteProperties(this.properties);
+		this.colorsChanged();
+	}
 }
