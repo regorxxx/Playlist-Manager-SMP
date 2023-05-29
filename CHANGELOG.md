@@ -52,6 +52,7 @@
 ### Fixed
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
 - UI: settings menu opening when clicking at blank space within the buttons toolbar at header instead of just the settings and power action buttons.
+- UI: incorrect settings for panel/buttons colors using dark mode in foobar2000.
 
 ## [0.5.0-beta.20] - 2023-05-16
 ### Added
