@@ -45,6 +45,7 @@
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
 - Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
+- UI: 'Send selection to playlist' now creates an backup before editing the playlist file (to restore it in case it fails).
 - UI: added presets to UI elements configuration menu. Fast settings to enable/disable search box and multiple buttons at the same time.
 - UI: improved checks to ensure there is at least one UI element able to open the settings menu.
 - UI: improved tooltip of power action button. Mouse shortcuts tips are always shown, including the settings menu by R. clicking.

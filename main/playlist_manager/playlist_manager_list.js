@@ -1663,11 +1663,14 @@ function _list(x, y, w, h) {
 		const [handleUpdate, tagsUpdate] = this.bAutoTrackTag ? this.getUpdateTrackTags(handleList, pls) : [null, null]; // Done at 2 steps, first get tags
 		const playlistPath = pls.path;
 		const bUI = pls.extension === '.ui';
+		const backPath = playlistPath + '.back';
+		if (pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf') {_copyFile(playlistPath, backPath);}
 		let done = bUI ? true : addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 		if (!done) {
 			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
+			_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 			return false;
-		}
+		} else if (_isFile(backPath)) {_deleteFile(backPath);}
 		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 		this.editData(pls, {
 			size: pls.size + handleList.Count,
