@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//29/05/23
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -178,7 +178,7 @@ function themedButton(
 					if (bDrawBackground) {
 						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
 						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-						gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+						gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
 						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
 						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
 					} else if (buttonsPanel.config.bToolbar) {
@@ -200,12 +200,9 @@ function themedButton(
 					if (bDrawBackground) {
 						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
 						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-						gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+						gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
 					} else if (buttonsPanel.config.bToolbar) {
 						gr.FillSolidRect(x, y, wCalc, h, 1, RGB(160,160,160));
-					} else {
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(160,160,160));
 					}
 					if (buttonsPanel.config.bToolbar) {
 						if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
@@ -216,7 +213,7 @@ function themedButton(
 					}
 					if (bDrawBackground) {
 						gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
-						gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(17,166,248,50));
+						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(17,166,248,50));
 					} else if (buttonsPanel.config.bToolbar) {
 						gr.FillSolidRect(x, y + 1, w, h / 2 - 1, RGBA(255,255,255,50));
 						gr.FillSolidRect(x, y + h / 2, w, h / 2, RGBA(0,0,0,10));
@@ -224,12 +221,17 @@ function themedButton(
 						gr.FillRoundRect(x, y + 1, w, h / 2 - 1, arc, arc, RGBA(255,255,255,50));
 						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(0,0,0,10));
 					}
+					if (bDrawBackground) {
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+					} else if (!buttonsPanel.config.bToolbar) {
+						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(160,160,160));
+					}
 					break;
 				case buttonStates.down:
 					if (bDrawBackground) {
 						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
 						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-						gr.FillGradRect(x, y + h / 2, w, h - 10, 180, RGB(219,219,219), RGB(207,207,207))
+						gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
 					}
 					if (buttonsPanel.config.bToolbar) {
 						if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
@@ -240,7 +242,7 @@ function themedButton(
 					if (bDrawBackground) {
 						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
 						gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
-						gr.FillRoundRect(x, y + h / 2, w, h, arc, arc, RGBA(37,196,255,80));
+						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(37,196,255,80));
 						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 3, RGBA(0,0,0,50));
 					} else if (buttonsPanel.config.bToolbar) {
 						gr.FillSolidRect(x - 1, y, w + 2, h / 8, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
