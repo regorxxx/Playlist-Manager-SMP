@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/23
+//29/05/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -683,6 +683,10 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 }
 
 listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecommendedPlaylistsNames(user, params = {/*count, offset*/}, token) {
+	if (!user) {
+		console.log('retrieveUserRecommendedPlaylistsNames: no user provided');
+		return Promise.Reject([]);
+	}
 	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
 	return send({
 		method: 'GET', 
