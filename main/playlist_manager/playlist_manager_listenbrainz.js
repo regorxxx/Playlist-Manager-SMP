@@ -685,7 +685,7 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecommendedPlaylistsNames(user, params = {/*count, offset*/}, token) {
 	if (!user) {
 		console.log('retrieveUserRecommendedPlaylistsNames: no user provided');
-		return Promise.Reject([]);
+		return Promise.resolve([]);
 	}
 	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
 	return send({
