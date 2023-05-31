@@ -33,6 +33,7 @@
 
 ## [Unreleased][]
 ### Added
+- Tags: new auto-tags named 'bPinnedFirst' and 'bPinnedLast' which force showing the tagged playlists at top/bottom of the list, for any sorting/filtering combination.
 - UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
 - UI: added sorting by creation date.
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
@@ -45,7 +46,7 @@
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
 - Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
-- UI: 'Send selection to playlist' now creates an backup before editing the playlist file (to restore it in case it fails).
+- UI: 'Send selection to playlist' now creates a backup before editing the playlist file (to restore it in case it fails).
 - UI: added presets to UI elements configuration menu. Fast settings to enable/disable search box and multiple buttons at the same time.
 - UI: improved checks to ensure there is at least one UI element able to open the settings menu.
 - UI: improved tooltip of power action button. Mouse shortcuts tips are always shown, including the settings menu by R. clicking.
