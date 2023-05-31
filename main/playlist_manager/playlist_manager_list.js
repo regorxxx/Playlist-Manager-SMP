@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/23
+//31/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2296,6 +2296,24 @@ function _list(x, y, w, h) {
 					{
 						'(D) Asc.': (a, b) => {return a.created - b.created;},
 						'(D) Des.': (a, b) => {return b.created - a.created;}
+					},
+				// Internal
+				'Pinned': 
+					{
+						'First': (a, b) => {
+							const aPin = a.tags.includes('bPinnedFirst');
+							const bPin = b.tags.includes('bPinnedFirst');
+							if (aPin && !bPin) {return -1;}
+							else if (!aPin && bPin) {return 1;}
+							else {return 0;}
+						},
+						'Last': (a, b) => {
+							const aPin = a.tags.includes('bPinnedLast');
+							const bPin = b.tags.includes('bPinnedLast');
+							if (aPin && !bPin) {return 1;}
+							else if (!aPin && bPin) {return -1;}
+							else {return 0;}
+						}
 					}
 		};
 	}
@@ -2351,6 +2369,12 @@ function _list(x, y, w, h) {
 	this.sort = (sortMethod = this.sortMethods()[this.methodState][this.sortState], bPaint = false) => {
 		this.data.sort(sortMethod); // Can use arbitrary methods...
 		this.dataAll.sort(sortMethod); // This is done, because filter uses a copy of dataAll when resetting to no filter! So we need a sorted copy
+		if (this.bApplyAutoTags) {
+			this.data.sort(this.sortMethods().Pinned.First);
+			this.data.sort(this.sortMethods().Pinned.Last);
+			this.dataAll.sort(this.sortMethods().Pinned.First);
+			this.dataAll.sort(this.sortMethods().Pinned.Last);
+		}
 		if (bMaintainFocus) {
 			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
 				// Get current index of the previously selected item to not move the list focus when updating...

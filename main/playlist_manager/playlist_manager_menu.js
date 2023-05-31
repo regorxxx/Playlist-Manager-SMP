@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/05/23
+//31/05/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -35,7 +35,7 @@ function createMenuLeft(forcedIndex = -1) {
 		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
-	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const lb = listenBrainz;
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(pls.nameId) !== -1;};
@@ -607,7 +607,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			return menu;
 		}
 	});
-	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
