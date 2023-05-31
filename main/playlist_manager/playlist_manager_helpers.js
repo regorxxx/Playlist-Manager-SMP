@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/05/23
+//01/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -298,13 +298,13 @@ function setTag(tags, list, z) {
 	const pls = list.data[z];
 	const extension = pls.extension;
 	if (! new Set(tags).isEqual(new Set(pls.tags))) { // Compares arrays
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui') {
 			list.editData(pls, {tags});
 			list.update(true, true);
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 			list.filter({tagState});
 			bDone = true;
-		} else if (pls.extension === '.ui' || pls.extension === '.strm') {
+		} else if (pls.extension === '.strm') {
 			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
 			bDone = false;
 		} else {
@@ -340,6 +340,7 @@ function setTag(tags, list, z) {
 	}
 	// Rebuild dynamic menus if needed
 	if (bDone && (tags.includes('bSkipMenu') || pls.tags.includes('bSkipMenu')) && list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+	if (bDone && (tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast')) && list.bApplyAutoTags) {list.sort();}
 	return bDone;
 }
 
@@ -347,9 +348,9 @@ function setCategory(category, list, z) {
 	let bDone = false;
 	const pls = list.data[z];
 	const extension = pls.extension;
-	if (extension === '.ui' || extension === '.strm') {return bDone;}
+	if (extension === '.strm') {return bDone;}
 	if (pls.category !== category) {
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || extension === '.ui' ) {
 			list.editData(pls, {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list

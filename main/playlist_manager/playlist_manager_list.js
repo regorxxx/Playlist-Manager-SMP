@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/05/23
+//01/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2639,6 +2639,8 @@ function _list(x, y, w, h) {
 						if (cacheItem) {
 							item.created = cacheItem.created;
 							item.modified = cacheItem.modified;
+							item.tags = cacheItem.tags;
+							item.category = cacheItem.category;
 						}
 						this.dataFoobar.push(item);
 					}

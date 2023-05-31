@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/05/23
+//01/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -42,7 +42,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
 	const isAutoPls = () => {return pls.isAutoPlaylist || pls.query;};
 	const isLockPls = () => {return pls.isLocked;};
-	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist;};
+	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui';};
 	const isPlsLockable = () => {return isPlsEditable() || pls.extension === '.strm';};
 	const isPlsUI = () => {return pls.extension === '.ui';};
 	// Evaluate
@@ -614,9 +614,10 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
 	const isAutoPls = (pls) => {return pls.isAutoPlaylist || pls.query;};
 	const isLockPls = (pls) => {return pls.isLocked;};
-	const isPlsEditable = (pls) => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist;};
+	const isPlsEditable = (pls) => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui';};
 	const isPlsLockable = (pls) => {return isPlsEditable(pls) || pls.extension === '.strm';};
 	const isPlsUI = (pls) => {return pls.extension === '.ui';};
+	const nonPlsUI = playlists.filter((pls) => {return pls.extension !== '.ui';});
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
 	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => {return isPlsLoaded(pls);});
@@ -624,7 +625,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs') || true;});
 	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs');});
 	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => {return isAutoPls(pls);});
-	const bIsLockPlsEvery = playlists.filter((pls) => {return pls.extension !== '.ui';}).every((pls) => {return isLockPls(pls);});
+	const bIsLockPlsEvery = nonPlsUI.length && nonPlsUI.every((pls) => {return isLockPls(pls);});
 	const bIsPlsEditable = playlists.some((pls) => {return isPlsEditable(pls);});
 	const bIsPlsLockable = playlists.some((pls) => {return isPlsLockable(pls);});
 	const bIsPlsUIEvery = playlistsUI.length === playlists.length;
