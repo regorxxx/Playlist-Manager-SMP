@@ -58,7 +58,7 @@ function addGlobTags() { // Add calculated properties
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
-	globQuery.remDuplBias = globTags.rating + '|$strstr($lower(' + globTags.genreStyle.join('\', \'') + '),live)';
+	globQuery.remDuplBias = globTags.rating + '|$strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live)';
 }
 
 // Tags: user replaceable with a presets file at folders.data

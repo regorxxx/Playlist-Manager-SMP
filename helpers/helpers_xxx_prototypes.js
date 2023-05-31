@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/05/23
+//30/05/23
 
 /* 
 	Objects
@@ -419,6 +419,31 @@ Array.prototype.multiIndexOf = function (el) {
 		if (this[i] === el) {idxs.unshift(i);}
 	}
 	return idxs;
+};
+
+Array.prototype.partialSort = function (order, bOptimze = true) {
+	if (bOptimize) {order = [...(new Set(order).intersection(new Set(this)))];}
+	const profiler = new FbProfiler('partialSort');
+	const orderIndex = [];
+	const orderLen = order.length;
+	for (let i = 0; i < orderLen; i++) {
+		const idx = this.indexOf(order[i]);
+		if (idx != -1) {orderIndex[i] = idx;}
+	}
+	const orderIdxLen = orderIndex.length;
+	for (let i = 0; i < orderIdxLen; i++) {
+		let indexI = orderIndex[i];
+		for (let j = i + 1; j < orderIdxLen; j++) {
+			const indexJ = orderIndex[j];
+			if (indexI > indexJ) {
+				[this[indexI], this[indexJ]] = [this[indexJ], this[indexI]];
+				[orderIndex[i], orderIndex[j]] = [indexJ, indexI];
+				indexI = indexJ;
+			}
+		}
+	}
+	profiler.Print();
+	return this;
 };
 
 /* 

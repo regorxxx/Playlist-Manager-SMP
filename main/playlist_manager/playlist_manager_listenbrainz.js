@@ -418,8 +418,15 @@ listenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 				const response = JSON.parse(resolve);
 				if (response.hasOwnProperty('feedback')) {
 					// Add null data to holes, so response respects input length
-					mbid.forEach((m, i) => {if (!m) {response.feedback.splice(i, 0, {...noData});}});
-					return response.feedback;
+					const feedback = mbid.map((m) => {
+						return {...noData, ...{recording_mbid: m || null}};
+					});
+					// And insert data, since it doesn't respect original sorting
+					response.feedback.forEach((responseData) => {
+						const idx = feedback.findIndex((data) => data.recording_mbid === responseData.recording_mbid);
+						if (idx !== -1) {feedback[idx] = responseData;}
+					});
+					return feedback;
 				}
 				return [];
 			}
