@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/05/23
+//01/06/23
 
 /* 
 	Objects
@@ -365,6 +365,11 @@ Array.prototype.shuffle = function() {
 		[this[n], this[last]] = [this[last], this[n]];
 	}
 	return this;
+};
+
+// [3, 4, 5, 1, 2].move(3, 0, 2) // => [1, 2, 3, 4, 5]
+Array.prototype.move = function(from, to, on) {
+	this.splice(to, 0, this.splice(from, on)[0]);
 };
 
 function zeroOrVal(e){
