@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/22
+//01/06/23
 
 //Always loaded along other buttons and panel
 include('..\\..\\helpers\\buttons_panel_xxx.js');
@@ -12,13 +12,11 @@ addButton({
 	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed. 
 	// Since the opposite sort state (Az -> Za) is expected to be on even indexes, we use that to toggle icon and tooltip for any method.
 	sortButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
-		// let t0 = Date.now();
-		// let t1 = 0;
+		const test = new FbProfiler(window.Name + ': ' + 'Sorting - ' + list.getMethodState() + ' - ' + list.getSortState());
 		let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
 		list.setSortState(newSortState);
 		list.sort(void(0), true); // Uses current state
-		// t1 = Date.now();
-		// console.log('Call to Sort took ' + (t1 - t0) + ' milliseconds.');
+		test.Print();
 	}, null, void(0), sortTooltip, 'plm_', void(0), sortIcon),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
 	filterOneButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {

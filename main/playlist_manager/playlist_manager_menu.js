@@ -1731,7 +1731,8 @@ function createMenuRightTop() {
 						list.bApplyAutoTags = (i === 0) ? true : false;
 						list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
 						overwriteProperties(list.properties);
-						fb.ShowPopupMessage('Note in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).\n\n\'bMultMenu\': Associates playlist to menu entries applied to multiple playlists.\n\n\'bSkipMenu\': Skips dynamic menu creation for tagged playlist.', window.Name);
+						fb.ShowPopupMessage('Note in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).\n\n\'bMultMenu\': Associates playlist to menu entries applied to multiple playlists.\n\n\'bSkipMenu\': Skips dynamic menu creation for tagged playlist.\n\nUsage of \'bPinnedFirst\' and \'bPinnedLast\', to pin playlists at top/bottom, require automatic actions to be enabled.', window.Name);
+						if (list.data.some((pls) => pls.tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast'))) {list.sort();} // For pinned recordings
 					}});
 				});
 				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
@@ -2731,21 +2732,22 @@ function createMenuRightSort() {
 	menu.clear(true); // Reset one every call
 	// Entries
 	{	// Sorting
-		const options = Object.keys(list.sortMethods()).sort();
+		const options = Object.keys(list.sortMethods(false)).slice(0, -1).sort().concat(['sep', list.manualMethodState()]);
 		const optionsLength = options.length;
 		menu.newEntry({entryText: 'Change sorting method:', flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		if (optionsLength) {
 			options.forEach((item) => {
+				if (item === 'sep') {menu.newEntry({entryText: 'sep'}); return;}
 				menu.newEntry({entryText: item, func: () => {
 					const previousMethodState = list.methodState;
 					list.methodState = item;
-					list.sortState = Object.keys(list.sortMethods()[list.methodState])[0];
+					list.sortState = Object.keys(list.sortMethods(false)[list.methodState])[0];
 					// Update properties to save between reloads, but property descriptions change according to list.methodState
 					list.properties['methodState'][1] = list.methodState;
 					const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
-					list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods()[previousMethodState]).join(','),''); // remove old keys
-					list.properties['sortState'][0] += Object.keys(list.sortMethods()[list.methodState]); // add new ones
+					list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods(false)[previousMethodState]).join(','),''); // remove old keys
+					list.properties['sortState'][0] += Object.keys(list.sortMethods(false)[list.methodState]); // add new ones
 					list.properties['sortState'][1] = list.sortState; // and change value
 					// And set properties
 					deleteProperties(removeProperties); // Deletes old properties used as placeholders
@@ -2754,7 +2756,7 @@ function createMenuRightSort() {
 				}});
 			});
 		}
-		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1],  () => {return options.indexOf(list.methodState);});
+		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1], () => {return options.filter((s) => s !== 'sep').indexOf(list.methodState);});
 	}
 	return menu;
 }

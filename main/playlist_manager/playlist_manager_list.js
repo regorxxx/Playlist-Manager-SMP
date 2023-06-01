@@ -593,6 +593,25 @@ function _list(x, y, w, h) {
 				}
 			}
 		}
+		// Display internal drag n drop
+		if (this.isInternalDrop()) {
+			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
+			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
+			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
+				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
+					const pls = this.data[this.internalPlsDrop[0]];
+					if (pls) {
+						const len = this.internalPlsDrop.length;
+						const playlistDataText =  pls.name + (len > 1 ? '... (' + len  + ' playlists)' : '');
+						gr.FillSolidRect(this.x - 5, this.my, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 40));
+						gr.DrawRect(this.x - 5, this.my, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 100));
+						gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colors.text, this.bShowIcons ? this.x + maxIconWidth : this.mx, this.my, this.text_width - 30, panel.row_height, LEFT);
+					} else {
+						console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
+					}
+				}
+			}
+		}
 		// Char popup as animation
 		if (this.lastCharsPressed.bDraw) {
 			const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
@@ -724,6 +743,7 @@ function _list(x, y, w, h) {
 		for (let key in this.headerButtons) {
 			this.headerButtons[key].inFocus = false;
 		}
+		this.internalPlsDrop = [];
 		window.Repaint();
 	}
 	
@@ -889,6 +909,11 @@ function _list(x, y, w, h) {
 					break;
 				}
 			}
+			// Force scrolling so the list doesn't get blocked at current view while doing internal drag n drop
+			if (this.isInternalDrop()) {
+				this.up_btn.hover = this.up_btn.lbtn_up(x, y);
+				this.down_btn.hover = this.down_btn.lbtn_up(x, y);
+			}
 			return true;
 		} else {
 			this.up_btn.hover = false;
@@ -979,6 +1004,20 @@ function _list(x, y, w, h) {
 				this.searchInput.check('up', -1, -1);
 			}
 		}
+		if (this.trace(x,y)) {
+			if (this.methodState === this.manualMethodState()) {
+				if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
+					// Set drag n drop after some time
+					const z = this.index;
+					setTimeout(() => {
+						if (!utils.IsKeyPressed(0x01) || z === -1) {return;} // L. Click
+						if (z !== this.index || z === this.index && (Math.abs(this.mx - x) > 20 || Math.abs(this.my - y) > 20)) {
+							this.internalPlsDrop = this.indexes.length ? [...this.indexes] : [z];
+						}
+					}, 300);
+				}
+			}
+		}
 	}
 	
 	this.lbtn_up = (x, y, mask) => {
@@ -998,7 +1037,27 @@ function _list(x, y, w, h) {
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
-						if (shortcuts.hasOwnProperty(mask)) {
+						if (this.isInternalDrop()) {
+							const name = this.data[z].nameId;
+							if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
+								const cache = [...this.sortingFile];
+								const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
+								if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
+								const toMove = this.internalPlsDrop.reverse().map((idx) => {
+									const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
+									return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
+								}).filter((n) => n !== null).reverse();
+								const toIdx = this.sortingFile.findIndex((n) => n === name);
+								if (toIdx !== -1) {
+									this.sortingFile.splice(toIdx, 0, ...toMove);
+									if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
+									if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
+									this.saveManualSorting();
+									this.sort();
+								} else {this.sortingFile = cache;}
+							}
+							this.internalPlsDrop = [];
+						} else if (shortcuts.hasOwnProperty(mask)) {
 							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
 								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
 								const cache = [this.offset, this.index];
@@ -1510,6 +1569,9 @@ function _list(x, y, w, h) {
 	}
 	
 	// Drag n drop
+	this.isInternalDrop = () => {
+		return this.internalPlsDrop.length && this.methodState === this.manualMethodState();
+	};
 	this.onDragDrop = () => {
 		if (_isFile(null)) { // Sends files (playlists) to tracked folder
 			return true;
@@ -2266,8 +2328,9 @@ function _list(x, y, w, h) {
 		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories(), mbidState: this.constMbidStates()[0], plsState: []});
 	}
 	
-	this.sortMethods = () => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
-		return {'By name': 
+	this.sortMethods = (bInternal = true) => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
+		return {
+				'By name': 
 					{
 						'Az': (a, b) => {return a.name.localeCompare(b.name);}, 
 						'Za': (a, b) => {return 0 - a.name.localeCompare(b.name);}
@@ -2297,24 +2360,37 @@ function _list(x, y, w, h) {
 						'(D) Asc.': (a, b) => {return a.created - b.created;},
 						'(D) Des.': (a, b) => {return b.created - a.created;}
 					},
-				// Internal
-				'Pinned': 
+				// Manual
+				'Manual sorting': 
 					{
-						'First': (a, b) => {
-							const aPin = a.tags.includes('bPinnedFirst');
-							const bPin = b.tags.includes('bPinnedFirst');
-							if (aPin && !bPin) {return -1;}
-							else if (!aPin && bPin) {return 1;}
-							else {return 0;}
-						},
-						'Last': (a, b) => {
-							const aPin = a.tags.includes('bPinnedLast');
-							const bPin = b.tags.includes('bPinnedLast');
-							if (aPin && !bPin) {return 1;}
-							else if (!aPin && bPin) {return -1;}
-							else {return 0;}
-						}
+						'(M) Asc.': (a, b) => {return a.sortIdx - b.sortIdx;},
+						'(M) Des.': (a, b) => {return b.sortIdx - a.sortIdx;}
+					},
+				// Internal
+				// Only getOppositeSortState work with these
+				...(bInternal
+					? {
+						'Pinned': 
+							{
+								'First': (a, b) => {
+									const aPin = a.tags.includes('bPinnedFirst');
+									const bPin = b.tags.includes('bPinnedFirst');
+									if (aPin && !bPin) {return -1;}
+									else if (!aPin && bPin) {return 1;}
+									else {return 0;}
+								},
+								'Last': (a, b) => {
+									const aPin = a.tags.includes('bPinnedLast');
+									const bPin = b.tags.includes('bPinnedLast');
+									if (aPin && !bPin) {return 1;}
+									else if (!aPin && bPin) {return -1;}
+									else {return 0;}
+								},
+								bHidden: true
+							}
 					}
+				: {}
+				)
 		};
 	}
 	this.getOppositeSortState = (sortState, methodState = this.methodState) => { // first or second key
@@ -2324,20 +2400,20 @@ function _list(x, y, w, h) {
 		return ((index === 0) ? keys[++index] : keys[--index]);
 	}
 	this.getIndexSortState = (sortState = this.sortState, methodState = this.methodState) => {
-		const keys = Object.keys(this.sortMethods()[methodState]);
+		const keys = Object.keys(this.sortMethods(false)[methodState]);
 		const index = keys.indexOf(sortState);
 		return index;
 	}
 	// Use these to always get valid values
 	this.getSortState = () => {
-		const keys = Object.keys(this.sortMethods()[this.methodState]);
+		const keys = Object.keys(this.sortMethods(false)[this.methodState]);
 		let index = keys.indexOf(this.sortState);
-		if (index === -1) {return Object.keys(this.sortMethods()[this.methodState])[0];}
+		if (index === -1) {return Object.keys(this.sortMethods(false)[this.methodState])[0];}
 		return this.sortState;
 	}
 	this.setSortState = (sortState) => {
 		// Check if it's a valid one
-		const keys = Object.keys(this.sortMethods()[this.methodState]);
+		const keys = Object.keys(this.sortMethods(false)[this.methodState]);
 		let index = keys.indexOf(sortState);
 		if (index === -1) {return false;}
 		// Save it
@@ -2347,14 +2423,14 @@ function _list(x, y, w, h) {
 		return true;
 	}
 	this.getMethodState = () => {
-		const keys = Object.keys(this.sortMethods());
+		const keys = Object.keys(this.sortMethods(false));
 		let index = keys.indexOf(this.methodState);
-		if (index === -1) {return Object.keys(this.sortMethods())[0];}
+		if (index === -1) {return Object.keys(this.sortMethods(false))[0];}
 		return this.methodState;
 	}
 	this.setMethodState = (methodState) => {
 		// Check if it's a valid one
-		const keys = Object.keys(this.sortMethods());
+		const keys = Object.keys(this.sortMethods(false));
 		let index = keys.indexOf(methodState);
 		if (index === -1) {return false;}
 		// Save it
@@ -2363,17 +2439,59 @@ function _list(x, y, w, h) {
 		overwriteProperties(this.properties);
 		return true;
 	}
+	this.defaultMethodState = () => {
+		return Object.keys(this.sortMethods(false))[0];
+	}
+	this.defaultSortState = (method = this.defaultMethodState()) => {
+		return Object.keys(this.sortMethods(false)[method])[0];
+	}
+	this.manualMethodState = () => {
+		return Object.keys(this.sortMethods(false)).slice(-1)[0];
+	}
 	this.methodState = this.getMethodState(); // On first call first method will be default
 	this.sortState = this.getSortState(); // On first call first state of that method will be default
 	
-	this.sort = (sortMethod = this.sortMethods()[this.methodState][this.sortState], bPaint = false) => {
+	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false) => {
+		const bManual = this.methodState === this.manualMethodState();
+		if (bManual) {
+			let bSave = false;
+			if (this.sortingFile.length) {
+				// Assign Ids and remove not present playlists
+				this.sortingFile = this.sortingFile.filter((plsSort) => this.dataAll.some((pls) => pls.nameId === plsSort));
+				this.dataAll.forEach((pls) => {
+					const idx = this.sortingFile.findIndex((plsSort) => pls.nameId === plsSort);
+					pls.sortIdx = idx !== -1 ? idx : this.sortingFile.push(pls.nameId);
+					if (idx === -1) {bSave = true;}
+				});
+			} else { // Create new one sorted by name
+				const defSort = this.sortMethods(false)[this.defaultMethodState()][this.defaultSortState()];
+				this.dataAll.sort(defSort)
+				this.dataAll.forEach((pls, i) => {
+					this.sortingFile.push(pls.nameId);
+					pls.sortIdx = i;
+				});
+				bSave = true;
+			}
+			if (bSave) {this.saveManualSorting();}
+		}
 		this.data.sort(sortMethod); // Can use arbitrary methods...
 		this.dataAll.sort(sortMethod); // This is done, because filter uses a copy of dataAll when resetting to no filter! So we need a sorted copy
-		if (this.bApplyAutoTags) {
-			this.data.sort(this.sortMethods().Pinned.First);
-			this.data.sort(this.sortMethods().Pinned.Last);
-			this.dataAll.sort(this.sortMethods().Pinned.First);
-			this.dataAll.sort(this.sortMethods().Pinned.Last);
+		if (!bManual && this.bApplyAutoTags) {
+			const {bFirst, bLast} = this.data.reduce((acc, pls) => {
+					if (!acc.bFirst && pls.tags.includes('bPinnedFirst')) {acc.bFirst = true;}
+					if (!acc.bLast && pls.tags.includes('bPinnedLast')) {acc.bLast = true;}
+					return acc;
+				}, {bFirst: false, bLast: false});
+			if (bFirst) {
+				const method = this.sortMethods().Pinned.First;
+				this.data.sort(method);
+				this.dataAll.sort(method);
+			}
+			if (bLast) {
+				const method = this.sortMethods().Pinned.Last;
+				this.data.sort(method);
+				this.dataAll.sort(method);
+			}
 		}
 		if (bMaintainFocus) {
 			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
@@ -2391,6 +2509,10 @@ function _list(x, y, w, h) {
 			}
 		}
 		if (bPaint) {window.Repaint();}
+	}
+	
+	this.saveManualSorting = () => {
+		_save(this.filename.replace('.json','_sorting.json'), JSON.stringify(this.sortingFile, this.replacer, '\t'), false); // No BOM
 	}
 	
 	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
@@ -2851,7 +2973,6 @@ function _list(x, y, w, h) {
 					}
 				});
 				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI], this.replacer, '\t'), this.bBOM); // No BOM
-				// _save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp], this.replacer, '\t'), this.bBOM); // No BOM
 			}
 			if (!bInit) {
 				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();}
@@ -3454,15 +3575,15 @@ function _list(x, y, w, h) {
 			if (!this.properties['methodState'][1]) {
 				removeProperties['methodState'] = [this.properties['methodState'][0], null]; // need to remove manually since we change the ID (description)!
 				// Fill description and first method will be default
-				this.properties['methodState'][0] += Object.keys(this.sortMethods()); // We change the description, but we don't want to overwrite the value
+				this.properties['methodState'][0] += Object.keys(this.sortMethods(false)); // We change the description, but we don't want to overwrite the value
 				newProperties['methodState'] = [this.properties['methodState'][0], this.getMethodState()];
 				bDone = true;
 			} 
 			if (!this.properties['sortState'][1]) { // This one changes according to the previous one! So we need to load the proper 'methodState'
 				removeProperties['sortState'] = [this.properties['sortState'][0], null]; // need to remove manually since we change the ID (description)!
 				// Fill description and first state of the method will be default
-				let savedMethodState = window.GetProperty(this.properties['methodState'][0], this.getMethodState()); // Note this will get always a value
-				this.properties['sortState'][0] += Object.keys(this.sortMethods()[savedMethodState]); // We change the description, but we don't want to overwrite the value
+				let savedMethodState = window.GetProperty(this.properties['methodState'][0], this.getMethodState()) || this.getMethodState(); // Note this will get always a value
+				this.properties['sortState'][0] += Object.keys(this.sortMethods(false)[savedMethodState]); // We change the description, but we don't want to overwrite the value
 				newProperties['sortState'] = [this.properties['sortState'][0], this.getSortState()];
 				bDone = true;
 			}
@@ -3514,14 +3635,14 @@ function _list(x, y, w, h) {
 				this.bUseUUID = false;
 			}
 			// Check sorting is valid
-			if (!this.sortMethods().hasOwnProperty(this.methodState)) {
-				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods()).join('\n') + '\n\nUsing default method as fallback', window.Name);
+			if (!this.sortMethods(false).hasOwnProperty(this.methodState)) {
+				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
 				this.methodState = this.getMethodState(); // On first call first state of that method will be default
 				this.properties['methodState'][1] = this.methodState;
 				bDone = true;
 			}
-			if (!this.sortMethods()[this.methodState].hasOwnProperty(this.sortState)) {
-				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods()[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
+			if (!this.sortMethods(false)[this.methodState].hasOwnProperty(this.sortState)) {
+				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
 				this.sortState = this.getSortState(); // On first call first state of that method will be default
 				this.properties['sortState'][1] = this.sortState;
 				bDone = true;
@@ -3622,6 +3743,12 @@ function _list(x, y, w, h) {
 			if (!file.length) {this.configFile = null; return;}
 			if (_isFile(file)) {this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, utf8);}
 			else {this.configFile = null;}
+		}
+		
+		this.loadSortingFile = (file = this.filename.replace('.json','_sorting.json')) => {
+			if (!file.length) {this.sortingFile = []; return;}
+			if (_isFile(file)) {this.sortingFile = _jsonParseFileCheck(file, 'Sorting json', window.Name, utf8);}
+			else {this.sortingFile = [];}
 		}
 		
 		this.createMainMenuDynamic = ({file = folders.ajquerySMP + 'playlistmanagerentries.json'} = {}) => {
@@ -3793,6 +3920,7 @@ function _list(x, y, w, h) {
 			this.indexes = [];
 			this.lastIndex = -1;
 			this.lastOffset = 0;
+			this.internalPlsDrop = [];
 			this.data = []; // Data to paint
 			this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
 			this.dataAutoPlaylists = []; // Only autoplaylists to save to json
@@ -3861,7 +3989,8 @@ function _list(x, y, w, h) {
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
 		_recycleFile(this.filename + '.old', true); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
-		this.loadConfigFile(); // Extra json config available?
+		this.loadConfigFile(); // Extra json files available?
+		this.loadSortingFile();
 		this.initProperties(); // This only set properties if they have no values...
 		this.reset();
 		let bDone = this.checkConfig();
@@ -3923,6 +4052,8 @@ function _list(x, y, w, h) {
 	this.bSelMenu = false;
 	this.filename = '';
 	this.configFile = null;
+	this.sortingFile = [];
+	this.internalPlsDrop = [];
 	this.totalFileSize = 0; // Stores the file size of all playlists for later comparison when autosaving
 	this.lastPlsLoaded = [];
 	this.mainMenuDynamic = [];
@@ -3992,8 +4123,8 @@ function _list(x, y, w, h) {
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
-	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0 && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop); }, () => { this.wheel({s: 1}); });
-	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop); }, () => { this.wheel({s: -1}); });
+	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0 && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop || this.isInternalDrop()); }, () => { this.wheel({s: 1}); });
+	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop || this.isInternalDrop()); }, () => { this.wheel({s: -1}); });
 	this.headerButtonsDef = {};
 	this.headerButtons = {
 		search: {
