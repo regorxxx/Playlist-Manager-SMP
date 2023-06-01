@@ -51,6 +51,7 @@
 - UI: added presets to UI elements configuration menu. Fast settings to enable/disable search box and multiple buttons at the same time.
 - UI: improved checks to ensure there is at least one UI element able to open the settings menu.
 - UI: improved tooltip of power action button. Mouse shortcuts tips are always shown, including the settings menu by R. clicking.
+- Console: improved console logging for empty playlists (no longer reporting 0 items found).
 ### Removed
 ### Fixed
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/23
+//01/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -669,7 +669,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			} else {notFound.add(i);}
 		}
 		
-		if (bXSPF && count !== filePaths.length) {
+		if (bXSPF && count !== playlistLength) {
 			bOmitNotFound = true; // Omit not found for xspf playlists, forced by specification
 			let playlistText = _open(playlistPath);
 			if (typeof playlistText !== 'undefined' && playlistText.length) {
@@ -719,14 +719,19 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			}
 		}
 		pathsNotFound = [...notFound].map((idx) => {return filePaths[idx];});
-		if (count === filePaths.length && filePaths.length) {
-			console.log(playlistPath.split('\\').pop() + ': Found all tracks on library.');
-			handlePlaylist = new FbMetadbHandleList(handlePlaylist);
-		} else if (bOmitNotFound && handlePlaylist !== null) {
-			console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (filePaths.length - count) + ').' + '\n' + pathsNotFound.join('\n'));
-			handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
+		if (playlistLength) {
+			if (count === playlistLength) {
+				console.log(playlistPath.split('\\').pop() + ': found all tracks on library.');
+				handlePlaylist = new FbMetadbHandleList(handlePlaylist);
+			} else if (bOmitNotFound && handlePlaylist !== null) {
+				console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n'));
+				handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
+			} else {
+				console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n'));
+				handlePlaylist = null;
+			}
 		} else {
-			console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (filePaths.length - count) + ').' + '\n' + pathsNotFound.join('\n'));
+			console.log(playlistPath.split('\\').pop() + ': empty playlist.');
 			handlePlaylist = null;
 		}
 		if (handlePlaylist !== null) {
