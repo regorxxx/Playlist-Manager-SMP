@@ -2960,7 +2960,7 @@ function _list(x, y, w, h) {
 			this.dataFpl = [];
 			this.dataXsp = [];
 			this.dataUI = [];
-			if (this.dataAll) {
+			if (this.dataAll && this.dataAll.length) {
 				this.dataAll.forEach((item) => {
 					if (item.isAutoPlaylist) { // Saves autoplaylists to json
 						this.dataAutoPlaylists.push(item);
@@ -2972,7 +2972,12 @@ function _list(x, y, w, h) {
 						this.dataUI.push(item);
 					}
 				});
-				_save(this.filename, JSON.stringify([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI], this.replacer, '\t'), this.bBOM); // No BOM
+				const data = [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI];
+				const stripMeta = ['sortIdx'];
+				data.forEach((pls) => {
+					stripMeta.forEach((key) => delete pls[key]);
+				});
+				_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
 			}
 			if (!bInit) {
 				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();}
