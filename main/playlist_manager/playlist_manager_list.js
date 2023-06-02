@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/23
+//02/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2513,6 +2513,33 @@ function _list(x, y, w, h) {
 	
 	this.saveManualSorting = () => {
 		_save(this.filename.replace('.json','_sorting.json'), JSON.stringify(this.sortingFile, this.replacer, '\t'), false); // No BOM
+	}
+	
+	this.setManualSortingForPls = (plsArr, toIdx) => {
+		if (plsArr.every((pls) => this.dataAll.includes(pls))) {
+			if (!this.sortingFile.length) {this.sort();}
+			const cache = [...this.sortingFile];
+			const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
+			if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
+			const toMove = plsArr.reverse().map((pls) => {
+				const sortIdx = this.sortingFile.findIndex((n) => n === pls.nameId);
+				return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
+			}).filter((n) => n !== null).reverse();
+			if (toMove.length) {
+				if (isFunction(toIdx)) {
+					const ref = cache.findIndex((n) => n === toMove[0]);
+					toIdx = ref !== -1 ? toIdx(ref) : -1;
+				}
+				if (toIdx !== -1 && (toMove.length !== 1 || (toMove[0] !== cache.slice(-1)[0] || toIdx < cache.length))) { // Don't move past limits...
+					if (toIdx > this.sortingFile.length) {toIdx = this.sortingFile.length;}
+					this.sortingFile.splice(toIdx, 0, ...toMove);
+					if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
+					if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
+					this.saveManualSorting();
+					this.sort();
+				} else {this.sortingFile = cache;}
+			} else {this.sortingFile = cache;}
+		} else {console.log('Playlist Manager: invalid data array.');}
 	}
 	
 	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
