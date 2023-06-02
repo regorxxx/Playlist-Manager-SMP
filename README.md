@@ -91,11 +91,14 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * By tag
   * By category
 * **Sorting:**
+  * Manually
+  * Pinned Playlists (to be used with the other sorting modes)
   * Name: Az | Za
   * Size: Ascd. | Desc.
   * Category: Az | Za
   * Tags (first one): Az | Za
-  * Date: Az | Za
+  * Creation Date: Ascd. | Desc.
+  * Last Modified Date: Az | Za
 * UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
   * Invisible Unicode chars plus (*)
   * (a-f)
@@ -118,6 +121,8 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * Properties descriptions change according to things set on the panel, not just the values. i.e. if you change the sort method, then the description reflects the associated states dynamically.
 * **UI:**
   * UI resizable on the fly.
+  * UI elements can be selectivel enabled or disabled.
+  * Fully configurable mouse shortcuts.
   * Selection indicators.
   * Now playing and loaded playlist indicators.
   * Empty / not empty playlist indicators. To be used as fallback when size is not shown.
