@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/06/23
+//05/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -1083,10 +1083,10 @@ function _list(x, y, w, h) {
 									if (this.indexes.length) {
 										createMenuLeftMult(this.indexes).btn_up(x,y);
 									} else {
-										createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 100 ms delay to another pls (bug) or even out of range (crash)
+										createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
 									}
 									this.bSelMenu = false;
-								}, 100)(x,y); // Creates the menu and calls it later
+								}, this.iDoubleClickTimer)(x,y); // Creates the menu and calls it later
 							} else {this.bDoubleclick = false;}
 						}
 					}
@@ -1123,7 +1123,7 @@ function _list(x, y, w, h) {
 					const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 					if (sgShortcut) { // Select all from current view or clean selection
 						if (!this.bDoubleclick) { // It's not a second lbtn click
-							this.timeOut = delayFn(this.executeAction, 100)(void(0), sgShortcut, false);
+							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void(0), sgShortcut, false);
 						} else {this.bDoubleclick = false;}
 					}
 					this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
@@ -2858,29 +2858,29 @@ function _list(x, y, w, h) {
 	}
 	
 	this.updateAllUUID = () => {
-		this.dataAll.forEach((pls, z) => {if (pls.extension !== '.pls') {this.updateUUID(pls, z);}}); // Changes data on the other arrays too since they link to same object
+		this.dataAll.forEach((pls, z) => {if (pls.extension !== '.pls' && pls.extension !== '.ui') {this.updateUUID(pls, z);}}); // Changes data on the other arrays too since they link to same object
 		this.update(true, true);
 		this.filter();
 	}
 	
 	this.updateUUID = (playlistObj, z) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-		const old_name = playlistObj.name;
-		const old_id = playlistObj.ud;
-		const old_nameId = playlistObj.nameId;
-		const new_id = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), true) : ''; // May have enabled/disabled UUIDs just before renaming
-		const new_nameId = old_name + ((this.bUseUUID) ? new_id : '');
-		if (new_nameId !== old_nameId) {
-			playlistObj.id = new_id;
-			playlistObj.nameId = new_nameId;
-			let duplicated = plman.FindPlaylist(new_nameId);
+		const oldName = playlistObj.name;
+		const oldId = playlistObj.ud;
+		const oldNameId = playlistObj.nameId;
+		const newId = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), true) : ''; // May have enabled/disabled UUIDs just before renaming
+		const newNameId = oldName + ((this.bUseUUID) ? newId : '');
+		if (newNameId !== oldNameId) {
+			playlistObj.id = newId;
+			playlistObj.nameId = newNameId;
+			let duplicated = plman.FindPlaylist(newNameId);
 			if (duplicated !== -1) { // Playlist already exists on foobar2000...
-				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + old_name + '\n' + 'Choose another unique name for renaming.', window.Name);
+				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name);
 			} else {
-				const plsIdx = plman.FindPlaylist(old_nameId);
+				const plsIdx = plman.FindPlaylist(oldNameId);
 				if (plsIdx !== -1) {
 					if (playlistObj.isAutoPlaylist || playlistObj.extension === '.fpl' || playlistObj.extension === '.xsp' || playlistObj.extension === '.ui') {
-						this.updatePlman(new_nameId, old_nameId); // Update with new id
+						this.updatePlman(newNameId, oldNameId); // Update with new id
 					} else {
 						const path = playlistObj.path;
 						if (_isFile(path)) {
@@ -2889,16 +2889,16 @@ function _list(x, y, w, h) {
 								_copyFile(path, backPath);
 								let bDone, reason;
 								if (playlistObj.extension === '.m3u' || playlistObj.extension === '.m3u8') {
-										let originalStrings = ['#PLAYLIST:' + old_name, '#UUID:' + old_id];
-										let newStrings = ['#PLAYLIST:' + new_name, '#UUID:' + new_id];
+										let originalStrings = ['#PLAYLIST:' + oldName, '#UUID:' + oldId];
+										let newStrings = ['#PLAYLIST:' + oldName, '#UUID:' + newId];
 										[bDone, reason] = editTextFile(path, originalStrings, newStrings, this.bBOM); // No BOM
 										if (!bDone && reason === 1) { // Retry with new header
 											bDone = rewriteHeader(this, playlistObj); 
 											if (bDone) {bDone = editTextFile(path, originalStrings, newStrings, this.bBOM);}
 										}
 								} else if (playlistObj.extension === '.xspf') {
-									let originalStrings = ['<title>' + old_name, '<meta rel="uuid">' + old_id];
-									let newStrings = ['<title>' + new_name, '<meta rel="uuid">' + new_id];
+									let originalStrings = ['<title>' + oldName, '<meta rel="uuid">' + oldId];
+									let newStrings = ['<title>' + oldName, '<meta rel="uuid">' + newId];
 									[bDone, reason] = editTextFile(path, originalStrings, newStrings, this.bBOM); // No BOM
 									if (!bDone && reason === 1) { // Retry with new header
 										bDone = rewriteHeader(this, playlistObj); 
@@ -2906,12 +2906,12 @@ function _list(x, y, w, h) {
 									}
 								} else {bDone = true;}
 								if (!bDone) {
-									fb.ShowPopupMessage('Error renaming playlist file: ' + old_nameId + ' --> ' + new_nameId + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);
+									fb.ShowPopupMessage('Error renaming playlist file: ' + oldNameId + ' --> ' + newNameId + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);
 									_renameFile(backPath, path); // Restore backup in case something goes wrong
 									console.log('Playlist manager: Restoring backup...');
 								} else {
 									if (_isFile(backPath)) {_deleteFile(backPath);}
-									this.updatePlman(new_nameId, old_nameId); // Update with new id
+									this.updatePlman(newNameId, oldNameId); // Update with new id
 								}
 							}
 						} else {fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + path, window.Name);}
@@ -3363,19 +3363,19 @@ function _list(x, y, w, h) {
 				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
 				return;
 			}
-			const old_nameId = pls.nameId;
-			const old_name = pls.name;
-			const duplicated = getPlaylistIndexArray(old_nameId);
+			const oldNameId = pls.nameId;
+			const oldName = pls.name;
+			const duplicated = getPlaylistIndexArray(oldNameId);
 			if (duplicated && duplicated.length > 1) {
-				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + old_name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 				return false;
 			} else {
 				if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1], true);} // Async backup before future changes
-				let [fbPlaylistIndex] = clearPlaylistByName(old_nameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
+				let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 				if (pls.isAutoPlaylist) { // AutoPlaylist
 					if (!fbPlaylistIndex) {fbPlaylistIndex = plman.PlaylistCount;}
 					if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return;}
-					plman.CreateAutoPlaylist(fbPlaylistIndex, old_name, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
+					plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 					plman.ActivePlaylist = fbPlaylistIndex;
 					const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 					this.editData(pls, {
@@ -3387,7 +3387,7 @@ function _list(x, y, w, h) {
 					}
 				} else { // Or file
 					if (_isFile(pls.path)) {
-						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, old_nameId);} //If it was not loaded on foobar2000, then create a new one
+						if (!fbPlaylistIndex) {fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, oldNameId);} //If it was not loaded on foobar2000, then create a new one
 						plman.ActivePlaylist = fbPlaylistIndex;
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
 						// But it will fail as soon as any track is not found on library
@@ -3525,8 +3525,8 @@ function _list(x, y, w, h) {
 				}
 			}
 			// Delete from data
-			const old_nameId = pls.nameId;
-			const duplicated = plman.FindPlaylist(old_nameId);
+			const oldNameId = pls.nameId;
+			const duplicated = plman.FindPlaylist(oldNameId);
 			if (pls.size) {this.totalFileSize -= pls.size;}
 			this.deletedItems.unshift(pls);
 			this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
@@ -4149,6 +4149,7 @@ function _list(x, y, w, h) {
 	this.bTracking = true;
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
+	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	// Other
 	this.bIsDragDrop = false;
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};

@@ -37,6 +37,7 @@
 - UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
 - UI: added manual sorting. It must be enabled on the sorting button and works independently to the automatic sorting methods. Playlist can be reordered by drag n' dropping within the panel or using the sorting submenu. It also works with multiple selection. Pinned playlists are ignored in this mode. Sorting indexes are stored at '.\js_data\'.
 - UI: added sorting by creation date.
+- UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
 ### Changed
