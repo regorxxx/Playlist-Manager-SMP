@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/06/23
+//05/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -175,7 +175,7 @@ var properties = {
 		'Single Click':	'Show current / playing playlist',
 		'Double Click':	'Cycle categories'
 	})],
-	showMenus			: ['Show menus configuration', JSON.stringify({
+	showMenus				: ['Show menus configuration', JSON.stringify({
 		'Contextual menus':			true,
 		'Category':					true,
 		'Tags':						true,
@@ -187,7 +187,7 @@ var properties = {
 		'UI playlist locks':		true,
 		'File locks':				true,
 	})],
-	searchMethod		: ['Search settings', JSON.stringify({
+	searchMethod			: ['Search settings', JSON.stringify({
 		bName:			true,
 		bTags:			true,
 		bCategory:		true,
@@ -212,7 +212,8 @@ var properties = {
 			}
 		}
 	})],
-	bSetup					:['Setup mode', true, {func: isBoolean}, true],
+	bSetup					: ['Setup mode', true, {func: isBoolean}, true],
+	iDoubleClickTimer		: ['Double click timer', 250, {func: isInt}, 250],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);

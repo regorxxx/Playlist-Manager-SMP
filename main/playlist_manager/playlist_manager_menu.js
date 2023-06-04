@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/06/23
+//05/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2495,6 +2495,14 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}});
 			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Double click timer...', func: () => {
+				let input = Input.number('int positive', list.iDoubleClickTimer, 'Enter ms:\nHigher values will delay more single clicking actions.', window.Name, 300);
+				if (input === null) {return;}
+				if (!Number.isFinite(input)) {return;}
+				list.iDoubleClickTimer = list.properties.iDoubleClickTimer[1] = input;
+				overwriteProperties(list.properties);
+			}});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults (all)', func: () => {
 				['lShortcuts', 'mShortcuts', 'lShortcutsHeader', 'mShortcutsHeader'].forEach((key) => {
