@@ -52,7 +52,7 @@ function loadUserDefFile(def) {
 }
 
 function addGlobTags() { // Add calculated properties
-	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
+	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];

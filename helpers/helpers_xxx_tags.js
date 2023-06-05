@@ -57,10 +57,13 @@ function sanitizeQueryVal(val) {
 
 // Quote value if needed
 function sanitizeTagIds(tag, bSpace = true) {
-	return '$ascii($lower($trim($replace(' + tag.toUpperCase() + ',\'\',,`,,-,,\\,,/,,:,,$char(34),' + (bSpace ? ', ,' : '') + '))))';
+	return '$ascii($lower($trim($replace(' + tag.toUpperCase() + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),' + (bSpace ? ', ,' : '') + '))))';
 }
 function sanitizeTagValIds(val, bSpace = true) {
-	return _asciify(val).trim().replace((bSpace ? /['`\-/\\ :"]/g : /['`\-/\\:"]/g),'').toLowerCase();
+	return _asciify(val).trim().replace((bSpace 
+		? /['`’\-/\\ :"]/g 
+		: /['`’\-/\\:"]/g)
+	,'').toLowerCase();
 }
 
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
