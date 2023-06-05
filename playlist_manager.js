@@ -145,6 +145,7 @@ var properties = {
 		Ctrl:			'Copy selection to playlist',
 		Shift:			'Load / show playlist',
 		'Ctrl + Shift':	'Clone playlist in UI',
+		'Single Click':	'- None -',
 		'Double Click':	'Load / show playlist'
 	})],
 	mShortcuts				: ['M. click modifiers', JSON.stringify({
@@ -176,10 +177,10 @@ var properties = {
 		'Double Click':	'Cycle categories'
 	})],
 	showMenus				: ['Show menus configuration', JSON.stringify({
-		'Contextual menus':			true,
+		'Playlist\'s items menu':	false,
 		'Category':					true,
 		'Tags':						true,
-		'Relative paths handling':	true,
+		'Relative paths handling':	false,
 		'Export and copy':			true,
 		'Online sync':				true,
 		'Sorting':					true,
@@ -214,12 +215,19 @@ var properties = {
 	})],
 	bSetup					: ['Setup mode', true, {func: isBoolean}, true],
 	iDoubleClickTimer		: ['Double click timer', 250, {func: isInt}, 250],
+	rShortcuts				: ['R. click modifiers', JSON.stringify({
+		Ctrl:			'- None -',
+		Shift:			'Playlist\'s items menu',
+		'Ctrl + Shift':	'- None -',
+		'Single Click':	'Manage playlist'
+	})],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
 properties['playlistIcons'].push({func: isJSON}, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({func: isJSON}, properties['mShortcuts'][1]);
 properties['lShortcuts'].push({func: isJSON}, properties['lShortcuts'][1]);
+properties['rShortcuts'].push({func: isJSON}, properties['rShortcuts'][1]);
 properties['lShortcutsHeader'].push({func: isJSON}, properties['lShortcutsHeader'][1]);
 properties['mShortcutsHeader'].push({func: isJSON}, properties['mShortcutsHeader'][1]);
 properties['showMenus'].push({func: isJSON}, properties['showMenus'][1]);
@@ -265,21 +273,40 @@ let delayAutoUpdate = () => void(0);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
 		if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager: introduction');}
-		// Simple mode
-		const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'];
-		const otherFeatures = ['Advanced search tools'];
-		const answer = WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, window.Name, popup.question + popup.yes_no);
-		if (answer === popup.no) {
-			// Menus
-			const showMenus = JSON.parse(prop.showMenus[1]);
-			features.forEach((key) => {
-				showMenus[key] = false;
-			});
-			prop.showMenus[1] = JSON.stringify(showMenus);
-			// Other tools
-			const searchMethod = JSON.parse(prop.searchMethod[1]);
-			searchMethod.bPath = searchMethod.bRegExp = false;
-			prop.searchMethod[1] = JSON.stringify(searchMethod);
+		{	// Simple mode
+			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'];
+			const otherFeatures = ['Advanced search tools'];
+			const answer = WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.no) {
+				// Menus
+				const showMenus = JSON.parse(prop.showMenus[1]);
+				features.forEach((key) => {
+					showMenus[key] = false;
+				});
+				prop.showMenus[1] = JSON.stringify(showMenus);
+				// Other tools
+				const searchMethod = JSON.parse(prop.searchMethod[1]);
+				searchMethod.bPath = searchMethod.bRegExp = false;
+				prop.searchMethod[1] = JSON.stringify(searchMethod);
+			}
+		}
+		{	// UI tracking
+			const answer = WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				prop.bAllPls[1] = true;
+			}
+		}
+		{	// Manual sorting
+			const answer = WshShell.Popup('By default automatic sorting is used.\nManual sorting can be set at the sorting button at bottom. Playlisst may be reorderd by using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				new Promise((resolve) => {
+					const timer = setInterval(() => {
+						if (list) {clearInterval(timer); resolve();}
+					}, 250);
+				}).then(() => {
+					list.changeSorting(list.manualMethodState());
+				});
+			}
 		}
 		overwriteProperties(prop); // Updates panel
 		// Share ListenBrainz Token
@@ -472,7 +499,7 @@ if (!list.properties.bSetup[1]) {
 		list.onMouseLeaveList(); // Clears index selector
 	});
 
-	addEventListener('on_mouse_rbtn_up', (x, y) => {
+	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
 		if (pop.isEnabled()) {return true;}
 		if (list.modeUI === 'traditional' && buttonsPanel.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
@@ -483,7 +510,7 @@ if (!list.properties.bSetup[1]) {
 		} else {
 			if (buttonsPanel.curBtn === null) {
 				if (scroll && scroll.trace(x, y)) {return scroll.rbtn_up(x, y);}
-				else {return list.rbtn_up(x, y);}
+				else {return list.rbtn_up(x, y, mask);}
 			}
 			if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
 				return createMenuRightSort().btn_up(x, y);
