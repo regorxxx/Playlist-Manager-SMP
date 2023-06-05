@@ -37,6 +37,7 @@
 - UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
 - UI: added manual sorting. It must be enabled on the sorting button and works independently to the automatic sorting methods. Playlist can be reordered by drag n' dropping within the panel or using the sorting submenu. It also works with multiple selection. Pinned playlists are ignored in this mode. Sorting indexes are stored at '.\js_data\'.
 - UI: added sorting by creation date.
+- UI: added configurable R. click mouse actions (like the previous L. click and Middle click ones).
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
@@ -49,8 +50,11 @@
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
 - Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
+- UI: R. clicking now opens the contextual menu for the selected playlists (previously on L. Click). Shift + R. Clicking opens the playlist's items native contextual menu.
+- UI: L. single click action is now configurable. 
 - UI: 'Send selection to playlist' now creates a backup before editing the playlist file (to restore it in case it fails).
 - UI: added presets to UI elements configuration menu. Fast settings to enable/disable search box and multiple buttons at the same time.
+- UI: added presets to available menu entries configuration menu.
 - UI: improved checks to ensure there is at least one UI element able to open the settings menu.
 - UI: improved tooltip of power action button. Mouse shortcuts tips are always shown, including the settings menu by R. clicking.
 - UI: added new entries to configurable playlist menus: File locks, UI playlist locks and Sorting.
