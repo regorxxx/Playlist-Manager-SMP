@@ -849,6 +849,7 @@ function _list(x, y, w, h) {
 								// Show current action
 								const lShortcuts = this.getShortcuts('L');
 								const mShortcuts = this.getShortcuts('M');
+								const rShortcuts = this.getShortcuts('R');
 								const defaultAction = this.getDefaultShortcutAction('M'); // All actions are shared for M or L mouse
 								if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
 									playlistDataText += '\n---------------------------------------------------';
@@ -856,14 +857,17 @@ function _list(x, y, w, h) {
 								if (mask === MK_CONTROL) {
 									playlistDataText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
 									playlistDataText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+									playlistDataText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
 								} else if (mask === MK_SHIFT) {
 									playlistDataText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
 									playlistDataText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+									playlistDataText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
 								} else if (mask === MK_SHIFT + MK_CONTROL) {
 									playlistDataText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+									playlistDataText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 								} else if (this.bShowTips) { // All Tips
-									playlistDataText += '\n(L. Click to manage playlist)';
+									playlistDataText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
 									playlistDataText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
 									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {playlistDataText += '\n(R. Click for other tools / new playlists)';}
 									playlistDataText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
@@ -874,10 +878,19 @@ function _list(x, y, w, h) {
 									playlistDataText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
 									playlistDataText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
 									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+									// R. Button
+									playlistDataText += rShortcuts['SG_CLICK'].key !== defaultAction ? '\n(R. Click to ' + rShortcuts['SG_CLICK'].key + ')' : '';
+									playlistDataText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')' : '';
+									playlistDataText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')' : '';
+									playlistDataText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 								}
 								if (headerRe.test(playlistDataText)) { // If no shortcut was found, show default ones
-									playlistDataText += '\n(L. Click to manage playlist)';
-									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {playlistDataText += '\n(R. Click for other tools / new playlists)';}
+									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+										playlistDataText += '\n(L. Click to Manage playlist)';
+										playlistDataText += '\n(R. Click for other tools / new playlists)';
+									} else {
+										playlistDataText += '\n(L. Click to Manage playlist)';
+									}
 								}
 								// Adding Duplicates on selection hint
 								let warningText = '';
@@ -987,9 +1000,16 @@ function _list(x, y, w, h) {
 					}
 				}
 			}
-		} else {
-			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
-				return createMenuRight().btn_up(x, y);
+		} else if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+			return createMenuRight().btn_up(x, y);
+		} else if (this.trace(x, y)) {
+			const z = this.index;
+			if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
+				const shortcuts = this.getShortcuts('R');
+				const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
+				if (sgShortcut) { // Select all from current view or clean selection
+					this.executeAction(z, x, y, sgShortcut, false);
+				}
 			}
 		}
 		return true;
@@ -1074,19 +1094,15 @@ function _list(x, y, w, h) {
 									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 								}
 							} else {
-								this.executeAction(z, shortcuts[mask]);
+								this.executeAction(z, x, y, shortcuts[mask]);
 							}
 						} else { // Only mouse
 							if (!this.bDoubleclick) { // It's not a second lbtn click
-								this.timeOut = delayFn((x,y) => {
-									this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
-									if (this.indexes.length) {
-										createMenuLeftMult(this.indexes).btn_up(x,y);
-									} else {
-										createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
-									}
-									this.bSelMenu = false;
-								}, this.iDoubleClickTimer)(x,y); // Creates the menu and calls it later
+								if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+									this.playlistMenu(z, x, y);
+								} else {
+									this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
+								}
 							} else {this.bDoubleclick = false;}
 						}
 					}
@@ -1123,7 +1139,7 @@ function _list(x, y, w, h) {
 					const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 					if (sgShortcut) { // Select all from current view or clean selection
 						if (!this.bDoubleclick) { // It's not a second lbtn click
-							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void(0), sgShortcut, false);
+							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void(0), x, y, sgShortcut, false);
 						} else {this.bDoubleclick = false;}
 					}
 					this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
@@ -1166,10 +1182,10 @@ function _list(x, y, w, h) {
 									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
 								}
 							} else {
-								this.executeAction(z, shortcuts[mask]);
+								this.executeAction(z, x, y, shortcuts[mask]);
 							}
 						} else { // Only mouse
-							this.executeAction(z, shortcuts['SG_CLICK']);
+							this.executeAction(z, x, y, shortcuts['SG_CLICK']);
 						}
 					}
 					break;
@@ -1195,7 +1211,7 @@ function _list(x, y, w, h) {
 				const shortcuts = this.getShortcuts('M', 'HEADER');
 				const sgShortcut = shortcuts[shortcuts.hasOwnProperty(mask) ? mask : 'SG_CLICK'];
 				if (sgShortcut) {
-					this.executeAction(void(0), sgShortcut, false);
+					this.executeAction(void(0), x, y, sgShortcut, false);
 				}
 			}
 			return false;
@@ -1220,7 +1236,7 @@ function _list(x, y, w, h) {
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
 					this.bDoubleclick = true;
-					this.executeAction(z, shortcuts[mask]);
+					this.executeAction(z, x, y, shortcuts[mask]);
 					break;
 				}
 			}
@@ -1250,7 +1266,7 @@ function _list(x, y, w, h) {
 					const shortcuts = this.getShortcuts('L', 'HEADER');
 					const sgShortcut = shortcuts[mask];
 					if (sgShortcut) {
-						this.executeAction(void(0), sgShortcut, false);
+						this.executeAction(void(0), x, y, sgShortcut, false);
 					}
 					this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
 				}
@@ -1378,6 +1394,25 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.playlistMenu = (z, x, y) => {
+		if (z === -1) {return;}
+		this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
+		if (this.indexes.length) {
+			createMenuLeftMult(this.indexes).btn_up(x,y);
+		} else {
+			createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
+		}
+		this.bSelMenu = false;
+	}
+	
+	this.contextMenu = (z, x, y) => {
+		if (z === -1) {return;}
+		const pls = list.data[z];
+		const menu = new _menu({bInit: false});
+		menu.newMenu(void(0), void(0), void(0), {type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId)});
+		return menu.btn_up(x,y);
+	}
+	
 	this.search = (bFilter = true, str = this.searchInput ? this.searchInput.text : '') => {
 		if (this.searchInput.text.length && this.searhHistory.indexOf(this.searchInput.text) === -1) {this.searhHistory.push(this.searchInput.text);}
 		if (this.searhHistory.length > 10) {this.searhHistory.splice(10, Infinity);}
@@ -1458,7 +1493,7 @@ function _list(x, y, w, h) {
 		else {this.indexes = range(0, this.data.length - 1, 1);}
 	}
 	
-	this.executeAction = (z, shortcut, bMultiple = !!this.indexes.length) => {
+	this.executeAction = (z, x, y, shortcut, bMultiple = !!this.indexes.length) => {
 		if (shortcut.key !== 'Multiple selection' && shortcut.key !== 'Multiple selection (range)' && bMultiple) {
 			this.indexes.forEach((zz) => {
 				const pls = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
@@ -1475,7 +1510,8 @@ function _list(x, y, w, h) {
 				const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 				shortcut.func(z, remDupl, this.bAdvTitle);
 			} else {
-				shortcut.func(z);
+				if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) {shortcut.func(z, x, y);}
+				else {shortcut.func(z);}
 			}
 		}
 	}
@@ -1491,11 +1527,21 @@ function _list(x, y, w, h) {
 					element.toUpperCase() === 'HEADER' 
 						? {key: 'Single Click',	mask: 'SG_CLICK'} 
 						: void(0),
+					{key: 'Single Click',	mask: 'SG_CLICK'},
 					{key: 'Double Click',	mask: 'DB_CLICK'}
 				].filter(Boolean);
 				break;
 			}
 			case 'M': {
+				shortcuts.options = [
+					{key: 'Ctrl',			mask: MK_CONTROL},
+					{key: 'Shift',			mask: MK_SHIFT},
+					{key: 'Ctrl + Shift',	mask: MK_SHIFT + MK_CONTROL},
+					{key: 'Single Click',	mask: 'SG_CLICK'}
+				];
+				break;
+			}
+			case 'R': {
 				shortcuts.options = [
 					{key: 'Ctrl',			mask: MK_CONTROL},
 					{key: 'Shift',			mask: MK_SHIFT},
@@ -1510,6 +1556,8 @@ function _list(x, y, w, h) {
 				case 'LIST': {
 					shortcuts.actions = [
 						{key: '- None -',					func: () => {void(0);}},
+						{key: 'Manage playlist',			func: this.playlistMenu},
+						{key: 'Playlist\'s items menu',		func: this.contextMenu},
 						{key: 'Load / show playlist',		func: this.loadPlaylistOrShow},
 						{key: 'Copy selection to playlist',	func: null}, // Processed at lbtn_up
 						{key: 'Move selection to playlist',	func: null}, // Processed at lbtn_up
@@ -1554,6 +1602,7 @@ function _list(x, y, w, h) {
 		switch (mouseBtn.toUpperCase() + '-' + element.toUpperCase()) {
 			case 'M-LIST': {prop = this.mShortcuts; break;}
 			case 'L-LIST': {prop = this.lShortcuts; break;}
+			case 'R-LIST': {prop = this.rShortcuts; break;}
 			case 'M-HEADER': {prop = this.mShortcutsHeader; break;}
 			case 'L-HEADER': {prop = this.lShortcutsHeader; break;}
 		}
@@ -1561,7 +1610,7 @@ function _list(x, y, w, h) {
 			for (let key in prop) {
 				const mask = (options.find((obj) => {return obj.key === key;}) || {}).mask || 'none';
 				const action = prop[key];
-				const func = (actions.find((obj) => {return obj.key === action;}) || {}).func || (() => {console.popup('Shortcut not properly set: ' + key + ' --> ' + action);});
+				const func = (actions.find((obj) => {return obj.key === action;}) || {}).func || (() => {console.popup('Shortcut not properly set: ' + mouseBtn + ' ' + key + ' --> ' + action, window.Name);});
 				shortcuts[mask] = {key: action, func};
 			}
 		}
@@ -2450,6 +2499,22 @@ function _list(x, y, w, h) {
 	}
 	this.methodState = this.getMethodState(); // On first call first method will be default
 	this.sortState = this.getSortState(); // On first call first state of that method will be default
+	
+	this.changeSorting = (newMethod) => {
+		const previousMethodState = this.methodState;
+		this.methodState = newMethod;
+		this.sortState = this.defaultSortState(this.methodState);
+		// Update properties to save between reloads, but property descriptions change according to list.methodState
+		this.properties['methodState'][1] = this.methodState;
+		const removeProperties = {SortState: [this.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
+		this.properties['sortState'][0] = this.properties['sortState'][0].replace(Object.keys(this.sortMethods(false)[previousMethodState]).join(','),''); // remove old keys
+		this.properties['sortState'][0] += Object.keys(this.sortMethods(false)[this.methodState]); // add new ones
+		this.properties['sortState'][1] = this.sortState; // and change value
+		// And set properties
+		deleteProperties(removeProperties); // Deletes old properties used as placeholders
+		overwriteProperties(this.properties);
+		this.sort(void(0), true); // uses current sort state and repaint
+	}
 	
 	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false) => {
 		const bManual = this.methodState === this.manualMethodState();
@@ -4112,6 +4177,7 @@ function _list(x, y, w, h) {
 	this.playlistIcons = JSON.parse(this.properties['playlistIcons'][1]);
 	this.lShortcuts = JSON.parse(this.properties['lShortcuts'][1]);
 	this.mShortcuts = JSON.parse(this.properties['mShortcuts'][1]);
+	this.rShortcuts = JSON.parse(this.properties['rShortcuts'][1]);
 	this.lShortcutsHeader = JSON.parse(this.properties['lShortcutsHeader'][1]);
 	this.mShortcutsHeader = JSON.parse(this.properties['mShortcutsHeader'][1]);
 	this.modeUI = 'modern'

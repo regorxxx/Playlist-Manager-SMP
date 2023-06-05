@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/05/23
+//05/06/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -10,7 +10,8 @@
 	and the menus' functions on the same place. Creation order is done following entry/menus addition.
 	
 	Methods:
-		_menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000})
+		_menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000})
+			-bInit:					Creates a main menu object at init. Set to false to directly replace with a contextual/main menu obj.
 			-bSupressDefaultMenu:	Suppress the default context menu. left shift + left windows key will bypass it. 
 			-bAddInvisibleIds:		When trying to add multiple (sub)menus with same name (and different parent), an invisible ID 
 										may be added to allow it. .newMenu() will return the final name in such case.
@@ -60,7 +61,7 @@
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 
-function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false} = {}) {
+function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false} = {}) {
 	// Checks
 	if (onBtnUp && !isFunction(onBtnUp)) {throw new Error('onBtnUp is not a function');}
 	if (iMaxEntryLen <= 0) {throw new Error('iMaxEntryLen can not be <= 0');}
@@ -131,10 +132,10 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 			throw 'There is already another menu with same name';
 		}
 		menuArr.push({menuName, subMenuFrom});
-		if (menuArr.length > 1) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true, context, main});}
+		if (menuArr.length > 1 || !bInit) {entryArr.push({menuName, subMenuFrom, flags, bIsMenu: true, context, main});}
 		return menuName;
 	};
-	this.newMenu(); // Default menu
+	if (bInit) {this.newMenu();} // Default menu
 	
 	this.findOrNewMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING) => { // Used when invisible IDs are used, so there is no need to check if the menu already exists...
 		return this.getMenuNameFrom(menuName, subMenuFrom) || this.newMenu(menuName, subMenuFrom, flags);
@@ -303,7 +304,8 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 				this.addToMenu({entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags});
 			} else { // Append sub-menus
 				const subMenuName = isFunction(entry.menuName) ? entry.menuName() : entry.menuName;
-				if (subMenuName !== menuArr[0].menuName) {
+				const bMainMenu = subMenuName === this.getMainMenuName() && entry.subMenuFrom === '';
+				if (subMenuName !== this.getMainMenuName()  || bMainMenu) {
 					const flags = isFunction(entry.flags) ? entry.flags() : entry.flags;
 					const subMenuFrom = isFunction(entry.subMenuFrom) ? entry.subMenuFrom() : entry.subMenuFrom;
 					const subMenuNameSanitized = subMenuName.replace(hiddenCharsRegEx, ''); // Delete invisible chars since they may appear as bugged chars with some fonts on Wine
@@ -316,8 +318,12 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 						if (type === 'handlelist') { // InitContext()
 							const idx = context.hasOwnProperty('playlistIdx') ? context.playlistIdx : plman.ActivePlaylist;
 							if (idx === -1) {return;}
+							const name = plman.GetPlaylistName(idx).replace(/&&/g,'&').replace(/&/g,'&&');
 							const playlistItems = plman.GetPlaylistItems(idx);
-							if (playlistItems.Count > 0) {
+							const count = playlistItems.Count;
+							this.addToMenu({entryText: name + ': ' + count + ' tracks', func: null, menuName: subMenuName, flags: MF_GRAYED});
+							this.addToMenu({entryText: 'sep'});
+							if (count > 0) {
 								contextMenu = fb.CreateContextMenuManager();
 								contextMenu.InitContext(playlistItems);
 								contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
@@ -333,7 +339,7 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 						}
 						if (contextMenu) {
 							contextIdx += idxInitialOffset;
-							contextMenuMap.set(subMenuName, contextMenu);
+							if (!bMainMenu) {contextMenuMap.set(subMenuName, contextMenu);}
 						}
 					}
 					if (main && main.type) {
@@ -347,10 +353,10 @@ function _menu({bSupressDefaultMenu = true, properties = null, iMaxEntryLen = In
 						}
 						if (mainMenu) {
 							mainIdx += idxInitialOffset;
-							mainMenuMap.set(subMenuName, mainMenu);
+							if (!bMainMenu) {mainMenuMap.set(subMenuName, mainMenu);}
 						}
 					}
-					this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuNameSanitized);
+					if (!bMainMenu) {this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuNameSanitized);}
 				}
 			}
 		});

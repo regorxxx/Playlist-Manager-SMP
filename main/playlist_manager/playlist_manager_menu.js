@@ -79,7 +79,7 @@ function createMenuLeft(forcedIndex = -1) {
 		// Show binded playlist
 		menu.newEntry({entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => {list.showBindedPlaylist(z);}, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED});
 		// Contextual menu
-		if (bIsPlsLoaded && showMenus['Contextual menus']) {
+		if (bIsPlsLoaded && showMenus['Playlist\'s items menu']) {
 			menu.newMenu('Items...', void(0), void(0), {type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId)});
 		}
 		menu.newEntry({entryText: 'sep'});
@@ -2367,6 +2367,7 @@ function createMenuRightTop() {
 		{	// Shortcuts
 			const subMenuName = menu.newMenu('Shortcuts...', menuName);
 			{
+				const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
 				const subMenuNameL = menu.newMenu('Left Click', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('L');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
@@ -2374,7 +2375,9 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
 				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier, subMenuNameL);
+					const subMenuOption = modifier === 'Single Click' && !bListButton
+						? menu.newMenu(modifier + '\t(enable List Menu button)', subMenuNameL, MF_GRAYED)
+						: menu.newMenu(modifier, subMenuNameL);
 					actions.forEach((action) => {
 						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
 						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
@@ -2395,6 +2398,38 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
 					list.properties['lShortcuts'][1] = list.defaultProperties['lShortcuts'][3];
 					list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);
+					overwriteProperties(list.properties);
+				}});
+			}
+			{
+				const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
+				const subMenuNameR = menu.newMenu('Right Click' + (bListButton ? '' : '\t(enable List Menu button)'), subMenuName, bListButton ? MF_STRING : MF_GRAYED)
+				const shortcuts =  list.getDefaultShortcuts('R');
+				const modifiers = shortcuts.options.map((_) => {return _.key;});
+				const actions = shortcuts.actions.map((_) => {return _.key;});
+				menu.newEntry({menuName: subMenuNameR, entryText: 'Modifiers on R. Click:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameR, entryText: 'sep'});
+				modifiers.forEach((modifier) => {
+					const subMenuOption = menu.newMenu(modifier, subMenuNameR);
+					actions.forEach((action) => {
+						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+							list.rShortcuts[modifier] = action;
+							list.properties['rShortcuts'][1] = JSON.stringify(list.rShortcuts);
+							overwriteProperties(list.properties);
+							if (action === 'Multiple selection') {
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+							}
+						}});
+					});
+					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+						const idx = actions.indexOf(list.rShortcuts[modifier]);
+						return (idx !== -1 ? idx : 0);
+					});
+				});
+				menu.newEntry({menuName: subMenuNameR, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameR, entryText: 'Restore defaults', func: () => {
+					list.properties['rShortcuts'][1] = list.defaultProperties['rShortcuts'][3];
+					list.rShortcuts = JSON.parse(list.properties['rShortcuts'][1]);
 					overwriteProperties(list.properties);
 				}});
 			}
@@ -2525,6 +2560,24 @@ function createMenuRightTop() {
 				}});
 				menu.newCheckMenu(subMenuName, key, void(0), () => showMenus[key]);
 			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{ // Presets
+				const defOpts = JSON.parse(list.properties.showMenus[3]);
+				const options = [
+					{name: 'Full', options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))},
+					{name: 'Bassic', options: {...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'].map((k) => [k, false]))}},
+				];
+				const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
+				options.forEach((preset) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: preset.name, func: () => {
+						Object.keys(preset.options).forEach((key) => {
+							showMenus[key] = preset.options[key];
+						});
+						list.properties.showMenus[1] = JSON.stringify(showMenus);
+						overwriteProperties(list.properties);
+					}});
+				});
+			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 				list.properties.showMenus[1] = list.properties.showMenus[3];
@@ -2798,19 +2851,7 @@ function createMenuRightSort() {
 			options.forEach((item) => {
 				if (item === 'sep') {menu.newEntry({entryText: 'sep'}); return;}
 				menu.newEntry({entryText: item, func: () => {
-					const previousMethodState = list.methodState;
-					list.methodState = item;
-					list.sortState = Object.keys(list.sortMethods(false)[list.methodState])[0];
-					// Update properties to save between reloads, but property descriptions change according to list.methodState
-					list.properties['methodState'][1] = list.methodState;
-					const removeProperties = {SortState: [list.properties['sortState'][0], null]}; // need to remove manually since we change the ID (description)!
-					list.properties['sortState'][0] = list.properties['sortState'][0].replace(Object.keys(list.sortMethods(false)[previousMethodState]).join(','),''); // remove old keys
-					list.properties['sortState'][0] += Object.keys(list.sortMethods(false)[list.methodState]); // add new ones
-					list.properties['sortState'][1] = list.sortState; // and change value
-					// And set properties
-					deleteProperties(removeProperties); // Deletes old properties used as placeholders
-					overwriteProperties(list.properties);
-					list.sort(void(0), true); // uses current sort state and repaint
+					list.changeSorting(item);
 				}});
 			});
 		}
