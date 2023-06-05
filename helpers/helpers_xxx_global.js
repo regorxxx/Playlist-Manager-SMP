@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/05/23
+//05/06/23
 
 /* 
 	Global tags, queries, RegExp
@@ -52,9 +52,11 @@ function loadUserDefFile(def) {
 }
 
 function addGlobTags() { // Add calculated properties
+	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
+	globQuery.compareTitle = '"$stricmp(%' + globTags.title + '%,#' + globTags.title + '#)" IS 1';
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
@@ -67,9 +69,7 @@ const globTags = {
 	_file: folders.userPresetsGlobal + 'globTags.json',
 	_description: 'These tags are used across all tools, being the default values. In case you use other tags, for ex. for KEY, edit it here and every new panel installed will use the new value by default (not requiring manual tag remapping on every panel). Already existing panels will only load these values when using the "Reset to defaults" option (if available).',
 	_usage: 'Don\'t add multiple tags to these variables. TITLE, DATE and RATING must be enclosed on %. Special characters like single quotes (\') or backslash (\\) must be properly escaped. Remember to also properly escape special characters according to TF rules!',
-	title: '$ascii($lower($trim(%TITLE%)))', // Takes ~0.5 secs on 70K tracks
-	titleLowPerf: '$trim($replace($ascii($lower(%TITLE%)),\'(12\'$char(39)$char(39)\' mix)\',,\'(12\'$char(39)$char(39)\' single)\',,\'(12\'$char(39)$char(39)\' version)\',,\'(12\'$char(34)\' mix)\',,\'(12\'$char(34)\' single)\',,\'(12\'$char(34)\' version)\',,\'(7\'$char(39)$char(39)\' mix)\',,\'(7\'$char(39)$char(39)\' single)\',,\'(7\'$char(39)$char(39)\' version)\',,\'(7\'$char(34)\' mix)\',,\'(7\'$char(34)\' single)\',,\'(7\'$char(34)\' version)\',,\'(acoustic intro)\',,\'(acoustic version)\',,\'(acoustic)\',,\'(album mix)\',,\'(album version)\',,\'(album)\',,\'(alt. lyrics)\',,\'(alt. mix)\',,\'(alt. take)\',,\'(alt. version)\',,\'(alternate intro mix)\',,\'(alternate lyrics)\',,\'(alternate mix)\',,\'(alternate take)\',,\'(alternate version)\',,\'(alternate vocal mix)\',,\'(alternate)\',,\'(bbc session)\',,\'(demo)\',,\'(dub mix)\',,\'(dub)\',,\'(duo version)\',,\'(early version)\',,\'(edit mix)\',,\'(edit)\',,\'(electric intro)\',,\'(electric verison)\',,\'(extended version)\',,\'(fast version)\',,\'(hit version)\',,\'(instrumental version)\',,\'(instrumental)\',,\'(live acoustic)\',,\'(live at the bbc)\',,\'(live bbc)\',,\'(live studio version)\',,\'(live version)\',,\'(live)\',,\'(long)\',,\'(mix)\',,\'(mono)\',,\'(movie mix)\',,\'(original mono mix)\',,\'(original version)\',,\'(outtake)\',,\'(radio)\',,\'(remix version)\',,\'(remix)\',,\'(reprise)\',,\'(rough mix)\',,\'(rough version)\',,\'(short)\',,\'(single edit)\',,\'(single version)\',,\'(single)\',,\'(slow version)\',,\'(stereo mix)\',,\'(stereo)\',,\'(studio demo)\',,\'(studio outtake)\',,\'(studio)\',,\'(take 1)\',,\'(take 2)\',,\'(take 3)\',,\'(take 4)\',,\'(take 5)\',,\'(take 6)\',,\'(take 7)\',,\'(take 8)\',,\'(take 9)\',,\'(tv mix)\',,\'(unissued version)\',,\'(unplugged)\',,\'(unreleased alt. mix)\',,\'(unreleased alternate mix)\',,\'(unreleased mono mix)\',,\'(unreleased stereo mix)\',,\'(unreleased)\',,))', // Takes +1.5 secs on 70K tracks
-	titleMedPerf: '$ascii($lower($trim($left(%TITLE%,$if2($strstr(%TITLE%,\' (\'),-1)))))', // Takes ~0.5 secs on 70K tracks but there are false positives
+	titleRaw: 'TITLE',
 	date: '$year(%DATE%)',
 	artist: 'ARTIST',
 	genre: 'GENRE',
@@ -104,7 +104,6 @@ const globQuery = {
 	noLive: '(NOT ' + globTags.genre + ' IS live AND NOT ' + globTags.style + ' IS live) OR ((' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live) AND ' + globTags.style + ' IS hi-fi)',
 	noLiveNone: 'NOT ' + globTags.genre + ' IS live AND NOT ' + globTags.style + ' IS live',
 	noSACD: 'NOT %_PATH% HAS .iso AND NOT CODEC IS MLP AND NOT CODEC IS DSD64 AND NOT CODEC IS DST64',
-	compareTitle: '"$stricmp(' + globTags.title + ',' + globTags.title.replaceAll('%','#') + ')" IS 1'
 };
 
 // RegExp: user replaceable with a presets file at folders.data

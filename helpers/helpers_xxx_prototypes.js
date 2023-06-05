@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/23
+//05/06/23
 
 /* 
 	Objects
@@ -137,6 +137,22 @@ class biMap {
 
 function isFunction(obj) {
 	return !!(obj && obj.constructor && obj.call && obj.apply);
+}
+
+Function.prototype.applyInChunks = function applyInChunks() {
+	const len = arguments.length;
+	const max = 32768;
+	let result = [];
+	for (let i = 0; i < len; i++) {
+		const arg = [...arguments[i]];
+		const subLen = arg.length;
+		let subResult = [];
+		for (let j = 0; j < subLen; j++) {
+			subResult.push(this.apply(null, arg.slice(j, Math.min(j + max, subLen))));
+		}
+		result[i] = this.apply(null, subResult);
+	}
+	return this.apply(null, result);
 }
 
 /* 
