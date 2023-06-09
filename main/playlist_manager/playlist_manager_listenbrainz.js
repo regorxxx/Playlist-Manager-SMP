@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/23
+//07/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -14,7 +14,15 @@ const listenBrainz = {
 		user: new Map(),
 		key: null,
 	},
-	algorithm: {},
+	algorithm: {
+		retrieveSimilarArtists: {
+			v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
+			v2: 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30',
+		},
+		retrieveSimilarRecordings: {
+			v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
+		},
+	},
 	// API constants
 	// https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants
 	// https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/webserver/views/api_tools.py
@@ -607,7 +615,12 @@ listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 	);
 }
 
+// Check output with:
+// if (infoNames.every((tag) => info.hasOwnProperty(tag))) {...}
 listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MBIds, infoNames = ['recording_mbid', 'recording_name', 'artist_credit_name'], token) {
+	const count = MBIds.length;
+	if (!count) {return Promise.resolve({});}
+	console.log('lookupRecordingInfoByMBIDs', count, MBIds)
 	const allInfo = [
 		'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 
 		'artist_credit_name', 'artist_credit_mbids', 
@@ -617,7 +630,7 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 	return this.lookupTracksByMBIDs(MBIds, token).then(
 		(resolve) => {
 			const info = {};
-			infoNames.forEach((tag) => {info[tag] = new Array(MBIds.length).fill('');});
+			infoNames.forEach((tag) => {info[tag] = new Array(count).fill('');});
 			if (resolve.length) {
 				infoNames.forEach((tag) => {
 					if (allInfo.indexOf(tag) !== -1) {
@@ -631,7 +644,37 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 		},
 		(reject) => {
 			console.log('lookupRecordingInfoByMBIDs: ' + reject);
-			return null;
+			return {};
+		}
+	);
+}
+
+/*
+	Lookup recordings
+*/
+
+// To use along listenBrainz.retrieveSimilarArtists (unstable API)
+listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, bReleaseGroup = false) {
+	const data = tagsArr.map((tag) => {return {"[tag]": tag};}); // [{"[tag]": "rock"}, ...]
+	return send({
+		method: 'POST', 
+		URL: (bReleaseGroup ? 'https://datasets.listenbrainz.org/recording-from-rg-tag/json' : 'https://datasets.listenbrainz.org/recording-from-tag/json'),
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) {
+				const response = JSON.parse(resolve);
+				if (response) {
+					console.log('getRecordingsByTag: ' + response.length + ' found items');
+					return response; // [{recording_mbid}, ...]
+				}
+			}
+			return []; 
+		},
+		(reject) => {
+			console.log('getRecordingsByTag: ' + reject.status + ' ' + reject.responseText);
+			return [];
 		}
 	);
 }
@@ -718,7 +761,7 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 	);
 }
 
-// To use along listenBrainz.retrieveSimilarArtists
+// To use along listenBrainz.retrieveSimilarArtists (unstable API)
 listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtist(artist_mbids, token) {
 	const data = artist_mbids.map((mbid) => {return {"[artist_mbid]": mbid};}); // [{"[artist_mbid]": "69ec6867-bda0-404b-bac4-338df8d73723"}, ...]
 	return send({
@@ -738,7 +781,7 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 			return []; 
 		},
 		(reject) => {
-			console.log('retrieveSimilarArtists: ' + reject.status + ' ' + reject.responseText);
+			console.log('getPopularRecordingsByArtist: ' + reject.status + ' ' + reject.responseText);
 			return [];
 		}
 	);
@@ -748,10 +791,6 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 	Similarity
 */
 // Only default algorithms work
-listenBrainz.algorithm.retrieveSimilarArtists = {
-	v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
-	v2: 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30',
-};
 listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'v1') { // May add algorithm directly or by key
 	if (this.algorithm.retrieveSimilarArtists.hasOwnProperty(algorithm)) {algorithm = this.algorithm.retrieveSimilarArtists[algorithm];}
 	const data = [{
@@ -782,9 +821,6 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 }
 
 // Only default algorithm works
-listenBrainz.algorithm.retrieveSimilarRecordings = {
-	v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
-};
 listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'v1') {
 	if (this.algorithm.retrieveSimilarRecordings.hasOwnProperty(algorithm)) {algorithm = this.algorithm.retrieveSimilarRecordings[algorithm];}
 	const data = [{
@@ -839,10 +875,10 @@ listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 		let identifier = '';
 		lookupKeys.forEach((look) => {
 			const key = look.xspfKey;
-			const queryKey = look.queryKey;
+			const queryKey = _q(sanitizeTagIds(_t(look.queryKey)));
 			if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
 				if (key === 'identifier') {identifier = decodeURI(rows[i][key]).replace(this.regEx,'');}
-				lookup[queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : rows[i][key]);
+				lookup[look.queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : rows[i][key]);
 			}
 		});
 		for (let condition of conditions) {
@@ -866,7 +902,7 @@ listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 };
 
 listenBrainz.sanitizeQueryValue = function sanitizeQueryValue(value) {
-	return sanitizeQueryVal(value).toLowerCase().replace(/’/g, '\'');
+	return sanitizeQueryVal(sanitizeTagValIds(value));
 };
 
 /*

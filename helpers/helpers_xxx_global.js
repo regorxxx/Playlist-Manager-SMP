@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/23
+//07/06/23
 
 /* 
 	Global tags, queries, RegExp
@@ -60,7 +60,7 @@ function addGlobTags() { // Add calculated properties
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
-	globQuery.remDuplBias = globTags.rating + '|$strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live)';
+	globQuery.remDuplBias = globTags.rating + '|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)';
 }
 
 // Tags: user replaceable with a presets file at folders.data

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/23
+//07/06/23
 
 /* 
 	FbTitleFormat
@@ -59,6 +59,33 @@ Object.defineProperty(fb, 'tfCache', {
 		return that;
 	}
 }
+
+/* 
+	FbMetadbHandleList
+*/
+// Sort handleList following another handleList; orderHandleList may differ in size
+FbMetadbHandleList.partialSort = (handleList, orderHandleList) => { // 600 ms on 80K tracks
+	let bOutputList = false;
+	if (!Array.isArray(handleList)) {handleList = handleList.Convert(); bOutputList = true;}
+	if (!Array.isArray(orderHandleList)) {orderHandleList = orderHandleList.Convert();}
+	const dic = new Map();
+	orderHandleList.forEach((handle, i) => {
+		const id = handle.RawPath + ',' + handle.SubSong;
+		const prev = (dic.get(id) || []).concat([i]);
+		dic.set(id, prev);
+	});
+	const count = handleList.length;
+	const output = new Array(handleList.length);
+	handleList.forEach((handle, i) => {
+		const id = handle.RawPath + ',' + handle.SubSong;
+		const arrIdx = dic.get(id);
+		let idx = i;
+		idx = arrIdx.pop();
+		if (!arrIdx.length) {dic.delete(id);}
+		output[idx] = handle;
+	});
+	return bOutputList ? new FbMetadbHandleList(output.filter(Boolean)) : output.filter(Boolean);
+};
 
 /* 
 	fb

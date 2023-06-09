@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/23
+//09/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -654,7 +654,7 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
-	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
+	if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle});}
 	if (bAddToList) {
 		const objectPlaylist = list.add({bEmpty: false}); // Create playlist from active playlist
 		bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
@@ -696,7 +696,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 		if (idx !== -1) {
 			plman.ActivePlaylist = idx;
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-			if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
+			if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle});}
 			bDone = true;
 		}
 		if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');}
@@ -751,7 +751,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false,  bA
 		if (idx !== -1) {
 			plman.ActivePlaylist = idx;
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-			if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, bAdvTitle});}
+			if (remDupl && remDupl.length && removeDuplicatesV2) {removeDuplicatesV2({checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle});}
 		} else {bDone = false;}
 		if (bDone) {console.log('Playlist Manager: merge-load ' + names.join(', ') + ' done.');}
 	} else {bDone = false;}
@@ -1008,11 +1008,9 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\%FILENAME%.mp3
 	if (!checkQuery(pls.query, true, true)) {fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone;}
 	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 	if (handleList && handleList.Count) {
-		if (remDupl && remDupl.length && removeDuplicatesV2) {handleList = removeDuplicatesV2({handleList, checkKeys: remDupl, bAdvTitle});}
-		if (pls.sort) {
-			const sortObj = getSortObj(pls.sort);
-			if (sortObj) {handleList.OrderByFormat(sortObj.tf, sortObj.direction);}
-		}
+		const sortObj = pls.sort && pls.sort.length ? getSortObj(sort) : null;
+		if (remDupl && remDupl.length && removeDuplicatesV2) {handleList = removeDuplicatesV2({handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle});}
+		if (sortObj) {handleList.OrderByFormat(sortObj.tf, sortObj.direction);}
 		const subsongRegex = /,\d*$/g;
 		const paths = fb.TitleFormat('%path%').EvalWithMetadbs(handleList).map((path) => {return path.replace(subsongRegex,'');});
 		const root = utils.SplitFilePath(newPath)[0];

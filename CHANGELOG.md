@@ -47,6 +47,9 @@
 - ListenBrainz: optimizations finding tracks on library.
 - ListenBrainz: key for the token is cached during the same session.
 - ListenBrainz: user name is cached during same session.
+- Merge load: when removing duplicates, tracks are now preferred by higher rating and not live.
+- Exporting Playlists: when removing duplicates, tracks are now preferred by higher rating and not live.
+- XSP: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
 - Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
@@ -65,6 +68,7 @@
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
 - UI: settings menu opening when clicking at blank space within the buttons toolbar at header instead of just the settings and power action buttons.
 - UI: incorrect settings for panel/buttons colors using dark mode in foobar2000.
+- UI: list view not maintaining current position at some instances. 'Online sync...'
 
 ## [0.5.0-beta.20] - 2023-05-16
 ### Added

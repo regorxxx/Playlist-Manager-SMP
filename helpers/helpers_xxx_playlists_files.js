@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/23
+//09/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -593,11 +593,9 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		else {console.log('Error on XSP Playlist: ' + query);}
 		if (handlePlaylist) {
 			handlePlaylist.Sort();
-			if (remDupl && remDupl.length && removeDuplicatesV2) {handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist, checkKeys: remDupl, bAdvTitle});}
-			if (sort.length) {
-				const sortObj = getSortObj(sort);
-				if (sortObj) {handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction);}
-			}
+			const sortObj = sort.length ? getSortObj(sort) : null;
+			if (remDupl && remDupl.length && removeDuplicatesV2) {handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle});}
+			if (sortObj) {handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction);}
 			const limit = XSP.getLimit(jsp);
 			if (isFinite(limit)) {handlePlaylist.RemoveRange(limit, handlePlaylist.Count);}
 			console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort);
