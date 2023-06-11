@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/23
+//12/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -356,6 +356,10 @@ function createMenuLeft(forcedIndex = -1) {
 						if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 					}
 					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
+					if (list.properties.bSpotify[1]) {
+						console.log('Exporting playlist to Spotify: ' + pls.name);
+						lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
+					}
 					if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
@@ -2789,13 +2793,21 @@ function createMenuRightTop() {
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Lookup for missing track MBIDs?', func: () => {
-				list.properties.bLookupMBIDs[1] = !list.properties['bLookupMBIDs'][1];
+				list.properties.bLookupMBIDs[1] = !list.properties.bLookupMBIDs[1];
 				if (list.properties.bLookupMBIDs[1]) {
 					fb.ShowPopupMessage('Exporting a playlist requires tracks to have \'MUSICBRAINZ_TRACKID\' tags on files.\n\nWhenever such tag is missing, the file can not be sent to ListenBrainz\'s online playlist. As workaround, the script may try to lookup missing MBIDs before exporting.\n\nNote results depend on the success of MusicBrainz api, so it\'s not guaranteed to find the proper match in all cases. Tag properly your files with Picard or foo_musicbrainz in such case.\n\nApi used:\nhttps://labs.api.listenbrainz.org/mbid-mapping', window.Name);
 				}
 				overwriteProperties(list.properties);
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
 			menu.newCheckMenu(subMenuName, 'Lookup for missing track MBIDs?', void(0), () => {return list.properties.bLookupMBIDs[1];});
+			menu.newEntry({menuName: subMenuName, entryText: 'Export playlists to Spotify?', func: () => {
+				list.properties.bSpotify[1] = !list.properties.bSpotify[1];
+				if (list.properties.bSpotify[1]) {
+					fb.ShowPopupMessage('Exporting a playlist to Spotify requires the service to be connected to your user profile, and \'Play music on ListenBrainz\' enabled.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
+				}
+				overwriteProperties(list.properties);
+			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
+			menu.newCheckMenu(subMenuName, 'Export playlists to Spotify?', void(0), () => {return list.properties.bSpotify[1];});
 		}
 		{	// Startup active playlist
 			const nameUI = plman.GetPlaylistName(plman.ActivePlaylist);

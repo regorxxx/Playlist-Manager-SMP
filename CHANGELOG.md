@@ -41,6 +41,7 @@
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
+- ListenBrainz: playlists can now be exported to Spotify (when exporting to ListenBrainz). Requires Spotify's service to be connected to the user profile, and \'Play music on ListenBrainz\' [enabled](https://listenbrainz.org/profile/music-services/details/).
 ### Changed
 - ListenBrainz: YouTube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 - ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).

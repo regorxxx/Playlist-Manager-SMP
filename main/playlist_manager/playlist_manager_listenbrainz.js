@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/06/23
+//11/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -22,6 +22,9 @@ const listenBrainz = {
 		retrieveSimilarRecordings: {
 			v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
 		},
+	},
+	services: {
+		global: ['spotify']
 	},
 	// API constants
 	// https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants
@@ -350,7 +353,7 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 	const mbidLen = mbid.length;
 	const missingCount = byMbid ? 0 : handleList.Count - mbidLen;
 	if (missingCount) {console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks while setting feedback');}
-	const rate = 100;
+	const rate = 50;
 	const retryMs = 500;
 	let score = 0;
 	switch (feedback.toLowerCase()) {
@@ -364,7 +367,7 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 			URL: 'https://api.listenbrainz.org/1/feedback/recording-feedback',
 			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
 			body: JSON.stringify({"recording_mbid": recording_mbid, "score" : score})
-		}, rate).then(
+		}).then(
 			(resolve) => {
 				if (resolve) {
 					const response = JSON.parse(resolve);
@@ -381,7 +384,7 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 				return bRetry ? Promise.wait(retryMs).then(() => listenBrainz.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, true, false)) : false;
 			}
 		)
-	).then((results) => {
+	, rate).then((results) => {
 		if (results.length === 1 && !bRetry) {
 			return Promise.wait(retryMs).then(() => results[0]);
 		} else {
@@ -974,7 +977,7 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 	if (!token || !token.length || !userToFollow || !userToFollow.length) {return null;}
 	return send({
 		method: 'POST', 
-		URL: 'https://api.listenbrainz.org//1/user/' + userToFollow + '/follow',
+		URL: 'https://api.listenbrainz.org/1/user/' + userToFollow + '/follow',
 		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]]
 	}).then(
 		(resolve) => {
@@ -989,8 +992,35 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 			return reject.status === 400;
 		}
 	);
-	
-	
+};
+
+/*
+	Services
+*/
+listenBrainz.exportPlaylistToService = function exportPlaylistToService(pls /*{playlist_mbid}*/, service /*spotify*/, token) {
+	if (!token || !token.length || !service || !pls.playlist_mbid) {return null;}
+	if (Array.isArray(service)) {
+		return Promise.serial(service, 
+			(s, i) => listenBrainz.exportPlaylistToService(pls, s, token)
+		, 50); // [{status, value}, ...]
+	};
+	return send({
+		method: 'POST', 
+		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/export/' + service,
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]]
+	}).then(
+		(resolve) => {
+			console.log('exportPlaylistToService: ' + JSON.stringify(pls) + ' to ' + service + ' -> ' + resolve);
+			if (resolve) {
+				return JSON.parse(resolve).status === 'ok';
+			}
+			return false;
+		},
+		(reject) => {
+			console.log('exportPlaylistToService: ' + pls + ' to ' + service + ' -> ' + reject.status + ' ' + reject.responseText);
+			return reject.status === 400;
+		}
+	);
 };
 
 /*
