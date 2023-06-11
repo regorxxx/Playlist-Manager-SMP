@@ -62,6 +62,7 @@
 - UI: improved tooltip of power action button. Mouse shortcuts tips are always shown, including the settings menu by R. clicking.
 - UI: added new entries to configurable playlist menus: File locks, UI playlist locks and Sorting.
 - UI: now applies configurable playlist menus when using multiple selection.
+- UI: clicking anywhere on scrollbar will move list up/down depending on relative position, up to the current mouse position (mimics Win behavior).
 - Console: improved console logging for empty playlists (no longer reporting 0 items found).
 ### Removed
 ### Fixed

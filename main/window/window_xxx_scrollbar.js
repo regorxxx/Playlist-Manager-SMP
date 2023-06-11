@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/04/22
+//11/06/23
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -34,6 +34,8 @@ function _scrollBar({
 	this.bHoveredCurr = false;
 	this.bHoveredUp = false;
 	this.bHoveredDown = false;
+	this.bHoveredBarUp = false;
+	this.bHoveredBarDown = false;
 	this.bHovered = false;
 	this.rows = rows;
 	this.rowsPerPage = rowsPerPage;
@@ -115,6 +117,9 @@ function _scrollBar({
 		// Bg
 		gr.SetSmoothingMode(SmoothingMode.HighQuality);
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, bgColor);
+		if (this.bHoveredBarUp) {gr.FillSolidRect(this.x, this.y, this.w, this.currY(), tintColor(bgColor, 5));}
+		if (this.bHoveredBarDown) {gr.FillSolidRect(this.x, this.currY(), this.w, this.h - this.currY(), tintColor(bgColor, 5));}
+		
 		// Buttons
 		const buttonHeight = gr.CalcTextHeight('\u25BC', this.font) + _scale(2);
 		gr.FillSolidRect(this.x, this.y, this.w, buttonHeight + _scale(2), up.bg);
@@ -147,15 +152,21 @@ function _scrollBar({
 			debounced[timeout](this.x, this.y, this.x + this.w, this.y + this.h, true);
 		}
 	}
-
+	
+	this.currY = () => {
+		return Math.min(Math.max(this.calcCurrPos(), this.y + this.buttonHeight), this.y + this.buttonHeight + this.barLength);
+	};
+	
+	this.bottom = () => {
+		return Math.min(this.currY() + this.size, this.y + this.buttonHeight + this.barLength);
+	};
+	
 	this.trace = (x, y) => {
 		return y >= this.y && y <= (this.y + this.h) && x >= this.x && x <= (this.x + this.w);
 	};
 	
 	this.tracePos = (x, y) => {
-		const currY = Math.min(Math.max(this.calcCurrPos(), this.y + this.buttonHeight), this.y + this.buttonHeight + this.barLength);
-		const top = Math.min(currY + this.size, this.y + this.buttonHeight + this.barLength);
-		return y >= currY && y <= top && x >= this.x && x <= (this.x + this.w);
+		return y >= this.currY() && y <= this.bottom() && x >= this.x && x <= (this.x + this.w);
 	};
 	
 	this.traceButtons = (x, y, button = 'up') => {
@@ -164,8 +175,12 @@ function _scrollBar({
 			: y >= (this.y + this.h - this.buttonHeight) && y <= (this.y + this.h) && x >= this.x && x <= (this.x + this.w);
 	};
 	
+	this.tracePosRel = (x, y, pos = 'u') => {
+		return (pos === 'u' && y < this.currY() || pos === 'd' && y > this.bottom()) && x >= this.x && x <= (this.x + this.w);
+	};
+	
 	this.btn_up = (x, y) => {
-		this.bDrag = this.bDragUp = this.bDragDown = false;
+		this.bDrag = this.bDragUp = this.bDragDown = this.bHoveredBarUp = this.bHoveredBarDown = false;
 		if (dragUpFunc) {clearInterval(dragUpFunc); dragUpFunc = null; draggingTime = 0;}
 		if (dragDownFunc) {clearInterval(dragDownFunc); dragDownFunc = null; draggingTime = 0;}
 		if (this.trace(x, y)) {
@@ -183,14 +198,20 @@ function _scrollBar({
 			this.bHoveredCurr = this.tracePos(x, y);
 			this.bHoveredUp = this.bHoveredCurr ? false : this.traceButtons(x, y, 'up');
 			this.bHoveredDown = this.bHoveredCurr ? false : this.traceButtons(x, y, 'down');
+			this.bHoveredBarUp = this.bHoveredCurr || this.bHoveredUp || this.bHoveredDown ? false : this.tracePosRel(x, y, 'u');
+			this.bHoveredBarDown = this.bHoveredCurr || this.bHoveredUp || this.bHoveredDown || this.bHoveredBarUp ? false : true;
 			if (this.bHoveredCurr) {
 				this.bDrag = true;
 				this.bDragUp = this.bDragDown = false;
-			} else if (this.bHoveredUp) {
+			} else if (this.bHoveredUp || this.bHoveredBarUp) {
 				draggingTime = 0;
 				this.bDragUp = true;
 				this.bDrag = this.bDragDown = false;
 				dragUpFunc = setInterval(() => {
+					if (this.bHoveredBarUp && this.currY() <= y) {
+						this.btn_up(x, this.currY());
+						return;
+					}
 					if (this.bDragUp && this.currRow > 0) {
 						const delta = draggingTime >= this.scrollSpeed * 9 
 							? 4
@@ -202,11 +223,15 @@ function _scrollBar({
 					}
 					draggingTime += this.scrollSpeed;
 				}, this.scrollSpeed);
-			} else if (this.bHoveredDown) {
+			} else if (this.bHoveredDown || this.bHoveredBarDown) {
 				draggingTime = 0;
 				this.bDragDown = true;
 				this.bDrag = this.bDragUp = false;
 				dragDownFunc = setInterval(() => {
+					if (this.bHoveredBarDown && this.bottom() >= y) {
+						this.btn_up(x, this.currY());
+						return;
+					}
 					if (this.bDragDown && this.currRow < this.rows) {
 						const delta = draggingTime >= this.scrollSpeed * 9 
 							? -4
@@ -222,7 +247,7 @@ function _scrollBar({
 			this.repaint();
 			return true;
 		} else { 
-			this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bDrag = this.bDragUp = this.bDragDown = false;
+			this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bHoveredBarUp = this.bHoveredBarDown = this.bDrag = this.bDragUp = this.bDragDown = false;
 		}
 		return false;
 	};
@@ -257,7 +282,7 @@ function _scrollBar({
 			return true;
 		} else {
 			if (this.bHoveredCurr || this.bHovered) {
-				this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bDragUp = this.bDragDown = false;
+				this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bDragUp = this.bDragDown = this.bHoveredBarUp = this.bHoveredBarDown = false;
 				this.repaint();
 			}
 		}
