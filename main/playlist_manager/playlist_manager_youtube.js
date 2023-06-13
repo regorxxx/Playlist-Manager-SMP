@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/05/23
+//13/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -13,7 +13,9 @@ const youtube = {
 
 youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => {return void(0);}} = {}) {
 	const id = creator.toLowerCase() + ' ' + title.toLowerCase();
-	const mbid = tags && tags.hasOwnProperty('MUSICBRAINZ_TRACKID') ? tags.MUSICBRAINZ_TRACKID : null;
+	const regex = /MUSICBRAINZ_TRACKID/gi;
+	const mbidKey = tags ? Object.keys(tags).find((key) => regex.test(key)) : null ;
+	const mbid = mbidKey ? tags[mbidKey] : null;
 	const ytItem = youtube.cache.get(mbid || id) || null;
 	// Add tags from input
 	if (tags && ytItem) {
