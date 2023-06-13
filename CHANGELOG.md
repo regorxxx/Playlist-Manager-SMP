@@ -39,6 +39,7 @@
 - UI: added sorting by creation date.
 - UI: added configurable R. click mouse actions (like the previous L. click and Middle click ones).
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
+- UI: added configurable timer for tooltip (on properties panel). By default is now 3 times the double clicking timer, also if changed, a popup will ask to update its value.
 - Drag and Drop: added tooltip on drag n drop giving hints about the action used: sending to new playlist, to selected playlist, to search box, ...
 - Keyboard shortcuts: pressing F2 will rename the highlighted playlist.
 - Keyboard shortcuts: pressing F3 will create a clone on UI of the highlighted playlist.

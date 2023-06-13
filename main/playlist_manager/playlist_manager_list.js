@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//14/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -50,6 +50,7 @@ function _list(x, y, w, h) {
 	const headerRe = /\n[-]*$/;
 	
 	// Global tooltip
+	// Timers follow the double click timer
 	this.tooltip = new _tt(null, void(0), void(0), 600); 
 	
 	this.updateUIElements = (bReload = false) => {
@@ -922,7 +923,12 @@ function _list(x, y, w, h) {
 								if (this.bLibraryChanged && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
 								if (pls.extension === '.xsp' && pls.type !== 'songs') {warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.';}
 								if (warningText.length) {playlistDataText += '\n' + warningText;}
-								this.tooltip.SetValue(playlistDataText, true);
+								if (this.tooltip.text !== playlistDataText) {
+									this.tooltip.Deactivate();
+									this.tooltip.SetValue(playlistDataText, true);
+								} else {
+									this.tooltip.SetValue(playlistDataText, true);
+								}
 							}
 							break;
 						}
@@ -3891,6 +3897,8 @@ function _list(x, y, w, h) {
 			if (!this.tagState || !this.tagState.length || (!this.bSaveFilterStates && !isArrayEqual(this.tagState, this.tags()))) {
 				this.tagState = this.tags(); // No need to save properties since it will be done at filter stage
 			}
+			// Set tooltip timer values
+			this.tooltip.SetDelayTime(0, this.properties['iTooltipTimer'][1]); // TTDT_AUTOMATIC
 			if (bDone) {overwriteProperties(this.properties);}
 		}
 		

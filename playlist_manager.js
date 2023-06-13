@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//14/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -222,6 +222,7 @@ var properties = {
 		'Single Click':	'Manage playlist'
 	})],
 	bSpotify				: ['ListenBrainz export to Spotify', true, {func: isBoolean}, true],
+	iTooltipTimer			: ['Tooltip timer', 250 * 3, {func: isInt}, 250 * 3],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);

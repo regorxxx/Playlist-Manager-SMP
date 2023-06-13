@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/23
+//14/06/23
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -199,10 +199,9 @@ function removeIdFromStr(nameId) {
 
 function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.tooltip.size), width = 600) {
 	this.SetValue = (value,  bForceActivate = false) => {
-		if (!this.tooltip && !this.init()) {return;}
+		if (!this.tooltip && !this.init()) {return false;}
 		if (value === null) {
 			this.Deactivate();
-			return;
 		} else {
 			if (this.tooltip.Text !== value) {
 				this.text = this.tooltip.Text = value;
@@ -210,40 +209,46 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 			}
 			if (bForceActivate) {this.Activate();} // Only on force to avoid flicker
 		}
+		return true;
 	};
 	
 	this.SetFont = (name, size, style = 0) => {
-		if (!this.tooltip && !this.init()) {return;}
+		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.SetFont(name, size, style);
 		this.font = {name, size, style};
+		return true;
 	};
 	
 	this.SetMaxWidth = (width) => {
-		if (!this.tooltip && !this.init()) {return;}
+		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.SetMaxWidth(width);
 		this.width = width;
+		return true;
 	};
 	
 	this.Activate = () => {
-		if (!this.tooltip && !this.init()) {return;}
+		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.Activate();
 		this.bActive = true;
+		return true;
 	};
 	
 	this.Deactivate = () => {
-		if (!this.tooltip && !this.init()) {return;}
+		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.Deactivate();
 		this.bActive = false;
+		return true;
 	};
 	
 	this.SetDelayTime = (type, time) => {
-		if (!this.tooltip && !this.init()) {return;}
-		this.tooltip.SetDelayTime(type, time) ;
+		if (!this.tooltip && !this.init()) {return false;}
+		this.tooltip.SetDelayTime(type, time);
+		return true;
     };
 	
 	this.GetDelayTime = (type) => {
 		if (!this.tooltip && !this.init()) {return;}
-		this.tooltip.GetDelayTime(type) ;
+		return this.tooltip.GetDelayTime(type) ;
 	};
 	
 	this.init = () => {

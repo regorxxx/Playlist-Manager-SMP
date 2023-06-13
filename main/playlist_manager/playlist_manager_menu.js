@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//14/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2547,6 +2547,10 @@ function createMenuRightTop() {
 				if (input === null) {return;}
 				if (!Number.isFinite(input)) {return;}
 				list.iDoubleClickTimer = list.properties.iDoubleClickTimer[1] = input;
+				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x3)', 0, window.Name, popup.question + popup.yes_no) === popup.yes) {
+					list.properties.iTooltipTimer[1] = input * 3;
+					list.tooltip.SetDelayTime(0, list.properties.iTooltipTimer[1]); // TTDT_AUTOMATIC
+				}
 				overwriteProperties(list.properties);
 			}});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
