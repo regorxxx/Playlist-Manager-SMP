@@ -39,9 +39,17 @@
 - UI: added sorting by creation date.
 - UI: added configurable R. click mouse actions (like the previous L. click and Middle click ones).
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
+- Drag and Drop: added tooltip on drag n drop giving hints about the action used: sending to new playlist, to selected playlist, to search box, ...
+- Keyboard shortcuts: pressing F2 will rename the highlighted playlist.
+- Keyboard shortcuts: pressing F3 will create a clone on UI of the highlighted playlist.
+- Keyboard shortcuts: pressing F4 load the highlighted playlist (or jump to it if it was already loaded).
+- Keyboard shortcuts: pressing F5 will create a copy of the highlighted playlist with same extension. AutoPlaylists, Smart Playlists and UI-only playlists will maintain their format.
+- Keyboard shortcuts: pressing F7 will create a new empty playlist.
+- Keyboard shortcuts: pressing F8 will delete the highlighted playlist.
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
 - ListenBrainz: playlists can now be exported to Spotify (when exporting to ListenBrainz). Requires Spotify's service to be connected to the user profile, and \'Play music on ListenBrainz\' [enabled](https://listenbrainz.org/profile/music-services/details/).
+- Clone: added 'Clone as Smart Playlist' entry for AutoPlaylists and Smart Playlists. This allows to easily switch between formats or clone existing XSP playlists.
 ### Changed
 - ListenBrainz: YouTube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 - ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
@@ -54,6 +62,7 @@
 - XSPF: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
 - XSPF: optimizations finding tracks on library.
 - Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
+- Drag and Drop: sending tracks to blank space or list menu button (plus shape) will create a new playlist.
 - UI: R. clicking now opens the contextual menu for the selected playlists (previously on L. Click). Shift + R. Clicking opens the playlist's items native contextual menu.
 - UI: L. single click action is now configurable. 
 - UI: 'Send selection to playlist' now creates a backup before editing the playlist file (to restore it in case it fails).
