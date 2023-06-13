@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/23
+//12/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -12,6 +12,9 @@ const listenBrainz = {
 	bProfile: false,
 	cache: {
 		user: new Map(),
+		services: new Map([['global', ['spotify']]]),
+		similarUsers: new Map(),
+		following: new Map(),
 		key: null,
 	},
 	algorithm: {
@@ -22,9 +25,6 @@ const listenBrainz = {
 		retrieveSimilarRecordings: {
 			v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
 		},
-	},
-	services: {
-		global: ['spotify']
 	},
 	// API constants
 	// https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants
@@ -270,7 +270,7 @@ listenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, t
 
 // Import playlist metadata and track list from online playlist
 listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, token) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return false;}
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '?fetch_metadata=true',
@@ -303,7 +303,7 @@ listenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 	if (!checkLBToken()) {return false;}
 	let bDone = false;
 	const jsfpArr = await this.retrieveUserPlaylists(user, this.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}));
-	if (jsfpArr && jsfpArr.length) {
+	if (jsfpArr.length) {
 		const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 		jsfpArr.forEach((jspf) => {
 			const handleList = this.contentResolver(jspf);
@@ -623,7 +623,6 @@ listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MBIds, infoNames = ['recording_mbid', 'recording_name', 'artist_credit_name'], token) {
 	const count = MBIds.length;
 	if (!count) {return Promise.resolve({});}
-	console.log('lookupRecordingInfoByMBIDs', count, MBIds)
 	const allInfo = [
 		'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 
 		'artist_credit_name', 'artist_credit_mbids', 
@@ -853,6 +852,34 @@ listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
 	);
 }
 
+listenBrainz.retrieveSimilarUsers = function retrieveSimilarUsers(user, token, iThreshold = 0.7) {
+	if (!token || !token.length) {return Promise.resolve([]);}
+	const similar = this.cache.similarUsers.get(user);
+	return similar
+		? similar.filter((user) => user.similarity >= iThreshold)
+		: send({
+			method: 'GET', 
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/similar-users',
+			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+			bypassCache: true
+		}).then(
+			(resolve) => {
+				const response = JSON.parse(resolve);
+				if (response && response.hasOwnProperty('payload')) {
+					console.log('retrieveSimilarUsers: ' + user + ' -> ' + response.payload.length + ' similar users');
+					this.cache.similarUsers.set(user, response.payload);
+					return response.payload.filter((user) => user.similarity >= iThreshold); // [{user_name, similarity}]
+					
+				}
+				return [];
+			},
+			(reject) => {
+				console.log('retrieveSimilarUsers: ' + JSON.stringify(reject));
+				return [];
+			}
+		);
+};
+
 /*
 	Content resolver by MBID
 */
@@ -912,7 +939,7 @@ listenBrainz.sanitizeQueryValue = function sanitizeQueryValue(value) {
 	User data
 */
 listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(user, token) {
-	if (!token || !token.length || !user || !user.length) {return null;}
+	if (!token || !token.length || !user || !user.length) {return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists',
@@ -932,7 +959,7 @@ listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 };
 
 listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
-	if (!token || !token.length) {return null;}
+	if (!token || !token.length) {return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/validate-token?token=' + token,
@@ -959,7 +986,7 @@ listenBrainz.retrieveUser = async function retrieveUser(token) {
 };
 
 listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token) {
-	if (!token || !token.length || !user || !user.length) {return null;}
+	if (!token || !token.length || !user || !user.length) {return Promise.resolve([]);}
 	return this.retrieveUserPlaylistsNames(user, token).then(
 		(resolve) => {
 			const playlists = resolve.playlists;
@@ -968,13 +995,13 @@ listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token)
 		},
 		(reject) => {
 			console.log('retrieveUserPlaylists: ' + JSON.stringify(reject));
-			return null;
+			return [];
 		}
 	);
 };
 
 listenBrainz.followUser = function followUser(userToFollow, token) {
-	if (!token || !token.length || !userToFollow || !userToFollow.length) {return null;}
+	if (!token || !token.length || !userToFollow || !userToFollow.length) {return Promise.resolve(null);}
 	return send({
 		method: 'POST', 
 		URL: 'https://api.listenbrainz.org/1/user/' + userToFollow + '/follow',
@@ -983,7 +1010,16 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 		(resolve) => {
 			console.log('followUser: ' + userToFollow + ' -> ' + resolve);
 			if (resolve) {
-				return JSON.parse(resolve).status === 'ok';
+				const bDone = JSON.parse(resolve).status === 'ok';
+				if (bDone && this.cache.user.has(token)) {
+					const user = this.cache.user.get(token);
+					const following = this.cache.following.get(user) || [];
+					if (following.indexOf(userToFollow) === -1) {
+						following.push(userToFollow);
+						this.cache.following.set(user, following);
+					}
+				}
+				return bDone;
 			}
 			return false;
 		},
@@ -994,11 +1030,41 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 	);
 };
 
+listenBrainz.retrieveFollowing = function retrieveFollowing(user, token) {
+	if (!token || !token.length) {return Promise.resolve([]);}
+	return send({
+		method: 'GET', 
+		URL: 'https://api.listenbrainz.org/1/user/' + user +  '/following',
+		requestHeader: [['Authorization', 'Token ' + token]],
+		bypassCache: true
+	}).then(
+		(resolve) => {
+				const response = JSON.parse(resolve); // {user, following: []}
+				if (response.hasOwnProperty('user') && response.user === user && response.hasOwnProperty('following')) {
+					this.cache.following.set(user, response.following);
+					return response.following; // []
+				}
+				return [];
+		},
+		(reject) => {
+			console.log('retrieveFollowing: ' + JSON.stringify(reject));
+			return [];
+		}
+	);
+};
+
+// Retrieve following first for caching
+listenBrainz.isFollowing = function isFollowing(token, toUser) {
+	const user = this.cache.user.get(token);
+	const following = user ? this.cache.following.get(user) || [] : [];
+	return following.indexOf(toUser) !== -1;
+};
+
 /*
 	Services
 */
 listenBrainz.exportPlaylistToService = function exportPlaylistToService(pls /*{playlist_mbid}*/, service /*spotify*/, token) {
-	if (!token || !token.length || !service || !pls.playlist_mbid) {return null;}
+	if (!token || !token.length || !service || !pls.playlist_mbid) {return Promise.resolve(null);}
 	if (Array.isArray(service)) {
 		return Promise.serial(service, 
 			(s, i) => listenBrainz.exportPlaylistToService(pls, s, token)
@@ -1023,11 +1089,37 @@ listenBrainz.exportPlaylistToService = function exportPlaylistToService(pls /*{p
 	);
 };
 
+listenBrainz.getUserServices = function getUserServices(user, token) {
+	if (!token || !token.length || !user || !user.length) {return Promise.resolve([]);}
+	const services = this.cache.services.get(user);
+	return services 
+		? services 
+		: send({
+			method: 'GET', 
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/services',
+			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+			bypassCache: true
+		}).then(
+			(resolve) => {
+				const response = JSON.parse(resolve); // {"user_name": "hwnrwx", "services": ["spotify"]}
+				if (response.hasOwnProperty('user_name') && response.user_name === user && response.hasOwnProperty('services')) {
+					this.cache.services.set(user, response.services);
+					return response.services; // ['spotify']
+				}
+				return [];
+			},
+			(reject) => {
+				console.log('getUserServices: ' + JSON.stringify(reject));
+				return []
+			}
+		);
+};
+
 /*
 	Token
 */
 listenBrainz.decryptToken = function decryptToken({lBrainzToken, bEncrypted = true}) {
-	if (bEncrypted) {
+	if (bEncrypted && !this.cache.key) {
 		let pass = '';
 		try {pass = utils.InputBox(window.ID, 'Enter password:', window.Name, pass, true);} 
 		catch(e) {return null;}

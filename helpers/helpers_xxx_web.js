@@ -1,11 +1,10 @@
 ﻿'use strict';
-//24/05/23
+//13/06/23
 
 function getText(link){
 	if (link.indexOf('http://') !== -1 || link.indexOf('https://') !== -1) {
 		let request = new ActiveXObject('Microsoft.XMLHTTP');
 		request.open('GET', link, true);
-		request.send();
 		request.onreadystatechange = function () {
 			if (request.readyState === 4) {
 				if (request.status === 200) {
@@ -16,6 +15,7 @@ function getText(link){
 				} else {console.log('HTTP error: ' + request.status);}
 			}
 		}
+		request.send();
 	} else {console.log('getText(): input is not a link. ' + link); return null;}
 }
 
