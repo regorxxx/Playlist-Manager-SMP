@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/23
+//13/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -612,7 +612,7 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
-function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
+function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -623,6 +623,21 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
 	bDone = list.addAutoplaylist(objectPlaylist) ? true : false;
+	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');} else {console.log('Playlist Manager: Error duplicating playlist'); return false;}
+	return bDone;
+}
+
+function cloneAsSmartPls(list, z) { // May be used only to copy an Auto-Playlist or Smart Playlist
+	let bDone = false;
+	const pls = list.data[z];
+	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
+	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => {if (iPls.name.startsWith(pls.name + ' (copy ')) {count++;} return count;}, 0)+ ')';
+	const objectPlaylist = clone(pls);
+	objectPlaylist.name = playlistName;
+	bDone = list.addSmartplaylist(objectPlaylist) ? true : false;
 	if (bDone) {console.log('Playlist Manager: cloning ' + playlistName + ' done.');} else {console.log('Playlist Manager: Error duplicating playlist'); return false;}
 	return bDone;
 }

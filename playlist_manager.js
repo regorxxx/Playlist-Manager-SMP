@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/23
+//13/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -485,10 +485,11 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
 		if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
 		if (scroll && scroll.move(x, y)) {list.move(-1, -1); return;}
-		if (!bDragDrop) {on_mouse_move_buttn(x, y, mask);}
+		on_mouse_move_buttn(x, y, mask);
 		if (buttonsPanel.curBtn === null) {
 			list.move(x, y, mask, bDragDrop);
 		} else {
+			list.move(-1, -1);
 			list.up_btn.hover = false;
 			list.down_btn.hover = false;
 		}
@@ -531,6 +532,7 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_paint', (gr) => {
 		panel.paint(gr);
+		on_paint_buttn(gr);
 		list.paint(gr);
 		if (scroll) {
 			scroll.rows = Math.max(list.items - list.rows, 1);
@@ -539,7 +541,6 @@ if (!list.properties.bSetup[1]) {
 			scroll.currRow = list.offset;
 			if (scroll.rows > 1) {scroll.paint(gr);}
 		}
-		on_paint_buttn(gr);
 		pop.paint(gr);
 	});
 
@@ -816,19 +817,45 @@ if (!list.properties.bSetup[1]) {
 		if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) {action.Effect = dropEffect.none; return;}
 		if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
 		// Move playlist index only while not pressing alt
+		on_mouse_move(x, y, mask, true);
 		if ((mask & 32) === 32) {
 			if (list.index !== -1) {
 				list.index = -1;
 				window.Repaint();
 			}
-		} else {on_mouse_move(x, y, mask, true);}
+		}
 		// Force scrolling so the list doesn't get blocked at current view
 		list.up_btn.hover = list.up_btn.lbtn_up(x, y);
 		list.down_btn.hover = list.down_btn.lbtn_up(x, y);
-		// Is on search input?
-		const bSearch = list.searchInput && list.searchMethod.bPath && list.searchInput.trackCheck(x, y);
-		if (bSearch) {action.Effect = dropEffect.copy; return;}
-		else if (buttonsPanel.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
+		// Check actions per UI element
+		const headerbuttons = Object.keys(list.headerButtons);
+		if (list.traceHeader(x, y)) {
+			if (list.searchInput && list.searchInput.trackCheck(x, y)) { // Search input
+				if (list.searchMethod.bPath) {action.Effect = dropEffect.copy; list.dragDropText = 'Add paths to search box';}
+				else {action.Effect = dropEffect.none; list.dragDropText = 'Path searching must be enabled';}
+				return;
+			} else if (headerbuttons.some((key) => list.headerButtons[key].inFocus)) { // New playlist button
+				if (list.headerButtons.newPls.inFocus) {
+					list.dragDropText = 'Create new Playlist';
+				} else {
+					action.Effect = dropEffect.none;
+					list.dragDropText = '';
+					return;
+				}
+			} else {
+				action.Effect = dropEffect.none;
+				list.dragDropText = '';
+				return;
+			}
+		} else if (buttonsPanel.curBtn !== null || (scroll && scroll.trace(x, y))) { // Scrollbar or buttons
+		// else if (buttonsPanel.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
+			action.Effect = dropEffect.none;
+			list.dragDropText = '';
+			return;
+		} else { // List
+			if (list.index === -1) {list.dragDropText = 'Create new Playlist';}
+			else {list.dragDropText = 'To selected Playlist';}
+		}
 		// Set effects
 		if ((mask & dropMask.ctrl) === dropMask.ctrl) {action.Effect = dropEffect.copy;} // Mask is mouse + key
 		// else if ((mask & 32) === 32) {action.Effect = dropEffect.link;} // TODO: Bug, sends callback to on_drag_leave
@@ -855,7 +882,7 @@ if (!list.properties.bSetup[1]) {
 					if (list.searchMethod.bAutoSearch) {list.search();}
 				}
 			} else {
-				if ((mask & 32) === 32) { // Create new playlist when pressing alt
+				if ((mask & 32) === 32 || list.index === -1) { // Create new playlist when pressing alt
 					const oldIdx = plman.ActivePlaylist;
 					const pls = list.add({bEmpty: true});
 					if (pls) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/23
+//13/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -647,6 +647,19 @@ function _list(x, y, w, h) {
 			this.lastCharsPressed.bDraw = false;
 			animation.fRepaint = setTimeout(() => {animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h);}, 600);
 		}
+		// Draw a tooltip box on drag n drop
+		if (this.bIsDragDrop) {
+			const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+			const borderCol = opaqueColor(invert(popupCol), 50);
+			const sizeX = gr.CalcTextWidth(this.dragDropText, panel.fonts.normal) + _scale (4);
+			const sizeY = gr.CalcTextHeight(this.dragDropText, panel.fonts.normal) + _scale (2);
+			const y = Math.min(this.my + _scale(25), this.y + this.h - sizeY);
+			const offsetX = y === this.my + _scale(25) ? _scale(10) : _scale(53)
+			const x = Math.min(this.mx + offsetX, this.x + this.w - sizeX);
+			gr.FillRoundRect(x, y, sizeX, sizeY, 1, 1, popupCol);
+			gr.DrawRoundRect(x, y, sizeX, sizeY, 1, 1, 1, borderCol);
+			gr.GdiDrawText(this.dragDropText, panel.fonts.normal, panel.colors.text, x, y, sizeX, sizeY, CENTRE);
+		}
 		// Up/down buttons
 		this.up_btn.paint(gr, this.up_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
 		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
@@ -740,6 +753,7 @@ function _list(x, y, w, h) {
 		this.up_btn.hover = false;
 		this.down_btn.hover = false;
 		this.bIsDragDrop = false;
+		this.dragDropText = '';
 		for (let key in this.headerButtons) {
 			this.headerButtons[key].inFocus = false;
 		}
@@ -1337,9 +1351,53 @@ function _list(x, y, w, h) {
 				else {this.move(this.mx, this.my, MK_SHIFT);}
 				return true;
 			}
-			// Quick-search
-			default: { // Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
+			// Quick-search or keyboard shortcuts
+			default: {
 				const keyChar = keyCode(k);
+				// Shortcuts
+				if (this.trace(this.mx, this.my)) {
+					const z = this.index;
+					const pls = this.data[z];
+					switch (keyChar) {
+						case 'f2': // Rename
+							if (z !== -1) {
+								const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
+								if (input === null) {return;}
+								renamePlaylist(this, z, input);
+								return true;
+							}
+							return false;
+						case 'f3': // Clone in UI (view)
+							if (z !== -1) {
+								clonePlaylistFile(this, z, '.ui');
+								return true;
+							}
+							return false;
+						case 'f4': // Load (edit)
+							if (z !== -1) {
+								this.loadPlaylistOrShow(z);
+								return true;
+							}
+							return false;
+						case 'f5': // Clone (copy)
+							if (z !== -1) {
+								if (pls.isAutoPlaylist) {cloneAsAutoPls(this, z);}
+								else if (pls.extension === '.xsp') {cloneAsSmartPls(this, z);}
+								else {clonePlaylistFile(this, z, pls.extension);}
+								return true;
+							}
+							return false;
+						case 'f7': // Add playlist (new)
+							this.add({bEmpty: true});
+							return true;
+						case 'f8': // Delete playlist (delete)
+							this.removePlaylist(z);
+							this.move(this.mx, this.my); // Update cursor
+							return true;
+					}
+				}
+				// Quick-search
+				// Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				if (this.searchInput && keyChar === 'e' && getKeyboardMask() === kMask.ctrl) {
 					this.searchInput.check('down', this.searchInput.x + 1, this.searchInput.y + 1);
 					this.searchInput.check('up', this.searchInput.x + 1, this.searchInput.y + 1);
@@ -4218,6 +4276,7 @@ function _list(x, y, w, h) {
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	// Other
 	this.bIsDragDrop = false;
+	this.dragDropText = '';
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
 	this.selPaths = {pls: new Set(), sel: []};
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
