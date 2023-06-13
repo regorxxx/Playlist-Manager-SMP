@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/23
+//13/06/23
 
 /* 
 	Objects
@@ -251,6 +251,12 @@ String.prototype.count = function count(c) {
 		if (this[i] == c) {result++;}
 	}
 	return result;
+};
+
+const cutRegex = {};
+String.prototype.cut = function cut(c) {
+	if (!cutRegex.hasOwnProperty(c)) {cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g');}
+	return this.replace(cutRegex[c], '$1…');
 };
 
 function capitalize(s) {

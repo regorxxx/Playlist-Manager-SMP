@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/23
+//13/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -81,6 +81,56 @@ listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, b
 	return tags;
 };
 
+listenBrainz.joinArtistMBIDs = async function joinArtistMBIDs(artists, MBIds, token, bInverse = false) {
+	const artistCount = artists.length;
+	const MBIdsCount = MBIds.length;
+	const results = new Array(MBIdsCount).fill({});
+	const data = new Array(MBIdsCount).fill({});
+	data.forEach((_, i, thisArr) => {
+		thisArr[i] = {};
+		results[i] = {artists: []};
+		thisArr[i]['[artist_mbid]'] = results[i].mbid = MBIds[i];
+	});
+	return send({
+		method: 'POST', 
+		URL: 'https://datasets.listenbrainz.org/artist-lookup/json',
+		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
+		body: JSON.stringify(data)
+	}).then(
+		(resolve) => {
+			if (resolve) {
+				const response = JSON.parse(resolve); // [{artist_mbid, artist_name, artist_sortname, type}, ...]
+				if (response) {
+					response.forEach((found) => {
+						const result = results.find((m) => m.mbid === found.artist_mbid);
+						for (let i = 0; i < artistCount; i++) {
+							const artist = artists[i];
+							if (similarity(artist, found.artist_name) >= 0.90) {
+								result.artists.push(artist);
+							}
+						}
+					});
+				}
+			}
+			return bInverse 
+				? artists.map((artist) => {
+						const obj = {artist, mbids: []};
+						results.forEach((result) => {
+							if (result.artists.indexOf(artist) !== -1) {
+								obj.mbids.push(result.mbid);
+							}
+						});
+						return obj;
+					})
+				: results;
+		},
+		(reject) => {
+			console.log('joinArtistMBIDs: ' + reject.status + ' ' + reject.responseText);
+			return results;
+		}
+	)
+};
+
 listenBrainz.consoleError = (message = 'Token can not be validated.') => {
 	fb.ShowPopupMessage(
 		message.trim() + ' Check console.\n\nSome possible errors:' + 
@@ -98,7 +148,8 @@ listenBrainz.consoleError = (message = 'Token can not be validated.') => {
 // Post new playlist using the playlist file as reference and provides a new MBID
 // Note posting multiple times the same playlist file will create different entities
 // Use sync to edit already exported playlists
-listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId, path}*/, root = '', token, bLookupMBIDs = true) {
+listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId, path, extension}*/, root = '', token, bLookupMBIDs = true) {
+	if (!pls.path && !pls.extension || pls.extension && !pls.nameId || !pls.name) {console.log('exportPlaylist: no valid pls provided'); return promise.resolve('');}
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, root, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
@@ -114,7 +165,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 				}
 			},
 			title: pls.name,
-			track,	
+			track,
 		}
 	};
 	return send({
@@ -145,7 +196,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 // Delete all tracks on online playlist and then add all tracks again using the playlist file as reference
 // Easier than single edits, etc.
 listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, playlist_mbid}*/, root = '', token, bLookupMBIDs = true) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return '';}
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('syncPlaylist: no playlist_mbid provided'); return promise.resolve('');}
 	const data = {
 		index: 0,
 		count: Number.MAX_VALUE
@@ -202,8 +253,8 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 /*{name, playlist_mbid}*/
 // Add handleList to given online playlist
 listenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, token, bLookupMBIDs = true) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return '';}
-	if (!handleList || !handleList.Count) {return pls.playlist_mbid;}
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('addPlaylist: no playlist_mbid provided'); return promise.resolve('');}
+	if (!handleList || !handleList.Count) {console.log('addPlaylist: empty pls provided'); return promise.resolve(pls.playlist_mbid);}
 	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat();
 	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
 	const missingCount = handleList.Count - mbid.length;
@@ -270,7 +321,7 @@ listenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, t
 
 // Import playlist metadata and track list from online playlist
 listenBrainz.importPlaylist = function importPlaylist(pls /*{playlist_mbid}*/, token) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {return Promise.resolve(null);}
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('importPlaylist: no playlist_mbid provided'); return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '?fetch_metadata=true',
@@ -499,7 +550,7 @@ listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*
 */
 listenBrainz.lookupTracks = function lookupTracks(handleList, token) {
 	const count = handleList.Count;
-	if (!handleList.Count) {return [];}
+	if (!handleList.Count) {console.log('lookupTracks: no tracks provided'); return Promise.resolve([]);}
 	const [artist, title] = getTagsValuesV4(handleList, ['ARTIST', 'TITLE']);
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
@@ -591,7 +642,7 @@ listenBrainz.lookupArtistMBIDs = function getArtistMBIDs(handleList, token) { //
 
 listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 	const count = MBIds.length;
-	if (!count) {return Promise.resolve([]);}
+	if (!count) {console.log('lookupTracks: no MBIds provided'); return Promise.resolve([]);}
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
@@ -622,7 +673,7 @@ listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 // if (infoNames.every((tag) => info.hasOwnProperty(tag))) {...}
 listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MBIds, infoNames = ['recording_mbid', 'recording_name', 'artist_credit_name'], token) {
 	const count = MBIds.length;
-	if (!count) {return Promise.resolve({});}
+	if (!count) {console.log('lookupRecordingInfoByMBIDs: no MBIds provided'); return Promise.resolve({});}
 	const allInfo = [
 		'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 
 		'artist_credit_name', 'artist_credit_mbids', 
@@ -685,6 +736,7 @@ listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, bR
 	Statistics
 */
 listenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', params = {/*count, offset, range*/}, token) {
+	if (!user) {console.log('getTopRecordings: no user provided'); return Promise.resolve([]);}
 	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
 	return send({
 		method: 'GET', 
@@ -710,6 +762,7 @@ listenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', par
 }
 
 listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, params = {artist_type: 'top' /*count, offset*/}, token) {
+	if (!user) {console.log('getRecommendedRecordings: no user provided'); return Promise.resolve([]);}
 	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
 	return send({
 		method: 'GET', 
@@ -735,10 +788,7 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 }
 
 listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecommendedPlaylistsNames(user, params = {/*count, offset*/}, token) {
-	if (!user) {
-		console.log('retrieveUserRecommendedPlaylistsNames: no user provided');
-		return Promise.resolve([]);
-	}
+	if (!user) {console.log('retrieveUserRecommendedPlaylistsNames: no user provided'); return Promise.resolve([]);}
 	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
 	return send({
 		method: 'GET', 
@@ -765,6 +815,7 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 
 // To use along listenBrainz.retrieveSimilarArtists (unstable API)
 listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtist(artist_mbids, token) {
+	if (!artist_mbids || !artist_mbids.filter(Boolean).length) {console.log('getPopularRecordingsByArtist: no artist_mbids provided'); return Promise.resolve([]);}
 	const data = artist_mbids.map((mbid) => {return {"[artist_mbid]": mbid};}); // [{"[artist_mbid]": "69ec6867-bda0-404b-bac4-338df8d73723"}, ...]
 	return send({
 		method: 'POST', 
@@ -794,6 +845,7 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 */
 // Only default algorithms work
 listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'v1') { // May add algorithm directly or by key
+	if (!artistMbid || !artistMbid.length) {console.log('retrieveSimilarArtists: no artistMbid provided'); return Promise.resolve([]);}
 	if (this.algorithm.retrieveSimilarArtists.hasOwnProperty(algorithm)) {algorithm = this.algorithm.retrieveSimilarArtists[algorithm];}
 	const data = [{
 		'artist_mbid': artistMbid,
@@ -824,6 +876,7 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 
 // Only default algorithm works
 listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'v1') {
+	if (!recordingMBId || !recordingMBId.length) {console.log('retrieveSimilarRecordings: no recordingMBId provided'); return Promise.resolve([]);}
 	if (this.algorithm.retrieveSimilarRecordings.hasOwnProperty(algorithm)) {algorithm = this.algorithm.retrieveSimilarRecordings[algorithm];}
 	const data = [{
 		'recording_mbid': recordingMBId,
@@ -853,7 +906,7 @@ listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
 }
 
 listenBrainz.retrieveSimilarUsers = function retrieveSimilarUsers(user, token, iThreshold = 0.7) {
-	if (!token || !token.length) {return Promise.resolve([]);}
+	if (!user || !user.length || !token || !token.length) {console.log('retrieveSimilarUsers: no user/token provided'); return Promise.resolve([]);}
 	const similar = this.cache.similarUsers.get(user);
 	return similar
 		? similar.filter((user) => user.similarity >= iThreshold)
@@ -939,7 +992,7 @@ listenBrainz.sanitizeQueryValue = function sanitizeQueryValue(value) {
 	User data
 */
 listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(user, token) {
-	if (!token || !token.length || !user || !user.length) {return Promise.resolve(null);}
+	if (!user || !user.length || !token || !token.length) {console.log('retrieveUserPlaylistsNames: no user/token provided'); return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists',
@@ -959,7 +1012,7 @@ listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 };
 
 listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
-	if (!token || !token.length) {return Promise.resolve(null);}
+	if (!token || !token.length) {console.log('retrieveUserResponse: no token provided'); return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/validate-token?token=' + token,
@@ -986,7 +1039,7 @@ listenBrainz.retrieveUser = async function retrieveUser(token) {
 };
 
 listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token) {
-	if (!token || !token.length || !user || !user.length) {return Promise.resolve([]);}
+	if (!user || !user.length || !token || !token.length) {console.log('retrieveUserPlaylists: no user/token provided'); return Promise.resolve([]);}
 	return this.retrieveUserPlaylistsNames(user, token).then(
 		(resolve) => {
 			const playlists = resolve.playlists;
@@ -1001,7 +1054,7 @@ listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token)
 };
 
 listenBrainz.followUser = function followUser(userToFollow, token) {
-	if (!token || !token.length || !userToFollow || !userToFollow.length) {return Promise.resolve(null);}
+	if (!userToFollow || !userToFollow.length || !token || !token.length) {console.log('followUser: no user/token provided'); return Promise.resolve(null);}
 	return send({
 		method: 'POST', 
 		URL: 'https://api.listenbrainz.org/1/user/' + userToFollow + '/follow',
@@ -1031,7 +1084,7 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 };
 
 listenBrainz.retrieveFollowing = function retrieveFollowing(user, token) {
-	if (!token || !token.length) {return Promise.resolve([]);}
+	if (!user || !user.length || !token || !token.length) {console.log('retrieveFollowing: no user/token provided'); return Promise.resolve([]);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/user/' + user +  '/following',
@@ -1064,7 +1117,7 @@ listenBrainz.isFollowing = function isFollowing(token, toUser) {
 	Services
 */
 listenBrainz.exportPlaylistToService = function exportPlaylistToService(pls /*{playlist_mbid}*/, service /*spotify*/, token) {
-	if (!token || !token.length || !service || !pls.playlist_mbid) {return Promise.resolve(null);}
+	if (!token || !token.length || !service || !pls.playlist_mbid) {console.log('exportPlaylistToService: no pls/service/token provided'); return Promise.resolve(null);}
 	if (Array.isArray(service)) {
 		return Promise.serial(service, 
 			(s, i) => listenBrainz.exportPlaylistToService(pls, s, token)
@@ -1090,7 +1143,7 @@ listenBrainz.exportPlaylistToService = function exportPlaylistToService(pls /*{p
 };
 
 listenBrainz.getUserServices = function getUserServices(user, token) {
-	if (!token || !token.length || !user || !user.length) {return Promise.resolve([]);}
+	if (!user || !user.length || !token || !token.length) {console.log('getUserServices: no user/token provided'); return Promise.resolve([]);}
 	const services = this.cache.services.get(user);
 	return services 
 		? services 
