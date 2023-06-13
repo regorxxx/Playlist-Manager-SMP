@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/23
+//13/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -261,8 +261,11 @@ function createMenuLeft(forcedIndex = -1) {
 				const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 				cloneAsStandardPls(list, z, remDupl, list.bAdvTitle);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
-			menu.newEntry({entryText: 'Clone AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
+			menu.newEntry({entryText: 'Clone as AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
 				cloneAsAutoPls(list, z);
+			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
+			menu.newEntry({entryText: 'Clone as Smart Playlist and edit...', func: () => { // Here creates a Kodi XSP smart no matter the original format
+				cloneAsSmartPls(list, z);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Export as json file...', func: () => {
 				const path = list.exportJson({idx: z, bAllExt: true});
@@ -357,8 +360,12 @@ function createMenuLeft(forcedIndex = -1) {
 					}
 					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
 					if (list.properties.bSpotify[1]) {
-						console.log('Exporting playlist to Spotify: ' + pls.name);
-						lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
+						lb.retrieveUser(token).then((user) => listenBrainz.getUserServices(user, token)).then((services) => {
+							if (services.indexOf('spotify') !== -1) {
+								console.log('Exporting playlist to Spotify: ' + pls.name);
+								lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
+							}
+						});
 					}
 					if (bUpdateMBID && bWritableFormat) {setPlaylist_mbid(playlist_mbid, list, pls);}
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
@@ -2804,6 +2811,14 @@ function createMenuRightTop() {
 				list.properties.bSpotify[1] = !list.properties.bSpotify[1];
 				if (list.properties.bSpotify[1]) {
 					fb.ShowPopupMessage('Exporting a playlist to Spotify requires the service to be connected to your user profile, and \'Play music on ListenBrainz\' enabled.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
+					const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+					if (token) {
+						lb.retrieveUser(token).then((user) => listenBrainz.getUserServices(user, token)).then((services) => {
+							if (services.indexOf('spotify') === -1) {
+								fb.ShowPopupMessage('Spotify\'s service is not connected.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
+							}
+						});
+					}
 				}
 				overwriteProperties(list.properties);
 			}, flags: bListenBrainz ? MF_STRING: MF_GRAYED});
