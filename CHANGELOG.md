@@ -39,14 +39,20 @@
 - UI: added sorting by creation date.
 - UI: added configurable R. click mouse actions (like the previous L. click and Middle click ones).
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
-- UI: added configurable timer for tooltip (on properties panel). By default is now 3 times the double clicking timer, also if changed, a popup will ask to update its value.
+- UI: added configurable timer for tooltip (on properties panel). By default is now 2 times the double clicking timer, also if changed, a popup will ask to update its value.
 - Drag and Drop: added tooltip on drag n drop giving hints about the action used: sending to new playlist, to selected playlist, to search box, ...
+- Keyboard shortcuts: pressing F1 will lock / unlock the highlighted playlist file or UI-only playlist.
 - Keyboard shortcuts: pressing F2 will rename the highlighted playlist.
 - Keyboard shortcuts: pressing F3 will create a clone on UI of the highlighted playlist.
 - Keyboard shortcuts: pressing F4 load the highlighted playlist (or jump to it if it was already loaded).
 - Keyboard shortcuts: pressing F5 will create a copy of the highlighted playlist with same extension. AutoPlaylists, Smart Playlists and UI-only playlists will maintain their format.
+- Keyboard shortcuts: pressing F6 will export the highlighted playlist to ListenBrainz (+ Spotify if configured to do so).
 - Keyboard shortcuts: pressing F7 will create a new empty playlist.
 - Keyboard shortcuts: pressing F8 will delete the highlighted playlist.
+- Keyboard shortcuts: pressing F9 will filter the manager showing playlists with the selected tracks (if the search box and path searching are enabled) or show a popup with the results (otherwise).
+- Keyboard shortcuts: pressing F10 will open the settings menu or the list menu (when also pressing shift).
+- Keyboard shortcuts: pressing F11 will open the documentation (pdf).
+- Keyboard shortcuts: pressing F11 will open playlists tracked folder.
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
 - ListenBrainz: playlists can now be exported to Spotify (when exporting to ListenBrainz). Requires Spotify's service to be connected to the user profile, and \'Play music on ListenBrainz\' [enabled](https://listenbrainz.org/profile/music-services/details/).
@@ -80,7 +86,8 @@
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
 - UI: settings menu opening when clicking at blank space within the buttons toolbar at header instead of just the settings and power action buttons.
 - UI: incorrect settings for panel/buttons colors using dark mode in foobar2000.
-- UI: list view not maintaining current position at some instances. 'Online sync...'
+- UI: list view not maintaining current position at some instances. 'Online sync...'.
+- UI: focus was lost in some cases when editing an UI-only playlist.
 
 ## [0.5.0-beta.20] - 2023-05-16
 ### Added
