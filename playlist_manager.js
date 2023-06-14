@@ -214,7 +214,7 @@ var properties = {
 		}
 	})],
 	bSetup					: ['Setup mode', true, {func: isBoolean}, true],
-	iDoubleClickTimer		: ['Double click timer', 250, {func: isInt}, 250],
+	iDoubleClickTimer		: ['Double click timer', 375, {func: isInt}, 375],
 	rShortcuts				: ['R. click modifiers', JSON.stringify({
 		Ctrl:			'- None -',
 		Shift:			'Playlist\'s items menu',
@@ -222,7 +222,8 @@ var properties = {
 		'Single Click':	'Manage playlist'
 	})],
 	bSpotify				: ['ListenBrainz export to Spotify', true, {func: isBoolean}, true],
-	iTooltipTimer			: ['Tooltip timer', 250 * 3, {func: isInt}, 250 * 3],
+	iTooltipTimer			: ['Tooltip timer', 375 * 2, {func: isInt}, 375 * 2],
+	bGlobalShortcuts		: ['Enable FX global shortcuts', true, {func: isBoolean}, true],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
