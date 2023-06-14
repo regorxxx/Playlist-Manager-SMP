@@ -360,7 +360,7 @@ function createMenuLeft(forcedIndex = -1) {
 					}
 					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
 					if (list.properties.bSpotify[1]) {
-						lb.retrieveUser(token).then((user) => listenBrainz.getUserServices(user, token)).then((services) => {
+						lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
 							if (services.indexOf('spotify') !== -1) {
 								console.log('Exporting playlist to Spotify: ' + pls.name);
 								lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
@@ -2377,7 +2377,7 @@ function createMenuRightTop() {
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Shortcuts
 			const subMenuName = menu.newMenu('Shortcuts...', menuName);
-			{
+			{	// List L. Click
 				const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
 				const subMenuNameL = menu.newMenu('Left Click', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('L');
@@ -2412,7 +2412,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}});
 			}
-			{
+			{	// List R. Click
 				const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
 				const subMenuNameR = menu.newMenu('Right Click' + (bListButton ? '' : '\t(enable List Menu button)'), subMenuName, bListButton ? MF_STRING : MF_GRAYED)
 				const shortcuts =  list.getDefaultShortcuts('R');
@@ -2444,7 +2444,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}});
 			}
-			{
+			{	// List M. Click
 				const subMenuNameM = menu.newMenu('Middle Click', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('M');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
@@ -2476,7 +2476,7 @@ function createMenuRightTop() {
 				}});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			{
+			{	// Header L. Click
 				const subMenuNameL = menu.newMenu('Left Click (header)', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('L', 'HEADER');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
@@ -2509,7 +2509,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}});
 			}
-			{
+			{	// Header M. Click
 				const subMenuNameM = menu.newMenu('Middle Click (header)', subMenuName)
 				const shortcuts =  list.getDefaultShortcuts('M', 'HEADER');
 				const modifiers = shortcuts.options.map((_) => {return _.key;});
@@ -2542,13 +2542,36 @@ function createMenuRightTop() {
 				}});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{	// Keyboard
+				menu.newEntry({menuName: subMenuName, entryText: 'Enable F1-F8 keyboard actions', func: () => {
+					fb.ShowPopupMessage(
+						'- F1: Lock/unlock playlist file or UI-only playlist.\n' +
+						'- F2: Rename highlighted playlist.\n' +
+						'- F3: Clone in UI highlighted playlist.\n' +
+						'- F4: Load/show highlighted playlist\n' +
+						'- F5: Copy highlighted playlist. Maintains original format.\n' +
+						'- F6: Export playlist to ListenBrainz (+ Spotify).\n' +
+						'- F7: Add new (empty) playlist.\n' +
+						'- F8: Delete highlighted playlist.\n' +
+						'- F9: Filter/Search playlists with selected tracks\n' +
+						'- F10: Open Settings menu.\n' +
+						'- F10 + Shift: Open List menu.\n' +
+						'- F11: Open documentation.\n' +
+						'- F12: Open playlists tracked folder.'
+					, window.Name);
+					list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1]
+					overwriteProperties(list.properties);
+				}});
+				menu.newCheckMenu(subMenuName, 'Enable F1-F8 keyboard actions', void(0), () => list.properties.bGlobalShortcuts[1]);
+			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Double click timer...', func: () => {
 				let input = Input.number('int positive', list.iDoubleClickTimer, 'Enter ms:\nHigher values will delay more single clicking actions.', window.Name, 300);
 				if (input === null) {return;}
 				if (!Number.isFinite(input)) {return;}
 				list.iDoubleClickTimer = list.properties.iDoubleClickTimer[1] = input;
-				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x3)', 0, window.Name, popup.question + popup.yes_no) === popup.yes) {
-					list.properties.iTooltipTimer[1] = input * 3;
+				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x2)', 0, window.Name, popup.question + popup.yes_no) === popup.yes) {
+					list.properties.iTooltipTimer[1] = input * 2;
 					list.tooltip.SetDelayTime(0, list.properties.iTooltipTimer[1]); // TTDT_AUTOMATIC
 				}
 				overwriteProperties(list.properties);
