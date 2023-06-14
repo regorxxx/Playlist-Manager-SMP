@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//14/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -1136,7 +1136,7 @@ listenBrainz.exportPlaylistToService = function exportPlaylistToService(pls /*{p
 			return false;
 		},
 		(reject) => {
-			console.log('exportPlaylistToService: ' + pls + ' to ' + service + ' -> ' + reject.status + ' ' + reject.responseText);
+			console.log('exportPlaylistToService: ' + JSON.stringify(pls) + ' to ' + service + ' -> ' + reject.status + ' ' + reject.responseText);
 			return reject.status === 400;
 		}
 	);
