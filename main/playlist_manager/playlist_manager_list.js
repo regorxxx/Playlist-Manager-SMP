@@ -43,6 +43,7 @@ function _list(x, y, w, h) {
 	var currentItemPath = bMaintainFocus ? this.data[currentItemIndex].path : null;
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
 	var currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
+	var currentItemIsUI = bMaintainFocus ? this.data[currentItemIndex].extension === '.ui' : null;
 	var idxHighlight = -1;
 	var animation = {bHighlight: false, fRepaint: null};
 	
@@ -970,6 +971,7 @@ function _list(x, y, w, h) {
 		currentItemPath = item ? item.path : null;
 		currentItemNameId = item ? item.nameId : null;
 		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
+		currentItemIsUI = item ? item.extension === '.ui' : null;
 	}
 	
 	this.clearLastPosition = () => { // Clears position
@@ -983,6 +985,7 @@ function _list(x, y, w, h) {
 		currentItemPath = item ? item.path : null;
 		currentItemNameId = item ? item.nameId : null;
 		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
+		currentItemIsUI = item ? item.extension === '.ui' : null;
 		this.index = -1;
 		this.offset = 0;
 	}
@@ -1362,9 +1365,30 @@ function _list(x, y, w, h) {
 				const keyChar = keyCode(k);
 				// Shortcuts
 				if (this.trace(this.mx, this.my)) {
+					if (!this.properties.bGlobalShortcuts[1]) {return false;}
 					const z = this.index;
 					const pls = this.data[z];
 					switch (keyChar) {
+						case 'f1': // Lock/Unlock
+							if (z !== -1) {
+								if (pls.extension === '.ui') {
+									const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist'];
+									const index = plman.FindPlaylist(pls.nameId);
+									if (index === -1) {return false;}
+									const currentLocks = plman.GetPlaylistLockedActions(index) || [];
+									const lockName = plman.GetPlaylistLockName(index);
+									this.cacheLastPosition(z);
+									if (lockName === 'foo_spider_monkey_panel' || !lockName) {
+										if (currentLocks.length) {
+											plman.SetPlaylistLockedActions(index, []);
+										} else {
+											plman.SetPlaylistLockedActions(index, lockTypes);
+										}
+									}
+								} else {switchLock(this, z);}
+								return true;
+							}
+							return false;
 						case 'f2': // Rename
 							if (z !== -1) {
 								const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
@@ -1393,12 +1417,100 @@ function _list(x, y, w, h) {
 								return true;
 							}
 							return false;
+						case 'f6': // Export to ListenBrainz (move)
+							if (z !== -1) {
+								return checkLBToken()
+									.then(async (result) => {
+										if (!result) {return false;}
+										let bUpdateMBID = false;
+										let playlist_mbid = '';
+										const lb = listenBrainz;
+										const bLookupMBIDs = this.properties.bLookupMBIDs[1];
+										const token = this.properties.lBrainzToken[1].length > 0 ? lb.decryptToken({lBrainzToken: this.properties.lBrainzToken[1], bEncrypted: this.properties.lBrainzEncrypt[1]}) : null;
+										if (!token) {return false;}
+										if (pls.playlist_mbid.length) {
+											console.log('Syncing playlist with MusicBrainz: ' + pls.name);
+											playlist_mbid = await lb.syncPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
+											if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
+										} else {
+											console.log('Exporting playlist to MusicBrainz: ' + pls.name);
+											playlist_mbid = await lb.exportPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
+											if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
+										}
+										if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
+										if (this.properties.bSpotify[1]) {
+											lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
+												if (services.indexOf('spotify') !== -1) {
+													console.log('Exporting playlist to Spotify: ' + pls.name);
+													lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
+												}
+											});
+										}
+										if (bUpdateMBID && writablePlaylistFormats.has(pls.extension)) {setPlaylist_mbid(playlist_mbid, this, pls);}
+										return true;
+									});
+							}
+							return false;
 						case 'f7': // Add playlist (new)
 							this.add({bEmpty: true});
 							return true;
 						case 'f8': // Delete playlist (delete)
 							this.removePlaylist(z);
 							this.move(this.mx, this.my); // Update cursor
+							return true;
+						case 'f8': // Delete playlist (delete)
+							this.removePlaylist(z);
+							this.move(this.mx, this.my); // Update cursor
+							return true;
+						case 'f9': // Filter playlists with selected tracks / Search
+							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+							if (selItems && selItems.Count) {
+								if (this.searchInput && this.searchMethod.bPath) {
+									let search = '';
+									if (selItems.Count > 1 && list.searchMethod.bRegExp) {
+										const paths = selItems.GetLibraryRelativePaths().map((path) => path.split('\\').slice(-1)[0]).filter(Boolean);
+										search = '/' + paths.join('|') + '/i';
+										
+									} else {
+										search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
+									}
+									this.searchInput.text = search;
+									this.search();
+								} else {
+									const found = [];
+									for (let i = 0; i < this.itemsAll; i++) {
+										if (this.checkSelectionDuplicatesPlaylist({playlistIndex: i, bAlsoHidden: true})) {
+											found.push({name: this.dataAll[i].name, category: this.dataAll[i].category});
+										}
+									}
+									found.sort((a, b) => a.category.localeCompare(b.category));
+									for (let i = 0, prevCat = null; i < found.length; i++) {
+										if (prevCat !== found[i].category) {prevCat = found[i].category; found.splice(i, 0, found[i].category);}
+									}
+									for (let i = 0; i < found.length; i++) {
+										if (found[i].name) {
+											found[i] = '\t- ' + found[i].name;
+										} else {
+											found[i] = (found[i] || 'No category') + ':';
+										}
+									}
+									fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+								}
+								return true;
+							}
+							return false;
+						case 'f10': // Settings / List (+ Shift)
+							if (getKeyboardMask() === kMask.shift) {
+								createMenuRight().btn_up(this.mx, this.my);
+							} else {
+								createMenuRightTop().btn_up(this.mx, this.my);
+							}
+							return true;
+						case 'f11': // Help
+							createMenuRightTop().btn_up(this.mx, this.my, void(0), 'Open documentation...')
+							return true;
+						case 'f12': // Tracked folder
+							_explorer(this.playlistsPath);
 							return true;
 					}
 				}
@@ -2363,6 +2475,11 @@ function _list(x, y, w, h) {
 					// Offset is calculated simulating the wheel, so it moves to the previous location
 					if (currentItemIsAutoPlaylist) { // AutoPlaylists
 						if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
+							this.jumpToIndex(i);
+							break;
+						}
+					} else if (currentItemIsUI) {
+						if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) { 
 							this.jumpToIndex(i);
 							break;
 						}
