@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/06/23
+//15/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -46,6 +46,9 @@ function _list(x, y, w, h) {
 	var currentItemIsUI = bMaintainFocus ? this.data[currentItemIndex].extension === '.ui' : null;
 	var idxHighlight = -1;
 	var animation = {bHighlight: false, fRepaint: null};
+	var animationButtons = new Map(
+		/* buttonKey: {bHighlight: false, fRepaint: null} */
+	);
 	
 	// Helpers
 	const headerRe = /\n[-]*$/;
@@ -320,6 +323,7 @@ function _list(x, y, w, h) {
 				].filter((button) => button.parent).sort((a, b) => a.align === 'l' ? a.position - b.position : b.position - a.position);
 				let maxHeaderH = headerTextH;
 				if (buttons.length) {
+					// Position
 					buttons.forEach((button) => {
 						button.w = gr.CalcTextWidth(button.icon, gfontHeader),
 						button.h = gr.CalcTextHeight(button.icon, gfontHeader);
@@ -334,6 +338,27 @@ function _list(x, y, w, h) {
 						}
 						if (isFunction(button.y)) {button.y = button.y(button);}
 					});
+					// Check extra highlighting
+					buttons.forEach((button) => {
+						const parent = button.parent;
+						if (parent.highlighting) {
+							if (!animationButtons.has(parent)) {
+								animationButtons.set(parent, {bHighlight: false, fRepaint: null});
+							}
+							const animationButton = animationButtons.get(parent);
+							if (!parent.inFocus && !animationButton.fRepaint){
+								if (parent.highlighting(void(0), void(0), void(0), parent)) {
+									if (animationButton.bHighlight) {
+										animationButton.fRepaint = setTimeout(() => {animationButton.fRepaint = null; animationButton.bHighlight = false; window.RepaintRect(button.x, button.y, button.x + button.w, button.y + button.h)}, 600);
+									} else {
+										animationButton.fRepaint = setTimeout(() => {animationButton.fRepaint = null; animationButton.bHighlight = true; window.RepaintRect(button.x, button.y, button.x + button.w, button.y + button.h)}, 600);
+									}
+								} else {animationButton.bHighlight = false;}
+							} else if (parent.inFocus) {
+								animationButton.bHighlight = false;
+							}
+						}
+					});
 				}
 				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
 				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
@@ -345,11 +370,17 @@ function _list(x, y, w, h) {
 					// Buttons
 					gr.SetSmoothingMode(SmoothingMode.HighQuality);
 					buttons.forEach((button) => {
-						[button.parent.x, button.parent.y, button.parent.w, button.parent.h] = [button.x, button.y, button.w, button.h] // Update button coords
+						const parent = button.parent;
+						[parent.x, parent.y, parent.w, parent.h] = [button.x, button.y, button.w, button.h] // Update button coords
 						if (button.bgColor !== null) {
 							gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2) , _scale(2), _scale(2), button.bgColor);
 						}
-						gr.GdiDrawText(button.icon, gfontHeader, button.color, button.x, -2, button.w + _scale(1), maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX); // Add some extra width to avoid drawing bugs on small settings
+						const color = parent.highlighting && animationButtons.get(parent).bHighlight 
+							? blendColors(RGB(...toRGB(panel.colors.text)), invert(this.colors.selectedPlaylistColor), 0.8)
+							: parent.altColor && !parent.inFocus && parent.altColor(void(0), void(0), void(0), parent) 
+								? blendColors(RGB(...toRGB(panel.colors.text)), invert(this.colors.selectedPlaylistColor), 0.8)
+								: button.color;
+						gr.GdiDrawText(button.icon, gfontHeader, color, button.x, -2, button.w + _scale(1), maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX); // Add some extra width to avoid drawing bugs on small settings
 					})
 				}
 				// Text
@@ -775,7 +806,7 @@ function _list(x, y, w, h) {
 				const button = this.headerButtons[key];
 				if (this.traceHeaderButton(x, y, button)) {
 					if (!bDragDrop && bMoved) {window.SetCursor(IDC_HAND);}
-					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask) : button.text, true);
+					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask, button) : button.text, true);
 					button.inFocus = true;
 					bButtonTrace = true;
 				} else {
@@ -3226,6 +3257,24 @@ function _list(x, y, w, h) {
 		return this.disableAutosave.indexOf(nameId) === -1;
 	}
 	
+	this.checkTrackedFolderChanged = () => {
+		const test = new FbProfiler(window.Name + ': ' + 'checkTrackedFolderChanged');
+		const playlistPathArray = getFiles(this.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
+		const playlistPathArrayLength = playlistPathArray.length;
+		let bDone = false;
+		if (playlistPathArrayLength !== (this.getPlaylistNum())) {bDone = true;}
+		else {
+			let totalFileSize = 0;
+			for (let i = 0; i < playlistPathArrayLength; i++) {
+				totalFileSize += utils.GetFileSize(playlistPathArray[i]);
+				if (totalFileSize > this.totalFileSize) {break;}
+			}
+			if (totalFileSize !== this.totalFileSize) {bDone = true;}
+		}
+		// test.Print(); // TODO
+		return bDone;
+	}
+
 	this.init = () => {
 		
 		this.save = (bInit = false) => {
@@ -4249,10 +4298,12 @@ function _list(x, y, w, h) {
 			this.activePlsStartup = this.properties['activePlsStartup'][1];
 			this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 			this.bTracking = true;
+			this.trackedFolderChanged = false;
 		}
 		
 		this.manualRefresh = () => {
 			const test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+			this.trackedFolderChanged = false;
 			this.loadConfigFile();
 			const z = this.offset + Math.round(this.rows / 2 - 1);
 			this.cacheLastPosition(z);
@@ -4288,6 +4339,7 @@ function _list(x, y, w, h) {
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
 		if (this.activePlsStartup.length) {this.startupPlaylist();}
+		setInterval(() => {this.trackedFolderChanged = this.checkTrackedFolderChanged();}, Number(this.properties.autoUpdate[1]) || 5000);
 	}
 	
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
@@ -4400,6 +4452,7 @@ function _list(x, y, w, h) {
 	this.cacheLibTimer = null;
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	// Other
+	this.trackedFolderChanged = false;
 	this.bIsDragDrop = false;
 	this.dragDropText = '';
 	this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};
@@ -4411,13 +4464,13 @@ function _list(x, y, w, h) {
 	this.headerButtonsDef = {};
 	this.headerButtons = {
 		search: {
-			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => {
 					return (this.searchInput.text.length || this.isFilterActive('Playlist')
 						? 'Clear search\n----------------------------------------------\n(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
 						: 'Search settings...\n----------------------------------------------\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)') + (this.searchMethod.bPath 
 								? '\n(Drag n\' drop track(s) to copy filename(s))' 
 								: '');
-			}, func: (x, y, mask) => {
+			}, func: (x, y, mask, parent) => {
 				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
 					this.searchInput.on_key_down(VK_ESCAPE); 
 					this.search();
@@ -4429,28 +4482,64 @@ function _list(x, y, w, h) {
 			}
 		},
 		action: {
-			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => {
 				return 'Action button...\n----------------------------------------------\n' + this.headerTooltip(mask, true, true);
 			}, func: null
 		},
 		resetFilters: {
-			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask) => {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => {
 				const filters = this.getFilter(true);
+				const filterKeys = Object.keys(filters);
 				let info = 'Reset all filters...';
 				info += '\n----------------------------------------------\n';
-				info += Object.values(filters).some(Boolean) 
-					? 'Active:\t' + Object.keys(filters).joinEvery(', ', 3, '\n\t')
+				info += filterKeys.length 
+					? 'Active:\t' + filterKeys.joinEvery(', ', 3, '\n\t')
 					: 'No active filters.'
-				if (filters.Search && !list.searchMethod.bResetFilters) {
+				if (filters.Search && !this.searchMethod.bResetFilters) {
 					info += '\nSearch filter set to be ommited.';
 				}
 				return info;
-			}, func: this.resetFilter
+			}, func: this.resetFilter,
+			altColor: (x, y, mask, parent) => {
+				const filterKeys = Object.keys(this.getFilter(true));
+				return this.searchMethod.bResetFilters 
+					? filterKeys.length
+					: filterKeys.filter((key) => key !== 'Search').length;
+			}
 		},
-		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask) => createMenuRight().btn_up(x, y)},
-		settings: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Playlist Manager settings...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y)},
-		folder: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open playlists folder', func: (x, y, mask) => _explorer(this.playlistsPath)},
-		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...', func: (x, y, mask) => createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...')},
+		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask, parent) => createMenuRight().btn_up(x, y)},
+		settings: {
+			x: 0, y: 0, w: 0, h: 0,
+			inFocus: false,
+			text: (x, y, mask, parent) => {
+				return 'Playlist Manager settings...' + (
+					parent.highlighting(x, y, mask, parent)
+						? '\n----------------------------------------------\n' +
+							'Library has changed since tracking was disabled.\n' +
+							'Paths cache needs rebuilding.'
+						: ''
+				);
+			},
+			func: (x, y, mask, parent) => createMenuRightTop().btn_up(x, y),
+			highlighting: (x, y, mask, parent) => {
+				return this.bLibraryChanged && !this.bTracking;
+			}
+		},
+		folder: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false,
+			text: (x, y, mask, parent) => {
+				return 'Open playlists folder' + (
+					parent.highlighting(x, y, mask, parent)
+						? '\n----------------------------------------------\n' +
+							'Playlists tracked folder has new changes.\n' +
+							'Use manual refresh or enable auto-loading.'
+						: ''
+				);
+			},
+			func: (x, y, mask, parent) => _explorer(this.playlistsPath),
+			highlighting: (x, y, mask, parent) => this.trackedFolderChanged
+		},
+		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...', func: (x, y, mask, parent) => createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...')},
 	};
 	this.searchCurrent = '';
 	this.searhHistory = [];

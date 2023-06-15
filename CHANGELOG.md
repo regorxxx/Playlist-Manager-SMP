@@ -40,6 +40,9 @@
 - UI: added configurable R. click mouse actions (like the previous L. click and Middle click ones).
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
 - UI: added configurable timer for tooltip (on properties panel). By default is now 2 times the double clicking timer, also if changed, a popup will ask to update its value.
+- UI: settings header button is now animated when library tracking has been disabled and path cache needs to be rebuilt.
+- UI: folder header button is now animated when tracked playlists folder contains new changes. In case auto-loading has been disabled, it can be used as a warning to know when manual refresh is needed.
+- UI: filter header button is now highlighted whenever a filter is active, It follows the 'Also reset search filter' setting, thus not being highlighted while using the search filter if it's disabled.
 - Drag and Drop: added tooltip on drag n drop giving hints about the action used: sending to new playlist, to selected playlist, to search box, ...
 - Keyboard shortcuts: pressing F1 will lock / unlock the highlighted playlist file or UI-only playlist.
 - Keyboard shortcuts: pressing F2 will rename the highlighted playlist.

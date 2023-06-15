@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/06/23
+//15/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -358,30 +358,15 @@ if (!list.properties.bSetup[1]) {
 	const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
 	function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 	function autoUpdate() {
-		const playlistPathArray = getFiles(list.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
-		const playlistPathArrayLength = playlistPathArray.length;
-		if (playlistPathArrayLength !== (list.getPlaylistNum())) { // Most times that's good enough. Count total items minus virtual playlists
+		let bDone = list.trackedFolderChanged;
+		if (bDone) {
 			if (!pop.isEnabled()) {pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.');}
 			const z = list.offset + Math.round(list.rows / 2 - 1);
 			list.cacheLastPosition(z);
 			list.update(false, true, z);
-			list.filter(); // Maintains focus on last selected item
+			list.filter(); // Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
 			setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
 			return true;
-		} else { // Otherwise check size
-			let totalFileSize = 0;
-			for (let i = 0; i < playlistPathArrayLength; i++) {
-				totalFileSize += utils.GetFileSize(playlistPathArray[i]);
-			}
-			if (totalFileSize !== list.totalFileSize) { // User may have replaced a file with foobar2000 executed
-				if (!pop.isEnabled()) {pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.');}
-				const z = list.offset + Math.round(list.rows / 2 - 1);
-				list.cacheLastPosition(z);
-				list.update(false, true, z);
-				list.filter(); // Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
-				setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
-				return true;
-			}
 		}
 		return false;
 	}
