@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//16/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -11,6 +11,7 @@ const youtube = {
 	key: new SimpleCrypto('xxx').decrypt('2bb4f0f02b806d21c6845503a2a7217144fd704bc2f5575c321492466bd126bbczJl0PQ45sUqh6aFpWaHzIq4SFOZiZlgCWF6n0TK2Lw1YweE7OU0/OpN358conVS56fcf54cc4120a2f24b985f5e6b496c57c24908b5a0cde72d8bda082efb3ed43')
 };
 
+// Tags object should only contain one value per tag.Multi-valued tags are encoded with '; ' as separator.
 youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => {return void(0);}} = {}) {
 	const id = creator.toLowerCase() + ' ' + title.toLowerCase();
 	const regex = /MUSICBRAINZ_TRACKID/gi;
@@ -19,8 +20,15 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 	const ytItem = youtube.cache.get(mbid || id) || null;
 	// Add tags from input
 	if (tags && ytItem) {
-		ytItem.url += Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join('');
-		for (let key in tags) {ytItem[key] = tags[key];}
+		ytItem.url += Object.entries(tags).map((entry) => {
+			if (typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') {return null;}
+			const tagVal = Array.isArray(entry[1]) ? entry[1].join('; ') : entry[1].toString();
+			return tagVal.length ? '&fb2k_' + entry[0] + '=' + encodeURIComponent(tagVal) : null;
+		}).filter(Boolean).join('');
+		for (let key in tags) {
+			if (typeof tags[key] === 'undefined' || tags[key] === null || tags[key] === '' || (Array.isArray(tags[key]) && !tags[key].length)) {continue;}
+			ytItem[key] = tags[key];
+		}
 	}
 	// Retrieve cached item or new one
 	return ytItem || await send({ 
@@ -73,8 +81,8 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 				if (videos.length) {
 					// Find best matches
 					const conditions = [
-						{re: new RegExp('.*' + escapeRegExpV2(title) + '.*', 'i'), match: true, score: 35},
-						{re: new RegExp('.*' + escapeRegExpV2(creator) + '.*', 'i'), match: true, score: 35},
+						{re: new RegExp('.*' + escapeRegExp(title) + '.*', 'i'), match: true, score: 35}, // V2 escape sometimes fail...
+						{re: new RegExp('.*' + escapeRegExp(creator) + '.*', 'i'), match: true, score: 35},
 						{re: new RegExp('.*(live|bootleg|cover|karaoke|performed by).*', 'i'), match: false, score: 30},
 					];
 					videos.forEach((vid) => {
@@ -108,8 +116,13 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({title, cre
 					if (mbid && !youtube.cache.has(mbid)) {youtube.cache.set(mbid, ytItem);}
 					// Add tags from input
 					if (tags) {
-						ytItem.url += Object.entries(tags).map((entry) => '&fb2k_' + entry[0] + '=' + encodeURIComponent(entry[1])).join('');
+						ytItem.url += Object.entries(tags).map((entry) => {
+							if (typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') {return null;}
+							const tagVal = Array.isArray(entry[1]) ? entry[1].join('; ') : entry[1].toString();
+							return tagVal.length ? '&fb2k_' + entry[0] + '=' + encodeURIComponent(tagVal) : null;
+						}).filter(Boolean).join('');
 						for (let key in tags) {
+							if (typeof tags[key] === 'undefined' || tags[key] === null || tags[key] === '' || (Array.isArray(tags[key]) && !tags[key].length)) {continue;}
 							ytItem[key] = tags[key];
 						}
 					}

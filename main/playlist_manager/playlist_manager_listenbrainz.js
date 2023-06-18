@@ -1,14 +1,15 @@
 ﻿'use strict';
-//14/06/23
+//16/06/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 include('..\\..\\helpers\\helpers_xxx_web.js');
+include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
 
 const listenBrainz = {
-	regEx: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g,
+	regEx: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|(artist)|\//g,
 	bProfile: false,
 	cache: {
 		user: new Map(),
@@ -676,7 +677,7 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 	if (!count) {console.log('lookupRecordingInfoByMBIDs: no MBIds provided'); return Promise.resolve({});}
 	const allInfo = [
 		'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 
-		'artist_credit_name', 'artist_credit_mbids', 
+		'artist_credit_name', '[artist_credit_mbids]', 
 		'canonical_recording_mbid', 'original_recording_mbid'
 	];
 	if (!infoNames || !infoNames.length) {infoNames = allInfo;}
@@ -708,7 +709,7 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 
 // To use along listenBrainz.retrieveSimilarArtists (unstable API)
 listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, bReleaseGroup = false) {
-	const data = tagsArr.map((tag) => {return {"[tag]": tag};}); // [{"[tag]": "rock"}, ...]
+	const data = tagsArr.map((tag) => {return {"[tag]": tag, operator: 'and', threshold: '4'};}); // [{"[tag]": "rock", "operator": "and", "threshold": "4"}, ...]
 	return send({
 		method: 'POST', 
 		URL: (bReleaseGroup ? 'https://datasets.listenbrainz.org/recording-from-rg-tag/json' : 'https://datasets.listenbrainz.org/recording-from-tag/json'),
@@ -748,7 +749,7 @@ listenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', par
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response.hasOwnProperty('payload') && response.payload.hasOwnProperty('recordings')) {
-					return response.payload.recordings;
+					return response.payload.recordings; /* {artist_mbids: [], artist_name, caa_id, caa_release_mbid, listen_count, recording_mbid, release_mbid, release_name, track_name} */
 				}
 				return [];
 			}
@@ -936,7 +937,8 @@ listenBrainz.retrieveSimilarUsers = function retrieveSimilarUsers(user, token, i
 /*
 	Content resolver by MBID
 */
-listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = globQuery.remDuplBias) {
+// Recommended filter: NOT (%RATING% EQUAL 1 OR %RATING% EQUAL 2) AND NOT (GENRE IS live OR STYLE IS live)
+listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = globQuery.remDuplBias, bOnlyMBID = false) {
 	if (!jspf) {return null;}
 	const profiler = this.bProfile ? new FbProfiler('listenBrainz.contentResolver') : null;
 	// Query cache (Library)
@@ -949,19 +951,31 @@ listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 	const rows = playlist.track;
 	const rowsLength = rows.length;
 	const lookupKeys = [{xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}, {xspfKey: 'title', queryKey: 'TITLE'}, {xspfKey: 'creator', queryKey: 'ARTIST'}];
-	const conditions = [['MUSICBRAINZ_TRACKID'], ['TITLE','ARTIST'], ['TITLE']];
-	const libItems = checkQuery(filter, false) ? fb.GetQueryItems(fb.GetLibraryItems(), filter) : fb.GetLibraryItems();
+	const conditions = bOnlyMBID ? [['MUSICBRAINZ_TRACKID']] : [['MUSICBRAINZ_TRACKID'], ['TITLE','ARTIST'], ['TITLE']];
+	const libItems = checkQuery(filter, false) // Filtering can easily speedup the entire process up to 50%
+		? fb.GetQueryItems(fb.GetLibraryItems(), filter + (bOnlyMBID ? ' AND MUSICBRAINZ_TRACKID PRESENT' : '')) 
+		: bOnlyMBID 
+			? fb.GetQueryItems(fb.GetLibraryItems(), 'MUSICBRAINZ_TRACKID PRESENT')
+			: fb.GetLibraryItems();
 	const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 	for (let i = 0; i < rowsLength; i++) {
+		const row = rows[i];
+		const rowExt = row.extension['https://musicbrainz.org/doc/jspf#track'];
 		let query = '';
 		let lookup = {};
 		let identifier = '';
+		const artistIndentifier = rowExt.hasOwnProperty('artist_identifiers') && rowExt.artist_identifiers && rowExt.artist_identifiers.length
+			? rowExt.artist_identifiers.map((val) => decodeURI(val).replace(this.regEx,''))
+			: [''];
 		lookupKeys.forEach((look) => {
 			const key = look.xspfKey;
 			const queryKey = _q(sanitizeTagIds(_t(look.queryKey)));
-			if (rows[i].hasOwnProperty(key) && rows[i][key] && rows[i][key].length) {
-				if (key === 'identifier') {identifier = decodeURI(rows[i][key]).replace(this.regEx,'');}
-				lookup[look.queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : rows[i][key]);
+			if (row.hasOwnProperty(key)) {
+				const value = row[key];
+				if (value && value.length) {
+					if (key === 'identifier') {identifier = decodeURI(value).replace(this.regEx,'');}
+					lookup[look.queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : value);
+				}
 			}
 		});
 		for (let condition of conditions) {
@@ -977,7 +991,7 @@ listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 				}
 			}
 		}
-		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier});}
+		if (!handleArr[i]) {notFound.push({creator: rows[i].creator, title: rows[i].title, identifier /* str */, artistIndentifier /* [str, ...]*/});}
 	}
 	if (notFound.length) {console.log('Some tracks have not been found on library:\n\t' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t'));}
 	if (this.bProfile) {profiler.Print('');}
@@ -1011,7 +1025,7 @@ listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 	);
 };
 
-listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
+listenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = true) {
 	if (!token || !token.length) {console.log('retrieveUserResponse: no token provided'); return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
@@ -1022,7 +1036,7 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token) {
 			return JSON.parse(resolve);
 		},
 		(reject) => {
-			console.log('retrieveUser: ' + JSON.stringify(reject));
+			if (bLog) {console.log('retrieveUser: ' + JSON.stringify(reject));}
 			return null;
 		}
 	);
