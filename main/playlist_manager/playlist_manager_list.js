@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/06/23
+//19/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -3183,7 +3183,7 @@ function _list(x, y, w, h) {
 									}
 								} else {bDone = true;}
 								if (!bDone) {
-									fb.ShowPopupMessage('Error renaming playlist file: ' + oldNameId + ' --> ' + newNameId + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);
+									fb.ShowPopupMessage('Error editing playlist file: ' + oldNameId + ' --> ' + newNameId + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
 									_renameFile(backPath, path); // Restore backup in case something goes wrong
 									console.log('Playlist manager: Restoring backup...');
 								} else {
