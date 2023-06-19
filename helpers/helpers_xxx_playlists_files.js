@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/23
+//19/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -64,7 +64,7 @@ const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
 function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false}) {
-	if (!playlistIndex && !handleList) {return false;}
+	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) {console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', ' + !!handleList)); return false;}
 	const extension = ext.toLowerCase();
 	if (!writablePlaylistFormats.has(extension)){
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
