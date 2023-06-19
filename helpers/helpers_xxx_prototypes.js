@@ -101,7 +101,15 @@ Object.defineProperty(Object.prototype, 'toStr', {
 	configurable: false,
 	value: function toStr({bClosure = false, bCapitalizeKeys = false, separator = ', '} = {}) {
 		return (bClosure ? '{' : '') + Object.entries(this).map((entry) => {
-			return (typeof entry[0] === 'object' ? entry[0].toStr() : bCapitalizeKeys ? capitalize(entry[0].toString()) : entry[0].toString()) + ': ' + (typeof entry[1] === 'object' ? entry[1].toStr() : entry[1].toString());
+			return (typeof entry[0] === 'object' 
+				? entry[0].toStr() 
+				: bCapitalizeKeys 
+					? capitalize(entry[0].toString()) 
+					: entry[0].toString()
+			) + ': ' + (typeof entry[1] === 'object' 
+					? entry[1] === null ? 'null' : entry[1].toStr() 
+					: entry[1].toString()
+			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
@@ -153,6 +161,17 @@ Function.prototype.applyInChunks = function applyInChunks() {
 		result[i] = this.apply(null, subResult);
 	}
 	return this.apply(null, result);
+}
+
+// JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
+function $args(func) {
+	return (func + '')
+		.replace(/[/][/].*$/mg,'') // strip single-line comments
+		.replace(/\s+/g, '') // strip white space
+		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments  
+		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters  
+		.replace(/=[^,]+/g, '') // strip any ES6 defaults  
+		.split(',').filter(Boolean); // split & filter [""]
 }
 
 /* 

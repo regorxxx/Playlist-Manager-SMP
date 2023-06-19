@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/06/23
+//19/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -476,7 +476,7 @@ if (!list.properties.bSetup[1]) {
 		if (buttonsPanel.curBtn === null) {
 			list.move(x, y, mask, bDragDrop);
 		} else {
-			list.move(-1, -1);
+			list.move(-1, -1, void(0), void(0), true);
 			list.up_btn.hover = false;
 			list.down_btn.hover = false;
 		}
@@ -522,11 +522,13 @@ if (!list.properties.bSetup[1]) {
 		on_paint_buttn(gr);
 		list.paint(gr);
 		if (scroll) {
-			scroll.rows = Math.max(list.items - list.rows, 1);
+			scroll.rows = Math.max(list.items - list.rows, 0);
 			scroll.rowsPerPage = list.rows;
-			scroll.size = Math.max(Math.round(scroll.h / (scroll.rows || 1)), _scale(14));
 			scroll.currRow = list.offset;
-			if (scroll.rows > 1) {scroll.paint(gr);}
+			if (scroll.rows >= 1) {
+				scroll.size = Math.max(Math.round(scroll.h / (scroll.rows === 1 ? 2 : scroll.rows)), _scale(14));
+				scroll.paint(gr);
+			}
 		}
 		pop.paint(gr);
 	});
@@ -853,9 +855,10 @@ if (!list.properties.bSetup[1]) {
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none) {return;}
 		if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return;}
-		if (plman.ActivePlaylist !== -1) {
+		const oldIdx = plman.ActivePlaylist;
+		if (oldIdx !== -1) {
 			if (list.searchInput && list.searchMethod.bPath && list.searchInput.trackCheck(x, y)) {
-				const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+				const selItems = plman.GetPlaylistSelectedItems(oldIdx);
 				if (selItems && selItems.Count) {
 					let search = '';
 					if (selItems.Count > 1 && list.searchMethod.bRegExp) {
@@ -870,8 +873,7 @@ if (!list.properties.bSetup[1]) {
 				}
 			} else {
 				if ((mask & 32) === 32 || list.index === -1) { // Create new playlist when pressing alt
-					const oldIdx = plman.ActivePlaylist;
-					const pls = list.add({bEmpty: true});
+					const pls = list.add({bEmpty: true, name: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10), bInputName: true});
 					if (pls) {
 						const playlistIndex = list.getPlaylistsIdxByName([pls.name])[0];
 						const newIdx = plman.ActivePlaylist;

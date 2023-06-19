@@ -794,7 +794,7 @@ function _list(x, y, w, h) {
 		window.Repaint();
 	}
 	
-	this.move = (x, y, mask, bDragDrop = false) => {
+	this.move = (x, y, mask, bDragDrop = false, bTooltipOverride = false) => {
 		this.bIsDragDrop = bDragDrop;
 		this.bMouseOver = true;
 		const bMoved = this.mx !== x || this.my !== y;
@@ -956,7 +956,7 @@ function _list(x, y, w, h) {
 								if (pls.extension === '.xsp' && pls.type !== 'songs') {warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.';}
 								if (warningText.length) {playlistDataText += '\n' + warningText;}
 								if (this.tooltip.text !== playlistDataText) {
-									this.tooltip.Deactivate();
+									if (bMoved) {this.tooltip.Deactivate();}
 									this.tooltip.SetValue(playlistDataText, true);
 								} else {
 									this.tooltip.SetValue(playlistDataText, true);
@@ -983,7 +983,7 @@ function _list(x, y, w, h) {
 		} else {
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
-			this.tooltip.SetValue(null); // Removes tt when not over a list element
+			if (!bTooltipOverride) {this.tooltip.SetValue(null);} // Removes tt when not over a list element
 			this.index = -1;
 			window.Repaint(); // Removes selection indicator
 			return false;
@@ -1867,7 +1867,7 @@ function _list(x, y, w, h) {
 	
 	this.checkSelectionDuplicatesPlaylist = ({playlistIndex, bAlsoHidden = false} = {}) => {
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
-			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+			console.log('Playlist Manager: Error checking duplicates. Index '+ _p(playlistIndex) + ' out of bounds. (checkSelectionDuplicatesPlaylist)');
 			return false;
 		}
 		const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
@@ -1906,7 +1906,7 @@ function _list(x, y, w, h) {
 	
 	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false} = {}) => {
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
-			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+			console.log('Playlist Manager: Error adding tracks to playlist. Index '+ _p(playlistIndex) + ' out of bounds. (sendSelectionToPlaylist)');
 			return false;
 		}
 		if (plman.ActivePlaylist === -1) {return;}
@@ -1965,11 +1965,11 @@ function _list(x, y, w, h) {
 	
 	this.addTracksToPlaylist = ({playlistIndex, handleList, bAlsoHidden = false, bPaint = true} = {}) => { // Sends tracks to playlist file directly
 		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
-			console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+			console.log('Playlist Manager: Error adding tracks to playlist. Index '+ _p(playlistIndex) + ' out of bounds. (addTracksToPlaylist)');
 			return false;
 		}
 		if (typeof handleList === 'undefined' || handleList === null || handleList.Count === 0) {
-				console.log('Playlist Manager: Error adding tracks to playlist. Handle list has no tracks.');
+				console.log('Playlist Manager: Error adding tracks to playlist. Handle list has no tracks. (addTracksToPlaylist)');
 			return false;
 		}
 		const pls =  bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
@@ -1985,7 +1985,12 @@ function _list(x, y, w, h) {
 		if (pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf') {_copyFile(playlistPath, backPath);}
 		let done = bUI ? true : addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 		if (!done) {
-			fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
+			fb.ShowPopupMessage(
+				'Playlist generation failed while writing file:\n' + playlistPath + 
+				'\n\nTrace:' + 
+				'\nadd' + _p({playlistIndex, handleList, bAlsoHidden, bPaint}.toStr()) +
+				'\n\naddHandleToPlaylist' + _p({handleList, playlistPath, relativePath: (this.bRelativePath ? this.playlistsPath : ''), bBOM: this.bBOM}.toStr())
+			, window.Name);
 			_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 			return false;
 		} else if (_isFile(backPath)) {_deleteFile(backPath);}
@@ -2226,7 +2231,12 @@ function _list(x, y, w, h) {
 						const extension = this.bSavingDefExtension || plsData.extension === '.fpl' ? this.playlistsExtension : plsData.extension;
 						let done = savePlaylist({playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, author: plsData.author, description: plsData.description, bBom: this.bBOM});
 						if (!done) {
-							fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
+							fb.ShowPopupMessage(
+								'Playlist generation failed while writing file:\n' + playlistPath + 
+								'\n\nTrace:' + 
+								'\nupdatePlaylist' + _p({playlistIndex, bCallback, bForceLocked}.toStr()) +
+								'\n\nsavePlaylist' + _p({playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, author: plsData.author, description: plsData.description, bBom: this.bBOM}.toStr())
+								, window.Name);
 							_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
 							return false;
 						}
@@ -3031,7 +3041,6 @@ function _list(x, y, w, h) {
 				}
 				// Perform Auto-Tags actions
 				if (this.bApplyAutoTags) {
-					if (item.tags.indexOf('bAutoLoad') !== -1) {this.loadPlaylist(z);}
 					if (item.tags.indexOf('bAutoLock') !== -1) {item.isLocked = true;}
 				}
 			});
@@ -3535,14 +3544,14 @@ function _list(x, y, w, h) {
 			return objectPlaylist;
 		}
 		
-		this.add = ({bEmpty = true, name = '', bShowPopups = true} = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
+		this.add = ({bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length} = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
 			if (!bEmpty && plman.ActivePlaylist === -1) {return;}
 			const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 			const oldName = removeIdFromStr(oldNameId);
 			let input = name || '';
-			if (!input.length) {
+			if (bInputName) {
 				let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
-				try {input = utils.InputBox(window.ID, boxText, window.Name, bEmpty ? '' : oldName, true);} 
+				try {input = utils.InputBox(window.ID, boxText, window.Name, (bEmpty ? '' : oldName) || input, true);} 
 				catch(e) {return false;}
 				if (!input.length) {return false;}
 			}
@@ -3618,7 +3627,12 @@ function _list(x, y, w, h) {
 						});
 					}
 				} else {
-					console.popup('Playlist generation failed while writing file \'' + oPlaylistPath + '\'.', window.Name, bShowPopups);
+					console.popup(
+						'Playlist generation failed while writing file:\n' + oPlaylistPath +
+						'\n\nTrace:' +
+						'\nadd' + _p({bEmpty, name, bShowPopups, bInputName}.toStr()) + 
+						 '\n\nsavePlaylist' + _p({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM}.toStr())
+					, window.Name, bShowPopups);
 					return false;
 				}
 			} else {console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups); return false;}
@@ -3633,7 +3647,7 @@ function _list(x, y, w, h) {
 		
 		this.loadPlaylistOrShow = (idx, bAlsoHidden = false) => {
 			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+				console.log('Playlist Manager: Error loading/showing playlist. Index '+ _p(idx) + ' out of bounds. (loadPlaylistOrShow)');
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
@@ -3650,7 +3664,7 @@ function _list(x, y, w, h) {
 		
 		this.loadPlaylist = (idx, bAlsoHidden = false) => {
 			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+				console.log('Playlist Manager: Error loading playlist. Index '+ _p(idx) + ' out of bounds. (loadPlaylist)');
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
@@ -3772,7 +3786,7 @@ function _list(x, y, w, h) {
 		
 		this.showBindedPlaylist = (idx, bAlsoHidden = false) => {
 			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+				console.log('Playlist Manager: Error showing playlist. Index '+ _p(idx) + ' out of bounds. (showBindedPlaylist)');
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
@@ -3783,7 +3797,7 @@ function _list(x, y, w, h) {
 		
 		this.removePlaylist = (idx, bAlsoHidden = false) => {
 			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error adding tracks to playlist. Index out of bounds.');
+				console.log('Playlist Manager: Error removing playlist. Index '+ _p(idx) + ' out of bounds. (removePlaylist)');
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
@@ -4546,6 +4560,13 @@ function _list(x, y, w, h) {
 	this.searchInput = null;
 	callbacksListener.listenNames = this.bDynamicMenus;
 	this.init();
+	if (this.bApplyAutoTags && this.itemsAll) {
+		setTimeout(() => {
+			this.dataAll.forEach((item, z) => {
+				if (item.tags.indexOf('bAutoLoad') !== -1) {this.loadPlaylist(z, true);}
+			});
+		}, 300);
+	}
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process
