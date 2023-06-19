@@ -43,6 +43,7 @@
 - UI: settings header button is now animated when library tracking has been disabled and path cache needs to be rebuilt.
 - UI: folder header button is now animated when tracked playlists folder contains new changes. In case auto-loading has been disabled, it can be used as a warning to know when manual refresh is needed.
 - UI: filter header button is now highlighted whenever a filter is active, It follows the 'Also reset search filter' setting, thus not being highlighted while using the search filter if it's disabled.
+- UI: added new menu entry to create a playlist from current selection (which does the same than drag n' drop + ALT).
 - Drag and Drop: added tooltip on drag n drop giving hints about the action used: sending to new playlist, to selected playlist, to search box, ...
 - Keyboard shortcuts: pressing F1 will lock / unlock the highlighted playlist file or UI-only playlist.
 - Keyboard shortcuts: pressing F2 will rename the highlighted playlist.
@@ -73,6 +74,7 @@
 - XSPF: optimizations finding tracks on library.
 - Playlist formats: creation and last modified date values are calculated when loading the playlist files, and cached during the entire session. Sorting by date is now much faster.
 - Drag and Drop: sending tracks to blank space or list menu button (plus shape) will create a new playlist.
+- UI: renamed some menu entries for playlist creation.
 - UI: R. clicking now opens the contextual menu for the selected playlists (previously on L. Click). Shift + R. Clicking opens the playlist's items native contextual menu.
 - UI: L. single click action is now configurable. 
 - UI: 'Send selection to playlist' now creates a backup before editing the playlist file (to restore it in case it fails).
@@ -84,6 +86,7 @@
 - UI: now applies configurable playlist menus when using multiple selection.
 - UI: clicking anywhere on scrollbar will move list up/down depending on relative position, up to the current mouse position (mimics Win behavior).
 - Console: improved console logging for empty playlists (no longer reporting 0 items found).
+- Console: improved error logging at multiple places.
 ### Removed
 ### Fixed
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
@@ -91,6 +94,9 @@
 - UI: incorrect settings for panel/buttons colors using dark mode in foobar2000.
 - UI: list view not maintaining current position at some instances. 'Online sync...'.
 - UI: focus was lost in some cases when editing an UI-only playlist.
+- UI: scrollbar not working properly when list exceeded current window size by one row.
+- Auto-Functions: fix 'bAutoLoad' improper loading in some cases.
+- Error while saving a playlist which was the first one on UI.
 
 ## [0.5.0-beta.20] - 2023-05-16
 ### Added
