@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/06/23
+//19/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -902,19 +902,33 @@ function createMenuRight() {
 	const lb = listenBrainz;
 	// Entries
 	{ // New Playlists
-		menu.newEntry({entryText: 'Add new empty playlist file...', func: () => {list.add({bEmpty: true});}});
-		menu.newEntry({entryText: 'Add new AutoPlaylist...', func: () => {list.addAutoplaylist();}});
-		menu.newEntry({entryText: 'Add new Smart Playlist...', func: () => {list.addSmartplaylist();}});
+		menu.newEntry({entryText: 'New playlist file...', func: () => {list.add({bEmpty: true});}});
+		menu.newEntry({entryText: 'New AutoPlaylist...', func: () => {list.addAutoplaylist();}});
+		menu.newEntry({entryText: 'New Smart Playlist...', func: () => {list.addSmartplaylist();}});
 		menu.newEntry({entryText: 'sep'});
-		menu.newEntry({entryText: 'Create new playlist file from active playlist...', func: () => {list.add({bEmpty: false});}});
-		if (plman.IsAutoPlaylist(plman.ActivePlaylist)) {
-			menu.newEntry({entryText: 'Create new AutoPlaylist from active playlist...', func: () => {
+		menu.newEntry({entryText: 'New playlist from active...', func: () => {list.add({bEmpty: false});}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
+		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
+			menu.newEntry({entryText: 'New AutoPlaylist from active ...', func: () => {
 				const pls = {name: plman.GetPlaylistName(plman.ActivePlaylist)};
 				plman.ShowAutoPlaylistUI(plman.ActivePlaylist); // Workaround to not being able to access AutoPlaylist data... user must copy/paste
 				list.addAutoplaylist(pls, true);
-			}});
+			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 		}
-		menu.newEntry({entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
+		menu.newEntry({entryText: 'New playlist from selection...', func: () => {
+			const oldIdx = plman.ActivePlaylist;
+			if (oldIdx === -1) {return;}
+			const pls = list.add({bEmpty: true, name: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10), bInputName: true});
+			if (pls) {
+				const playlistIndex = list.getPlaylistsIdxByName([pls.name])[0];
+				const newIdx = plman.ActivePlaylist;
+				plman.ActivePlaylist = oldIdx;
+				const bSucess = list.sendSelectionToPlaylist({playlistIndex, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: false});
+				// Don't reload the list but just paint with changes to avoid jumps
+				list.showPlsByIdx(playlistIndex);
+				plman.ActivePlaylist = newIdx;
+			}
+		}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
+		menu.newEntry({entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 			if (!await checkLBToken()) {return Promise.resolve(false);}
 			let bDone = false;
 			let playlist_mbid = '';
@@ -1179,7 +1193,7 @@ function createMenuRight() {
 	menu.newEntry({entryText: 'sep'});
 	{
 		// Playlist errors
-		const subMenuName = menu.newMenu('Playlists maintenance tools...');
+		const subMenuName = menu.newMenu('Playlists maintenance tools');
 		menu.newEntry({menuName: subMenuName, entryText: 'Perform checks on all playlists:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		{	// Absolute/relative paths consistency
