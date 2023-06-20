@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/23
+//20/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -3575,7 +3575,7 @@ function _list(x, y, w, h) {
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
-				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
+				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ?  new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
 				if (done) {
 					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
 					const now = Date.now();
@@ -3631,7 +3631,7 @@ function _list(x, y, w, h) {
 						'Playlist generation failed while writing file:\n' + oPlaylistPath +
 						'\n\nTrace:' +
 						'\nadd' + _p({bEmpty, name, bShowPopups, bInputName}.toStr()) + 
-						 '\n\nsavePlaylist' + _p({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM}.toStr())
+						 '\n\nsavePlaylist' + _p({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ?  'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM}.toStr())
 					, window.Name, bShowPopups);
 					return false;
 				}

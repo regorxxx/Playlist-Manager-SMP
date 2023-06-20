@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//20/06/23
 
 /* 
 	Objects
@@ -108,7 +108,7 @@ Object.defineProperty(Object.prototype, 'toStr', {
 					: entry[0].toString()
 			) + ': ' + (typeof entry[1] === 'object' 
 					? entry[1] === null ? 'null' : entry[1].toStr() 
-					: entry[1].toString()
+					:  typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
 			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
