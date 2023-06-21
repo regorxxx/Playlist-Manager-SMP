@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/03/23
+//21/06/23
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
@@ -142,7 +142,7 @@ const Input = Object.seal(Object.freeze({
 		if (!types.has(type)) {throw new Error('Invalid type: ' + type);}
 		let input, newVal;
 		let uOldVal = null;
-		if (type === 'unicode') {uOldVal = oldVal.codePointAt(0).toString(16);}
+		if (type === 'unicode') {uOldVal = oldVal.split(' ').map((s) =>  s !== '' ? s.codePointAt(0).toString(16) : '').join(' ');}
 		try {
 			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true);
 			if (input === null || typeof input === 'undefined') {throw new Error('Invalid type');}
@@ -152,9 +152,9 @@ const Input = Object.seal(Object.freeze({
 					if (bFilterEmpty && !newVal.length) {throw new Error('Empty')}
 					break;
 				}
-				case 'unicode': {
+				case 'unicode': { // https://www.rapidtables.com/code/text/unicode-characters.html
 					if (bFilterEmpty && !newVal.length) {throw new Error('Empty')}
-					newVal = String.fromCharCode(parseInt(newVal, 16));
+					newVal = newVal.split(' ').map((s) => s !== '' ? String.fromCharCode(parseInt(s, 16)) : '').join(' ');
 					break;
 				}
 			}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/23
+//21/06/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -242,15 +242,24 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		if (isFunction(menuName)) {menuName = menuName();}
 		if (isFunction(entryTextA)) {entryTextA = entryTextA();}
 		const entryNameA = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextA : entryTextA;
+		const idxA =  this.getIdx(entryNameA);
+		if (typeof idxA === 'undefined' || idxA === null) {console.log('this.checkMenu: entryA not found -> ' + entryNameA);}
 		if (entryTextB) { // Radio check
 			if (isFunction(entryTextB)) {entryTextB = entryTextB();}
 			const entryNameB = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextB : entryTextB;
 			checkMenuMap.set(menuName, () => {
-				return menuMap.get(menuName).CheckMenuRadioItem(this.getIdx(entryNameA), this.getIdx(entryNameB), this.getIdx(entryNameA) + idxFunc());
+				const idxB =  this.getIdx(entryNameB);
+				if (typeof idxB === 'undefined' || idxB === null) {console.log('this.checkMenu: entryB not found -> ' + entryNameB);}
+				const delta = idxFunc();
+				if (typeof delta !== 'number') {console.log('this.checkMenu: idxFunc not a number -> ' + menuName + ' -> ' + delta);}
+				if ((idxA + delta) > idxB) {console.log('this.checkMenu: idxA + idxFunc over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta);}
+				return menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta);
 			});
 		} else { // Item check
 			checkMenuMap.set(menuName + entryTextA, () => {
-				return menuMap.get(menuName).CheckMenuItem(this.getIdx(entryNameA), idxFunc());
+				const bVal = idxFunc();
+				if (typeof bVal !== 'boolean') {console.log('this.checkMenu: idxFunc not a boolean -> ' + entryNameA + ' -> ' + bVal);}
+				return menuMap.get(menuName).CheckMenuItem(idxA, bVal);
 			});
 		}
 	};
