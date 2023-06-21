@@ -181,6 +181,7 @@ CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
 CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_instances.js
+CALL :copy_file helpers\helpers_xxx_levenshtein.js
 CALL :copy_file helpers\helpers_xxx_playlists.js
 CALL :copy_file helpers\helpers_xxx_playlists_files.js
 CALL :copy_file helpers\helpers_xxx_playlists_files_xsp.js
