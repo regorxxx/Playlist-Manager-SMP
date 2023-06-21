@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/06/23
+//21/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -1021,6 +1021,31 @@ function _list(x, y, w, h) {
 		this.offset = 0;
 	}
 	
+	this.jumpLastPosition = () => {
+		if (currentItemIndex < this.items) {
+			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
+				// Get current index of the previously selected item to not move the list focus when updating...
+				// Offset is calculated simulating the wheel, so it moves to the previous location
+				if (currentItemIsAutoPlaylist) { // AutoPlaylists
+					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
+						this.jumpToIndex(i);
+						break;
+					}
+				} else if (currentItemIsUI) {
+					if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) { 
+						this.jumpToIndex(i);
+						break;
+					}
+				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
+					this.jumpToIndex(i);
+					break;
+				}
+			}
+		} else {
+			this.clearLastPosition();
+		}
+	};
+	
 	this.on_focus = (bFocused) => {
 		if (this.searchInput) {
 			this.searchInput.check('down', -1, -1);
@@ -1057,6 +1082,7 @@ function _list(x, y, w, h) {
 		} else if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
 			return createMenuRight().btn_up(x, y);
 		} else if (this.trace(x, y)) {
+			this.cacheLastPosition();
 			const z = this.index;
 			if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 				const shortcuts = this.getShortcuts('R');
@@ -1399,6 +1425,7 @@ function _list(x, y, w, h) {
 					if (!this.properties.bGlobalShortcuts[1]) {return false;}
 					const z = this.index;
 					const pls = this.data[z];
+					if (z !== -1) {this.cacheLastPosition(z);}
 					switch (keyChar) {
 						case 'f1': // Lock/Unlock
 							if (z !== -1) {
@@ -1408,7 +1435,6 @@ function _list(x, y, w, h) {
 									if (index === -1) {return false;}
 									const currentLocks = plman.GetPlaylistLockedActions(index) || [];
 									const lockName = plman.GetPlaylistLockName(index);
-									this.cacheLastPosition(z);
 									if (lockName === 'foo_spider_monkey_panel' || !lockName) {
 										if (currentLocks.length) {
 											plman.SetPlaylistLockedActions(index, []);
@@ -1482,17 +1508,21 @@ function _list(x, y, w, h) {
 									});
 							}
 							return false;
-						case 'f7': // Add playlist (new)
+						case 'f7': {// Add playlist (new)
 							this.add({bEmpty: true});
 							return true;
+						}
 						case 'f8': // Delete playlist (delete)
-							this.removePlaylist(z);
-							this.move(this.mx, this.my); // Update cursor
-							return true;
-						case 'f8': // Delete playlist (delete)
-							this.removePlaylist(z);
-							this.move(this.mx, this.my); // Update cursor
-							return true;
+							if (z !== -1) {
+								this.removePlaylist(z);
+								setTimeout(() => { // Required since input popup invokes move callback after this func!
+									this.cacheLastPosition(Math.min(z, this.items - 1));
+									this.jumpLastPosition();
+									this.move(this.mx, this.my); // Update cursor
+								}, 10);
+								return true;
+							}
+							return false;
 						case 'f9': // Filter playlists with selected tracks / Search
 							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 							if (selItems && selItems.Count) {
@@ -2509,30 +2539,7 @@ function _list(x, y, w, h) {
 		}
 		// Focus
 		this.items = this.data.length;
-		if (bMaintainFocus) {
-			if (currentItemIndex < this.items) {
-				for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
-					// Get current index of the previously selected item to not move the list focus when updating...
-					// Offset is calculated simulating the wheel, so it moves to the previous location
-					if (currentItemIsAutoPlaylist) { // AutoPlaylists
-						if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
-							this.jumpToIndex(i);
-							break;
-						}
-					} else if (currentItemIsUI) {
-						if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) { 
-							this.jumpToIndex(i);
-							break;
-						}
-					} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-						this.jumpToIndex(i);
-						break;
-					}
-				}
-			} else {
-				this.clearLastPosition(); currentItemIndex = -1;
-			}
-		}
+		if (bMaintainFocus) {this.jumpLastPosition();}
 		// Update filters with current values
 		// Lock, playlist type, extension
 		// Rotate original matrix until it matches the current one
@@ -2780,21 +2787,7 @@ function _list(x, y, w, h) {
 				this.dataAll.sort(method);
 			}
 		}
-		if (bMaintainFocus) {
-			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
-				// Get current index of the previously selected item to not move the list focus when updating...
-				// Offset is calculated simulating the wheel, so it moves to the previous location
-				if (currentItemIsAutoPlaylist) { // AutoPlaylists
-					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
-						this.jumpToIndex(i);
-						break;
-					}
-				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.jumpToIndex(i);
-					break;
-				}
-			}
-		}
+		if (bMaintainFocus) {this.jumpLastPosition();}
 		if (bPaint) {window.Repaint();}
 	}
 	
@@ -3098,21 +3091,7 @@ function _list(x, y, w, h) {
 		this.totalFileSize = totalFileSize; // Better to set it on one step to not call autoupdate in the middle of this update!
 		this.sort(); // Sorts data according to current sort state
 		if (!bMaintainFocus) {this.offset = 0;} // Don't move the list focus...
-		else {
-			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to 
-				// Get current index of the previously selected item to not move the list focus when updating...
-				// Offset is calculated simulating the wheel, so it moves to the previous location
-				if (currentItemIsAutoPlaylist) { // AutoPlaylists
-					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) { 
-						this.jumpToIndex(i);
-						break;
-					}
-				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.jumpToIndex(i);
-					break;
-				}
-			}
-		}
+		else {this.jumpLastPosition();}
 		this.save(bInit); // Updates this.dataAutoPlaylists
 		this.itemsAutoplaylist = this.dataAutoPlaylists.length;
 		if (this.bUpdateAutoplaylist) {this.bUpdateAutoplaylist = false;}
@@ -3560,7 +3539,6 @@ function _list(x, y, w, h) {
 			// Auto-Tags
 			const oPlaylistTags = [];
 			let objectPlaylist = null;
-			let idx = null;
 			if (this.bAutoLoadTag) {oPlaylistTags.push('bAutoLoad');}
 			if (this.bAutoLockTag) {oPlaylistTags.push('bAutoLock');}
 			if (this.bMultMenuTag) {oPlaylistTags.push('bMultMenu');}
@@ -3593,7 +3571,7 @@ function _list(x, y, w, h) {
 						modified: now
 					});
 					// Adds to list of objects and update variables
-					idx = this.addToData(objectPlaylist);
+					this.addToData(objectPlaylist);
 					if (bEmpty) { // Empty playlist
 						let indexFound = plman.FindPlaylist(newName);
 						if (indexFound === -1) { 
@@ -3635,12 +3613,19 @@ function _list(x, y, w, h) {
 					, window.Name, bShowPopups);
 					return false;
 				}
-			} else {console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups); return false;}
+			} else {
+				console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups); 
+				return false;
+			}
 			this.update(true, true); // We have already updated data
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			if (idx && idx.dataIdx === this.data.findIndex((pls) => {return pls === objectPlaylist;})) {
-				this.showPlsByIdx(idx.dataIdx);
+			const idx = this.data.findIndex((pls) => {return pls === objectPlaylist;});
+			if (idx !== -1) {
+				setTimeout(() => { // Required since input popup invokes move callback after this func!
+					this.cacheLastPosition(idx);
+					this.showPlsByIdx(idx);
+				}, 10);
 			}
 			return objectPlaylist;
 		}
@@ -3743,6 +3728,16 @@ function _list(x, y, w, h) {
 			return plsArr;
 		}
 		
+		this.getPlaylistsIdxByObj = (objPls = []) => {
+			let plsArr = [];
+			const plsSet = new Set(objPls);
+			this.dataAll.forEach((pls, idx) => {
+				if (!plsSet.size) {return;}
+				if (plsSet.has(pls)) {plsArr.push(idx); plsSet.delete(pls);}
+			});
+			return plsArr;
+		}
+		
 		this.getHandleFromPlaylists = (names = [], bSort = true) => {
 			let playlistsManager = new Set();
 			let playlistsUI = new Set();
@@ -3839,8 +3834,9 @@ function _list(x, y, w, h) {
 			if (pls.size) {this.totalFileSize -= pls.size;}
 			this.deletedItems.unshift(pls);
 			this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
+			if (!bAlsoHidden) {this.cacheLastPosition(Math.min(idx, this.items - 1));}
 			if (!bUI) {
-				this.update(true, true); // Call this immediately after removal! If paint fires before updating things get weird
+				this.update(true, true, currentItemIndex); // Call this immediately after removal! If paint fires before updating things get weird
 				// Delete category from current view if needed
 				// Easy way: intersect current view + with refreshed list
 				const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
@@ -3855,9 +3851,13 @@ function _list(x, y, w, h) {
 			}
 			// Needed after removing the playlist on UI
 			if (bUI) {
-				this.update(true, true);
+				this.update(true, true, currentItemIndex);
 				const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
 				this.filter({categoryState});
+				setTimeout(() => { // Required since input popup invokes move callback after this func!
+					this.cacheLastPosition(Math.min(idx, this.items - 1));
+					this.jumpLastPosition();
+				}, 10);
 			}
 			// Remove item from current selection (otherwise it would crash)
 			if (!bAlsoHidden && this.indexes.length && this.indexes.indexOf(idx) !== -1) {

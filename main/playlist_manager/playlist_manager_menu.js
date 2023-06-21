@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/23
+//21/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -919,13 +919,13 @@ function createMenuRight() {
 			if (oldIdx === -1) {return;}
 			const pls = list.add({bEmpty: true, name: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10), bInputName: true});
 			if (pls) {
-				const playlistIndex = list.getPlaylistsIdxByName([pls.name])[0];
+				const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 				const newIdx = plman.ActivePlaylist;
 				plman.ActivePlaylist = oldIdx;
-				const bSucess = list.sendSelectionToPlaylist({playlistIndex, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: false});
+				const bSucess = list.sendSelectionToPlaylist({playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: false});
 				// Don't reload the list but just paint with changes to avoid jumps
-				list.showPlsByIdx(playlistIndex);
 				plman.ActivePlaylist = newIdx;
+				list.showCurrPls();
 			}
 		}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
