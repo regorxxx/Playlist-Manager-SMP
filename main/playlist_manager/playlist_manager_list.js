@@ -19,6 +19,7 @@ include('playlist_manager_helpers.js');
 
 
 function _list(x, y, w, h) {
+	const bProfile = false;
 	// Pls Keys
 	const defPls = new oPlaylist();
 	const defPlsKeys = new Set(Object.keys(new oPlaylist()));
@@ -31,6 +32,7 @@ function _list(x, y, w, h) {
 	
 	// UI offset
 	var yOffset = _scale(6) + panel.row_height / 4;
+	const columnOffset = _scale(2);
 	
 	// Header
 	var headerW = -1;
@@ -52,6 +54,13 @@ function _list(x, y, w, h) {
 	
 	// Helpers
 	const headerRe = /\n[-]*$/;
+	const regexHours = /^\d*:\d*:/;
+	const regexWeek = /^\dw/;
+	const regexDay = /^\dd/;
+	const regexTwoDecs = /^(\d*\.\d{2,3})/;
+	const regexHundreds= /^(\d{3,4})/;
+	const regexUnit= /(^\d*.*\d* )(\w*)/;
+	const quickSearchRe = /[_A-z0-9]/;
 	
 	// Global tooltip
 	// Timers follow the double click timer
@@ -79,6 +88,127 @@ function _list(x, y, w, h) {
 			iconCharPlaylistWidth[key] = icon ? _gr.CalcTextWidth(icon, gfontIconChar()) : 0;
 		}
 		maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
+	}
+	
+	this.calcColumnVal = (key /*pls property*/, pls) => {
+		let val = pls[key] === -1 ? '?' : pls[key];
+		if (val !== '?') {
+			switch (key) {
+				case 'duration': { // Format it with no more than 4 digits
+					val = utils.FormatDuration(val);  // Xw xd XX:XX:XX
+					if (regexHours.test(val)) {
+						val = round(pls[key] / 3600, 1) + ' h';
+					} else if (regexDay.test(val)) {
+						val = round(pls[key] / 86400, 1) + ' d';
+					} else if (regexWeek.test(val)) {
+						val = round(pls[key] / 604800, 1) + ' w';
+					}
+					break;
+				}
+				case 'fileSize': { // Format it with no more than 4 digits
+					if (val === 0) {val = '-'; break;};
+					val = utils.FormatFileSize(val);  // X.XX bb
+					if (regexHundreds.test(val)) {
+						val = val.replace(regexHundreds, round(parseFloat(val.match(regexHundreds)[0] / 1024), 3));
+						const unit = val.match(regexUnit)[2];
+						let toUnit = '';
+						switch (unit) {
+							case 'B': toUnit = 'KB'; break;
+							case 'KB': toUnit = 'MB'; break;
+							case 'MB': toUnit = 'GB'; break;
+							case 'GB': toUnit = 'TB'; break;
+						}
+						val = val.replace(regexUnit, '$1' + toUnit);
+					}
+					if (regexTwoDecs.test(val)) {
+						val = val.replace(regexTwoDecs, round(parseFloat(val.match(regexTwoDecs)[0]), 1));
+					}
+					break;
+				}
+				case 'size': {
+					val = this.columns.sizeUnits.prefix.toString() + val.toString() + this.columns.sizeUnits.suffix.toString();
+				}
+			}
+		}
+		return val;
+	}
+	
+	this.calcColumnAlign = (key /*align key*/) => {
+		switch ((key || '').toLowerCase()) {
+			case 'center': return CENTRE;
+			case 'left': return LEFT;
+			case 'right':
+			default: return RIGHT;
+		}
+	}
+	
+	this.calcRowWidth = (gr, w, columnIdx, plsIdx) => {
+		return w === 'auto' 
+			? gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]),  panel.fonts[this.columns.font[columnIdx] || 'normal'])
+			: (w < 1 ? w * (this.w - this.x): w);
+	}
+	
+	this.calcColumnsWidth = (gr = _gr, toColumn = Infinity, current = -1) => {
+		const test = bProfile ? new FbProfiler(window.Name + ': ' + 'calcColumnsWidth') : null;
+		let total = 0;
+		const offset = 5;
+		const perLabel = {};
+		if (toColumn) {
+			const columns = this.columns.width.slice(0, toColumn);
+			if (columns.filter((_, i) => this.columns.bShown[i]).some((val) => val === 'auto')) {
+				columns.forEach((val, i) => {
+					if (!this.columns.bShown[i]) {return;}
+					let maxVal = 0;
+					if (val === 'auto') {
+						const rows = this.columns.autoWidth === 'current view' ? Math.min(this.items, this.rows) : this.items;
+						for (let j = 0; j < rows; j++) {
+							const currIdx = this.columns.autoWidth === 'current view' ? j + this.offset : j;
+							if (currIdx >= this.items) {break;}
+							maxVal = Math.max(maxVal, this.calcRowWidth(gr, val, i, currIdx));
+						}
+						maxVal += columnOffset * ((i === this.columns.width.length - 1) ? 3 : 2)
+					} else {
+						maxVal = this.calcRowWidth(gr, val);
+					}
+					total += maxVal;
+					perLabel[this.columns.labels[i]] = maxVal;
+				});
+			} else {
+				columns.forEach((val, i) => {
+					if (!this.columns.bShown[i]) {return;}
+					total += this.calcRowWidth(gr, val);
+					perLabel[this.columns.labels[i]] = val
+				});
+			}
+		}
+		if (current === -1) {
+			let maxVal = 0;
+			if (this.columns.bShown[current]) {
+				const val = this.columns.width[current];
+				if (val === 'auto') {
+					const rows = this.columns.autoWidth === 'current view' ? Math.min(this.items, this.rows) : this.items ;
+					for (let j = 0; j < rows; j++) {
+						const currIdx = this.columns.autoWidth === 'current view' ? j + this.offset : j;
+						if (currIdx >= this.items) {break;}
+						maxVal = Math.max(maxVal, this.calcRowWidth(gr, val, current, currIdx));
+					}
+					maxVal += columnOffset * (current === this.columns.width.length - 1 ? 3 : 2)
+				} else {
+					maxVal = this.calcRowWidth(gr, val);
+				}
+			}
+			perLabel[this.columns.labels[current]] = maxVal;
+		}
+		if (bProfile) {test.Print();}
+		return {total, perLabel};
+	}
+	
+	this.getColumnsEnabled = (label) => {
+		return this.columns.labels.map((_, i) => i).filter((i) => this.columns.bShown[i] && (!label || this.columns.labels[i] === label));
+	}
+	
+	this.isColumnsEnabled = (label) => {
+		return this.uiElements['Columns'].enabled && this.getColumnsEnabled(label).length > 0;
 	}
 	
 	this.size = () => {
@@ -421,7 +551,7 @@ function _list(x, y, w, h) {
 		this.paintHeader(gr, this.modeUI);
 		// Empty Panel
 		this.text_x = 0;
-		this.text_width = this.w;
+		this.textWidth = this.w;
 		if (this.items === 0) {
 			let emptyText = '';
 			if (this.itemsAll !== 0) {
@@ -475,6 +605,11 @@ function _list(x, y, w, h) {
 				idxHighlight = -1;
 			}
 		} else {animation.bHighlight = false;}
+		// Columns settings
+		const bColumnsEnabled = this.isColumnsEnabled();
+		const columns = this.columns.labels;
+		const {total: columnsWidth = 0, perLabel: columnsWidthLabel = null} = bColumnsEnabled ? this.calcColumnsWidth(gr) : {};
+		const columnLineColor = bColumnsEnabled ? blendColors(panel.colors.highlight, panelBgColor, 0.7) : null;
 		// Rows
 		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
 		let cacheLen = 0;
@@ -504,7 +639,7 @@ function _list(x, y, w, h) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.textWidth , panel.row_height , RIGHT);
 					}
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
@@ -515,7 +650,7 @@ function _list(x, y, w, h) {
 						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.textWidth , panel.row_height , RIGHT);
 						}
 					}
 					// Show always current letter at bottom. Also shows number
@@ -524,20 +659,21 @@ function _list(x, y, w, h) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
 						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.text_width , panel.row_height , RIGHT);
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.textWidth , panel.row_height , RIGHT);
 					}
 				}
 			}
 			// Playlists
 			let playlistDataText =  pls.name + (this.bShowSize ? ' (' + pls.size + ')' : '');
 			// Adjust playlist name according to width available but always show the size if possible
+			this.textWidth = this.w - columnsWidth;
 			if (this.bShowSize && playlistDataText.length > cacheLen) {
 				const w = gr.CalcTextWidth(playlistDataText, panel.fonts.normal);
-				if (w > this.text_width - 30) {
+				if (w > this.textWidth - 30) {
 					const size = ' (' + pls.size + ')';
 					const sizeW = gr.CalcTextWidth(size, panel.fonts.normal);
 					const plsW = w - sizeW;
-					const left = this.text_width - 30 - sizeW - ellipisisW - 2;
+					const left = this.textWidth - 30 - sizeW - ellipisisW - 2;
 					playlistDataText = pls.name.slice(0, Math.floor(left * pls.name.length / plsW)) + '...' + size;
 				} else {cacheLen = playlistDataText.length;}
 			}
@@ -552,6 +688,7 @@ function _list(x, y, w, h) {
 			else if (extension === '.xsp') {playlistColor = this.colors.smartPlaylistColor; iconColor = smartPlaylistIconColor;}
 			else if (extension === '.ui') {playlistColor = this.colors.uiPlaylistColor; iconColor = uiPlaylistIconColor;}
 			if (pls.size === 0) {extension = 'blank';}
+			// Icon
 			if (this.bShowIcons) {
 				let icon = playlistDescriptors[extension].icon;
 				let iconBg = playlistDescriptors[extension].iconBg;
@@ -586,7 +723,26 @@ function _list(x, y, w, h) {
 					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
 				}
 			}
-			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.text_width - 30, panel.row_height, LEFT);
+			// Text
+			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.textWidth - 30, panel.row_height, LEFT);
+			// Columns
+			if (bColumnsEnabled && columnsWidth) {
+				const columnColor = this.columns.bPlsColor ? playlistColor : panel.colors.text;
+				const columnY = this.y + yOffset + (i * panel.row_height);
+				columns.forEach((key, i) => {
+					const columnX = (this.bShowIcons ? this.x + maxIconWidth : this.x) + this.textWidth - 30 + this.calcColumnsWidth(gr, i).total;
+					const columnFont = panel.fonts[this.columns.font[i] || 'normal'];
+					const val = this.calcColumnVal(key, pls);
+					const columnW = (this.columns.width[i] === 'auto' 
+							? columnsWidthLabel[key]
+							: this.columns.width[i]
+						) - columnOffset * ((i === columns.length - 1) ? 3 : 2);
+					const align = this.calcColumnAlign(this.columns.align[i]);
+					if (this.columns.line === 'all' || i === 0 && this.columns.line === 'first') {gr.DrawLine(columnX, columnY, columnX, columnY + panel.row_height, 1, columnLineColor);}
+					gr.GdiDrawText(val, columnFont, columnColor, columnX + columnOffset, columnY, columnW, panel.row_height, align);
+				});
+				this.textWidth = this.w;
+			}
 			// Add playing now indicator
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
 			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoplaylist) { // If missing it's false
@@ -604,7 +760,7 @@ function _list(x, y, w, h) {
 				});
 				const icon = iconChars[fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist ? 'playing' : 'loaded'];
 				// Draw
-				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, this.y + yOffset + (i * panel.row_height), this.text_width, panel.row_height, RIGHT);
+				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, this.y + yOffset + (i * panel.row_height), this.textWidth, panel.row_height, RIGHT);
 			}
 			// Multiple selection
 			if (this.indexes.length) {
@@ -638,7 +794,7 @@ function _list(x, y, w, h) {
 						const playlistDataText =  pls.name + (len > 1 ? '... (' + len  + ' playlists)' : '');
 						gr.FillSolidRect(this.x - 5, this.my, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 40));
 						gr.DrawRect(this.x - 5, this.my, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 100));
-						gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colors.text, this.bShowIcons ? this.x + maxIconWidth : this.mx, this.my, this.text_width - 30, panel.row_height, LEFT);
+						gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colors.text, this.bShowIcons ? this.x + maxIconWidth : this.mx, this.my, this.textWidth - 30, panel.row_height, LEFT);
 					} else {
 						console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
 					}
@@ -1421,8 +1577,7 @@ function _list(x, y, w, h) {
 			default: {
 				const keyChar = keyCode(k);
 				// Shortcuts
-				if (this.trace(this.mx, this.my)) {
-					if (!this.properties.bGlobalShortcuts[1]) {return false;}
+				if (this.properties.bGlobalShortcuts[1]) {
 					const z = this.index;
 					const pls = this.data[z];
 					if (z !== -1) {this.cacheLastPosition(z);}
@@ -1573,6 +1728,14 @@ function _list(x, y, w, h) {
 						case 'f12': // Tracked folder
 							_explorer(this.playlistsPath);
 							return true;
+						case 'numpad /': // Show hide columns
+						case '\\':
+						case 'º':
+							this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
+							this.properties.uiElements[1] = JSON.stringify(this.uiElements);
+							overwriteProperties(this.properties);
+							this.updateUIElements();
+							return true;
 					}
 				}
 				// Quick-search
@@ -1582,7 +1745,7 @@ function _list(x, y, w, h) {
 					this.searchInput.check('up', this.searchInput.x + 1, this.searchInput.y + 1);
 					return true;
 				}
-				if (keyChar && keyChar.length === 1 && /[_A-z0-9]/.test(keyChar)) {
+				if (keyChar && keyChar.length === 1 && quickSearchRe.test(keyChar)) {
 					if (animation.fRepaint !== null) {clearTimeout(animation.fRepaint);}
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
 					let method = this.methodState.split('\t')[0].replace('By ', '');
@@ -1663,7 +1826,7 @@ function _list(x, y, w, h) {
 						rgExp = re ? new RegExp(re, flag) : null;
 					} catch(e) {}
 				}
-				if (!rgExp) {rgExp =  new RegExp(escapeRegExp(str), 'gi');}
+				if (!rgExp) {rgExp = new RegExp(escapeRegExp(str), 'gi');}
 				if (this.searchMethod.bName && rgExp.test(pls.name)) {return true;}
 				else if (this.searchMethod.bTags && pls.tags.some((tag) => rgExp.test(tag))) {return true;}
 				else if (this.searchMethod.bCategory && rgExp.test(pls.category)) {return true;}
@@ -2365,7 +2528,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.loadExternalJson = ({path = '', bOldVersion} = {}) => {
-		const test = new FbProfiler(window.Name + ': ' + 'Load json file');
+		const test = bProfile ? new FbProfiler(window.Name + ': ' + 'Load json file') : null;
 		let externalPath = path;
 		if (!path || !path.length) {
 			try {externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', window.Name, '', true);}
@@ -2431,7 +2594,7 @@ function _list(x, y, w, h) {
 		if (dataExternalPlaylists.length) {this.addToData(dataExternalPlaylists);} // Add to database
 		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
 		this.resetFilter();
-		test.Print();
+		if (bProfile) {test.Print();}
 		return true;
 	}
 	// Categories and tags
@@ -2850,7 +3013,8 @@ function _list(x, y, w, h) {
 			this.indexes = [];
 			if (_isFile(this.filename)) {
 				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoplaylist || this.bAutoTrackTagAutoPlsInit && bInit);
-				const bUpdateSize = this.bUpdateAutoplaylist && (this.bShowSize || bUpdateTags);
+				const bColumns = this.isColumnsEnabled('size');
+				const bUpdateSize = this.bUpdateAutoplaylist && (this.bShowSize || bUpdateTags || bColumns);
 				if (bUpdateSize || bUpdateTags) {var test = new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists');}
 				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
 				if (!data) {return;}
@@ -3246,7 +3410,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.checkTrackedFolderChanged = () => {
-		const test = new FbProfiler(window.Name + ': ' + 'checkTrackedFolderChanged');
+		const test = bProfile ? new FbProfiler(window.Name + ': ' + 'checkTrackedFolderChanged') : null;
 		const playlistPathArray = getFiles(this.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 		const playlistPathArrayLength = playlistPathArray.length;
 		let bDone = false;
@@ -3259,7 +3423,7 @@ function _list(x, y, w, h) {
 			}
 			if (totalFileSize !== this.totalFileSize) {bDone = true;}
 		}
-		// test.Print(); // TODO
+		if (bProfile) {test.Print();}
 		return bDone;
 	}
 
@@ -3550,6 +3714,7 @@ function _list(x, y, w, h) {
 			let oPlaylistCategory = void(0);
 			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) {oPlaylistCategory = this.categoryState[0];} 
 			// Save file
+			// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
 			if (!_isFile(oPlaylistPath)) { // Just for safety
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
@@ -4094,7 +4259,8 @@ function _list(x, y, w, h) {
 			else {this.sortingFile = [];}
 		}
 		
-		this.createMainMenuDynamic = ({file = folders.ajquerySMP + 'playlistmanagerentries.json'} = {}) => {
+		this.createMainMenuDynamic = ({file = folders.ajquerySMP + 'playlistmanagerentries.json', bRetry = true} = {}) => {
+			const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
 			this.deleteMainMenuDynamic();
 			let currId = this.mainMenuDynamic.length;
 			const bToFile = file && file.length;
@@ -4163,6 +4329,7 @@ function _list(x, y, w, h) {
 					});
 				})()
 				menusGlobal.forEach((menu) => {listExport[menu.type] = [];});
+				const promiseArr = [];
 				menusGlobal.forEach((menu, i) => {
 					const type = menu.type;
 					const name = menu.name;
@@ -4174,17 +4341,30 @@ function _list(x, y, w, h) {
 						listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
 					}
 					currId++;
+					if (test.Time > 250) {throw new Error('Script aborted by user');}
 				});
 				data[wName] = listExport;
 				// Don try to export for ajquery-xxx integration when it isn't installed
 				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) {return true;}
 				return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
-			} catch (e) {console.log('this.createMainMenuDynamic: unknown error'); console.log(e.message);}
+			} catch (e) {
+				// Retry once
+				if (bRetry) {
+					if (e.message === 'Script aborted by user') {
+						console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing'); 
+						return Promise.wait(1000).then(() => this.createMainMenuDynamic({file, bRetry: false}));
+					}
+				}
+ 				console.log('this.createMainMenuDynamic: unknown error'); 
+				console.log(e.message);
+			}
 			return false;
 		}
 		
 		this.deleteMainMenuDynamic = () => {
-			this.mainMenuDynamic.forEach((pls, i) => {fb.UnregisterMainMenuCommand(i)});
+			this.mainMenuDynamic.forEach((pls, i) => {
+				try {fb.UnregisterMainMenuCommand(i);} catch (e) {};
+			});
 			this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 		}
 		
@@ -4289,6 +4469,7 @@ function _list(x, y, w, h) {
 			this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
 			this.bAutoLockTag = this.properties['bAutoLockTag'][1];
 			this.bMultMenuTag = this.properties['bMultMenuTag'][1];
+			this.bSkipMenuTag = this.properties['bSkipMenuTag'][1];
 			this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
 			this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
 			this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
@@ -4316,7 +4497,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.manualRefresh = () => {
-			const test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+			const test = bProfile ? new FbProfiler(window.Name + ': ' + 'Manual refresh') : null;
 			this.trackedFolderChanged = false;
 			this.loadConfigFile();
 			const z = this.offset + Math.round(this.rows / 2 - 1);
@@ -4327,11 +4508,12 @@ function _list(x, y, w, h) {
 			this.lastPlsLoaded = [];
 			if (typeof xspCache !== 'undefined') {xspCache.clear();} // Discard old cache to load new changes
 			if (typeof xspfCache !== 'undefined') {xspfCache.clear();}
-			test.Print();
+			if (bProfile) {test.Print();}
 		}
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
+		let test = bProfile ? new FbProfiler(window.Name + ': ' + 'Init') : null;
 		_recycleFile(this.filename + '.old', true); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
 		this.loadConfigFile(); // Extra json files available?
@@ -4339,20 +4521,27 @@ function _list(x, y, w, h) {
 		this.initProperties(); // This only set properties if they have no values...
 		this.reset();
 		let bDone = this.checkConfig();
+		if (bProfile) {test.Print('Load config files');}
 		if (!this.properties.bSetup[1]) {this.update(false, true, void(0), true);} // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
 		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
+		if (bProfile) {test.Print('Load playlists');}
 		if (this.bDynamicMenus) { // Init menus unless they will be init later after Autoplaylists processing
 			const queryItems = this.itemsAutoplaylist + this.itemsXsp;
-			const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && this.bShowSize;
+			const bColumns = this.isColumnsEnabled('size');
+			const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && (this.bShowSize || bColumns);
 			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
 			if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
 				this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
+				// Promise.wait(1000).then(() => {
+					// this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
+				// });
 			}
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
 		if (this.activePlsStartup.length) {this.startupPlaylist();}
+		if (bProfile) {test.Print('Post startup'); test = null;}
 		setInterval(() => {this.trackedFolderChanged = this.checkTrackedFolderChanged();}, Number(this.properties.autoUpdate[1]) || 5000);
 	}
 	
@@ -4430,11 +4619,15 @@ function _list(x, y, w, h) {
 	this.lShortcutsHeader = JSON.parse(this.properties['lShortcutsHeader'][1]);
 	this.mShortcutsHeader = JSON.parse(this.properties['mShortcutsHeader'][1]);
 	this.modeUI = 'modern'
+	this.uiElements = JSON.parse(this.properties['uiElements'][1]);
+	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
+	this.columns = JSON.parse(this.properties['columns'][1]);
 	// Panel behavior
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
 	this.bAutoLockTag = this.properties['bAutoLockTag'][1];
 	this.bMultMenuTag = this.properties['bMultMenuTag'][1];
+	this.bSkipMenuTag = this.properties['bSkipMenuTag'][1];
 	this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
 	this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
 	this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
@@ -4460,11 +4653,9 @@ function _list(x, y, w, h) {
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
 	this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
-	this.uiElements = JSON.parse(this.properties['uiElements'][1]);
 	this.bTracking = true;
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
-	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	// Other
 	this.trackedFolderChanged = false;
 	this.bIsDragDrop = false;

@@ -75,7 +75,7 @@ var properties = {
 	bFplLock				: ['Load .fpl native playlists as read only?' , true, {func: isBoolean}, true],
 	extension				: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8', {func: (val) => {return writablePlaylistFormats.has(val);}}, '.m3u8'],
 	autoUpdate				: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.' , 5000, {func: isInt, range: [[0,0],[200, Infinity]]}, 5000], // Safety limit 0 or > 200
-	bShowSize				: ['Show playlist size' , true, {func: isBoolean}, true],
+	bShowSize				: ['Show playlist size' , false, {func: isBoolean}, false],
 	bUpdateAutoplaylist		: ['Update Autoplaylist size by query output', true, {func: isBoolean}, true],
 	bUseUUID				: ['Use UUIDs along playlist names (not available for .pls playlists).', false, {func: isBoolean}, false],
 	optionUUID				: ['UUID current method', '', {func: isStringWeak}, ''],
@@ -201,6 +201,7 @@ var properties = {
 	uiElements				: ['UI elements', JSON.stringify({
 		'Scrollbar':				{enabled: true},
 		'Search filter':			{enabled: true},
+		'Columns':					{enabled: true},
 		'Up/down buttons':			{enabled: false},
 		'Header buttons':			{enabled: true, elements: 
 			{
@@ -224,6 +225,18 @@ var properties = {
 	bSpotify				: ['ListenBrainz export to Spotify', true, {func: isBoolean}, true],
 	iTooltipTimer			: ['Tooltip timer', 375 * 2, {func: isInt}, 375 * 2],
 	bGlobalShortcuts		: ['Enable FX global shortcuts', true, {func: isBoolean}, true],
+	columns					: ['Columns options', JSON.stringify({
+		labels:		['size', 'duration'],
+		width:		['auto', 'auto'],
+		font:		['small', 'small'],
+		align: 		['right', 'right'],
+		bShown: 	[true, true],
+		line:		'all',
+		autoWidth:	'entire list',
+		bPlsColor: 	true,
+		sizeUnits:	{prefix: '', suffix: ' \u266A'} // Musical note
+	})],
+	bSkipMenuTag			: ['Automatically add \'bSkipMenuTag\' to all playlists', false],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -236,6 +249,7 @@ properties['mShortcutsHeader'].push({func: isJSON}, properties['mShortcutsHeader
 properties['showMenus'].push({func: isJSON}, properties['showMenus'][1]);
 properties['searchMethod'].push({func: isJSON}, properties['searchMethod'][1]);
 properties['uiElements'].push({func: isJSON}, properties['uiElements'][1]);
+properties['columns'].push({func: isJSON}, properties['columns'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');

@@ -1637,7 +1637,7 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 				window.Reload();
 			}});
-			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return (Number(list.properties['autoSave'][1]) !== 0 ? 1 : 0);});
+			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return Number(list.properties['autoSave'][1]) !== 0;});
 		}
 		{	// Auto-Loading
 			menu.newEntry({menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + ' ms)', func: () => {
@@ -1650,7 +1650,7 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 				window.Reload();
 			}});
-			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return (Number(list.properties['autoUpdate'][1]) !== 0 ? 1 : 0);});
+			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return Number(list.properties['autoUpdate'][1]) !== 0;});
 		}
 		{	// Auto-Backup
 			menu.newEntry({menuName, entryText: 'Auto-backup interval...\t(' + (isInt(list.properties['autoBack'][1]) ? list.properties['autoBack'][1] : '\u221E') + ' ms)', func: () => {
@@ -1663,7 +1663,7 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 				window.Reload();
 			}});
-			menu.newCheckMenu(menuName, 'Auto-backup interval...', void(0),  () => {return (Number(list.properties['autoBack'][1]) !== 0 ? 1 : 0);});
+			menu.newCheckMenu(menuName, 'Auto-backup interval...', void(0),  () => {return Number(list.properties['autoBack'][1]) !== 0;});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Stop tracking library paths
@@ -1849,8 +1849,8 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuNameTwo, 'Locked playlists', void(0),  () => {return list.bAutoTrackTagLockPls;});
 				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists', void(0),  () => {return list.bAutoTrackTagAutoPls;});
 				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists (at startup)', void(0),  () => {return list.bAutoTrackTagAutoPlsInit;});
-				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuName, entryText: 'Block panel while updating (at startup)?', func: () => {
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Block panel while updating (at startup)?', func: () => {
 					list.properties.bBlockUpdateAutoPls[1] = !list.properties.bBlockUpdateAutoPls[1];
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTagAutoPlsInit ? MF_STRING: MF_GRAYED});
@@ -2009,7 +2009,7 @@ function createMenuRightTop() {
 		const menuName = menu.newMenu('UI');
 		{	// Playlist Size
 			const subMenuName = menu.newMenu('Show Playlist size...', menuName);
-			const options = ['Yes: Shown along the playlist name', 'No: Only shown on tooltip'];
+			const options = ['Yes: Shown along the playlist name', 'No: Only shown on tooltip/columns'];
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'Track count on parenthesis:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -2170,7 +2170,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}});
 				});
-				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return panel.colors.bCustomText;});
+				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return panel.colors.bCustomText ? 1 : 0;});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'Set custom colour...', func: () => {
 					panel.colors.customText = utils.ColourPicker(window.ID, panel.colors.customText);
@@ -2636,6 +2636,162 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 			}});
 		}
+		{	// Columns
+			const subMenuName = menu.newMenu('Columns...', menuName);
+			menu.newEntry({menuName: subMenuName, entryText: 'Columns config:' + '\t' + (list.getColumnsEnabled() ? '(disabled)' : ''), flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			list.columns.labels.forEach((key, i) => {
+				const subMenuColumn = menu.newMenu('Column ' + (i + 1) + '\t ' + _b(key), subMenuName);
+				{	// Metadata
+					const options = ['duration', 'size']; /*'fileSize'*/
+					const subMenuNameTwo = menu.newMenu('Metadata...', subMenuColumn);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Display:', flags: MF_GRAYED});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					options.forEach((opt) => {
+						menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+							list.columns.labels[i] = opt;
+							list.properties.columns[1] = JSON.stringify(list.columns);
+							overwriteProperties(list.properties);
+							list.repaint();
+						}});
+					});
+					if (options.indexOf(key) !== -1) {menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => options.indexOf(key));}
+				}
+				{	// Size
+					const options = ['normal', 'small'];
+					const subMenuNameTwo = menu.newMenu('Size...', subMenuColumn);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Font size:', flags: MF_GRAYED});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					options.forEach((opt) => {
+						menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+							list.columns.font[i] = opt;
+							list.properties.columns[1] = JSON.stringify(list.columns);
+							overwriteProperties(list.properties);
+							list.repaint();
+						}});
+					});
+					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.font[i]); return idx !== -1 ? idx : 0;});
+				}
+				{	// Align
+					const options = ['right', 'left', 'center'];
+					const subMenuNameTwo = menu.newMenu('Align...', subMenuColumn);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Alignment:', flags: MF_GRAYED});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					options.forEach((opt) => {
+						menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+							list.columns.align[i] = opt;
+							list.properties.columns[1] = JSON.stringify(list.columns);
+							overwriteProperties(list.properties);
+							list.repaint();
+						}});
+					});
+					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.align[i]); return idx !== -1 ? idx : 0;});
+				}
+				// Width
+				menu.newEntry({menuName: subMenuColumn, entryText: 'Width...' + '\t' + _b(list.columns.width[i]), func: () => {
+					const input = Input.number('real positive', list.columns.width[i], 'Enter width: (px)\n(0 to set width automatically)', window.Name, 60);
+					if (input === null) {return;}
+					list.columns.width[i] = input || 'auto';
+					list.properties.columns[1] = JSON.stringify(list.columns);
+					overwriteProperties(list.properties);
+					list.repaint();
+				}});
+				menu.newEntry({menuName: subMenuColumn, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuColumn, entryText: 'Show', func: () => {
+					list.columns.bShown[i] = !list.columns.bShown[i];
+					list.properties.columns[1] = JSON.stringify(list.columns);
+					overwriteProperties(list.properties);
+					list.repaint();
+				}});
+				menu.newCheckMenu(subMenuColumn, 'Show', void(0), () => list.columns.bShown[i]);
+			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Add new column', func: () => {
+				list.columns.labels.push('size');
+				list.columns.width.push(30);
+				list.columns.font.push('normal');
+				list.properties['columns'][1] = JSON.stringify(list.columns);
+				overwriteProperties(list.properties);
+				list.repaint();
+			}});
+			const subMenuNameTwo = menu.newMenu('Remove column...', subMenuName);
+			list.columns.labels.forEach((key, i) => {
+				const column = 'Column ' + ( i + 1) + '\t ' + _b(key);
+				menu.newEntry({menuName: subMenuNameTwo, entryText: column, func: () => {
+					list.columns.labels.splice(i, 1);
+					list.columns.width.splice(i, 1);
+					list.columns.font.splice(i, 1);
+					list.properties['columns'][1] = JSON.stringify(list.columns);
+					overwriteProperties(list.properties);
+					list.repaint();
+				}});
+			});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{	// Line
+				const subMenuNameTwo = menu.newMenu('Border...', subMenuName);
+				const options = ['none', 'first', 'all'];
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Column borders:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				options.forEach((opt) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+						list.columns.line = opt;
+						list.properties.columns[1] = JSON.stringify(list.columns);
+						overwriteProperties(list.properties);
+						list.repaint();
+					}});
+				});
+				menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.line); return idx !== -1 ? idx : 0;});
+			}
+			{	// Auto-Width
+				const subMenuNameTwo = menu.newMenu('Auto-Width...', subMenuName);
+				const options = ['entire list', 'current view'];
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Calculate by:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				options.forEach((opt) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+						list.columns.autoWidth = opt;
+						list.properties.columns[1] = JSON.stringify(list.columns);
+						overwriteProperties(list.properties);
+						list.repaint();
+					}});
+				});
+				menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.autoWidth); return idx !== -1 ? idx : 0;});
+			}
+			{	// Size unis
+				const subMenuNameTwo = menu.newMenu('Size units...', subMenuName);
+				const options = ['prefix', 'suffix'];
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Calculate by:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				options.forEach((opt) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt) + '\t' + _b(list.columns.sizeUnits[opt]), func: () => {
+						const mode = WshShell.Popup('Use unicode char codes?\nFor example: (escape | input | display)\n\\u2665 | 2665 | \u2665\n\\u266A | 266A | \u266A\n\nMore info:\nhttps://www.rapidtables.com/code/text/unicode-characters.html', 0, window.Name, popup.question + popup.yes_no) === popup.yes 
+							? 'unicode'
+							: 'string';
+						const input = Input.string(mode, list.columns.sizeUnits[opt], 'Enter string to show as prefix/suffix:' + (mode === 'unicode' ? '\n(unicode chars are split by blank spaces)' : ''), window.Name, mode === 'unicode' ? '' : ' t.');
+						if (input === null) {return;}
+						list.columns.sizeUnits[opt] = input;
+						list.properties.columns[1] = JSON.stringify(list.columns);
+						overwriteProperties(list.properties);
+						list.repaint();
+					}});
+					menu.newCheckMenu(subMenuNameTwo, capitalize(opt), void(0), () => list.columns.sizeUnits[opt].toString().length !== 0);
+				});
+			}
+			menu.newEntry({menuName: subMenuName, entryText: 'Use playlist\'s color', func: () => {
+				list.columns.bPlsColor = !list.columns.bPlsColor;
+				list.properties.columns[1] = JSON.stringify(list.columns);
+				overwriteProperties(list.properties);
+				list.repaint();
+			}});
+			menu.newCheckMenu(subMenuName, 'Use playlist\'s color', void(0), () => list.columns.bPlsColor);
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
+				list.properties.columns[1] = list.properties.columns[3];
+				list.columns =  JSON.parse(list.properties.columns[1])
+				overwriteProperties(list.properties);
+				list.repaint();
+			}});
+		}
 		{	// Enabled UI elements
 			const subMenuName = menu.newMenu('UI elements...', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Elements shown:', flags: MF_GRAYED});
@@ -2690,6 +2846,7 @@ function createMenuRightTop() {
 				const options = [
 					{name: 'Full', elements: {
 						'Search filter':			{enabled: true},
+						'Columns':					{enabled: true},
 						'Header buttons':			{enabled: true, elements: 
 							{
 								'Power actions':	{enabled: true},
@@ -2888,7 +3045,7 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 				window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup)
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
-			menu.newCheckMenu(subMenuName, 'Input name...', void(0), () => {return list.activePlsStartup.length && list.activePlsStartup !== name;});
+			menu.newCheckMenu(subMenuName, 'Input name...', void(0), () => {return (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name);});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
