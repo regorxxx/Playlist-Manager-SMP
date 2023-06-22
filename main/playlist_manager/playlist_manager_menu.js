@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/23
+//22/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2643,22 +2643,23 @@ function createMenuRightTop() {
 			list.columns.labels.forEach((key, i) => {
 				const subMenuColumn = menu.newMenu('Column ' + (i + 1) + '\t ' + _b(key), subMenuName);
 				{	// Metadata
-					const options = ['duration', 'size']; /*'fileSize'*/
+					const options = ['duration', 'size', 'fileSize', 'playlist_mbid', 'trackTags', 'isLocked'];
 					const subMenuNameTwo = menu.newMenu('Metadata...', subMenuColumn);
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Display:', flags: MF_GRAYED});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					const toEntry = (s) => capitalizeAll(s.replace(/[A-Z]/g, ' $&').replace(/_/g, ' '));
 					options.forEach((opt) => {
-						menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+						menu.newEntry({menuName: subMenuNameTwo, entryText: toEntry(opt) , func: () => {
 							list.columns.labels[i] = opt;
 							list.properties.columns[1] = JSON.stringify(list.columns);
 							overwriteProperties(list.properties);
 							list.repaint();
 						}});
 					});
-					if (options.indexOf(key) !== -1) {menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => options.indexOf(key));}
+					if (options.indexOf(key) !== -1) {menu.newCheckMenu(subMenuNameTwo, toEntry(options[0]), toEntry(options[options.length -1]), () => options.indexOf(key));}
 				}
 				{	// Size
-					const options = ['normal', 'small'];
+					const options = ['normal', 'small', 'title'];
 					const subMenuNameTwo = menu.newMenu('Size...', subMenuColumn);
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Font size:', flags: MF_GRAYED});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
@@ -2708,8 +2709,10 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Add new column', func: () => {
 				list.columns.labels.push('size');
-				list.columns.width.push(30);
+				list.columns.width.push('auto');
 				list.columns.font.push('normal');
+				list.columns.align.push('right');
+				list.columns.bShown.push(true);
 				list.properties['columns'][1] = JSON.stringify(list.columns);
 				overwriteProperties(list.properties);
 				list.repaint();
