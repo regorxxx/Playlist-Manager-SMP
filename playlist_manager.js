@@ -231,7 +231,7 @@ var properties = {
 		font:		['small', 'small'],
 		align: 		['right', 'right'],
 		bShown: 	[true, true],
-		line:		'all',
+		line:		'none',
 		autoWidth:	'entire list',
 		bPlsColor: 	true,
 		sizeUnits:	{prefix: '', suffix: ' \u266A'} // Musical note
