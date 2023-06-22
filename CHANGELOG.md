@@ -101,6 +101,7 @@
 - UI: scrollbar not working properly when list exceeded current window size by one row.
 - UI: multiple minor fixes to menu entry checks (the tick shown if setting is enabled).
 - UI: loaded and playing now indicators not working for AutoPlaylists.
+- Quick-search: no longer works when the mouse is not over the panel.
 - Export: export to JSON not working for AutoPlaylists in some cases.
 - Auto-Functions: fix 'bAutoLoad' improper loading in some cases.
 - Error while saving a playlist which was the first one on UI.
