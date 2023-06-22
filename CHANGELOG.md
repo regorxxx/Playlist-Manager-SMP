@@ -38,6 +38,7 @@
 - UI: added manual sorting. It must be enabled on the sorting button and works independently to the automatic sorting methods. Playlist can be reordered by drag n' dropping within the panel or using the sorting submenu. It also works with multiple selection. Pinned playlists are ignored in this mode. Sorting indexes are stored at '.\js_data\'.
 - UI: configurable columns to display playlist metadata. Width, metadata, font size, order, num of columns, borders and colors can be set. In the case of playlist's size, a configurable unit may be set. The entire feature may be disabled using the configurable UI elements submenu.
 - UI: added sorting by creation date.
+- UI: added sorting by duration.
 - UI: added configurable R. click mouse actions (like the previous L. click and Middle click ones).
 - UI: added configurable timer for [double clicking](https://en.wikipedia.org/wiki/Double-click).
 - UI: added configurable timer for tooltip (on properties panel). By default is now 2 times the double clicking timer, also if changed, a popup will ask to update its value.
@@ -59,7 +60,7 @@
 - Keyboard shortcuts: pressing F11 will open the documentation (pdf).
 - Keyboard shortcuts: pressing F11 will open playlists tracked folder.
 - Keyboard shortcuts: pressing 'º', '\' or 'Numpad /' will globally hide/show the playlist's metadata columns.
-- Playlist formats: creation and last modified date values are now cached for UI-only playlists and Auto-Playlists. To be used along the new date sorting options.
+- Playlist formats: creation and last modified date values are now cached for UI-only playlists and AutoPlaylists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
 - ListenBrainz: playlists can now be exported to Spotify (when exporting to ListenBrainz). Requires Spotify's service to be connected to the user profile, and \'Play music on ListenBrainz\' [enabled](https://listenbrainz.org/profile/music-services/details/).
 - Clone: added 'Clone as Smart Playlist' entry for AutoPlaylists and Smart Playlists. This allows to easily switch between formats or clone existing XSP playlists.
@@ -99,6 +100,8 @@
 - UI: focus was lost in some cases when editing an UI-only playlist.
 - UI: scrollbar not working properly when list exceeded current window size by one row.
 - UI: multiple minor fixes to menu entry checks (the tick shown if setting is enabled).
+- UI: loaded and playing now indicators not working for AutoPlaylists.
+- Export: export to JSON not working for AutoPlaylists in some cases.
 - Auto-Functions: fix 'bAutoLoad' improper loading in some cases.
 - Error while saving a playlist which was the first one on UI.
 
