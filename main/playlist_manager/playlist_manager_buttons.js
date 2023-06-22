@@ -205,7 +205,7 @@ function sortTooltip() {
 
 function sortIcon() {
 	const bDir = !list.getIndexSortState(); // Natural or inverted order
-	const varType = (list.methodState.match(/tag|name|category/gi) ? 'str' : (list.methodState.match(/date|size/gi) ? 'num' : 'other'));
+	const varType = (list.methodState.match(/tag|name|category/gi) ? 'str' : (list.methodState.match(/date|size|duration/gi) ? 'num' : 'other'));
 	switch (varType) {
 		case 'str': {
 			return bDir ? '\uf15d' : '\uf15e';
