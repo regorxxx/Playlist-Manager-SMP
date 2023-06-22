@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/06/23
+//22/06/23
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -40,7 +40,7 @@ const colorbrewer = {
 }
 
 // Cache
-const scaleDPI = {}; // Caches _scale() values;
+const scaleDPI = {factor: -1, reference: 72}; // Caches _scale() values;
 const fonts = {notFound: []}; // Caches _gdifont() values;
 
 // Flags
@@ -66,13 +66,11 @@ const popup = {
 const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 
 function _scale(size, bRound = true) {
-	if (!scaleDPI[size]) {
-		let DPI;
-		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI');}
-		catch (e) {DPI = 96;} // Fix for linux
-		scaleDPI[size] = size * DPI / 72;
+	if (scaleDPI.factor === -1) {
+		try {scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference;} 
+		catch (e) {scaleDPI.factor = 1;}
 	}
-	return (bRound ? Math.round(scaleDPI[size]) : scaleDPI[size]);
+	return (bRound ? Math.round(size * scaleDPI.factor) : size * scaleDPI.factor);
 }
 
 /* 
