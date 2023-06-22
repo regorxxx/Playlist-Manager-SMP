@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/23
+//22/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -745,7 +745,7 @@ function _list(x, y, w, h) {
 			}
 			// Add playing now indicator
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
-			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoplaylist) { // If missing it's false
+			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoPlaylist) { // If missing it's false
 				const iconChars = {
 					playing: {s: String.fromCharCode(9654), offset: 0}, 
 					loaded: {s: String.fromCharCode(187) /* » */, offset: true}, 
@@ -2489,12 +2489,14 @@ function _list(x, y, w, h) {
 		else {console.log('exportJson: Invalid index argument ' + idx); return '';}
 		if (!bArray && idx !== -1 ) { // Safety check
 			const pls = this.data[idx];
-			if (!bAllExt && !pls.isAutoplaylist) {return '';}
-			else if (bAllExt) {
-				if (pls.extension !== '.fpl' && pls.extension !== '.xsp') {return '';}
-				if (pls.extension === '.xsp' &&  pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't export incompatible files
-					fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-					return '';
+			if (!pls.isAutoPlaylist) {
+				if (!bAllExt) {return '';}
+				else if (bAllExt) {
+					if (pls.extension !== '.fpl' && pls.extension !== '.xsp') {return '';}
+					if (pls.extension === '.xsp' &&  pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't export incompatible files
+						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+						return '';
+					}
 				}
 			}
 		}
@@ -2518,7 +2520,7 @@ function _list(x, y, w, h) {
 					}
 					toSave.push(pls);
 				}
-				else if (pls.isAutoplaylist) {toSave.push(pls);}
+				else if (pls.isAutoPlaylist) {toSave.push(pls);}
 			});
 		}
 		else if (idx === -1) {toSave = bAllExt ? [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp] : [...this.dataAutoPlaylists];}
@@ -2800,6 +2802,11 @@ function _list(x, y, w, h) {
 					{
 						'(D) Asc.': (a, b) => {return a.created - b.created;},
 						'(D) Des.': (a, b) => {return b.created - a.created;}
+					},
+				'By duration': 
+					{
+						'(D) Asc.': (a, b) => {return a.duration - b.duration;},
+						'(D) Des.': (a, b) => {return b.duration - a.duration;}
 					},
 				// Manual
 				'Manual sorting': 
