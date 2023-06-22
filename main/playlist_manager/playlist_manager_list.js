@@ -32,7 +32,7 @@ function _list(x, y, w, h) {
 	
 	// UI offset
 	var yOffset = _scale(6) + panel.row_height / 4;
-	const columnOffset = _scale(2);
+	const columnOffset = Math.min(_scale(2), 3);
 	
 	// Header
 	var headerW = -1;
@@ -58,8 +58,9 @@ function _list(x, y, w, h) {
 	const regexWeek = /^\dw/;
 	const regexDay = /^\dd/;
 	const regexTwoDecs = /^(\d*\.\d{2,3})/;
-	const regexHundreds= /^(\d{3,4})/;
-	const regexUnit= /(^\d*.*\d* )(\w*)/;
+	const regexHundreds = /^(\d{3,4})/;
+	const regexUnit = /(^\d*.*\d* )(\w*)/;
+	const regexUnicode = /[^\u0000-\u00ff]/;
 	const quickSearchRe = /[_A-z0-9]/;
 	
 	// Global tooltip
@@ -127,6 +128,19 @@ function _list(x, y, w, h) {
 				}
 				case 'size': {
 					val = this.columns.sizeUnits.prefix.toString() + val.toString() + this.columns.sizeUnits.suffix.toString();
+					break;
+				}
+				case 'playlist_mbid': {
+					val = val.length ? '\u2605' : '';
+					break;
+				}
+				case 'trackTags': {
+					val = val.length ? '\u2710' : '';
+					break;
+				}
+				case 'isLocked': {
+					val = val ? '\u26D4' : '';
+					break;
 				}
 			}
 		}
@@ -144,7 +158,7 @@ function _list(x, y, w, h) {
 	
 	this.calcRowWidth = (gr, w, columnIdx, plsIdx) => {
 		return w === 'auto' 
-			? gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]),  panel.fonts[this.columns.font[columnIdx] || 'normal'])
+			? gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]), panel.fonts[this.columns.font[columnIdx] || 'normal'])
 			: (w < 1 ? w * (this.w - this.x): w);
 	}
 	
@@ -1575,6 +1589,7 @@ function _list(x, y, w, h) {
 			}
 			// Quick-search or keyboard shortcuts
 			default: {
+				if (!this.bMouseOver) {return false;}
 				const keyChar = keyCode(k);
 				// Shortcuts
 				if (this.properties.bGlobalShortcuts[1]) {
