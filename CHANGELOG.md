@@ -58,7 +58,7 @@
 - Keyboard shortcuts: pressing F9 will filter the manager showing playlists with the selected tracks (if the search box and path searching are enabled) or show a popup with the results (otherwise).
 - Keyboard shortcuts: pressing F10 will open the settings menu or the list menu (when also pressing shift).
 - Keyboard shortcuts: pressing F11 will open the documentation (pdf).
-- Keyboard shortcuts: pressing F11 will open playlists tracked folder.
+- Keyboard shortcuts: pressing F12 will open playlists tracked folder.
 - Keyboard shortcuts: pressing 'º', '\' or 'Numpad /' will globally hide/show the playlist's metadata columns.
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and AutoPlaylists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
@@ -91,6 +91,8 @@
 - UI: clicking anywhere on scrollbar will move list up/down depending on relative position, up to the current mouse position (mimics Win behavior).
 - Console: improved console logging for empty playlists (no longer reporting 0 items found).
 - Console: improved error logging at multiple places.
+- Documentation: updated readme PDF to be up to date with all latest changes.
+- Documentation: added a quick help summary at the help button (by pressing shift).
 ### Removed
 ### Fixed
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
