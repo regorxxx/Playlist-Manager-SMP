@@ -741,7 +741,6 @@ function _list(x, y, w, h) {
 			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.textWidth - 30, panel.row_height, LEFT);
 			// Columns
 			if (bColumnsEnabled && columnsWidth) {
-				const columnColor = this.columns.bPlsColor ? playlistColor : panel.colors.text;
 				const columnY = this.y + yOffset + (i * panel.row_height);
 				columns.forEach((key, i) => {
 					const columnX = (this.bShowIcons ? this.x + maxIconWidth : this.x) + this.textWidth - 30 + this.calcColumnsWidth(gr, i).total;
@@ -752,6 +751,11 @@ function _list(x, y, w, h) {
 							: this.columns.width[i]
 						) - columnOffset * ((i === columns.length - 1) ? 3 : 2);
 					const align = this.calcColumnAlign(this.columns.align[i]);
+					const columnColor = this.columns.color[i] === 'playlistColor' 
+						? playlistColor 
+						: this.columns.color[i] === 'textColor' 
+							? panel.colors.text
+							: this.columns.color[i];
 					if (this.columns.line === 'all' || i === 0 && this.columns.line === 'first') {gr.DrawLine(columnX, columnY, columnX, columnY + panel.row_height, 1, columnLineColor);}
 					gr.GdiDrawText(val, columnFont, columnColor, columnX + columnOffset, columnY, columnW, panel.row_height, align);
 				});

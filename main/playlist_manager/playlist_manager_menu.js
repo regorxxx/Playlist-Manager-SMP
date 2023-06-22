@@ -2671,7 +2671,7 @@ function createMenuRightTop() {
 							list.repaint();
 						}});
 					});
-					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.font[i]); return idx !== -1 ? idx : 0;});
+					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.font[i]); return (idx !== -1 ? idx : 0);});
 				}
 				{	// Align
 					const options = ['right', 'left', 'center'];
@@ -2686,7 +2686,22 @@ function createMenuRightTop() {
 							list.repaint();
 						}});
 					});
-					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.align[i]); return idx !== -1 ? idx : 0;});
+					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.align[i]); return (idx !== -1 ? idx : 0);});
+				}
+				{	// Color
+					const options = ['playlistColor', 'textColor', 'custom'];
+					const subMenuNameTwo = menu.newMenu('Color...', subMenuColumn);
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Color:', flags: MF_GRAYED});
+					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+					options.forEach((opt) => {
+						menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
+							list.columns.color[i] = opt === 'custom' ? utils.ColourPicker(window.ID, list.columns.color[i]) : opt;
+							list.properties.columns[1] = JSON.stringify(list.columns);
+							overwriteProperties(list.properties);
+							list.repaint();
+						}});
+					});
+					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length -1]), () => {const idx = options.indexOf(list.columns.color[i]); return (idx !== -1 ? idx : (options.length - 1));});
 				}
 				// Width
 				menu.newEntry({menuName: subMenuColumn, entryText: 'Width...' + '\t' + _b(list.columns.width[i]), func: () => {
@@ -2780,13 +2795,6 @@ function createMenuRightTop() {
 					menu.newCheckMenu(subMenuNameTwo, capitalize(opt), void(0), () => list.columns.sizeUnits[opt].toString().length !== 0);
 				});
 			}
-			menu.newEntry({menuName: subMenuName, entryText: 'Use playlist\'s color', func: () => {
-				list.columns.bPlsColor = !list.columns.bPlsColor;
-				list.properties.columns[1] = JSON.stringify(list.columns);
-				overwriteProperties(list.properties);
-				list.repaint();
-			}});
-			menu.newCheckMenu(subMenuName, 'Use playlist\'s color', void(0), () => list.columns.bPlsColor);
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 				list.properties.columns[1] = list.properties.columns[3];

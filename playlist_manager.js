@@ -230,10 +230,10 @@ var properties = {
 		width:		['auto', 'auto'],
 		font:		['small', 'small'],
 		align: 		['right', 'right'],
+		color:		['playlistColor', 'playlistColor'],
 		bShown: 	[true, true],
 		line:		'none',
 		autoWidth:	'entire list',
-		bPlsColor: 	true,
 		sizeUnits:	{prefix: '', suffix: ' \u266A'} // Musical note
 	})],
 	bSkipMenuTag			: ['Automatically add \'bSkipMenuTag\' to all playlists', false],
@@ -258,6 +258,26 @@ setProperties(properties, 'plm_');
 		addInstance('Playlist Manager');
 		plmInit.interval = setInterval(cacheLib, 500, true);
 	}
+	// Update default values for JSON properties (for compat with new releases)
+	const props = ['columns', 'rShortcuts', 'uiElements', 'searchMethod', 'showMenus', 'lShortcutsHeader', 'mShortcutsHeader', 'mShortcuts', 'lShortcuts', 'playlistIcons'];
+	let bDone = false;
+	props.forEach((propKey) => {
+		const oldProp = JSON.parse(prop[propKey][1]);
+		const defProp = JSON.parse(prop[propKey][3]);
+		let bParse = false;
+		for (let key in defProp) {
+			if (!oldProp.hasOwnProperty(key)) {oldProp[key] = defProp[key]; bParse = true;}
+		}
+		for (let key in oldProp) {
+			if (!defProp.hasOwnProperty(key)) {delete oldProp[key]; bParse = true;}
+		}
+		if (bParse) {
+			prop[propKey][1] = JSON.stringify(oldProp); 
+			bDone = true; 
+			console.log('Playlist Manager: Rewriting default values for property ' + _p(propKey));
+		}
+	});
+	if (bDone) {overwriteProperties(prop);}
 }
 // Panel
 const panel = new _panel(true, getPropertyByKey(properties, 'bSetup', 'plm_'));
