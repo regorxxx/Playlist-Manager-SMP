@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/06/23
+//23/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -4770,7 +4770,48 @@ function _list(x, y, w, h) {
 			func: (x, y, mask, parent) => _explorer(this.playlistsPath),
 			highlighting: (x, y, mask, parent) => this.trackedFolderChanged
 		},
-		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...', func: (x, y, mask, parent) => createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...')},
+		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...\n(Shift + L. Click to show quick help)', func: (x, y, mask, parent) => {
+			if (mask === MK_SHIFT) {
+				fb.ShowPopupMessage(
+					'Global keyboard shortcuts:' +
+					'\n-------------------' +
+					'\n- F1: lock / unlock playlist.' +
+					'\n- F2: rename playlist.' +
+					'\n- F3: clone on UI playlist.' +
+					'\n- F4: load / jump to playlist.' +
+					'\n- F5: copy playlist (with same format).' +
+					'\n- F6: export playlist to ListenBrainz (+ Spotify).' +
+					'\n- F7: new playlist.' +
+					'\n- F8: delete playlist.' +
+					'\n- F9: search playlists with selected tracks.' +
+					'\n- F10: settings menu or list menu (+ Shift).' +
+					'\n- F11: documentation (pdf).' +
+					'\n- F12: open playlists tracked folder.' +
+					'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
+					'\n' +
+					'\nQuick-search' +
+					'\n-------------------' +
+					'\nPress any letter / number to jump by current sorting' + 
+					'\n(i.e. sorting by category jumps by it instead of name).' +
+					'\n' +
+					'\nTooltip' +
+					'\n-------------------' +
+					'\nShift / Ctrl on buttons / playlists will show the associated action.' +
+					'\n' +
+					'\Sorting & Filters' +
+					'\n-------------------' +
+					'\nRight click on buttons allow to switch current filters and sorting.' +
+					'\n' +
+					'\nList view shortcuts:' +
+					'\n-------------------' +
+					'\n- Up / Down: scroll down / up.' +
+					'\n- Re Pag / Av Pag: scroll down / up page.' +
+					'\n- Home / End: scroll to top / bottom.'
+				, window.Name + ': Quick help');
+			} else {
+				createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...');
+			}
+		}},
 	};
 	this.searchCurrent = '';
 	this.searhHistory = [];
