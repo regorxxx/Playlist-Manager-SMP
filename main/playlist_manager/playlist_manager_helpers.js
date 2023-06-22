@@ -1318,12 +1318,13 @@ function findMixedPaths() {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
+		const absPathRegex = /[A-Z]*:\\/;
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					if (!playlist.isAutoPlaylist && playlist.extension !== '.fpl' && playlist.extension !== '.ui' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs')) {
 						const filePaths = getFilePathsFromPlaylist(playlist.path);
-						if (filePaths.some((path) => {return !(/[A-Z]*:\\/.test(path));}) && filePaths.some((path) => {return (/[A-Z]*:\\/.test(path));})) {
+						if (filePaths.some((path) => {return !(absPathRegex.test(path));}) && filePaths.some((path) => {return (absPathRegex.test(path));})) {
 							found.push(playlist);
 						}
 					}
@@ -1348,6 +1349,7 @@ function findExternal() {
 		const promises = [];
 		let prevProgress = -1;
 		const subsongRegex = /,\d*$/g;
+		const absPathRegex = /[A-Z]*:\\/;
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
@@ -1358,7 +1360,7 @@ function findExternal() {
 							const bDead = filePaths.map((path) => {return path.replace(subsongRegex,'');}).some((path) => {
 								// Skip streams & look for absolute and relative paths (with and without .\)
 								let bCheck = !_isLink(path);
-								if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+								if (absPathRegex.test(path)) {bCheck = bCheck && !_isFile(path);}
 								else {
 									let pathAbs = path;
 									if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
@@ -1396,6 +1398,7 @@ function findDead() {
 		let prevProgress = -1;
 		let iDelay = 0;
 		const subsongRegex = /,\d*$/g;
+		const absPathRegex = /[A-Z]*:\\/;
 		list.dataAll.forEach((playlist, i) => {
 			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise((resolve) => {
@@ -1406,7 +1409,7 @@ function findDead() {
 						const bDead = filePaths.some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
 							let bCheck = !_isLink(path);
-							if (/[A-Z]*:\\/.test(path)) {bCheck = bCheck && !_isFile(path);}
+							if (absPathRegex.test(path)) {bCheck = bCheck && !_isFile(path);}
 							else {
 								let pathAbs = path;
 								if (pathAbs.startsWith('.\\')) {pathAbs = pathAbs.replace('.\\', list.playlistsPath);}
@@ -1465,6 +1468,7 @@ function findSizeMismatch() {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
+		const newLineRegex = /\r\n|\n\r|\n|\r/;
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
@@ -1476,7 +1480,7 @@ function findSizeMismatch() {
 							const codePage = checkCodePage(text, playlist.extension);
 							if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 							if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
-								text = text.split(/\r\n|\n\r|\n|\r/);
+								text = text.split(newLineRegex);
 								const lines = text.length;
 								let j = 0;
 								while (j < lines) { // Changes size Line
@@ -1487,14 +1491,14 @@ function findSizeMismatch() {
 									j++;
 								}
 							} else if (playlist.extension === '.pls') {
-								text = text.split(/\r\n|\n\r|\n|\r/);
+								text = text.split(newLineRegex);
 								const lines = text.length;
 								let j = 0;
 								if (text[lines - 2].startsWith('NumberOfEntries=')) {
 									size = Number(text[lines - 2].split('=')[1]);
 								}
 							} else if (playlist.extension === '.strm') {
-								text = text.split(/\r\n|\n\r|\n|\r/);
+								text = text.split(newLineRegex);
 								size = 0;
 								for (let line of text) {
 									if (line.trim().length) {size++;}
@@ -1541,6 +1545,7 @@ function findDurationMismatch() {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
+		const newLineRegex = /\r\n|\n\r|\n|\r/;
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
@@ -1554,7 +1559,7 @@ function findDurationMismatch() {
 								const codePage = checkCodePage(text, playlist.extension);
 								if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 								if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
-									text = text.split(/\r\n|\n\r|\n|\r/);
+									text = text.split(newLineRegex);
 									const lines = text.length;
 									let j = 0;
 									while (j < lines) { // Changes duration Line
@@ -1602,6 +1607,7 @@ function findBlank() {
 		const total = list.itemsAll - 1;
 		const promises = [];
 		let prevProgress = -1;
+		const newLineRegex = /\r\n|\n\r|\n|\r/;
 		list.dataAll.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
@@ -1611,7 +1617,7 @@ function findBlank() {
 						if (typeof text !== 'undefined' && text.length) {
 							const codePage = checkCodePage(text, playlist.extension);
 							if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
-							lines = text.split(/\r\n|\n\r|\n|\r/);
+							lines = text.split(newLineRegex);
 							size = lines.filter(Boolean).length;
 							lines = lines.length;
 						}
@@ -1675,6 +1681,7 @@ function findFormatErrors() {
 		const promises = [];
 		let prevProgress = -1;
 		let iDelay = 0;
+		const newLineRegex = /\r\n|\n\r|\n|\r/;
 		list.dataAll.forEach((playlist, i) => {
 			iDelay = iDelay + iDelayPlaylists / 6;
 			promises.push(new Promise((resolve) => {
@@ -1698,7 +1705,7 @@ function findFormatErrors() {
 						if (typeof text !== 'undefined' && text.length) {
 							const codePage = checkCodePage(text, playlist.extension);
 							if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
-							lines = text.split(/\r\n|\n\r|\n|\r/).filter(Boolean).length;
+							lines = text.split(newLineRegex).filter(Boolean).length;
 						}
 						if (lines > 1) {
 							bDone = true;
