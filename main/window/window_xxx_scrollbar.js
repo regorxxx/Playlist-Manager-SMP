@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/23
+//23/06/23
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -24,6 +24,7 @@ function _scrollBar({
 	this.x = x;
 	this.y = y;
 	this.w = w;
+	this.wHidden = Math.max(this.w / 10, _scale(2));
 	this.h = h;
 	this.size = size;
 	this.color = color;
@@ -71,14 +72,16 @@ function _scrollBar({
 		if (this.w <= 0) {return;} 
 		// Smooth visibility switch
 		if (!this.visibleFunc(this.time)) {
-			if (this.visible) {this.visible = false;}
-			else { // Small bar when not shown
+			if (this.visible) {
+				this.visible = false;
+				if (window.NotifyThis) {setTimeout(() => window.NotifyThis('scrollbar hidden', this.visible), this.timer);}
+			} else { // Small bar when not shown
+				this.wHidden = Math.max(this.w / 10, _scale(2));
 				gr.SetSmoothingMode(SmoothingMode.HighQuality);
-				const w = Math.max(this.w / 10, _scale(2));
 				const currY = Math.min(Math.max(this.calcCurrPos(), this.y), this.y + this.h - this.size);
-				const currX = this.x + this.w * 2 / 3 - w;
-				try {gr.FillRoundRect(currX, currY, w, this.size, w / 2, w / 2, this.color);} 
-				catch (e) {gr.FillSolidRect(currX, currY, w, this.size, this.color);}
+				const currX = this.x + this.w * 2 / 3 - this.wHidden;
+				try {gr.FillRoundRect(currX, currY, this.wHidden, this.size, this.wHidden / 2, this.wHidden / 2, this.color);} 
+				catch (e) {gr.FillSolidRect(currX, currY, this.wHidden, this.size, this.color);}
 				gr.SetSmoothingMode(SmoothingMode.Default);
 				return;
 			}

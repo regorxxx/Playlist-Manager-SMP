@@ -376,6 +376,7 @@ let delayAutoUpdate = () => void(0);
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
 // List
 const list = new _list(LM, TM, 0, 0);
+let scroll;
 
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
@@ -408,7 +409,7 @@ if (!list.properties.bSetup[1]) {
 	const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
 	const plsHistory = new PlsHistory();
 	// Scroll bar
-	const scroll = list.uiElements['Scrollbar'].enabled ? new _scrollBar({
+	scroll = list.uiElements['Scrollbar'].enabled ? new _scrollBar({
 		w: _scale(5), 
 		size: _scale(14),
 		bgColor: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.3 : 0.8),
@@ -520,6 +521,7 @@ if (!list.properties.bSetup[1]) {
 		if (pop.isEnabled()) {return;}
 		on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
+		scroll && scroll.move(-1, -1);
 	});
 
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
@@ -662,6 +664,9 @@ if (!list.properties.bSetup[1]) {
 					callbacksListener.lBrainzTokenListener = false;
 				}
 				break;
+			}
+			case 'scrollbar hidden': {
+				window.RepaintRect(list.x + list.w - list.categoryHeaderOffset, list.y, list.x + list.w, list.y + list.h)
 			}
 		}
 	});
