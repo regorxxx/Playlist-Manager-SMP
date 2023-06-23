@@ -32,7 +32,10 @@ function _list(x, y, w, h) {
 	
 	// UI offset
 	var yOffset = _scale(6) + panel.row_height / 4;
-	const columnOffset = Math.min(_scale(2), 3);
+	const columnOffset = Math.max(_scale(2), 3);
+	// const columnOffset = _scale(2);
+	// console.log(_scale(4), _scale(2));
+	// console.log(scaleDPI.factor);
 	
 	// Header
 	var headerW = -1;
@@ -590,14 +593,14 @@ function _list(x, y, w, h) {
 		const autoPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.autoPlaylistColor, 0.8);
 		const smartPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.smartPlaylistColor, 0.8);
 		const uiPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.uiPlaylistColor, 0.8);
-		const categoryHeaderOffset = _scale(panel.fonts.size - 4);
+		if (!this.categoryHeaderOffset) {this.categoryHeaderOffset = _scale(panel.fonts.size - 4);}
 		const categoryHeaderColor = blendColors(panelBgColor, panel.colors.text, 0.6);
 		const categoryHeaderLineColor = blendColors(panelBgColor, categoryHeaderColor, 0.5);
 		const altColorRow = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
 		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // Compare to the next one or the previous one according to sort order
 		const rows = Math.min(this.items, this.rows);
 		const rowWidth =  this.x + this.w; // Ignore separator UI config
-		const selWidth =  this.bShowSep ? this.x + this.w - categoryHeaderOffset :  this.x + this.w; // Adjust according to UI config
+		const selWidth =  this.bShowSep ? this.x + this.w - this.categoryHeaderOffset :  this.x + this.w; // Adjust according to UI config
 		// Highlight
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
@@ -628,6 +631,7 @@ function _list(x, y, w, h) {
 		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
 		let cacheLen = 0;
 		const ellipisisW = this.bShowSize ? gr.CalcTextWidth('...', panel.fonts.normal) : 0;
+		const iconsRightW = this.uiElements['Scrollbar'].enabled && scroll ? this.w - (scroll.visible ? scroll.w : scroll.wHidden) : this.textWidth;
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -648,12 +652,14 @@ function _list(x, y, w, h) {
 				else if (this.methodState.split('\t')[0] === 'By tags'){dataKey = 'tags';}
 				if (dataKey.length){
 					const data = isArray(pls[dataKey]) ? pls[dataKey][0] : pls[dataKey]; // If it's an array get first value
+					let offsetLetter = 0;
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
-						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, this.textWidth , panel.row_height , RIGHT);
+						else if (sepLetter === 'W') {offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8;}
+						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, iconsRightW + offsetLetter , panel.row_height , RIGHT);
 					}
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
@@ -663,8 +669,9 @@ function _list(x, y, w, h) {
 						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
 						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
-							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.textWidth , panel.row_height , RIGHT);
+							if (sepLetter === 'W') {offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8;}
+							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
+							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, iconsRightW + offsetLetter, panel.row_height , RIGHT);
 						}
 					}
 					// Show always current letter at bottom. Also shows number
@@ -672,15 +679,16 @@ function _list(x, y, w, h) {
 						let sepIndex = i + indexSortStateOffset;
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
-						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, this.textWidth , panel.row_height , RIGHT);
+						else if (sepLetter === 'W') {offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8;}
+						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, iconsRightW + offsetLetter, panel.row_height , RIGHT);
 					}
 				}
 			}
 			// Playlists
 			let playlistDataText =  pls.name + (this.bShowSize ? ' (' + pls.size + ')' : '');
 			// Adjust playlist name according to width available but always show the size if possible
-			this.textWidth = this.w - columnsWidth;
+			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
 			if (this.bShowSize && playlistDataText.length > cacheLen) {
 				const w = gr.CalcTextWidth(playlistDataText, panel.fonts.normal);
 				if (w > this.textWidth - 30) {
@@ -778,7 +786,7 @@ function _list(x, y, w, h) {
 				});
 				const icon = iconChars[fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist ? 'playing' : 'loaded'];
 				// Draw
-				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, this.y + yOffset + (i * panel.row_height), this.textWidth, panel.row_height, RIGHT);
+				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, this.y + yOffset + (i * panel.row_height), iconsRightW, panel.row_height, RIGHT);
 			}
 			// Multiple selection
 			if (this.indexes.length) {
@@ -3480,7 +3488,10 @@ function _list(x, y, w, h) {
 				_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
 			}
 			if (!bInit) {
-				if (this.bDynamicMenus) {this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();}
+				if (this.bDynamicMenus) {
+					this.createMainMenuDynamic().then((result) => {
+						this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});
+					}
 				else if (this.mainMenuDynamic.length) {this.deleteMainMenuDynamic();}
 			}
 		}
@@ -4286,7 +4297,6 @@ function _list(x, y, w, h) {
 		}
 		
 		this.createMainMenuDynamic = ({file = folders.ajquerySMP + 'playlistmanagerentries.json', bRetry = true} = {}) => {
-			const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
 			this.deleteMainMenuDynamic();
 			let currId = this.mainMenuDynamic.length;
 			const bToFile = file && file.length;
@@ -4356,35 +4366,52 @@ function _list(x, y, w, h) {
 				})()
 				menusGlobal.forEach((menu) => {listExport[menu.type] = [];});
 				const promiseArr = [];
-				menusGlobal.forEach((menu, i) => {
-					const type = menu.type;
-					const name = menu.name;
-					const description = menu.description;
-					const arg = menu.arg || [i];
-					this.mainMenuDynamic.push({type, arg, name, description});
-					fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
-					if (!name.endsWith('\t (input)')) { // Don't export when requiring input
-						listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
+				return new Promise((resolve) => {
+					const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
+					menusGlobal.forEach((menu, i) => {
+						const type = menu.type;
+						const name = menu.name;
+						const description = menu.description;
+						const arg = menu.arg || [i];
+						this.mainMenuDynamic.push({type, arg, name, description});
+						fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
+						if (!name.endsWith('\t (input)')) { // Don't export when requiring input
+							listExport[type].push({name: wName + '/' + name}); // File/Spider Monkey Panel/Script commands
+						}
+						currId++;
+						if (test.Time > 250) {throw new Error('Script aborted by user');}
+					});
+					resolve(true);
+				})
+				.then(() => {
+					data[wName] = listExport;
+					// Don try to export for ajquery-xxx integration when it isn't installed
+					if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) {return true;}
+					return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
+				})
+				.catch((e) => {
+					if (bRetry) {
+						if (e.message === 'Script aborted by user') {
+							console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing'); 
+							return Promise.wait(5000).then(() => this.createMainMenuDynamic({file, bRetry: false}));
+						}
 					}
-					currId++;
-					if (test.Time > 250) {throw new Error('Script aborted by user');}
+					console.log('this.createMainMenuDynamic: unknown error'); 
+					console.log(e.message);
+					return false;
 				});
-				data[wName] = listExport;
-				// Don try to export for ajquery-xxx integration when it isn't installed
-				if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) {return true;}
-				return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
 			} catch (e) {
 				// Retry once
 				if (bRetry) {
 					if (e.message === 'Script aborted by user') {
 						console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing'); 
-						return Promise.wait(1000).then(() => this.createMainMenuDynamic({file, bRetry: false}));
+						return Promise.wait(5000).then(() => this.createMainMenuDynamic({file, bRetry: false}));
 					}
 				}
  				console.log('this.createMainMenuDynamic: unknown error'); 
 				console.log(e.message);
 			}
-			return false;
+			return Promise.resolve(false);
 		}
 		
 		this.deleteMainMenuDynamic = () => {
@@ -4559,10 +4586,13 @@ function _list(x, y, w, h) {
 			const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && (this.bShowSize || bColumns);
 			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
 			if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
-				this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
-				// Promise.wait(1000).then(() => {
-					// this.createMainMenuDynamic(); this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
-				// });
+				Promise.wait(5000).then(() => {
+					return this.createMainMenuDynamic();
+				}).then((result) => {
+					if (result) {console.log('Playlist Manager: created dynamic menus');}
+					this.exportPlaylistsInfo(); 
+					callbacksListener.checkPanelNamesAsync();
+				});
 			}
 		} else {this.deleteExportInfo();}
 		if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
@@ -4645,6 +4675,7 @@ function _list(x, y, w, h) {
 	this.lShortcutsHeader = JSON.parse(this.properties['lShortcutsHeader'][1]);
 	this.mShortcutsHeader = JSON.parse(this.properties['mShortcutsHeader'][1]);
 	this.modeUI = 'modern'
+	this.categoryHeaderOffset = 0;
 	this.uiElements = JSON.parse(this.properties['uiElements'][1]);
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	this.columns = JSON.parse(this.properties['columns'][1]);
