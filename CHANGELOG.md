@@ -64,6 +64,7 @@
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
 - ListenBrainz: playlists can now be exported to Spotify (when exporting to ListenBrainz). Requires Spotify's service to be connected to the user profile, and \'Play music on ListenBrainz\' [enabled](https://listenbrainz.org/profile/music-services/details/).
 - Clone: added 'Clone as Smart Playlist' entry for AutoPlaylists and Smart Playlists. This allows to easily switch between formats or clone existing XSP playlists.
+- Exporting Playlists: added a copy entry to the multiple playlist selection contextual menu.
 ### Changed
 - ListenBrainz: YouTube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 - ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).
@@ -89,10 +90,13 @@
 - UI: added new entries to configurable playlist menus: File locks, UI playlist locks and Sorting.
 - UI: now applies configurable playlist menus when using multiple selection.
 - UI: clicking anywhere on scrollbar will move list up/down depending on relative position, up to the current mouse position (mimics Win behavior).
+- UI: adjusted playing now / loaded playlist indicators and letters/numbers separators at right according to the scrollbar state. When it is enabled, those indicators are shifted a bit to the left. Alignment also changes according to the toolbar state (visible or minimized).
 - Console: improved console logging for empty playlists (no longer reporting 0 items found).
 - Console: improved error logging at multiple places.
 - Documentation: updated readme PDF to be up to date with all latest changes.
 - Documentation: added a quick help summary at the help button (by pressing shift).
+- Dynamic menus: delayed dynamic menus initialization some seconds after panel is loaded (to avoid foobar2000 hiccups due to SMP bad behavior).
+- Dynamic menus: retried 5 secs after first try in case it fails or gets blocked.
 ### Removed
 ### Fixed
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
@@ -101,6 +105,7 @@
 - UI: list view not maintaining current position at some instances. 'Online sync...'.
 - UI: focus was lost in some cases when editing an UI-only playlist.
 - UI: scrollbar not working properly when list exceeded current window size by one row.
+- UI: scrollbar not hiding in some cases.
 - UI: multiple minor fixes to menu entry checks (the tick shown if setting is enabled).
 - UI: loaded and playing now indicators not working for AutoPlaylists.
 - Quick-search: no longer works when the mouse is not over the panel.
