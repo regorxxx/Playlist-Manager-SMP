@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/23
+//23/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -339,7 +339,7 @@ function setTag(tags, list, z) {
 		}
 	}
 	// Rebuild dynamic menus if needed
-	if (bDone && (tags.includes('bSkipMenu') || pls.tags.includes('bSkipMenu')) && list.bDynamicMenus) {list.createMainMenuDynamic(); list.exportPlaylistsInfo();}
+	if (bDone && (tags.includes('bSkipMenu') || pls.tags.includes('bSkipMenu')) && list.bDynamicMenus) {list.createMainMenuDynamic().then(() => list.exportPlaylistsInfo());}
 	if (bDone && (tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast')) && list.bApplyAutoTags) {list.sort();}
 	return bDone;
 }
@@ -828,6 +828,39 @@ function exportPlaylistFile(list, z, defPath = '') {
 		if (list.properties.bOpenOnExport[1]) {_explorer(path);} 
 		console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 	} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name);}
+	return bDone;
+}
+
+// TODO: Use m3u8 as default format if original playlist format is not writable
+function exportPlaylistFiles(list, zArr, defPath = '') {
+	let bDone = false;
+	if (!zArr.length) {return bDone;}
+	const playlists = zArr.map((z) => list.data[z]);
+	if (playlists.some((pls) => pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs')) { // Don't load incompatible files
+		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
+		return bDone;
+	}
+	const playlistPaths = utils.SplitFilePath(playlists[0])[0];
+	let path = '';
+	try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, defPath || list.playlistsPath + 'Export\\', true));} 
+	catch(e) {return bDone;}
+	if (!path.length) {return bDone;}
+	if (path === playlistPaths) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return bDone;}
+	const bCopy = playlists.map((pls) => {
+		const playlistPath = pls.path;
+		const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
+		if (_isFile(path + playlistName)) {
+			let answer = WshShell.Popup('There is a file with same name. Overwrite?', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.no) {return bDone;}
+			bDone = _recycleFile(path);
+		}
+		bDone = _copyFile(playlistPath, path + playlistName);
+		if (bDone) {
+			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+		} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name);}
+	});
+	bDone = bDone && bCopy.every(Boolean);
+	if (list.properties.bOpenOnExport[1] && bCopy.some(Boolean)) {_explorer(path);} 
 	return bDone;
 }
 
