@@ -5,10 +5,10 @@
 ![GitHub](https://img.shields.io/github/license/regorxxx/Playlist-Manager-SMP)  
 A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
 
-![PLM_1](https://user-images.githubusercontent.com/83307074/169891736-d774fad4-e7c2-4943-992a-ceff7c955d86.gif)
+![plm1](https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/cc22416b-734f-4751-b6df-6e10ecc83573)
 
 ## Features
-![PLM_3](https://user-images.githubusercontent.com/83307074/169891784-9a8bea2a-ebc7-4a53-a10b-7b1abb397bfa.gif)
+![plm2](https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/3d8152e4-78ab-4fdd-a52d-de005107ffb3)
 
 * **Manages Playlist files and AutoPlaylists.** 
   * Playlist files are linked to physical files (.m3u8, .m3u, .pls, .xspf, .xsp or .fpl).
@@ -32,6 +32,9 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Allow to limit the number of tracks output by a query.
   * Allows to use other playlists as source (even AutoPlaylists) via queries.
   * Have the same advanced UI features than AutoPlaylists.
+  
+ ![plm4](https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/e576931d-d5aa-44a7-98a3-04d04dd93bc8)
+
 * Input search box with RegExp and track searching support. Also quick-searching by chars (like album list).
 * **[ListenBrainz](https://listenbrainz.org/) integration**: sync user's playlists, import by playlist's MBID; track content resolution by Title, Recording MBID, ...
 * **[Spotify](https://open.spotify.com/) integration**: sync user's playlists to ListenBrainz and Spotify at the same time.
@@ -153,7 +156,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 
 [^5]: .pls playlists format doesn't allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.
  
-![PLM_2](https://user-images.githubusercontent.com/83307074/169891819-bd5ce698-deac-4344-bad7-6540da17d414.gif)
+![plm3](https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/8c5b300d-e66e-48f0-b608-9008beea1b9d)
 
 ### Current limitations
 .fpl playlists (native format) are read only and can not be auto-saved since the format is closed source and there are no methods on [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save them on a path (without showing the 'save as' window), neither load them as handle lists (without loading on playlist tabs, for example to update the track count).  
