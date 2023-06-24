@@ -5,7 +5,9 @@
 ![GitHub](https://img.shields.io/github/license/regorxxx/Playlist-Manager-SMP)  
 A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
 
-![plm1](https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/cc22416b-734f-4751-b6df-6e10ecc83573)
+<p align="center">
+<img src="https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/cc22416b-734f-4751-b6df-6e10ecc83573">
+</p>
 
 ## Features
 ![plm2](https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/3d8152e4-78ab-4fdd-a52d-de005107ffb3)
