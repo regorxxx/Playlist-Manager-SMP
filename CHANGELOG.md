@@ -64,7 +64,8 @@
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.
 - ListenBrainz: playlists can now be exported to Spotify (when exporting to ListenBrainz). Requires Spotify's service to be connected to the user profile, and \'Play music on ListenBrainz\' [enabled](https://listenbrainz.org/profile/music-services/details/).
 - Clone: added 'Clone as Smart Playlist' entry for AutoPlaylists and Smart Playlists. This allows to easily switch between formats or clone existing XSP playlists.
-- Exporting Playlists: added a copy entry to the multiple playlist selection contextual menu.
+- Exporting Playlists: added a 'Copy playlist files to...' entry to the multiple playlist selection contextual menu.
+- Exporting Playlists: added a 'Export and Copy Tracks to...' entry to the multiple playlist selection contextual menu.
 ### Changed
 - ListenBrainz: YouTube searches are now cached (during the same session). i.e. matches are found much faster for tracks already searched.
 - ListenBrainz: matches on library -for playlist creation- are now preferred by higher rating and not live tracks (if possible).

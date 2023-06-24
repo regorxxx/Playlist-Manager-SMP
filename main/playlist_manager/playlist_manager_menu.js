@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/23
+//24/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -305,7 +305,7 @@ function createMenuLeft(forcedIndex = -1) {
 				}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
 				// Export and copy
 				menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
-					exportPlaylistFileWithTracks(list, z, void(0), list.properties['bCopyAsync'][1]);
+					exportPlaylistFileWithTracks({list, z, bAsync: list.properties.bCopyAsync[1]});
 				}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
 			}
 		}
@@ -803,6 +803,21 @@ function createMenuLeftMult(forcedIndexes = []) {
 		{	// Copy
 			menu.newEntry({entryText: 'Copy playlist files to...', func: () => {
 				exportPlaylistFiles(list, indexes.filter((z) => list.data[z].path.length));
+			}, flags});
+		}
+		{	// Export and copy
+			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
+				let path = '';
+				try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, list.playlistsPath + 'Export\\', true));} 
+				catch(e) {return;}
+				if (!path.length) {return;}
+				if (path === list.playlistsPath) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return;}
+				const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
+				indexes.forEach((z, i) => {
+					const plsPath = path + (bSubFolder ? list.data[z].name + '\\' : '');
+					exportPlaylistFileWithTracks({list, z, bAsync: list.properties.bCopyAsync[1], bNoInput: true, defPath: plsPath, bOpenOnExport: false});
+				});
+				if (list.properties.bOpenOnExport[1]) {_explorer(path);}
 			}, flags});
 		}
 		{	// Export

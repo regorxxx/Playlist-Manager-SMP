@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/23
+//24/06/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -840,12 +840,11 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
 		return bDone;
 	}
-	const playlistPaths = utils.SplitFilePath(playlists[0])[0];
 	let path = '';
 	try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, defPath || list.playlistsPath + 'Export\\', true));} 
 	catch(e) {return bDone;}
 	if (!path.length) {return bDone;}
-	if (path === playlistPaths) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return bDone;}
+	if (path === list.playlistsPath) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return bDone;}
 	const bCopy = playlists.map((pls) => {
 		const playlistPath = pls.path;
 		const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
@@ -864,7 +863,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 	return bDone;
 }
 
-function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
+function exportPlaylistFileWithRelPaths({list, z, ext = '', defPath = '', bNoInput = false} = {}) {
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -874,8 +873,12 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	const playlistPath = pls.path;
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let newPath = '';
-	try {newPath = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
-	catch(e) {return {bDone, newPath};}
+	if (bNoInput) {
+		newPath = defPath + playlistName;
+	} else {
+		try {newPath = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name,  defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true));} 
+		catch(e) {return {bDone, newPath};}
+	}
 	if (!newPath.length) {return {bDone, newPath};}
 	if (newPath === playlistPath) {console.log('Playlist Manager: can\'t export playlist to original path.'); return {bDone, newPath};}
 	const paths = getFilePathsFromPlaylist(playlistPath);
@@ -905,8 +908,8 @@ function exportPlaylistFileWithRelPaths(list, z, ext = '', defPath = '') {
 	return {bDone, newPath, paths};
 }
 
-function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
-	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths(list, z, void(0), defPath);
+function exportPlaylistFileWithTracks({list, z, defPath = '', bAsync = true, bNoInput = false, bOpenOnExport = true} = {}) {
+	let {bDone = false, newPath, paths} = exportPlaylistFileWithRelPaths({list, z, defPath, bNoInput});
 	if (!newPath.length) {return false;}
 	if (bDone) {
 		const pls = list.data[z];
@@ -943,7 +946,7 @@ function exportPlaylistFileWithTracks(list, z, defPath = '', bAsync = true) {
 				resolve('done');
 			});
 		}).then(() => {
-			if (list.properties.bOpenOnExport[1]) {_explorer(newPath);}
+			if (list.properties.bOpenOnExport[1] && bOpenOnExport) {_explorer(newPath);}
 			if (report.length) {fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);}
 			console.log('Playlist Manager: exporting tracks from ' + playlistName + ' done.');
 			return bDone;
