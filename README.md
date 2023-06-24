@@ -32,8 +32,9 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Allow to limit the number of tracks output by a query.
   * Allows to use other playlists as source (even AutoPlaylists) via queries.
   * Have the same advanced UI features than AutoPlaylists.
-* **[ListenBrainz](https://listenbrainz.org/) integration**: sync user's playlists, import by playlist's MBID; track content resolution by Title, Recording MBID, ....
-* **Complete documentation**, FAQ and step by step guide (see 'readmes\playlist_manager.pdf').
+* Input search box with RegExp and track searching support. Also quick-searching by chars (like album list).
+* **[ListenBrainz](https://listenbrainz.org/) integration**: sync user's playlists, import by playlist's MBID; track content resolution by Title, Recording MBID, ...
+* **[Spotify](https://open.spotify.com/) integration**: sync user's playlists to ListenBrainz and Spotify at the same time.
 * **Loads .m3u8, .m3u and .pls playlists x100 times faster than standard foobar** (if all items are on library). i.e. "As fast as the native format".
 * **Auto-saves changes** within foobar to bound playlists files. (configurable)
 * Automatically updates changes within the tracked folder. (configurable)
@@ -42,6 +43,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Copy playlist file to location.
   * Export playlist file along its tracks.
   * Export playlist file and convert its tracks to another format (using Foobar2000 converter presets).
+  * **Also work on multiple selected playlists on batch.**
 * **Bind playlist to physical files:**
   * Tracks playlists for changes and update bound files.
   * Auto-saving (configurable).
@@ -87,6 +89,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * **Filters:**
   * Show All | Only Autoplaylists & Smart Playlists | Only standard Playlists
   * Show All | Not locked | Only locked
+  * Upladed | Not uploaded to ListenBrainz
   * By extension
   * By tag
   * By category
@@ -122,6 +125,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * **UI:**
   * UI resizable on the fly.
   * UI elements can be selectivel enabled or disabled.
+  * Customizable columns with playlist's metadata (for size, etc)
   * Fully configurable mouse shortcuts.
   * Selection indicators.
   * Now playing and loaded playlist indicators.
@@ -129,6 +133,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Font Size (configurable).
   * Separators between different names/categories (configurable).
   * Ready to use presets. Also specific ones for Color Blindness (deuteranopia) and Grey Scale
+  * Scrollbar and drag n' drop.
   * Icons for different playlists types (configurable). Can also be hidden.
   * Colors for different playlists types, status, text, background and selection (configurable).
 * **Shortcuts:** modifiers allow to directly apply different actions on playlists. See manual.
