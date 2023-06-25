@@ -54,11 +54,12 @@
 - Keyboard shortcuts: pressing F5 will create a copy of the highlighted playlist with same extension. AutoPlaylists, Smart Playlists and UI-only playlists will maintain their format.
 - Keyboard shortcuts: pressing F6 will export the highlighted playlist to ListenBrainz (+ Spotify if configured to do so).
 - Keyboard shortcuts: pressing F7 will create a new empty playlist.
-- Keyboard shortcuts: pressing F8 will delete the highlighted playlist.
+- Keyboard shortcuts: pressing F8 will cycle current view by category.
 - Keyboard shortcuts: pressing F9 will filter the manager showing playlists with the selected tracks (if the search box and path searching are enabled) or show a popup with the results (otherwise).
 - Keyboard shortcuts: pressing F10 will open the settings menu or the list menu (when also pressing shift).
 - Keyboard shortcuts: pressing F11 will open the documentation (pdf).
 - Keyboard shortcuts: pressing F12 will open playlists tracked folder.
+- Keyboard shortcuts: pressing DEL will delete the highlighted playlist.
 - Keyboard shortcuts: pressing 'º', '\' or 'Numpad /' will globally hide/show the playlist's metadata columns.
 - Playlist formats: creation and last modified date values are now cached for UI-only playlists and AutoPlaylists. To be used along the new date sorting options.
 - Playlist formats: UI-only playlists metadata (tag, category and tracks' tags) is now editable (and cached between sessions). This allows for sorting and categorization of UI-only playlists.

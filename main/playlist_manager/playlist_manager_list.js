@@ -1694,17 +1694,9 @@ function _list(x, y, w, h) {
 							this.add({bEmpty: true});
 							return true;
 						}
-						case 'f8': // Delete playlist (delete)
-							if (z !== -1) {
-								this.removePlaylist(z);
-								setTimeout(() => { // Required since input popup invokes move callback after this func!
-									this.cacheLastPosition(Math.min(z, this.items - 1));
-									this.jumpLastPosition();
-									this.move(this.mx, this.my); // Update cursor
-								}, 10);
-								return true;
-							}
-							return false;
+						case 'f8': // Cycle categories
+							cycleCategories();
+							return true;
 						case 'f9': // Filter playlists with selected tracks / Search
 							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 							if (selItems && selItems.Count) {
@@ -1763,6 +1755,17 @@ function _list(x, y, w, h) {
 							overwriteProperties(this.properties);
 							this.updateUIElements();
 							return true;
+						case 'delete': // Delete playlist (delete)
+							if (z !== -1) {
+								this.removePlaylist(z);
+								setTimeout(() => { // Required since input popup invokes move callback after this func!
+									this.cacheLastPosition(Math.min(z, this.items - 1));
+									this.jumpLastPosition();
+									this.move(this.mx, this.my); // Update cursor
+								}, 10);
+								return true;
+							}
+							break; // Don't process when not over playlist
 					}
 				}
 				// Quick-search
@@ -4813,12 +4816,13 @@ function _list(x, y, w, h) {
 					'\n- F5: copy playlist (with same format).' +
 					'\n- F6: export playlist to ListenBrainz (+ Spotify).' +
 					'\n- F7: new playlist.' +
-					'\n- F8: delete playlist.' +
+					'\n- F8: cycle categories.' +
 					'\n- F9: search playlists with selected tracks.' +
 					'\n- F10: settings menu or list menu (+ Shift).' +
 					'\n- F11: documentation (pdf).' +
 					'\n- F12: open playlists tracked folder.' +
 					'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
+					'\n- DEL: delete playlist.' +
 					'\n' +
 					'\nQuick-search' +
 					'\n-------------------' +
