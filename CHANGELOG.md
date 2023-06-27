@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.21](#050-beta21---2023-06-27)
 - [0.5.0-beta.20](#050-beta20---2023-05-16)
 - [0.5.0-beta.19](#050-beta19---2023-05-08)
 - [0.5.0-beta.18](#050-beta18---2023-03-08)
@@ -32,6 +33,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.21] - 2023-06-27
 ### Added
 - Tags: new auto-tags named 'bPinnedFirst' and 'bPinnedLast' which force showing the tagged playlists at top/bottom of the list, for any sorting/filtering combination.
 - UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
@@ -101,6 +108,7 @@
 - Dynamic menus: retried 5 secs after first try in case it fails or gets blocked.
 ### Removed
 ### Fixed
+- UI: category filter is no longer set on first innit in case panel is installed to track UI-only playlists and/or old playlists files with category set.
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
 - UI: settings menu opening when clicking at blank space within the buttons toolbar at header instead of just the settings and power action buttons.
 - UI: incorrect settings for panel/buttons colors using dark mode in foobar2000.
@@ -762,7 +770,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.20...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.21...HEAD
+[0.5.0-beta.21]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.20...v0.5.0-beta.21
 [0.5.0-beta.20]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.19...v0.5.0-beta.20
 [0.5.0-beta.19]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.18...v0.5.0-beta.19
 [0.5.0-beta.18]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.17...v0.5.0-beta.18
