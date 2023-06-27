@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/23
+//27/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -371,6 +371,14 @@ let delayAutoUpdate = () => void(0);
 		});
 		setTimeout(() => removeEventListener('on_notify_data', null, id), 20000);
 	}
+	// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first innit...
+	new Promise((resolve) => {
+		const timer = setInterval(() => {
+			if (list) {clearInterval(timer); resolve();}
+		}, 1000);
+	}).then(() => {
+		list.resetFilter();
+	});
 }
 // Disable panel on init until it's done
 if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
