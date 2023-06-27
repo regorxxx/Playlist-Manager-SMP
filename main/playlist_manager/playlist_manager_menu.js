@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/06/23
+//27/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -1596,7 +1596,8 @@ function createMenuRightTop() {
 					if (list.bAllPls) {
 						fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom colour to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name);
 					}
-					createMenuRight().btn_up(-1,-1, null, 'Manual refresh');
+					list.manualRefresh();
+					list.resetFilter();
 				}});
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bAllPls ? 0 : 1);});
