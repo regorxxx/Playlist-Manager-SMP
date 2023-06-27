@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/23
+//27/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -58,7 +58,7 @@ function _list(x, y, w, h) {
 	// Helpers
 	const headerRe = /\n[-]*$/;
 	const regexHours = /^\d*:\d*:/;
-	const regexWeek = /^\dw/;
+	const regexWeek = /^\d*wk/;
 	const regexDay = /^\dd/;
 	const regexTwoDecs = /^(\d*\.\d{2,3})/;
 	const regexHundreds = /^(\d{3,4})/;
@@ -100,12 +100,12 @@ function _list(x, y, w, h) {
 			switch (key) {
 				case 'duration': { // Format it with no more than 4 digits
 					val = utils.FormatDuration(val);  // Xw xd XX:XX:XX
-					if (regexHours.test(val)) {
-						val = round(pls[key] / 3600, 1) + ' h';
+					if (regexWeek.test(val)) {
+						val = round(pls[key] / 604800, 1) + ' w';
 					} else if (regexDay.test(val)) {
 						val = round(pls[key] / 86400, 1) + ' d';
-					} else if (regexWeek.test(val)) {
-						val = round(pls[key] / 604800, 1) + ' w';
+					} else if (regexHours.test(val)) {
+						val = round(pls[key] / 3600, 1) + ' h';
 					}
 					break;
 				}
@@ -3483,7 +3483,7 @@ function _list(x, y, w, h) {
 						this.dataUI.push(item);
 					}
 				});
-				const data = [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI];
+				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI]);
 				const stripMeta = ['sortIdx'];
 				data.forEach((pls) => {
 					stripMeta.forEach((key) => delete pls[key]);
