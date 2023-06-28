@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/06/23
+//29/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -580,7 +580,6 @@ function createMenuLeft(forcedIndex = -1) {
 				const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 				const lockName = plman.GetPlaylistLockName(index);
 				const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
-				const bLocked = !bSMPLock || currentLocks.size;
 				const flags = bSMPLock ? MF_STRING: MF_GRAYED;
 				const subMenuName = menu.newMenu('Edit UI Playlist lock...');
 				menu.newEntry({menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED});
@@ -656,7 +655,6 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
-	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
@@ -666,6 +664,9 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const isPlsLockable = (pls) => {return isPlsEditable(pls) || pls.extension === '.strm';};
 	const isPlsUI = (pls) => {return pls.extension === '.ui';};
 	const nonPlsUI = playlists.filter((pls) => {return pls.extension !== '.ui';});
+	// Pls
+	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
+	const playlistsLoaded = playlists.filter((pls) => {return isPlsLoaded(pls);});
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
 	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => {return isPlsLoaded(pls);});
@@ -878,24 +879,98 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 		// Locks UI playlist
 		if (showMenus['UI playlist locks']) {
-			const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist', 'ExecuteDefaultAction'];
-			const defaultLockTypes = lockTypes.slice(0, 4);
-			menu.newEntry({entryText: 'Edit UI Playlist lock', func: () => {
-				let newLock = '';
-				try {newLock = utils.InputBox(window.ID, 'Lock types, multiple values separated by \',\':\n\n' + _p(lockTypes.joinEvery(', ', 4)), window.Name, '', true);} 
-				catch(e) {return;}
-				newLock = [...new Set(newLock.split(/;|,/g)).intersection(lockTypes)]; // This filters blank values
-				playlistsUI.forEach((pls, i) => {
+			if (bIsPlsUISome || bIsPlsLoadedSome) {
+				const lockTypes = [
+					{type: 'AddItems', entryText: 'Adding items'},
+					{type: 'RemoveItems', entryText: 'Removing items'},
+					{type: 'ReplaceItems', entryText: 'Replacing items'},
+					{type: 'ReorderItems', entryText: 'Sorting items'},
+					{type: 'RenamePlaylist', entryText: 'Renaming playlist'},
+					{type: 'RemovePlaylist', entryText: 'Deleting playlist'},
+					{type: 'ExecuteDefaultAction', entryText: 'Default action'}
+				];
+				let bSMPLock = false, lockName = new Set();
+				playlistsLoaded.forEach((pls, i) => {
 					const index = plman.FindPlaylist(pls.nameId);
-					const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
-					const lockName = plman.GetPlaylistLockName(index);
-					const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
-					const bLocked = !bSMPLock || playlistLockTypes.size;
-					const oldLock = (bLocked ? [...playlistLockTypes] : []);
-					if (!isArrayEqual(newLock, oldLock)) {plman.SetPlaylistLockedActions(index, newLock);}
+					const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
+					const lockNamePls = plman.GetPlaylistLockName(index);
+					if (!bSMPLock) {bSMPLock = (lockNamePls === 'foo_spider_monkey_panel' || !lockNamePls);}
+					if (!bSMPLock) {lockName.add(lockNamePls);}
 				});
-			}, flags: bIsPlsUISome || bIsPlsLoadedSome ? MF_STRING : MF_GRAYED});
+				lockName =  [...lockName][0] + (lockName.size > 1 ?  ' & ...' : '');
+				const flags = bSMPLock ? MF_STRING: MF_GRAYED;
+				const subMenuName = menu.newMenu('Edit UI Playlist lock...');
+				menu.newEntry({menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				lockTypes.forEach((lock) => {
+					menu.newEntry({menuName: subMenuName, entryText: lock.entryText, func: () => {
+						const report = [];
+						playlistsLoaded.forEach((pls, i) => {
+							const index = plman.FindPlaylist(pls.nameId);
+							const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
+							const lockName = plman.GetPlaylistLockName(index);
+							const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+							if (bSMPLock) {
+								if (currentLocks.has(lock.type)) {
+									currentLocks.delete(lock.type);
+								} else {
+									currentLocks.add(lock.type);
+								}
+								plman.SetPlaylistLockedActions(index, [...currentLocks]);
+							} else {
+								report.push('\t- ' + pls.nameId + ': ' + lockName)
+							}
+						});
+						if (report.length) {
+							fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name);
+						}
+					}, flags});
+					menu.newCheckMenu(subMenuName, lock.entryText, void(0), () => {
+						return playlistsLoaded.every((pls, i) => {
+							const index = plman.FindPlaylist(pls.nameId);
+							const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
+							return currentLocks.has(lock.type);
+						});
+					});
+				});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'All locks', func: () => {
+					const report = [];
+					playlistsLoaded.forEach((pls, i) => {
+						const index = plman.FindPlaylist(pls.nameId);
+						const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
+						const lockName = plman.GetPlaylistLockName(index);
+						const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+						if (bSMPLock) {
+							plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
+						} else {
+							report.push('\t- ' + pls.nameId + ': ' + lockName)
+						}
+					});
+					if (report.length) {
+						fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name);
+					}
+				}, flags});
+				menu.newEntry({menuName: subMenuName, entryText: 'None', func: () => {
+					const report = [];
+					playlistsLoaded.forEach((pls, i) => {
+						const index = plman.FindPlaylist(pls.nameId);
+						const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
+						const lockName = plman.GetPlaylistLockName(index);
+						const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+						if (bSMPLock) {
+							plman.SetPlaylistLockedActions(index, []);
+						} else {
+							report.push('\t- ' + pls.nameId + ': ' + lockName)
+						}
+					});
+					if (report.length) {
+						fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name);
+					}
+				}, flags});
+			}
 		}
+		
 		if (showMenus['Sorting'] && bManualSorting) {
 			menu.newEntry({entryText: 'sep'});
 			const subMenuName = menu.newMenu('Sorting...');
