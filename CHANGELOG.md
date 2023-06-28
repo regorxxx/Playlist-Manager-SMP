@@ -42,6 +42,7 @@
 ### Removed
 ### Fixed
 - UI: workaround for a SMP crash with some combinations of sizes drawing rounded boxes. This doesn't solve the underlying problem but at least bypass the crash and just omits painting the element.
+- UI: another workaround for a SMP crash with some combinations of sizes drawing rounded boxes, this time aiming to avoid the previous situation by properly adjusting arc of rounded boxes whenever it's possible.
 
 ## [0.5.0-beta.21] - 2023-06-27
 ### Added

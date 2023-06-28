@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/06/23
+//29/06/23
 
 /* 
 	FbTitleFormat
@@ -76,8 +76,8 @@ function extendGR (gr , options = {DrawRoundRect: true, FillRoundRect: true}) {
 			} catch (e) {
 				let bRetry = true;
 				const newArgs = [...arguments];
-				newArgs[4] += 1;
-				newArgs[5] += 1;
+				newArgs[4] = newArgs[3] / 2 - Number.EPSILON;
+				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
 					that = old.apply(gr,[...arguments]);
 				} catch(e) {bRetry = false;}
@@ -107,8 +107,8 @@ function extendGR (gr , options = {DrawRoundRect: true, FillRoundRect: true}) {
 			} catch (e) {
 				let bRetry = true;
 				const newArgs = [...arguments];
-				newArgs[4] += 1;
-				newArgs[5] += 1;
+				newArgs[4] = newArgs[3] / 2 - Number.EPSILON;
+				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
 					that = old.apply(gr,[...arguments]);
 				} catch(e) {bRetry = false;}

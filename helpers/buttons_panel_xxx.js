@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/06/23
+//29/06/23
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -171,96 +171,98 @@ function themedButton(
 		// Draw Button
 		if (buttonsPanel.useThemeManager()) {this.g_theme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);}
 		else {
-			const x = xCalc + 1; const y = yCalc; const w =  wCalc - 4; const h =  hCalc - 2; const arc = 3;
-			gr.SetSmoothingMode(2); // Antialias for lines
-			const toolbarAlpha = Math.min(buttonsPanel.config.toolbarTransparency * 10, 100);
-			switch (this.state) {
-				case buttonStates.normal:
-					if (bDrawBackground) {
-						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
-						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-						gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
-						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
-					} else if (buttonsPanel.config.bToolbar) {
-							gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+			const x = xCalc + 1; const y = yCalc; const w = Math.max(wCalc - 4, 0); const h = Math.max(hCalc - 2, 0); const arc = Math.min(w, h, _scale(5)) / 2;
+			if (w > 0 && h > 0 && arc > 0) {
+				gr.SetSmoothingMode(2); // Antialias for lines
+				const toolbarAlpha = Math.min(buttonsPanel.config.toolbarTransparency * 10, 100);
+				switch (this.state) {
+					case buttonStates.normal:
+						if (bDrawBackground) {
+							gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+							gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+							gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
+							gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+							gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+						} else if (buttonsPanel.config.bToolbar) {
+								gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+								if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
+						} else {
+							gr.DrawRoundRect(x, y, w, h, arc, arc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+						}
+						break;
+					case buttonStates.hover:
+						buttonsPanel.tooltipButton.SetValue((buttonsPanel.config.bShowID 
+							? (isFunction(this.description) 
+								? this.descriptionWithID() 
+								: this.descriptionWithID) 
+							: (isFunction(this.description) 
+								? this.description() 
+								: this.description)
+						) , true); // ID or just description, according to string or func.
+						if (bDrawBackground) {
+							gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+							gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+							gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
+						} else if (buttonsPanel.config.bToolbar) {
+							gr.FillSolidRect(x, y, wCalc, h, 1, RGB(160,160,160));
+						}
+						if (buttonsPanel.config.bToolbar) {
 							if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
-					} else {
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
-					}
-					break;
-				case buttonStates.hover:
-					buttonsPanel.tooltipButton.SetValue((buttonsPanel.config.bShowID 
-						? (isFunction(this.description) 
-							? this.descriptionWithID() 
-							: this.descriptionWithID) 
-						: (isFunction(this.description) 
-							? this.description() 
-							: this.description)
-					) , true); // ID or just description, according to string or func.
-					if (bDrawBackground) {
-						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
-						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-						gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
-					} else if (buttonsPanel.config.bToolbar) {
-						gr.FillSolidRect(x, y, wCalc, h, 1, RGB(160,160,160));
-					}
-					if (buttonsPanel.config.bToolbar) {
-						if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
-						gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
-						gr.DrawRect(x, y + 1, w, h, 1, RGB(243,243,243));
-					} else {
-						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
-					}
-					if (bDrawBackground) {
-						gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
-						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(17,166,248,50));
-					} else if (buttonsPanel.config.bToolbar) {
-						gr.FillSolidRect(x, y + 1, w, h / 2 - 1, RGBA(255,255,255,50));
-						gr.FillSolidRect(x, y + h / 2, w, h / 2, RGBA(0,0,0,10));
-					} else {
-						gr.FillRoundRect(x, y + 1, w, h / 2 - 1, arc, arc, RGBA(255,255,255,50));
-						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(0,0,0,10));
-					}
-					if (bDrawBackground) {
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
-					} else if (!buttonsPanel.config.bToolbar) {
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(160,160,160));
-					}
-					break;
-				case buttonStates.down:
-					if (bDrawBackground) {
-						gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
-						gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
-						gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
-					}
-					if (buttonsPanel.config.bToolbar) {
-						if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
-						gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
-					} else {
-						gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
-					}
-					if (bDrawBackground) {
-						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
-						gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
-						gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(37,196,255,80));
-						gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 3, RGBA(0,0,0,50));
-					} else if (buttonsPanel.config.bToolbar) {
-						gr.FillSolidRect(x - 1, y, w + 2, h / 8, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
-						gr.FillSolidRect(x - 1, y, w + 2, h / 6, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
-						gr.FillSolidRect(x - 1, y + h / 6, w + 2, h / 6, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
-						gr.FillSolidRect(x - 1, y, w + 2, h, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
-					} else {
-						gr.FillRoundRect(x, y, w, h / 8, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
-						gr.FillRoundRect(x, y, w, h / 6, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
-						gr.FillRoundRect(x, y + h / 6, w, h / 6, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
-						gr.FillRoundRect(x, y, w, h, arc / 2, arc / 2, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
-					}
-					break;
-				case buttonStates.hide:
-					return;
+							gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+							gr.DrawRect(x, y + 1, w, h, 1, RGB(243,243,243));
+						} else {
+							gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+						}
+						if (bDrawBackground) {
+							gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
+							gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(17,166,248,50));
+						} else if (buttonsPanel.config.bToolbar) {
+							gr.FillSolidRect(x, y + 1, w, h / 2 - 1, RGBA(255,255,255,50));
+							gr.FillSolidRect(x, y + h / 2, w, h / 2, RGBA(0,0,0,10));
+						} else {
+							gr.FillRoundRect(x, y + 1, w, h / 2 - 1, arc, arc, RGBA(255,255,255,50));
+							gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(0,0,0,10));
+						}
+						if (bDrawBackground) {
+							gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+						} else if (!buttonsPanel.config.bToolbar) {
+							gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(160,160,160));
+						}
+						break;
+					case buttonStates.down:
+						if (bDrawBackground) {
+							gr.FillRoundRect(x, y, w, h, arc, arc, RGB(240,240,240));
+							gr.FillGradRect(x, y + 2, w, h / 2 - 2, 180, RGB(241,241,241), RGB(235,235,235))
+							gr.FillGradRect(x, y + h / 2, w, h / 2, 180, RGB(219,219,219), RGB(207,207,207))
+						}
+						if (buttonsPanel.config.bToolbar) {
+							if (bLast) {gr.DrawLine(xCalc + wCalc - 2, y, xCalc + wCalc - 2, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));}
+							gr.DrawLine(xCalc - 1, y, xCalc - 1, y + hCalc, 1, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha));
+						} else {
+							gr.DrawRoundRect(x, y, w, h, arc, arc, 1, RGB(0,0,0));
+						}
+						if (bDrawBackground) {
+							gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 1, RGB(243,243,243));
+							gr.FillRoundRect(x, y, w, h / 2, arc, arc, RGBA(225,243,252,255));
+							gr.FillRoundRect(x, y + h / 2, w, h / 2, arc, arc, RGBA(37,196,255,80));
+							gr.DrawRoundRect(x + 1, y + 1, w - 2, h - 2, arc, arc, 3, RGBA(0,0,0,50));
+						} else if (buttonsPanel.config.bToolbar) {
+							gr.FillSolidRect(x - 1, y, w + 2, h / 8, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+							gr.FillSolidRect(x - 1, y, w + 2, h / 6, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+							gr.FillSolidRect(x - 1, y + h / 6, w + 2, h / 6, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+							gr.FillSolidRect(x - 1, y, w + 2, h, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+						} else {
+							gr.FillRoundRect(x, y, w, h / 8, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+							gr.FillRoundRect(x, y, w, h / 6, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 2));
+							gr.FillRoundRect(x, y + h / 6, w, h / 6, arc / 4, arc / 4, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+							gr.FillRoundRect(x, y, w, h, arc / 2, arc / 2, opaqueColor(buttonsPanel.config.toolbarColor, toolbarAlpha / 5));
+						}
+						break;
+					case buttonStates.hide:
+						return;
+				}
+				gr.SetSmoothingMode(0);
 			}
-			gr.SetSmoothingMode(0);
 		}
 		const offset = 10;
 		if (this.icon !== null) {
