@@ -44,7 +44,7 @@
 - UI: new menu entry to create UI-only playlists.
 - UI: new lite mode to exclusively track UI-only playlists, thus behaving like a simple replacement for foo_plorg. Extends the current settings to disable/enable features, changing how the panel works at low level. i.e. no playlist files, no folder tracking, etc.
 ### Changed
-- UI: configurable playlist menus is now at 'Features...' submenu within the settings menu. 
+- UI: configurable playlist menus is now at 'Features...' submenu within the settings menu. No longer associated to "menu entries" since it now affects other settings.
 - UI: settings menu, new playlist menu, keyboard shortcuts and filter buttons now follow the settings for shown/hidden features. i.e. if menu entries to edit tags are hidden, then all other features depending on it will also be hidden (like filtering or sorting by tag). (see above)
 ### Removed
 ### Fixed
