@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/06/23
+//28/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -67,7 +67,7 @@ function createMenuLeft(forcedIndex = -1) {
 	// Entries
 	{	// Load
 		// Load playlist within foobar2000. Only 1 instance allowed
-		menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {
+		!list.bLiteMode && menu.newEntry({entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {
 			if (pls.isAutoPlaylist) {
 				const idx = getPlaylistIndexArray(pls.nameId);
 				if (idx.length) {
@@ -159,7 +159,7 @@ function createMenuLeft(forcedIndex = -1) {
 					}
 				}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			}
-		} else {
+		} else if (!list.bLiteMode) {
 			// Updates playlist file with any new changes on the playlist binded within foobar2000
 			menu.newEntry({entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
 				if (_isFile(pls.path)) {
@@ -257,27 +257,29 @@ function createMenuLeft(forcedIndex = -1) {
 	{	// Export and clone
 		//	AutoPlaylists clone
 		if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
-			menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
+			!list.bLiteMode && menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 				const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 				cloneAsStandardPls(list, z, remDupl, list.bAdvTitle);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
 			menu.newEntry({entryText: 'Clone as AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
 				cloneAsAutoPls(list, z);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
-			menu.newEntry({entryText: 'Clone as Smart Playlist and edit...', func: () => { // Here creates a Kodi XSP smart no matter the original format
+			!list.bLiteMode && menu.newEntry({entryText: 'Clone as Smart Playlist and edit...', func: () => { // Here creates a Kodi XSP smart no matter the original format
 				cloneAsSmartPls(list, z);
 			}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
-			menu.newEntry({entryText: 'Export as json file...', func: () => {
-				const path = list.exportJson({idx: z, bAllExt: true});
-				if (_isFile(path)) {_explorer(path);}
-			}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
-			if (pls.extension === '.xsp') {
-				// Copy
-				menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
-					exportPlaylistFile(list, z);
-				}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+			if (showMenus['Export and copy']) {
+				!list.bLiteMode && menu.newEntry({entryText: 'Export as json file...', func: () => {
+					const path = list.exportJson({idx: z, bAllExt: true});
+					if (_isFile(path)) {_explorer(path);}
+				}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED});
+				if (pls.extension === '.xsp') {
+					// Copy
+					!list.bLiteMode && menu.newEntry({entryText: 'Copy playlist file to...', func: () => {
+						exportPlaylistFile(list, z);
+					}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED});
+				}
 			}
-		} else {	// Export and Rel. Paths handling
+		} else if (!list.bLiteMode) {	// Export and Rel. Paths handling
 			if (showMenus['Relative paths handling']) {
 				// Rel Paths
 				menu.newEntry({entryText: 'Force relative paths...', func: () => {
@@ -308,6 +310,11 @@ function createMenuLeft(forcedIndex = -1) {
 					exportPlaylistFileWithTracks({list, z, bAsync: list.properties.bCopyAsync[1]});
 				}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
 			}
+		} else { // Lite mode
+			// Clone as
+			menu.newEntry({entryText: 'Clone in UI', func: () => {
+				clonePlaylistFile(list, z, '.ui');
+			}});
 		}
 		if (showMenus['Export and copy']) {
 			{	// Export and Convert
@@ -589,6 +596,13 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags});
 					menu.newCheckMenu(subMenuName, lock.entryText, void(0), () => {return currentLocks.has(lock.type);});
 				});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'All locks', func: () => {
+					plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
+				}, flags});
+				menu.newEntry({menuName: subMenuName, entryText: 'None', func: () => {
+					plman.SetPlaylistLockedActions(index, []);
+				}, flags});
 			}
 		}
 		if (showMenus['Sorting'] && bManualSorting) {
@@ -613,7 +627,7 @@ function createMenuLeft(forcedIndex = -1) {
 			menu.newEntry({entryText: 'sep'});
 			// Deletes playlist file and playlist loaded
 			menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
-			menu.newEntry({entryText: 'Open file on explorer', func: () => {
+			!list.bLiteMode && menu.newEntry({entryText: 'Open file on explorer', func: () => {
 				if (pls.isAutoPlaylist) {_explorer(list.filename);} // Open AutoPlaylist json file
 				else {_explorer(_isFile(pls.path) ? pls.path : list.playlistsPath);} // Open playlist path
 			}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED});
@@ -922,11 +936,18 @@ function createMenuRight() {
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	const lb = listenBrainz;
+	// Enabled menus
+	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{ // New Playlists
-		menu.newEntry({entryText: 'New playlist file...', func: () => {list.add({bEmpty: true});}});
-		menu.newEntry({entryText: 'New AutoPlaylist...', func: () => {list.addAutoplaylist();}});
-		menu.newEntry({entryText: 'New Smart Playlist...', func: () => {list.addSmartplaylist();}});
+		!list.bLiteMode && menu.newEntry({entryText: 'New Playlist File...', func: () => {list.add({bEmpty: true});}});
+			menu.newEntry({entryText: 'New AutoPlaylist...', func: () => {list.addAutoplaylist();}});
+		!list.bLiteMode && menu.newEntry({entryText: 'New Smart Playlist...', func: () => {list.addSmartplaylist();}});
+		menu.newEntry({entryText: 'New UI-only Playlist...', func: () => {list.addUIplaylist({bInputName: true});}});
+		if (showMenus['Folders']) {
+			menu.newEntry({entryText: 'sep'});
+			menu.newEntry({entryText: 'New Folder...', func: () => {list.addFolder();}});
+		}
 		menu.newEntry({entryText: 'sep'});
 		menu.newEntry({entryText: 'New playlist from active...', func: () => {list.add({bEmpty: false});}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
@@ -950,201 +971,203 @@ function createMenuRight() {
 				list.showCurrPls();
 			}
 		}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
-		menu.newEntry({entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-			if (!await checkLBToken()) {return Promise.resolve(false);}
-			let bDone = false;
-			let playlist_mbid = '';
-			try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, menu.cache.playlist_mbid || '', true);}
-			catch (e) {bDone = true;}
-			playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
-			if (playlist_mbid.length) {
-				menu.cache.playlist_mbid = playlist_mbid;
-				const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
-				if (!token) {return Promise.resolve(false);}
-				pop.enable(true, 'Importing...', 'Importing tracks from ListenBrainz...\nPanel will be disabled during the process.');
-				lb.importPlaylist({playlist_mbid}, token)
-					.then((jspf) => {
-						if (jspf) {
-							let bXSPF = false;
-							if (list.playlistsExtension !== '.xspf') {
-								const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.Name, popup.question + popup.yes_no);
-								if (answer === popup.yes) {bXSPF = true;}
-							} else {bXSPF = true;}
-							const data = lb.contentResolver(jspf);
-							const handleArr = data.handleArr;
-							const notFound = data.notFound;
-							const playlist = jspf.playlist;
-							const useUUID = list.optionsUUIDTranslate();
-							const playlistName = playlist.title;
-							const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
-							const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
-							const tags = ['ListenBrainz'];
-							const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
-							if (list.bAutoLoadTag) {tags.push('bAutoLoad');}
-							if (list.bAutoLockTag) {tags.push('bAutoLock');}
-							if (list.bMultMenuTag) {tags.push('bMultMenu');}
-							if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(tags).has(tag)) {tags.push(tag);}});}
-							if (!bXSPF) {
-								let bYouTube = false;
-								if (notFound.length && isYouTube) {
-									const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
-									if (answer === popup.yes) {bYouTube = true;}
-								}
-								const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
-								const backPath = playlistPath + '.back';
-								// Find missing tracks on youtube
-								if (bYouTube) {
-									pop.enable(false, 'YouTube...', 'Importing tracks from YouTube...\nPanel will be disabled during the process.');
-									list.disableAutosaveForPls(playlistNameId);
-									// Add MBIDs to youtube track metadata
-									notFound.forEach((track) => track.tags = {musicbrainz_trackid: track.identifier});
-									// Send request in parallel every x ms and process when all are done
-									return Promise.parallel(notFound, youtube.searchForYoutubeTrack, 5).then((results) => {
-										let j = 0;
-										const itemsLen = handleArr.length;
-										let foundLinks = 0;
-										results.forEach((result, i) => {
-											for (void(0); j <= itemsLen; j++) {
-												if (result.status !== 'fulfilled') {break;}
-												const link = result.value;
-												if (!link || !link.length) {break;}
-												if (!handleArr[j]) {
-													handleArr[j] = link.url;
-													foundLinks++;
-													break;
-												}
-											}
-										});
-										const bLoaded = plman.FindPlaylist(playlistNameId) !== -1;
-										const idx = plman.FindOrCreatePlaylist(playlistNameId, true);
-										plman.ClearPlaylist(idx);
-										return plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true)
-											.finally(() => {
-												plman.ActivePlaylist = idx;
-												const handleList = plman.GetPlaylistItems(idx);
-												console.log('Found ' + foundLinks + ' tracks on YouTube');
-												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-												if (_isFile(playlistPath)) {
-													let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
-													if (answer === popup.no) {return false;}
-													_renameFile(playlistPath, backPath);
-												}
-												bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
-												// Restore backup in case something goes wrong
-												if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
-												else if (_isFile(backPath)) {_deleteFile(backPath);}
-												if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
-												if (bDone && !bLoaded) {plman.RemovePlaylist(idx);}
-												clearInterval(delay);
-												list.enableAutosaveForPls(playlistNameId);
-												return bDone;
-											});
-									});
-								} else {
-									const handleList = data.handleList;
-									const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-									if (_isFile(playlistPath)) {
-										let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
-										if (answer === popup.no) {return false;}
-										_renameFile(playlistPath, backPath);
+		if (showMenus['Online sync']) {
+			menu.newEntry({entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
+				if (!await checkLBToken()) {return Promise.resolve(false);}
+				let bDone = false;
+				let playlist_mbid = '';
+				try {playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, menu.cache.playlist_mbid || '', true);}
+				catch (e) {bDone = true;}
+				playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
+				if (playlist_mbid.length) {
+					menu.cache.playlist_mbid = playlist_mbid;
+					const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
+					if (!token) {return Promise.resolve(false);}
+					pop.enable(true, 'Importing...', 'Importing tracks from ListenBrainz...\nPanel will be disabled during the process.');
+					lb.importPlaylist({playlist_mbid}, token)
+						.then((jspf) => {
+							if (jspf) {
+								let bXSPF = false;
+								if (list.playlistsExtension !== '.xspf') {
+									const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.Name, popup.question + popup.yes_no);
+									if (answer === popup.yes) {bXSPF = true;}
+								} else {bXSPF = true;}
+								const data = lb.contentResolver(jspf);
+								const handleArr = data.handleArr;
+								const notFound = data.notFound;
+								const playlist = jspf.playlist;
+								const useUUID = list.optionsUUIDTranslate();
+								const playlistName = playlist.title;
+								const playlistNameId = playlistName + (list.bUseUUID ? nextId(useUUID, false) : '');
+								const category = list.categoryState.length === 1 && list.categoryState[0] !== list.categories(0) ? list.categoryState[0] : '';
+								const tags = ['ListenBrainz'];
+								const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
+								if (list.bAutoLoadTag) {tags.push('bAutoLoad');}
+								if (list.bAutoLockTag) {tags.push('bAutoLock');}
+								if (list.bMultMenuTag) {tags.push('bMultMenu');}
+								if (list.bAutoCustomTag) {list.autoCustomTag.forEach((tag) => {if (! new Set(tags).has(tag)) {tags.push(tag);}});}
+								if (!bXSPF) {
+									let bYouTube = false;
+									if (notFound.length && isYouTube) {
+										const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+										if (answer === popup.yes) {bYouTube = true;}
 									}
-									bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
+									const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
+									const backPath = playlistPath + '.back';
+									// Find missing tracks on youtube
+									if (bYouTube) {
+										pop.enable(false, 'YouTube...', 'Importing tracks from YouTube...\nPanel will be disabled during the process.');
+										list.disableAutosaveForPls(playlistNameId);
+										// Add MBIDs to youtube track metadata
+										notFound.forEach((track) => track.tags = {musicbrainz_trackid: track.identifier});
+										// Send request in parallel every x ms and process when all are done
+										return Promise.parallel(notFound, youtube.searchForYoutubeTrack, 5).then((results) => {
+											let j = 0;
+											const itemsLen = handleArr.length;
+											let foundLinks = 0;
+											results.forEach((result, i) => {
+												for (void(0); j <= itemsLen; j++) {
+													if (result.status !== 'fulfilled') {break;}
+													const link = result.value;
+													if (!link || !link.length) {break;}
+													if (!handleArr[j]) {
+														handleArr[j] = link.url;
+														foundLinks++;
+														break;
+													}
+												}
+											});
+											const bLoaded = plman.FindPlaylist(playlistNameId) !== -1;
+											const idx = plman.FindOrCreatePlaylist(playlistNameId, true);
+											plman.ClearPlaylist(idx);
+											return plman.AddPlaylistItemsOrLocations(idx, handleArr.filter(Boolean), true)
+												.finally(() => {
+													plman.ActivePlaylist = idx;
+													const handleList = plman.GetPlaylistItems(idx);
+													console.log('Found ' + foundLinks + ' tracks on YouTube');
+													const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+													if (_isFile(playlistPath)) {
+														let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+														if (answer === popup.no) {return false;}
+														_renameFile(playlistPath, backPath);
+													}
+													bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
+													// Restore backup in case something goes wrong
+													if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+													else if (_isFile(backPath)) {_deleteFile(backPath);}
+													if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+													if (bDone && !bLoaded) {plman.RemovePlaylist(idx);}
+													clearInterval(delay);
+													list.enableAutosaveForPls(playlistNameId);
+													return bDone;
+												});
+										});
+									} else {
+										const handleList = data.handleList;
+										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+										if (_isFile(playlistPath)) {
+											let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+											if (answer === popup.no) {return false;}
+											_renameFile(playlistPath, backPath);
+										}
+										bDone = savePlaylist({handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '')});
+										// Restore backup in case something goes wrong
+										if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
+										else if (_isFile(backPath)) {_deleteFile(backPath);}
+										list.disableAutosaveForPls(playlistNameId);
+										const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
+										if (bDone && idx !== -1) {sendToPlaylist(handleList, playlistNameId);}
+										if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+										clearInterval(delay);
+										list.enableAutosaveForPls(playlistNameId);
+										return bDone;
+									}
+								} else {
+									let totalDuration = 0;
+									playlist.creator = author + ' - Playlist-Manager-SMP';
+									playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
+									playlist.location = playlist.identifier;
+									playlist.meta = [
+										{uuid: (useUUID ? nextId(useUUID) : '')},
+										{locked: true},
+										{category},
+										{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
+										{trackTags: ''},
+										{playlistSize: playlist.track.length},
+										{duration: totalDuration},
+										{playlist_mbid}
+									];
+									// Tracks text
+									handleArr.forEach((handle, i) => {
+										if (!handle) {return;}
+										const relPath = '';
+										const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+										const title = tags[0][0][0];
+										const creator = tags[1][0].join(', ');
+										const album = tags[2][0][0];
+										const trackNum = Number(tags[3][0][0]);
+										const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
+										totalDuration += Math.round(Number(tags[4][0][0])); // In s
+										const location = [relPath.length && !_isLink(tags[5][0][0]) ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]]
+											.map((path) => {
+												return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
+											});
+										const subSong = Number(tags[6][0][0]);
+										const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
+										const identifier = [tags[7][0][0]];
+										playlist.track[i] = {
+											location,
+											annotation: void(0),
+											title,
+											creator,
+											info: void(0),
+											image: void(0),
+											album,
+											duration,
+											trackNum,
+											identifier,
+											extension: {},
+											link: [],
+											meta
+										};
+									});
+									// Fix JSPF identifiers as array
+									playlist.track.forEach((track) => {
+										if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
+									});
+									// Update total duration of playlist
+									playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
+									const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
+									const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
+									let xspf = XSPF.toXSPF(jspf);
+									const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+									xspf = xspf.join('\r\n');
+									bDone = _save(playlistPath, xspf, list.bBOM);
+									// Check
+									if (_isFile(playlistPath) && bDone) {bDone = (_open(playlistPath, utf8) === xspf);}
 									// Restore backup in case something goes wrong
+									const backPath = playlistPath + '.back';
 									if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 									else if (_isFile(backPath)) {_deleteFile(backPath);}
-									list.disableAutosaveForPls(playlistNameId);
-									const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
-									if (bDone && idx !== -1) {sendToPlaylist(handleList, playlistNameId);}
-									if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
+									if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId);}
+									if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
 									clearInterval(delay);
-									list.enableAutosaveForPls(playlistNameId);
 									return bDone;
 								}
-							} else {
-								let totalDuration = 0;
-								playlist.creator = author + ' - Playlist-Manager-SMP';
-								playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
-								playlist.location = playlist.identifier;
-								playlist.meta = [
-									{uuid: (useUUID ? nextId(useUUID) : '')},
-									{locked: true},
-									{category},
-									{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
-									{trackTags: ''},
-									{playlistSize: playlist.track.length},
-									{duration: totalDuration},
-									{playlist_mbid}
-								];
-								// Tracks text
-								handleArr.forEach((handle, i) => {
-									if (!handle) {return;}
-									const relPath = '';
-									const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
-									const title = tags[0][0][0];
-									const creator = tags[1][0].join(', ');
-									const album = tags[2][0][0];
-									const trackNum = Number(tags[3][0][0]);
-									const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
-									totalDuration += Math.round(Number(tags[4][0][0])); // In s
-									const location = [relPath.length && !_isLink(tags[5][0][0]) ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]]
-										.map((path) => {
-											return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
-										});
-									const subSong = Number(tags[6][0][0]);
-									const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
-									const identifier = [tags[7][0][0]];
-									playlist.track[i] = {
-										location,
-										annotation: void(0),
-										title,
-										creator,
-										info: void(0),
-										image: void(0),
-										album,
-										duration,
-										trackNum,
-										identifier,
-										extension: {},
-										link: [],
-										meta
-									};
-								});
-								// Fix JSPF identifiers as array
-								playlist.track.forEach((track) => {
-									if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
-								});
-								// Update total duration of playlist
-								playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
-								const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
-								const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
-								let xspf = XSPF.toXSPF(jspf);
-								const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-								xspf = xspf.join('\r\n');
-								bDone = _save(playlistPath, xspf, list.bBOM);
-								// Check
-								if (_isFile(playlistPath) && bDone) {bDone = (_open(playlistPath, utf8) === xspf);}
-								// Restore backup in case something goes wrong
-								const backPath = playlistPath + '.back';
-								if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
-								else if (_isFile(backPath)) {_deleteFile(backPath);}
-								if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId);}
-								if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
-								clearInterval(delay);
-								return bDone;
-							}
-						} else {return bDone;}
-					})
-					.finally(() => {
-						if (!bDone) {lb.consoleError('Playlist was not imported.');}
-						if (pop.isEnabled()) {pop.disable(true);}
-						return bDone;
-					});
-			} else {return Promise.resolve(true);}
-		}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
+							} else {return bDone;}
+						})
+						.finally(() => {
+							if (!bDone) {lb.consoleError('Playlist was not imported.');}
+							if (pop.isEnabled()) {pop.disable(true);}
+							return bDone;
+						});
+				} else {return Promise.resolve(true);}
+			}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{	// File management
-		{	// Refresh
+		if (!list.bLiteMode) {	// Refresh
 			menu.newEntry({entryText: 'Manual refresh', func: list.manualRefresh});
 		}
 		{	// Restore
@@ -1213,12 +1236,11 @@ function createMenuRight() {
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
-	{
-		// Playlist errors
+	{	// Maintenance tools
 		const subMenuName = menu.newMenu('Playlists maintenance tools');
 		menu.newEntry({menuName: subMenuName, entryText: 'Perform checks on all playlists:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-		{	// Absolute/relative paths consistency
+		if (!list.bLiteMode) {	// Absolute/relative paths consistency
 			menu.newEntry({menuName: subMenuName, entryText: 'Absolute/relative paths...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other enviroments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
@@ -1230,7 +1252,7 @@ function createMenuRight() {
 				});
 			}});
 		}
-		{	// External items
+		if (!list.bLiteMode) {	// External items
 			menu.newEntry({menuName: subMenuName, entryText: 'External items...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
@@ -1266,7 +1288,7 @@ function createMenuRight() {
 				});
 			}});
 		}
-		{	// Size mismatch
+		if (!list.bLiteMode) {	// Size mismatch
 			menu.newEntry({menuName: subMenuName, entryText: 'Playlist size mismatch...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
@@ -1278,7 +1300,7 @@ function createMenuRight() {
 				});
 			}});
 		}
-		{	// Duration mismatch
+		if (!list.bLiteMode) {	// Duration mismatch
 			menu.newEntry({menuName: subMenuName, entryText: 'Playlist duration mismatch...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for reported playlist duration not matching duration of tracks.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
@@ -1290,7 +1312,7 @@ function createMenuRight() {
 				});
 			}});
 		}
-		{	// Blank Lines
+		if (!list.bLiteMode) {	// Blank Lines
 			menu.newEntry({menuName: subMenuName, entryText: 'Blank lines...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for blank lines (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
@@ -1314,7 +1336,7 @@ function createMenuRight() {
 				});
 			}});
 		}
-		{	// Format specific errors
+		if (!list.bLiteMode) {	// Format specific errors
 			menu.newEntry({menuName: subMenuName, entryText: 'Format specific errors...', func: () => {
 				let answer = WshShell.Popup('Scan all playlists to check for errors on playlist structure or format.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer !== popup.yes) {return;}
@@ -1360,8 +1382,10 @@ function createMenuRightTop() {
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	const lb = listenBrainz;
+	// Enabled menus
+	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
-	{	// Playlist folder
+	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
 			let input = '';
 			try {input = sanitizePath(utils.InputBox(window.ID, 'Enter path of tracked folder:', window.Name, list.properties['playlistPath'][1], true));}
@@ -1387,11 +1411,12 @@ function createMenuRightTop() {
 				fb.ShowPopupMessage(readme, window.Name);
 			} else {list.properties['bNetworkPopup'][1] = false;}
 			overwriteProperties(list.properties);
-			list.checkConfig();
+			bDone = list.checkConfig();
 			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 			list.headerTextUpdate();
 			list.bUpdateAutoplaylist = true; 
 			list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
+			list.checkConfigPostUpdate(bDone);
 			list.filter();
 			test.Print();
 			// Tracking network drive?
@@ -1399,9 +1424,9 @@ function createMenuRightTop() {
 			window.Reload();
 		}});
 		menu.newEntry({entryText: 'Open playlists folder', func: () => {_explorer(list.playlistsPath);}});
+		menu.newEntry({entryText: 'sep'});
 	}
-	menu.newEntry({entryText: 'sep'});
-	{	// Category Filter
+	if (showMenus['Category']) {	// Category Filter
 		const subMenuName = menu.newMenu('Categories shown...');
 		const options = list.categories();
 		const defOpt = options[0];
@@ -1428,7 +1453,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.categoryState.indexOf(item) !== -1;});
 		});
 	}
-	{	// Tag Filter
+	if (showMenus['Tags']) {	// Tag Filter
 		const subMenuName = menu.newMenu('Tags shown...');
 		const options = list.tags();
 		const defOpt = options[0];
@@ -1456,11 +1481,11 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, item, void(0), () => {return list.tagState.indexOf(item) !== -1;});
 		});
 	}
-	menu.newEntry({entryText: 'sep'});
-	{	// Playlist saving
+	if (showMenus['Category'] || showMenus['Tags']) {menu.newEntry({entryText: 'sep'});}
+	if (!list.bLiteMode) {	// Playlist saving
 		const menuName = menu.newMenu('Playlist saving');
 		{
-			{	// Relative folder
+			if (!list.bLiteMode) {	// Relative folder
 				const subMenuName = menu.newMenu('Save paths relative to folder...', menuName);
 				const options = ['Yes: Relative to playlists folder', 'No: Use absolute paths (default)'];
 				const optionsLength = options.length;
@@ -1479,7 +1504,7 @@ function createMenuRightTop() {
 					menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bRelativePath ? 0 : 1);});
 				}
 			}
-			{	// Playlist extension
+			if (!list.bLiteMode) {	// Playlist extension
 				const subMenuName = menu.newMenu('Default playlist extension...', menuName);
 				const options = [...writablePlaylistFormats];
 				const optionsLength = options.length;
@@ -1511,7 +1536,7 @@ function createMenuRightTop() {
 				}});
 				menu.newCheckMenu(subMenuName, 'Force on (auto)saving', null,  () => {return list.bSavingDefExtension;});
 			}
-			{	// BOM
+			if (!list.bLiteMode) {	// BOM
 				const subMenuName = menu.newMenu('Save files with BOM...', menuName);
 				const options = ['Yes: UTF8-BOM', 'No: UTF8'];
 				const optionsLength = options.length;
@@ -1528,7 +1553,7 @@ function createMenuRightTop() {
 				}
 				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bBOM ? 0 : 1;});
 			}
-			{	// Saving warnings
+			if (!list.bLiteMode) {	// Saving warnings
 				const subMenuName = menu.newMenu('Warnings about format change...', menuName);
 				const options = ['Yes: If format will be changed', 'No: Never'];
 				const optionsLength = options.length;
@@ -1545,7 +1570,7 @@ function createMenuRightTop() {
 				}
 				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.bSavingWarnings ? 0 : 1;});
 			}
-			{	// Smart Playlist saving
+			if (!list.bLiteMode) {	// Smart Playlist saving
 				const subMenuName = menu.newMenu('Skip Smart Playlists on Auto-saving...', menuName);
 				const options = ['Yes: Original format will be maintained', 'No: Format will change on Auto-saving'];
 				const optionsLength = options.length;
@@ -1582,7 +1607,7 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bSaveFilterStates ? 0 : 1);});
 		}
-		{	// UI-only playlists
+		if (!list.bLiteMode) {	// UI-only playlists
 			const subMenuName = menu.newMenu('Track UI-only playlists...', menuName);
 			const options = ['Yes: also show UI-only playlists','No: Only playlist files on tracked folder'];
 			const optionsLength = options.length;
@@ -1596,8 +1621,7 @@ function createMenuRightTop() {
 					if (list.bAllPls) {
 						fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom colour to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name);
 					}
-					list.manualRefresh();
-					list.resetFilter();
+					createMenuRight().btn_up(-1,-1, null, 'Manual refresh');
 				}});
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bAllPls ? 0 : 1);});
@@ -1698,7 +1722,7 @@ function createMenuRightTop() {
 	}
 	{	// Playlists behavior
 		const menuName = menu.newMenu('Playlists behavior');
-		{	// UUID
+		if (!list.bLiteMode) {	// UUID
 			const subMenuName = menu.newMenu('Use UUIDs for playlist names...', menuName);
 			const options = list.optionsUUID();
 			const optionsLength = options.length;
@@ -1715,8 +1739,8 @@ function createMenuRightTop() {
 				}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING}); // Disable UUID for .pls playlists
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
+			menu.newEntry({menuName, entryText: 'sep'});
 		}
-		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Playlist Size
 			const subMenuName = menu.newMenu('Update AutoPlaylists size...', menuName);
 			const options = ['Yes: Automatically on every startup', 'No: Only when loading them'];
@@ -1751,12 +1775,14 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 			}});
 			menu.newCheckMenu(subMenuName, 'On AutoPlaylist cloning', void(0), () => {return list.bRemoveDuplicatesAutoPls;});
-			menu.newEntry({menuName: subMenuName, entryText: 'On Smart Playlist loading & cloning', func: () => {
-				list.bRemoveDuplicatesSmartPls = !list.bRemoveDuplicatesSmartPls;
-				list.properties.bRemoveDuplicatesSmartPls[1] = list.bRemoveDuplicatesSmartPls;
-				overwriteProperties(list.properties);
-			}});
-			menu.newCheckMenu(subMenuName, 'On Smart Playlist loading & cloning', void(0), () => {return list.bRemoveDuplicatesSmartPls;});
+			if (!list.bLiteMode) {
+				menu.newEntry({menuName: subMenuName, entryText: 'On Smart Playlist loading & cloning', func: () => {
+					list.bRemoveDuplicatesSmartPls = !list.bRemoveDuplicatesSmartPls;
+					list.properties.bRemoveDuplicatesSmartPls[1] = list.bRemoveDuplicatesSmartPls;
+					overwriteProperties(list.properties);
+				}});
+				menu.newCheckMenu(subMenuName, 'On Smart Playlist loading & cloning', void(0), () => {return list.bRemoveDuplicatesSmartPls;});
+			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Use RegExp for title matching?', func: () => {
 				list.bAdvTitle = !list.bAdvTitle;
@@ -1786,8 +1812,8 @@ function createMenuRightTop() {
 				overwriteProperties(list.properties);
 			}});
 		}
-		menu.newEntry({menuName, entryText: 'sep'});
-		{	// Playlist AutoTags & Actions
+		if (showMenus['Tags']) {menu.newEntry({menuName, entryText: 'sep'});}
+		if (showMenus['Tags']) {	// Playlist AutoTags & Actions
 			const subMenuName = menu.newMenu('Playlist AutoTags and actions', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Playlist file\'s Tags relatad actions:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -1836,7 +1862,7 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1],  () => {return (list.bApplyAutoTags ? 0 : 1);});
 			}
 		}
-		{	// Tracks AutoTags
+		if (showMenus['Tags']) {	// Tracks AutoTags
 			const subMenuName = menu.newMenu('Tracks AutoTags and actions', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Track\'s Tags related actions:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -1899,7 +1925,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Export and Converter settings
-			{	//Export and copy
+			if (!list.bLiteMode) {	//Export and copy
 				const subMenuName = menu.newMenu('Export and copy...', menuName);
 				menu.newEntry({menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -2173,7 +2199,7 @@ function createMenuRightTop() {
 					// Update property to save between reloads
 					list.properties.listColors[1] = convertObjectToString(list.colors);
 					overwriteProperties(list.properties);
-					list.checkConfig();
+					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 					window.Repaint();
 				}});
 			});
@@ -2189,7 +2215,7 @@ function createMenuRightTop() {
 						panel.properties.bCustomText[1] = panel.colors.bCustomText;
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
-						list.checkConfig();
+						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 						window.Repaint();
 					}});
 				});
@@ -2201,7 +2227,7 @@ function createMenuRightTop() {
 					panel.properties.customText[1] = panel.colors.customText;
 					overwriteProperties(panel.properties);
 					panel.colorsChanged();
-					list.checkConfig();
+					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 					window.Repaint();
 				}, flags: panel.colors.bCustomText ? MF_STRING : MF_GRAYED,});
 			}
@@ -2218,7 +2244,7 @@ function createMenuRightTop() {
 						// Update property to save between reloads
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
-						list.checkConfig();
+						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 						window.Repaint();
 					}});
 				});
@@ -2231,7 +2257,7 @@ function createMenuRightTop() {
 					// Update property to save between reloads
 					overwriteProperties(panel.properties);
 					panel.colorsChanged();
-					list.checkConfig();
+					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 					window.Repaint();
 				}});
 			}
@@ -2247,7 +2273,7 @@ function createMenuRightTop() {
 						// Update property to save between reloads
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
-						list.checkConfig();
+						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 						window.Repaint();
 					}});
 				});
@@ -2267,7 +2293,7 @@ function createMenuRightTop() {
 							panel.properties.colorsMode[1] = panel.colors.mode;
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfig();
+							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 							// Set defaults again
 							if (panel.setDefault({oldColor: defaultButtonsCol})) {overwriteProperties(panel.properties);}
 							window.Repaint();
@@ -2281,7 +2307,7 @@ function createMenuRightTop() {
 						panel.properties.customBackground[1] = panel.colors.customBackground;
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
-						list.checkConfig();
+						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 						// Set defaults again
 						if (panel.setDefault({oldColor: defaultButtonsCol})) {overwriteProperties(panel.properties);}
 						window.Repaint();
@@ -2293,7 +2319,7 @@ function createMenuRightTop() {
 					panel.properties['bAltRowsColor'][1] = panel.colors.bAltRowsColor;
 					overwriteProperties(panel.properties);
 					panel.colorsChanged();
-					list.checkConfig();
+					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 					window.Repaint();
 				}});
 				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background colour', void(0), () => {return panel.colors.bAltRowsColor;});
@@ -2344,7 +2370,7 @@ function createMenuRightTop() {
 						}
 						overwriteProperties(list.properties);
 						overwriteProperties(panel.properties);
-						list.checkConfig();
+						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 						window.Repaint();
 					}});
 					menu.newCheckMenu(subMenuSecondName, preset.name, void(0), () => {
@@ -2389,7 +2415,7 @@ function createMenuRightTop() {
 				panel.setDefault({all: true});
 				overwriteProperties(list.properties);
 				overwriteProperties(panel.properties);
-				list.checkConfig();
+				list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 				window.Repaint();
 			}});
 		}
@@ -2412,253 +2438,6 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return (panel.colors.bToolbar ? 0 : (panel.colors.bButtonsBackground ? 2 : 1));});
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
-		{	// Shortcuts
-			const subMenuName = menu.newMenu('Shortcuts...', menuName);
-			{	// List L. Click
-				const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
-				const subMenuNameL = menu.newMenu('Left Click', subMenuName)
-				const shortcuts =  list.getDefaultShortcuts('L');
-				const modifiers = shortcuts.options.map((_) => {return _.key;});
-				const actions = shortcuts.actions.map((_) => {return _.key;});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
-				modifiers.forEach((modifier) => {
-					const subMenuOption = modifier === 'Single Click' && !bListButton
-						? menu.newMenu(modifier + '\t(enable List Menu button)', subMenuNameL, MF_GRAYED)
-						: menu.newMenu(modifier, subMenuNameL);
-					actions.forEach((action) => {
-						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
-						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
-							list.lShortcuts[modifier] = action;
-							list.properties['lShortcuts'][1] = JSON.stringify(list.lShortcuts);
-							overwriteProperties(list.properties);
-							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
-							}
-						}, flags});
-					});
-					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
-						const idx = actions.indexOf(list.lShortcuts[modifier]);
-						return (idx !== -1 ? idx : 0);
-					});
-				});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
-					list.properties['lShortcuts'][1] = list.defaultProperties['lShortcuts'][3];
-					list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);
-					overwriteProperties(list.properties);
-				}});
-			}
-			{	// List R. Click
-				const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
-				const subMenuNameR = menu.newMenu('Right Click' + (bListButton ? '' : '\t(enable List Menu button)'), subMenuName, bListButton ? MF_STRING : MF_GRAYED)
-				const shortcuts =  list.getDefaultShortcuts('R');
-				const modifiers = shortcuts.options.map((_) => {return _.key;});
-				const actions = shortcuts.actions.map((_) => {return _.key;});
-				menu.newEntry({menuName: subMenuNameR, entryText: 'Modifiers on R. Click:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameR, entryText: 'sep'});
-				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier, subMenuNameR);
-					actions.forEach((action) => {
-						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
-							list.rShortcuts[modifier] = action;
-							list.properties['rShortcuts'][1] = JSON.stringify(list.rShortcuts);
-							overwriteProperties(list.properties);
-							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
-							}
-						}});
-					});
-					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
-						const idx = actions.indexOf(list.rShortcuts[modifier]);
-						return (idx !== -1 ? idx : 0);
-					});
-				});
-				menu.newEntry({menuName: subMenuNameR, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameR, entryText: 'Restore defaults', func: () => {
-					list.properties['rShortcuts'][1] = list.defaultProperties['rShortcuts'][3];
-					list.rShortcuts = JSON.parse(list.properties['rShortcuts'][1]);
-					overwriteProperties(list.properties);
-				}});
-			}
-			{	// List M. Click
-				const subMenuNameM = menu.newMenu('Middle Click', subMenuName)
-				const shortcuts =  list.getDefaultShortcuts('M');
-				const modifiers = shortcuts.options.map((_) => {return _.key;});
-				const actions = shortcuts.actions.map((_) => {return _.key;});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
-				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier, subMenuNameM);
-					actions.forEach((action) => {
-						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
-							list.mShortcuts[modifier] = action;
-							list.properties['mShortcuts'][1] = JSON.stringify(list.mShortcuts);
-							overwriteProperties(list.properties);
-							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
-							}
-						}});
-					});
-					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
-						const idx = actions.indexOf(list.mShortcuts[modifier]);
-						return (idx !== -1 ? idx : 0);
-					});
-				});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
-					list.properties['mShortcuts'][1] = list.defaultProperties['mShortcuts'][3];
-					list.mShortcuts = JSON.parse(list.properties['mShortcuts'][1]);
-					overwriteProperties(list.properties);
-				}});
-			}
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			{	// Header L. Click
-				const subMenuNameL = menu.newMenu('Left Click (header)', subMenuName)
-				const shortcuts =  list.getDefaultShortcuts('L', 'HEADER');
-				const modifiers = shortcuts.options.map((_) => {return _.key;});
-				const actions = shortcuts.actions.map((_) => {return _.key;});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameL, entryText: '(on Action Button)', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
-				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier, subMenuNameL);
-					actions.forEach((action) => {
-						const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
-						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
-							list.lShortcutsHeader[modifier] = action;
-							list.properties['lShortcutsHeader'][1] = JSON.stringify(list.lShortcutsHeader);
-							overwriteProperties(list.properties);
-							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
-							}
-						}, flags});
-					});
-					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
-						const idx = actions.indexOf(list.lShortcutsHeader[modifier]);
-						return (idx !== -1 ? idx : 0);
-					});
-				});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
-					list.properties['lShortcutsHeader'][1] = list.defaultProperties['lShortcutsHeader'][3];
-					list.lShortcutsHeader = JSON.parse(list.properties['lShortcutsHeader'][1]);
-					overwriteProperties(list.properties);
-				}});
-			}
-			{	// Header M. Click
-				const subMenuNameM = menu.newMenu('Middle Click (header)', subMenuName)
-				const shortcuts =  list.getDefaultShortcuts('M', 'HEADER');
-				const modifiers = shortcuts.options.map((_) => {return _.key;});
-				const actions = shortcuts.actions.map((_) => {return _.key;});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameM, entryText: '(on Action Button)', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
-				modifiers.forEach((modifier) => {
-					const subMenuOption = menu.newMenu(modifier, subMenuNameM);
-					actions.forEach((action) => {
-						menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
-							list.mShortcutsHeader[modifier] = action;
-							list.properties['mShortcutsHeader'][1] = JSON.stringify(list.mShortcutsHeader);
-							overwriteProperties(list.properties);
-							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
-							}
-						}});
-					});
-					menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
-						const idx = actions.indexOf(list.mShortcutsHeader[modifier]);
-						return (idx !== -1 ? idx : 0);
-					});
-				});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
-					list.properties['mShortcutsHeader'][1] = list.defaultProperties['mShortcutsHeader'][3];
-					list.mShortcutsHeader = JSON.parse(list.properties['mShortcutsHeader'][1]);
-					overwriteProperties(list.properties);
-				}});
-			}
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			{	// Keyboard
-				menu.newEntry({menuName: subMenuName, entryText: 'Enable F1-F8 keyboard actions', func: () => {
-					fb.ShowPopupMessage(
-						'- F1: Lock/unlock playlist file or UI-only playlist.\n' +
-						'- F2: Rename highlighted playlist.\n' +
-						'- F3: Clone in UI highlighted playlist.\n' +
-						'- F4: Load/show highlighted playlist\n' +
-						'- F5: Copy highlighted playlist. Maintains original format.\n' +
-						'- F6: Export playlist to ListenBrainz (+ Spotify).\n' +
-						'- F7: Add new (empty) playlist.\n' +
-						'- F8: Delete highlighted playlist.\n' +
-						'- F9: Filter/Search playlists with selected tracks\n' +
-						'- F10: Open Settings menu.\n' +
-						'- F10 + Shift: Open List menu.\n' +
-						'- F11: Open documentation.\n' +
-						'- F12: Open playlists tracked folder.'
-					, window.Name);
-					list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1]
-					overwriteProperties(list.properties);
-				}});
-				menu.newCheckMenu(subMenuName, 'Enable F1-F8 keyboard actions', void(0), () => list.properties.bGlobalShortcuts[1]);
-			}
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Double click timer...', func: () => {
-				let input = Input.number('int positive', list.iDoubleClickTimer, 'Enter ms:\nHigher values will delay more single clicking actions.', window.Name, 300);
-				if (input === null) {return;}
-				if (!Number.isFinite(input)) {return;}
-				list.iDoubleClickTimer = list.properties.iDoubleClickTimer[1] = input;
-				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x2)', 0, window.Name, popup.question + popup.yes_no) === popup.yes) {
-					list.properties.iTooltipTimer[1] = input * 2;
-					list.tooltip.SetDelayTime(0, list.properties.iTooltipTimer[1]); // TTDT_AUTOMATIC
-				}
-				overwriteProperties(list.properties);
-			}});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults (all)', func: () => {
-				['lShortcuts', 'mShortcuts', 'lShortcutsHeader', 'mShortcutsHeader'].forEach((key) => {
-					list.properties[key][1] = list.defaultProperties[key][3];
-					list[key] = JSON.parse(list.properties[key][1]);
-				});
-				overwriteProperties(list.properties);
-			}});
-		}
-		{	// Enabled menus
-			const showMenus = JSON.parse(list.properties.showMenus[1]);
-			const subMenuName = menu.newMenu('Playlist menus...', menuName);
-			menu.newEntry({menuName: subMenuName, entryText: 'Playlist menu entries shown:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			Object.keys(showMenus).forEach((key) => {
-				menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
-					showMenus[key] = !showMenus[key];
-					list.properties.showMenus[1] = JSON.stringify(showMenus);
-					overwriteProperties(list.properties);
-				}});
-				menu.newCheckMenu(subMenuName, key, void(0), () => showMenus[key]);
-			});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			{ // Presets
-				const defOpts = JSON.parse(list.properties.showMenus[3]);
-				const options = [
-					{name: 'Full', options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))},
-					{name: 'Bassic', options: {...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'].map((k) => [k, false]))}},
-				];
-				const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
-				options.forEach((preset) => {
-					menu.newEntry({menuName: subMenuNameTwo, entryText: preset.name, func: () => {
-						Object.keys(preset.options).forEach((key) => {
-							showMenus[key] = preset.options[key];
-						});
-						list.properties.showMenus[1] = JSON.stringify(showMenus);
-						overwriteProperties(list.properties);
-					}});
-				});
-			}
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
-				list.properties.showMenus[1] = list.properties.showMenus[3];
-				overwriteProperties(list.properties);
-			}});
-		}
 		{	// Columns
 			const subMenuName = menu.newMenu('Columns...', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Columns config:' + '\t' + (list.getColumnsEnabled() ? '(disabled)' : ''), flags: MF_GRAYED});
@@ -2834,7 +2613,9 @@ function createMenuRightTop() {
 				const subElement = list.uiElements[key];
 				if (subElement.hasOwnProperty('elements')) {
 					const subMenuNameTwo = menu.newMenu(key, subMenuName);
-					const keys = Object.keys(subElement.elements);
+					const keys = list.bLiteMode 
+						? Object.keys(subElement.elements).filter((subKey) => subKey !== 'Folder')
+						: Object.keys(subElement.elements);
 					const bCanHideSettings = (subKey) => {
 						if (!list.uiElements['Search filter'].enabled) {return true;}
 						else if (subKey === 'Settings menu') {return subElement.elements.hasOwnProperty('Power actions') && subElement.elements['Power actions'].enabled;}
@@ -2887,7 +2668,7 @@ function createMenuRightTop() {
 								'Reset filters':	{enabled: true},
 								'List menu':		{enabled: true},
 								'Settings menu':	{enabled: true},
-								'Folder':			{enabled: true},
+								'Folder':			{enabled: list.bLiteMode ? false : true},
 								'Help':				{enabled: true},
 							}
 						}}
@@ -2985,6 +2766,261 @@ function createMenuRightTop() {
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
+	{	// Shortcuts
+		const subMenuName = menu.newMenu('Shortcuts...');
+		menu.newEntry({menuName: subMenuName, entryText: 'Mouse / Keyboard actions:', flags: MF_GRAYED});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		{	// List L. Click
+			const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
+			const subMenuNameL = menu.newMenu('Left Click', subMenuName)
+			const shortcuts =  list.getDefaultShortcuts('L');
+			const modifiers = shortcuts.options.map((_) => {return _.key;});
+			const actions = shortcuts.actions.map((_) => {return _.key;});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+			modifiers.forEach((modifier) => {
+				const subMenuOption = modifier === 'Single Click' && !bListButton
+					? menu.newMenu(modifier + '\t(enable List Menu button)', subMenuNameL, MF_GRAYED)
+					: menu.newMenu(modifier, subMenuNameL);
+				actions.forEach((action) => {
+					const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
+					menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+						list.lShortcuts[modifier] = action;
+						list.properties['lShortcuts'][1] = JSON.stringify(list.lShortcuts);
+						overwriteProperties(list.properties);
+						if (action === 'Multiple selection') {
+							fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+						}
+					}, flags});
+				});
+				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+					const idx = actions.indexOf(list.lShortcuts[modifier]);
+					return (idx !== -1 ? idx : 0);
+				});
+			});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
+				list.properties['lShortcuts'][1] = list.defaultProperties['lShortcuts'][3];
+				list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);
+				overwriteProperties(list.properties);
+			}});
+		}
+		{	// List R. Click
+			const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
+			const subMenuNameR = menu.newMenu('Right Click' + (bListButton ? '' : '\t(enable List Menu button)'), subMenuName, bListButton ? MF_STRING : MF_GRAYED)
+			const shortcuts =  list.getDefaultShortcuts('R');
+			const modifiers = shortcuts.options.map((_) => {return _.key;});
+			const actions = shortcuts.actions.map((_) => {return _.key;});
+			menu.newEntry({menuName: subMenuNameR, entryText: 'Modifiers on R. Click:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameR, entryText: 'sep'});
+			modifiers.forEach((modifier) => {
+				const subMenuOption = menu.newMenu(modifier, subMenuNameR);
+				actions.forEach((action) => {
+					menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+						list.rShortcuts[modifier] = action;
+						list.properties['rShortcuts'][1] = JSON.stringify(list.rShortcuts);
+						overwriteProperties(list.properties);
+						if (action === 'Multiple selection') {
+							fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+						}
+					}});
+				});
+				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+					const idx = actions.indexOf(list.rShortcuts[modifier]);
+					return (idx !== -1 ? idx : 0);
+				});
+			});
+			menu.newEntry({menuName: subMenuNameR, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuNameR, entryText: 'Restore defaults', func: () => {
+				list.properties['rShortcuts'][1] = list.defaultProperties['rShortcuts'][3];
+				list.rShortcuts = JSON.parse(list.properties['rShortcuts'][1]);
+				overwriteProperties(list.properties);
+			}});
+		}
+		{	// List M. Click
+			const subMenuNameM = menu.newMenu('Middle Click', subMenuName)
+			const shortcuts =  list.getDefaultShortcuts('M');
+			const modifiers = shortcuts.options.map((_) => {return _.key;});
+			const actions = shortcuts.actions.map((_) => {return _.key;});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+			modifiers.forEach((modifier) => {
+				const subMenuOption = menu.newMenu(modifier, subMenuNameM);
+				actions.forEach((action) => {
+					menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+						list.mShortcuts[modifier] = action;
+						list.properties['mShortcuts'][1] = JSON.stringify(list.mShortcuts);
+						overwriteProperties(list.properties);
+						if (action === 'Multiple selection') {
+							fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+						}
+					}});
+				});
+				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+					const idx = actions.indexOf(list.mShortcuts[modifier]);
+					return (idx !== -1 ? idx : 0);
+				});
+			});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
+				list.properties['mShortcuts'][1] = list.defaultProperties['mShortcuts'][3];
+				list.mShortcuts = JSON.parse(list.properties['mShortcuts'][1]);
+				overwriteProperties(list.properties);
+			}});
+		}
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		{	// Header L. Click
+			const subMenuNameL = menu.newMenu('Left Click (header)', subMenuName)
+			const shortcuts =  list.getDefaultShortcuts('L', 'HEADER');
+			const modifiers = shortcuts.options.map((_) => {return _.key;});
+			const actions = shortcuts.actions.map((_) => {return _.key;});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'Modifiers on L. Click:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameL, entryText: '(on Action Button)', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+			modifiers.forEach((modifier) => {
+				const subMenuOption = menu.newMenu(modifier, subMenuNameL);
+				actions.forEach((action) => {
+					const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
+					menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+						list.lShortcutsHeader[modifier] = action;
+						list.properties['lShortcutsHeader'][1] = JSON.stringify(list.lShortcutsHeader);
+						overwriteProperties(list.properties);
+						if (action === 'Multiple selection') {
+							fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+						}
+					}, flags});
+				});
+				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+					const idx = actions.indexOf(list.lShortcutsHeader[modifier]);
+					return (idx !== -1 ? idx : 0);
+				});
+			});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
+				list.properties['lShortcutsHeader'][1] = list.defaultProperties['lShortcutsHeader'][3];
+				list.lShortcutsHeader = JSON.parse(list.properties['lShortcutsHeader'][1]);
+				overwriteProperties(list.properties);
+			}});
+		}
+		{	// Header M. Click
+			const subMenuNameM = menu.newMenu('Middle Click (header)', subMenuName)
+			const shortcuts =  list.getDefaultShortcuts('M', 'HEADER');
+			const modifiers = shortcuts.options.map((_) => {return _.key;});
+			const actions = shortcuts.actions.map((_) => {return _.key;});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'Modifiers on M. Click:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameM, entryText: '(on Action Button)', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+			modifiers.forEach((modifier) => {
+				const subMenuOption = menu.newMenu(modifier, subMenuNameM);
+				actions.forEach((action) => {
+					menu.newEntry({menuName: subMenuOption, entryText: action, func: () => {
+						list.mShortcutsHeader[modifier] = action;
+						list.properties['mShortcutsHeader'][1] = JSON.stringify(list.mShortcutsHeader);
+						overwriteProperties(list.properties);
+						if (action === 'Multiple selection') {
+							fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+						}
+					}});
+				});
+				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+					const idx = actions.indexOf(list.mShortcutsHeader[modifier]);
+					return (idx !== -1 ? idx : 0);
+				});
+			});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
+				list.properties['mShortcutsHeader'][1] = list.defaultProperties['mShortcutsHeader'][3];
+				list.mShortcutsHeader = JSON.parse(list.properties['mShortcutsHeader'][1]);
+				overwriteProperties(list.properties);
+			}});
+		}
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		{	// Keyboard
+			menu.newEntry({menuName: subMenuName, entryText: 'Enable F1-F8 keyboard actions', func: () => {
+				fb.ShowPopupMessage(
+					'- F1: Lock/unlock playlist file or UI-only playlist.\n' +
+					'- F2: Rename highlighted playlist.\n' +
+					'- F3: Clone in UI highlighted playlist.\n' +
+					'- F4: Load/show highlighted playlist\n' +
+					'- F5: Copy highlighted playlist. Maintains original format.\n' +
+					'- F6: Export playlist to ListenBrainz (+ Spotify).\n' +
+					'- F7: Add new (empty) playlist.\n' +
+					'- F8: Delete highlighted playlist.\n' +
+					'- F9: Filter/Search playlists with selected tracks\n' +
+					'- F10: Open Settings menu.\n' +
+					'- F10 + Shift: Open List menu.\n' +
+					'- F11: Open documentation.\n' +
+					'- F12: Open playlists tracked folder.'
+				, window.Name);
+				list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1]
+				overwriteProperties(list.properties);
+			}});
+			menu.newCheckMenu(subMenuName, 'Enable F1-F8 keyboard actions', void(0), () => list.properties.bGlobalShortcuts[1]);
+		}
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		menu.newEntry({menuName: subMenuName, entryText: 'Double click timer...', func: () => {
+			let input = Input.number('int positive', list.iDoubleClickTimer, 'Enter ms:\nHigher values will delay more single clicking actions.', window.Name, 300);
+			if (input === null) {return;}
+			if (!Number.isFinite(input)) {return;}
+			list.iDoubleClickTimer = list.properties.iDoubleClickTimer[1] = input;
+			if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x2)', 0, window.Name, popup.question + popup.yes_no) === popup.yes) {
+				list.properties.iTooltipTimer[1] = input * 2;
+				list.tooltip.SetDelayTime(0, list.properties.iTooltipTimer[1]); // TTDT_AUTOMATIC
+			}
+			overwriteProperties(list.properties);
+		}});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults (all)', func: () => {
+			['lShortcuts', 'mShortcuts', 'lShortcutsHeader', 'mShortcutsHeader'].forEach((key) => {
+				list.properties[key][1] = list.defaultProperties[key][3];
+				list[key] = JSON.parse(list.properties[key][1]);
+			});
+			overwriteProperties(list.properties);
+		}});
+	}
+	{	// Enabled menus
+		const showMenus = JSON.parse(list.properties.showMenus[1]);
+		const liteOmmit = ['Relative paths handling', 'Export and copy', 'File management', 'File locks'];
+		const subMenuName = menu.newMenu('Features...');
+		menu.newEntry({menuName: subMenuName, entryText: 'Menu entries / Features enabled:', flags: MF_GRAYED});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		Object.keys(showMenus).forEach((key) => {
+			if (list.bLiteMode && liteOmmit.includes(key)) {return;}
+			menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
+				showMenus[key] = !showMenus[key];
+				list.properties.showMenus[1] = JSON.stringify(showMenus);
+				overwriteProperties(list.properties);
+				list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+			}});
+			menu.newCheckMenu(subMenuName, key, void(0), () => showMenus[key]);
+		});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		{ // Presets
+			const defOpts = JSON.parse(list.properties.showMenus[3]);
+			const options = [
+				{name: 'Full', options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))},
+				{name: 'Bassic', options: {...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'].map((k) => [k, false]))}},
+			];
+			const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
+			options.forEach((preset) => {
+				menu.newEntry({menuName: subMenuNameTwo, entryText: preset.name, func: () => {
+					Object.keys(preset.options).forEach((key) => {
+						if (list.bLiteMode && liteOmmit.includes(key)) {return;}
+						showMenus[key] = preset.options[key];
+					});
+					list.properties.showMenus[1] = JSON.stringify(showMenus);
+					overwriteProperties(list.properties);
+					list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+				}});
+			});
+		}
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
+			list.properties.showMenus[1] = list.properties.showMenus[3];
+			overwriteProperties(list.properties);
+			list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+		}});
+	}
 	{	// Integration
 		const menuName = menu.newMenu('Integration');
 		{	// Dynamic menus
@@ -3010,7 +3046,7 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return (list.bDynamicMenus ? 0 : 1);});
 		}
-		{	// ListenBrainz
+		if (showMenus['Online sync']) {	// ListenBrainz
 			const subMenuName = menu.newMenu('ListenBrainz...', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Set token...', func: async () => {return await checkLBToken('');}});
 			menu.newCheckMenu(subMenuName, 'Set token...', void(0), () => {return list.properties.lBrainzToken[1].length ? true : false;});
@@ -3083,6 +3119,34 @@ function createMenuRightTop() {
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
+	menu.newEntry({entryText: 'Lite mode', func: () => {
+		fb.ShowPopupMessage('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled.\n\nNote on lite mode, manager exclusively tracks UI-only playlists.', window.Name)
+		list.bLiteMode = !list.bLiteMode;
+		list.properties['bLiteMode'][1] = list.bLiteMode;
+		if (list.bLiteMode) {
+			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'File locks'];
+			const otherFeatures = ['Advanced search tools'];
+			// Menus
+			features.forEach((key) => {
+				showMenus[key] = false;
+			});
+			list.properties.showMenus[3] = list.properties.showMenus[1] = JSON.stringify(showMenus);
+			// Other tools
+			if (list.searchInput) {
+				list.searchMethod.bPath = list.searchMethod.bRegExp = false;
+				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			}
+			// Tracking
+			list.bAllPls = list.properties.bAllPls[1] = true;
+			overwriteProperties(list.properties);
+			// Sorting
+			list.changeSorting(list.manualMethodState());
+		}
+		list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+		list.manualRefresh();
+	}});
+	menu.newCheckMenu(void(0), 'Lite mode', void(0),  () => list.bLiteMode);
+	menu.newEntry({entryText: 'sep'});
 	{	// Readme
 		const path = folders.xxx + 'readmes\\playlist_manager.pdf';
 		menu.newEntry({entryText: 'Open documentation...',  func: () => {
@@ -3124,9 +3188,11 @@ function createMenuRightFilter(buttonKey) {
 	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtnSort;
 	menu.clear(true); // Reset one every call
+	// Enabled menus
+	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{	// Filter
-		const options = ['Category', 'Extension', 'Lock state', 'MBID', 'Playlist type', 'Tag'].sort();
+		const options = list.availableFilters();
 		const optionsLength = options.length;
 		menu.newEntry({entryText: 'Change filtering method:', flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
@@ -3172,6 +3238,9 @@ function createMenuSearch() {
 	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuSearch;
 	menu.clear(true); // Reset one every call
+	// Enabled menus
+	const showMenus = JSON.parse(list.properties.showMenus[1]);
+	
 	menu.newEntry({entryText: 'Search filter:', func: null, flags: MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
 	{
@@ -3196,10 +3265,10 @@ function createMenuSearch() {
 		const subMenu = menu.newMenu('Settings...');
 		const options = [
 			{entryText: 'By names', key: 'bName'},
-			{entryText: 'By tags', key: 'bTags'},
-			{entryText: 'By categories', key: 'bCategory'},
+			showMenus['Tags'] ? {entryText: 'By tags', key: 'bTags'} : null,
+			showMenus['Category'] ? {entryText: 'By categories', key: 'bCategory'} : null,
 			{entryText: 'By file and folder names', key: 'bPath'}
-		].sort();
+		].filter(Boolean).sort();
 		const optionsLength = options.length;
 		menu.newEntry({menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});

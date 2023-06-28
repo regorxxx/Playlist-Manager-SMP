@@ -34,7 +34,11 @@
 
 ## [Unreleased][]
 ### Added
+- UI: new menu entry to create UI-only playlists.
+- UI: new lite mode to exclusively track UI-only playlists, thus behaving like a simple replacement for foo_plorg. Extends the current settings to disable/enable features, changing how the panel works at low level. i.e. no playlist files, no folder tracking, etc.
 ### Changed
+- UI: configurable playlist menus is now at 'Features...' submenu within the settings menu. 
+- UI: settings menu, new playlist menu, keyboard shortcuts and filter buttons now follow the settings for shown/hidden features. i.e. if menu entries to edit tags are hidden, then all other features depending on it will also be hidden (like filtering or sorting by tag). (see above)
 ### Removed
 ### Fixed
 
@@ -593,7 +597,7 @@
 - UI: default text color is now set to black or white automatically according to background color, set to the inverse (once converted to B&W).
 - UI: new playlists will now inherit category/tags of the current filtering state. i.e. if the current view is set to display a single category or group of tags, created playlists will also have them by default. Note playlist can only have one category so it only applies when the view is filtered by a single one, this limit does not apply to tags though (the view still requires to be filtered and excluding 'no tags').
 - Instances manager: internal change, tracking of other Playlist Manager panels is now done with this new helper. Used to ensure proper cache sharing and forcing only one calculation per foobar instance (previous approach was not working as expected in all use-cases).
-- Menus: Reordered menu entries into sub-menus for more logical access: panel behavior, playlist behavior, UI, ...
+- Menus: reordered menu entries into sub-menus for more logical access: panel behavior, playlist behavior, UI, ...
 - Menus: 'Copy playlist file to...' is now available for .fpl playlist too, since it's the only option which doesn't involve playlist editing.
 - Menus: 'Bind active playlist to this file...' is now disabled for locked playlists (must unlock them first) and .fpl playlists (in any case).
 - Helpers: Split 'helpers_xxx_playlists.js' into 2 files (new one is 'helpers_xxx_playlists_files.js').

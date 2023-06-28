@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/06/23
+//28/06/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -99,13 +99,14 @@ function _list(x, y, w, h) {
 		if (val !== '?') {
 			switch (key) {
 				case 'duration': { // Format it with no more than 4 digits
+					const cache = val;
 					val = utils.FormatDuration(val);  // Xw xd XX:XX:XX
-					if (regexWeek.test(val)) {
-						val = round(pls[key] / 604800, 1) + ' w';
+					if (regexHours.test(val)) {
+						val = round(cache / 3600, 1) + ' h';
 					} else if (regexDay.test(val)) {
-						val = round(pls[key] / 86400, 1) + ' d';
-					} else if (regexHours.test(val)) {
-						val = round(pls[key] / 3600, 1) + ' h';
+						val = round(cache / 86400, 1) + ' d';
+					} else if (regexWeek.test(val)) {
+						val = round(cache / 604800, 1) + ' w';
 					}
 					break;
 				}
@@ -386,7 +387,7 @@ function _list(x, y, w, h) {
 						h: 0
 					},
 					{	// Folder
-						parent: this.uiElements['Header buttons'].elements['Folder'].enabled ? this.headerButtons.folder : null,
+						parent: this.uiElements['Header buttons'].elements['Folder'].enabled && !this.bLiteMode ? this.headerButtons.folder : null,
 						position: this.uiElements['Header buttons'].elements['Folder'].position,
 						icon: this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]) 
 							? this.configFile.ui.icons.category[this.categoryState[0]] 
@@ -1607,6 +1608,8 @@ function _list(x, y, w, h) {
 				if (this.properties.bGlobalShortcuts[1]) {
 					const z = this.index;
 					const pls = this.data[z];
+					// Enabled menus
+					const showMenus = JSON.parse(this.properties.showMenus[1]);
 					if (z !== -1) {this.cacheLastPosition(z);}
 					switch (keyChar) {
 						case 'f1': // Lock/Unlock
@@ -1657,7 +1660,7 @@ function _list(x, y, w, h) {
 							}
 							return false;
 						case 'f6': // Export to ListenBrainz (move)
-							if (z !== -1) {
+							if (z !== -1 && showMenus['Online sync']) {
 								return checkLBToken()
 									.then(async (result) => {
 										if (!result) {return false;}
@@ -1690,12 +1693,16 @@ function _list(x, y, w, h) {
 									});
 							}
 							return false;
-						case 'f7': {// Add playlist (new)
-							this.add({bEmpty: true});
+						case 'f7': { // Add playlist (new)
+							if (this.bLiteMode) {
+								this.addUIplaylist({bInputName: true});
+							} else {
+								this.add({bEmpty: true});
+							}
 							return true;
 						}
 						case 'f8': // Cycle categories
-							cycleCategories();
+							if (showMenus['Category']) {cycleCategories();}
 							return true;
 						case 'f9': // Filter playlists with selected tracks / Search
 							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
@@ -1745,7 +1752,7 @@ function _list(x, y, w, h) {
 							createMenuRightTop().btn_up(this.mx, this.my, void(0), 'Open documentation...')
 							return true;
 						case 'f12': // Tracked folder
-							_explorer(this.playlistsPath);
+							if (!this.bLiteMode) {_explorer(this.playlistsPath);}
 							return true;
 						case 'numpad /': // Show hide columns
 						case '\\':
@@ -2650,7 +2657,13 @@ function _list(x, y, w, h) {
 	this.plsState = [];
 	// These are constant
 	this.constLockStates = () => {return ['All','Not locked','Locked'];};
-	this.constAutoPlaylistStates = (bUI = this.bAllPls) => {return bUI ? this.constAutoPlaylistStates(false).concat(['UI-only Playlists']): ['All','AutoPlaylists && Smart Playlists','Standard Playlists'];};
+	this.constAutoPlaylistStates = (bUI = this.bAllPls, bLiteMode = this.bLiteMode) => {
+		return bUI 
+			? this.constAutoPlaylistStates(false).concat(['UI-only Playlists'])
+			: bLiteMode 
+				? ['All','AutoPlaylists && Smart Playlists']
+				: ['All','AutoPlaylists && Smart Playlists','Standard Playlists'];
+	};
 	this.constExtStates = (bUI = this.bAllPls) => {return bUI ? this.constExtStates(false).concat(['.ui']) : ['All', ...loadablePlaylistFormats];};
 	this.constMbidStates = () => {return ['All','No MBID','With MBID'];};
 	// These rotate over time
@@ -2692,7 +2705,11 @@ function _list(x, y, w, h) {
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
 			this.data = this.data.filter((item) => {return item.isAutoPlaylist || item.query;});
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
-			this.data = this.data.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
+			if (!this.bLiteMode) {
+				this.data = this.data.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
+			} else {
+				this.data = this.data.filter((item) => {return item.extension === '.ui';});
+			}
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
 			this.data = this.data.filter((item) => {return item.extension === '.ui';});
 		}
@@ -2800,8 +2817,14 @@ function _list(x, y, w, h) {
 		if (this.searchInput && this.searchMethod.bResetFilters) {this.searchInput.on_key_down(VK_ESCAPE);}
 		this.filter({autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories(), mbidState: this.constMbidStates()[0], plsState: []});
 	}
+	this.availableFilters = () => {
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		const bListenBrainz = this.properties.lBrainzToken[1].length > 0;
+		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type',  showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort();
+	}
 	
 	this.sortMethods = (bInternal = true) => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		return {
 				'By name': 
 					{
@@ -2813,16 +2836,26 @@ function _list(x, y, w, h) {
 						'(S) Asc.': (a, b) => {return a.size - b.size;},
 						'(S) Des.': (a, b) => {return b.size - a.size;}
 					},
-				'By category': 
-					{
-						'(C) Az': (a, b) => {return a.category.localeCompare(b.category);}, 
-						'(C) Za': (a, b) => {return 0 - a.category.localeCompare(b.category);}
-					},
-				'By tags\t-first one-': 
-					{
-						'(T) Az': (a, b) => {return (a.tags[0] || '').localeCompare((b.tags[0] || ''));}, 
-						'(T) Za': (a, b) => {return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''));}
-					},
+				...(showMenus['Category'] 
+					? {
+						'By category': 
+							{
+								'(C) Az': (a, b) => {return a.category.localeCompare(b.category);}, 
+								'(C) Za': (a, b) => {return 0 - a.category.localeCompare(b.category);}
+							}
+						}
+					: {}
+				),
+				...(showMenus['Tags'] 
+					? {
+						'By tags\t-first one-': 
+							{
+								'(T) Az': (a, b) => {return (a.tags[0] || '').localeCompare((b.tags[0] || ''));}, 
+								'(T) Za': (a, b) => {return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''));}
+							}
+						}
+					: {}
+				),
 				'By date\t-last modified-': 
 					{
 						'(D) Asc.': (a, b) => {return a.modified - b.modified;},
@@ -2866,8 +2899,8 @@ function _list(x, y, w, h) {
 								},
 								bHidden: true
 							}
-					}
-				: {}
+						}
+					: {}
 				)
 		};
 	}
@@ -2926,8 +2959,6 @@ function _list(x, y, w, h) {
 	this.manualMethodState = () => {
 		return Object.keys(this.sortMethods(false)).slice(-1)[0];
 	}
-	this.methodState = this.getMethodState(); // On first call first method will be default
-	this.sortState = this.getSortState(); // On first call first state of that method will be default
 	
 	this.changeSorting = (newMethod) => {
 		const previousMethodState = this.methodState;
@@ -3159,40 +3190,42 @@ function _list(x, y, w, h) {
 			this.itemsFpl = this.dataFpl.length;
 			this.itemsXsp = this.dataXsp.length;
 			this.data = [];
-			this.data = loadPlaylistsFromFolder(this.playlistsPath).map((item) => {
-					if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
-						if (this.bFplLock) {item.isLocked = true;}
-						let fplPlaylist = this.dataFpl.find((pls) => {return pls.name === item.name;});
-						if (fplPlaylist) {
-							item.category = fplPlaylist.category;
-							item.tags = fplPlaylist.tags;
-							item.size = fplPlaylist.size;
-							item.duration = fplPlaylist.duration;
-							item.author = fplPlaylist.author;
-							item.description = fplPlaylist.description;
+			if (!this.bLiteMode) {
+				this.data = loadPlaylistsFromFolder(this.playlistsPath).map((item) => {
+						if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
+							if (this.bFplLock) {item.isLocked = true;}
+							let fplPlaylist = this.dataFpl.find((pls) => {return pls.name === item.name;});
+							if (fplPlaylist) {
+								item.category = fplPlaylist.category;
+								item.tags = fplPlaylist.tags;
+								item.size = fplPlaylist.size;
+								item.duration = fplPlaylist.duration;
+								item.author = fplPlaylist.author;
+								item.description = fplPlaylist.description;
+							}
+							if (!this.properties.bSetup[1]) {this.fplPopup();}
+						} else if (item.extension === '.pls') {
+							if (!this.properties.bSetup[1]) {this.plsPopup();}
+						} else if (item.extension === '.xspf') {
+							if (!this.properties.bSetup[1]) {this.xspfPopup();}
+						} else if (item.extension === '.xsp') {
+							let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
+							if (xspPlaylist) {
+								item.category = xspPlaylist.category;
+								item.tags = xspPlaylist.tags;
+								item.size = xspPlaylist.size;
+								item.duration = xspPlaylist.duration;
+								item.isLocked = xspPlaylist.isLocked;
+								item.author = xspPlaylist.author;
+								item.description = xspPlaylist.description;
+							}
+							if (!this.properties.bSetup[1]) {this.xspPopup();}
 						}
-						if (!this.properties.bSetup[1]) {this.fplPopup();}
-					} else if (item.extension === '.pls') {
-						if (!this.properties.bSetup[1]) {this.plsPopup();}
-					} else if (item.extension === '.xspf') {
-						if (!this.properties.bSetup[1]) {this.xspfPopup();}
-					} else if (item.extension === '.xsp') {
-						let xspPlaylist = this.dataXsp.find((pls) => {return pls.name === item.name;});
-						if (xspPlaylist) {
-							item.category = xspPlaylist.category;
-							item.tags = xspPlaylist.tags;
-							item.size = xspPlaylist.size;
-							item.duration = xspPlaylist.duration;
-							item.isLocked = xspPlaylist.isLocked;
-							item.author = xspPlaylist.author;
-							item.description = xspPlaylist.description;
-						}
-						if (!this.properties.bSetup[1]) {this.xspPopup();}
-					}
-					if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
-					else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
-					return item;
-				});
+						if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
+						else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
+						return item;
+					});
+			}
 			this.data = this.data.concat(this.dataAutoPlaylists);
 			// Auto-Tags & Actions
 			this.data.forEach((item, z) => {
@@ -3447,6 +3480,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.checkTrackedFolderChanged = () => {
+		if (this.bLiteMode) {return false;}
 		const test = bProfile ? new FbProfiler(window.Name + ': ' + 'checkTrackedFolderChanged') : null;
 		const playlistPathArray = getFiles(this.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 		const playlistPathArrayLength = playlistPathArray.length;
@@ -3595,17 +3629,17 @@ function _list(x, y, w, h) {
 			// Create oPlaylist
 			let newName = hasName ? pls.name : '';
 			if (!newName.length || bEdit) {
-				try {newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name', window.Name, newName, true);}
+				try {newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', window.Name, newName, true);}
 				catch (e) {return false;}
 				if (!newName.length) {return false;}
 			}
 			let newQuery = hasQuery ? pls.query : '';
 			if (!newQuery.length || bEdit) {
-				try {newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query', window.Name, newQuery, true);}
+				try {newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, newQuery, true);}
 				catch (e) {return false;}
 			}
 			if (!checkQuery(newQuery, false, true)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
-			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
+			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern:\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 			const newForced = (newSort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
 			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
 			const handleList = hasSize && hasQuery && pls.query === newQuery ? null: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
@@ -4145,7 +4179,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		
-		this.checkConfig = () => { // Forces right settings
+		this.checkConfig = ({bSilentSorting = false} = {}) => { // Forces right settings
 			let bDone = false;
 			// Check playlists path
 			if (!this.playlistsPath.endsWith('\\')) {
@@ -4182,13 +4216,17 @@ function _list(x, y, w, h) {
 			}
 			// Check sorting is valid
 			if (!this.sortMethods(false).hasOwnProperty(this.methodState)) {
-				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
+				if (!bSilentSorting) {
+					fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
+				}
 				this.methodState = this.getMethodState(); // On first call first state of that method will be default
 				this.properties['methodState'][1] = this.methodState;
 				bDone = true;
 			}
 			if (!this.sortMethods(false)[this.methodState].hasOwnProperty(this.sortState)) {
-				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
+				if (!bSilentSorting) {
+					fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
+				}
 				this.sortState = this.getSortState(); // On first call first state of that method will be default
 				this.properties['sortState'][1] = this.sortState;
 				bDone = true;
@@ -4269,6 +4307,44 @@ function _list(x, y, w, h) {
 					headerButtons[key] = headerButtonsDef[key];
 				}
 				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
+				bDone = true;
+			}
+			// Check by features enabled
+			const showMenus = JSON.parse(this.properties.showMenus[1]);
+			const bSearch = this.uiElements['Search filter'].enabled; // this.searchInput is null at this point before painting
+			if (!showMenus['Tags']) {
+				if (bSearch && this.searchMethod.bTags) { // Check search
+					this.searchMethod.bTags = false;
+					bDone = true;
+				}
+			}
+			if (!showMenus['Category']) {
+				if (bSearch && this.searchMethod.bCategory) { // Check search
+					this.searchMethod.bCategory = false;
+					bDone = true;
+				}
+			}
+			// Check filters
+			const filters = this.properties['filterMethod'][1].split(',');
+			const availableFilters = this.availableFilters();
+			if (filters.some((filter) => !availableFilters.includes(filter))) {
+				filters.forEach((filter, i) => {
+					if (!availableFilters.includes(filter)) {
+						filters[i] = availableFilters[0];
+					}
+				});
+				this.properties['filterMethod'][1] = filters.join(',');
+				// Update buttons
+				buttonsPanel.buttons.filterOneButton.method = filters[0];
+				buttonsPanel.buttons.filterTwoButton.method = filters[1];
+				bDone = true;
+			}
+			// Lite mode
+			if (this.bLiteMode) {
+				const disabledFeatures = ['Tags', 'Online sync', 'Relative paths handling', 'Export and copy', 'File locks'];
+				const showMenusDef = JSON.parse(this.properties.showMenus[3]);
+				disabledFeatures.forEach((key) => {showMenusDef[key] = false;});
+				this.properties.showMenus[3] = JSON.stringify(showMenusDef);
 				bDone = true;
 			}
 			return bDone;
@@ -4493,6 +4569,7 @@ function _list(x, y, w, h) {
 			this.itemsAutoplaylist = 0;
 			this.itemsFpl = 0;
 			this.itemsXsp = 0;
+			this.itemsFoobar = 0;
 			this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1];
 			this.totalFileSize = 0;
 			this.index = -1;
@@ -4566,6 +4643,9 @@ function _list(x, y, w, h) {
 			if (typeof xspfCache !== 'undefined') {xspfCache.clear();}
 			if (bProfile) {test.Print();}
 		}
+		
+		this.methodState = this.getMethodState(); // On first call first method will be default
+		this.sortState = this.getSortState(); // On first call first state of that method will be default
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
 		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
@@ -4716,6 +4796,7 @@ function _list(x, y, w, h) {
 	this.bTracking = true;
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
+	this.bLiteMode = this.properties['bLiteMode'][1];
 	// Other
 	this.trackedFolderChanged = false;
 	this.bIsDragDrop = false;
@@ -4806,6 +4887,8 @@ function _list(x, y, w, h) {
 		},
 		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...\n(Shift + L. Click to show quick help)', func: (x, y, mask, parent) => {
 			if (mask === MK_SHIFT) {
+				// Enabled menus
+				const showMenus = JSON.parse(this.properties.showMenus[1]);
 				fb.ShowPopupMessage(
 					'Global keyboard shortcuts:' +
 					'\n-------------------' +
@@ -4814,13 +4897,13 @@ function _list(x, y, w, h) {
 					'\n- F3: clone on UI playlist.' +
 					'\n- F4: load / jump to playlist.' +
 					'\n- F5: copy playlist (with same format).' +
-					'\n- F6: export playlist to ListenBrainz (+ Spotify).' +
+					(showMenus['Online sync'] ? '\n- F6: export playlist to ListenBrainz (+ Spotify).' : '\n- F6: (disabled Online sync)') +
 					'\n- F7: new playlist.' +
-					'\n- F8: cycle categories.' +
+					(showMenus['Category'] ? '\n- F8: cycle categories.' :  '\n- F8: (disabled Categories)') +
 					'\n- F9: search playlists with selected tracks.' +
 					'\n- F10: settings menu or list menu (+ Shift).' +
 					'\n- F11: documentation (pdf).' +
-					'\n- F12: open playlists tracked folder.' +
+					(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: (disabled File tracking -lite mode-)') +
 					'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
 					'\n- DEL: delete playlist.' +
 					'\n' +

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/06/23
+//28/06/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -236,7 +236,8 @@ var properties = {
 		autoWidth:	'entire list',
 		sizeUnits:	{prefix: '', suffix: ' \u266A'} // Musical note
 	})],
-	bSkipMenuTag			: ['Automatically add \'bSkipMenuTag\' to all playlists', false],
+	bSkipMenuTag			: ['Automatically add \'bSkipMenuTag\' to all playlists', false, {func: isBoolean}, false],
+	bLiteMode				: ['Lite mode enabled? (foo_plorg replacement)', false, {func: isBoolean}, false],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -310,17 +311,25 @@ let delayAutoUpdate = () => void(0);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
 		if (readme.length) {fb.ShowPopupMessage(readme, 'Playlist Manager: introduction');}
+		{	// Lite mode
+			const answer = WshShell.Popup('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled. \n\nEnable lite mode?', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				prop.bLiteMode[1] = true;
+			}
+		}
 		{	// Simple mode
-			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'];
+			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'].concat(prop.bLiteMode[1] ? ['File locks'] : []);
 			const otherFeatures = ['Advanced search tools'];
-			const answer = WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, window.Name, popup.question + popup.yes_no);
+			const answer = prop.bLiteMode[1] 
+				? popup.no
+				: WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.no) {
 				// Menus
 				const showMenus = JSON.parse(prop.showMenus[1]);
 				features.forEach((key) => {
 					showMenus[key] = false;
 				});
-				prop.showMenus[1] = JSON.stringify(showMenus);
+				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
 				// Other tools
 				const searchMethod = JSON.parse(prop.searchMethod[1]);
 				searchMethod.bPath = searchMethod.bRegExp = false;
@@ -328,13 +337,17 @@ let delayAutoUpdate = () => void(0);
 			}
 		}
 		{	// UI tracking
-			const answer = WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+			const answer = prop.bLiteMode[1] 
+				? popup.yes
+				: WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				prop.bAllPls[1] = true;
 			}
 		}
 		{	// Manual sorting
-			const answer = WshShell.Popup('By default automatic sorting is used.\nManual sorting can be set at the sorting button at bottom. Playlisst may be reorderd by using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+			const answer = prop.bLiteMode[1] 
+				? popup.yes
+				: WshShell.Popup('By default automatic sorting is used.\nManual sorting can be set at the sorting button at bottom. Playlisst may be reorderd by using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				new Promise((resolve) => {
 					const timer = setInterval(() => {

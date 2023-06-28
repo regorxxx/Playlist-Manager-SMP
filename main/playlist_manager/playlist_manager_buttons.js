@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/06/23
+//28/06/23
 
 //Always loaded along other buttons and panel
 include('..\\..\\helpers\\buttons_panel_xxx.js');
@@ -84,7 +84,7 @@ function filterName() {
 			switch (list.autoPlaylistStates[0]) {
 				case list.constAutoPlaylistStates()[0]: {return list.autoPlaylistStates[0];}
 				case list.constAutoPlaylistStates()[1]: {return 'Ap';}
-				case list.constAutoPlaylistStates()[2]: {return 'Pls';}
+				case list.constAutoPlaylistStates()[2]: {return list.bLiteMode ? 'UI' : 'Pls';}
 				case list.constAutoPlaylistStates()[3]: {return 'UI';}
 			}
 			break;
