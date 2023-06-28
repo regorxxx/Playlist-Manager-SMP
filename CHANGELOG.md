@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.22](#050-beta22---2023-06-29)
 - [0.5.0-beta.21](#050-beta21---2023-06-27)
 - [0.5.0-beta.20](#050-beta20---2023-05-16)
 - [0.5.0-beta.19](#050-beta19---2023-05-08)
@@ -34,6 +35,12 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.22] - 2023-06-29
+### Added
 - UI: new menu entry to create UI-only playlists.
 - UI: new lite mode to exclusively track UI-only playlists, thus behaving like a simple replacement for foo_plorg. Extends the current settings to disable/enable features, changing how the panel works at low level. i.e. no playlist files, no folder tracking, etc.
 ### Changed
@@ -41,6 +48,7 @@
 - UI: settings menu, new playlist menu, keyboard shortcuts and filter buttons now follow the settings for shown/hidden features. i.e. if menu entries to edit tags are hidden, then all other features depending on it will also be hidden (like filtering or sorting by tag). (see above)
 ### Removed
 ### Fixed
+- Playlist locks: menu entries not working properly for multiple selection mode (when lock was set by another component). Now mimics the behavior of single selection menu.
 - UI: workaround for a SMP crash with some combinations of sizes drawing rounded boxes. This doesn't solve the underlying problem but at least bypass the crash and just omits painting the element.
 - UI: another workaround for a SMP crash with some combinations of sizes drawing rounded boxes, this time aiming to avoid the previous situation by properly adjusting arc of rounded boxes whenever it's possible.
 
@@ -776,7 +784,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.21...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.22...HEAD
+[0.5.0-beta.22]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.21...v0.5.0-beta.22
 [0.5.0-beta.21]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.20...v0.5.0-beta.21
 [0.5.0-beta.20]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.19...v0.5.0-beta.20
 [0.5.0-beta.19]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.18...v0.5.0-beta.19
