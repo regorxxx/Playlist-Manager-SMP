@@ -41,6 +41,7 @@
 - UI: settings menu, new playlist menu, keyboard shortcuts and filter buttons now follow the settings for shown/hidden features. i.e. if menu entries to edit tags are hidden, then all other features depending on it will also be hidden (like filtering or sorting by tag). (see above)
 ### Removed
 ### Fixed
+- UI: workaround for a SMP crash with some combinations of sizes drawing rounded boxes. This doesn't solve the underlying problem but at least bypass the crash and just omits painting the element.
 
 ## [0.5.0-beta.21] - 2023-06-27
 ### Added

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/23
+//28/06/23
 
 include('helpers_xxx_prototypes.js');
 include('helpers_xxx_UI.js');
@@ -123,6 +123,7 @@ function themedButton(
 	};
 
 	this.draw = function (gr, bLast = false) {
+		extendGR(gr); // helpers_xxx_prototypes_smp.js
 		// Draw?
 		if (this.state === buttonStates.hide) {return;}
 		const bDrawBackground = buttonsPanel.config.partAndStateID === 1;
