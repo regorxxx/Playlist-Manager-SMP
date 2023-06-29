@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.23](#050-beta23---2023-06-29)
 - [0.5.0-beta.22](#050-beta22---2023-06-29)
 - [0.5.0-beta.21](#050-beta21---2023-06-27)
 - [0.5.0-beta.20](#050-beta20---2023-05-16)
@@ -38,6 +39,13 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.5.0-beta.23] - 2023-06-29
+### Added
+### Changed
+### Removed
+### Fixed
+- Helpers: fixed incorrect warning about missing font.
 
 ## [0.5.0-beta.22] - 2023-06-29
 ### Added
@@ -784,7 +792,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.22...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.23...HEAD
+[0.5.0-beta.23]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.22...v0.5.0-beta.23
 [0.5.0-beta.22]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.21...v0.5.0-beta.22
 [0.5.0-beta.21]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.20...v0.5.0-beta.21
 [0.5.0-beta.20]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.19...v0.5.0-beta.20
