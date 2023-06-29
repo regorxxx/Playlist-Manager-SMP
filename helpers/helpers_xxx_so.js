@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/22
+//29/06/23
 
 /* 
 	Global tags, queries, RegExp
@@ -92,9 +92,6 @@ function checkSoFeatures(soFeat) {
 		bPass = false;
 	} else if (!soFeat.segoe) {
 		fb.ShowPopupMessage('Found an issue on current installation:\nSegoe UI font is missing.\n\nFix: install missing font.\n' + 'https://github.com/mrbvrz/segoe-ui-linux', 'SO features');
-		bPass = false;
-	} else if (!soFeat.arialU) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nArial Unicode MS font is missing.\n\nFix: install missing font.\n' + 'https://github.com/mrbvrz/segoe-ui-linux', 'SO features');
 		bPass = false;
 	}
 	return bPass;
