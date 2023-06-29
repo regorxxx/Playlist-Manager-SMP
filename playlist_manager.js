@@ -255,7 +255,7 @@ setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
 	if (prop.bFirstPopup[1] && prop.bSetup[1]) {prop.bSetup[1] = false; overwriteProperties(prop);} // Don't apply on already existing installations
-	if (!prop.bSetup[1]) {
+	if (!prop.bSetup[1] && !prop.bLiteMode[1]) {
 		addInstance('Playlist Manager');
 		plmInit.interval = setInterval(cacheLib, 500, true);
 	}
@@ -392,9 +392,11 @@ let delayAutoUpdate = () => void(0);
 	}).then(() => {
 		list.resetFilter();
 	});
+	
+	// Disable panel on init until it's done
+	if (!pop.isEnabled() && !prop.bLiteMode[1]) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
 }
-// Disable panel on init until it's done
-if (!pop.isEnabled()) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
+
 // List
 const list = new _list(LM, TM, 0, 0);
 let scroll;
@@ -641,6 +643,7 @@ if (!list.properties.bSetup[1]) {
 				break;
 			}
 			case 'precacheLibraryPaths': {
+				if (list.bLiteMode) {return;}
 				if (!info) {
 					cacheLib(void(0), void(0), void(0), true);
 				} else {
@@ -663,6 +666,7 @@ if (!list.properties.bSetup[1]) {
 				break;
 			}
 			case 'precacheLibraryPaths ask': {
+				if (list.bLiteMode) {return;}
 				if (list.bLibraryChanged) {
 					window.NotifyOthers('precacheLibraryPaths', null);
 				} else if (libItemsAbsPaths && libItemsAbsPaths.length) {

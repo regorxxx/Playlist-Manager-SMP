@@ -43,6 +43,7 @@
 ## [0.5.0-beta.23] - 2023-06-29
 ### Added
 ### Changed
+- Disable path tracking on lite mode.
 ### Removed
 ### Fixed
 - Helpers: fixed incorrect warning about missing font.

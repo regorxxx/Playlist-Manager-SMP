@@ -317,7 +317,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		let warningText = '';
-		if (this.bLibraryChanged) {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
+		if (this.bLibraryChanged && !this.bLiteMode) {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
 		if (warningText.length) {headerText += '\n' + warningText;}
 		return headerText;
 	}
@@ -1135,7 +1135,7 @@ function _list(x, y, w, h) {
 									if (this.checkSelectionDuplicatesPlaylist({playlistIndex: this.index})) {warningText += '\nWarning! Some track(s) already present...';}
 								}
 								if (iDup > 1) {warningText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.';}
-								if (this.bLibraryChanged && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
+								if (this.bLibraryChanged && !this.bLiteMode && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') {warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...';}
 								if (pls.extension === '.xsp' && pls.type !== 'songs') {warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.';}
 								if (warningText.length) {playlistDataText += '\n' + warningText;}
 								if (this.tooltip.text !== playlistDataText) {
@@ -4179,7 +4179,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		
-		this.checkConfig = ({bSilentSorting = false} = {}) => { // Forces right settings
+		this.checkConfig = ({bSilenSorting = false} = {}) => { // Forces right settings
 			let bDone = false;
 			// Check playlists path
 			if (!this.playlistsPath.endsWith('\\')) {
@@ -4216,7 +4216,7 @@ function _list(x, y, w, h) {
 			}
 			// Check sorting is valid
 			if (!this.sortMethods(false).hasOwnProperty(this.methodState)) {
-				if (!bSilentSorting) {
+				if (!bSilenSorting) {
 					fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
 				}
 				this.methodState = this.getMethodState(); // On first call first state of that method will be default
@@ -4224,7 +4224,7 @@ function _list(x, y, w, h) {
 				bDone = true;
 			}
 			if (!this.sortMethods(false)[this.methodState].hasOwnProperty(this.sortState)) {
-				if (!bSilentSorting) {
+				if (!bSilenSorting) {
 					fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
 				}
 				this.sortState = this.getSortState(); // On first call first state of that method will be default
@@ -4341,10 +4341,13 @@ function _list(x, y, w, h) {
 			}
 			// Lite mode
 			if (this.bLiteMode) {
+				// Disable features
 				const disabledFeatures = ['Tags', 'Online sync', 'Relative paths handling', 'Export and copy', 'File locks'];
 				const showMenusDef = JSON.parse(this.properties.showMenus[3]);
 				disabledFeatures.forEach((key) => {showMenusDef[key] = false;});
 				this.properties.showMenus[3] = JSON.stringify(showMenusDef);
+				// Disable tracking
+				this.switchTracking(false);
 				bDone = true;
 			}
 			return bDone;
@@ -4868,7 +4871,7 @@ function _list(x, y, w, h) {
 			},
 			func: (x, y, mask, parent) => createMenuRightTop().btn_up(x, y),
 			highlighting: (x, y, mask, parent) => {
-				return this.bLibraryChanged && !this.bTracking;
+				return this.bLibraryChanged && !this.bTracking && !this.bLiteMode;
 			}
 		},
 		folder: {

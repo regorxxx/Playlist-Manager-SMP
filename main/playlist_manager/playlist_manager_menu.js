@@ -1787,8 +1787,8 @@ function createMenuRightTop() {
 			}});
 			menu.newCheckMenu(menuName, 'Auto-backup interval...', void(0),  () => {return Number(list.properties['autoBack'][1]) !== 0;});
 		}
-		menu.newEntry({menuName, entryText: 'sep'});
-		{	// Stop tracking library paths
+		if (!list.bLiteMode) {	// Stop tracking library paths
+			menu.newEntry({menuName, entryText: 'sep'});
 			menu.newEntry({menuName, entryText: 'Don\'t track library (until next startup)', func: () => {
 				list.switchTracking(void(0), true);
 			}});
@@ -3216,6 +3216,10 @@ function createMenuRightTop() {
 			overwriteProperties(list.properties);
 			// Sorting
 			list.changeSorting(list.manualMethodState());
+			// Instances
+			removeInstance('Playlist Manager');
+		} else {
+			addInstance('Playlist Manager');
 		}
 		list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
 		list.manualRefresh();
