@@ -2690,13 +2690,25 @@ function _list(x, y, w, h) {
 	this.isFilterActive = (filter = null) => {
 		return filter ? this.getFilter()[filter] : Object.values(this.getFilter()).some(Boolean);
 	};
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState} = {}) => {
-		if (!plsState.length && this.searchInput && this.searchInput.text.length) {
-			plsState = this.search(false).plsState;
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false} = {}) => {
+		// Apply current search
+		const bPlsFilter = plsState.length;
+		if (this.searchInput && this.searchInput.text.length) {
+			if (!bReusePlsFilter || !bPlsFilter) {
+				plsState = this.search(false).plsState;
+			} else if (bReusePlsFilter && bPlsFilter) {
+				const newPlsState = this.search(false).plsState;
+				plsState = plsState.filter((oldPls) => {
+					return newPlsState.includes(oldPls) || (newPlsState.findIndex((pls) => 
+							pls.nameId === oldPls.nameId && pls.path === oldPls.path && oldPls.extension === pls.extension
+						) !== -1);
+				});
+			}
 		}
-		// On first filter we use this.dataAll as origin
+		// Then filter by current playlists filtered
 		if (plsState.length) {
 			this.data = this.dataAll.filter((pls) => plsState.includes(pls));
+			// In case there has been an update, objects can change, look for other properties
 			if (!this.data.length) {
 				this.data = this.dataAll.filter((dataPls) => 
 					plsState.findIndex((pls) => 
@@ -2704,7 +2716,7 @@ function _list(x, y, w, h) {
 					) !== -1
 				);
 			}
-		} else {
+		} else { // On first filter we use this.dataAll as origin
 			this.data = [...this.dataAll];
 		}
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists

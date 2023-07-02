@@ -6,7 +6,7 @@
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta23', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta24', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -423,7 +423,7 @@ if (!list.properties.bSetup[1]) {
 			list.cacheLastPosition(z);
 			list.update(false, true, z);
 			// Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
-			list.filter(list.searchInput && list.searchInput.text.length ? list.search(false) : void(0));
+			list.filter();
 			setTimeout(() => {if (pop.isEnabled()) {pop.disable(true);}}, 500);
 			return true;
 		}

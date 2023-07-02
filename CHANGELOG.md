@@ -37,6 +37,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Search: in case current view is filtered by specific playlist (for ex. using the 'Playlist maintenance tools'), if there is a text on the search box, the results are also filtered by the search.
 ### Removed
 ### Fixed
 - Search: current search did not update properly after adding/removing a playlist (for ex. cloning).
