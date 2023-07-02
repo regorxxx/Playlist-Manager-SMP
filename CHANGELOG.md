@@ -39,6 +39,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- Search: current search did not update properly after adding/removing a playlist (for ex. cloning).
 
 ## [0.5.0-beta.23] - 2023-06-29
 ### Added

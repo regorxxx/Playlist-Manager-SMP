@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/06/23
+//02/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2697,6 +2697,13 @@ function _list(x, y, w, h) {
 		// On first filter we use this.dataAll as origin
 		if (plsState.length) {
 			this.data = this.dataAll.filter((pls) => plsState.includes(pls));
+			if (!this.data.length) {
+				this.data = this.dataAll.filter((dataPls) => 
+					plsState.findIndex((pls) => 
+						pls.nameId === dataPls.nameId && pls.path === dataPls.path && dataPls.extension === pls.extension
+					) !== -1
+				);
+			}
 		} else {
 			this.data = [...this.dataAll];
 		}
