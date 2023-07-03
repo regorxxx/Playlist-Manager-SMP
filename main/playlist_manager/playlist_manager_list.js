@@ -1838,6 +1838,7 @@ function _list(x, y, w, h) {
 		if (z === -1) {return;}
 		this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
 		if (this.indexes.length) {
+			if (!this.indexes.includes(z)) {this.multSelect(z);}
 			createMenuLeftMult(this.indexes).btn_up(x,y);
 		} else {
 			createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
