@@ -110,7 +110,7 @@ function _panel(customBackground = false, bSetup = false) {
 			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
 			: handle 
 				? utils.GetAlbumArtAsyncV2(void(0), handle, 0, true, false, false)
-				: Promise().reject('No handle/art');
+				: Promise.reject('No handle/art');
 		promise.then((result) => {
 			if (this.imageBackground.mode === 2) {
 				this.imageBackground.art.image = result;
