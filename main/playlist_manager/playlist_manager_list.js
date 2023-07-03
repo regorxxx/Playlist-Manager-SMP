@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/07/23
+//03/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2482,7 +2482,11 @@ function _list(x, y, w, h) {
 							duration: plman.GetPlaylistItems(fbPlaylistIndex).CalcTotalDuration(),
 							modified: Date.now(),
 						});
-						plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);
+						if (plsData.nameId !== playlistNameId) {
+							const currentLocks = plman.GetPlaylistLockedActions(fbPlaylistIndex) || [];
+							if (!currentLocks.includes('RenamePlaylist')) {plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId);}
+							else {console.log('updatePlaylist: can not rename playlist due to lock. ' + plsData.nameId);}
+						}
 						// Warn about dead items
 						if (!bCallback || (!bCallback && this.bDeadCheckAutoSave)) {
 							const selItems = plman.GetPlaylistItems(fbPlaylistIndex).Convert();
@@ -3839,7 +3843,11 @@ function _list(x, y, w, h) {
 							let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + newName + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, window.Name, popup.question + popup.yes_no) : popup.no;
 							if (answer === popup.yes) {
 								plman.ActivePlaylist = indexFound;
-								plman.RenamePlaylist(indexFound, newName + UUID);
+								if (UUID.length) {
+									const currentLocks = plman.GetPlaylistLockedActions(indexFound) || [];
+									if (!currentLocks.includes('RenamePlaylist')) {plman.RenamePlaylist(indexFound, newName + UUID);}
+									else {console.popup('add: can not rename playlist due to lock. ' + newName);}
+								}
 								this.updatePlaylist({playlistIndex: plman.ActivePlaylist, bCallback: true}); // This updates size too. Must replicate callback call since the playlist may not be visible on the current filter view!
 							}
 						}
@@ -3847,8 +3855,10 @@ function _list(x, y, w, h) {
 						if (newName !== oldName) {
 							let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, newName + UUID);
 							plman.ActivePlaylist = new_playlist;
-						} else {
-							plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID);
+						} else if (UUID.length) {
+							const currentLocks = plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [];
+							if (!currentLocks.includes('RenamePlaylist')) {plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID);}
+							else {console.popup('add: can not rename playlist due to lock. ' + oldName);}
 						}
 					}
 					// Warn about dead items
@@ -4089,6 +4099,8 @@ function _list(x, y, w, h) {
 			// Delete from data
 			const oldNameId = pls.nameId;
 			const duplicated = plman.FindPlaylist(oldNameId);
+			const currentLocks = duplicated !== -1 ? plman.GetPlaylistLockedActions(duplicated) || [] : [];
+			if (currentLocks.includes('RemovePlaylist') && bUI) {fb.ShowPopupMessage('UI-Playlist is locked: ' + pls.name, window.Name); return;}
 			if (pls.size) {this.totalFileSize -= pls.size;}
 			this.deletedItems.unshift(pls);
 			this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
@@ -4102,9 +4114,11 @@ function _list(x, y, w, h) {
 			}
 			clearInterval(delay);
 			if (duplicated !== -1) {
-				let answer = bUI ? popup.yes : WshShell.Popup('Delete also the playlist loaded within foobar2000?', 0, window.Name, popup.question + popup.yes_no);
-				if (answer === popup.yes) {
-					plman.RemovePlaylistSwitch(duplicated);
+				if (!currentLocks.includes('RemovePlaylist')) {
+					const answer = bUI ? popup.yes : WshShell.Popup('Delete also the playlist loaded within foobar2000?', 0, window.Name, popup.question + popup.yes_no);
+					if (answer === popup.yes) {
+						plman.RemovePlaylistSwitch(duplicated);
+					}
 				}
 			}
 			// Needed after removing the playlist on UI
@@ -4127,7 +4141,9 @@ function _list(x, y, w, h) {
 			let i = 0;
 			while (i < plman.PlaylistCount) {
 				if (plman.GetPlaylistName(i) === oldName) {
-					plman.RenamePlaylist(i, name);
+					const currentLocks = plman.GetPlaylistLockedActions(i) || [];
+					if (currentLocks.includes('RenamePlaylist')) {i++; console.log('UI-Playlist is locked and can not be renamed: ' + pls.name, window.Name); continue;}
+					else {plman.RenamePlaylist(i, name);}
 				} else {
 					i++;
 				}

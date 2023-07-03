@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/23
+//03/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -40,17 +40,19 @@ function createMenuLeft(forcedIndex = -1) {
 	// Helpers
 	const isPlsLoaded = () => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsActive = () => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
-	const isAutoPls = () => {return pls.isAutoPlaylist || pls.query;};
+	const isAutoPls = () => {return pls.isAutoPlaylist || pls.query || isPlsUI() && plman.IsAutoPlaylist(plman.FindPlaylist(pls.nameId));};
 	const isLockPls = () => {return pls.isLocked;};
 	const isPlsEditable = () => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui';};
 	const isPlsLockable = () => {return isPlsEditable() || pls.extension === '.strm';};
 	const isPlsUI = () => {return pls.extension === '.ui';};
 	// Evaluate
-	const bIsPlsLoaded = isPlsLoaded();
+	const uiIdx = plman.FindPlaylist(pls.nameId);
+	const bIsPlsLoaded = uiIdx !== -1;
 	const bIsPlsActive = isPlsActive();
 	const bIsAutoPls = isAutoPls();
 	const bIsValidXSP = pls.extension !== '.xsp' || pls.hasOwnProperty('type') && pls.type === 'songs';
 	const bIsLockPls = isLockPls();
+	const bIsLockPlsRename = bIsPlsLoaded && (plman.GetPlaylistLockedActions(uiIdx) || []).includes('RenamePlaylist');
 	const bIsPlsEditable = isPlsEditable();
 	const bIsPlsLockable = isPlsLockable();
 	const bIsPlsUI = isPlsUI();
@@ -91,11 +93,11 @@ function createMenuLeft(forcedIndex = -1) {
 		}, flags: !bIsAutoPls && !bIsLockPls && (bWritableFormat || bIsPlsUI) && selItems.Count ? MF_STRING : MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		// Renames both playlist file and playlist within foobar2000. Only 1 instance allowed
-		menu.newEntry({entryText: (!bIsLockPls) ? 'Rename...' : (bIsAutoPls ? 'Rename...' : 'Rename... (only filename)'), func: () => {
+		menu.newEntry({entryText: (!bIsLockPls && !bIsLockPlsRename ? 'Rename...' : (bIsAutoPls || bIsPlsUI ? 'Rename...' : 'Rename... (only filename)')), func: () => {
 			const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
 			if (input === null) {return;}
 			renamePlaylist(list, z, input);
-		}});
+		}, flags: bIsPlsUI && bIsLockPlsRename ? MF_GRAYED : MF_STRING});
 	}
 	{	// Edit and update
 		if (isAutoPls()) {
@@ -201,7 +203,7 @@ function createMenuLeft(forcedIndex = -1) {
 	{	// Tags and category
 		if (showMenus['Category']) {
 			{	// Set category
-				const menuName = menu.newMenu('Set category...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+				const menuName = menu.newMenu('Set category...', void(0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 				menu.newEntry({menuName, entryText: 'New category...', func: () => {
 					const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name, 'My category');
 					if (input === null) {return;}
@@ -218,7 +220,7 @@ function createMenuLeft(forcedIndex = -1) {
 		}
 		if (showMenus['Tags']) {
 			{	// Set tag(s)
-				const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPls &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
+				const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 				menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
 					const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name, '["TagA","TagB"]', void(0), true);
 					if (input === null) {return;}
@@ -250,7 +252,7 @@ function createMenuLeft(forcedIndex = -1) {
 					try {tags = JSON.parse(tags);} catch(e){fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return;}
 				}
 				if (tagsString !== currValue) {setTrackTags(tags, list, z);}
-			}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP ? MF_STRING : MF_GRAYED});
+			}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP || bIsPlsUI ? MF_STRING : MF_GRAYED});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -554,7 +556,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}
 		}
 	}
-	if (showMenus['File locks'] || showMenus['UI playlist locks'] || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
+	if (showMenus['File locks'] || showMenus['UI playlist locks'] && bIsPlsLoaded || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
 	{	// File management
 		// Locks playlist file
 		if (showMenus['File locks']) {
