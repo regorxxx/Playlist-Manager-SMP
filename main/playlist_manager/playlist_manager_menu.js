@@ -2514,6 +2514,71 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return (panel.colors.bToolbar ? 0 : (panel.colors.bButtonsBackground ? 2 : 1));});
 		}
+		{	// Panel background
+			const subMenuName = menu.newMenu('Panel background...', menuName);
+			const options = ['Use front cover', 'Use color background'];
+			const optionsLength = options.length;
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+					panel.imageBackground.enabled = i === 0 ? true : false;
+					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					overwriteProperties(panel.properties);
+					panel.updateImageBg();
+					window.Repaint();
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return (panel.imageBackground.enabled ? 0 : 1);});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			{
+				const subMenuNameTwo = menu.newMenu('Mode...', subMenuName);
+				const options = ['Follow selection', 'Follow now playing', 'External file...'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
+						if (i === 2) {
+							const input = Input.string('string', panel.imageBackground.mode === 2 ? panel.imageBackground.art.path : '', 'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)', window.Name, 'myfile.jpg');
+							if (input === null) {return;}
+							panel.imageBackground.art.path = input;
+						}
+						panel.imageBackground.mode = i;
+						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						overwriteProperties(panel.properties);
+						panel.updateImageBg();
+						window.Repaint();
+					}});
+				});
+				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1], () => {return panel.imageBackground.mode;});
+			}
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Maintain proportions', func: () => {
+				panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
+				if (panel.imageBackground.bProportions) {panel.imageBackground.bFill = false;}
+				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+				overwriteProperties(panel.properties);
+				panel.updateImageBg();
+				window.Repaint();
+			}});
+			menu.newCheckMenu(subMenuName,'Maintain proportions', void(0), () => {return panel.imageBackground.bProportions;});
+			menu.newEntry({menuName: subMenuName, entryText: 'Fill panel', func: () => {
+				panel.imageBackground.bFill = !panel.imageBackground.bFill;
+				if (panel.imageBackground.bFill) {panel.imageBackground.bProportions = false;}
+				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+				overwriteProperties(panel.properties);
+				panel.updateImageBg();
+				window.Repaint();
+			}});
+			menu.newCheckMenu(subMenuName,'Fill panel', void(0), () => {return panel.imageBackground.bFill;});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Set transparency...\t' + _b(panel.imageBackground.transparency), func: () => {
+				let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n(0-100)', window.Name, 50, [(n) => n >= 0 && n <= 100]);
+				if (input === null) {return;}
+				panel.imageBackground.transparency = input;
+				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+				overwriteProperties(panel.properties);
+				panel.updateImageBg();
+				window.Repaint();
+			}});
+		}
 		menu.newEntry({menuName, entryText: 'sep'});
 		{	// Columns
 			const subMenuName = menu.newMenu('Columns...', menuName);

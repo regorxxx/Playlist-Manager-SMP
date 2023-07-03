@@ -565,6 +565,7 @@ function _list(x, y, w, h) {
 	this.paint = (gr) => {
 		// Bg
 		const panelBgColor = panel.getColorBackground();
+		panel.paintImage(gr, {w: window.Width, h: this.h - buttonCoordinatesOne.h, x: 0, y: this.y, offsetH: _scale(1)});
 		// HEADER
 		this.paintHeader(gr, this.modeUI);
 		// Empty Panel

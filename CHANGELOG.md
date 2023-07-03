@@ -36,12 +36,14 @@
 
 ## [Unreleased][]
 ### Added
+-UI: panel background can now use the now playing/selection art or an external file. Different proportion/filling settings available, along transparency.
 ### Changed
 - Search: in case current view is filtered by specific playlist (for ex. using the 'Playlist maintenance tools'), if there is a text on the search box, the results are also filtered by the search.
 -UI: some improvements to menus while managing locked UI-only playlists (specially for native AutoPlaylists) or loaded playlists with UI-locks.
 ### Removed
 ### Fixed
 - Search: current search did not update properly after adding/removing a playlist (for ex. cloning).
+- Playlist locks: multiple fixes to handling of playlists with rename/delete locks.
 
 ## [0.5.0-beta.23] - 2023-06-29
 ### Added
