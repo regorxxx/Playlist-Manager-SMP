@@ -43,6 +43,7 @@
 ### Removed
 ### Fixed
 - Search: current search did not update properly after adding/removing a playlist (for ex. cloning).
+- UI: selection rectangle not being shown when opening the playlist contextual menu.
 - Playlist locks: multiple fixes to handling of playlists with rename/delete locks.
 
 ## [0.5.0-beta.23] - 2023-06-29
@@ -352,7 +353,7 @@
 - UI: fix text on playlist type filter button. '&' being displayed as '_'.
 - UI: adding new files with new tags did not updated properly the current view, showing by default the new tags too. Similar to past bug with categories.
 - UI: after sending a track to a playlist(s), the UI was being repaint even if no changes were made (for ex. on duplicated track). Implies no change for final user.
-- UI: Tags entries were not properly shown with a check in the upper list of 'Set tag' submenu.
+- UI: tags entries were not properly shown with a check in the upper list of 'Set tag' submenu.
 - UI: fix to quick-searching / show active playlist not jumping to playlist in some cases (also appeared at [0.5.0-beta.8] and before). Method has been rewritten from scratch and now puts the result on the middle of the window whenever it's possible resulting in a more natural behavior.
 - UI: selected and highlighted playlist rectangles did not match in size, neither were properly adjusted to playlist name text in some cases.
 - UI: size not being shown when playlist name was too long. Now the name is sliced to accommodate the available width after the size info is taken into account. Example: "My too long playlist..." is now displayed as "My too long pl... (100)".

@@ -800,7 +800,7 @@ function _list(x, y, w, h) {
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
-		if (this.colors.selectedPlaylistColor !== panelBgColor && this.bMouseOver) {
+		if (this.colors.selectedPlaylistColor !== panelBgColor && (this.bMouseOver || this.bSelMenu)) {
 			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
@@ -962,7 +962,9 @@ function _list(x, y, w, h) {
 	}
 	
 	this.onMouseLeaveList = () => {  // Removes selection indicator
-		this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1)); // When pressing right button, the index gets cleared too... but we may want to use it on the menus
+		if (!this.bSelMenu) { // When pressing right button, the index gets cleared too... but we may want to use it on the menus
+			this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
+		}
 		this.index = -1;
 		this.mx = -1; this.my = -1;
 		this.bMouseOver = false;
@@ -1177,7 +1179,7 @@ function _list(x, y, w, h) {
 	this.cacheLastPosition = (z = this.index) => { // Saves info to restore position later!
 		if (this.inRange && z !== -1) {
 			this.lastIndex = z;
-			this.lastOffset = z;
+			this.lastOffset = this.offset;
 		}
 		currentItemIndex = this.lastIndex;
 		if (currentItemIndex >= this.items) {currentItemIndex = this.items - 1;}
