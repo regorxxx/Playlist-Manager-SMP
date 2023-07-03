@@ -36,10 +36,11 @@
 
 ## [Unreleased][]
 ### Added
--UI: panel background can now use the now playing/selection art or an external file. Different proportion/filling settings available, along transparency.
+- UI: panel background can now use the now playing/selection art or an external file. Different proportion/filling settings available, along transparency.
 ### Changed
+- UI: while using multiple selection, R. clicking on another playlist appends it to the current selection and immediately calls the context menu. This only happens in case R. Click action is associated to the playlists context menu.
 - Search: in case current view is filtered by specific playlist (for ex. using the 'Playlist maintenance tools'), if there is a text on the search box, the results are also filtered by the search.
--UI: some improvements to menus while managing locked UI-only playlists (specially for native AutoPlaylists) or loaded playlists with UI-locks.
+- UI: some improvements to menus while managing locked UI-only playlists (specially for native AutoPlaylists) or loaded playlists with UI-locks.
 ### Removed
 ### Fixed
 - Search: current search did not update properly after adding/removing a playlist (for ex. cloning).
