@@ -3082,19 +3082,7 @@ function _list(x, y, w, h) {
 		const oldTags = this.tags();
 		// Saves currently selected item for later use
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
-		if (bReuseData) {
-			// Recalculates from data
-			this.data = this.data.map((item) => {
-					if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal) + 8 + maxIconWidth;} 
-					else {item.width = _textWidth(item.name, panel.fonts.normal) +  + 8 + maxIconWidth;}
-					return item;
-				});
-			this.dataAll = this.dataAll.map((item) => {
-					if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal) + 8 + maxIconWidth;} 
-					else {item.width = _textWidth(item.name, panel.fonts.normal) +  + 8 + maxIconWidth;}
-					return item;
-				});
-		} else { // Recalculates from files
+		if (!bReuseData) { // Recalculates from files
 			// AutoPlaylist and FPL From json
 			console.log('Playlist manager: reading files from ' + _q(this.playlistsPath));
 			this.dataAutoPlaylists = [];
@@ -3138,7 +3126,6 @@ function _list(x, y, w, h) {
 											if (bUpdated) {console.log('Playlist Manager: Auto-tagging playlist ' + item.name);}
 										}
 									}
-									if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;}
 									if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
 										console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 										if (item.extension === '.xsp') {
@@ -3167,7 +3154,6 @@ function _list(x, y, w, h) {
 												const bUpdated = this.updateTags(handleList, item);
 												if (bUpdated) {console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name);}
 											}
-											if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;}
 											if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
 												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 												if (item.extension === '.xsp') {
@@ -3189,13 +3175,9 @@ function _list(x, y, w, h) {
 								}
 							}
 						}
-						if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
-						else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
 						if (item.isAutoPlaylist) {this.dataAutoPlaylists.push(item);}
 						else if (item.extension === '.xsp') {this.dataXsp.push(item);}
 					} else if (item.extension === '.fpl') {
-						if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
-						else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
 						this.dataFpl.push(item);
 					} else if (item.extension === '.ui') {
 						this.dataUI.push(item);
@@ -3244,8 +3226,6 @@ function _list(x, y, w, h) {
 							}
 							if (!this.properties.bSetup[1]) {this.xspPopup();}
 						}
-						if (this.bShowSize) {item.width = _textWidth(item.name + '(' + item.size + ')', panel.fonts.normal)  + 8 + maxIconWidth;} 
-						else {item.width = _textWidth(item.name, panel.fonts.normal) + 8 + maxIconWidth;}
 						return item;
 					});
 			}
@@ -4142,7 +4122,7 @@ function _list(x, y, w, h) {
 			while (i < plman.PlaylistCount) {
 				if (plman.GetPlaylistName(i) === oldName) {
 					const currentLocks = plman.GetPlaylistLockedActions(i) || [];
-					if (currentLocks.includes('RenamePlaylist')) {i++; console.log('UI-Playlist is locked and can not be renamed: ' + pls.name, window.Name); continue;}
+					if (currentLocks.includes('RenamePlaylist')) {i++; console.log('UI-Playlist is locked and can not be renamed: ' + oldName, window.Name); continue;}
 					else {plman.RenamePlaylist(i, name);}
 				} else {
 					i++;
