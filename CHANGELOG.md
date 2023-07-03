@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0-beta.27](#050-beta24---2023-07-03)
 - [0.5.0-beta.23](#050-beta23---2023-06-29)
 - [0.5.0-beta.22](#050-beta22---2023-06-29)
 - [0.5.0-beta.21](#050-beta21---2023-06-27)
@@ -35,6 +36,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.24] - 2023-07-03
 ### Added
 - UI: panel background can now use the now playing/selection art or an external file. Different proportion/filling settings available, along transparency.
 ### Changed
@@ -800,7 +807,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.23...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.24...HEAD
+[0.5.0-beta.24]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.23...v0.5.0-beta.24
 [0.5.0-beta.23]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.22...v0.5.0-beta.23
 [0.5.0-beta.22]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.21...v0.5.0-beta.22
 [0.5.0-beta.21]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.20...v0.5.0-beta.21
