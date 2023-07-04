@@ -2,7 +2,8 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.5.0-beta.27](#050-beta24---2023-07-03)
+- [0.5.0-beta.25](#050-beta25---2023-07-04)
+- [0.5.0-beta.24](#050-beta24---2023-07-03)
 - [0.5.0-beta.23](#050-beta23---2023-06-29)
 - [0.5.0-beta.22](#050-beta22---2023-06-29)
 - [0.5.0-beta.21](#050-beta21---2023-06-27)
@@ -37,9 +38,17 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0-beta.25] - 2023-07-04
+### Added
 - UI: added option to use bold font for playlists.
 - UI: added light shadows to playlists' text when using art as background to improve readability. It's now the default, but it may be disabled.
+- UI: added blur setting for the panel background art.
 ### Changed
+- UI: multiple optimizations to panel background art usage.
 ### Removed
 ### Fixed
 
@@ -809,7 +818,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.24...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.25...HEAD
+[0.5.0-beta.25]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.24...v0.5.0-beta.25
 [0.5.0-beta.24]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.23...v0.5.0-beta.24
 [0.5.0-beta.23]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.22...v0.5.0-beta.23
 [0.5.0-beta.22]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.21...v0.5.0-beta.22
