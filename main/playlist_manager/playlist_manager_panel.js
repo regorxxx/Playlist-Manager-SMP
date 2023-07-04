@@ -102,7 +102,7 @@ function _panel(customBackground = false, bSetup = false) {
 		return col;
 	};
 	
-	this.updateImageBg = (bForce = false) => {
+	this.updateImageBg = debounce((bForce = false) => {
 		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null;}
 		let handle;
 		if (this.imageBackground.mode === 0) { // Selection
@@ -134,7 +134,7 @@ function _panel(customBackground = false, bSetup = false) {
 			this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null;
 			return window.Repaint();
 		});
-	}
+	}, 250);
 	
 	this.paintImage = (gr, limits = {x, y, w, h, offsetH}) => {
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
