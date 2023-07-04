@@ -25,7 +25,8 @@ function _panel(customBackground = false, bSetup = false) {
 			art: {path: '', image: null}, 
 			transparency: 60, 
 			bProportions: false, 
-			bFill: true
+			bFill: true,
+			blur: 10
 		}), {func: isJSON}],
 		bFontOutline			: ['Add shadows to font?', true, {func: isBoolean}],
 		bBold					: ['Use bold font?', false, {func: isBoolean}],
@@ -101,14 +102,15 @@ function _panel(customBackground = false, bSetup = false) {
 		return col;
 	};
 	
-	this.updateImageBg = () => {
-		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null;}
+	this.updateImageBg = (bForce = false) => {
+		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null;}
 		let handle;
 		if (this.imageBackground.mode === 0) { // Selection
 			handle = fb.GetFocusItem(true);
 		} else if (this.imageBackground.mode === 1) { // Now Playing
 			handle = fb.GetNowPlaying() || fb.GetFocusItem(true);
 		}
+		if (!bForce && (handle && this.imageBackground.handle === handle.RawPath || this.imageBackground.handle === this.imageBackground.art.path)) {return;}
 		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length 
 			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
 			: handle 
@@ -117,30 +119,36 @@ function _panel(customBackground = false, bSetup = false) {
 		promise.then((result) => {
 			if (this.imageBackground.mode === 2) {
 				this.imageBackground.art.image = result;
+				this.imageBackground.handle = this.imageBackground.art.path;
 			} else {
 				if (!result.image) {throw 'Image not available';}
 				this.imageBackground.art.image = result.image;
 				this.imageBackground.art.path = result.path;
+				this.imageBackground.handle = handle.RawPath;
+			}
+			if (this.imageBackground.art.image && this.imageBackground.blur !== -1 && Number.isInteger(this.imageBackground.blur)) {
+				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
 			}
 			return window.Repaint();
 		}).catch(() => {
-			this.imageBackground.art.path = null; this.imageBackground.art.image = null;
+			this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null;
 			return window.Repaint();
 		});
 	}
 	
 	this.paintImage = (gr, limits = {x, y, w, h, offsetH}) => {
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
+			const img = this.imageBackground.art.image;
 			if (this.imageBackground.bFill) {
 				const prop = limits.w / limits.h - limits.offsetH;
-				const offsetX = prop > 1 ? prop * this.imageBackground.art.image.Width : 0;
-				const offsetY = prop < 1 ? prop * this.imageBackground.art.image.Height : 0;
-				gr.DrawImage(this.imageBackground.art.image, limits.x , limits.y, limits.w, limits.h, offsetX / 2, offsetY / 2, this.imageBackground.art.image.Width - offsetX / 2, this.imageBackground.art.image.Height - offsetY, 0, this.imageBackground.transparency);
+				const offsetX = prop > 1 ? prop * img.Width : 0;
+				const offsetY = prop < 1 ? prop * img.Height : 0;
+				gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, offsetX / 2, offsetY / 2, img.Width - offsetX / 2, img.Height - offsetY, 0, this.imageBackground.transparency);
 			} else {
 				let w, h;
 				if (this.imageBackground.bProportions) {w = h = Math.min(limits.w, limits.h - limits.offsetH);}
 				else {[w , h] = [limits.w, limits.h];}
-				gr.DrawImage(this.imageBackground.art.image, (window.Width - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, this.imageBackground.art.image.Width, this.imageBackground.art.image.Height, 0, this.imageBackground.transparency);
+				gr.DrawImage(img, (window.Width - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
 			}
 		}
 	};
@@ -194,7 +202,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
 	this.colors.bFontOutline = this.properties.bFontOutline[1];
 	this.colors.bBold = this.properties.bBold[1];
-	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => key === 'image' ? null : value);
+	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => key === 'image' || key === 'handle' ? null : value);
 	this.listObjects = [];
 	this.textObjects = [];
 	this.fontChanged();

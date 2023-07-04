@@ -2542,7 +2542,7 @@ function createMenuRightTop() {
 						panel.colors.bFontOutline = true;
 					}
 					overwriteProperties(panel.properties);
-					panel.updateImageBg();
+					panel.updateImageBg(true);
 					window.Repaint();
 				}});
 			});
@@ -2562,7 +2562,7 @@ function createMenuRightTop() {
 						panel.imageBackground.mode = i;
 						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 						overwriteProperties(panel.properties);
-						panel.updateImageBg();
+						panel.updateImageBg(true);
 						window.Repaint();
 					}});
 				});
@@ -2595,6 +2595,15 @@ function createMenuRightTop() {
 				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 				overwriteProperties(panel.properties);
 				panel.updateImageBg();
+				window.Repaint();
+			}});
+			menu.newEntry({menuName: subMenuName, entryText: 'Set blur...\t' + _b(panel.imageBackground.blur), func: () => {
+				let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(>= 0)', window.Name, 10);
+				if (input === null) {return;}
+				panel.imageBackground.blur = input;
+				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+				overwriteProperties(panel.properties);
+				panel.updateImageBg(true);
 				window.Repaint();
 			}});
 		}

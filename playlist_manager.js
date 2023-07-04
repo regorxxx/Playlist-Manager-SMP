@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/07/23
+//04/07/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -609,29 +609,37 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
 		window.Repaint();
-		panel.updateImageBg();
+		if (panel.imageBackground.mode === 1) {panel.updateImageBg();}
 	});
 	
 	addEventListener('on_selection_changed', () => {
-		panel.updateImageBg();
-	});
-
-	addEventListener('on_item_focus_change', () => {
-		panel.updateImageBg();
-	});
-
-	addEventListener('on_playlist_switch', () => {
-		panel.updateImageBg();
-	});
-
-	addEventListener('on_playback_stop', (reason) => {
-		if (reason !== 2) { // Invoked by user or Starting another track
+		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
 		}
 	});
 
+	addEventListener('on_item_focus_change', () => {
+		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+			panel.updateImageBg();
+		}
+	});
+
+	addEventListener('on_playlist_switch', () => {
+		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+			panel.updateImageBg();
+		}
+	});
+
+	addEventListener('on_playback_stop', (reason) => {
+		if (reason !== 2) { // Invoked by user or Starting another track
+			if (panel.imageBackground.mode === 1) {panel.updateImageBg();}
+		}
+	});
+
 	addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
-		panel.updateImageBg();
+		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+			panel.updateImageBg();
+		}
 		window.Repaint();
 	});
 
@@ -827,7 +835,9 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
 		const name = plman.GetPlaylistName(playlistIndex);
-		panel.updateImageBg();
+		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+			panel.updateImageBg();
+		}
 		if (!list.isAutosave(name)) {return;}
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, name); return;}
@@ -838,7 +848,9 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
 		const name = plman.GetPlaylistName(playlistIndex);
-		panel.updateImageBg();
+		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+			panel.updateImageBg();
+		}
 		if (!list.isAutosave(name)) {return;}
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) {setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, name); return;}
