@@ -2549,7 +2549,7 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {return (panel.imageBackground.enabled ? 0 : 1);});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			{
-				const subMenuNameTwo = menu.newMenu('Mode...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Selection mode...', subMenuName);
 				const options = ['Follow selection', 'Follow now playing', 'External file...'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -2569,24 +2569,35 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1], () => {return panel.imageBackground.mode;});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Maintain proportions', func: () => {
-				panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
-				if (panel.imageBackground.bProportions) {panel.imageBackground.bFill = false;}
-				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
-				overwriteProperties(panel.properties);
-				panel.updateImageBg();
-				window.Repaint();
-			}});
-			menu.newCheckMenu(subMenuName,'Maintain proportions', void(0), () => {return panel.imageBackground.bProportions;});
-			menu.newEntry({menuName: subMenuName, entryText: 'Fill panel', func: () => {
-				panel.imageBackground.bFill = !panel.imageBackground.bFill;
-				if (panel.imageBackground.bFill) {panel.imageBackground.bProportions = false;}
-				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
-				overwriteProperties(panel.properties);
-				panel.updateImageBg();
-				window.Repaint();
-			}});
-			menu.newCheckMenu(subMenuName,'Fill panel', void(0), () => {return panel.imageBackground.bFill;});
+			{
+				const subMenuNameTwo = menu.newMenu('Display mode...', subMenuName);
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Maintain proportions', func: () => {
+					panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
+					if (panel.imageBackground.bProportions) {panel.imageBackground.bFill = false;}
+					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					overwriteProperties(panel.properties);
+					panel.updateImageBg();
+					window.Repaint();
+				}});
+				menu.newCheckMenu(subMenuNameTwo, 'Maintain proportions', void(0), () => {return panel.imageBackground.bProportions;});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Fill panel', func: () => {
+					panel.imageBackground.bFill = !panel.imageBackground.bFill;
+					if (panel.imageBackground.bFill) {panel.imageBackground.bProportions = false;}
+					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					overwriteProperties(panel.properties);
+					panel.updateImageBg();
+					window.Repaint();
+				}});
+				menu.newCheckMenu(subMenuNameTwo, 'Fill panel', void(0), () => {return panel.imageBackground.bFill;});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Tint all UI elements', func: () => {
+					panel.imageBackground.bTint = !panel.imageBackground.bTint;
+					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					overwriteProperties(panel.properties);
+					window.Repaint();
+				}});
+				menu.newCheckMenu(subMenuNameTwo, 'Tint all UI elements', void(0), () => {return panel.imageBackground.bTint;});
+			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Set transparency...\t' + _b(panel.imageBackground.transparency), func: () => {
 				let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n(0-100)', window.Name, 50, [(n) => n >= 0 && n <= 100]);

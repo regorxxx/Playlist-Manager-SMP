@@ -578,6 +578,13 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_paint', (gr) => {
 		panel.paint(gr);
+		if (panel.imageBackground.bTint) {
+			panel.paintImage(
+				gr,
+				{w: window.Width, h: buttonCoordinatesOne.h, x: 0, y: buttonCoordinatesOne.y(), offsetH: _scale(1)},
+				{transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50: 40)}
+			);
+		}
 		on_paint_buttn(gr);
 		list.paint(gr);
 		if (scroll) {

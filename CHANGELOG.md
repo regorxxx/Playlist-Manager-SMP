@@ -47,6 +47,7 @@
 - UI: added option to use bold font for playlists.
 - UI: added light shadows to playlists' text when using art as background to improve readability. It's now the default, but it may be disabled.
 - UI: added blur setting for the panel background art.
+- UI: added setting to tint UI elements (appart from the playlist list) while using the panel background art.
 ### Changed
 - UI: multiple optimizations to panel background art usage.
 ### Removed

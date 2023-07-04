@@ -26,7 +26,8 @@ function _panel(customBackground = false, bSetup = false) {
 			transparency: 60, 
 			bProportions: false, 
 			bFill: true,
-			blur: 10
+			blur: 10,
+			bTint: true
 		}), {func: isJSON}],
 		bFontOutline			: ['Add shadows to font?', true, {func: isBoolean}],
 		bBold					: ['Use bold font?', false, {func: isBoolean}],
@@ -136,19 +137,23 @@ function _panel(customBackground = false, bSetup = false) {
 		});
 	}, 250);
 	
-	this.paintImage = (gr, limits = {x, y, w, h, offsetH}) => {
+	this.paintImage = (gr, limits = {x, y, w, h, offsetH}, fill = null /* {transparency: 20} */) => {
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
 			const img = this.imageBackground.art.image;
-			if (this.imageBackground.bFill) {
-				const prop = limits.w / limits.h - limits.offsetH;
-				const offsetX = prop > 1 ? prop * img.Width : 0;
-				const offsetY = prop < 1 ? prop * img.Height : 0;
-				gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, offsetX / 2, offsetY / 2, img.Width - offsetX / 2, img.Height - offsetY, 0, this.imageBackground.transparency);
+			if (fill) {
+				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.transparency);
 			} else {
-				let w, h;
-				if (this.imageBackground.bProportions) {w = h = Math.min(limits.w, limits.h - limits.offsetH);}
-				else {[w , h] = [limits.w, limits.h];}
-				gr.DrawImage(img, (window.Width - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+				if (this.imageBackground.bFill) {
+					const prop = limits.w / limits.h - limits.offsetH;
+					const offsetX = prop > 1 ? prop * img.Width : 0;
+					const offsetY = prop < 1 ? prop * img.Height : 0;
+					gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, offsetX / 2, offsetY / 2, img.Width - offsetX / 2, img.Height - offsetY, 0, this.imageBackground.transparency);
+				} else {
+					let w, h;
+					if (this.imageBackground.bProportions) {w = h = Math.min(limits.w, limits.h - limits.offsetH);}
+					else {[w , h] = [limits.w, limits.h];}
+					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+				}
 			}
 		}
 	};

@@ -537,6 +537,13 @@ function _list(x, y, w, h) {
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
 					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
 					this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
+					if (panel.imageBackground.bTint) {
+						panel.paintImage(
+							gr,
+							{w: this.x + this.w - iconOffsetRight, h: this.searchInput.h, x: 0, y: this.searchInput.y, offsetH: _scale(1)},
+							{transparency: (getBrightness(...toRGB(panelBgColor)) < 50 ? 50: 20)}
+						);
+					}
 				} else {
 					const bCatIcon = this.categoryState.length === 1 && this.configFile && this.configFile.ui.icons.category.hasOwnProperty(this.categoryState[0]);
 					const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : null; // Try setting customized button from json
