@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/07/23
+//04/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2260,6 +2260,14 @@ function createMenuRightTop() {
 					let idx = options.indexOf(panel.fonts.size);
 					return idx !== -1 ? idx : optionsLength - 1;
 				});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Use bold version', func: () => {
+					panel.colors.bBold = !panel.colors.bBold;
+					panel.properties.bBold[1] = panel.colors.bBold;
+					overwriteProperties(panel.properties);
+					window.Repaint();
+				}});
+				menu.newCheckMenu(subMenuName, 'Use bold version', void(0), () => {return panel.colors.bBold;});
 			}
 		}
 		{	// List colours
@@ -2307,6 +2315,14 @@ function createMenuRightTop() {
 					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 					window.Repaint();
 				}, flags: panel.colors.bCustomText ? MF_STRING : MF_GRAYED,});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'Add shadows to font', func: () => {
+					panel.colors.bFontOutline = !panel.colors.bFontOutline;
+					panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
+					overwriteProperties(panel.properties);
+					window.Repaint();
+				}});
+				menu.newCheckMenu(subMenuSecondName, 'Add shadows to font', void(0), () => {return panel.colors.bFontOutline;});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			{	// Buttons' toolbar
@@ -2522,6 +2538,9 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					panel.imageBackground.enabled = i === 0 ? true : false;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					if (panel.imageBackground.enabled) { // Add shadows by default
+						panel.colors.bFontOutline = true;
+					}
 					overwriteProperties(panel.properties);
 					panel.updateImageBg();
 					window.Repaint();

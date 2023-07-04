@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/07/23
+//04/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -33,9 +33,6 @@ function _list(x, y, w, h) {
 	// UI offset
 	var yOffset = _scale(6) + panel.row_height / 4;
 	const columnOffset = Math.max(_scale(2), 3);
-	// const columnOffset = _scale(2);
-	// console.log(_scale(4), _scale(2));
-	// console.log(scaleDPI.factor);
 	
 	// Header
 	var headerW = -1;
@@ -646,6 +643,8 @@ function _list(x, y, w, h) {
 			}
 			const currIdx = i + this.offset;
 			const pls = this.data[currIdx];
+			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
+			const textY = this.y + yOffset + (i * panel.row_height);
 			// Add category sep
 			if (this.bShowSep) {
 				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to all use-cases
@@ -660,8 +659,8 @@ function _list(x, y, w, h) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) {sepLetter = '#';} // Group numbers
 						else if (sepLetter === 'W') {offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8;}
-						drawDottedLine(gr, this.x, this.y + yOffset + (i * panel.row_height), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (i * panel.row_height) , 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (i * panel.row_height) - panel.row_height / 2, iconsRightW + offsetLetter , panel.row_height , RIGHT);
+						drawDottedLine(gr, this.x, textY, this.x + this.w - this.categoryHeaderOffset, textY , 1, categoryHeaderLineColor, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, textY - panel.row_height / 2, iconsRightW + offsetLetter , panel.row_height , RIGHT);
 					}
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
@@ -692,10 +691,10 @@ function _list(x, y, w, h) {
 			// Adjust playlist name according to width available but always show the size if possible
 			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
 			if (this.bShowSize && playlistDataText.length > cacheLen) {
-				const w = gr.CalcTextWidth(playlistDataText, panel.fonts.normal);
+				const w = gr.CalcTextWidth(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal);
 				if (w > this.textWidth - 30) {
 					const size = ' (' + pls.size + ')';
-					const sizeW = gr.CalcTextWidth(size, panel.fonts.normal);
+					const sizeW = gr.CalcTextWidth(size, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal);
 					const plsW = w - sizeW;
 					const left = this.textWidth - 30 - sizeW - ellipisisW - 2;
 					playlistDataText = pls.name.slice(0, Math.floor(left * pls.name.length / plsW)) + '...' + size;
@@ -739,21 +738,30 @@ function _list(x, y, w, h) {
 					}
 				}
 				if (iconBg) {
-					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5, textY, maxIconWidth, panel.row_height, CENTRE);
 					if (icon) {
-						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5, textY, maxIconWidth, panel.row_height, CENTRE);
 					}
 				} else if (icon) {
-					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5, this.y + yOffset + (i * panel.row_height), maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5, textY, maxIconWidth, panel.row_height, CENTRE);
 				}
 			}
 			// Text
-			gr.GdiDrawText(playlistDataText, panel.fonts.normal, playlistColor, this.bShowIcons ? this.x + maxIconWidth : this.x, this.y + yOffset + (i * panel.row_height), this.textWidth - 30, panel.row_height, LEFT);
+			if (panel.colors.bFontOutline) { // Outline current text
+				let img = gdi.CreateImage(this.textWidth - 30, panel.row_height);
+				const grImg = img.GetGraphics();
+				const outColor = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 75 : 50)
+				grImg.DrawString(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, outColor, 0, 0, img.Width, img.Height, LEFT);
+				img.ReleaseGraphics(grImg);
+				img.StackBlur(0);
+				gr.DrawImage(img, textX, textY, img.Width, img.Height, 0, 0, img.Width, img.Height);
+			}
+			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX, textY, this.textWidth - 30, panel.row_height, LEFT);
 			// Columns
 			if (bColumnsEnabled && columnsWidth) {
-				const columnY = this.y + yOffset + (i * panel.row_height);
+				const columnY = textY;
 				columns.forEach((key, i) => {
-					const columnX = (this.bShowIcons ? this.x + maxIconWidth : this.x) + this.textWidth - 30 + this.calcColumnsWidth(gr, i).total;
+					const columnX = (textX) + this.textWidth - 30 + this.calcColumnsWidth(gr, i).total;
 					const columnFont = panel.fonts[this.columns.font[i] || 'normal'];
 					const val = this.calcColumnVal(key, pls);
 					const columnW = (this.columns.width[i] === 'auto' 
@@ -788,7 +796,7 @@ function _list(x, y, w, h) {
 				});
 				const icon = iconChars[fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist ? 'playing' : 'loaded'];
 				// Draw
-				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, this.y + yOffset + (i * panel.row_height), iconsRightW, panel.row_height, RIGHT);
+				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, textX, iconsRightW, panel.row_height, RIGHT);
 			}
 			// Multiple selection
 			if (this.indexes.length) {

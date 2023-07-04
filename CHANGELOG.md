@@ -37,6 +37,8 @@
 
 ## [Unreleased][]
 ### Added
+- UI: added option to use bold font for playlists.
+- UI: added light shadows to playlists' text when using art as background to improve readability. It's now the default, but it may be disabled.
 ### Changed
 ### Removed
 ### Fixed

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/07/23
+//04/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -19,14 +19,16 @@ function _panel(customBackground = false, bSetup = false) {
 		bButtonsBackground	: ['Use buttons background?', false, {func: isBoolean}],
 		buttonsToolbarColor	: ['Buttons\' toolbar colour', RGB(0,0,0), {func: isInt}],
 		buttonsToolbarTransparency	: ['Buttons\' toolbar transparency', 5, {func: isInt, range: [[0,100]]}],
-		imageBackground			: ['Image background config', JSON.stringify({
+		imageBackground		: ['Image background config', JSON.stringify({
 			enabled: true, 
 			mode: 1, 
 			art: {path: '', image: null}, 
 			transparency: 60, 
-			bProportions: true, 
+			bProportions: false, 
 			bFill: true
 		}), {func: isJSON}],
+		bFontOutline			: ['Add shadows to font?', true, {func: isBoolean}],
+		bBold					: ['Use bold font?', false, {func: isBoolean}],
 	};
 	for (let key in panelProperties) {panelProperties[key][3] = panelProperties[key][1];}
 	setProperties(panelProperties, 'panel_');
@@ -65,6 +67,7 @@ function _panel(customBackground = false, bSetup = false) {
 		}
 		this.fonts.title = _gdiFont(name, (this.fonts.size + 2 <= 16) ? this.fonts.size + 2 : this.fonts.size, 1);
 		this.fonts.normal = _gdiFont(name, this.fonts.size);
+		this.fonts.normalBold = _gdiFont(name, this.fonts.size - 1, FontStyle.Bold);
 		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
 		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
 		this.row_height = this.fonts.normal.Height;
@@ -189,6 +192,8 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.bButtonsBackground = this.properties.bButtonsBackground[1];
 	this.colors.buttonsToolbarColor = this.properties.buttonsToolbarColor[1];
 	this.colors.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
+	this.colors.bFontOutline = this.properties.bFontOutline[1];
+	this.colors.bBold = this.properties.bBold[1];
 	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => key === 'image' ? null : value);
 	this.listObjects = [];
 	this.textObjects = [];
