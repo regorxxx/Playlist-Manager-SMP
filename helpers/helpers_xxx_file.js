@@ -535,7 +535,7 @@ function sanitize(value) {
 function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	if (!value || !value.length) {return '';}
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
-	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/[\/]/g, '\\').replace(/[|–]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
+	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/[\/]/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
 }
 
 function UUID() {
