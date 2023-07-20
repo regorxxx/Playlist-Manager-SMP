@@ -1000,7 +1000,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					const z = list.data.indexOf(pls);
 					if (z !== -1) {list.removePlaylist(z);}
 				});
-				this.indexes.length = 0; // Reset selection since there is no playlists now
+				list.indexes.length = 0; // Reset selection since there is no playlists now
 			}});
 		}
 	}
