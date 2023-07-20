@@ -2668,7 +2668,7 @@ function _list(x, y, w, h) {
 		if (idx === 0) {return defCateg;}
 		let categ = new Set();
 		this.dataAll.forEach( (playlist) => {if (playlist.category.length) {categ.add(playlist.category);}});
-		return idx ? [defCateg, ...[...categ].sort()][idx] : [defCateg, ...[...categ].sort()];
+		return idx ? [defCateg, ...[...categ].sort((a,b) => a.localeCompare(b))][idx] : [defCateg, ...[...categ].sort((a,b) => a.localeCompare(b))];
 	}
 	this.categoryState = [];
 	this.tags = (idx = null) => {
@@ -2676,7 +2676,7 @@ function _list(x, y, w, h) {
 		if (idx === 0) {return defTag;}
 		let tags = new Set();
 		this.dataAll.forEach( (playlist) => {if (playlist.tags.length) {playlist.tags.forEach((tag) => {tags.add(tag);});}});
-		return idx ? [defTag, ...[...tags].sort()][idx] : [defTag, ...[...tags].sort()];
+		return idx ? [defTag, ...[...tags].sort((a,b) => a.localeCompare(b))][idx] : [defTag, ...[...tags].sort((a,b) => a.localeCompare(b))];
 	}
 	this.tagState = [];
 	// By pls
@@ -2865,7 +2865,7 @@ function _list(x, y, w, h) {
 	this.availableFilters = () => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		const bListenBrainz = this.properties.lBrainzToken[1].length > 0;
-		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type',  showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort();
+		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type',  showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort((a,b) => a.localeCompare(b));
 	}
 	
 	this.sortMethods = (bInternal = true) => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
