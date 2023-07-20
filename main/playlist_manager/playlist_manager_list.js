@@ -2198,13 +2198,34 @@ function _list(x, y, w, h) {
 				// Add to pls
 				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
 				const index = plman.FindPlaylist(pls.nameId);
+				const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
 				// Add items to chosen playlist too if it's loaded within foobar2000 unless it's the current playlist
 				if (index !== -1 && plman.ActivePlaylist !== index) {
 					plman.UndoBackup(index);
 					plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
+					// Edit again data since update did not catch the change
+					if (pls.extension === '.ui') {
+						this.editData(pls, {
+							size: pls.size + selItems.Count,
+							duration: (pls.duration !== - 1 ? pls.duration + selItems.CalcTotalDuration() : plman.GetPlaylistSelectedItems(plman.ActivePlaylist).CalcTotalDuration()),
+							modified: Date.now(),
+						});
+					}
 				}
 				// Remove items when moving
-				if (bDelSource) {plman.UndoBackup(plman.ActivePlaylist); plman.RemovePlaylistSelection(plman.ActivePlaylist);}
+				if (bDelSource) {
+					plman.UndoBackup(plman.ActivePlaylist); 
+					plman.RemovePlaylistSelection(plman.ActivePlaylist);
+					const sourcePls = (bAlsoHidden ? this.dataAll : this.data)
+						.find((pls, idx) => {return pls.nameId === plman.GetPlaylistName(plman.ActivePlaylist);});
+					if (pls !== sourcePls) {
+						this.editData(sourcePls, {
+							size: sourcePls.size + selItems.Count,
+							duration: (sourcePls.duration !== - 1 ? sourcePls.duration - selItems.CalcTotalDuration() : selItems.CalcTotalDuration()),
+							modified: Date.now(),
+						});
+					}
+				}
 				return true;
 			}
 		}

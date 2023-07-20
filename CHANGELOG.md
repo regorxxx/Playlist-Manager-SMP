@@ -42,6 +42,7 @@
 ### Removed
 ### Fixed
 - AutoPlaylists: fixed non valid query warning for queries containing 'SORT' as string/tag, like "%ALBUMARTISTSORT%%ALBUMTYPE%%ARTISTS%%ARTISTSORT%%ARTWORKGUID% PRESENT".
+- UI: size and duration was not properly updated in some cases for UI-only playlists after using drag n' drop or copy/move tracks actions.
 - UI: current view was vertically shifted sometimes after editing the query of an AutoPlaylist or Smart Playlist (instead of maintaining the position).
 - UI: categories and tags not being sorted following current locale. i.e. "World" being shown before "foobar", due to uppercase usage, or "_first" at the end due to "_" usage. Now it follows the expected behavior: _first, foobar, World, ...
 - UI: cosmetic internal drag n' drop fixes when releasing outside the allowed range.
