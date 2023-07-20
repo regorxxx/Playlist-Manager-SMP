@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/23
+//21/07/23
 
 include('helpers_xxx.js');
 
@@ -240,7 +240,7 @@ function checkSort(queryOrSort) {
 // Must check query too to be sure it's a valid query!
 function stripSort(query) {
 	let queryNoSort = query;
-	if (query.match(/ *SORT.*$/)) {
+	if (query.match(/ *SORT .*$/)) {
 		if (query.match(/ *SORT BY .*$/)) {queryNoSort = query.split(/( *SORT BY ).*$/)[0];}
 		else if (query.match(/ *SORT DESCENDING BY .*$/)) {queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0];}
 		else if (query.match(/ *SORT ASCENDING BY .*$/)) {queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0];}
