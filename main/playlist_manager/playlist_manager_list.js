@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/07/23
+//20/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -1334,6 +1334,7 @@ function _list(x, y, w, h) {
 				case this.down_btn.lbtn_up(x, y):
 				case !this.inRange:
 					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
+					if (this.isInternalDrop()) {this.internalPlsDrop = [];}
 					break;
 				default: {
 					const z = this.index;
@@ -1386,6 +1387,8 @@ function _list(x, y, w, h) {
 								}
 							} else {this.bDoubleclick = false;}
 						}
+					} else {
+						if (this.isInternalDrop()) {this.internalPlsDrop = [];}
 					}
 					break;
 				}
