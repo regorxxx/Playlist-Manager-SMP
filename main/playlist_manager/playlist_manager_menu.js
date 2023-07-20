@@ -123,7 +123,7 @@ function createMenuLeft(forcedIndex = -1) {
 				}
 				if (bDone) {bDone = pls.extension === '.xsp' ? rewriteXSPSort(pls, input) : true;}
 				if (bDone) {
-					list.update(true, true);
+					list.update(true, true, z);
 					list.filter();
 				}
 			}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
@@ -141,7 +141,7 @@ function createMenuLeft(forcedIndex = -1) {
 							query: newQuery,
 							size: bPlaylist ? '?' : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
 						});
-						list.update(true, true);
+						list.update(true, true, z);
 						list.filter();
 					}
 				}
@@ -156,7 +156,7 @@ function createMenuLeft(forcedIndex = -1) {
 						list.editData(pls, {
 							limit: input,
 						});
-						list.update(true, true);
+						list.update(true, true, z);
 						list.filter();
 					}
 				}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
