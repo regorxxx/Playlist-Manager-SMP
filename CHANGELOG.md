@@ -41,6 +41,10 @@
 ### Changed
 ### Removed
 ### Fixed
+- AutoPlaylists: fixed non valid query warning for queries containing 'SORT' as string/tag, like "%ALBUMARTISTSORT%%ALBUMTYPE%%ARTISTS%%ARTISTSORT%%ARTWORKGUID% PRESENT".
+- UI: categories and tags not being sorted following current locale. i.e. "World" being shown before "foobar", due to uppercase usage, or "_first" at the end due to "_" usage. Now it follows the expected behavior: _first, foobar, World, ...
+- UI: cosmetic internal drag n' drop fixes when releasing outside the allowed range.
+- Crash when deleting a multiple selection.
 
 ## [0.5.0-beta.25] - 2023-07-04
 ### Added
