@@ -1038,7 +1038,7 @@ function createMenuRight() {
 			const oldIdx = plman.ActivePlaylist;
 			if (oldIdx === -1) {return;}
 			const name = list.properties.bAutoSelTitle[1] 
-				? list.generateTitleFromSelection()
+				? list.plsNameFromSelection(oldIdx)
 				: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
 			const pls = list.add({bEmpty: true, name, bInputName: true});
 			if (pls) {
