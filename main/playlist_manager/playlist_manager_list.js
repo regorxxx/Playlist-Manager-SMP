@@ -2155,45 +2155,6 @@ function _list(x, y, w, h) {
 		}
 		return bDup;
 	}
-		
-	this.generateTitleFromSelection = () => {
-		console.log('Generating title from selection...')
-		const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-		console.log(selItems);
-		if ( selItems.Count > 0 ) {
-			const tags = getTagsValuesV4(selItems, ['ALBUM ARTIST', 'ALBUM']);
-			const [artists, albums] = tags;
-			var [multiArtists,multiAlbums] = [false,false];
-			var artistName = artists[0][0];
-			console.log('Initial artist: ' + artistName);
-			for (let i = 1; i < artists.length; i++) {
-				//console.log('Track artist: ' + artists[i][0]); //Debug
-				if (!multiArtists && artistName !== artists[i][0]) { 
-					multiArtists = true; 
-					artistName = 'Various Artists';
-					console.log('Multiple artists.'); 
-					break;
-				}
-			}
-			var albumName = albums[0][0];
-			console.log('Initial album: ' + albumName);
-			for (let i = 1; i < albums.length; i++) {
-				//console.log('Track album: ' + albums[i][0]); //Debug
-				if (!multiAlbums && albumName !== albums[i][0]) { 
-					multiAlbums = true; 
-					albumName = "";
-					console.log('Multiple albums.');
-					break;
-				}
-			}
-			if (multiAlbums) { var titleString = artistName; } else { var titleString = artistName + ' - ' + albumName; }
-			console.log('Generated title: ' + titleString);
-			return titleString;
-		} else {
-			console.log('Nothing selected.');
-			return "Empty playlist"
-		}
-	}
 	
 	this.plsNameFromSelection = (idx) => {
 		const selItems = plman.GetPlaylistSelectedItems(idx);
