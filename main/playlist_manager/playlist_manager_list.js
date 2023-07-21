@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/07/23
+//21/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2193,6 +2193,33 @@ function _list(x, y, w, h) {
 			console.log('Nothing selected.');
 			return "Empty playlist"
 		}
+	}
+	
+	this.plsNameFromSelection = (idx) => {
+		const selItems = plman.GetPlaylistSelectedItems(idx);
+		if (selItems && selItems.Count > 0) {
+			const tags = getTagsValuesV4(selItems, ['ALBUM ARTIST', 'ALBUM']);
+			const [artists, albums] = tags;
+			let [bMultArtists, bMultAlbums] = [false, false];
+			let artistName = artists[0][0];
+			for (let i = 0; i < artists.length; i++) {
+				if (!bMultArtists && artistName !== artists[i][0]) { 
+					bMultArtists = true; 
+					artistName = 'Various Artists';
+					break;
+				}
+			}
+			let albumName = albums[0][0];
+			for (let i = 0; i < albums.length; i++) {
+				if (!bMultAlbums && albumName !== albums[i][0]) { 
+					bMultAlbums = true; 
+					albumName = '';
+					break;
+				}
+			}
+			return bMultAlbums ? artistName : artistName + ' - ' + albumName;
+		}
+		return 'Empty playlist';
 	}
 	
 	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false} = {}) => {

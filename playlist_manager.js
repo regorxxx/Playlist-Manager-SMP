@@ -1,12 +1,12 @@
 ﻿'use strict';
-//04/07/23
+//21/07/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta25', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.0-beta26', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -237,6 +237,7 @@ var properties = {
 	})],
 	bSkipMenuTag			: ['Automatically add \'bSkipMenuTag\' to all playlists', false, {func: isBoolean}, false],
 	bLiteMode				: ['Lite mode enabled? (foo_plorg replacement)', false, {func: isBoolean}, false],
+	bAutoSelTitle			: ['Playlist\'s name from selection using ARTIST[ - ALBUM]', false, {func: isBoolean}, false],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -356,6 +357,10 @@ let delayAutoUpdate = () => void(0);
 					list.changeSorting(list.manualMethodState());
 				});
 			}
+		}
+		// Other changes due to lite mode
+		if (prop.bLiteMode[1]) {
+			prop.bAutoSelTitle[1] = true;
 		}
 		overwriteProperties(prop); // Updates panel
 		// Share ListenBrainz Token
@@ -978,7 +983,10 @@ if (!list.properties.bSetup[1]) {
 				}
 			} else {
 				if ((mask & 32) === 32 || list.index === -1) { // Create new playlist when pressing alt
-					const pls = list.add({bEmpty: true, name: list.generateTitleFromSelection(), bInputName: true});
+					const name = list.properties.bAutoSelTitle[1] 
+						? list.plsNameFromSelection(oldIdx)
+						: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
+					const pls = list.add({bEmpty: true, name, bInputName: true});
 					if (pls) {
 						const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 						const newIdx = plman.ActivePlaylist;

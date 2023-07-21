@@ -1037,7 +1037,10 @@ function createMenuRight() {
 		menu.newEntry({entryText: 'New playlist from selection...', func: () => {
 			const oldIdx = plman.ActivePlaylist;
 			if (oldIdx === -1) {return;}
-			const pls = list.add({bEmpty: true, name: list.generateTitleFromSelection(), bInputName: true});
+			const name = list.properties.bAutoSelTitle[1] 
+				? list.plsNameFromSelection(oldIdx)
+				: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
+			const pls = list.add({bEmpty: true, name, bInputName: true});
 			if (pls) {
 				const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 				const newIdx = plman.ActivePlaylist;
@@ -1799,23 +1802,39 @@ function createMenuRightTop() {
 	}
 	{	// Playlists behavior
 		const menuName = menu.newMenu('Playlists behavior');
-		if (!list.bLiteMode) {	// UUID
-			const subMenuName = menu.newMenu('Use UUIDs for playlist names...', menuName);
-			const options = list.optionsUUID();
-			const optionsLength = options.length;
-			menu.newEntry({menuName: subMenuName, entryText: 'For playlists tracked by Manager:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			options.forEach((item, i) => {
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					list.optionUUID = item;
-					list.properties['optionUUID'][1] = list.optionUUID;
-					list.bUseUUID = (i === optionsLength - 1) ? false : true;
-					list.properties['bUseUUID'][1] = list.bUseUUID;
-					overwriteProperties(list.properties);
-					list.updateAllUUID();
-				}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING}); // Disable UUID for .pls playlists
-			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
+		if (!list.bLiteMode) {	
+			{	// UUID
+				const subMenuName = menu.newMenu('Use UUIDs for playlist names...', menuName);
+				const options = list.optionsUUID();
+				const optionsLength = options.length;
+				menu.newEntry({menuName: subMenuName, entryText: 'For playlists tracked by Manager:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						list.optionUUID = item;
+						list.properties['optionUUID'][1] = list.optionUUID;
+						list.bUseUUID = (i === optionsLength - 1) ? false : true;
+						list.properties['bUseUUID'][1] = list.bUseUUID;
+						overwriteProperties(list.properties);
+						list.updateAllUUID();
+					}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING}); // Disable UUID for .pls playlists
+				});
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return options.indexOf(list.optionUUID);});
+			}
+			{	// Automatic playlist names
+				const subMenuName = menu.newMenu('Automatic playlist names...', menuName);
+				const options = ['Yes: use ARTIST[ - ALBUM]', 'No: use source as name'];
+				const optionsLength = options.length;
+				menu.newEntry({menuName: subMenuName, entryText: 'For playlists created from selection:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				options.forEach((item, i) => {
+					menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
+						list.properties.bAutoSelTitle[1] = i === 0;
+						overwriteProperties(list.properties);
+					}});
+				});
+				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1],  () => {return list.properties.bAutoSelTitle[1] ? 0 : 1;});
+			}
 			menu.newEntry({menuName, entryText: 'sep'});
 		}
 		{	// Playlist Size
