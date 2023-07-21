@@ -2224,8 +2224,8 @@ function _list(x, y, w, h) {
 				});
 				// Add to pls
 				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
-				const index = plman.FindPlaylist(pls.nameId);
 				const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
+				const index = plman.FindPlaylist(pls.nameId);
 				// Add items to chosen playlist too if it's loaded within foobar2000 unless it's the current playlist
 				if (index !== -1 && plman.ActivePlaylist !== index) {
 					plman.UndoBackup(index);
