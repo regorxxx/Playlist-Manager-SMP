@@ -978,7 +978,7 @@ if (!list.properties.bSetup[1]) {
 				}
 			} else {
 				if ((mask & 32) === 32 || list.index === -1) { // Create new playlist when pressing alt
-					const pls = list.add({bEmpty: true, name: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10), bInputName: true});
+					const pls = list.add({bEmpty: true, name: list.generateTitleFromSelection(), bInputName: true});
 					if (pls) {
 						const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 						const newIdx = plman.ActivePlaylist;
