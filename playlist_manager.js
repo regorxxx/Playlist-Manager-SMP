@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/07/23
+//21/07/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -978,7 +978,10 @@ if (!list.properties.bSetup[1]) {
 				}
 			} else {
 				if ((mask & 32) === 32 || list.index === -1) { // Create new playlist when pressing alt
-					const pls = list.add({bEmpty: true, name: list.generateTitleFromSelection(), bInputName: true});
+					const name = list.properties.bAutoSelTitle[1] 
+						? list.generateTitleFromSelection()
+						: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
+					const pls = list.add({bEmpty: true, name, bInputName: true});
 					if (pls) {
 						const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 						const newIdx = plman.ActivePlaylist;

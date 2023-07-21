@@ -1037,7 +1037,10 @@ function createMenuRight() {
 		menu.newEntry({entryText: 'New playlist from selection...', func: () => {
 			const oldIdx = plman.ActivePlaylist;
 			if (oldIdx === -1) {return;}
-			const pls = list.add({bEmpty: true, name: list.generateTitleFromSelection(), bInputName: true});
+			const name = list.properties.bAutoSelTitle[1] 
+				? list.generateTitleFromSelection()
+				: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
+			const pls = list.add({bEmpty: true, name, bInputName: true});
 			if (pls) {
 				const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 				const newIdx = plman.ActivePlaylist;
