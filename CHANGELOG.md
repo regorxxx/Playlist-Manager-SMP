@@ -39,13 +39,17 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Configuration: ALBUM ARTIST is now used instead of ARTIST by default (on new installations). This ensures better compatibility with classical music, where the artist is the actual performer but the album artist is the original composer/artist. To apply the change on existing installations, delete '[foobar_profile]\js_data\presets\global\globQuery.json' and '[foobar_profile]\foobar2000\js_data\presets\global\globTags.json' files. Further configuration may be needed via menus.
+- UI: improvements to text shading depending on the background/art color.
 ### Removed
 ### Fixed
+- Export: multiple fixes to TF paths.
 - AutoPlaylists: fixed non valid query warning for queries containing 'SORT' as string/tag, like "%ALBUMARTISTSORT%%ALBUMTYPE%%ARTISTS%%ARTISTSORT%%ARTWORKGUID% PRESENT".
 - UI: size and duration was not properly updated in some cases for UI-only playlists after using drag n' drop or copy/move tracks actions.
 - UI: current view was vertically shifted sometimes after editing the query of an AutoPlaylist or Smart Playlist (instead of maintaining the position).
 - UI: categories and tags not being sorted following current locale. i.e. "World" being shown before "foobar", due to uppercase usage, or "_first" at the end due to "_" usage. Now it follows the expected behavior: _first, foobar, World, ...
 - UI: cosmetic internal drag n' drop fixes when releasing outside the allowed range.
+- UI: workaround for GDI/SMP bugs or weird behaviors using text shading.
 - Fix for non [standard hyphen chars](https://jakubmarian.com/hyphen-minus-en-dash-and-em-dash-difference-and-usage-in-english/) on playlist names.
 - Crash when deleting a multiple selection.
 
