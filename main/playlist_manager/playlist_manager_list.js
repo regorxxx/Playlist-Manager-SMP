@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/07/23
+//24/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -757,11 +757,13 @@ function _list(x, y, w, h) {
 			if (panel.colors.bFontOutline) { // Outline current text
 				let img = gdi.CreateImage(this.textWidth - 30, panel.row_height);
 				const grImg = img.GetGraphics();
-				const outColor = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 75 : 50)
-				grImg.DrawString(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, outColor, 0, 0, img.Width, img.Height, LEFT);
+				const bPanelArt = panel.imageBackground.enabled && panel.imageBackground.art.image;
+				const outColor = bPanelArt ? RGB(0, 0, 0) : invert(panelBgColor, true);
+				grImg.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, outColor, 0, 0, img.Width, img.Height, LEFT);
 				img.ReleaseGraphics(grImg);
 				img.StackBlur(0);
-				gr.DrawImage(img, textX, textY, img.Width, img.Height, 0, 0, img.Width, img.Height);
+				if (bPanelArt && getBrightness(...toRGB(panel.imageBackground.art.colors[0].col)) < 100) {img = img.InvertColours();} // Due to GDI bug, painting white doesn't work properly...
+				gr.DrawImage(img, textX, textY, img.Width, img.Height, 0, 0, img.Width, img.Height, 0, getBrightness(...toRGB(playlistColor)) < 50 ? 125 : 100);
 			}
 			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX, textY, this.textWidth - 30, panel.row_height, LEFT);
 			// Columns

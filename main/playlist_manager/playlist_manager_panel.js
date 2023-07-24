@@ -104,7 +104,7 @@ function _panel(customBackground = false, bSetup = false) {
 	};
 	
 	this.updateImageBg = debounce((bForce = false) => {
-		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null;}
+		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null;}
 		let handle;
 		if (this.imageBackground.mode === 0) { // Selection
 			handle = fb.GetFocusItem(true);
@@ -130,9 +130,12 @@ function _panel(customBackground = false, bSetup = false) {
 			if (this.imageBackground.art.image && this.imageBackground.blur !== -1 && Number.isInteger(this.imageBackground.blur)) {
 				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
 			}
+			if (this.imageBackground.art.image) {
+				this.imageBackground.art.colors = JSON.parse(this.imageBackground.art.image.GetColourSchemeJSON(4));
+			}
 			return window.Repaint();
 		}).catch(() => {
-			this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null;
+			this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null;
 			return window.Repaint();
 		});
 	}, 250);
@@ -207,7 +210,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
 	this.colors.bFontOutline = this.properties.bFontOutline[1];
 	this.colors.bBold = this.properties.bBold[1];
-	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => key === 'image' || key === 'handle' ? null : value);
+	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => key === 'image' || key === 'handle' || key === 'colors' ? null : value);
 	this.listObjects = [];
 	this.textObjects = [];
 	this.fontChanged();
