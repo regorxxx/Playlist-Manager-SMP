@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/07/23
+//22/07/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -102,13 +102,13 @@ var properties = {
 	bAutoTrackTagAutoPls	: ['Auto-tagging for AutoPlaylists', false, {func: isBoolean}, false],
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false, {func: isBoolean}, false],
 	converterPreset			: ['Converter Preset list', JSON.stringify([
-		{name: '', dsp: '...', tf: '.\\%filename%.mp3', path: '', extension: ''}, // Export all at same folder
-		{name: '', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: ''}, // Transfer library
-		{name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($meta(artist,0)))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%track% - %title%),:,-,/,-,?,).lossy.flac', path: '', extension: '.m3u'}, // Kodi-like library
-		{name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($meta(artist,0)\\%album%\\%track% - %title%).mp3', path: '', extension: '.m3u'}, // Kodi-like library
-		{name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($meta(artist,0)\\%album%\\%track% - %title%).mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on different folder than music
-		{name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\%artist%\\$ascii($meta(artist,0)\\%track% - %title%).mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on same root than music (without a folder)
-		{name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\%artist%\\$ascii($meta(artist,0)\\%track% - %title%).mp3', path: '', extension: '.m3u8'} // Foobar2000 mobile, playlists on same folder than music
+		{name: '', dsp: '...', tf: '.\\%FILENAME%.mp3', path: '', extension: ''}, // Export all at same folder
+		{name: '', dsp: '...', tf: '.\\' + _t(globTags.artist) + '\\%ALBUM%\\%TRACK% - %TITLE%.mp3', path: '', extension: ''}, // Transfer library
+		{name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($meta(' + globTags.artist + ',0)))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', extension: '.m3u'}, // Kodi-like library
+		{name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($meta(' + globTags.artist + ',0)\\%album%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u'}, // Kodi-like library
+		{name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($meta(' + globTags.artist + ',0)\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on different folder than music
+		{name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($meta(' + globTags.artist + ',0)\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on same root than music (without a folder)
+		{name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($meta(' + globTags.artist + ',0)\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u8'} // Foobar2000 mobile, playlists on same folder than music
 	])],
 	bForbidDuplicates		: ['Skip duplicates when adding to playlists', true, {func: isBoolean}, true],
 	bDeadCheckAutoSave		: ['Warn about dead items on auto-save', false, {func: isBoolean}, false],

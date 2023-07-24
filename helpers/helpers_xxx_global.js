@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/06/23
+//22/07/23
 
 /* 
 	Global tags, queries, RegExp
@@ -71,7 +71,7 @@ const globTags = {
 	_usage: 'Don\'t add multiple tags to these variables. TITLE, DATE and RATING must be enclosed on %. Special characters like single quotes (\') or backslash (\\) must be properly escaped. Remember to also properly escape special characters according to TF rules!',
 	titleRaw: 'TITLE',
 	date: '$year(%DATE%)',
-	artist: 'ARTIST',
+	artist: 'ALBUM ARTIST',
 	genre: 'GENRE',
 	style: 'STYLE',
 	mood: 'MOOD',
