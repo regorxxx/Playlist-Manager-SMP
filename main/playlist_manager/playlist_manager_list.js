@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/07/23
+//25/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -829,21 +829,22 @@ function _list(x, y, w, h) {
 		}
 		// Display internal drag n drop
 		if (this.isInternalDrop()) {
-			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
-			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
-			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
-				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					const pls = this.data[this.internalPlsDrop[0]];
-					if (pls) {
-						const len = this.internalPlsDrop.length;
-						const playlistDataText =  pls.name + (len > 1 ? '... (' + len  + ' playlists)' : '');
-						gr.FillSolidRect(this.x - 5, this.my, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 40));
-						gr.DrawRect(this.x - 5, this.my, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 100));
-						gr.GdiDrawText(playlistDataText, panel.fonts.normal, panel.colors.text, this.bShowIcons ? this.x + maxIconWidth : this.mx, this.my, this.textWidth - 30, panel.row_height, LEFT);
-					} else {
-						console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
-					}
-				}
+			const pls = this.data[this.internalPlsDrop[0]];
+			if (pls) {
+				const len = this.internalPlsDrop.length;
+				const playlistDataText =  pls.name + (len > 1 ? '... (' + len  + ' playlists)' : '');
+				const bValid = this.isInternalDropValid();
+				const backgroundColor = bValid 
+					? this.colors.selectedPlaylistColor
+					: invert(this.colors.selectedPlaylistColor);
+				const titleColor = bValid
+					? panel.colors.text
+					: blendColors(panel.colors.text, backgroundColor, 0.5);
+				gr.FillSolidRect(this.x - 5, this.my, selWidth, panel.row_height, opaqueColor(backgroundColor, bValid ? 40 : 20));
+				gr.DrawRect(this.x - 5, this.my, selWidth, panel.row_height, 0, opaqueColor(backgroundColor, bValid ? 100 : 50));
+				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, this.bShowIcons ? this.x + maxIconWidth : this.mx, this.my, this.textWidth - 30, panel.row_height, LEFT);
+			} else {
+				console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
 			}
 		}
 		// Char popup as animation
@@ -1016,7 +1017,8 @@ function _list(x, y, w, h) {
 					button.inFocus = false;
 				}
 			}
-			if (!bButtonTrace) {
+			if (this.isInternalDrop() && !this.isInternalDropValid()) {window.SetCursor(IDC_NO);}
+			else if (!bButtonTrace) {
 				if (this.searchInput) { // Apart to correctly select the end of string on move
 					this.searchInput.check('move', x, y, bDragDrop);
 				}
@@ -1181,6 +1183,7 @@ function _list(x, y, w, h) {
 			if (this.isInternalDrop()) {
 				this.up_btn.hover = this.up_btn.lbtn_up(x, y);
 				this.down_btn.hover = this.down_btn.lbtn_up(x, y);
+				if (!this.isInternalDropValid()) {window.SetCursor(IDC_NO);}
 			}
 			return true;
 		} else {
@@ -1336,14 +1339,14 @@ function _list(x, y, w, h) {
 				case this.down_btn.lbtn_up(x, y):
 				case !this.inRange:
 					if (!shortcuts.hasOwnProperty(mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') {this.resetMultSelect();}
-					if (this.isInternalDrop()) {this.internalPlsDrop = [];}
+					if (this.isInternalDrop()) {this.internalPlsDrop = []; this.move(this.mx + 0.01, this.my, mask); return false;}
 					break;
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (this.isInternalDrop()) {
-							const name = this.data[z].nameId;
 							if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
+								const name = this.data[z].nameId;
 								const cache = [...this.sortingFile];
 								const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
 								if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
@@ -1398,6 +1401,7 @@ function _list(x, y, w, h) {
 			this.searchInput && this.searchInput.check('up', -1, -1);
 			return true;
 		} else if (this.traceHeader(x, y)) { // Highlight active playlist or playing playlist
+			if (this.isInternalDrop()) {this.internalPlsDrop = []; this.move(this.mx + 0.01, this.my, mask); return true;}
 			if (this.searchInput && this.searchInput.select && this.searchInput.edit && !this.searchInput.trackCheck(x, y)) { // Allow finishing selection outside the input box
 				this.searchInput.check('up', x < this.searchInput.x ? this.searchInput.x + 1 : this.searchInput.x + this.searchInput.w, this.searchInput.y + 1);
 				return true;
@@ -1428,7 +1432,7 @@ function _list(x, y, w, h) {
 							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void(0), x, y, sgShortcut, false);
 						} else {this.bDoubleclick = false;}
 					}
-					this.move(this.mx, this.my); // Updates tooltip even when mouse hasn't moved
+					this.move(this.mx, this.my, mask); // Updates tooltip even when mouse hasn't moved
 				}
 			}
 			return true;
@@ -2081,7 +2085,14 @@ function _list(x, y, w, h) {
 	// Drag n drop
 	this.isInternalDrop = () => {
 		return this.internalPlsDrop.length && this.methodState === this.manualMethodState();
-	};
+	}
+	
+	this.isInternalDropValid = () => {
+		const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
+		const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
+		return typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' && (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows;
+	}
+	
 	this.onDragDrop = () => {
 		if (_isFile(null)) { // Sends files (playlists) to tracked folder
 			return true;
