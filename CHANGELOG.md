@@ -38,14 +38,25 @@
 
 ## [Unreleased][]
 ### Added
+- AutoPlaylists: new 'Clone in UI' menu entry for AutoPlaylists.
+- XSP: new 'Clone in UI' menu entry for XSP playlists.
 ### Changed
 - UI: improvements to text shading depending on the background/art color.
 - UI: mouse cursor now reflects when an internal drag n drop for manual sorting is not allowed. Selection is also shown using the inverted selection color (usually red/orange).
+- UI: shift clicking on folder button will manually refresh the panel. Tooltip has been adjusted.
+- UI: shift clicking on settings button will switch library tracking. Tooltip has been adjusted.
 - Configuration: ALBUM ARTIST is now used instead of ARTIST by default (on new installations). This ensures better compatibility with classical music, where the artist is the actual performer but the album artist is the original composer/artist. To apply the change on existing installations, delete '[foobar_profile]\js_data\presets\global\globQuery.json' and '[foobar_profile]\foobar2000\js_data\presets\global\globTags.json' files. Further configuration may be needed via menus.
 ### Removed
 ### Fixed
 - Export: multiple fixes to TF paths.
 - AutoPlaylists: fixed non valid query warning for queries containing 'SORT' as string/tag, like "%ALBUMARTISTSORT%%ALBUMTYPE%%ARTISTS%%ARTISTSORT%%ARTWORKGUID% PRESENT".
+- AutoPlaylists: AutoPlaylists not filtering duplicates -if enabled- when using keyboard shortcut F3.
+- XSP: XSP playlists not filtering duplicates -if enabled- when using shortcut actions or keyboard shortcut F3.
+- Lite mode: switching lite mode no longer overrides default features enabled when lite mode is disabled afterwards. This made restoring defaults to not work as expected since it would only enable the features available on lite mode. A panel refresh fixed this behavior.
+- Lite mode: tooltip fix at settings button when switching lite mode during the same session.
+- Lite mode: minor fixes to AutoPlaylists contextual menu on lite mode.
+- UI: minor fixes and improvements to quick help (shift click on help button).
+- UI: minor fixes to multiple selection contextual menus.
 - UI: in some cases the filter buttons were miss-clicked when clicking on the scrollbar if distance was lower than the cursor size and the mouse entered first on the button(s), should be much precise now.
 - UI: size and duration was not properly updated in some cases for UI-only playlists after using drag n' drop or copy/move tracks actions.
 - UI: current view was vertically shifted sometimes after editing the query of an AutoPlaylist or Smart Playlist (instead of maintaining the position).
@@ -84,7 +95,7 @@
 ## [0.5.0-beta.23] - 2023-06-29
 ### Added
 ### Changed
-- Disable library path caching on lite mode.
+- Lite mode: disable library path caching on lite mode.
 ### Removed
 ### Fixed
 - Helpers: fixed incorrect warning about missing font.
@@ -92,7 +103,7 @@
 ## [0.5.0-beta.22] - 2023-06-29
 ### Added
 - UI: new menu entry to create UI-only playlists.
-- UI: new lite mode to exclusively track UI-only playlists, thus behaving like a simple replacement for foo_plorg. Extends the current settings to disable/enable features, changing how the panel works at low level. i.e. no playlist files, no folder tracking, etc.
+- Lite mode: new lite mode to exclusively track UI-only playlists, thus behaving like a simple replacement for foo_plorg. Extends the current settings to disable/enable features, changing how the panel works at low level. i.e. no playlist files, no folder tracking, etc.
 ### Changed
 - UI: configurable playlist menus is now at 'Features...' submenu within the settings menu. No longer associated to "menu entries" since it now affects other settings.
 - UI: settings menu, new playlist menu, keyboard shortcuts and filter buttons now follow the settings for shown/hidden features. i.e. if menu entries to edit tags are hidden, then all other features depending on it will also be hidden (like filtering or sorting by tag). (see above)
