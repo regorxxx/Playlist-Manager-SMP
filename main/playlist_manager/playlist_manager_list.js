@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/07/23
+//26/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -1668,7 +1668,12 @@ function _list(x, y, w, h) {
 							return false;
 						case 'f3': // Clone in UI (view)
 							if (z !== -1) {
-								clonePlaylistFile(this, z, '.ui');
+								if (pls && (pls.isAutoPlaylist || pls.query)) {
+									const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
+									clonePlaylistInUI(this, z, remDupl, this.bAdvTitle);
+								} else {
+									clonePlaylistFile(this, z, '.ui');
+								}
 								return true;
 							}
 							return false;
@@ -1962,7 +1967,7 @@ function _list(x, y, w, h) {
 		if (shortcut.key !== 'Multiple selection' && shortcut.key !== 'Multiple selection (range)' && bMultiple) {
 			this.indexes.forEach((zz) => {
 				const pls = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
-				if (pls && pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
+				if (pls && (pls.isAutoPlaylist || pls.query) && shortcut.key === 'Clone playlist in UI') {
 					const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 					shortcut.func(zz, remDupl, this.bAdvTitle);
 				} else {
@@ -1971,7 +1976,7 @@ function _list(x, y, w, h) {
 			});
 		} else {
 			const pls = typeof z !== 'undefined' && z !== -1 ? this.data[z] : null;
-			if (pls && pls.isAutoPlaylist && shortcut.key === 'Clone playlist in UI') {
+			if (pls && (pls.isAutoPlaylist || pls.query) && shortcut.key === 'Clone playlist in UI') {
 				const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 				shortcut.func(z, remDupl, this.bAdvTitle);
 			} else {
@@ -4899,6 +4904,7 @@ function _list(x, y, w, h) {
 	this.cacheLibTimer = null;
 	this.bLiteMode = this.properties['bLiteMode'][1];
 	// Other
+	this.showMenusDef = JSON.parse(this.properties.showMenus[3]);
 	this.trackedFolderChanged = false;
 	this.bIsDragDrop = false;
 	this.dragDropText = '';
@@ -4965,9 +4971,20 @@ function _list(x, y, w, h) {
 							'Library has changed since tracking was disabled.\n' +
 							'Paths cache needs rebuilding.'
 						: ''
+				) + (
+					this.bLiteMode 
+						?	''
+						: '\n----------------------------------------------\n' +
+							'(Shift + L. Click to switch library tracking'
 				);
 			},
-			func: (x, y, mask, parent) => createMenuRightTop().btn_up(x, y),
+			func: (x, y, mask, parent) => {
+				if (!this.bLiteMode && mask === MK_SHIFT) {
+					this.switchTracking(void(0), true);
+				} else {
+					createMenuRightTop().btn_up(x, y)
+				}
+			},
 			highlighting: (x, y, mask, parent) => {
 				return this.bLibraryChanged && !this.bTracking && !this.bLiteMode;
 			}
@@ -4981,56 +4998,71 @@ function _list(x, y, w, h) {
 							'Playlists tracked folder has new changes.\n' +
 							'Use manual refresh or enable auto-loading.'
 						: ''
+				) + (
+					this.bLiteMode 
+						?	''
+						: '\n----------------------------------------------\n' +
+							'(Shift + L. Click to manual refresh'
 				);
 			},
-			func: (x, y, mask, parent) => _explorer(this.playlistsPath),
+			func: (x, y, mask, parent) => {
+				if (!this.bLiteMode && mask === MK_SHIFT) {
+					this.manualRefresh();
+				} else {
+					_explorer(this.playlistsPath);
+				}
+			},
 			highlighting: (x, y, mask, parent) => this.trackedFolderChanged
 		},
-		help: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'Open documentation...\n(Shift + L. Click to show quick help)', func: (x, y, mask, parent) => {
-			if (mask === MK_SHIFT) {
-				// Enabled menus
-				const showMenus = JSON.parse(this.properties.showMenus[1]);
-				fb.ShowPopupMessage(
-					'Global keyboard shortcuts:' +
-					'\n-------------------' +
-					'\n- F1: lock / unlock playlist.' +
-					'\n- F2: rename playlist.' +
-					'\n- F3: clone on UI playlist.' +
-					'\n- F4: load / jump to playlist.' +
-					'\n- F5: copy playlist (with same format).' +
-					(showMenus['Online sync'] ? '\n- F6: export playlist to ListenBrainz (+ Spotify).' : '\n- F6: (disabled Online sync)') +
-					'\n- F7: new playlist.' +
-					(showMenus['Category'] ? '\n- F8: cycle categories.' :  '\n- F8: (disabled Categories)') +
-					'\n- F9: search playlists with selected tracks.' +
-					'\n- F10: settings menu or list menu (+ Shift).' +
-					'\n- F11: documentation (pdf).' +
-					(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: (disabled File tracking -lite mode-)') +
-					'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
-					'\n- DEL: delete playlist.' +
-					'\n' +
-					'\nQuick-search' +
-					'\n-------------------' +
-					'\nPress any letter / number to jump by current sorting' + 
-					'\n(i.e. sorting by category jumps by it instead of name).' +
-					'\n' +
-					'\nTooltip' +
-					'\n-------------------' +
-					'\nShift / Ctrl on buttons / playlists will show the associated action.' +
-					'\n' +
-					'\Sorting & Filters' +
-					'\n-------------------' +
-					'\nRight click on buttons allow to switch current filters and sorting.' +
-					'\n' +
-					'\nList view shortcuts:' +
-					'\n-------------------' +
-					'\n- Up / Down: scroll down / up.' +
-					'\n- Re Pag / Av Pag: scroll down / up page.' +
-					'\n- Home / End: scroll to top / bottom.'
-				, window.Name + ': Quick help');
-			} else {
-				createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...');
+		help: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, 
+			text: 'Open documentation...\n----------------------------------------------\n(Shift + L. Click to show quick help)',
+			func: (x, y, mask, parent) => {
+				if (mask === MK_SHIFT) {
+					// Enabled menus
+					const showMenus = JSON.parse(this.properties.showMenus[1]);
+					fb.ShowPopupMessage(
+						'Global keyboard shortcuts:' +
+						'\n-------------------' +
+						'\n- F1: lock / unlock playlist.' +
+						'\n- F2: rename playlist.' +
+						'\n- F3: clone in UI playlist.' +
+						'\n- F4: load / jump to playlist.' +
+						'\n- F5: copy playlist (with same format).' +
+						(showMenus['Online sync'] ? '\n- F6: export playlist to ListenBrainz (+ Spotify).' : '\n- F6: -none-\t(disabled Online sync)') +
+						'\n- F7: new playlist.' +
+						(showMenus['Category'] ? '\n- F8: cycle categories.' :  '\n- F8: -none-\t(disabled Categories)') +
+						'\n- F9: search playlists with selected tracks.' +
+						'\n- F10: settings menu or list menu (+ Shift).' +
+						'\n- F11: documentation (pdf).' +
+						(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: -none-\t(disabled File tracking -lite mode-)') +
+						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
+						'\n- DEL: delete playlist.' +
+						'\n' +
+						'\nQuick-search' +
+						'\n-------------------' +
+						'\nPress any letter / number to jump by current sorting' + 
+						'\n(i.e. sorting by category jumps by it instead of name).' +
+						'\n' +
+						'\nTooltip' +
+						'\n-------------------' +
+						'\nShift / Ctrl on buttons / playlists will show the associated action.' +
+						'\n' +
+						'\nSorting & Filters' +
+						'\n-------------------' +
+						'\nRight click on buttons allow to switch current filters and sorting.' +
+						'\n' +
+						'\nList view shortcuts:' +
+						'\n-------------------' +
+						'\n- Up / Down: scroll down / up.' +
+						'\n- Re Pag / Av Pag: scroll down / up page.' +
+						'\n- Home / End: scroll to top / bottom.'
+					, window.Name + ': Quick help');
+				} else {
+					createMenuRightTop().btn_up(x, y, void(0), 'Open documentation...');
+				}
 			}
-		}},
+		},
 	};
 	this.searchCurrent = '';
 	this.searhHistory = [];
