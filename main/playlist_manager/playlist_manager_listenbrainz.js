@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/06/23
+//26/07/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -1036,16 +1036,16 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = 
 			return JSON.parse(resolve);
 		},
 		(reject) => {
-			if (bLog) {console.log('retrieveUser: ' + JSON.stringify(reject));}
+			if (bLog) {console.log('retrieveUserResponse: ' + JSON.stringify(reject));}
 			return null;
 		}
 	);
 };
 
-listenBrainz.retrieveUser = async function retrieveUser(token) {
+listenBrainz.retrieveUser = async function retrieveUser(token, bLog = true) {
 	let user = this.cache.user.get(token);
 	if (!user) {
-		const response = await this.retrieveUserResponse(token);
+		const response = await this.retrieveUserResponse(token, bLog);
 		user = response && response.valid ? response.user_name : '';
 		if (user.length) {this.cache.user.set(token, response.user_name);}
 	}
