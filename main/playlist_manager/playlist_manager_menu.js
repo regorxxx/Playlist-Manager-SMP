@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/07/23
+//26/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -259,6 +259,10 @@ function createMenuLeft(forcedIndex = -1) {
 	{	// Export and clone
 		//	AutoPlaylists clone
 		if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
+			menu.newEntry({entryText: 'Clone in UI', func: () => {
+				const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
+				clonePlaylistInUI(list, z, remDupl, list.bAdvTitle);
+			}});
 			!list.bLiteMode && menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 				const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 				cloneAsStandardPls(list, z, remDupl, list.bAdvTitle);
@@ -313,7 +317,6 @@ function createMenuLeft(forcedIndex = -1) {
 				}, flags: bWritableFormat ? MF_STRING : MF_GRAYED});
 			}
 		} else { // Lite mode
-			// Clone as
 			menu.newEntry({entryText: 'Clone in UI', func: () => {
 				clonePlaylistFile(list, z, '.ui');
 			}});
@@ -607,7 +610,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}
 		}
 		if (showMenus['Sorting'] && bManualSorting) {
-			menu.newEntry({entryText: 'sep'});
+			if (showMenus['File locks'] || showMenus['UI playlist locks'] &&  bIsPlsLoaded) {menu.newEntry({entryText: 'sep'});}
 			const subMenuName = menu.newMenu('Sorting...');
 			menu.newEntry({menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -972,9 +975,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 				}, flags});
 			}
 		}
-		
 		if (showMenus['Sorting'] && bManualSorting) {
-			menu.newEntry({entryText: 'sep'});
+			if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome)) {menu.newEntry({entryText: 'sep'});}
 			const subMenuName = menu.newMenu('Sorting...');
 			menu.newEntry({menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -3330,7 +3332,7 @@ function createMenuRightTop() {
 			features.forEach((key) => {
 				showMenus[key] = false;
 			});
-			list.properties.showMenus[3] = list.properties.showMenus[1] = JSON.stringify(showMenus);
+			list.properties.showMenus[3] = list.properties.showMenus[1] = JSON.stringify(showMenus); // Change default values
 			// Other tools
 			if (list.searchInput) {
 				list.searchMethod.bPath = list.searchMethod.bRegExp = false;
@@ -3344,9 +3346,12 @@ function createMenuRightTop() {
 			// Instances
 			removeInstance('Playlist Manager');
 		} else {
+			list.properties.showMenus[1] = list.properties.showMenus[3] = JSON.stringify(list.showMenusDef); // Restore default values from init
+			overwriteProperties(list.properties);
 			addInstance('Playlist Manager');
 		}
 		list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+		list.updateUIElements(); // Buttons, etc.
 		list.manualRefresh();
 	}});
 	menu.newCheckMenu(void(0), 'Lite mode', void(0),  () => list.bLiteMode);
