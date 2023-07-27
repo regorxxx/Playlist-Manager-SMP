@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/23
+//27/07/23
 
 /*
 	Remove duplicates
@@ -7,11 +7,11 @@
 	if 'handleList = null' then it will work directly on current active playlist.
 	If 'sortOutput = ""', then final order will be randomized. It follows 'plman.SortByFormat' conventions.
 	Any 'sort...' variable follows titleformat conventions
-		i.e. "%title%|%artist%|%date%"
+		i.e. "%TITLE%|%ALBUM ARTIST%|%DATE%"
 	Any 'check...' variable can follow both tag name or titleformat conventions (functions too) 
-		i.e. 'title' or '%title%'
+		i.e. 'TITLE' or '%TITLE%'
 	You can add multiple entries to the same variable but then it must follow titleformat conventions.
-		i.e. 'checkKeys = [%title% - %artist%]'
+		i.e. 'checkKeys = [%TITLE% - %ARTIST%]'
 	The multiple 'check...' variables are joined using ' - '
 	
 	CAVEAT: 

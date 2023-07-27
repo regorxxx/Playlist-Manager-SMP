@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/01/23
+//27/07/23
 
 include('..\\window\\window_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
@@ -37,26 +37,6 @@ options.load = () => {
 		}
 	}
 }
-
-
-/* playlistPath			: ['Path to the folder containing the playlists' , (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
-	extension				: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8'],
-
-	// autoPlaylistTags		: ['Playlist tags and actions config', JSON.parse({bAutoLoadTag: false, bAutoLockTag: false, bAutoCustomTag: false, bApplyAutoTags: false, autoCustomTag: ''})],
-
-	converterPreset			: ['Converter Preset list', JSON.stringify([
-		{name: '', dsp: '...', tf: '.\\%filename%.mp3', path: '', extension: ''}, // Export all at same folder
-		{name: '', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: ''}, // Transfer library
-		{name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '\\media\\<your_disk_name>\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u'}, // Kodi-like library
-		{name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u'}, // Kodi-like library
-		{name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on different folder than music
-		{name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'}, // Foobar2000 mobile, playlists on same root than music (without a folder)
-		{name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\%artist%\\%album%\\%track% - %title%.mp3', path: '', extension: '.m3u8'} // Foobar2000 mobile, playlists on same folder than music
-	])],
-	bCopyAsync				: ['Copy tracks asynchronously on export?', true],
- */
-
-
 
 // Add tabs with its data
 options.addTab({title: 'Playlist saving', columns: 1, data: [
