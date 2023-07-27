@@ -950,8 +950,13 @@ listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 	const playlist = jspf.playlist;
 	const rows = playlist.track;
 	const rowsLength = rows.length;
-	const lookupKeys = [{xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}, {xspfKey: 'title', queryKey: 'TITLE'}, {xspfKey: 'creator', queryKey: 'ARTIST'}];
-	const conditions = bOnlyMBID ? [['MUSICBRAINZ_TRACKID']] : [['MUSICBRAINZ_TRACKID'], ['TITLE','ARTIST'], ['TITLE']];
+	const lookupKeys = [
+		{xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}, 
+		{xspfKey: 'title', queryKey: 'TITLE'}, 
+		{xspfKey: 'creator', queryKey: 'ALBUM ARTIST'},
+		{xspfKey: 'creator', queryKey: 'ARTIST'}
+	];
+	const conditions = bOnlyMBID ? [['MUSICBRAINZ_TRACKID']] : [['MUSICBRAINZ_TRACKID'], ['TITLE','ARTIST'], ['TITLE','ALBUM ARTIST'], ['TITLE']];
 	const libItems = checkQuery(filter, false) // Filtering can easily speedup the entire process up to 50%
 		? fb.GetQueryItems(fb.GetLibraryItems(), filter + (bOnlyMBID ? ' AND MUSICBRAINZ_TRACKID PRESENT' : '')) 
 		: bOnlyMBID 
