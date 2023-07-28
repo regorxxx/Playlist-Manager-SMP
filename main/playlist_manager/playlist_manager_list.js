@@ -3711,6 +3711,29 @@ function _list(x, y, w, h) {
 			return key === 'width' ? void(0) : value;
 		}
 		
+		this.addUIplaylist = ({name = 'New playlist', bInputName = !name.length} = {}) => {
+			let input = name;
+			if (bInputName) {
+				input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
+				if (input === null && !Input.isLastEqual) {return;}
+			}
+			let i = 0;
+			let newName;
+			while (!newName || plman.FindPlaylist(newName) !== -1) {
+				newName = (input || 'New playlist') + (i ? ' ' + _p(i) : '');
+				i++;
+			}
+			plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
+			// Set focus on new playlist if possible
+			if (plman.ActivePlaylist !== -1) {
+				setTimeout(() => { // Required since input popup invokes move callback after this func!
+					this.cacheLastPosition();
+					this.showCurrPls();
+				}, 10);
+			}
+			return plman.ActivePlaylist;
+		}
+		
 		this.addAutoplaylist = (pls = null, bEdit = true) => {
 			// Check if there are initial values
 			const bPls = pls ? true : false;
@@ -3759,12 +3782,16 @@ function _list(x, y, w, h) {
 			// Add Category of current view if none was forced
 			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) {objectPlaylist.category = this.categoryState[0];} 
 			// Save
-			const idx = this.addToData(objectPlaylist);
+			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			if (idx && idx.dataIdx === this.data.findIndex((pls) => {return pls === objectPlaylist;})) {
-				this.showPlsByIdx(idx.dataIdx);
+			const idx = this.data.findIndex((pls) => {return pls === objectPlaylist;});
+			if (idx !== -1) {
+				setTimeout(() => { // Required since input popup invokes move callback after this func!
+					this.cacheLastPosition(idx);
+					this.showPlsByIdx(idx);
+				}, 10);
 			}
 			return objectPlaylist;
 		}
@@ -3791,6 +3818,8 @@ function _list(x, y, w, h) {
 			}
 			const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
 			if (!checkQuery(newQuery, false, true, bPlaylist)) {fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false;}
+			const {rules, match} = XSP.getRules(newQuery);
+			if (!rules.length) {fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return false;}
 			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 			const newForced = false;
 			const newQueryObj = {query: newQuery, sort: newSort, bSortForced: newForced};
@@ -3830,7 +3859,6 @@ function _list(x, y, w, h) {
 			// Categories
 			// Add Category of current view if none was forced
 			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) {objectPlaylist.category = this.categoryState[0];} 
-			const {rules, match} = XSP.getRules(newQuery);
 			if (rules.length) {
 				const jspPls = XSP.emptyJSP('songs');
 				jspPls.playlist.name = newName;
@@ -3842,12 +3870,16 @@ function _list(x, y, w, h) {
 				if (xspText && xspText.length) {bDone = _save(playlistPath, xspText.join('\r\n'));}
 			} else {return false;}
 			// Save
-			const idx = this.addToData(objectPlaylist);
+			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			if (idx && idx.dataIdx === this.data.findIndex((pls) => {return pls === objectPlaylist;})) {
-				this.showPlsByIdx(idx.dataIdx);
+			const idx = this.data.findIndex((pls) => {return pls === objectPlaylist;});
+			if (idx !== -1) {
+				setTimeout(() => { // Required since input popup invokes move callback after this func!
+					this.cacheLastPosition(idx);
+					this.showPlsByIdx(idx);
+				}, 10);
 			}
 			return objectPlaylist;
 		}

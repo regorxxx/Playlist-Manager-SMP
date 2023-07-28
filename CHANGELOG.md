@@ -41,6 +41,7 @@
 - AutoPlaylists: new 'Clone in UI' menu entry for AutoPlaylists.
 - XSP: new 'Clone in UI' menu entry for XSP playlists.
 ### Changed
+- XSP: wrong queries when creating a new Smart Playlist now show an informative popup instead of silently failing and logging to console.
 - UI: improvements to text shading depending on the background/art color.
 - UI: mouse cursor now reflects when an internal drag n drop for manual sorting is not allowed. Selection is also shown using the inverted selection color (usually red/orange).
 - UI: shift clicking on folder button will manually refresh the panel. Tooltip has been adjusted.
@@ -55,6 +56,9 @@
 - Lite mode: switching lite mode no longer overrides default features enabled when lite mode is disabled afterwards. This made restoring defaults to not work as expected since it would only enable the features available on lite mode. A panel refresh fixed this behavior.
 - Lite mode: tooltip fix at settings button when switching lite mode during the same session.
 - Lite mode: minor fixes to AutoPlaylists contextual menu on lite mode.
+- UI: focus sometimes not being set on newly created AutoPlaylist.
+- UI: focus sometimes not being set on newly created Smart Playlists.
+- UI: focus not being set on newly created UI-Only Playlists.
 - UI: minor fixes and improvements to quick help (shift click on help button).
 - UI: minor fixes to multiple selection contextual menus.
 - UI: in some cases the filter buttons were miss-clicked when clicking on the scrollbar if distance was lower than the cursor size and the mouse entered first on the button(s), should be much precise now.
@@ -67,6 +71,7 @@
 - UI: cursor not being updated in some cases after releasing internal drag n drop for manual sorting on header or buttons.
 - Fix for non [standard hyphen chars](https://jakubmarian.com/hyphen-minus-en-dash-and-em-dash-difference-and-usage-in-english/) on playlist names.
 - Crash when deleting a multiple selection.
+- Crash when creating UI-Only Playlists.
 
 ## [0.5.0-beta.25] - 2023-07-04
 ### Added
