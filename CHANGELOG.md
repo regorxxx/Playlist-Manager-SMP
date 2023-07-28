@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.0](#050---2023-07-28)
 - [0.5.0-beta.25](#050-beta25---2023-07-04)
 - [0.5.0-beta.24](#050-beta24---2023-07-03)
 - [0.5.0-beta.23](#050-beta23---2023-06-29)
@@ -37,6 +38,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.5.0] - 2023-07-28
 ### Added
 - AutoPlaylists: new 'Clone in UI' menu entry for AutoPlaylists.
 - XSP: new 'Clone in UI' menu entry for XSP playlists.
@@ -850,7 +857,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.25...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.25...v0.5.0
 [0.5.0-beta.25]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.24...v0.5.0-beta.25
 [0.5.0-beta.24]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.23...v0.5.0-beta.24
 [0.5.0-beta.23]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.22...v0.5.0-beta.23
