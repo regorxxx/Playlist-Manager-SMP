@@ -475,6 +475,7 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 	
 	// Helpers
 	this.getHiddenCharsRegEx = () => {return hiddenCharsRegEx;}
+	this.getNextId = () => {return invsId(true);}
 	const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 	const hiddenCharsRegEx = /[\u200b\u200c\u200d\u200e]{1,5}$/g;
 	const invsId = (function() {
