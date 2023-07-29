@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/07/23
+//29/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2060,7 +2060,7 @@ function createMenuRightTop() {
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 						}
 					}});
 					{
@@ -2072,7 +2072,7 @@ function createMenuRightTop() {
 									preset.extension = extension;
 									list.properties['converterPreset'][1] = JSON.stringify(presets);
 									overwriteProperties(list.properties);
-									if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+									if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 								}
 							}});
 						});
@@ -2087,7 +2087,7 @@ function createMenuRightTop() {
 							preset.dsp = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 						}
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
@@ -2099,7 +2099,7 @@ function createMenuRightTop() {
 							preset.tf = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 						}
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
@@ -2113,7 +2113,7 @@ function createMenuRightTop() {
 							preset.name = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+							if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 						}
 					}});
 				});
@@ -2122,7 +2122,7 @@ function createMenuRightTop() {
 					presets.push({dsp: '...', tf: '.\\%filename%.mp3', path: ''});
 					list.properties['converterPreset'][1] = JSON.stringify(presets);
 					overwriteProperties(list.properties);
-					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 				}});
 				const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
 				presets.forEach((preset, i) => {
@@ -2139,14 +2139,14 @@ function createMenuRightTop() {
 						presets.splice(i, 1);
 						list.properties['converterPreset'][1] = JSON.stringify(presets);
 						overwriteProperties(list.properties);
-						if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+						if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 					}});
 				});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Restore defaults', func: () => {
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 					list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
 					overwriteProperties(list.properties);
-					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});}
+					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 				}});
 			}
 		}
@@ -3241,7 +3241,7 @@ function createMenuRightTop() {
 					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
 					overwriteProperties(list.properties);
 					// And create / delete menus
-					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); list.checkPanelNames();});} 
+					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});} 
 					else {list.deleteMainMenuDynamic(); list.deleteExportInfo(); list.listenNames = false;}
 					if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
 				}, flags});
