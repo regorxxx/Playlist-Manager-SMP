@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/23
+//29/07/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -331,7 +331,7 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 							const playlistItems = plman.GetPlaylistItems(idx);
 							const count = playlistItems.Count;
 							this.addToMenu({entryText: name + ': ' + count + ' tracks', func: null, menuName: subMenuName, flags: MF_GRAYED});
-							this.addToMenu({entryText: 'sep'});
+							this.addToMenu({entryText: 'sep', menuName: subMenuName});
 							if (count > 0) {
 								contextMenu = fb.CreateContextMenuManager();
 								contextMenu.InitContext(playlistItems);

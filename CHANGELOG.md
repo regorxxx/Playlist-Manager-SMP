@@ -43,6 +43,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: missing separator at header from Playlist items' contextual menu.
 
 ## [0.5.1] - 2023-07-29
 ### Added
