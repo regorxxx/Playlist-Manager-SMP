@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.1](#051---2023-07-29)
 - [0.5.0](#050---2023-07-28)
 - [0.5.0-beta.25](#050-beta25---2023-07-04)
 - [0.5.0-beta.24](#050-beta24---2023-07-03)
@@ -42,6 +43,14 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.5.1] - 2023-07-29
+### Added
+### Changed
+### Removed
+### Fixed
+- Configuration: some fixes for ALBUM ARTIST usage instead of ARTIST.  To apply the change on existing installations, delete '[foobar_profile]\js_data\presets\global\globQuery.json' and '[foobar_profile]\foobar2000\js_data\presets\global\globTags.json' files. Also click on settings menut at 'Playlist Behavior\Export and Convert\Restore defaults'.
+- Crash due to list.checkPanelNames method missing after using some menu entries.
 
 ## [0.5.0] - 2023-07-28
 ### Added
@@ -857,7 +866,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.25...v0.5.0
 [0.5.0-beta.25]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.24...v0.5.0-beta.25
 [0.5.0-beta.24]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.23...v0.5.0-beta.24
