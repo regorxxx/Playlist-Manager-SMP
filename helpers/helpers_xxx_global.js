@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/23
+//29/07/23
 
 /* 
 	Global tags, queries, RegExp
@@ -53,10 +53,12 @@ function loadUserDefFile(def) {
 
 function addGlobTags() { // Add calculated properties
 	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
+	globTags.artist = globTags.artistRaw.indexOf('%') === -1 && globTags.artistRaw.indexOf('$') === -1 ? '%' + globTags.artistRaw + '%' : globTags.artistRaw;
+	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,\'#\'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');;
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
-	globQuery.compareTitle = '"$stricmp(%' + globTags.title + '%,#' + globTags.title + '#)" IS 1';
+	globQuery.compareTitle = '"$stricmp(' + (globTags.title.indexOf('$') === -1 ? '%' + globTags.title + '%' : globTags.title) + ',#' + globTags.title + '#)" IS 1';
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
@@ -71,7 +73,7 @@ const globTags = {
 	_usage: 'Don\'t add multiple tags to these variables. TITLE, DATE and RATING must be enclosed on %. Special characters like single quotes (\') or backslash (\\) must be properly escaped. Remember to also properly escape special characters according to TF rules!',
 	titleRaw: 'TITLE',
 	date: '$year(%DATE%)',
-	artist: 'ALBUM ARTIST',
+	artistRaw: 'ALBUM ARTIST',
 	genre: 'GENRE',
 	style: 'STYLE',
 	mood: 'MOOD',

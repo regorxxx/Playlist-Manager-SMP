@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/07/23
+//29/07/23
 
 include('helpers_xxx.js');
 
@@ -68,12 +68,14 @@ function sanitizeTagValIds(val, bSpace = true) {
 
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
-function queryReplaceWithCurrent(query, handle) {
+function queryReplaceWithCurrent(query, handle, bDebug = false) {
+	if (bDebug) {console.log('Initial query:', query);}
 	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return '';}
 	else if (!handle) {
 		if ((query.match(/#/g) || []).length >= 2) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
 		else {return query;}
 	}
+	if (/#NEXTKEY#|#PREVKEY#/g.test(query)) {console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return;}
 	if (query.indexOf('#') !== -1) {
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
@@ -87,6 +89,7 @@ function queryReplaceWithCurrent(query, handle) {
 		let count = idx.length;
 		const startQuery = query[0] === '(' ? query.slice(0, query.split('').findIndex((s) => {return s !== '(';})) : '';
 		const endQuery = query.length > idx[count - 1] ? query.slice(idx[count - 1] + 1, query.length) : '';
+		if (bDebug) {console.log(startQuery, '-', endQuery);}
 		if (count % 2 === 0) { // Must be on pairs of 2
 			let tempQuery = '';
 			let tfo = '', tfoVal = '';
@@ -97,9 +100,14 @@ function queryReplaceWithCurrent(query, handle) {
 				const nextChar = query[idx[i + 1] + 1];
 				const bIsWithinFunc = (prevChar === '('  || prevChar === ',') && (nextChar === ')' || nextChar === ',');
 				tfo = !bIsFunc ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
+				// Workaround for album artist
+				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
+					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
+					.replace(/\$meta\(ALBUM ARTIST\)/g, '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
+				if (bDebug) {console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc);}
 				tfo = fb.TitleFormat(tfo);
 				tfoVal = bIsFunc || bIsWithinFunc ? sanitizeTagTfo(tfo.EvalWithMetadb(handle)) : tfo.EvalWithMetadb(handle);
-				if (tfoVal.indexOf('#') !== -1) { // Split multivalue tags if possible!
+				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interQueryStart = interText[0] === ')' ? interText.slice(0, interText.split('').findIndex((s) => {return s !== ')';})) : '';
 					const breakPoint = interText.lastIndexOf(' (');
@@ -114,6 +122,7 @@ function queryReplaceWithCurrent(query, handle) {
 				}
 			}
 			query = startQuery + tempQuery + endQuery;
+			if (bDebug) {console.log(startQuery, '-', tempQuery, '-', endQuery);}
 		}
 	}
 	return query;
