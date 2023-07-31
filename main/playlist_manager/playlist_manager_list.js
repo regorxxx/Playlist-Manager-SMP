@@ -46,6 +46,7 @@ function _list(x, y, w, h) {
 	var currentItemNameId = bMaintainFocus ? this.data[currentItemIndex].nameId : null;
 	var currentItemIsAutoPlaylist = bMaintainFocus ? this.data[currentItemIndex].isAutoPlaylist : null;
 	var currentItemIsUI = bMaintainFocus ? this.data[currentItemIndex].extension === '.ui' : null;
+	var currentItemIsFolder = bMaintainFocus ? this.data[currentItemIndex].isFolder : null;
 	var idxHighlight = -1;
 	var animation = {bHighlight: false, fRepaint: null};
 	var animationButtons = new Map(
@@ -93,6 +94,23 @@ function _list(x, y, w, h) {
 	
 	this.calcColumnVal = (key /*pls property*/, pls) => {
 		let val = pls[key] === -1 ? '?' : pls[key];
+		if (pls.isFolder) {
+			switch (key) {
+				case 'duration':
+				case 'fileSize':
+				case 'size': {
+					pls.pls.forEach((subPls) => {
+						if (subPls[key] !== -1) {
+							if (val === '?') {val = 0;}
+							val += subPls[key];
+						}
+					});
+					break;
+				}
+				default:
+					break;
+			}
+		}
 		if (val !== '?') {
 			switch (key) {
 				case 'duration': { // Format it with no more than 4 digits
@@ -637,21 +655,32 @@ function _list(x, y, w, h) {
 		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
 		let cacheLen = 0;
 		const ellipisisW = this.bShowSize ? gr.CalcTextWidth('...', panel.fonts.normal) : 0;
-		const iconsRightW = this.uiElements['Scrollbar'].enabled && scroll ? this.w - (scroll.visible ? scroll.w : scroll.wHidden) : this.textWidth;
-		for (let i = 0; i < rows; i++) {
-			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
-			if (i + this.offset >= this.items) {
-				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
-				break;
+		const iconsRightW = this.uiElements['Scrollbar'].enabled && scroll ? this.w - (scroll.visible ? scroll.w : scroll.wHidden) : this.textWidth
+		const level = {name: '', offset: 0};
+		// Helpers
+		const paintColumn = (item, x, columnY, color) => {
+			if (bColumnsEnabled && columnsWidth) {
+				columns.forEach((key, i) => {
+					const columnX = x + this.textWidth - 30 + this.calcColumnsWidth(gr, i).total;
+					const columnFont = panel.fonts[this.columns.font[i] || 'normal'];
+					const val = this.calcColumnVal(key, item);
+					const columnW = (this.columns.width[i] === 'auto' 
+							? columnsWidthLabel[key]
+							: this.columns.width[i]
+						) - columnOffset * ((i === columns.length - 1) ? 3 : 2);
+					const align = this.calcColumnAlign(this.columns.align[i]);
+					const columnColor = this.columns.color[i] === 'playlistColor' 
+						? color 
+						: this.columns.color[i] === 'textColor' 
+							? panel.colors.text
+							: this.columns.color[i];
+					if (this.columns.line === 'all' || i === 0 && this.columns.line === 'first') {gr.DrawLine(columnX, columnY, columnX, columnY + panel.row_height, 1, columnLineColor);}
+					gr.GdiDrawText(val, columnFont, columnColor, columnX + columnOffset, columnY, columnW, panel.row_height, align);
+				});
+				this.textWidth = this.w;
 			}
-			// Alternate row colors
-			if (panel.colors.bAltRowsColor && (i + this.offset) % 2) {
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, rowWidth, panel.row_height, altColorRow);
-			}
-			const currIdx = i + this.offset;
-			const pls = this.data[currIdx];
-			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
-			const textY = this.y + yOffset + (i * panel.row_height);
+		};
+		const paintPls = (pls, i, currIdx, textX, textY, level = 0) => {
 			// Add category sep
 			if (this.bShowSep) {
 				let dataKey = ''; // Use this.data[dataKey] notation instead of this.data.dataKey, so we can apply the same code to all use-cases
@@ -694,6 +723,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			// Playlists
+			const levelOffset = level * 20;
 			let playlistDataText =  pls.name + (this.bShowSize ? ' (' + pls.size + ')' : '');
 			// Adjust playlist name according to width available but always show the size if possible
 			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
@@ -745,12 +775,12 @@ function _list(x, y, w, h) {
 					}
 				}
 				if (iconBg) {
-					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5, textY, maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.row_height, CENTRE);
 					if (icon) {
-						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5, textY, maxIconWidth, panel.row_height, CENTRE);
+						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.row_height, CENTRE);
 					}
 				} else if (icon) {
-					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5, textY, maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.row_height, CENTRE);
 				}
 			}
 			// Text
@@ -763,31 +793,12 @@ function _list(x, y, w, h) {
 				img.ReleaseGraphics(grImg);
 				img.StackBlur(0);
 				if (bPanelArt && getBrightness(...toRGB(panel.imageBackground.art.colors[0].col)) < 100) {img = img.InvertColours();} // Due to GDI bug, painting white doesn't work properly...
-				gr.DrawImage(img, textX, textY, img.Width, img.Height, 0, 0, img.Width, img.Height, 0, getBrightness(...toRGB(playlistColor)) < 50 ? 125 : 100);
+				gr.DrawImage(img, textX + levelOffset, textY, img.Width, img.Height, 0, 0, img.Width, img.Height, 0, getBrightness(...toRGB(playlistColor)) < 50 ? 125 : 100);
 			}
-			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX, textY, this.textWidth - 30, panel.row_height, LEFT);
-			// Columns
-			if (bColumnsEnabled && columnsWidth) {
-				const columnY = textY;
-				columns.forEach((key, i) => {
-					const columnX = (textX) + this.textWidth - 30 + this.calcColumnsWidth(gr, i).total;
-					const columnFont = panel.fonts[this.columns.font[i] || 'normal'];
-					const val = this.calcColumnVal(key, pls);
-					const columnW = (this.columns.width[i] === 'auto' 
-							? columnsWidthLabel[key]
-							: this.columns.width[i]
-						) - columnOffset * ((i === columns.length - 1) ? 3 : 2);
-					const align = this.calcColumnAlign(this.columns.align[i]);
-					const columnColor = this.columns.color[i] === 'playlistColor' 
-						? playlistColor 
-						: this.columns.color[i] === 'textColor' 
-							? panel.colors.text
-							: this.columns.color[i];
-					if (this.columns.line === 'all' || i === 0 && this.columns.line === 'first') {gr.DrawLine(columnX, columnY, columnX, columnY + panel.row_height, 1, columnLineColor);}
-					gr.GdiDrawText(val, columnFont, columnColor, columnX + columnOffset, columnY, columnW, panel.row_height, align);
-				});
-				this.textWidth = this.w;
-			}
+			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30, panel.row_height, LEFT);
+			return playlistColor;
+		};
+		const paintIndicators = (pls, textY) => {
 			// Add playing now indicator
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
 			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoPlaylist) { // If missing it's false
@@ -805,15 +816,68 @@ function _list(x, y, w, h) {
 				});
 				const icon = iconChars[fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist ? 'playing' : 'loaded'];
 				// Draw
-				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, textX, iconsRightW, panel.row_height, RIGHT);
+				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.row_height, RIGHT);
 			}
+		};
+		const paintSelection = (i, textY) => {
 			// Multiple selection
 			if (this.indexes.length) {
 				if (this.indexes.indexOf(this.offset + i) !== -1) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + i * panel.row_height, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
+					gr.DrawRect(this.x - 5, textY, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
+					gr.FillSolidRect(this.x - 5, textY, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 				}
 			}
+		};
+		const paintFolder = (folder, i, textY) => {
+			// Adjust playlist name according to width available but always show the size if possible
+			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
+			const folderCount = folder.pls.length;
+			const folderText =  _b(folder.name) + (this.bShowFolderSize ? ' (' + folderCount + ')' : '');
+			gr.GdiDrawText(folder.isOpen ? chars.downOutline : chars.leftOutline, gfontIconChar(), standardPlaylistIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
+			gr.GdiDrawText(folderText, panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
+			return panel.colors.text;
+		};
+		for (let i = 0; i < rows; i++) {
+			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
+			if (i + this.offset >= this.items) {
+				console.log('Playlist manager: Warning. i + this.offset (' + (i + this.offset) + ') is >= than this.items (' + this.items + ') on paint.'); 
+				break;
+			}
+			const currIdx = i + this.offset;
+			const pls = this.data[currIdx];
+			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
+			const textY = this.y + yOffset + (i * panel.row_height);
+			// Set levels
+			if (!pls.inFolder) {
+				level.offset = 0;
+				level.name = '';
+			} else if (level.name.length && level.name !== pls.inFolder) {
+				level.offset -= 1;
+				level.name = pls.inFolder;
+			} else if (!level.name && pls.inFolder) {
+				let folder = this.data.find((item) => pls.inFolder === item.name);
+				while (folder) {
+					level.offset += 1;
+					level.name = folder.name;
+					folder = this.data.find((item) => folder.inFolder === item.name);
+				}
+			}
+			// Alternate row colors
+			if (panel.colors.bAltRowsColor && currIdx % 2) {
+				gr.FillSolidRect(this.x - 5, textY, rowWidth, panel.row_height, altColorRow);
+			}
+			// Paint folders and playlists
+			let playlistColor;
+			if (pls.isFolder) {
+				playlistColor = paintFolder(pls, i, textY);
+				level.offset += 1;
+				level.name = pls.name;
+			} else {
+				playlistColor = paintPls(pls, i, currIdx, textX, textY, level.offset);
+			}
+			paintColumn(pls, textX, textY, playlistColor);
+			paintIndicators(pls, textY);
+			paintSelection(i, textY);
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
@@ -1225,6 +1289,7 @@ function _list(x, y, w, h) {
 		currentItemNameId = item ? item.nameId : null;
 		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
 		currentItemIsUI = item ? item.extension === '.ui' : null;
+		currentItemIsFolder = item ? item.isFolder : null;
 	}
 	
 	this.clearLastPosition = () => { // Clears position
@@ -1239,6 +1304,7 @@ function _list(x, y, w, h) {
 		currentItemNameId = item ? item.nameId : null;
 		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
 		currentItemIsUI = item ? item.extension === '.ui' : null;
+		currentItemIsFolder = item ? item.isFolder : null;
 		this.index = -1;
 		this.offset = 0;
 	}
@@ -1255,6 +1321,11 @@ function _list(x, y, w, h) {
 					}
 				} else if (currentItemIsUI) {
 					if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) { 
+						this.jumpToIndex(i);
+						break;
+					}
+				} else if (currentItemIsFolder) { // Standard Playlists
+					if (this.data[i].isFolder && this.data[i].nameId === currentItemNameId) { 
 						this.jumpToIndex(i);
 						break;
 					}
@@ -1327,7 +1398,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		if (this.trace(x,y)) {
-			if (this.methodState === this.manualMethodState()) {
+			if (this.methodState === this.manualMethodState() || this.isFolderInView()) {
 				if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 					// Set drag n drop after some time
 					const z = this.index;
@@ -1360,24 +1431,37 @@ function _list(x, y, w, h) {
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
+						const currItem = this.data[z];
 						if (this.isInternalDrop()) {
 							if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
-								const name = this.data[z].nameId;
-								const cache = [...this.sortingFile];
-								const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
-								if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
-								const toMove = this.internalPlsDrop.reverse().map((idx) => {
-									const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
-									return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
-								}).filter((n) => n !== null).reverse();
-								const toIdx = this.sortingFile.findIndex((n) => n === name);
-								if (toIdx !== -1) {
-									this.sortingFile.splice(toIdx, 0, ...toMove);
-									if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
-									if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
-									this.saveManualSorting();
+								if (this.methodState === this.manualMethodState()) {
+									const name = currItem.nameId;
+									const cache = [...this.sortingFile];
+									const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
+									if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
+									const toMove = this.internalPlsDrop.reverse().map((idx) => {
+										const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
+										return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
+									}).filter((n) => n !== null).reverse();
+									const toIdx = this.sortingFile.findIndex((n) => n === name);
+									if (toIdx !== -1) {
+										this.sortingFile.splice(toIdx, 0, ...toMove);
+										if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
+										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
+										this.saveManualSorting();
+										this.sort();
+									} else {this.sortingFile = cache;}
+								} else if (currItem.isFolder) {
+									this.internalPlsDrop.forEach((idx) => {
+										this.addToFolder(this.data[idx], currItem);
+									});
 									this.sort();
-								} else {this.sortingFile = cache;}
+								} else {
+									this.internalPlsDrop.forEach((idx) => {
+										this.removeFromFolder(this.data[idx]);
+									});
+									this.sort();
+								}
 							}
 							this.internalPlsDrop = [];
 						} else if (shortcuts.hasOwnProperty(mask)) {
@@ -1386,12 +1470,31 @@ function _list(x, y, w, h) {
 								const cache = [this.offset, this.index];
 								let bSucess = false;
 								if (this.indexes.length) {
-									this.indexes.forEach((z) => {
-										if (this.sendSelectionToPlaylist({playlistIndex: z, bCheckDup: true, bPaint: false, bDelSource})) {
+									this.indexes.forEach((zz) => {
+										const item =  typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
+										if (item && item.isFolder) {
+											for (let i = zz + 1; i <= zz + item.pls.length; i++) {
+												if (this.data[i].inFolder !== item.name) {break;}
+												if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
+													bSucess = true;
+												}
+											}
+										} else if (this.sendSelectionToPlaylist({playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource})) {
 											bSucess = true;
 										}
 									});
-								} else {bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false, bDelSource});}
+								} else {
+									if (currItem.isFolder) {
+										for (let i = z + 1; i <= z + currItem.pls.length; i++) {
+											if (this.data[i].inFolder !== currItem.name) {break;}
+											if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
+												bSucess = true;
+											}
+										}
+									} else {
+										bSucess = this.sendSelectionToPlaylist({playlistIndex: z, bPaint: false, bDelSource});
+									}
+								}
 								if (bSucess) {
 									[this.offset, this.index] = cache;
 									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
@@ -1403,6 +1506,8 @@ function _list(x, y, w, h) {
 							if (!this.bDoubleclick) { // It's not a second lbtn click
 								if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
 									this.playlistMenu(z, x, y);
+								} else if (currItem.isFolder) {
+									this.switchFolder(z);
 								} else {
 									this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
 								}
@@ -1542,6 +1647,7 @@ function _list(x, y, w, h) {
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
 					this.bDoubleclick = true;
+					if (this.data[z].isFolder) {break;}
 					this.executeAction(z, x, y, shortcuts[mask]);
 					break;
 				}
@@ -2104,14 +2210,22 @@ function _list(x, y, w, h) {
 	}
 	
 	// Drag n drop
+	this.isFolderInView = () => {
+		return this.data.some((pls) => pls.isFolder);
+	}
+	
 	this.isInternalDrop = () => {
-		return this.internalPlsDrop.length && this.methodState === this.manualMethodState();
+		return this.internalPlsDrop.length && (this.methodState === this.manualMethodState() || this.isFolderInView());
 	}
 	
 	this.isInternalDropValid = () => {
 		const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 		const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
-		return typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' && (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows;
+		return typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' &&  (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows && (
+			this.methodState === this.manualMethodState() 
+				? true
+				: this.data[currSelIdx].isFolder
+		);
 	}
 	
 	this.onDragDrop = () => {
@@ -2158,7 +2272,7 @@ function _list(x, y, w, h) {
 		}
 		const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
 		let bDup = false;
-		if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && pls.size) {
+		if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && !pls.isFolder && pls.size) {
 			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 			if (selItems && selItems.Count) {
 				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([pls.nameId])));
@@ -2828,6 +2942,10 @@ function _list(x, y, w, h) {
 		} else { // On first filter we use this.dataAll as origin
 			this.data = [...this.dataAll];
 		}
+		// Process folders
+		this.collapseFolders();
+		this.processFolders();
+		 // AutoPlaylists
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// this.data = this.data;
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
@@ -3105,6 +3223,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false) => {
+		this.collapseFolders();
 		const bManual = this.methodState === this.manualMethodState();
 		if (bManual) {
 			let bSave = false;
@@ -3146,6 +3265,7 @@ function _list(x, y, w, h) {
 				this.dataAll.sort(method);
 			}
 		}
+		this.processFolders();
 		if (bMaintainFocus) {this.jumpLastPosition();}
 		if (bPaint) {this.repaint();}
 	}
@@ -3179,6 +3299,81 @@ function _list(x, y, w, h) {
 				} else {this.sortingFile = cache;}
 			} else {this.sortingFile = cache;}
 		} else {console.log('Playlist Manager: invalid data array.');}
+	}
+	
+	this.switchFolder = (z) => {
+		if (z === -1) {return false;}
+		if (!Array.isArray(z)) {z = [z];}
+		for (let zz of z) {
+			const folder = this.data[zz];
+			if (!folder || !folder.isFolder) {console.log('switchFolder: item is not a folder. Name: ' + (folder ? folder.name : null) + ', Index: ' + zz); return false;}
+			const folderSize = folder.pls.length;
+			if (folder.isOpen) {
+				const top = zz + folderSize;
+				for (let i = top; i > zz; i--) {
+					if (this.data[i].inFolder === folder.name) {
+						if (this.data[i].isFolder && this.data[i].isOpen) {this.switchFolder(i);}
+						const pos = this.indexes.indexOf(i);
+						if (pos !== -1) {
+							this.indexes.splice(pos, 1);
+						}
+					}
+				}
+				this.indexes = this.indexes.map((idx) => idx > top ? idx - folderSize : idx);
+				if (this.index > top) {
+					this.index -= folderSize;
+				}
+				this.offset = Math.min(this.offset, this.items - this.rows - folderSize);
+			} else {
+				this.indexes = this.indexes.map((idx) => idx > zz ? idx + folderSize : idx);
+				if (this.index > zz) {
+					this.index += folderSize;
+					this.offset += folderSize;
+				}
+			}
+			this.data[zz].isOpen = !this.data[zz].isOpen;
+		}
+		this.processFolders();
+		if (this.index < 0) {this.index = 0;}
+		if (this.offset < 0) {this.offset = 0;}
+		return true;
+	}
+	
+	this.processFolders = () => {
+		if (this.data.some((item) => item.isFolder)) {
+			const expandedData = this.data.filter((item) => !item.inFolder);
+			this.data.filter((item) => !item.inFolder).forEach((item, i) => {
+				if (item.isFolder && item.isOpen && item.pls.length) {
+					this.processFolder(item, i, expandedData);
+				}
+			});
+			this.data = expandedData;
+			this.items = this.data.length;
+		}
+	}
+	
+	this.processFolder = (item, i, expandedData) => {
+		const pls = this.sortFolder([...item.pls].filter((subItem) => subItem.inFolder === item.nameId));
+		if (pls.some((subItem) => subItem.isFolder)) {
+			pls.forEach((subItem, j) => {
+				if (subItem.isFolder && subItem.isOpen && subItem.pls.length) {
+					this.processFolder(subItem, j, pls);
+				}
+			});
+		}
+		expandedData.splice(i + 1, 0, ...pls);
+	}
+	
+	this.sortFolder = (folder, sortMethod = this.sortMethods()[this.methodState][this.sortState]) => {
+		folder.sort(sortMethod);
+		return folder;
+	}
+	
+	this.collapseFolders = () => {
+		if (this.data.some((item, i) => item.isFolder)) {
+			this.data = this.data.filter((item) => !item.inFolder);
+			this.items = this.data.length;
+		}
 	}
 	
 	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
@@ -3530,7 +3725,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.getPlaylistNum = (bAll = false) => {
-		return (bAll ? this.itemsAll : this.itemsAll - this.itemsAutoplaylist - this.itemsFoobar);
+		return (bAll ? this.itemsAll : this.itemsAll - this.itemsAutoplaylist - this.itemsFoobar - this.itemsFolder);
 	}
 	
 	this.switchTracking = (forced = null, bNotify = false) => {
@@ -3614,6 +3809,7 @@ function _list(x, y, w, h) {
 			this.dataFpl = [];
 			this.dataXsp = [];
 			this.dataUI = [];
+			this.dataFolder = [];
 			if (this.dataAll && this.dataAll.length) {
 				this.dataAll.forEach((item) => {
 					if (item.isAutoPlaylist) { // Saves autoplaylists to json
@@ -3624,10 +3820,12 @@ function _list(x, y, w, h) {
 						this.dataXsp.push(item);
 					} else if (item.extension === '.ui') { // Save UI creation and last modified
 						this.dataUI.push(item);
+					} else if (item.isFolder) { // Save folders
+						this.dataFolder.push(item);
 					}
 				});
-				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI]);
-				const stripMeta = ['sortIdx'];
+				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI, ...this.dataFolder]);
+				const stripMeta = ['sortIdx', 'inFolder'];
 				data.forEach((pls) => {
 					stripMeta.forEach((key) => delete pls[key]);
 				});
@@ -3663,6 +3861,9 @@ function _list(x, y, w, h) {
 			} else if (objectPlaylist.extension === '.xsp') {
 				this.dataXsp.push(objectPlaylist);
 				this.itemsXsp++;
+			} else if (objectPlaylist.isFolder) {
+				this.dataFolder.push(objectPlaylist);
+				this.itemsFolder++;
 			}
 			const dataIdx = this.data.push(objectPlaylist) - 1;
 			this.items++;
@@ -3711,6 +3912,12 @@ function _list(x, y, w, h) {
 					this.dataXsp.splice(index, 1);
 					this.itemsXsp--;
 				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));}
+			} else if (objectPlaylist.isFolder) {
+				index = this.dataFolder.indexOf(objectPlaylist);
+				if (index !== -1) {
+					this.dataFolder.splice(index, 1);
+					this.itemsFolder--;
+				} else {console.log('Playlist Manager: error removing playlist object from \'this.dataFolder\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));}
 			}
 			index = this.data.indexOf(objectPlaylist);
 			if (index !== -1) {
@@ -3727,6 +3934,51 @@ function _list(x, y, w, h) {
 		
 		this.replacer = (key, value) => {
 			return key === 'width' ? void(0) : value;
+		}
+		
+		this.addFolder = (name = '') => {
+			if (!name.length) {
+				try {name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true);}
+				catch (e) {return false;}
+				if (!name.length) {return false;}
+				if (this.dataAll.some((pls) => pls.name === name || pls.nameId === name)) {
+					fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
+					return false;
+				}
+			}
+			const now = Date.now();
+			const defaults = new oPlaylist({name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now});
+			const folder = {isFolder: true, isOpen: false, pls: [], ...defaults};
+			// Add tags of current view
+			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(folder.tags).has(tag)) {folder.tags.push(tag);}});}
+			// Categories
+			// Add Category of current view if none was forced
+			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !folder.category.length) {folder.category = this.categoryState[0];} 
+			// Save
+			this.addToData(folder);
+			this.update(true, true); // We have already updated data before only for the variables changed
+			this.filter();
+			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+			this.showPlsByObj(folder);
+			return folder;
+		}
+		
+		this.addToFolder = (pls, folderObj) => {
+			if (pls.inFolder && pls.inFolder.length) {this.removeFromFolder(pls);}
+			pls.inFolder = folderObj.nameId;
+			folderObj.pls.push(pls);
+		}
+		
+		this.removeFromFolder = (pls) => {
+			const folder = this.data.find((item) => pls.inFolder === item.nameId && item.isFolder);
+			if (!folder) {return false;}
+			const idx = folder.pls.indexOf(pls);
+			if (idx !== -1) {
+				folder.pls.splice(idx, 1);
+				pls.inFolder = '';
+				return true;
+			}
+			return false;
 		}
 		
 		this.addUIplaylist = ({name = 'New playlist', bInputName = !name.length} = {}) => {
@@ -4167,7 +4419,7 @@ function _list(x, y, w, h) {
 			// Adds timestamp to filename
 			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			const bUI = pls.extension === '.ui';
-			if (!pls.isAutoPlaylist && !bUI) { // Only for not AutoPlaylists
+			if (!pls.isAutoPlaylist && !bUI && !pls.isFolder) { // Only for not AutoPlaylists
 				if (_isFile(pls.path)) {
 					let newPath = pls.path.split('.').slice(0,-1).join('.').split('\\');
 					const newName = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
@@ -4708,6 +4960,7 @@ function _list(x, y, w, h) {
 			this.itemsFpl = 0;
 			this.itemsXsp = 0;
 			this.itemsFoobar = 0;
+			this.itemsFolder = 0;
 			this.bUpdateAutoplaylist = this.properties['bUpdateAutoplaylist'][1];
 			this.totalFileSize = 0;
 			this.index = -1;
@@ -4722,6 +4975,7 @@ function _list(x, y, w, h) {
 			this.dataXsp = []; // Only xsp playlists to save to json
 			this.dataUI = []; // Only foobar2000 playlists on UI
 			this.dataFoobar = []; // Only foobar2000 playlists on UI
+			this.dataFolder = []; // Only folders for sorting
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
 			this.disableAutosave = [];
@@ -4858,6 +5112,7 @@ function _list(x, y, w, h) {
 	this.itemsFpl = 0;
 	this.itemsXsp = 0;
 	this.itemsFoobar = 0;
+	this.itemsFolder = 0;
 	this.text_x = 0;
 	this.timeOut = null;
 	this.bDoubleclick = false;
@@ -4900,6 +5155,8 @@ function _list(x, y, w, h) {
 	this.uiElements = JSON.parse(this.properties['uiElements'][1]);
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	this.columns = JSON.parse(this.properties['columns'][1]);
+	// Folders
+	this.bShowFolderSize = true;
 	// Panel behavior
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
