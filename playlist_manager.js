@@ -186,6 +186,7 @@ var properties = {
 		'File management':			true,
 		'UI playlist locks':		true,
 		'File locks':				true,
+		// 'Folders':					true,
 	})],
 	searchMethod			: ['Search settings', JSON.stringify({
 		bName:			true,
