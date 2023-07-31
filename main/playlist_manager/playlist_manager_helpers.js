@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/06/23
+//31/07/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1189,6 +1189,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 			}
 		}
 	}
+	if (bRenamedSucessfully) {list.showPlsByObj(pls);}
 	return bRenamedSucessfully;
 }
 
