@@ -2337,13 +2337,16 @@ function createMenuRightTop() {
 					window.Repaint();
 				}, flags: panel.colors.bCustomText ? MF_STRING : MF_GRAYED,});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuSecondName, entryText: 'Add shadows to font', func: () => {
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'Add font shading', func: () => {
 					panel.colors.bFontOutline = !panel.colors.bFontOutline;
 					panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
+					if (panel.colors.bFontOutline) {
+						fb.ShowPopupMessage('Adds font shading to improve readability (usually along art background usage).\n\nIt may heavily affect performance on some systems.', window.Name);
+					}
 					overwriteProperties(panel.properties);
 					window.Repaint();
 				}});
-				menu.newCheckMenu(subMenuSecondName, 'Add shadows to font', void(0), () => {return panel.colors.bFontOutline;});
+				menu.newCheckMenu(subMenuSecondName, 'Add font shading', void(0), () => {return panel.colors.bFontOutline;});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			{	// Buttons' toolbar
@@ -2560,7 +2563,7 @@ function createMenuRightTop() {
 					panel.imageBackground.enabled = i === 0 ? true : false;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 					if (panel.imageBackground.enabled) { // Add shadows by default
-						const answer = WshShell.Popup('Add shadows to fonts?\n(it may heavily affect performance on some systems)', 0, window.Name, popup.question + popup.yes_no);
+						const answer = WshShell.Popup('Add font shading to improve readability?\n(it may heavily affect performance on some systems)', 0, window.Name, popup.question + popup.yes_no);
 						if (answer === popup.yes) {
 							panel.colors.bFontOutline = true;
 						}
