@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/07/23
+//31/07/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -347,7 +347,7 @@ let delayAutoUpdate = () => void(0);
 		{	// Manual sorting
 			const answer = prop.bLiteMode[1] 
 				? popup.yes
-				: WshShell.Popup('By default automatic sorting is used.\nManual sorting can be set at the sorting button at bottom. Playlisst may be reorderd by using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+				: WshShell.Popup('By default automatic sorting is used.\nManual sorting can be set at the sorting button at bottom. Playlists may be reordered using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				new Promise((resolve) => {
 					const timer = setInterval(() => {
@@ -356,6 +356,16 @@ let delayAutoUpdate = () => void(0);
 				}).then(() => {
 					list.changeSorting(list.manualMethodState());
 				});
+			}
+		}
+		if (false) {	// Folders
+			const answer = prop.bLiteMode[1] 
+				? popup.yes
+				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop. \nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				const showMenus = JSON.parse(prop.showMenus[1]);
+				showMenus['Folders'] = true;
+				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
 			}
 		}
 		// Other changes due to lite mode
