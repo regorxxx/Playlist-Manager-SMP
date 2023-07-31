@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/07/23
+//31/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -29,7 +29,7 @@ function _panel(customBackground = false, bSetup = false) {
 			blur: 10,
 			bTint: true
 		}), {func: isJSON}],
-		bFontOutline			: ['Add shadows to font?', true, {func: isBoolean}],
+		bFontOutline			: ['Add shadows to font?', false, {func: isBoolean}],
 		bBold					: ['Use bold font?', false, {func: isBoolean}],
 	};
 	for (let key in panelProperties) {panelProperties[key][3] = panelProperties[key][1];}
