@@ -44,6 +44,7 @@
 - UI: list now jumps to new position after renaming a playlist [file] via menus/actions. For ex. sorting alphabetically, playlist may be found at a different position after renaming.
 - UI: playlist [file] is highlighted when renaming the bounded playlist on native foobar2000 UI.
 - UI: current panel position should be maintained -if possible- after [auto]updating playlist files from folder.
+- UI: font shading is now disabled when disabling panel art background and a popup warns about the performance impact when enabling it.
 ### Removed
 ### Fixed
 - UI: missing separator at header from Playlist items' contextual menu.

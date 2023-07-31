@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/23
+//31/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2560,8 +2560,14 @@ function createMenuRightTop() {
 					panel.imageBackground.enabled = i === 0 ? true : false;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 					if (panel.imageBackground.enabled) { // Add shadows by default
-						panel.colors.bFontOutline = true;
+						const answer = WshShell.Popup('Add shadows to fonts?\n(it may heavily affect performance on some systems)', 0, window.Name, popup.question + popup.yes_no);
+						if (answer === popup.yes) {
+							panel.colors.bFontOutline = true;
+						}
+					} else {
+						panel.colors.bFontOutline = false;
 					}
+					panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
 					overwriteProperties(panel.properties);
 					panel.updateImageBg(true);
 					window.Repaint();
