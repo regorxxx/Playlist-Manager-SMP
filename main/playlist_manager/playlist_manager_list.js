@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/07/23
+//31/07/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -75,7 +75,7 @@ function _list(x, y, w, h) {
 			button.x = button.y = button.w = button.h = 0;
 		}
 		this.size();
-		window.Repaint();
+		this.repaint();
 	}
 	
 	this.updatePlaylistIcons = () => {
@@ -929,7 +929,7 @@ function _list(x, y, w, h) {
 				}
 				if (this.offset !== offset) {
 					this.offset = offset;
-					if (bPaint) {window.Repaint();}
+					if (bPaint) {this.repaint();}
 				}
 			}
 			return true;
@@ -951,7 +951,7 @@ function _list(x, y, w, h) {
 			: 0;
 		if (this.offset + this.rows >= this.items) {this.offset = this.items > this.rows ? this.items - this.rows : 0;}
 		if (bScroll) {this.index = -1;}
-		if (cache.index !== this.index || cache.offset !== this.offset) {window.Repaint();}
+		if (cache.index !== this.index || cache.offset !== this.offset) {this.repaint();}
 		return this.index;
 	}
 	
@@ -979,6 +979,22 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.showPlsByObj = (obj, ms = 10) => {
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		const idx = this.data.findIndex((pls) => {return pls === obj;});
+		if (idx !== -1) {
+			if (ms) {
+				setTimeout(() => { // Required since input popup invokes move callback after this func!
+					this.cacheLastPosition(idx);
+					this.showPlsByIdx(idx);
+				}, ms);
+			} else {
+				this.cacheLastPosition(idx);
+				this.showPlsByIdx(idx);
+			}
+		}
+	}
+	
 	this.onMouseLeaveList = () => {  // Removes selection indicator
 		if (!this.bSelMenu) { // When pressing right button, the index gets cleared too... but we may want to use it on the menus
 			this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
@@ -995,7 +1011,7 @@ function _list(x, y, w, h) {
 			this.headerButtons[key].inFocus = false;
 		}
 		this.internalPlsDrop = [];
-		window.Repaint();
+		this.repaint();
 	}
 	
 	this.move = (x, y, mask, bDragDrop = false, bTooltipOverride = false) => {
@@ -1037,7 +1053,7 @@ function _list(x, y, w, h) {
 			this.inRange = false;
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
-			window.Repaint(); // Removes selection indicator
+			this.repaint(); // Removes selection indicator
 			return true;
 		} else {
 			for (let key in this.headerButtons) {
@@ -1059,7 +1075,7 @@ function _list(x, y, w, h) {
 					this.tooltip.SetValue(null); // Removes tt when not over a list element
 					this.index = -1;
 					// this.lastOffset = 0;
-					window.Repaint(); // Removes selection indicator
+					this.repaint(); // Removes selection indicator
 					break;
 				}
 				default: {
@@ -1068,7 +1084,7 @@ function _list(x, y, w, h) {
 							// Cursor
 							if (bMoved) {window.SetCursor(IDC_HAND);}
 							// Selection indicator
-							window.Repaint();
+							this.repaint();
 							// Tooltip for playlists
 							const pls = this.data[this.index];
 							if (pls) {
@@ -1172,7 +1188,7 @@ function _list(x, y, w, h) {
 						default: {
 							this.clearSelPlaylistCache();
 							this.tooltip.SetValue(null); // Removes tt when not over a list element
-							window.Repaint(); // Removes selection indicator
+							this.repaint(); // Removes selection indicator
 							break;
 						}
 					}
@@ -1191,7 +1207,7 @@ function _list(x, y, w, h) {
 			this.down_btn.hover = false;
 			if (!bTooltipOverride) {this.tooltip.SetValue(null);} // Removes tt when not over a list element
 			this.index = -1;
-			window.Repaint(); // Removes selection indicator
+			this.repaint(); // Removes selection indicator
 			return false;
 		}
 	}
@@ -1604,7 +1620,7 @@ function _list(x, y, w, h) {
 				let offset = 0;
 				while (true) {
 					this.wheel({s: 1, bPaint: false});
-					if (offset === this.offset) {window.Repaint(); currentItemIndex = 0; break;} else {offset = this.offset;}
+					if (offset === this.offset) {this.repaint(); currentItemIndex = 0; break;} else {offset = this.offset;}
 				}
 				return true;
 			}
@@ -1612,7 +1628,7 @@ function _list(x, y, w, h) {
 				let offset = 0;
 				while (true) {
 					this.wheel({s: -1, bPaint: false});
-					if (offset === this.offset) {window.Repaint(); currentItemIndex = this.items - 1; break;} else {offset = this.offset;}
+					if (offset === this.offset) {this.repaint(); currentItemIndex = this.items - 1; break;} else {offset = this.offset;}
 				}
 				return true;
 			}
@@ -2598,7 +2614,8 @@ function _list(x, y, w, h) {
 				}
 				this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
 				if (plsData.extension !== '.ui' && !pop.isEnabled()) { // Display animation except for UI playlists
-					pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.'); window.Repaint()
+					pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.'); 
+					this.repaint()
 				}
 				this.update(true, true, currentItemIndex); // We have already updated data before only for the variables changed
 				this.filter();
@@ -2922,7 +2939,7 @@ function _list(x, y, w, h) {
 		this.headerTextUpdate();
 		// Update offset!
 		if (currentItemIndex === -1) {this.offset = 0;}
-		window.Repaint();
+		this.repaint();
 	}
 	this.resetFilter = () => {
 		if (this.searchInput && this.searchMethod.bResetFilters) {this.searchInput.on_key_down(VK_ESCAPE);}
@@ -3130,7 +3147,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		if (bMaintainFocus) {this.jumpLastPosition();}
-		if (bPaint) {window.Repaint();}
+		if (bPaint) {this.repaint();}
 	}
 	
 	this.saveManualSorting = () => {
@@ -3225,7 +3242,7 @@ function _list(x, y, w, h) {
 												}
 											}
 										}
-										window.Repaint();
+										this.repaint();
 									}
 									resolve('done');
 								});
@@ -3253,7 +3270,7 @@ function _list(x, y, w, h) {
 														}
 													}
 												}
-												window.Repaint();
+												this.repaint();
 											}
 											resolve('done');
 										});
@@ -3429,7 +3446,7 @@ function _list(x, y, w, h) {
 			this.tagState = [...new Set(this.tagState).intersection(new Set(this.tags()))]; // Remove missing ones
 		}
 		this.headerTextUpdate();
-		if (!bNotPaint){window.Repaint();}
+		if (!bNotPaint){this.repaint();}
 		if (this.bCheckDuplWarnings) {this.checkDuplicates();}
 		clearInterval(delay);
 	}
@@ -3527,6 +3544,7 @@ function _list(x, y, w, h) {
 			this.bLibraryChanged = true;
 		}
 		if (bNotify) {window.NotifyOthers('Playlist manager: switch tracking', this.bTracking);}
+		this.repaint();
 		return this.bTracking;
 	}
 	
@@ -3786,13 +3804,7 @@ function _list(x, y, w, h) {
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			const idx = this.data.findIndex((pls) => {return pls === objectPlaylist;});
-			if (idx !== -1) {
-				setTimeout(() => { // Required since input popup invokes move callback after this func!
-					this.cacheLastPosition(idx);
-					this.showPlsByIdx(idx);
-				}, 10);
-			}
+			this.showPlsByObj(objectPlaylist);
 			return objectPlaylist;
 		}
 		
@@ -3874,13 +3886,7 @@ function _list(x, y, w, h) {
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			const idx = this.data.findIndex((pls) => {return pls === objectPlaylist;});
-			if (idx !== -1) {
-				setTimeout(() => { // Required since input popup invokes move callback after this func!
-					this.cacheLastPosition(idx);
-					this.showPlsByIdx(idx);
-				}, 10);
-			}
+			this.showPlsByObj(objectPlaylist);
 			return objectPlaylist;
 		}
 		
@@ -3988,13 +3994,7 @@ function _list(x, y, w, h) {
 			this.update(true, true); // We have already updated data
 			this.filter();
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			const idx = this.data.findIndex((pls) => {return pls === objectPlaylist;});
-			if (idx !== -1) {
-				setTimeout(() => { // Required since input popup invokes move callback after this func!
-					this.cacheLastPosition(idx);
-					this.showPlsByIdx(idx);
-				}, 10);
-			}
+			this.showPlsByObj(objectPlaylist);
 			return objectPlaylist;
 		}
 		
