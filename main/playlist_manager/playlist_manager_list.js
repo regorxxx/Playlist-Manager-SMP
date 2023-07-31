@@ -729,11 +729,11 @@ function _list(x, y, w, h) {
 			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
 			if (this.bShowSize && playlistDataText.length > cacheLen) {
 				const w = gr.CalcTextWidth(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal);
-				if (w > this.textWidth - 30) {
+				if (w > this.textWidth - 30 - levelOffset) {
 					const size = ' (' + pls.size + ')';
 					const sizeW = gr.CalcTextWidth(size, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal);
 					const plsW = w - sizeW;
-					const left = this.textWidth - 30 - sizeW - ellipisisW - 2;
+					const left = this.textWidth - 30 - sizeW - ellipisisW - _scale(3) * (1 + level * 2) - levelOffset;
 					playlistDataText = pls.name.slice(0, Math.floor(left * pls.name.length / plsW)) + '...' + size;
 				} else {cacheLen = playlistDataText.length;}
 			}
@@ -795,7 +795,7 @@ function _list(x, y, w, h) {
 				if (bPanelArt && getBrightness(...toRGB(panel.imageBackground.art.colors[0].col)) < 100) {img = img.InvertColours();} // Due to GDI bug, painting white doesn't work properly...
 				gr.DrawImage(img, textX + levelOffset, textY, img.Width, img.Height, 0, 0, img.Width, img.Height, 0, getBrightness(...toRGB(playlistColor)) < 50 ? 125 : 100);
 			}
-			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30, panel.row_height, LEFT);
+			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset, panel.row_height, LEFT);
 			return playlistColor;
 		};
 		const paintIndicators = (pls, textY) => {
@@ -855,11 +855,11 @@ function _list(x, y, w, h) {
 				level.offset -= 1;
 				level.name = pls.inFolder;
 			} else if (!level.name && pls.inFolder) {
-				let folder = this.data.find((item) => pls.inFolder === item.name);
+				let folder = this.data.find((item) => pls.inFolder === item.nameId);
 				while (folder) {
 					level.offset += 1;
 					level.name = folder.name;
-					folder = this.data.find((item) => folder.inFolder === item.name);
+					folder = this.data.find((item) => folder.inFolder === item.nameId);
 				}
 			}
 			// Alternate row colors
@@ -904,9 +904,30 @@ function _list(x, y, w, h) {
 				const titleColor = bValid
 					? panel.colors.text
 					: blendColors(panel.colors.text, backgroundColor, 0.5);
-				gr.FillSolidRect(this.x - 5, this.my, selWidth, panel.row_height, opaqueColor(backgroundColor, bValid ? 40 : 20));
-				gr.DrawRect(this.x - 5, this.my, selWidth, panel.row_height, 0, opaqueColor(backgroundColor, bValid ? 100 : 50));
-				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, this.bShowIcons ? this.x + maxIconWidth : this.mx, this.my, this.textWidth - 30, panel.row_height, LEFT);
+				const lineColor = opaqueColor(backgroundColor, bValid ? 100 : 50);
+				let level = 0;
+				if (this.index !== -1) {
+					if (this.dropUp || this.dropDown) {
+						const dropY = this.y + yOffset + (this.index - this.offset) * panel.row_height + (this.dropDown ? panel.row_height : 0);
+						gr.DrawLine(this.x - 5, dropY, selWidth + _scale(2), dropY, _scale(2), lineColor);
+					} else if (this.dropIn) {
+						gr.DrawRect(this.x - 5, this.y + yOffset + (this.index - this.offset) * panel.row_height, selWidth, panel.row_height, _scale(2), lineColor);
+					}
+					// Nest folders
+					let idx = this.index;
+					while (idx !== -1 && this.data[idx].isFolder) {
+						level++;
+						idx = this.data[idx].inFolder ? this.data.findIndex((pls) => pls.nameId === this.data[idx].inFolder): -1;
+					}
+				}
+				const levelOffset = 20 * level;
+				gr.FillSolidRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.row_height, opaqueColor(backgroundColor, bValid ? 40 : 20));
+				gr.DrawRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.row_height, 0, lineColor);
+				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, Math.max(levelOffset, this.bShowIcons ? maxIconWidth : 0) + this.x, this.my, this.textWidth - 30 - levelOffset / 2, panel.row_height, LEFT);
+				if (levelOffset > 0) {
+					gr.GdiDrawText(chars.folderOpenBlack, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
+					gr.GdiDrawText(chars.folderOpenBlack, gfontIconChar(), lineColor, this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
+				}
 			} else {
 				console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
 			}
@@ -1139,6 +1160,7 @@ function _list(x, y, w, h) {
 					this.tooltip.SetValue(null); // Removes tt when not over a list element
 					this.index = -1;
 					// this.lastOffset = 0;
+					this.dropUp = this.dropDown = this.dropIn = false;
 					this.repaint(); // Removes selection indicator
 					break;
 				}
@@ -1152,6 +1174,22 @@ function _list(x, y, w, h) {
 							// Tooltip for playlists
 							const pls = this.data[this.index];
 							if (pls) {
+								if (this.isInternalDrop()) {
+									const currY = this.y + yOffset + (this.index - this.offset) * panel.row_height;
+									if (this.methodState !== this.manualMethodState()) {
+										this.dropUp = this.dropDown = false;
+									} else {
+										this.dropUp = pls.isFolder
+											? y < (currY + panel.row_height / 3)
+											: y < (currY + panel.row_height / 2);
+										this.dropDown = pls.isFolder 
+											? y > (currY + panel.row_height * 2/3)
+											: !this.dropUp;
+									}
+									this.dropIn = !this.dropUp && !this.dropDown;
+								} else {
+									this.dropUp = this.dropDown = this.dropIn = false;
+								}
 								const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath,'')  + ')' : '';
 								const locks = getLocks(pls.nameId);
 								let playlistDataText = pls.isAutoPlaylist ? 'AutoPlaylist: ' : (pls.extension === '.xsp' ? 'Smart Playlist: ' : 'Playlist: ');
@@ -1253,6 +1291,7 @@ function _list(x, y, w, h) {
 							this.clearSelPlaylistCache();
 							this.tooltip.SetValue(null); // Removes tt when not over a list element
 							this.repaint(); // Removes selection indicator
+							this.dropUp = this.dropDown = this.dropIn = false;
 							break;
 						}
 					}
@@ -1267,6 +1306,7 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else {
+			this.dropUp = this.dropDown = this.dropIn = false;
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
 			if (!bTooltipOverride) {this.tooltip.SetValue(null);} // Removes tt when not over a list element
@@ -1431,10 +1471,11 @@ function _list(x, y, w, h) {
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
-						const currItem = this.data[z];
 						if (this.isInternalDrop()) {
+							const currIdx = this.dropIn || this.dropUp ? z : Math.min(z + 1, this.items - 1);
+							const currItem = this.data[currIdx];
 							if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
-								if (this.methodState === this.manualMethodState()) {
+								if (this.methodState === this.manualMethodState() && !this.dropIn) {
 									const name = currItem.nameId;
 									const cache = [...this.sortingFile];
 									const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
@@ -1445,9 +1486,17 @@ function _list(x, y, w, h) {
 									}).filter((n) => n !== null).reverse();
 									const toIdx = this.sortingFile.findIndex((n) => n === name);
 									if (toIdx !== -1) {
-										this.sortingFile.splice(toIdx, 0, ...toMove);
+										this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
 										if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
 										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
+										// TODO out of folder dropUp
+										// TODO out of current folder only if target does not match
+										// TODO sort within folder
+										if (this.internalPlsDrop.some((idx) => this.data[idx].inFolder) && !currItem.isFolder && !currItem.inFolder) {
+											this.internalPlsDrop.forEach((idx) => {
+												this.removeFromFolder(this.data[idx]);
+											});
+										}
 										this.saveManualSorting();
 										this.sort();
 									} else {this.sortingFile = cache;}
@@ -1455,11 +1504,13 @@ function _list(x, y, w, h) {
 									this.internalPlsDrop.forEach((idx) => {
 										this.addToFolder(this.data[idx], currItem);
 									});
+									if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
 									this.sort();
 								} else {
 									this.internalPlsDrop.forEach((idx) => {
 										this.removeFromFolder(this.data[idx]);
 									});
+									if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
 									this.sort();
 								}
 							}
@@ -1474,7 +1525,7 @@ function _list(x, y, w, h) {
 										const item =  typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
 										if (item && item.isFolder) {
 											for (let i = zz + 1; i <= zz + item.pls.length; i++) {
-												if (this.data[i].inFolder !== item.name) {break;}
+												if (this.data[i].inFolder !== item.nameId) {break;}
 												if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
 													bSucess = true;
 												}
@@ -1484,9 +1535,10 @@ function _list(x, y, w, h) {
 										}
 									});
 								} else {
+									const currItem = this.data[z];
 									if (currItem.isFolder) {
 										for (let i = z + 1; i <= z + currItem.pls.length; i++) {
-											if (this.data[i].inFolder !== currItem.name) {break;}
+											if (this.data[i].inFolder !== currItem.nameId) {break;}
 											if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
 												bSucess = true;
 											}
@@ -1503,6 +1555,7 @@ function _list(x, y, w, h) {
 								this.executeAction(z, x, y, shortcuts[mask]);
 							}
 						} else { // Only mouse
+							const currItem = this.data[z];
 							if (!this.bDoubleclick) { // It's not a second lbtn click
 								if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
 									this.playlistMenu(z, x, y);
@@ -3311,7 +3364,7 @@ function _list(x, y, w, h) {
 			if (folder.isOpen) {
 				const top = zz + folderSize;
 				for (let i = top; i > zz; i--) {
-					if (this.data[i].inFolder === folder.name) {
+					if (this.data[i].inFolder === folder.nameId) {
 						if (this.data[i].isFolder && this.data[i].isOpen) {this.switchFolder(i);}
 						const pos = this.indexes.indexOf(i);
 						if (pos !== -1) {
@@ -5193,6 +5246,7 @@ function _list(x, y, w, h) {
 	this.cacheLibTimer = null;
 	this.bLiteMode = this.properties['bLiteMode'][1];
 	// Other
+	this.dropUp = this.dropDown = this.dropIn = false;
 	this.showMenusDef = JSON.parse(this.properties.showMenus[3]);
 	this.trackedFolderChanged = false;
 	this.bIsDragDrop = false;
