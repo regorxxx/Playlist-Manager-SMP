@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/23
+//01/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -1830,7 +1830,7 @@ function createMenuRightTop() {
 			}});
 			menu.newCheckMenu(menuName, 'Auto-saving interval...', void(0),  () => {return Number(list.properties['autoSave'][1]) !== 0;});
 		}
-		{	// Auto-Loading
+		if (!list.bLiteMode) {	// Auto-Loading
 			menu.newEntry({menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoUpdate'][1]), true));}
@@ -1843,7 +1843,7 @@ function createMenuRightTop() {
 			}});
 			menu.newCheckMenu(menuName, 'Auto-loading interval...', void(0),  () => {return Number(list.properties['autoUpdate'][1]) !== 0;});
 		}
-		{	// Auto-Backup
+		if (!list.bLiteMode) {	// Auto-Backup
 			menu.newEntry({menuName, entryText: 'Auto-backup interval...\t(' + (isInt(list.properties['autoBack'][1]) ? list.properties['autoBack'][1] : '\u221E') + ' ms)', func: () => {
 				let input = 0;
 				try {input = Number(utils.InputBox(window.ID, 'Backup to zip periodically the tracked folder.\nEnter integer number > ' + list.properties['autoBack'][2].range[1][0] + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)', window.Name, Number(list.properties['autoBack'][1]), true));}
@@ -2084,8 +2084,8 @@ function createMenuRightTop() {
 			}
 		}
 		menu.newEntry({menuName, entryText: 'sep'});
-		{	// Export and Converter settings
-			if (!list.bLiteMode) {	//Export and copy
+		if (!list.bLiteMode) {	// Export and Converter settings
+			{	//Export and copy
 				const subMenuName = menu.newMenu('Export and copy...', menuName);
 				menu.newEntry({menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -3409,17 +3409,31 @@ function createMenuRightTop() {
 				list.searchMethod.bPath = list.searchMethod.bRegExp = false;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 			}
+			// Auto-save
+			list.properties.autoSave[1] = 1000;
+			debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 			// Tracking
 			list.bAllPls = list.properties.bAllPls[1] = true;
 			overwriteProperties(list.properties);
+			clearInterval(autoUpdateRepeat);
+			list.switchTracking(false);
+			// Auto-Backup
+			clearInterval(autoBackRepeat);
 			// Sorting
 			list.changeSorting(list.manualMethodState());
 			// Instances
 			removeInstance('Playlist Manager');
 		} else {
 			list.properties.showMenus[1] = list.properties.showMenus[3] = JSON.stringify(list.showMenusDef); // Restore default values from init
+			list.properties.autoSave[1] = list.properties.autoSave[3];
 			overwriteProperties(list.properties);
+			const autoBackTimer = Number(list.properties.autoBack[1]);
+			autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
+			const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
+			autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
+			debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 			addInstance('Playlist Manager');
+			list.switchTracking(true);
 		}
 		list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
 		list.updateUIElements(); // Buttons, etc.

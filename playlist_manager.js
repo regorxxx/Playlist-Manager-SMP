@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/23
+//01/08/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -30,6 +30,7 @@ checkCompatible('1.6.1', 'smp');
 // Cache
 let plmInit = {interval: null, lastUpdate: 0};
 const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.', bForce = false) => {
+	if (typeof list !== 'undefined' && list && list.bLiteMode) {return false;}
 	const plmInstances = [...getInstancesByKey('Playlist Manager')]; // First look if there are other panels already loaded
 	if (plmInstances[0] === window.ID || bForce) { // Only execute once per Foobar2000 instance
 		if (plmInit.interval) {clearInterval(plmInit.interval); plmInit.interval = null;}
@@ -294,6 +295,8 @@ const pop = new _popup({
 // Globals
 let debouncedAutoUpdate;
 let delayAutoUpdate = () => void(0);
+let autoBackRepeat;
+let autoUpdateRepeat;
 
 {	// Info Popup and setup
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -372,6 +375,7 @@ let delayAutoUpdate = () => void(0);
 		// Other changes due to lite mode
 		if (prop.bLiteMode[1]) {
 			prop.bAutoSelTitle[1] = true;
+			prop.autoSave[1] = 1000;
 		}
 		overwriteProperties(prop); // Updates panel
 		// Share ListenBrainz Token
@@ -428,9 +432,10 @@ if (!list.properties.bSetup[1]) {
 	// and since its timer is lower than the interval it fires before the next call is done. That's the regular use case.
 	// But we can also call the debounced func directly to delay it's execution (for ex. while updating files).
 	debouncedAutoUpdate = (autoUpdateTimer) ? debounce(autoUpdate, autoUpdateTimer - 50) : null;
-	const autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
+	autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
 	function delayAutoUpdate() {if (typeof debouncedAutoUpdate === 'function') {debouncedAutoUpdate();}} // Used before updating playlists to finish all changes
 	function autoUpdate() {
+		if (!list.playlistsPath.length || list.bLiteMode) {return false;}
 		let bDone = list.trackedFolderChanged;
 		if (bDone) {
 			if (!pop.isEnabled()) {pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.');}
@@ -446,7 +451,7 @@ if (!list.properties.bSetup[1]) {
 		return false;
 	}
 	// Helpers
-	const autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
+	autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
 	const plsHistory = new PlsHistory();
 	// Scroll bar
 	scroll = list.uiElements['Scrollbar'].enabled ? new _scrollBar({
@@ -1034,7 +1039,6 @@ if (!list.properties.bSetup[1]) {
 		// Clear timeouts
 		clearInterval(keyListener.fn);
 		if (autoBackRepeat) {clearInterval(autoBackRepeat);}
-		if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
 		if (autoUpdateRepeat) {clearInterval(autoUpdateRepeat);}
 		list.deleteMainMenuDynamic();
 	});
