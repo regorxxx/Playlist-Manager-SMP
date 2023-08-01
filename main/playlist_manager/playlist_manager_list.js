@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/23
+//01/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -658,6 +658,15 @@ function _list(x, y, w, h) {
 		const iconsRightW = this.uiElements['Scrollbar'].enabled && scroll ? this.w - (scroll.visible ? scroll.w : scroll.wHidden) : this.textWidth
 		const level = {name: '', offset: 0};
 		// Helpers
+		const shading = {};
+		if (panel.colors.bFontOutline && rows) {
+			shading.img = gdi.CreateImage(this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0), rows * panel.row_height);
+			shading.bPanelArt = panel.imageBackground.enabled && panel.imageBackground.art.image;
+			shading.outColor = shading.bPanelArt ? RGB(0, 0, 0) : invert(panelBgColor, true);
+			shading.gr = shading.img.GetGraphics();
+			shading.gr.SetTextRenderingHint(TextRenderingHint.TextRenderingHintSingleBitPerPixel);
+			shading.pls = [];
+		}
 		const paintColumn = (item, x, columnY, color) => {
 			if (bColumnsEnabled && columnsWidth) {
 				columns.forEach((key, i) => {
@@ -784,18 +793,12 @@ function _list(x, y, w, h) {
 				}
 			}
 			// Text
-			if (panel.colors.bFontOutline) { // Outline current text
-				let img = gdi.CreateImage(this.textWidth - 30, panel.row_height);
-				const grImg = img.GetGraphics();
-				const bPanelArt = panel.imageBackground.enabled && panel.imageBackground.art.image;
-				const outColor = bPanelArt ? RGB(0, 0, 0) : invert(panelBgColor, true);
-				grImg.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, outColor, 0, 0, img.Width, img.Height, LEFT);
-				img.ReleaseGraphics(grImg);
-				img.StackBlur(0);
-				if (bPanelArt && getBrightness(...toRGB(panel.imageBackground.art.colors[0].col)) < 100) {img = img.InvertColours();} // Due to GDI bug, painting white doesn't work properly...
-				gr.DrawImage(img, textX + levelOffset, textY, img.Width, img.Height, 0, 0, img.Width, img.Height, 0, getBrightness(...toRGB(playlistColor)) < 50 ? 125 : 100);
+			if (panel.colors.bFontOutline && shading.img) { // Outline current text
+				shading.gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, textX + levelOffset - this.x, i * panel.row_height, shading.img.Width, shading.img.Height, DT_LEFT);
+				shading.pls.push([playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset]);
+			} else {
+				gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset, panel.row_height, LEFT);
 			}
-			gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset, panel.row_height, LEFT);
 			return playlistColor;
 		};
 		const paintIndicators = (pls, textY) => {
@@ -837,6 +840,7 @@ function _list(x, y, w, h) {
 			gr.GdiDrawText(folderText, panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
 			return panel.colors.text;
 		};
+		// Paint list
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -878,6 +882,15 @@ function _list(x, y, w, h) {
 			paintColumn(pls, textX, textY, playlistColor);
 			paintIndicators(pls, textY);
 			paintSelection(i, textY);
+		}
+		if (panel.colors.bFontOutline && shading.img) {
+			// Paint shade
+			shading.img.StackBlur(0);
+			if (shading.bPanelArt && getBrightness(...toRGB(panel.imageBackground.art.colors[0].col)) < 100) {shading.img = shading.img.InvertColours();} // Due to GDI bug, painting white doesn't work properly..
+			gr.DrawImage(shading.img, this.x, this.y + yOffset, shading.img.Width, shading.img.Height, 0, 0, shading.img.Width, shading.img.Height, 0, 100);
+			shading.img.ReleaseGraphics(shading.gr);
+			// And text
+			shading.pls.forEach((data) => {gr.GdiDrawText(...data, panel.row_height, LEFT);});
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
@@ -1013,7 +1026,11 @@ function _list(x, y, w, h) {
 					offset = this.items - this.rows;
 				}
 				if (this.offset !== offset) {
+					this.cacheLastPosition();
 					this.offset = offset;
+					if (this.trace(this.mx, this.my)) {
+						this.index = Math.floor((this.my - this.y - yOffset) / panel.row_height) + this.offset;
+					}
 					if (bPaint) {this.repaint();}
 				}
 			}
@@ -4337,7 +4354,7 @@ function _list(x, y, w, h) {
 				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 				return false;
 			} else {
-				if (autoBackTimer && debouncedUpdate) {backup(this.properties.autoBackN[1], true);} // Async backup before future changes
+				if (autoBackTimer && debouncedUpdate && !this.bLiteMode) {backup(this.properties.autoBackN[1], true);} // Async backup before future changes
 				let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 				if (pls.isAutoPlaylist) { // AutoPlaylist
 					if (!fbPlaylistIndex) {fbPlaylistIndex = plman.PlaylistCount;}
