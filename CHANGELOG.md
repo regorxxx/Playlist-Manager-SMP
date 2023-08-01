@@ -41,6 +41,11 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Lite mode: fully disabled auto-backup on lite mode. Minor performance improvements.
+- Lite mode: fully disabled auto-load on lite mode. Minor performance improvements.
+- Lite mode: fully disabled library path tracking on lite mode. Minor performance improvements.
+- Lite mode: auto-save timer is now set to 1000 ms on lite mode, and back to default values when disabling it. It will be faster showing changes on UI-only playlists.
+- UI: improved text shading performance up to 90%. It should now be working much better on low-end systems.
 - UI: internal drag n' drop now allows to move an item below or over the current position (instead of just moving it before it). UI has been adjusted to show a bold line at the target position.
 - UI: list now jumps to new position after renaming a playlist [file] via menus/actions. For ex. sorting alphabetically, playlist may be found at a different position after renaming.
 - UI: playlist [file] is highlighted when renaming the bounded playlist on native foobar2000 UI.
@@ -48,6 +53,9 @@
 - UI: font shading is now disabled when disabling panel art background and a popup warns about the performance impact when enabling it.
 ### Removed
 ### Fixed
+- Lite mode: 'Export and convert' settings being shown on lite mode.
+- Lite mode: tracking disabled after disabling lite mode.
+- UI: selection focus was not being updated while scrolling using the wheel or buttons.
 - UI: missing separator at header from Playlist items' contextual menu.
 - UI: settings button not being updated in some instances after switching library tracking.
 
