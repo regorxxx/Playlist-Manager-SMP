@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/23
+//01/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -142,6 +142,7 @@ function _panel(customBackground = false, bSetup = false) {
 	
 	this.paintImage = (gr, limits = {x, y, w, h, offsetH}, fill = null /* {transparency: 20} */) => {
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
+			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.imageBackground.art.image;
 			if (fill) {
 				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.transparency);
@@ -158,6 +159,7 @@ function _panel(customBackground = false, bSetup = false) {
 					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
 				}
 			}
+			gr.SetInterpolationMode(InterpolationMode.Default);
 		}
 	};
 	
