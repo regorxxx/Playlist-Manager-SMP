@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/23
+//02/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2083,8 +2083,8 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuNameTwo, 'Also adding tracks without autosave', void(0),  () => {return list.bAutoTrackTagAlways;});
 			}
 		}
-		menu.newEntry({menuName, entryText: 'sep'});
 		if (!list.bLiteMode) {	// Export and Converter settings
+			menu.newEntry({menuName, entryText: 'sep'});
 			{	//Export and copy
 				const subMenuName = menu.newMenu('Export and copy...', menuName);
 				menu.newEntry({menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED});
