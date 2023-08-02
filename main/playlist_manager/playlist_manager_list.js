@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/23
+//02/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -338,6 +338,8 @@ function _list(x, y, w, h) {
 	}
 	
 	this.paintHeader = (gr, mode = 'traditional') => {
+		let lineY;
+		let lineColor;
 		switch (mode.toLowerCase()) {
 			case 'traditional' : {
 				const panelBgColor = panel.getColorBackground();
@@ -353,9 +355,9 @@ function _list(x, y, w, h) {
 				[this.headerButtons.folder.x, this.headerButtons.folder.y, this.headerButtons.folder.w, this.headerButtons.folder.h] = [LM, (maxHeaderH - iconH) / 2, iconW, iconH] // Update button coords
 				gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 				gr.GdiDrawText(this.headerText, panel.fonts.normal, panel.colors.highlight, LM + iconW + 5, 0, panel.w - (LM * 2) - iconW - 5, TM, LEFT);
-				let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
+				lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1;
 				lineY += offsetHeader;
-				gr.DrawLine(this.x, lineY , this.x + this.w, lineY, 1, panel.colors.highlight);
+				lineColor = panel.colors.highlight;
 				headerW = LM + iconW + 5;
 				headerH = lineY;
 				break;
@@ -525,7 +527,7 @@ function _list(x, y, w, h) {
 				}
 				const iconOffsetLeft = buttons.reduce((total, curr) => total + (curr.x < this.w / 2 ? curr.w : 0), 0);
 				const iconOffsetRight = this.w - buttons.reduce((total, curr) => Math.min(total, (curr.x > this.w / 2 ? curr.x : this.w)), this.w) + 2 * LM;
-				let lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1 + offsetHeader;;
+				lineY = maxHeaderH % 2 ? maxHeaderH + 2 : maxHeaderH + 1 + offsetHeader;
 				if (buttons.length) {
 					// Background
 					gr.FillSolidRect(0, 0, this.x + LM / 2 + iconOffsetLeft, lineY, altColorSearch);
@@ -573,23 +575,26 @@ function _list(x, y, w, h) {
 					gr.GdiDrawText(this.headerText, panel.fonts.normal, panel.colors.highlight, LM + iconW, 0, panel.w - (LM * 2) - iconW - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, TM, LEFT);
 				}
 				// Lines
-				const lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
-				gr.DrawLine(0, lineY , panel.w, lineY, 1, lineColor);
-				if (buttons.length) {gr.DrawLine(this.x + this.w - iconOffsetRight, this.y - lineY + 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);}
+				lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
+				if (buttons.length) {gr.DrawLine(this.x + this.w - iconOffsetRight, 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor);}
 				gr.SetSmoothingMode(SmoothingMode.Default);
 				headerW = LM + iconOffsetLeft + 5;
 				headerH = lineY;
 				break;
 			}
 		}
+		return [lineY, lineColor];
 	}
 	
 	this.paint = (gr) => {
 		// Bg
 		const panelBgColor = panel.getColorBackground();
-		panel.paintImage(gr, {w: window.Width, h: this.h - buttonCoordinatesOne.h, x: 0, y: this.y, offsetH: _scale(1)});
-		// HEADER
-		this.paintHeader(gr, this.modeUI);
+		// Header
+		const [lineY, lineColor] = this.paintHeader(gr, this.modeUI);
+		// Art background
+		panel.paintImage(gr, {w: window.Width, h: this.h - buttonCoordinatesOne.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2});
+		// Line
+		if (lineY > 0) {gr.DrawLine(0, lineY , panel.w, lineY, 1, lineColor);}
 		// Empty Panel
 		this.text_x = 0;
 		this.textWidth = this.w;
