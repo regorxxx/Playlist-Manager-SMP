@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/23
+//04/08/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -248,6 +248,7 @@ function setTrackTags(trackTags, list, z) {
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name); 
 		return bDone;
 	}
+	if (pls.isFolder) {return bDone;}
 	const extension = pls.extension;
 	const oldTags = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
@@ -298,7 +299,7 @@ function setTag(tags, list, z) {
 	const pls = list.data[z];
 	const extension = pls.extension;
 	if (! new Set(tags).isEqual(new Set(pls.tags))) { // Compares arrays
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui') {
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui' || pls.isFolder) {
 			list.editData(pls, {tags});
 			list.update(true, true);
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
@@ -350,7 +351,7 @@ function setCategory(category, list, z) {
 	const extension = pls.extension;
 	if (extension === '.strm') {return bDone;}
 	if (pls.category !== category) {
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || extension === '.ui' ) {
+		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || extension === '.ui' || pls.isFolder) {
 			list.editData(pls, {category});
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
@@ -400,6 +401,7 @@ function setCategory(category, list, z) {
 function setPlaylist_mbid(playlist_mbid, list, pls) {
 	let bDone = false;
 	const extension = pls.extension;
+	if (pls.isFolder) {return bDone;}
 	if (playlist_mbid !== pls.playlist_mbid) {
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') { // Don't load incompatible files
