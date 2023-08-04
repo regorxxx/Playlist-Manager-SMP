@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/08/23
+//04/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -727,13 +727,14 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
 	const isAutoPls = (pls) => {return pls.isAutoPlaylist || pls.query;};
 	const isLockPls = (pls) => {return pls.isLocked;};
-	const isPlsEditable = (pls) => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui';};
+	const isPlsEditable = (pls) => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui' || pls.isFolder;};
 	const isPlsLockable = (pls) => {return isPlsEditable(pls) || pls.extension === '.strm';};
 	const isPlsUI = (pls) => {return pls.extension === '.ui';};
 	const nonPlsUI = playlists.filter((pls) => {return pls.extension !== '.ui';});
+	const isFolder = (pls) => {return pls.isFolder;};
 	// Pls
 	const playlistsUI = playlists.filter((pls) => {return pls.extension === '.ui';});
-	const playlistsLoaded = playlists.filter((pls) => {return isPlsLoaded(pls);});
+	const playlistsLoaded = playlists.filter((pls) => {return !isFolder(pls) && isPlsLoaded(pls);});
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
 	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => {return isPlsLoaded(pls);});
@@ -742,6 +743,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs');});
 	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => {return isAutoPls(pls);});
 	const bIsLockPlsEvery = nonPlsUI.length && nonPlsUI.every((pls) => {return isLockPls(pls);});
+	const bIsFolderEvery = playlists.every((pls) => {return isFolder(pls);});
 	const bIsPlsEditable = playlists.some((pls) => {return isPlsEditable(pls);});
 	const bIsPlsLockable = playlists.some((pls) => {return isPlsLockable(pls);});
 	const bIsPlsUIEvery = playlistsUI.length === playlists.length;
@@ -761,30 +763,30 @@ function createMenuLeftMult(forcedIndexes = []) {
 		menu.newEntry({entryText: 'Load playlists', func: () => {
 			indexes.forEach((z, i) => {
 				const pls = playlists[i];
-				if (!isPlsUI(pls)) {list.loadPlaylist(z);}
+				if (!isPlsUI(pls) && !isFolder(pls)) {list.loadPlaylist(z);}
 			});
-		}, flags: bIsPlsLoadedEvery ? MF_GRAYED : MF_STRING});
+		}, flags: bIsPlsLoadedEvery || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		// Merge load
 		menu.newEntry({entryText: 'Merge-load playlists', func: () => {
-			const zArr = [...indexes];
+			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
 				const remDupl = [];
 				clonePlaylistMergeInUI(list, zArr);
 			}
-		}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly ? MF_GRAYED : MF_STRING});
+		}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		menu.newEntry({entryText: 'Merge-load (no duplicates)', func: () => {
-			const zArr = [...indexes];
+			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
 				const remDupl = list.removeDuplicatesAutoPls;
 				clonePlaylistMergeInUI(list, zArr, remDupl, list.bAdvTitle);
 			}
-		}, flags: !bIsValidXSPEveryOnly ? MF_GRAYED : MF_STRING});
+		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		// Clone in UI
 		menu.newEntry({entryText: 'Clone playlists in UI', func: () => {
 			indexes.forEach((z, i) => {
 				const pls = playlists[i];
 				if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
-				if (!isPlsUI(pls)) {
+				if (!isPlsUI(pls) && !isFolder(pls)) {
 					if (pls.isAutoPlaylist) {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 						cloneAsStandardPls(list, z, remDupl, list.bAdvTitle, false);
@@ -793,7 +795,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					}
 				}
 			});
-		}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly ? MF_GRAYED : MF_STRING});
+		}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 	}
 	if (showMenus['Category'] || showMenus['Tags']) {menu.newEntry({entryText: 'sep'});}
 	{	// Tags and category
@@ -872,19 +874,19 @@ function createMenuLeftMult(forcedIndexes = []) {
 				}
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
-					if (!isLockPls(pls) && isPlsEditable(pls)) {
+					if (!isLockPls(pls) && isPlsEditable(pls) && !isFolder(pls)) {
 						if (tagsString !== JSON.stringify(pls.trackTags)) {setTrackTags(tags, list, z);}
 					}
 				});
-			}, flags: !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED});
+			}, flags: !bIsLockPlsEvery && bIsPlsEditable && !bIsFolderEvery ? MF_STRING : MF_GRAYED});
 		}
 	}
 	if (showMenus['Export and copy']) {menu.newEntry({entryText: 'sep'});}
 	if (showMenus['Export and copy']) { // Export and Convert
-		const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery ? MF_STRING : MF_GRAYED;
+		const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
 		{	// Copy
 			menu.newEntry({entryText: 'Copy playlist files to...', func: () => {
-				exportPlaylistFiles(list, indexes.filter((z) => list.data[z].path.length));
+				exportPlaylistFiles(list, indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder));
 			}, flags});
 		}
 		{	// Export and copy
@@ -895,7 +897,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				if (!path.length) {return;}
 				if (path === list.playlistsPath) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return;}
 				const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
-				indexes.forEach((z, i) => {
+				indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
 					const plsPath = path + (bSubFolder ? list.data[z].name + '\\' : '');
 					exportPlaylistFileWithTracks({list, z, bAsync: list.properties.bCopyAsync[1], bNoInput: true, defPath: plsPath, bOpenOnExport: false});
 				});
@@ -920,7 +922,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
 				if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
 				menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-					indexes.forEach((z, i) => {
+					indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
 						const pls = playlists[i];
 						if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
 						if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
@@ -933,16 +935,16 @@ function createMenuLeftMult(forcedIndexes = []) {
 			});
 		}
 	}
-	if (showMenus['File locks'] || showMenus['UI playlist locks'] || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
+	if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome) || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
 	{	// File management
 		// Locks playlist file
 		if (showMenus['File locks']) {
 			menu.newEntry({entryText: !bIsLockPlsEvery ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
-					if (!isPlsUI(pls) && isLockPls(pls) === bIsLockPlsEvery) {switchLock(list, z);}
+					if (!isPlsUI(pls) && !isFolder(pls) && isLockPls(pls) === bIsLockPlsEvery) {switchLock(list, z);}
 				});
-			}, flags: bIsPlsLockable && !bIsPlsUIEvery ? MF_STRING : MF_GRAYED});
+			}, flags: bIsPlsLockable && !bIsPlsUIEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED});
 		}
 		// Locks UI playlist
 		if (showMenus['UI playlist locks']) {
