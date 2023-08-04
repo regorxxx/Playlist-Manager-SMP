@@ -58,6 +58,7 @@
 - Lite mode: tracking disabled after disabling lite mode.
 - UI: selection focus was not being updated while scrolling using the wheel or buttons.
 - UI: missing separator at header from Playlist items' contextual menu.
+- UI: minor fixes to multiple selection contextual menus.
 - UI: settings button not being updated in some instances after switching library tracking.
 - UI: wrong size for vertical line before buttons.
 
