@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/08/23
+//05/08/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,7 +8,7 @@
 
 const bEnableFolders = false;
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.1', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.2', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');

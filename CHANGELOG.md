@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.2](#052---2023-08-05)
 - [0.5.1](#051---2023-07-29)
 - [0.5.0](#050---2023-07-28)
 - [0.5.0-beta.25](#050-beta25---2023-07-04)
@@ -41,13 +42,19 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.5.2] - 2023-08-05
+### Added
+### Changed
 - Lite mode: fully disabled auto-backup on lite mode. Minor performance improvements.
 - Lite mode: fully disabled auto-load on lite mode. Minor performance improvements.
 - Lite mode: fully disabled library path tracking on lite mode. Minor performance improvements.
 - Lite mode: auto-save timer is now set to 1000 ms on lite mode, and back to default values when disabling it. It will be faster showing changes on UI-only playlists.
 - UI: internal drag n' drop now allows to move an item below or over the current position (instead of just moving it before it). UI has been adjusted to show a bold line at the target position.
 - UI: list now jumps to new position after renaming a playlist [file] via menus/actions. For ex. sorting alphabetically, playlist may be found at a different position after renaming.
-- UI: playlist [file] is highlighted when renaming the bounded playlist on native foobar2000 UI.
+- UI: playlist [file] is highlighted when renaming the bound playlist on native foobar2000 UI.
 - UI: current panel position should be maintained -if possible- after [auto]updating playlist files from folder.
 - UI: improved text shading performance up to 90%. It should now be working much better on low-end systems.
 - UI: font shading is now disabled when disabling panel art background and a popup warns about the performance impact when enabling it.
@@ -884,7 +891,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.25...v0.5.0
 [0.5.0-beta.25]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.24...v0.5.0-beta.25
