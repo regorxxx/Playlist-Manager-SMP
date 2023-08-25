@@ -1512,6 +1512,7 @@ function _list(x, y, w, h) {
 							const currItem = this.data[currIdx];
 							if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
 								if (this.methodState === this.manualMethodState() && !this.dropIn) {
+									const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]) : [];
 									const name = currItem.nameId;
 									const cache = [...this.sortingFile];
 									const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
@@ -1523,7 +1524,6 @@ function _list(x, y, w, h) {
 									const toIdx = this.sortingFile.findIndex((n) => n === name);
 									if (toIdx !== -1) {
 										this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
-										if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
 										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
 										// TODO sort within folder
 										if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
@@ -1533,7 +1533,10 @@ function _list(x, y, w, h) {
 										}
 										this.save();
 										this.saveManualSorting();
-										this.sort(); // Multiple selection is refreshed on sorting
+										this.sort();
+										if (plsSel.length) { // Restore multiple selection
+											this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
+										}
 									} else {this.sortingFile = cache;}
 								} else if (currItem.isFolder) {
 									this.internalPlsDrop.forEach((idx) => {
@@ -3359,7 +3362,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		this.processFolders();
-		if (plsSel) {
+		if (plsSel.length) {
 			this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
 		}
 		if (bMaintainFocus) {this.jumpLastPosition();}
