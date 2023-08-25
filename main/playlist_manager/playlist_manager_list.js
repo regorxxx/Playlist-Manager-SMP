@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/08/23
+//25/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -857,13 +857,13 @@ function _list(x, y, w, h) {
 			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
 			const textY = this.y + yOffset + (i * panel.row_height);
 			// Set levels
-			if (!pls.inFolder) {
+			if (!this.isInFolder(pls)) {
 				level.offset = 0;
 				level.name = '';
 			} else if (level.name.length && level.name !== pls.inFolder) {
 				level.offset -= 1;
 				level.name = pls.inFolder;
-			} else if (!level.name && pls.inFolder) {
+			} else if (!level.name) {
 				let folder = this.data.find((item) => pls.inFolder === item.nameId);
 				while (folder) {
 					level.offset += 1;
@@ -935,7 +935,7 @@ function _list(x, y, w, h) {
 					let idx = this.index;
 					while (idx !== -1 && this.data[idx].isFolder) {
 						level++;
-						idx = this.data[idx].inFolder ? this.data.findIndex((pls) => pls.nameId === this.data[idx].inFolder): -1;
+						idx = this.isInFolder(this.data[idx]) ? this.data.findIndex((pls) => pls.nameId === this.data[idx].inFolder): -1;
 					}
 				}
 				const levelOffset = 20 * level;
@@ -1511,14 +1511,18 @@ function _list(x, y, w, h) {
 										this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
 										if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
 										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
+										// 		When not using manual sorting, indicators show drop is not possible
+										// 		On multiple selection, selection must be refreshed to select items within folder (if it's expanded) when moving them in
+										// 		On multiple selection, selection must be refreshed to select items outside folder when moving them out
 										// TODO out of folder dropUp
 										// TODO out of current folder only if target does not match
 										// TODO sort within folder
-										if (this.internalPlsDrop.some((idx) => this.data[idx].inFolder) && !currItem.isFolder && !currItem.inFolder) {
+										if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
 											this.internalPlsDrop.forEach((idx) => {
 												this.removeFromFolder(this.data[idx]);
 											});
 										}
+										this.save();
 										this.saveManualSorting();
 										this.sort();
 									} else {this.sortingFile = cache;}
@@ -1526,12 +1530,14 @@ function _list(x, y, w, h) {
 									this.internalPlsDrop.forEach((idx) => {
 										this.addToFolder(this.data[idx], currItem);
 									});
+									this.save();
 									if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
 									this.sort();
 								} else {
 									this.internalPlsDrop.forEach((idx) => {
 										this.removeFromFolder(this.data[idx]);
 									});
+									this.save();
 									if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
 									this.sort();
 								}
@@ -1583,6 +1589,7 @@ function _list(x, y, w, h) {
 									this.playlistMenu(z, x, y);
 								} else if (currItem.isFolder) {
 									this.switchFolder(z);
+									this.save();
 								} else {
 									this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
 								}
@@ -3416,8 +3423,8 @@ function _list(x, y, w, h) {
 	
 	this.processFolders = () => {
 		if (this.data.some((item) => item.isFolder)) {
-			const expandedData = this.data.filter((item) => !item.inFolder);
-			this.data.filter((item) => !item.inFolder).forEach((item, i) => {
+			const expandedData = this.data.filter((item) => !this.isInFolder(item));
+			[...expandedData].forEach((item, i) => {
 				if (item.isFolder && item.isOpen && item.pls.length) {
 					this.processFolder(item, i, expandedData);
 				}
@@ -3446,7 +3453,7 @@ function _list(x, y, w, h) {
 	
 	this.collapseFolders = () => {
 		if (this.data.some((item, i) => item.isFolder)) {
-			this.data = this.data.filter((item) => !item.inFolder);
+			this.data = this.data.filter((item) => !this.isInFolder(item));
 			this.items = this.data.length;
 		}
 	}
@@ -3464,6 +3471,7 @@ function _list(x, y, w, h) {
 			this.dataFpl = [];
 			this.dataXsp = [];
 			this.dataUI = [];
+			this.dataFolder = [];
 			this.indexes = [];
 			if (_isFile(this.filename)) {
 				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoplaylist || this.bAutoTrackTagAutoPlsInit && bInit);
@@ -3556,6 +3564,8 @@ function _list(x, y, w, h) {
 						this.dataFpl.push(item);
 					} else if (item.extension === '.ui') {
 						this.dataUI.push(item);
+					} else if (item.isFolder) {
+						this.dataFolder.push(item);
 					}
 				});
 				if (promises.length) { // Updates this.dataAutoPlaylists when all are processed
@@ -3569,6 +3579,7 @@ function _list(x, y, w, h) {
 			this.itemsAutoplaylist = this.dataAutoPlaylists.length;
 			this.itemsFpl = this.dataFpl.length;
 			this.itemsXsp = this.dataXsp.length;
+			this.itemsFolder = this.dataFolder.length;
 			this.data = [];
 			if (!this.bLiteMode) {
 				this.data = loadPlaylistsFromFolder(this.playlistsPath).map((item) => {
@@ -3693,6 +3704,21 @@ function _list(x, y, w, h) {
 			}
 			this.itemsFoobar = this.dataFoobar.length;
 		} else {this.itemsFoobar = 0;}
+		// Folders
+		if (this.itemsFolder) {
+			if (!bReuseData) {
+				this.dataFolder.forEach((folder) => {
+					folder.pls = folder.pls.map((subPls) => { // Find matches by name and extension
+						const subItem = this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
+						subItem.inFolder = folder.nameId;
+						return subItem;
+					});
+				});
+				this.data = this.data.filter((item) => this.isInFolder(item));
+				this.data = this.data.concat(this.dataFolder);
+				this.dataAll = this.dataAll.concat(this.dataFolder);
+			}
+		}
 		// Always
 		this.items = this.data.length;
 		this.itemsAll = this.dataAll.length;
@@ -3903,6 +3929,15 @@ function _list(x, y, w, h) {
 				const stripMeta = ['sortIdx', 'inFolder'];
 				data.forEach((pls) => {
 					stripMeta.forEach((key) => delete pls[key]);
+					// Strip unnecessary folder data
+					if (pls.hasOwnProperty('pls')) {
+						pls.pls = pls.pls.map((subPls) => {
+							return {
+								nameId: subPls.nameId,
+								extension: subPls.extension
+							};
+						});
+					}
 				});
 				_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
 			}
@@ -4023,7 +4058,7 @@ function _list(x, y, w, h) {
 			}
 			const now = Date.now();
 			const defaults = new oPlaylist({name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now});
-			const folder = {isFolder: true, isOpen: false, pls: [], ...defaults};
+			const folder = {...defaults, isFolder: true, isOpen: false, pls: []};
 			// Add tags of current view
 			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(folder.tags).has(tag)) {folder.tags.push(tag);}});}
 			// Categories
@@ -4039,7 +4074,7 @@ function _list(x, y, w, h) {
 		}
 		
 		this.addToFolder = (pls, folderObj) => {
-			if (pls.inFolder && pls.inFolder.length) {this.removeFromFolder(pls);}
+			if (this.isInFolder(pls)) {this.removeFromFolder(pls);}
 			pls.inFolder = folderObj.nameId;
 			folderObj.pls.push(pls);
 		}
@@ -4054,6 +4089,10 @@ function _list(x, y, w, h) {
 				return true;
 			}
 			return false;
+		}
+		
+		this.isInFolder =(pls) => {
+			return (pls.hasOwnProperty('inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
 		}
 		
 		this.addUIplaylist = ({name = 'New playlist', bInputName = !name.length} = {}) => {
@@ -5330,17 +5369,15 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0,
 			inFocus: false,
 			text: (x, y, mask, parent) => {
-				return 'Playlist Manager settings...' + (
+				return 'Playlist Manager settings...' + '\n----------------------------------------------\n' + (
 					parent.highlighting(x, y, mask, parent)
-						? '\n----------------------------------------------\n' +
-							'Library has changed since tracking was disabled.\n' +
+						? 'Library has changed since tracking was disabled.\n' +
 							'Paths cache needs rebuilding.'
 						: ''
 				) + (
 					this.bLiteMode 
 						?	''
-						: '\n----------------------------------------------\n' +
-							'(Shift + L. Click to switch library tracking'
+						: (!this.bTracking ? 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking'
 				);
 			},
 			func: (x, y, mask, parent) => {
