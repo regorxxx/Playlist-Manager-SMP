@@ -3036,7 +3036,8 @@ function _list(x, y, w, h) {
 		// Process folders
 		this.collapseFolders();
 		this.processFolders();
-		 // AutoPlaylists
+		// TODO filter folders by their contents. Don't show a folder if it contains no item according to the filter
+		// AutoPlaylists
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// this.data = this.data;
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
@@ -3720,6 +3721,7 @@ function _list(x, y, w, h) {
 		// Folders
 		if (this.itemsFolder) {
 			if (!bReuseData) {
+				// TODO filter folder.pls by set
 				this.dataFolder.forEach((folder) => {
 					folder.pls = folder.pls.map((subPls) => { // Find matches by name and extension
 						const subItem = this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
@@ -3944,6 +3946,7 @@ function _list(x, y, w, h) {
 					stripMeta.forEach((key) => delete pls[key]);
 					// Strip unnecessary folder data
 					if (pls.hasOwnProperty('pls')) {
+						// TODO filter folder.pls by set
 						pls.pls = pls.pls.map((subPls) => {
 							return {
 								nameId: subPls.nameId,
