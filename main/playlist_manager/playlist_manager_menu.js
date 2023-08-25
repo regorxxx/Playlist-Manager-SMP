@@ -682,6 +682,9 @@ function createMenuFolder(menu, folder, z) {
 			fb.ShowPopupMessage('Name already used: ' + input + '\n' + 'Choose an unique name for renaming.', window.Name);
 			return;
 		} else {
+			list.dataAll.forEach((pls) => {
+				if (pls.inFolder === folder.nameId) {pls.inFolder = input;}
+			});
 			list.editData(folder, {
 				name: input,
 				id: '',
