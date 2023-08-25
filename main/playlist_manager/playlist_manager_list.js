@@ -3438,7 +3438,7 @@ function _list(x, y, w, h) {
 	this.processFolders = () => {
 		if (this.data.some((item) => item.isFolder)) {
 			const expandedData = this.data.filter((item) => !this.isInFolder(item));
-			[...expandedData].forEach((item, i) => {
+			expandedData.forEach((item, i) => { // Reuse the same object
 				if (item.isFolder && item.isOpen && item.pls.length) {
 					this.processFolder(item, i, expandedData);
 				}
@@ -3721,13 +3721,21 @@ function _list(x, y, w, h) {
 		// Folders
 		if (this.itemsFolder) {
 			if (!bReuseData) {
-				// TODO filter folder.pls by set
 				this.dataFolder.forEach((folder) => {
-					folder.pls = folder.pls.map((subPls) => { // Find matches by name and extension
-						const subItem = this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
-						subItem.inFolder = folder.nameId;
-						return subItem;
-					});
+					const list = new Set(folder.pls.map((subPls) => subPls.nameId + subPls.extension));
+					folder.pls = folder.pls.map((subPls) => { // Find matches by name and extension, filter duplicates or non found items
+						const id = subPls.nameId + subPls.extension;
+						if (list.has(id)) {
+							list.delete(id);
+							const subItem = this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
+							if (subItem) {
+								subItem.inFolder = folder.nameId;
+								return subItem;
+							} else {return null;}
+						} else {
+							return null;
+						}
+					}).filter(Boolean);
 				});
 				this.data = this.data.filter((item) => this.isInFolder(item));
 				this.data = this.data.concat(this.dataFolder);
@@ -3944,15 +3952,21 @@ function _list(x, y, w, h) {
 				const stripMeta = ['sortIdx', 'inFolder'];
 				data.forEach((pls) => {
 					stripMeta.forEach((key) => delete pls[key]);
-					// Strip unnecessary folder data
+					// Strip unnecessary folder data and filter duplicates
 					if (pls.hasOwnProperty('pls')) {
-						// TODO filter folder.pls by set
+						const list = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
 						pls.pls = pls.pls.map((subPls) => {
-							return {
-								nameId: subPls.nameId,
-								extension: subPls.extension
-							};
-						});
+							const id = subPls.nameId + subPls.extension;
+							if (list.has(id)) {
+								list.delete(id);
+								return {
+									nameId: subPls.nameId,
+									extension: subPls.extension
+								};
+							} else {
+								return null;
+							}
+						}).filter(Boolean);
 					}
 				});
 				_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
