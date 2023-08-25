@@ -57,6 +57,8 @@ const chars = {
 	save 			: '\uf0c7',
 	fileCode		: '\uf1c9',
 	fileSound		: '\uf1c7',
+	signOut			: '\uf08b',
+	signIn			: '\uf090',
 	// Utilities
 	search			: '\uf002',
 	menu			: '\uf0C9',

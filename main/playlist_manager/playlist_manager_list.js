@@ -915,7 +915,15 @@ function _list(x, y, w, h) {
 			if (pls) {
 				const len = this.internalPlsDrop.length;
 				const playlistDataText =  pls.name + (len > 1 ? '... (' + len  + ' playlists)' : '');
-				const bValid = this.isInternalDropValid();
+				const bInFolder = this.isInFolder(pls);
+				const bToFolder = this.index !== -1 ? this.data[this.index].isFolder : false;
+				const bToSameFolder = this.index !== -1 
+					? this.internalPlsDrop.every((idx) => {
+						return bToFolder && this.data[idx].inFolder === this.data[this.index].nameId || !bToFolder && this.data[idx].inFolder === this.data[this.index].inFolder;
+					})
+					: false;
+				const bInternalDrop = this.isInternalDropValid();
+				const bValid = bInternalDrop;
 				const backgroundColor = bValid 
 					? this.colors.selectedPlaylistColor
 					: invert(this.colors.selectedPlaylistColor);
@@ -933,18 +941,24 @@ function _list(x, y, w, h) {
 					}
 					// Nest folders
 					let idx = this.index;
-					while (idx !== -1 && this.data[idx].isFolder) {
-						level++;
+					while (idx !== -1 && (this.data[idx].isFolder || this.isInFolder(this.data[idx]))) {
+						if (this.data[idx].isFolder) {level++;}
 						idx = this.isInFolder(this.data[idx]) ? this.data.findIndex((pls) => pls.nameId === this.data[idx].inFolder): -1;
 					}
 				}
-				const levelOffset = 20 * level;
+				const levelOffset = 20 * (level || bValid && bInFolder ? 1 : 0);
 				gr.FillSolidRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.row_height, opaqueColor(backgroundColor, bValid ? 40 : 20));
 				gr.DrawRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.row_height, 0, lineColor);
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, Math.max(levelOffset, this.bShowIcons ? maxIconWidth : 0) + this.x, this.my, this.textWidth - 30 - levelOffset / 2, panel.row_height, LEFT);
 				if (levelOffset > 0) {
-					gr.GdiDrawText(chars.folderOpenBlack, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
-					gr.GdiDrawText(chars.folderOpenBlack, gfontIconChar(), lineColor, this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
+					if (bInFolder && !bToSameFolder) {
+						const lineColor = opaqueColor(invert(this.colors.selectedPlaylistColor), 50);
+						gr.GdiDrawText(chars.signOut, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x, this.my, this.textWidth, panel.row_height, LEFT);
+						gr.GdiDrawText(chars.signOut, gfontIconChar(), lineColor, this.x, this.my, this.textWidth, panel.row_height, LEFT);
+					} else {
+						gr.GdiDrawText(chars.folderOpenBlack, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
+						gr.GdiDrawText(chars.folderOpenBlack, gfontIconChar(), lineColor, this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
+					}
 				}
 			} else {
 				console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
@@ -1511,11 +1525,6 @@ function _list(x, y, w, h) {
 										this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
 										if (this.indexes.length) {this.indexes = toMove.map((_, i) => toIdx + i);}
 										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
-										// 		When not using manual sorting, indicators show drop is not possible
-										// 		On multiple selection, selection must be refreshed to select items within folder (if it's expanded) when moving them in
-										// 		On multiple selection, selection must be refreshed to select items outside folder when moving them out
-										// TODO out of folder dropUp
-										// TODO out of current folder only if target does not match
 										// TODO sort within folder
 										if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
 											this.internalPlsDrop.forEach((idx) => {
@@ -1524,7 +1533,7 @@ function _list(x, y, w, h) {
 										}
 										this.save();
 										this.saveManualSorting();
-										this.sort();
+										this.sort(); // Multiple selection is refreshed on sorting
 									} else {this.sortingFile = cache;}
 								} else if (currItem.isFolder) {
 									this.internalPlsDrop.forEach((idx) => {
@@ -2306,7 +2315,7 @@ function _list(x, y, w, h) {
 		return typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' &&  (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows && (
 			this.methodState === this.manualMethodState() 
 				? true
-				: this.data[currSelIdx].isFolder
+				: (this.data[currSelIdx].isFolder || this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !this.internalPlsDrop.every((idx) => this.data[idx].inFolder === this.data[currSelIdx].inFolder))
 		);
 	}
 	
@@ -3305,6 +3314,7 @@ function _list(x, y, w, h) {
 	}
 	
 	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false) => {
+		const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]) : [];
 		this.collapseFolders();
 		const bManual = this.methodState === this.manualMethodState();
 		if (bManual) {
@@ -3348,6 +3358,9 @@ function _list(x, y, w, h) {
 			}
 		}
 		this.processFolders();
+		if (plsSel) {
+			this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
+		}
 		if (bMaintainFocus) {this.jumpLastPosition();}
 		if (bPaint) {this.repaint();}
 	}
