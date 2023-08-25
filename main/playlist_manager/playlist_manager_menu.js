@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/08/23
+//25/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -657,10 +657,24 @@ function createMenuLeft(forcedIndex = -1) {
 }
 
 function createMenuFolder(menu, folder, z) {
+	const indexes = folder.pls.map((p) => list.dataAll.indexOf(p)); // When delaying menu, the mouse may move to other index...
+	const playlists = folder.pls;
 	// Helpers
+	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
+	const isPlsUI = (pls) => {return pls.extension === '.ui';};
+	const isFolder = (pls) => {return pls.isFolder;};
+	// Evaluate
+	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
+	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs') || true;});
+	const bIsFolderEvery = playlists.every((pls) => {return isFolder(pls);});
 	const bManualSorting = list.methodState === list.manualMethodState();
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
+	// Entries
+	menu.newEntry({entryText: 'Expand/collapse', func: () => {
+		list.switchFolder(z);
+	}});
+	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Rename...', func: () => {
 		const input = Input.string('string', folder.nameId, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
 		if (input === null) {return;}
@@ -679,6 +693,51 @@ function createMenuFolder(menu, folder, z) {
 			list.showPlsByObj(folder);
 		}
 	}});
+	menu.newEntry({entryText: 'sep'});
+	menu.newEntry({entryText: 'Multi-select child items...' + '\t' + _b(indexes.length), func: () => {
+		list.switchFolder(z);
+		folder.pls.map((p) => list.multSelect(list.data.indexOf(p)));
+	}, flags: indexes.length ? MF_STRING : MF_GRAYED});
+	menu.newEntry({entryText: 'sep'});
+	{	// Load
+		// Load playlist within foobar2000. Only 1 instance allowed
+		menu.newEntry({entryText: 'Load entire folder', func: () => {
+			indexes.forEach((z, i) => {
+				const pls = playlists[i];
+				if (!isPlsUI(pls) && !isFolder(pls)) {list.loadPlaylist(z, true);}
+			});
+		}, flags: bIsPlsLoadedEvery || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+		// Merge load
+		menu.newEntry({entryText: 'Merge-load entire folder', func: () => {
+			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
+			if (zArr.length) {
+				const remDupl = [];
+				clonePlaylistMergeInUI(list, zArr);
+			}
+		}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+		menu.newEntry({entryText: 'Merge-load (no duplicates)', func: () => {
+			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
+			if (zArr.length) {
+				const remDupl = list.removeDuplicatesAutoPls;
+				clonePlaylistMergeInUI(list, zArr, remDupl, list.bAdvTitlem, true);
+			}
+		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+		// Clone in UI
+		menu.newEntry({entryText: 'Clone entire folder in UI', func: () => {
+			indexes.forEach((z, i) => {
+				const pls = playlists[i];
+				if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
+				if (!isPlsUI(pls) && !isFolder(pls)) {
+					if (pls.isAutoPlaylist) {
+						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
+						cloneAsStandardPls(list, z, remDupl, list.bAdvTitle, false);
+					} else {
+						clonePlaylistFile(list, z, '.ui');
+					}
+				}
+			});
+		}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+	}
 	if (showMenus['Sorting'] && bManualSorting) {
 		menu.newEntry({entryText: 'sep'});
 		const subMenuName = menu.newMenu('Sorting...');
