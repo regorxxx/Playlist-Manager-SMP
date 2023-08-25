@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/23
+//15/08/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -135,11 +135,15 @@ console.flush = () => {
 };
 
 // Send to popup and console
-console.popup = (arg, popupName, bPopup = true) => {
+console.popup = (arg, popupName, bPopup = true, bSplit = true) => {
 	if (bPopup) {fb.ShowPopupMessage(arg, popupName);}
-	arg.split('\n').forEach((line) => {
-		if (line && line.length) {console.log(line);}
-	});
+	if (bSplit) {
+		arg.split('\n').forEach((line) => {
+			if (line && line.length) {console.log(line);}
+		});
+	} else {
+		console.log(arg);
+	}
 };
 
 if (console.File && console.File.length && console.MaxSize && console.log) {
