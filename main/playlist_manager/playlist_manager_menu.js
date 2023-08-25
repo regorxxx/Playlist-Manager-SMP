@@ -698,7 +698,7 @@ function createMenuFolder(menu, folder, z) {
 	}});
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Multi-select child items...' + '\t' + _b(indexes.length), func: () => {
-		list.switchFolder(z);
+		if (!folder.isOpen) {list.switchFolder(z);}
 		folder.pls.map((p) => list.multSelect(list.data.indexOf(p)));
 	}, flags: indexes.length ? MF_STRING : MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
