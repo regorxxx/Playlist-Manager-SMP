@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.5.3](#053---2023-08-28)
 - [0.5.2](#052---2023-08-05)
 - [0.5.1](#051---2023-07-29)
 - [0.5.0](#050---2023-07-28)
@@ -45,6 +46,13 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.5.3] - 2023-08-28
+### Added
+### Changed
+### Removed
+### Fixed
+- UI: filters reset on innit due to bugfix introduced on [0.5.0-beta.21](#050-beta21---2023-06-27). which was only intended on first innit (after setup).
 
 ## [0.5.2] - 2023-08-05
 ### Added
@@ -892,7 +900,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0-beta.25...v0.5.0

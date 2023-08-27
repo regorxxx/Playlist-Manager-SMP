@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/08/23
+//28/08/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,7 +8,7 @@
 
 const bEnableFolders = false;
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.2', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.3', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -404,15 +404,15 @@ let autoUpdateRepeat;
 			}
 		});
 		setTimeout(() => removeEventListener('on_notify_data', null, id), 20000);
+		// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first innit...
+		new Promise((resolve) => {
+			const timer = setInterval(() => {
+				if (list) {clearInterval(timer); resolve();}
+			}, 1000);
+		}).then(() => {
+			list.resetFilter();
+		});
 	}
-	// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first innit...
-	new Promise((resolve) => {
-		const timer = setInterval(() => {
-			if (list) {clearInterval(timer); resolve();}
-		}, 1000);
-	}).then(() => {
-		list.resetFilter();
-	});
 	
 	// Disable panel on init until it's done
 	if (!pop.isEnabled() && !prop.bLiteMode[1]) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
