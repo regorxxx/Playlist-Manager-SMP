@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/23
+//27/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -839,7 +839,7 @@ function _list(x, y, w, h) {
 		const paintFolder = (folder, i, textY) => {
 			// Adjust playlist name according to width available but always show the size if possible
 			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
-			const folderCount = folder.pls.length;
+			const folderCount = folder.pls.lengthFiltered;
 			const folderText =  _b(folder.name) + (this.bShowFolderSize ? ' (' + folderCount + ')' : '');
 			gr.GdiDrawText(folder.isOpen ? chars.downOutline : chars.leftOutline, gfontIconChar(), standardPlaylistIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
 			gr.GdiDrawText(folderText, panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
@@ -1562,12 +1562,15 @@ function _list(x, y, w, h) {
 								let bSucess = false;
 								if (this.indexes.length) {
 									this.indexes.forEach((zz) => {
-										const item =  typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
+										const item = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
 										if (item && item.isFolder) {
-											for (let i = zz + 1; i <= zz + item.pls.length; i++) {
-												if (this.data[i].inFolder !== item.nameId) {break;}
-												if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
-													bSucess = true;
+											const folderSize = item.pls.lengthFiltered;
+											if (folderSize) {
+												for (let i = zz + 1; i <= zz + folderSize; i++) {
+													if (this.data[i].inFolder !== item.nameId) {break;}
+													if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
+														bSucess = true;
+													}
 												}
 											}
 										} else if (this.sendSelectionToPlaylist({playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource})) {
@@ -1577,10 +1580,13 @@ function _list(x, y, w, h) {
 								} else {
 									const currItem = this.data[z];
 									if (currItem.isFolder) {
-										for (let i = z + 1; i <= z + currItem.pls.length; i++) {
-											if (this.data[i].inFolder !== currItem.nameId) {break;}
-											if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
-												bSucess = true;
+										const folderSize = currItem.pls.lengthFiltered;
+										if (folderSize) {
+											for (let i = z + 1; i <= z + folderSize; i++) {
+												if (this.data[i].inFolder !== currItem.nameId) {break;}
+												if (this.sendSelectionToPlaylist({playlistIndex: i, bCheckDup: true, bPaint: false, bDelSource})) {
+													bSucess = true;
+												}
 											}
 										}
 									} else {
@@ -3044,51 +3050,62 @@ function _list(x, y, w, h) {
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// this.data = this.data;
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
-			this.data = this.data.filter((item) => {return item.isAutoPlaylist || item.query;});
+			const isAutoPls = (item) => {return item.isAutoPlaylist || item.query || (item.isFolder && item.pls.some(isAutoPls));};
+			this.data = this.data.filter(isAutoPls);
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
 			if (!this.bLiteMode) {
-				this.data = this.data.filter((item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui';});
+				const isFilePls = (item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls));};
+				this.data = this.data.filter(isFilePls);
 			} else {
-				this.data = this.data.filter((item) => {return item.extension === '.ui';});
+				const isUiPls = (item) => {return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls));};
+				this.data = this.data.filter(isUiPls);
 			}
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
-			this.data = this.data.filter((item) => {return item.extension === '.ui';});
+			const isUiPls = (item) => {return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls));};
+			this.data = this.data.filter(isUiPls);
 		}
 		// And then... we use this.data to filter again by lock state
 		if (lockState === this.constLockStates()[0]) {
 			// this.data = this.data;
 		} else if (lockState === this.constLockStates()[1]) {
-			this.data = this.data.filter((item) => {return !item.isLocked;});
+			const isNotLocked = (item) => {return !item.isLocked ||(item.isFolder && item.pls.some(isNotLocked));};
+			this.data = this.data.filter(isNotLocked);
 		} else if (lockState === this.constLockStates()[2]) {
-			this.data = this.data.filter((item) => {return item.isLocked;});
+			const isLocked = (item) => {return item.isLocked || (item.isFolder && item.pls.some(isLocked));};
+			this.data = this.data.filter(isLocked);
 		}
 		// And again with extension
 		if (extState === this.constExtStates()[0]) {
 			// this.data = this.data;
 		} else {
-			this.data = this.data.filter((item) => {return item.extension === extState;});
+			const isExt = (item) => {return item.extension === extState || (item.isFolder && item.pls.some(isExt));};
+			this.data = this.data.filter(isExt);
 		}
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
-			this.data = this.data.filter((item) => {
-				if (categoryState.indexOf('(None)') !== -1) {return !item.category.length || categoryState.indexOf(item.category) !== -1;}
-				else {return categoryState.indexOf(item.category) !== -1;}
-			});
+			const isCategory = (item) => {
+				if (categoryState.indexOf('(None)') !== -1) {return (!item.category.length || categoryState.indexOf(item.category) !== -1) || (item.isFolder && item.pls.some(isCategory));}
+				else {return (categoryState.indexOf(item.category) !== -1 || (item.isFolder && item.pls.some(isCategory)));}
+			};
+			this.data = this.data.filter(isCategory);
 		}
 		// And again with tags
 		if (!isArrayEqual(tagState, this.tags())) {
-			this.data = this.data.filter((item) => {
-				if (tagState.indexOf('(None)') !== -1) {return !item.tags.length || new Set(tagState).intersectionSize(new Set(item.tags));}
-				else {return new Set(tagState).intersectionSize(new Set(item.tags));}
-			});
+			const isTag = (item) => {
+				if (tagState.indexOf('(None)') !== -1) {return (!item.tags.length || new Set(tagState).intersectionSize(new Set(item.tags)) !== 0) || (item.isFolder && item.pls.some(isTag));}
+				else {return new Set(tagState).intersectionSize(new Set(item.tags)) !== 0 || (item.isFolder && item.pls.some(isTag));}
+			};
+			this.data = this.data.filter(isTag);
 		}
 		// And again with MBID
 		if (mbidState === this.constMbidStates()[0]) {
 			// this.data = this.data;
 		} else if (mbidState === this.constMbidStates()[1]) {
-			this.data = this.data.filter((item) => {return !item.playlist_mbid.length;});
+			const isNoMbid = (item) => {return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			this.data = this.data.filter(isNoMbid);
 		} else if (mbidState === this.constMbidStates()[2]) {
-			this.data = this.data.filter((item) => {return item.playlist_mbid.length;});
+			const isMbid = (item) => {return item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			this.data = this.data.filter(isMbid);
 		}
 		// Focus
 		this.items = this.data.length;
@@ -3162,6 +3179,101 @@ function _list(x, y, w, h) {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		const bListenBrainz = this.properties.lBrainzToken[1].length > 0;
 		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type',  showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort((a,b) => a.localeCompare(b));
+	}
+	this.filterData = ({data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false} = {}) => {
+		if (!data || !data.length) {throw 'No data provided for filtering';}
+		let outData;
+		// Apply current search
+		const bPlsFilter = plsState.length;
+		if (this.searchInput && this.searchInput.text.length) {
+			if (!bReusePlsFilter || !bPlsFilter) {
+				plsState = this.search(false).plsState;
+			} else if (bReusePlsFilter && bPlsFilter) {
+				const newPlsState = this.search(false).plsState;
+				plsState = plsState.filter((oldPls) => {
+					return newPlsState.includes(oldPls) || (newPlsState.findIndex((pls) => 
+							pls.nameId === oldPls.nameId && pls.path === oldPls.path && oldPls.extension === pls.extension
+						) !== -1);
+				});
+			}
+		}
+		// Then filter by current playlists filtered
+		if (plsState.length) {
+			outData = data.filter((pls) => plsState.includes(pls));
+			// In case there has been an update, objects can change, look for other properties
+			if (!outData.length) {
+				outData = data.filter((dataPls) => 
+					plsState.findIndex((pls) => 
+						pls.nameId === dataPls.nameId && pls.path === dataPls.path && dataPls.extension === pls.extension
+					) !== -1
+				);
+			}
+		} else { // On first filter we use original data as source
+			outData = [...data];
+		}
+		// AutoPlaylists
+		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
+			// outData = outData;
+		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
+			const isAutoPls = (item) => {return item.isAutoPlaylist || item.query || (item.isFolder && item.pls.some(isAutoPls));};
+			outData = outData.filter(isAutoPls);
+		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
+			if (!this.bLiteMode) {
+				const isFilePls = (item) => {return !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls));};
+				outData = outData.filter(isFilePls);
+			} else {
+				const isUiPls = (item) => {return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls));};
+				outData = outData.filter(isUiPls);
+			}
+		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
+			const isUiPls = (item) => {return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls));};
+			outData = outData.filter(isUiPls);
+		}
+		// And then... we use outData to filter again by lock state
+		if (lockState === this.constLockStates()[0]) {
+			// outData = outData;
+		} else if (lockState === this.constLockStates()[1]) {
+			const isNotLocked = (item) => {return !item.isLocked ||(item.isFolder && item.pls.some(isNotLocked));};
+			outData = outData.filter(isNotLocked);
+		} else if (lockState === this.constLockStates()[2]) {
+			const isLocked = (item) => {return item.isLocked || (item.isFolder && item.pls.some(isLocked));};
+			outData = outData.filter(isLocked);
+		}
+		// And again with extension
+		if (extState === this.constExtStates()[0]) {
+			// outData = outData;
+		} else {
+			const isExt = (item) => {return item.extension === extState || (item.isFolder && item.pls.some(isExt));};
+			outData = outData.filter(isExt);
+		}
+		// And again with categories
+		if (!isArrayEqual(categoryState, this.categories())) {
+			const isCategory = (item) => {
+				if (categoryState.indexOf('(None)') !== -1) {return (!item.category.length || categoryState.indexOf(item.category) !== -1) || (item.isFolder && item.pls.some(isCategory));}
+				else {return (categoryState.indexOf(item.category) !== -1 || (item.isFolder && item.pls.some(isCategory)));}
+			};
+			outData = outData.filter(isCategory);
+		}
+		// And again with tags
+		if (!isArrayEqual(tagState, this.tags())) {
+			const isTag = (item) => {
+				if (tagState.indexOf('(None)') !== -1) {return (!item.tags.length || new Set(tagState).intersectionSize(new Set(item.tags)) !== 0) || (item.isFolder && item.pls.some(isTag));}
+				else {return new Set(tagState).intersectionSize(new Set(item.tags)) !== 0 || (item.isFolder && item.pls.some(isTag));}
+			};
+			outData = outData.filter(isTag);
+		}
+		// And again with MBID
+		if (mbidState === this.constMbidStates()[0]) {
+			// outData = outData;
+		} else if (mbidState === this.constMbidStates()[1]) {
+			const isNoMbid = (item) => {return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			outData = outData.filter(isNoMbid);
+		} else if (mbidState === this.constMbidStates()[2]) {
+			const isMbid = (item) => {return item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			outData = outData.filter( isMbid);
+		}
+		
+		return outData;
 	}
 	
 	this.sortMethods = (bInternal = true) => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
@@ -3406,28 +3518,30 @@ function _list(x, y, w, h) {
 		for (let zz of z) {
 			const folder = this.data[zz];
 			if (!folder || !folder.isFolder) {console.log('switchFolder: item is not a folder. Name: ' + (folder ? folder.name : null) + ', Index: ' + zz); return false;}
-			const folderSize = folder.pls.length;
-			if (folder.isOpen) {
-				const top = zz + folderSize;
-				for (let i = top; i > zz; i--) {
-					if (this.data[i].inFolder === folder.nameId) {
-						if (this.data[i].isFolder && this.data[i].isOpen) {this.switchFolder(i);}
-						const pos = this.indexes.indexOf(i);
-						if (pos !== -1) {
-							this.indexes.splice(pos, 1);
+			const folderSize = folder.pls.lengthFiltered; // May be affected by current filter
+			if (folderSize > 0) {
+				if (folder.isOpen) {
+					const top = zz + folderSize;
+					for (let i = top; i > zz; i--) {
+						if (this.data[i].inFolder === folder.nameId) {
+							if (this.data[i].isFolder && this.data[i].isOpen) {this.switchFolder(i);}
+							const pos = this.indexes.indexOf(i);
+							if (pos !== -1) {
+								this.indexes.splice(pos, 1);
+							}
 						}
 					}
-				}
-				this.indexes = this.indexes.map((idx) => idx > top ? idx - folderSize : idx);
-				if (this.index > top) {
-					this.index -= folderSize;
-				}
-				this.offset = Math.min(this.offset, this.items - this.rows - folderSize);
-			} else {
-				this.indexes = this.indexes.map((idx) => idx > zz ? idx + folderSize : idx);
-				if (this.index > zz) {
-					this.index += folderSize;
-					this.offset += folderSize;
+					this.indexes = this.indexes.map((idx) => idx > top ? idx - folderSize : idx);
+					if (this.index > top) {
+						this.index -= folderSize;
+					}
+					this.offset = Math.min(this.offset, this.items - this.rows - folderSize);
+				} else {
+					this.indexes = this.indexes.map((idx) => idx > zz ? idx + folderSize : idx);
+					if (this.index > zz) {
+						this.index += folderSize;
+						this.offset += folderSize;
+					}
 				}
 			}
 			this.data[zz].isOpen = !this.data[zz].isOpen;
@@ -3435,6 +3549,7 @@ function _list(x, y, w, h) {
 		this.processFolders();
 		if (this.index < 0) {this.index = 0;}
 		if (this.offset < 0) {this.offset = 0;}
+		this.filter({bReusePlsFilter: true});
 		return true;
 	}
 	
@@ -3739,6 +3854,13 @@ function _list(x, y, w, h) {
 							return null;
 						}
 					}).filter(Boolean);
+					const filterData = this.filterData;
+					Object.defineProperty(folder.pls, 'lengthFiltered', {
+						configurable: true, enumerable: true,
+						get: function () {
+							return filterData({data: this, bReusePlsFilter: true}).length;
+						}
+					});
 				});
 				this.data = this.data.filter((item) => this.isInFolder(item));
 				this.data = this.data.concat(this.dataFolder);
