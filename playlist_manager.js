@@ -367,7 +367,7 @@ let autoUpdateRepeat;
 		if (bEnableFolders) {	// Folders
 			const answer = prop.bLiteMode[1] 
 				? popup.yes
-				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop. \nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				const showMenus = JSON.parse(prop.showMenus[1]);
 				showMenus['Folders'] = true;
