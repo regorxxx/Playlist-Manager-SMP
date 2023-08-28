@@ -53,6 +53,8 @@
 ### Removed
 ### Fixed
 - UI: filters reset on innit due to bugfix introduced on [0.5.0-beta.21](#050-beta21---2023-06-27). which was only intended on first innit (after setup).
+- UI: offset improperly set after filtering in some corner cases.
+- UI: text shadows sometimes not being cut to the same length than the main text. [Issue 69](https://github.com/regorxxx/Playlist-Manager-SMP/issues/69).
 
 ## [0.5.2] - 2023-08-05
 ### Added

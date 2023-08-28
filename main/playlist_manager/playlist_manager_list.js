@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/08/23
+//28/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -799,7 +799,7 @@ function _list(x, y, w, h) {
 			}
 			// Text
 			if (panel.colors.bFontOutline && shading.img) { // Outline current text
-				shading.gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, textX + levelOffset - this.x, i * panel.row_height, shading.img.Width, shading.img.Height, DT_LEFT);
+				shading.gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, textX + levelOffset - this.x, i * panel.row_height, Math.min(shading.img.Width, this.textWidth - 30 - levelOffset), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 				shading.pls.push([playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset]);
 			} else {
 				gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset, panel.row_height, LEFT);
@@ -3045,7 +3045,6 @@ function _list(x, y, w, h) {
 		// Process folders
 		this.collapseFolders();
 		this.processFolders();
-		// TODO filter folders by their contents. Don't show a folder if it contains no item according to the filter
 		// AutoPlaylists
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// this.data = this.data;
@@ -3169,6 +3168,7 @@ function _list(x, y, w, h) {
 		this.headerTextUpdate();
 		// Update offset!
 		if (currentItemIndex === -1) {this.offset = 0;}
+		if (this.offset + this.rows >= this.items) {this.offset = Math.max(this.items - this.rows, 0);}
 		this.repaint();
 	}
 	this.resetFilter = () => {
@@ -3181,7 +3181,8 @@ function _list(x, y, w, h) {
 		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type',  showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort((a,b) => a.localeCompare(b));
 	}
 	this.filterData = ({data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false} = {}) => {
-		if (!data || !data.length) {throw 'No data provided for filtering';}
+		if (!data) {throw 'No data provided for filtering';}
+		if (!data.length) {return data;}
 		let outData;
 		// Apply current search
 		const bPlsFilter = plsState.length;
