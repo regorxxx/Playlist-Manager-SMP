@@ -63,6 +63,7 @@ function _list(x, y, w, h) {
 	const regexUnit = /(^\d*.*\d* )(\w*)/;
 	const regexUnicode = /[^\u0000-\u00ff]/;
 	const quickSearchRe = /[_A-z0-9]/;
+	const playlistRe = /playlist/gi;
 	
 	// Global tooltip
 	// Timers follow the double click timer
@@ -1319,10 +1320,11 @@ function _list(x, y, w, h) {
 										playlistDataText += '\n(L. Click to Manage playlist)';
 									}
 								}
-								// if (pls.isFolder) { // TODO
-									// if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
-										// playlist.replace('folder')
-								// }
+								if (pls.isFolder) { // Change text for folders
+									if (playlistRe.test(playlistDataText)) {
+										playlistDataText = playlistDataText.replace(playlistRe, 'folder');
+									}
+								}
 								// Adding Duplicates on selection hint
 								let warningText = '';
 								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Copy selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
@@ -2407,40 +2409,52 @@ function _list(x, y, w, h) {
 		return false;
 	}
 	
-	this.checkSelectionDuplicatesPlaylist = ({playlistIndex, bAlsoHidden = false} = {}) => {
-		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
-			console.log('Playlist Manager: Error checking duplicates. Index '+ _p(playlistIndex) + ' out of bounds. (checkSelectionDuplicatesPlaylist)');
+	this.checkSelectionDuplicatesPlaylist = ({playlistIndex, pls = null, bAlsoHidden = false} = {}) => {
+		if (typeof playlistIndex !== 'undefined' && playlistIndex !== null ) {
+			if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
+				console.log('Playlist Manager: Error checking duplicates. Index '+ _p(playlistIndex) + ' out of bounds. (checkSelectionDuplicatesPlaylist)');
+				return false;
+			}
+			pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
+		} else if (!pls) {
+			console.log('Playlist Manager: Error checking duplicates. Index or playlist not provided. (checkSelectionDuplicatesPlaylist)');
 			return false;
 		}
-		const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
 		let bDup = false;
-		if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && !pls.isFolder && pls.size) {
-			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-			if (selItems && selItems.Count) {
-				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([pls.nameId])));
-				const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
-				if (filePaths.intersectionSize(new Set(selItemsPaths))) {
-					if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsPaths};}
-					bDup = true;
-				} else {
-					const relPathSplit = this.playlistsPath.length ? this.playlistsPath.split('\\').filter(Boolean) : null;
-					const selItemsRelPaths = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '.\\');});
-					const selItemsRelPathsTwo = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '');});
-					const selItemsRelPathsThree = selItemsPaths.map((path) => {return getRelPath(path, relPathSplit);});
-					if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {
-						if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsRelPaths};}
+		if (pls.isFolder) { // Only check allowed destinations
+			bDup = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && item.extension !== '.fpl')
+				.map((item) => this.checkSelectionDuplicatesPlaylist({pls: item}))
+				.flat(Infinity)
+				.every((result) => result === true);
+		} else {
+			if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && !pls.isFolder && pls.size) {
+				const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+				if (selItems && selItems.Count) {
+					const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([pls.nameId])));
+					const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
+					if (filePaths.intersectionSize(new Set(selItemsPaths))) {
+						if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsPaths};}
 						bDup = true;
-					} else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {
-						if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsTwo};}
-						bDup = true;
-					} else if (filePaths.intersectionSize(new Set(selItemsRelPathsThree))) {
-						if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsThree};}
-						bDup = true;
+					} else {
+						const relPathSplit = this.playlistsPath.length ? this.playlistsPath.split('\\').filter(Boolean) : null;
+						const selItemsRelPaths = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '.\\');});
+						const selItemsRelPathsTwo = selItemsPaths.map((path) => {return path.replace(this.playlistsPath, '');});
+						const selItemsRelPathsThree = selItemsPaths.map((path) => {return getRelPath(path, relPathSplit);});
+						if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {
+							if (this.bForbidDuplicates) {this.selPaths = {sel: selItemsRelPaths};}
+							bDup = true;
+						} else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {
+							if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsTwo};}
+							bDup = true;
+						} else if (filePaths.intersectionSize(new Set(selItemsRelPathsThree))) {
+							if (this.bForbidDuplicates) {this.selPaths =  {sel: selItemsRelPathsThree};}
+							bDup = true;
+						}
 					}
+					if (bDup) {
+						if (this.bForbidDuplicates) {this.selPaths.pls = filePaths;}
+					} else {this.clearSelPlaylistCache();}
 				}
-				if (bDup) {
-					if (this.bForbidDuplicates) {this.selPaths.pls = filePaths;}
-				} else {this.clearSelPlaylistCache();}
 			}
 		}
 		return bDup;
