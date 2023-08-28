@@ -839,10 +839,15 @@ function _list(x, y, w, h) {
 		const paintFolder = (folder, i, textY) => {
 			// Adjust playlist name according to width available but always show the size if possible
 			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
-			const folderCount = folder.pls.lengthFiltered;
-			const folderText =  _b(folder.name) + (this.bShowFolderSize ? ' (' + folderCount + ')' : '');
+			const folderText =  _b(folder.name) + (this.bShowFolderSize ? ' (' + (this.bShowFolderSizeDeep ? folder.pls.lengthFilteredDeep : folder.pls.lengthFiltered) + ')' : '');
 			gr.GdiDrawText(folder.isOpen ? chars.downOutline : chars.leftOutline, gfontIconChar(), standardPlaylistIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
-			gr.GdiDrawText(folderText, panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
+			// Text
+			if (panel.colors.bFontOutline && shading.img) { // Outline current text
+				shading.gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, maxIconWidth + level.offset * 20, i * panel.row_height, Math.min(shading.img.Width,  this.textWidth - 25), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+				shading.pls.push([folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25]);
+			} else {
+				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
+			}
 			return panel.colors.text;
 		};
 		// Paint list
@@ -922,8 +927,7 @@ function _list(x, y, w, h) {
 						return bToFolder && this.data[idx].inFolder === this.data[this.index].nameId || !bToFolder && this.data[idx].inFolder === this.data[this.index].inFolder;
 					})
 					: false;
-				const bInternalDrop = this.isInternalDropValid();
-				const bValid = bInternalDrop;
+				const bValid = this.isInternalDropValid();
 				const backgroundColor = bValid 
 					? this.colors.selectedPlaylistColor
 					: invert(this.colors.selectedPlaylistColor);
@@ -959,6 +963,23 @@ function _list(x, y, w, h) {
 						gr.GdiDrawText(chars.folderOpenBlack, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
 						gr.GdiDrawText(chars.folderOpenBlack, gfontIconChar(), lineColor, this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
 					}
+				}
+				let dragDropText = '';
+				switch (true) {
+					case bToFolder && !bToSameFolder && !bValid: {dragDropText = 'Level nesting too deep... (> ' + this.maxFolderLevels + ')'; break;}
+					case bToSameFolder && !bValid: {dragDropText = 'Can not move to same folder...'; break;}
+				}
+				if (dragDropText.length) {
+					const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+					const borderCol = opaqueColor(invert(popupCol), 50);
+					const sizeX = gr.CalcTextWidth(dragDropText, panel.fonts.normal) + _scale (4);
+					const sizeY = gr.CalcTextHeight(dragDropText, panel.fonts.normal) + _scale (2);
+					const y = Math.min(this.my + panel.row_height, this.y + this.h - sizeY);
+					const offsetX = this.x + levelOffset * (level - 1) / level;
+					const x = Math.min(offsetX, this.x + this.w - sizeX);
+					gr.FillRoundRect(x, y, sizeX, sizeY, 1, 1, popupCol);
+					gr.DrawRoundRect(x, y, sizeX, sizeY, 1, 1, 1, borderCol);
+					gr.GdiDrawText(dragDropText, panel.fonts.normal, panel.colors.text, x, y, sizeX, sizeY, CENTRE);
 				}
 			} else {
 				console.log('Playlist manager: Warning. this.internalPlsDrop[0] (' + (this.internalPlsDrop[0]) + ') is not defined on paint.');
@@ -1298,6 +1319,10 @@ function _list(x, y, w, h) {
 										playlistDataText += '\n(L. Click to Manage playlist)';
 									}
 								}
+								// if (pls.isFolder) { // TODO
+									// if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
+										// playlist.replace('folder')
+								// }
 								// Adding Duplicates on selection hint
 								let warningText = '';
 								if (lShortcuts.hasOwnProperty(mask) && lShortcuts[mask].key === 'Copy selection to playlist' || mShortcuts.hasOwnProperty(mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
@@ -1508,52 +1533,54 @@ function _list(x, y, w, h) {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 						if (this.isInternalDrop()) {
-							const currIdx = this.dropIn || this.dropUp ? z : Math.min(z + 1, this.items - 1);
-							const currItem = this.data[currIdx];
-							if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
-								if (this.methodState === this.manualMethodState() && !this.dropIn) {
-									const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]) : [];
-									const name = currItem.nameId;
-									const cache = [...this.sortingFile];
-									const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
-									if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
-									const toMove = this.internalPlsDrop.reverse().map((idx) => {
-										const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
-										return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
-									}).filter((n) => n !== null).reverse();
-									const toIdx = this.sortingFile.findIndex((n) => n === name);
-									if (toIdx !== -1) {
-										this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
-										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
-										// TODO sort within folder
-										if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
-											this.internalPlsDrop.forEach((idx) => {
-												this.removeFromFolder(this.data[idx]);
-											});
-										}
+							if (this.isInternalDropValid()) {
+								const currIdx = this.dropIn || this.dropUp ? z : Math.min(z + 1, this.items - 1);
+								const currItem = this.data[currIdx];
+								if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
+									if (this.methodState === this.manualMethodState() && !this.dropIn) {
+										const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]) : [];
+										const name = currItem.nameId;
+										const cache = [...this.sortingFile];
+										const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
+										if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // For reverse sorting, list must be sorted first too!
+										const toMove = this.internalPlsDrop.reverse().map((idx) => {
+											const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
+											return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
+										}).filter((n) => n !== null).reverse();
+										const toIdx = this.sortingFile.findIndex((n) => n === name);
+										if (toIdx !== -1) {
+											this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
+											if (bInverted) {this.sortingFile = this.sortingFile.reverse();} // And revert back
+											// TODO sort within folder
+											if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
+												this.internalPlsDrop.forEach((idx) => {
+													this.removeFromFolder(this.data[idx]);
+												});
+											}
+											this.save();
+											this.saveManualSorting();
+											this.sort();
+											if (plsSel.length) { // Restore multiple selection
+												this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
+											}
+										} else {this.sortingFile = cache;}
+									} else if (currItem.isFolder) {
+										this.internalPlsDrop.forEach((idx) => {
+											this.addToFolder(this.data[idx], currItem);
+										});
 										this.save();
-										this.saveManualSorting();
+										if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
 										this.sort();
-										if (plsSel.length) { // Restore multiple selection
-											this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
-										}
-									} else {this.sortingFile = cache;}
-								} else if (currItem.isFolder) {
-									this.internalPlsDrop.forEach((idx) => {
-										this.addToFolder(this.data[idx], currItem);
-									});
-									this.save();
-									if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
-									this.sort();
-								} else {
-									this.internalPlsDrop.forEach((idx) => {
-										this.removeFromFolder(this.data[idx]);
-									});
-									this.save();
-									if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
-									this.sort();
+									} else {
+										this.internalPlsDrop.forEach((idx) => {
+											this.removeFromFolder(this.data[idx]);
+										});
+										this.save();
+										if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+										this.sort();
+									}
 								}
-							}
+								}
 							this.internalPlsDrop = [];
 						} else if (shortcuts.hasOwnProperty(mask)) {
 							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
@@ -2321,11 +2348,26 @@ function _list(x, y, w, h) {
 	this.isInternalDropValid = () => {
 		const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 		const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
-		return typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' &&  (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows && (
-			this.methodState === this.manualMethodState() 
-				? true
-				: (this.data[currSelIdx].isFolder || this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !this.internalPlsDrop.every((idx) => this.data[idx].inFolder === this.data[currSelIdx].inFolder))
-		);
+		const bValidPos = typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' &&  (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows;
+		if (this.methodState === this.manualMethodState()) {
+			return bValidPos;
+		} else {
+			const bToFolder = this.data[currSelIdx].isFolder;
+			const bFolder = bToFolder || this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !this.internalPlsDrop.every((idx) => this.data[idx].inFolder === this.data[currSelIdx].inFolder);
+			let level = bToFolder ? 1 : 0;
+			let i = currSelIdx;
+			while (this.data[i].inFolder) {
+				i = this.data.findIndex((item) => item.nameId === this.data[i].inFolder && item.isFolder);
+				level++;
+			}
+			const bMaxLevel = level <= this.maxFolderLevels;
+			const bToSameFolder = currSelIdx !== -1 
+				? this.internalPlsDrop.every((idx) => {
+					return bToFolder && this.data[idx].inFolder === this.data[currSelIdx].nameId || !bToFolder && this.data[idx].inFolder === this.data[currSelIdx].inFolder;
+				})
+				: false;
+			return bValidPos && bFolder && bMaxLevel && !bToSameFolder;
+		}
 	}
 	
 	this.onDragDrop = () => {
@@ -3562,7 +3604,7 @@ function _list(x, y, w, h) {
 					this.processFolder(item, i, expandedData);
 				}
 			});
-			this.data = expandedData;
+			this.data = [...new Set(expandedData)]; // Deduplicate
 			this.items = this.data.length;
 		}
 	}
@@ -3846,7 +3888,9 @@ function _list(x, y, w, h) {
 						const id = subPls.nameId + subPls.extension;
 						if (list.has(id)) {
 							list.delete(id);
-							const subItem = this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
+							const subItem = subPls.isFolder
+								? this.dataFolder.find((folder) => (folder.nameId === subPls.nameId))
+								: this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
 							if (subItem) {
 								subItem.inFolder = folder.nameId;
 								return subItem;
@@ -3855,13 +3899,7 @@ function _list(x, y, w, h) {
 							return null;
 						}
 					}).filter(Boolean);
-					const filterData = this.filterData;
-					Object.defineProperty(folder.pls, 'lengthFiltered', {
-						configurable: true, enumerable: true,
-						get: function () {
-							return filterData({data: this, bReusePlsFilter: true}).length;
-						}
-					});
+					this.addFolderProperties(folder);
 				});
 				this.data = this.data.filter((item) => this.isInFolder(item));
 				this.data = this.data.concat(this.dataFolder);
@@ -4075,24 +4113,37 @@ function _list(x, y, w, h) {
 					}
 				});
 				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI, ...this.dataFolder]);
-				const stripMeta = ['sortIdx', 'inFolder'];
-				data.forEach((pls) => {
-					stripMeta.forEach((key) => delete pls[key]);
-					// Strip unnecessary folder data and filter duplicates
+				const formatFolder = (pls) => {
 					if (pls.hasOwnProperty('pls')) {
 						const list = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
 						pls.pls = pls.pls.map((subPls) => {
 							const id = subPls.nameId + subPls.extension;
 							if (list.has(id)) {
 								list.delete(id);
-								return {
-									nameId: subPls.nameId,
-									extension: subPls.extension
-								};
+								if (subPls.isFolder) {
+									return {
+										nameId: subPls.nameId,
+										isFolder: true
+									};
+								} else {
+									return {
+										nameId: subPls.nameId,
+										extension: subPls.extension
+									};
+								}
 							} else {
 								return null;
 							}
 						}).filter(Boolean);
+					}
+					return pls;
+				};
+				const stripMeta = ['sortIdx', 'inFolder'];
+				data.forEach((pls) => {
+					stripMeta.forEach((key) => delete pls[key]);
+					// Strip unnecessary folder data and filter duplicates
+					if (pls.hasOwnProperty('pls')) {
+						formatFolder(pls);
 					}
 				});
 				_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
@@ -4215,6 +4266,8 @@ function _list(x, y, w, h) {
 			const now = Date.now();
 			const defaults = new oPlaylist({name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now});
 			const folder = {...defaults, isFolder: true, isOpen: false, pls: []};
+			const filterData = this.filterData;
+			this.addFolderProperties(folder);
 			// Add tags of current view
 			if (this.tagState.indexOf(this.tags(0)) === -1) {this.tagState.forEach((tag) => {if (! new Set(folder.tags).has(tag)) {folder.tags.push(tag);}});}
 			// Categories
@@ -4227,6 +4280,29 @@ function _list(x, y, w, h) {
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(folder);
 			return folder;
+		}
+		
+		this.addFolderProperties = (folder) => {
+			const filterData = this.filterData;
+			Object.defineProperty(folder.pls, 'lengthFiltered', {
+				configurable: true, enumerable: true,
+				get: function () {
+					return filterData({data: this, bReusePlsFilter: true}).length;
+				}
+			});
+			Object.defineProperty(folder.pls, 'lengthFilteredDeep', {
+				configurable: true, enumerable: true,
+				get: function () {
+					const count = (acc, item) => {
+						if (item.isFolder) {
+							return acc + filterData({data: item.pls, bReusePlsFilter: true}).reduce(count, 0);
+						} else {
+							return acc + 1;
+						}
+					};
+					return filterData({data: this, bReusePlsFilter: true}).reduce(count, 0);
+				}
+			});
 		}
 		
 		this.addToFolder = (pls, folderObj) => {
@@ -4717,6 +4793,13 @@ function _list(x, y, w, h) {
 					fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
 					return;
 				}
+			}
+			if (pls.isFolder) { // Folders must be closed first!
+				if (pls.isOpen) {this.switchFolder(idx);}
+			}
+			// Remove from folder
+			if (this.isInFolder(pls)) {
+				this.removeFromFolder(pls);
 			}
 			// Delete from data
 			const oldNameId = pls.nameId;
@@ -5427,6 +5510,8 @@ function _list(x, y, w, h) {
 	this.columns = JSON.parse(this.properties['columns'][1]);
 	// Folders
 	this.bShowFolderSize = true;
+	this.bShowFolderSizeDeep = true;
+	this.maxFolderLevels = 3;
 	// Panel behavior
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
