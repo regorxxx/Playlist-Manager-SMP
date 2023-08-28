@@ -971,7 +971,8 @@ if (!list.properties.bSetup[1]) {
 			list.dragDropText = '';
 			return;
 		} else { // List
-			if (list.index === -1) {list.dragDropText = 'Create new Playlist';}
+			if (list.index === -1 || list.index >= list.items) {list.dragDropText = 'Create new Playlist';}
+			else if (list.data[list.index].isFolder) {list.dragDropText = 'To selected Folder';}
 			else {list.dragDropText = 'To selected Playlist';}
 		}
 		// Set effects

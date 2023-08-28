@@ -2422,7 +2422,7 @@ function _list(x, y, w, h) {
 		}
 		let bDup = false;
 		if (pls.isFolder) { // Only check allowed destinations
-			bDup = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && item.extension !== '.fpl')
+			bDup = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && item.extension !== '.fpl' && (bAlsoHidden || this.data.includes(item)))
 				.map((item) => this.checkSelectionDuplicatesPlaylist({pls: item}))
 				.flat(Infinity)
 				.every((result) => result === true);
@@ -2487,77 +2487,92 @@ function _list(x, y, w, h) {
 		return 'Empty playlist';
 	}
 	
-	this.sendSelectionToPlaylist = ({playlistIndex, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false} = {}) => {
-		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
-			console.log('Playlist Manager: Error adding tracks to playlist. Index '+ _p(playlistIndex) + ' out of bounds. (sendSelectionToPlaylist)');
+	this.sendSelectionToPlaylist = ({playlistIndex, pls = null, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false} = {}) => {
+		if (typeof playlistIndex !== 'undefined' && playlistIndex !== null ) {
+			if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
+				console.log('Playlist Manager: Error adding tracks to playlist. Index '+ _p(playlistIndex) + ' out of bounds. (sendSelectionToPlaylist)');
+				return false;
+			}
+			pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
+		} else if (!pls) {
+			console.log('Playlist Manager: Error checking duplicates. Index or playlist not provided. (sendSelectionToPlaylist)');
 			return false;
 		}
-		if (plman.ActivePlaylist === -1) {return;}
-		const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
-		if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) {return false;} // Skip non writable playlists
-		let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-		if (selItems && selItems.Count) {
-			if (bCheckDup) {this.checkSelectionDuplicatesPlaylist({playlistIndex, bAlsoHidden});}
-			// Remove duplicates
-			if (this.bForbidDuplicates && this.selPaths.sel.length && this.selPaths.pls.size) { // Checked before at move()
-				const selPathsSet = new Set();
-				const toRemove = new Set();
-				this.selPaths.sel.forEach((path, idx) => {
-					if (this.selPaths.pls.has(path)) {toRemove.add(idx);} // Remove items already on pls
-					else {
-						if (!selPathsSet.has(path)) {selPathsSet.add(path);}
-						else {toRemove.add(idx);} // And duplicated items on selection
-					}
-				});
-				if (toRemove.size) {
-					selItems = selItems.Convert().filter((_, idx) => {return !toRemove.has(idx);});
-					selItems = new FbMetadbHandleList(selItems);
-					// Warn about duplication
-					if (!selItems.Count) {console.log('Playlist Manager: No tracks added, all are duplicated.');}
-					else {console.log('Playlist Manager: Skipped duplicated tracks.');}
-				}
-			}
+		if (plman.ActivePlaylist === -1) {return false;}
+		if (pls.isFolder) { // Only check allowed destinations
+			const plsArr = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl');
+			const total = plsArr.length;
+			return pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl' && (bAlsoHidden || this.data.includes(item)))
+				.map((item, i) => this.sendSelectionToPlaylist({pls: item, bCheckDup, bPaint: bPaint && total === (i + 1) ? true : false, bDelSource: bDelSource && total === (i + 1) ? true : false}))
+				.flat(Infinity)
+				.some((result) => result === true);
+		} else {
+			if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) {return false;} // Skip non writable playlists
+			let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 			if (selItems && selItems.Count) {
-				// Warn about dead items
-				selItems.Convert().some((handle, i) => {
-					if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-						fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name); 
-						return true;
-					}
-					return false;
-				});
-				// Add to pls
-				this.addTracksToPlaylist({playlistIndex: playlistIndex, handleList: selItems, bAlsoHidden, bPaint});
-				const pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
-				const index = plman.FindPlaylist(pls.nameId);
-				// Add items to chosen playlist too if it's loaded within foobar2000 unless it's the current playlist
-				if (index !== -1 && plman.ActivePlaylist !== index) {
-					plman.UndoBackup(index);
-					plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
-					// Edit again data since update did not catch the change
-					if (pls.extension === '.ui') {
-						this.editData(pls, {
-							size: pls.size + selItems.Count,
-							duration: (pls.duration !== - 1 ? pls.duration + selItems.CalcTotalDuration() : plman.GetPlaylistSelectedItems(plman.ActivePlaylist).CalcTotalDuration()),
-							modified: Date.now(),
-						});
+				if (bCheckDup) {this.checkSelectionDuplicatesPlaylist({playlistIndex, pls, bAlsoHidden});}
+				// Remove duplicates
+				if (this.bForbidDuplicates && this.selPaths.sel.length && this.selPaths.pls.size) { // Checked before at move()
+					const selPathsSet = new Set();
+					const toRemove = new Set();
+					this.selPaths.sel.forEach((path, idx) => {
+						if (this.selPaths.pls.has(path)) {toRemove.add(idx);} // Remove items already on pls
+						else {
+							if (!selPathsSet.has(path)) {selPathsSet.add(path);}
+							else {toRemove.add(idx);} // And duplicated items on selection
+						}
+					});
+					if (toRemove.size) {
+						selItems = selItems.Convert().filter((_, idx) => {return !toRemove.has(idx);});
+						selItems = new FbMetadbHandleList(selItems);
+						// Warn about duplication
+						if (!selItems.Count) {console.log('Playlist Manager: No tracks added, all are duplicated.');}
+						else {console.log('Playlist Manager: Skipped duplicated tracks.');}
 					}
 				}
-				// Remove items when moving
-				if (bDelSource) {
-					plman.UndoBackup(plman.ActivePlaylist); 
-					plman.RemovePlaylistSelection(plman.ActivePlaylist);
-					const sourcePls = (bAlsoHidden ? this.dataAll : this.data)
-						.find((pls, idx) => {return pls.nameId === plman.GetPlaylistName(plman.ActivePlaylist);});
-					if (pls !== sourcePls) {
-						this.editData(sourcePls, {
-							size: sourcePls.size + selItems.Count,
-							duration: (sourcePls.duration !== - 1 ? sourcePls.duration - selItems.CalcTotalDuration() : selItems.CalcTotalDuration()),
-							modified: Date.now(),
-						});
+				if (selItems && selItems.Count) {
+					// Warn about dead items
+					selItems.Convert().some((handle, i) => {
+						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+							fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name); 
+							return true;
+						}
+						return false;
+					});
+					// Add to pls
+					this.addTracksToPlaylist({playlistIndex, pls, handleList: selItems, bAlsoHidden, bPaint});
+					const idx = this.dataAll.findIndex((item) => item.nameId === pls.nameId && item.extension === pls.extension);
+					pls = this.dataAll[idx]; // Old object is not available anymore
+					const index = plman.FindPlaylist(pls.nameId);
+					// Add items to chosen playlist too if it's loaded within foobar2000 unless it's the current playlist
+					if (index !== -1 && plman.ActivePlaylist !== index) {
+						plman.UndoBackup(index);
+						plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
+						// Edit again data since update did not catch the change
+						if (pls.extension === '.ui') {
+							this.editData(pls, {
+								size: pls.size + selItems.Count,
+								duration: (pls.duration !== - 1 ? pls.duration + selItems.CalcTotalDuration() : plman.GetPlaylistSelectedItems(plman.ActivePlaylist).CalcTotalDuration()),
+								modified: Date.now(),
+							});
+						}
 					}
+					// Remove items when moving
+					if (bDelSource) {
+						plman.UndoBackup(plman.ActivePlaylist); 
+						plman.RemovePlaylistSelection(plman.ActivePlaylist);
+						const sourcePls = (bAlsoHidden ? this.dataAll : this.data)
+							.find((pls, idx) => {return pls.nameId === plman.GetPlaylistName(plman.ActivePlaylist);});
+						if (pls !== sourcePls) {
+							this.editData(sourcePls, {
+								size: sourcePls.size + selItems.Count,
+								duration: (sourcePls.duration !== - 1 ? sourcePls.duration - selItems.CalcTotalDuration() : selItems.CalcTotalDuration()),
+								modified: Date.now(),
+							});
+						}
+					}
+					return true;
 				}
-				return true;
 			}
 		}
 		return false;
@@ -2567,16 +2582,21 @@ function _list(x, y, w, h) {
 		this.selPaths = {pls: new Set(), sel: []};
 	}
 	
-	this.addTracksToPlaylist = ({playlistIndex, handleList, bAlsoHidden = false, bPaint = true} = {}) => { // Sends tracks to playlist file directly
-		if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
-			console.log('Playlist Manager: Error adding tracks to playlist. Index '+ _p(playlistIndex) + ' out of bounds. (addTracksToPlaylist)');
+	this.addTracksToPlaylist = ({playlistIndex, pls = null, handleList, bAlsoHidden = false, bPaint = true} = {}) => { // Sends tracks to playlist file directly
+		if (typeof playlistIndex !== 'undefined' && playlistIndex !== null ) {
+			if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
+				console.log('Playlist Manager: Error adding tracks to playlist. Index '+ _p(playlistIndex) + ' out of bounds. (addTracksToPlaylist)');
+				return false;
+			}
+			pls = bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
+		} else if (!pls) {
+			console.log('Playlist Manager: Error checking duplicates. Index or playlist not provided. (addTracksToPlaylist)');
 			return false;
 		}
 		if (typeof handleList === 'undefined' || handleList === null || handleList.Count === 0) {
 				console.log('Playlist Manager: Error adding tracks to playlist. Handle list has no tracks. (addTracksToPlaylist)');
 			return false;
 		}
-		const pls =  bAlsoHidden ? this.dataAll[playlistIndex] : this.data[playlistIndex];
 		if (pls.isLocked) { // Skip locked playlists
 			console.log('Playlist Manager: Skipping save on locked playlist.');
 			return false;
