@@ -1074,6 +1074,12 @@ function _list(x, y, w, h) {
 					}
 					if (bPaint) {this.repaint();}
 				}
+				if (this.uiElements['Scrollbar'].enabled && scroll && scroll.bDrag) {
+					this.offset = offset;
+					this.index = Math.floor((this.my - this.y - yOffset) / panel.row_height) + this.offset;
+					this.inRange = true;
+					this.cacheLastPosition();
+				}
 			}
 			return true;
 		} else {
@@ -2902,6 +2908,7 @@ function _list(x, y, w, h) {
 					clearInterval(delay);
 					console.log('Playlist Manager: done.');
 				}
+				const currIdx = this.data.indexOf(plsData);
 				this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
 				if (plsData.extension !== '.ui' && !pop.isEnabled()) { // Display animation except for UI playlists
 					pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.'); 
@@ -3935,9 +3942,26 @@ function _list(x, y, w, h) {
 					}).filter(Boolean);
 					this.addFolderProperties(folder);
 				});
-				this.data = this.data.filter((item) => this.isInFolder(item));
+				this.data = this.data.filter((item) => !this.isInFolder(item));
 				this.data = this.data.concat(this.dataFolder);
 				this.dataAll = this.dataAll.concat(this.dataFolder);
+			} else {
+				this.dataAll.forEach((folder) => {
+					if (folder.isFolder) {
+						folder.pls.forEach((subPls, i, thisArr) => {
+							if (subPls.extension === '.ui') {
+								const idx = this.dataUI.findIndex((pls) => pls.nameId === subPls.nameId);
+								if (idx !== -1) {
+									thisArr[i] = this.dataUI[idx];
+									thisArr[i].inFolder = folder.nameId;
+								} else {thisArr[i] = null;}
+							};
+						});
+						folder.pls = folder.pls.filter(Boolean);
+						this.addFolderProperties(folder);
+					}
+				});
+				this.data = this.data.filter((item) => !this.isInFolder(item));
 			}
 		}
 		// Always

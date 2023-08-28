@@ -46,6 +46,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: avoid jumping to the top after auto-updating a playlist if mouse never entered the list and was only used at the scroll bar.
 
 ## [0.5.3] - 2023-08-28
 ### Added
