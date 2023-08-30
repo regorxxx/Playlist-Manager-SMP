@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/08/23
+//29/08/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -466,7 +466,8 @@ if (!list.properties.bSetup[1]) {
 		},
 		dblclkFunc: (current) => {
 			list.showCurrPls() || list.showCurrPls({bPlayingPls: true});
-		}
+		},
+		tt: 'Double L. click to Show active or now playling playlist'
 	}) : null;
 	
 	// Tracking a network drive?

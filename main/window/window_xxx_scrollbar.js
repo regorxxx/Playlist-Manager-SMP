@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/23
+//29/08/23
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -18,9 +18,10 @@ function _scrollBar({
 			visibleFunc = (time) => Date.now() - time < this.timer || this.bHovered || this.bDrag,
 			scrollFunc = () => void(0),
 			scrollSpeed = 60, // ms
-			dblclkFunc = () => void(0)
+			dblclkFunc = () => void(0),
+			tt = ''
 		} = {}) {
-	this.tt = '';
+	this.tt = tt;
 	this.x = x;
 	this.y = y;
 	this.w = w;
@@ -51,6 +52,7 @@ function _scrollBar({
 	this.visible = true;
 	this.barLength = this.h;
 	this.buttonHeight = 0;
+	this.tooltip = new _tt(null, void(0), void(0), 600); 
 	
 	this.calcCurrRow = (y) => {
 		return y <= (this.y + this.buttonHeight)
@@ -281,6 +283,10 @@ function _scrollBar({
 				this.currRow = this.calcCurrRow(y);
 				if (oldRow !== this.currRow) {this.scrollFunc({current: this.currRow, delta: oldRow - this.currRow});}
 			}
+			if (this.bHoveredCurr && this.tt) {
+				if (this.tooltip.Text) {this.tooltip.Deactivate();}
+				this.tooltip.SetValue(this.tt, true);
+			}
 			this.repaint();
 			return true;
 		} else {
@@ -288,6 +294,7 @@ function _scrollBar({
 				this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bDragUp = this.bDragDown = this.bHoveredBarUp = this.bHoveredBarDown = false;
 				this.repaint();
 			}
+			if (this.tooltip.Text) {this.tooltip.SetValue(null);}
 		}
 		return false;
 	};
