@@ -2599,10 +2599,9 @@ function _list(x, y, w, h) {
 		}
 		if (plman.ActivePlaylist === -1) {return false;}
 		if (pls.isFolder) { // Only check allowed destinations
-			const plsArr = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl');
+			const plsArr = pls.pls.filtered.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl');
 			const total = plsArr.length;
-			return pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl' && (bAlsoHidden || this.data.includes(item)))
-				.map((item, i) => this.sendSelectionToPlaylist({pls: item, bCheckDup, bPaint: bPaint && total === (i + 1) ? true : false, bDelSource: bDelSource && total === (i + 1) ? true : false}))
+			return plsArr.map((item, i) => this.sendSelectionToPlaylist({pls: item, bCheckDup, bPaint: bPaint && total === (i + 1) ? true : false, bDelSource: bDelSource && total === (i + 1) ? true : false, bAlsoHidden: true}))
 				.flat(Infinity)
 				.some((result) => result === true);
 		} else {
@@ -2640,13 +2639,13 @@ function _list(x, y, w, h) {
 					});
 					// Add to pls
 					this.addTracksToPlaylist({playlistIndex, pls, handleList: selItems, bAlsoHidden, bPaint});
-					const idx = this.dataAll.findIndex((item) => item.nameId === pls.nameId && item.extension === pls.extension);
-					pls = this.dataAll[idx]; // Old object is not available anymore
 					const index = plman.FindPlaylist(pls.nameId);
 					// Add items to chosen playlist too if it's loaded within foobar2000 unless it's the current playlist
 					if (index !== -1 && plman.ActivePlaylist !== index) {
 						plman.UndoBackup(index);
 						plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
+						const idx = this.dataAll.findIndex((item) => item.nameId === pls.nameId && item.extension === pls.extension);
+						pls = this.dataAll[idx]; // Old object is not available anymore
 						// Edit again data since update did not catch the change
 						if (pls.extension === '.ui') {
 							this.editData(pls, {
@@ -2718,6 +2717,7 @@ function _list(x, y, w, h) {
 			return false;
 		} else if (_isFile(backPath)) {_deleteFile(backPath);}
 		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
+		pls = this.dataAll.find((item) => item.nameId === pls.nameId && item.extension === pls.extension);
 		this.editData(pls, {
 			size: pls.size + handleList.Count,
 			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
