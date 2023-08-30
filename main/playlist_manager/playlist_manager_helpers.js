@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/08/23
+//30/08/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1193,6 +1193,28 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 	}
 	if (bRenamedSucessfully) {list.showPlsByObj(pls);}
 	return bRenamedSucessfully;
+}
+
+function renamefolder(list, z, newName) {
+	const folder = list.data[z];
+	if (list.dataAll.some((pls) => pls.name === newName || pls.nameId === newName)) {
+		fb.ShowPopupMessage('Name already used: ' + newName + '\n' + 'Choose an unique name for renaming.', window.Name);
+		return false;
+	} else {
+		list.dataAll.forEach((pls) => {
+			if (pls.inFolder === folder.nameId) {pls.inFolder = newName;}
+		});
+		list.editData(folder, {
+			name: newName,
+			id: '',
+			nameId: newName,
+		});
+		list.update(true, true);
+		list.filter();
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		list.showPlsByObj(folder);
+	}
+	return true;
 }
 
 function cycleCategories() {

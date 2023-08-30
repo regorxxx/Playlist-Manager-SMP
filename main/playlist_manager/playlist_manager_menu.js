@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/23
+//30/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -657,8 +657,9 @@ function createMenuLeft(forcedIndex = -1) {
 }
 
 function createMenuFolder(menu, folder, z) {
-	const indexes = folder.pls.map((p) => list.dataAll.indexOf(p)); // When delaying menu, the mouse may move to other index...
-	const playlists = folder.pls;
+	const bOpen = folder.isOpen;
+	const playlists = folder.pls.filtered;
+	const indexes = playlists.map((p) => list.dataAll.indexOf(p)); // When delaying menu, the mouse may move to other index...
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsUI = (pls) => {return pls.extension === '.ui';};
@@ -678,23 +679,7 @@ function createMenuFolder(menu, folder, z) {
 	menu.newEntry({entryText: 'Rename...', func: () => {
 		const input = Input.string('string', folder.nameId, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
 		if (input === null) {return;}
-		if (list.dataAll.some((pls) => pls.name === input || pls.nameId === input)) {
-			fb.ShowPopupMessage('Name already used: ' + input + '\n' + 'Choose an unique name for renaming.', window.Name);
-			return;
-		} else {
-			list.dataAll.forEach((pls) => {
-				if (pls.inFolder === folder.nameId) {pls.inFolder = input;}
-			});
-			list.editData(folder, {
-				name: input,
-				id: '',
-				nameId: input,
-			});
-			list.update(true, true);
-			list.filter();
-			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			list.showPlsByObj(folder);
-		}
+		renamefolder(list, z, input);
 	}});
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Multi-select child items...' + '\t' + _b(indexes.length), func: () => {
@@ -712,23 +697,29 @@ function createMenuFolder(menu, folder, z) {
 		}, flags: bIsPlsLoadedEvery || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		// Merge load
 		menu.newEntry({entryText: 'Merge-load entire folder', func: () => {
-			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
+			if (!bOpen) {list.switchFolder(z);}
+			const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
 				const remDupl = [];
 				clonePlaylistMergeInUI(list, zArr);
 			}
+			if (!bOpen) {list.switchFolder(z);}
 		}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		menu.newEntry({entryText: 'Merge-load (no duplicates)', func: () => {
-			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
+			if (!bOpen) {list.switchFolder(z);}
+			const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
 				const remDupl = list.removeDuplicatesAutoPls;
 				clonePlaylistMergeInUI(list, zArr, remDupl, list.bAdvTitlem, true);
 			}
+			if (!bOpen) {list.switchFolder(z);}
 		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		// Clone in UI
 		menu.newEntry({entryText: 'Clone entire folder in UI', func: () => {
-			indexes.forEach((z, i) => {
-				const pls = playlists[i];
+			if (!bOpen) {list.switchFolder(z);}
+			const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
+			zArr.forEach((z) => {
+				const pls = list.data[z];
 				if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
 				if (!isPlsUI(pls) && !isFolder(pls)) {
 					if (pls.isAutoPlaylist) {
@@ -739,7 +730,8 @@ function createMenuFolder(menu, folder, z) {
 					}
 				}
 			});
-		}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+			if (!bOpen) {list.switchFolder(z);}
+		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 	}
 	if (showMenus['Sorting'] && bManualSorting) {
 		menu.newEntry({entryText: 'sep'});
@@ -760,7 +752,7 @@ function createMenuFolder(menu, folder, z) {
 		});
 	}
 	menu.newEntry({entryText: 'sep'});
-	menu.newEntry({entryText: 'Delete', func: () => {list.removePlaylist(z);}});
+	menu.newEntry({entryText: 'Delete (only folder)', func: () => {list.removePlaylist(z);}});
 	return menu;
 }
 
