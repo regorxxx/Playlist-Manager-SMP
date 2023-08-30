@@ -43,6 +43,7 @@
 ## [Unreleased][]
 ### Added
 - Folders: items may now be grouped in folders, with unlimited level depth support and the ability to be expanded/collapsed. Adding or removing items is done via drag n' drop, similar to the way manual sorting works. Folders have an unique contextual menu which allow to apply some actions to their content or multiple-select them. Feature can be disabled if desired.
+- UI: added tooltip at scrollbar about double click action.
 ### Changed
 ### Removed
 ### Fixed
