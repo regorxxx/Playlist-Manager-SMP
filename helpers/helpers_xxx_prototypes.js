@@ -278,6 +278,19 @@ String.prototype.cut = function cut(c) {
 	return this.replace(cutRegex[c], '$1…');
 };
 
+function matchCase(text, pattern, bFirst = true) {
+	let result = '';
+	const len = bFirst ? 1 : text.length;
+	for (let i = 0; i < len; i++) {
+		const p = pattern.charAt(i);
+		result += p === p.toUpperCase() 
+			? text.charAt(i).toUpperCase()
+			: text.charAt(i).toLowerCase();
+	}
+	if (bFirst) {result += text.slice(1);}
+	return result;
+}
+
 function capitalize(s) {
 	if (!isString(s)) {return '';}
 	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();

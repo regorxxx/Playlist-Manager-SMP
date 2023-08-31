@@ -1273,15 +1273,26 @@ function _list(x, y, w, h) {
 								}
 								const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath,'')  + ')' : '';
 								const locks = getLocks(pls.nameId);
-								let playlistDataText = pls.isAutoPlaylist ? 'AutoPlaylist: ' : (pls.extension === '.xsp' ? 'Smart Playlist: ' : 'Playlist: ');
-								playlistDataText += pls.nameId + ' - ' +  pls.size + ' Tracks ' + path;
-								playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
-								playlistDataText +=  locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '' ) + locks.name) : '';
-								playlistDataText +=  locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
-								playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
-								playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
-								playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0];}).join(', ') : '-');
-								playlistDataText += '\n' + 'Duration: ' +  (pls.duration !== -1 ? utils.FormatDuration(pls.duration) : '?');
+								let playlistDataText = (pls.isAutoPlaylist ? 'AutoPlaylist' : (pls.extension === '.xsp' ? 'Smart Playlist' : pls.isFolder ? 'Folder' : 'Playlist')) + ': ';
+								playlistDataText += pls.nameId + ' - ' + (pls.isFolder ? this.calcColumnVal('size', pls, true) : pls.size) + ' Tracks ' + path;
+								if (!pls.isFolder) {
+									playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
+									playlistDataText +=  locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '' ) + locks.name) : '';
+									playlistDataText +=  locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
+									playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
+									playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
+									playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => {return Object.keys(_)[0];}).join(', ') : '-');
+								} else {
+									const total = pls.pls.lengthDeep;
+									const totalCurrentView = pls.pls.lengthFilteredDeep;
+									playlistDataText += '\n' + 'Childs: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
+								}
+								playlistDataText += '\n' + 'Duration: ' +  (pls.isFolder 
+									? utils.FormatDuration(this.calcColumnVal('duration', pls, true)) 
+									: pls.duration !== -1 
+										? utils.FormatDuration(pls.duration) 
+										: '?'
+								);
 								// Text for AutoPlaylists
 								if (pls.isAutoPlaylist || pls.query) {
 									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
@@ -1351,7 +1362,7 @@ function _list(x, y, w, h) {
 									});
 									// Replace
 									if (playlistRe.test(playlistDataText)) {
-										playlistDataText = playlistDataText.replace(playlistRe, 'folder');
+										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('folder', match));
 									}
 								}
 								// Adding Duplicates on selection hint
@@ -4459,6 +4470,19 @@ function _list(x, y, w, h) {
 						}
 					};
 					return this.filtered.reduce(count, 0);
+				}
+			});
+			Object.defineProperty(folder.pls, 'lengthDeep', {
+				configurable: true, enumerable: true,
+				get: function () {
+					const count = (acc, item) => {
+						if (item.isFolder) {
+							return acc + item.pls.reduce(count, 0);
+						} else {
+							return acc + 1;
+						}
+					};
+					return this.reduce(count, 0);
 				}
 			});
 		}
