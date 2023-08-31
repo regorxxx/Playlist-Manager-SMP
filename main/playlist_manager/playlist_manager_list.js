@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/08/23
+//31/08/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -93,18 +93,18 @@ function _list(x, y, w, h) {
 		maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
 	}
 	
-	this.calcColumnVal = (key /*pls property*/, pls) => {
+	this.calcColumnVal = (key /*pls property*/, pls, bRough = false) => {
 		let val = pls[key] === -1 ? '?' : pls[key];
 		if (pls.isFolder) {
 			switch (key) {
 				case 'duration':
 				case 'fileSize':
 				case 'size': {
-					pls.pls.forEach((subPls) => {
-						if (subPls[key] !== -1) {
-							if (val === '?') {val = 0;}
-							val += subPls[key];
-						}
+					const plsArr = pls.pls.filtered;
+					if (plsArr.length) {val = 0;}
+					plsArr.forEach((subPls) => {
+						const newVal = this.calcColumnVal(key, subPls, true);
+						val += (newVal === '?' ? 0 : newVal);
 					});
 					break;
 				}
@@ -112,7 +112,7 @@ function _list(x, y, w, h) {
 					break;
 			}
 		}
-		if (val !== '?') {
+		if (!bRough && val !== '?') {
 			switch (key) {
 				case 'duration': { // Format it with no more than 4 digits
 					const cache = val;
