@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/08/23
+//04/09/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,7 +8,7 @@
 
 const bEnableFolders = false;
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.5.3', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.6.0-beta.3', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -163,8 +163,8 @@ var properties = {
 	bAdvTitle				: ['AutoPlaylists, duplicates RegExp title matching?', true, {func: isBoolean}, true],
 	activePlsStartup		: ['Active playlist on startup', '', {func: isStringWeak}, ''],
 	bBlockUpdateAutoPls		: ['Block panel while updating AutoPlaylists', false, {func: isBoolean}, false],
-	bQuicSearchNext			: ['QuickSearch jump to next item when letter is pressed twice', true, {func: isBoolean}, true],
-	bQuicSearchCycle		: ['QuickSearch cycling when no more items found', true, {func: isBoolean}, true],
+	bQuicSearchNext			: ['Quick-search jump to next item when letter is pressed twice', true, {func: isBoolean}, true],
+	bQuicSearchCycle		: ['Quick-search cycling when no more items found', true, {func: isBoolean}, true],
 	mShortcutsHeader		: ['M. click (header) modifiers', JSON.stringify({
 		Ctrl:			'- None -',
 		Shift:			'- None -',
@@ -189,7 +189,8 @@ var properties = {
 		'File management':			true,
 		'UI playlist locks':		true,
 		'File locks':				true,
-		...(bEnableFolders && {'Folders':					true})
+		'Quick-search':				true,
+		...(bEnableFolders && {'Folders':					true}),
 	})],
 	searchMethod			: ['Search settings', JSON.stringify({
 		bName:			true,
@@ -210,10 +211,11 @@ var properties = {
 			{
 				'Power actions':	{enabled: true, position: 0},
 				'Reset filters':	{enabled: true, position: 1},
-				'List menu':		{enabled: true, position: 2},
-				'Settings menu':	{enabled: true, position: 3},
-				'Folder':			{enabled: true, position: 4},
-				'Help':				{enabled: true, position: 5},
+				'Switch columns':	{enabled: true, position: 2},
+				'List menu':		{enabled: true, position: 3},
+				'Settings menu':	{enabled: true, position: 4},
+				'Folder':			{enabled: true, position: 5},
+				'Help':				{enabled: true, position: 6},
 			}
 		}
 	})],
@@ -242,6 +244,12 @@ var properties = {
 	bSkipMenuTag			: ['Automatically add \'bSkipMenuTag\' to all playlists', false, {func: isBoolean}, false],
 	bLiteMode				: ['Lite mode enabled? (foo_plorg replacement)', false, {func: isBoolean}, false],
 	bAutoSelTitle			: ['Playlist\'s name from selection using ARTIST[ - ALBUM]', false, {func: isBoolean}, false],
+	folders					: ['Folders options', JSON.stringify({
+		maxDepth:	3,
+		bShowSize: true,
+		bShowSizeDeep: true,
+		icons:		{open: chars.downOutline, closed: chars.leftOutline}
+	})],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -255,6 +263,7 @@ properties['showMenus'].push({func: isJSON}, properties['showMenus'][1]);
 properties['searchMethod'].push({func: isJSON}, properties['searchMethod'][1]);
 properties['uiElements'].push({func: isJSON}, properties['uiElements'][1]);
 properties['columns'].push({func: isJSON}, properties['columns'][1]);
+properties['folders'].push({func: isJSON}, properties['folders'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');

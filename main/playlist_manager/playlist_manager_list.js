@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/23
+//05/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -454,6 +454,22 @@ function _list(x, y, w, h) {
 						w: 0,
 						h: 0
 					},
+					{	// Columns
+						parent: this.uiElements['Header buttons'].elements['Switch columns'].enabled ? this.headerButtons.columns : null,
+						position: this.uiElements['Header buttons'].elements['Switch columns'].position,
+						icon: chars.table,
+						color: this.headerButtons.columns.inFocus 
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) 
+							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+						bgColor: this.headerButtons.columns.inFocus
+							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
+							: null,
+						align: 'r',
+						x: (button, curr, bFirst) => curr - button.w - (bFirst ? 0 : LM / 2),
+						y: (button) => (maxHeaderH - button.h) / 2,
+						w: 0,
+						h: 0
+					},
 					{	// Reset Filters
 						parent: this.uiElements['Header buttons'].elements['Reset filters'].enabled ? this.headerButtons.resetFilters : null,
 						position: this.uiElements['Header buttons'].elements['Reset filters'].position,
@@ -840,8 +856,11 @@ function _list(x, y, w, h) {
 		const paintFolder = (folder, i, textY) => {
 			// Adjust playlist name according to width available but always show the size if possible
 			this.textWidth = this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0);
-			const folderText =  _b(folder.name) + (this.bShowFolderSize ? ' (' + (this.bShowFolderSizeDeep ? folder.pls.lengthFilteredDeep : folder.pls.lengthFiltered) + ')' : '');
-			gr.GdiDrawText(folder.isOpen ? chars.downOutline : chars.leftOutline, gfontIconChar(), standardPlaylistIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
+			const folderText =  _b(folder.name) + (this.folders.bShowSize ? ' (' + (this.folders.bShowSizeDeep ? folder.pls.lengthFilteredDeep : folder.pls.lengthFiltered) + ')' : '');
+			const icon = folder.isOpen ? this.folders.icons.open : this.folders.icons.closed;
+			if (icon) {
+				gr.GdiDrawText(icon, gfontIconChar(), standardPlaylistIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
+			}
 			// Text
 			if (panel.colors.bFontOutline && shading.img) { // Outline current text
 				shading.gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, maxIconWidth + level.offset * 20, i * panel.row_height, Math.min(shading.img.Width,  this.textWidth - 25), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
@@ -967,7 +986,7 @@ function _list(x, y, w, h) {
 				}
 				let dragDropText = '';
 				switch (true) {
-					case bToFolder && !bToSameFolder && !bValid: {dragDropText = 'Level nesting too deep... (> ' + this.maxFolderLevels + ')'; break;}
+					case bToFolder && !bToSameFolder && !bValid: {dragDropText = 'Level nesting too deep... (> ' + this.folders.maxDepth + ')'; break;}
 					case bToSameFolder && !bValid: {dragDropText = 'Can not move to same folder...'; break;}
 				}
 				if (dragDropText.length) {
@@ -1910,13 +1929,13 @@ function _list(x, y, w, h) {
 			default: {
 				if (!this.bMouseOver) {return false;}
 				const keyChar = keyCode(k);
+				// Enabled features
+				const showMenus = JSON.parse(this.properties.showMenus[1]);
 				// Shortcuts
+				const z = this.index;
+				const pls = this.data[z];
+				if (z !== -1) {this.cacheLastPosition(z);}
 				if (this.properties.bGlobalShortcuts[1]) {
-					const z = this.index;
-					const pls = this.data[z];
-					// Enabled menus
-					const showMenus = JSON.parse(this.properties.showMenus[1]);
-					if (z !== -1) {this.cacheLastPosition(z);}
 					switch (keyChar) {
 						case 'f1': // Lock/Unlock
 							if (z !== -1) {
@@ -2014,44 +2033,18 @@ function _list(x, y, w, h) {
 							return false;
 						case 'f6': // Export to ListenBrainz (move)
 							if (z !== -1 && showMenus['Online sync']) {
-								if (pls.isFolder) {return false;} // TODO serial promises
-								return checkLBToken()
-									.then(async (result) => {
-										if (!result) {return false;}
-										let bUpdateMBID = false;
-										let playlist_mbid = '';
-										const lb = listenBrainz;
-										const bLookupMBIDs = this.properties.bLookupMBIDs[1];
-										const token = this.properties.lBrainzToken[1].length > 0 ? lb.decryptToken({lBrainzToken: this.properties.lBrainzToken[1], bEncrypted: this.properties.lBrainzEncrypt[1]}) : null;
-										if (!token) {return false;}
-										if (pls.playlist_mbid.length) {
-											console.log('Syncing playlist with MusicBrainz: ' + pls.name);
-											playlist_mbid = await lb.syncPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
-											if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
-										} else {
-											console.log('Exporting playlist to MusicBrainz: ' + pls.name);
-											playlist_mbid = await lb.exportPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
-											if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
-										}
-										if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
-										if (this.properties.bSpotify[1]) {
-											lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
-												if (services.indexOf('spotify') !== -1) {
-													console.log('Exporting playlist to Spotify: ' + pls.name);
-													lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
-												}
-											});
-										}
-										if (bUpdateMBID && writablePlaylistFormats.has(pls.extension)) {setPlaylist_mbid(playlist_mbid, this, pls);}
-										return true;
-									});
+								return this.exportToListenbrainz(pls);
 							}
 							return false;
 						case 'f7': { // Add playlist (new)
 							if (this.bLiteMode) {
 								this.addUIplaylist({bInputName: true});
 							} else {
-								this.add({bEmpty: true});
+								if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) {
+									this.addFolder();
+								} else {
+									this.add({bEmpty: true});
+								}
 							}
 							return true;
 						}
@@ -2108,35 +2101,38 @@ function _list(x, y, w, h) {
 						case 'f12': // Tracked folder
 							if (!this.bLiteMode) {_explorer(this.playlistsPath);}
 							return true;
-						case 'numpad /': // Show hide columns
-						case '\\':
-						case 'º':
-							this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
-							this.properties.uiElements[1] = JSON.stringify(this.uiElements);
-							overwriteProperties(this.properties);
-							this.updateUIElements();
-							return true;
-						case 'delete': // Delete playlist (delete)
-							if (z !== -1) {
-								this.removePlaylist(z);
-								setTimeout(() => { // Required since input popup invokes move callback after this func!
-									this.cacheLastPosition(Math.min(z, this.items - 1));
-									this.jumpLastPosition();
-									this.move(this.mx, this.my); // Update cursor
-								}, 10);
-								return true;
-							}
-							break; // Don't process when not over playlist
 					}
 				}
-				// Quick-search
-				// Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
+				switch (keyChar) {
+					case 'numpad /': // Show hide columns
+					case '\\':
+					case 'º':
+						this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
+						this.properties.uiElements[1] = JSON.stringify(this.uiElements);
+						overwriteProperties(this.properties);
+						this.updateUIElements();
+						return true;
+					case 'delete': // Delete playlist (delete)
+						if (z !== -1) {
+							this.removePlaylist(z);
+							setTimeout(() => { // Required since input popup invokes move callback after this func!
+								this.cacheLastPosition(Math.min(z, this.items - 1));
+								this.jumpLastPosition();
+								this.move(this.mx, this.my); // Update cursor
+							}, 10);
+							return true;
+						}
+						break; // Don't process when not over playlist
+				}
+				// Focus on search box
 				if (this.searchInput && keyChar === 'e' && getKeyboardMask() === kMask.ctrl) {
 					this.searchInput.check('down', this.searchInput.x + 1, this.searchInput.y + 1);
 					this.searchInput.check('up', this.searchInput.x + 1, this.searchInput.y + 1);
 					return true;
 				}
-				if (keyChar && keyChar.length === 1 && quickSearchRe.test(keyChar)) {
+				// Quick-search
+				// Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
+				if (showMenus['Quick-search'] && keyChar && keyChar.length === 1 && quickSearchRe.test(keyChar)) {
 					if (animation.fRepaint !== null) {clearTimeout(animation.fRepaint);}
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) {this.lastCharsPressed = {str: '', ms: Infinity, bDraw: false};}
 					let method = this.methodState.split('\t')[0].replace('By ', '');
@@ -2185,6 +2181,24 @@ function _list(x, y, w, h) {
 		}
 	}
 	
+	this.listGlobalShortcuts = (bForce = false) => {
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		return (this.properties.bGlobalShortcuts[1] || bForce
+			? '\n- F1: lock / unlock playlist.' +
+				'\n- F2: rename playlist.' +
+				'\n- F3: clone in UI playlist.' +
+				'\n- F4: load / jump to playlist.' +
+				'\n- F5: copy playlist (with same format).' +
+				(showMenus['Online sync'] ? '\n- F6: export playlist to ListenBrainz (+ Spotify).' : '\n- F6: -none-\t(disabled Online sync)') +
+				'\n- F7: new playlist' + (showMenus['Folders'] ? ' or folder (+ Shift)' : '') + '.' +
+				(showMenus['Category'] ? '\n- F8: cycle categories.' :  '\n- F8: -none-\t(disabled Categories)') +
+				'\n- F9: search playlists with selected tracks.' +
+				'\n- F10: settings menu or list menu (+ Shift).' +
+				'\n- F11: documentation (pdf).' +
+				(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: -none-\t(disabled File tracking -lite mode-)')
+			: '');
+	}
+	
 	this.playlistMenu = (z, x, y) => {
 		if (z === -1) {return;}
 		this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
@@ -2203,6 +2217,51 @@ function _list(x, y, w, h) {
 		const menu = new _menu({bInit: false});
 		menu.newMenu(void(0), void(0), void(0), {type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId)});
 		return menu.btn_up(x,y);
+	}
+	
+	this.exportToListenbrainz = (plsArr) => {
+		if (!plsArr && !isArray(plsArr)) {return Promise.resolve(false);}
+		if (isArray(plsArr) && plsArr.some((pls) => pls.isFolder) || plsArr.isFolder) {
+			if (plsArr.isFolder) {plsArr = plsArr.pls.filtered;}
+			const expand = (pls) => {
+				if (pls.isFolder) {
+					return pls.pls.filtered.map(expand);
+				} else {return pls;}
+			};
+			plsArr = plsArr.map(expand).flat(Infinity);
+		}
+		return checkLBToken()
+			.then((result) => {
+				if (!result) {return false;}
+				const lb = listenBrainz;
+				const bLookupMBIDs = this.properties.bLookupMBIDs[1];
+				const token = this.properties.lBrainzToken[1].length > 0 ? lb.decryptToken({lBrainzToken: this.properties.lBrainzToken[1], bEncrypted: this.properties.lBrainzEncrypt[1]}) : null;
+				if (!token) {return false;}
+				return Promise.serial(isArray(plsArr) ? plsArr : [plsArr], async (pls, i) => {
+					let bUpdateMBID = false;
+					let playlist_mbid = '';
+					if (pls.playlist_mbid.length) {
+						console.log('Syncing playlist with ListenBrainz: ' + pls.name);
+						playlist_mbid = await lb.syncPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
+						if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
+					} else {
+						console.log('Exporting playlist to ListenBrainz: ' + pls.name);
+						playlist_mbid = await lb.exportPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
+						if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
+					}
+					if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.'); return false;}
+					if (this.properties.bSpotify[1]) {
+						lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
+							if (services.indexOf('spotify') !== -1) {
+								console.log('Exporting playlist to Spotify: ' + pls.name);
+								lb.exportPlaylistToService({playlist_mbid}, 'spotify', token);
+							}
+						});
+					}
+					if (bUpdateMBID && writablePlaylistFormats.has(pls.extension)) {setPlaylist_mbid(playlist_mbid, this, pls);}
+					return true;
+				})
+			});
 	}
 	
 	this.search = (bFilter = true, str = this.searchInput ? this.searchInput.text : '') => {
@@ -2472,7 +2531,7 @@ function _list(x, y, w, h) {
 				i = this.data.findIndex((item) => item.nameId === this.data[i].inFolder && item.isFolder);
 				level++;
 			}
-			const bMaxLevel = level <= this.maxFolderLevels;
+			const bMaxLevel = level <= this.folders.maxDeep;
 			const bToSameFolder = currSelIdx !== -1 
 				? this.internalPlsDrop.every((idx) => {
 					return bToFolder && this.data[idx].inFolder === this.data[currSelIdx].nameId || !bToFolder && this.data[idx].inFolder === this.data[currSelIdx].inFolder;
@@ -3287,10 +3346,10 @@ function _list(x, y, w, h) {
 		if (mbidState === this.constMbidStates()[0]) {
 			// this.data = this.data;
 		} else if (mbidState === this.constMbidStates()[1]) {
-			const isNoMbid = (item) => {return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			const isNoMbid = (item) => {return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isNoMbid));};
 			this.data = this.data.filter(isNoMbid);
 		} else if (mbidState === this.constMbidStates()[2]) {
-			const isMbid = (item) => {return item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			const isMbid = (item) => {return item.playlist_mbid.length || (item.isFolder && item.pls.some(isMbid));};
 			this.data = this.data.filter(isMbid);
 		}
 		// Focus
@@ -3456,10 +3515,10 @@ function _list(x, y, w, h) {
 		if (mbidState === this.constMbidStates()[0]) {
 			// outData = outData;
 		} else if (mbidState === this.constMbidStates()[1]) {
-			const isNoMbid = (item) => {return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			const isNoMbid = (item) => {return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isNoMbid));};
 			outData = outData.filter(isNoMbid);
 		} else if (mbidState === this.constMbidStates()[2]) {
-			const isMbid = (item) => {return item.playlist_mbid.length || (item.isFolder && item.pls.some(isExt));};
+			const isMbid = (item) => {return item.playlist_mbid.length || (item.isFolder && item.pls.some(isMbid));};
 			outData = outData.filter( isMbid);
 		}
 		
@@ -3708,7 +3767,7 @@ function _list(x, y, w, h) {
 		for (let zz of z) {
 			const folder = this.data[zz];
 			if (!folder || !folder.isFolder) {console.log('switchFolder: item is not a folder. Name: ' + (folder ? folder.name : null) + ', Index: ' + zz); return false;}
-			const folderSize = folder.pls.lengthFiltered; // May be affected by current filter
+			const folderSize = folder.pls.lengthFilteredAll; // May be affected by current filter
 			if (folderSize > 0) {
 				if (folder.isOpen) {
 					const top = zz + folderSize;
@@ -4453,10 +4512,16 @@ function _list(x, y, w, h) {
 					return (this.length ? filterData({data: this, bReusePlsFilter: true}) : []);
 				}
 			});
-			Object.defineProperty(folder.pls, 'lengthFiltered', {
+			Object.defineProperty(folder.pls, 'lengthFilteredAll', {
 				configurable: true, enumerable: true,
 				get: function () {
 					return this.filtered.length;
+				}
+			});
+			Object.defineProperty(folder.pls, 'lengthFiltered', {
+				configurable: true, enumerable: true,
+				get: function () {
+					return this.filtered.filter((item) => !item.isFolder).length;
 				}
 			});
 			Object.defineProperty(folder.pls, 'lengthFilteredDeep', {
@@ -5267,6 +5332,8 @@ function _list(x, y, w, h) {
 				buttonsPanel.buttons.filterTwoButton.method = filters[1];
 				bDone = true;
 			}
+			// Check folders config
+			if (this.folders.maxDepth === null) {this.folders.maxDepth = Infinity;}
 			// Lite mode
 			if (this.bLiteMode) {
 				// Disable features
@@ -5697,9 +5764,7 @@ function _list(x, y, w, h) {
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	this.columns = JSON.parse(this.properties['columns'][1]);
 	// Folders
-	this.bShowFolderSize = true;
-	this.bShowFolderSizeDeep = true;
-	this.maxFolderLevels = 3;
+	this.folders = JSON.parse(this.properties['folders'][1]);
 	// Panel behavior
 	this.bRelativePath = this.properties['bRelativePath'][1];
 	this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
@@ -5793,6 +5858,16 @@ function _list(x, y, w, h) {
 					: filterKeys.filter((key) => key !== 'Search').length;
 			}
 		},
+		columns: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => {
+				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...';
+			}, func: () => {
+				this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
+				this.properties.uiElements[1] = JSON.stringify(this.uiElements);
+				overwriteProperties(this.properties);
+				this.updateUIElements();
+			}
+		},
 		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask, parent) => createMenuRight().btn_up(x, y)},
 		settings: {
 			x: 0, y: 0, w: 0, h: 0,
@@ -5853,33 +5928,25 @@ function _list(x, y, w, h) {
 					// Enabled menus
 					const showMenus = JSON.parse(this.properties.showMenus[1]);
 					fb.ShowPopupMessage(
-						'Global keyboard shortcuts:' +
+						'Global shortcuts:' +
 						'\n-------------------' +
-						'\n- F1: lock / unlock playlist.' +
-						'\n- F2: rename playlist.' +
-						'\n- F3: clone in UI playlist.' +
-						'\n- F4: load / jump to playlist.' +
-						'\n- F5: copy playlist (with same format).' +
-						(showMenus['Online sync'] ? '\n- F6: export playlist to ListenBrainz (+ Spotify).' : '\n- F6: -none-\t(disabled Online sync)') +
-						'\n- F7: new playlist.' +
-						(showMenus['Category'] ? '\n- F8: cycle categories.' :  '\n- F8: -none-\t(disabled Categories)') +
-						'\n- F9: search playlists with selected tracks.' +
-						'\n- F10: settings menu or list menu (+ Shift).' +
-						'\n- F11: documentation (pdf).' +
-						(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: -none-\t(disabled File tracking -lite mode-)') +
+						this.listGlobalShortcuts() +
 						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
 						'\n- DEL: delete playlist.' +
+						(this.searchInput ? '\n- CTRL + E: focus on search box.' : '') +
 						'\n' +
-						'\nQuick-search' +
-						'\n-------------------' +
-						'\nPress any letter / number to jump by current sorting' + 
-						'\n(i.e. sorting by category jumps by it instead of name).' +
-						'\n' +
-						'\nTooltip' +
+						(showMenus['Quick-search']
+							? '\nQuick-search:' +
+								'\n-------------------' +
+								'\nPress any letter / number to jump by current sorting' + 
+								'\n(i.e. sorting by category jumps by it instead of name).' +
+								'\n'
+							: '') +
+						'\nTooltip:' +
 						'\n-------------------' +
 						'\nShift / Ctrl on buttons / playlists will show the associated action.' +
 						'\n' +
-						'\nSorting & Filters' +
+						'\nSorting & Filters:' +
 						'\n-------------------' +
 						'\nRight click on buttons allow to switch current filters and sorting.' +
 						'\n' +

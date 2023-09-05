@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/05/23
+//04/09/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -7,6 +7,9 @@ const chars = {
 	// Web
 	lastFm			: '\uf202',
 	link			: '\uf0c1',
+	upload			: '\uf0ee',
+	download		: '\uf0ed',
+	cloud			: '\uf0c2',
 	// Standard
 	close 			: '\uf00D',
 	ratingOn 		: '\uf005',
@@ -46,9 +49,14 @@ const chars = {
 	moon			: '\uf186',
 	lighbulb		: '\uf0eb',
 	close			: '\uf00d',
+	columns			: '\uf0db',
+	table			: '\uf0ce',
+	chart			: '\uf201',
 	// Files
 	folderOpenBlack	: '\uf07c',
 	folderOpenWhite	: '\uf115',
+	folderCloseBlack: '\uf07b',
+	folderCloseWhite: '\uf114',
 	emptyFileWhite	: '\uf016',
 	emptyFilesWhite	: '\uf0c5',
 	fileWhite		: '\uf0f6',

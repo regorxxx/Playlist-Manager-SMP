@@ -43,8 +43,14 @@
 ## [Unreleased][]
 ### Added
 - Folders: items may now be grouped in folders, with unlimited level depth support and the ability to be expanded/collapsed. Adding or removing items is done via drag n' drop, similar to the way manual sorting works. Folders have an unique contextual menu which allow to apply some actions to their content or multiple-select them. Feature can be disabled if desired.
+- ListenBrainz: export to ListenBrainz is now available on the multiple selection contextual menu. i.e. can work on batch.
 - UI: added tooltip at scrollbar about double click action.
+- UI: switch columns button.
 ### Changed
+- Quick-search: can be now be disabled.
+- UI: improvements on how shortcuts are shown on quick help popup.
+- UI: Del, º, \, / shortcuts now work even when F1-F12 shortcuts are disabled.
+- UI: new shortcut, F7 + Shift, which creates a new folder.
 ### Removed
 ### Fixed
 - UI: avoid jumping to the top after auto-updating a playlist if mouse never entered the list and was only used at the scroll bar.

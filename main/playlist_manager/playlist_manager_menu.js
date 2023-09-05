@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/08/23
+//05/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -377,11 +377,11 @@ function createMenuLeft(forcedIndex = -1) {
 						const token = bListenBrainz ? lb.decryptToken({lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1]}) : null;
 						if (!token) {return false;}
 						if (pls.playlist_mbid.length) {
-							console.log('Syncing playlist with MusicBrainz: ' + pls.name);
+							console.log('Syncing playlist with ListenBrainz: ' + pls.name);
 							playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 							if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) {bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name);}
 						} else {
-							console.log('Exporting playlist to MusicBrainz: ' + pls.name);
+							console.log('Exporting playlist to ListenBrainz: ' + pls.name);
 							playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 							if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
 						}
@@ -565,7 +565,7 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
 					menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 					menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
-						console.popup('Playlist URL: \n' + lb.getPlaylistURL(pls), window.Name);
+						console.popup('Playlist URL:\n\t' + lb.getPlaylistURL(pls), window.Name);
 					}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED});
 					menu.newEntry({menuName: subMenuName, entryText: 'Open on Web...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
 						const url = lb.getPlaylistURL(pls);
@@ -776,6 +776,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
+	const lb = listenBrainz;
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
@@ -804,6 +805,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsPlsUISome = playlistsUI.length ? true : false;
 	const bWritableFormat = playlists.some((pls) => {return writablePlaylistFormats.has(pls.extension);});
 	const bManualSorting = list.methodState === list.manualMethodState();
+	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
@@ -935,7 +937,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			}, flags: !bIsLockPlsEvery && bIsPlsEditable && !bIsFolderEvery ? MF_STRING : MF_GRAYED});
 		}
 	}
-	if (showMenus['Export and copy']) {menu.newEntry({entryText: 'sep'});}
+	if (showMenus['Export and copy'] || showMenus['Online sync']) {menu.newEntry({entryText: 'sep'});}
 	if (showMenus['Export and copy']) { // Export and Convert
 		const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
 		{	// Copy
@@ -988,6 +990,17 @@ function createMenuLeftMult(forcedIndexes = []) {
 				}, flags});
 			});
 		}
+	}
+	if (showMenus['Online sync']) { // ListenBrainz
+			const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSPEvery ? MF_STRING : MF_GRAYED);
+			const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
+			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
+				list.exportToListenbrainz(playlists);
+			}, flags});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (playlists.some((pls) => pls.playlist_mbid.length) ? '' : '\t(no MBID)'), func: async () => {
+				console.popup('Playlist URL:\n\t' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t'), window.Name);
+			}, flags: playlists.some((pls) => pls.playlist_mbid.length) ? MF_STRING : MF_GRAYED});
 	}
 	if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome) || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
 	{	// File management
@@ -3071,8 +3084,8 @@ function createMenuRightTop() {
 				list.updateUIElements();
 			}});
 		}
-		menu.newEntry({menuName, entryText: 'sep'});
-		{	// QuickSearch
+		if (showMenus['Quick-search']) {	// QuickSearch
+			menu.newEntry({menuName, entryText: 'sep'});
 			const subMenuName = menu.newMenu('Quick-search...', menuName);
 			{
 				menu.newEntry({menuName: subMenuName, entryText: 'Quick-search configuration:', flags: MF_GRAYED});
@@ -3095,6 +3108,77 @@ function createMenuRightTop() {
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
+	if (showMenus['Folders']) {
+		const menuName = menu.newMenu('Folders');
+		{	// Max Depth
+			menu.newEntry({menuName, entryText: 'Max level depth...\t(' + (isInt(list.folders.maxDepth) ? list.folders.maxDepth : '\u221E') + ')', func: () => {
+				const input = Input.number('int positive', list.folders.maxDepth, 'Enter positive integer value:', window.Name, 3);
+				if (input === null) {return;}
+				list.folders.maxDepth = input;
+				list.properties.folders[1] = JSON.stringify(list.folders);
+				overwriteProperties(list.properties);
+			}});
+		}
+		{	// Folder size
+			const subMenuName = menu.newMenu('Show size...', menuName);
+			const options = [
+				{name: 'Deep recursion', settings: {bShowSize: true, bShowSizeDeep: true}},
+				{name: 'Current level', settings: {bShowSize: true, bShowSizeDeep: false}},
+				{name: 'None', settings: {bShowSize: false, bShowSizeDeep: false}},
+			];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Show size along name:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
+					Object.keys(item.settings).forEach((key) => {
+						list.folders[key] = item.settings[key];
+					});
+					list.properties.folders[1] = JSON.stringify(list.folders);
+					overwriteProperties(list.properties);
+					list.repaint();
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0].name, options[optionsLength - 1].name,  () => {
+				const idx = options.findIndex((option) => Object.keys(option.settings).every((key) => list.folders[key] === option.settings[key]));
+				return idx !== -1 ? idx : 2;
+			});
+		}
+		{	// Icons
+			const subMenuName = menu.newMenu('Icons...', menuName);
+			const options = [
+				{name: 'Charets', icons: {open: chars.downOutline, closed: chars.leftOutline}},
+				{name: 'Folders (solid)', icons: {open: chars.folderOpenBlack, closed: chars.folderCloseBlack}},
+				{name: 'Folders (outline)', icons: {open: chars.folderOpenWhite, closed: chars.folderCloseWhite}},
+				{name: 'Custom...', icons: {open: null, closed: null}},
+			];
+			const optionsLength = options.length;
+			menu.newEntry({menuName: subMenuName, entryText: 'Icons for folders:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			options.forEach((item, i) => {
+				menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
+					if (Object.values(item.icons).filter(Boolean).length !== 2) {
+						Object.keys(item.icons).forEach((key) => {
+							if (!item.icons[key]) {
+								const input = Input.string('unicode', list.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode)\n\nLook for values at:\nhttps://www.fontawesomecheatsheet.com', window.Name, chars.downOutline, void(0), false);
+								if (input === null) {return;}
+								item.icons[key] = input;
+							}
+						});
+					}
+					list.folders.icons = item.icons;
+					list.properties.folders[1] = JSON.stringify(list.folders);
+					overwriteProperties(list.properties);
+					list.repaint();
+				}});
+			});
+			menu.newCheckMenu(subMenuName, options[0].name, options[optionsLength - 1].name,  () => {
+				const idx = options.findIndex((option) => isArrayEqual(Object.values(option.icons), Object.values(list.folders.icons)));
+				return idx !== -1 ? idx : 3;
+			});
+		}
+		menu.newEntry({entryText: 'sep'});
+	}
 	{	// Shortcuts
 		const subMenuName = menu.newMenu('Shortcuts...');
 		menu.newEntry({menuName: subMenuName, entryText: 'Mouse / Keyboard actions:', flags: MF_GRAYED});
@@ -3265,26 +3349,13 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		{	// Keyboard
-			menu.newEntry({menuName: subMenuName, entryText: 'Enable F1-F8 keyboard actions', func: () => {
-				fb.ShowPopupMessage(
-					'- F1: Lock/unlock playlist file or UI-only playlist.\n' +
-					'- F2: Rename highlighted playlist.\n' +
-					'- F3: Clone in UI highlighted playlist.\n' +
-					'- F4: Load/show highlighted playlist\n' +
-					'- F5: Copy highlighted playlist. Maintains original format.\n' +
-					'- F6: Export playlist to ListenBrainz (+ Spotify).\n' +
-					'- F7: Add new (empty) playlist.\n' +
-					'- F8: Delete highlighted playlist.\n' +
-					'- F9: Filter/Search playlists with selected tracks\n' +
-					'- F10: Open Settings menu.\n' +
-					'- F10 + Shift: Open List menu.\n' +
-					'- F11: Open documentation.\n' +
-					'- F12: Open playlists tracked folder.'
-				, window.Name);
-				list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1]
+			menu.newEntry({menuName: subMenuName, entryText: 'Enable F1-F12 keyboard actions', func: () => {
+				const showMenus = JSON.parse(list.properties.showMenus[1]);
+				list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1];
 				overwriteProperties(list.properties);
+				if (list.properties.bGlobalShortcuts[1]) {fb.ShowPopupMessage(list.listGlobalShortcuts(), window.Name);}
 			}});
-			menu.newCheckMenu(subMenuName, 'Enable F1-F8 keyboard actions', void(0), () => list.properties.bGlobalShortcuts[1]);
+			menu.newCheckMenu(subMenuName, 'Enable F1-F12 keyboard actions', void(0), () => list.properties.bGlobalShortcuts[1]);
 		}
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		menu.newEntry({menuName: subMenuName, entryText: 'Double click timer...', func: () => {

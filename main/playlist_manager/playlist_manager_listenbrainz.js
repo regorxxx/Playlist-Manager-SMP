@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/06/23
+//05/09/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -135,6 +135,7 @@ listenBrainz.joinArtistMBIDs = async function joinArtistMBIDs(artists, MBIds, to
 listenBrainz.consoleError = (message = 'Token can not be validated.') => {
 	fb.ShowPopupMessage(
 		message.trim() + ' Check console.\n\nSome possible errors:' + 
+		'\n\t- 12029: Encrypted communication could not be established.' +
 		'\n\t- 12007: Network error and/or non reachable server.' +
 		'\n\t- 429: Too many requests on a short amount of time.' +
 		'\n\t- 400: Only add max 100 recordings per call. (Bug at script level)' +
@@ -150,7 +151,7 @@ listenBrainz.consoleError = (message = 'Token can not be validated.') => {
 // Note posting multiple times the same playlist file will create different entities
 // Use sync to edit already exported playlists
 listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId, path, extension}*/, root = '', token, bLookupMBIDs = true) {
-	if (!pls.path && !pls.extension || pls.extension && !pls.nameId || !pls.name) {console.log('exportPlaylist: no valid pls provided'); return promise.resolve('');}
+	if (!pls.path && !pls.extension || pls.extension && !pls.nameId || !pls.name) {console.log('exportPlaylist: no valid pls provided'); return Promise.resolve('');}
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
 	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, root, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
@@ -197,7 +198,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 // Delete all tracks on online playlist and then add all tracks again using the playlist file as reference
 // Easier than single edits, etc.
 listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, playlist_mbid}*/, root = '', token, bLookupMBIDs = true) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('syncPlaylist: no playlist_mbid provided'); return promise.resolve('');}
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('syncPlaylist: no playlist_mbid provided'); return Promise.resolve('');}
 	const data = {
 		index: 0,
 		count: Number.MAX_VALUE
@@ -254,8 +255,8 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 /*{name, playlist_mbid}*/
 // Add handleList to given online playlist
 listenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, token, bLookupMBIDs = true) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('addPlaylist: no playlist_mbid provided'); return promise.resolve('');}
-	if (!handleList || !handleList.Count) {console.log('addPlaylist: empty pls provided'); return promise.resolve(pls.playlist_mbid);}
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) {console.log('addPlaylist: no playlist_mbid provided'); return Promise.resolve('');}
+	if (!handleList || !handleList.Count) {console.log('addPlaylist: empty pls provided'); return Promise.resolve(pls.playlist_mbid);}
 	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat();
 	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
 	const missingCount = handleList.Count - mbid.length;
