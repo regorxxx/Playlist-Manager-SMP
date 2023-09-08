@@ -1,14 +1,12 @@
 ﻿'use strict';
-//04/09/23
+//08/09/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-const bEnableFolders = false;
-
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.6.0-beta.3', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'XXX', version: '0.6.0', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -25,6 +23,7 @@ include('main\\playlist_manager\\playlist_manager_buttons.js');
 include('main\\playlist_manager\\playlist_manager_menu.js');
 include('main\\playlist_manager\\playlist_manager_helpers.js');
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
+include('main\\playlist_manager\\playlist_manager_statistics.js');
 include('main\\window\\window_xxx_scrollbar.js');
 
 checkCompatible('1.6.1', 'smp');
@@ -190,7 +189,7 @@ var properties = {
 		'UI playlist locks':		true,
 		'File locks':				true,
 		'Quick-search':				true,
-		...(bEnableFolders && {'Folders':					true}),
+		'Folders':					true,
 	})],
 	searchMethod			: ['Search settings', JSON.stringify({
 		bName:			true,
@@ -250,6 +249,15 @@ var properties = {
 		bShowSizeDeep: true,
 		icons:		{open: chars.downOutline, closed: chars.leftOutline}
 	})],
+	bStatsMode			: ['Stats mode enabled?', false, {func: isBoolean}, false],
+	statsConfig			: ['Stats mode configuration', JSON.stringify({
+		// graph: {/* type, borderWidth, point */},
+		// dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot*/},
+		background: {color: null},
+		margin: {left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15)},
+		// grid = {x: {/* show, color, width */}, y: {/* ... */}},
+		// axis = {x: {/* show, color, width, ticks, labels, key *, singleLabels/}, y: {/* ... */}}
+	})]
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -264,6 +272,7 @@ properties['searchMethod'].push({func: isJSON}, properties['searchMethod'][1]);
 properties['uiElements'].push({func: isJSON}, properties['uiElements'][1]);
 properties['columns'].push({func: isJSON}, properties['columns'][1]);
 properties['folders'].push({func: isJSON}, properties['folders'][1]);
+properties['statsConfig'].push({func: isJSON}, properties['statsConfig'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -373,7 +382,7 @@ let autoUpdateRepeat;
 				});
 			}
 		}
-		if (bEnableFolders) {	// Folders
+		{	// Folders
 			const answer = prop.bLiteMode[1] 
 				? popup.yes
 				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
@@ -427,8 +436,9 @@ let autoUpdateRepeat;
 	if (!pop.isEnabled() && !prop.bLiteMode[1]) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
 }
 
-// List
+// List and other UI elements
 const list = new _list(LM, TM, 0, 0);
+const stats = new _listStatistics(LM, TM, 0, 0, list.properties.bStatsMode[1], JSON.parse(list.properties.statsConfig[1]));
 let scroll;
 
 const autoSaveTimer = Number(list.properties.autoSave[1]); 
@@ -519,17 +529,17 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_char', (code) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		list.on_char(code);
 	})
 
 	addEventListener('on_key_down', (k) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		list.key_down(k);
 	});
 
 	addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.btn_up(x, y)) {return;}
 			list.lbtn_up(x, y, mask);
@@ -538,14 +548,14 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		if (buttonsPanel.curBtn === null) {
 			list.mbtn_up(x, y, mask);
 		}
 	});
 
 	addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.btn_down(x, y)) {return;}
 			list.lbtn_down(x, y, mask)
@@ -554,7 +564,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.lbtn_dblclk(x, y)) {return;}
 			list.lbtn_dblclk(x, y);
@@ -562,6 +572,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
+		if (stats.bEnabled) {return;}
 		if (pop.isEnabled()) {pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return;}
 		if (scroll && scroll.move(x, y)) {list.move(-1, -1); buttonsPanel.curBtn = null; return;}
 		if (!list.isInternalDrop()) {on_mouse_move_buttn(x, y, mask);}
@@ -575,14 +586,14 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_leave', () => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
 		scroll && scroll.move(-1, -1);
 	});
 
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
-		if (pop.isEnabled()) {return true;}
+		if (pop.isEnabled() || stats.bEnabled) {return true;}
 		if (list.modeUI === 'traditional' && buttonsPanel.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
 				return createMenuRightTop().btn_up(x, y);
@@ -606,12 +617,13 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_wheel', (s) => {
-		if (pop.isEnabled()) {return;}
+		if (pop.isEnabled() || stats.bEnabled) {return;}
 		list.wheel({s});
 	});
 
 	addEventListener('on_paint', (gr) => {
 		panel.paint(gr);
+		if (stats.bEnabled) {return;}
 		if (panel.imageBackground.bTint) {
 			panel.paintImage(
 				gr,
@@ -1100,6 +1112,8 @@ if (!list.properties.bSetup[1]) {
 			keyListener.bShift = keyListener.bCtrol = false;
 		}
 	}, 500)();
+	
+	stats.attachCallbacks();
 } else {
 	buttonsPanel.buttons = {};
 	buttonsPanel.config.bToolbar = false;
