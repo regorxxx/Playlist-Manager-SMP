@@ -46,6 +46,7 @@
 - ListenBrainz: export to ListenBrainz is now available on the multiple selection contextual menu. i.e. can work on batch.
 - UI: added tooltip at scrollbar about double click action.
 - UI: switch columns button.
+- Statistics: added statistics mode. Use it to display general metadata stats about the current panel; for ex. number of playlists per extension.
 ### Changed
 - Quick-search: can be now be disabled.
 - UI: improvements on how shortcuts are shown on quick help popup.
