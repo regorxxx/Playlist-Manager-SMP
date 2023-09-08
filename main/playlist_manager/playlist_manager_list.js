@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/09/23
+//07/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2203,7 +2203,25 @@ function _list(x, y, w, h) {
 		if (z === -1) {return;}
 		this.bSelMenu = true; // Used to maintain current selection rectangle while drawing the menu
 		if (this.indexes.length) {
-			if (!this.indexes.includes(z)) {this.multSelect(z);}
+			if (!this.indexes.includes(z)) {
+				const pls = this.data[z];
+				const folderRecurse = (pls) => {
+					const bOpen = pls.isOpen;
+					if (!bOpen) {this.switchFolder(z, false);}
+					pls.pls.filter((item) => this.data.includes(item)).forEach((item) => {
+						const zz = this.data.indexOf(item);
+						if (zz !== -1 && !this.indexes.includes(zz)) {
+							if (this.data[zz].isFolder) {folderRecurse(this.data[zz]);}
+							else {this.multSelect(zz);}
+						}
+					});
+				}
+				if (pls.isFolder) {
+					folderRecurse(pls);
+				} else {
+					this.multSelect(z);
+				}
+			}
 			createMenuLeftMult(this.indexes).btn_up(x,y);
 		} else {
 			createMenuLeft(z).btn_up(x,y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
@@ -2358,23 +2376,40 @@ function _list(x, y, w, h) {
 				let bOpen = pls.isOpen;
 				if (shortcut.key === 'Multiple selection' && this.indexes.includes(z)) { // Deselect folder or select/deselect all items within
 					shortcut.func(z);
-					if (bOpen) {
-						pls.pls.filter((item) => this.data.includes(item)).forEach((item) => {const zz = this.data.indexOf(item); shortcut.func(zz);});
-					}
-				}
-				else {
-					if (!bOpen) {this.switchFolder(z, false);}
-					pls.pls.filter((item) => this.data.includes(item)).forEach((item) => {
-						const zz = this.data.indexOf(item);
-						if ((item.isAutoPlaylist || item.query) && shortcut.key === 'Clone playlist in UI') {
-							const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-							shortcut.func(zz, remDupl, this.bAdvTitle);
-						} else {
-							shortcut.func(zz);
+				} else {
+					let bEverySelected = false;
+					const folderRecurse = (pls, idx) => {
+						const bOpen = pls.isOpen;
+						if (pls.isFolder && !bOpen) {this.switchFolder(idx, false);}
+						if (!bEverySelected) {
+							bEverySelected = pls.pls.filtered.every((item) => {
+								return this.indexes.includes(this.data.indexOf(item));
+							});
 						}
-					});
+						pls.pls.filtered.forEach((item) => {
+							const zz = this.data.indexOf(item); 
+							if ((item.isAutoPlaylist || item.query) && shortcut.key === 'Clone playlist in UI') {
+								const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
+								shortcut.func(zz, remDupl, this.bAdvTitle);
+							} else {
+								if (this.data[zz].isFolder) {
+									if (shortcut.key === 'Multiple selection' && this.indexes.includes(zz)) {shortcut.func(zz);}
+									folderRecurse(this.data[zz], zz);
+								} else {
+									if (shortcut.key === 'Multiple selection') {
+										if (!this.indexes.includes(zz)) {
+											shortcut.func(zz);
+										} else if (bEverySelected) {
+											shortcut.func(zz);
+										}
+									} else {shortcut.func(zz);}
+								}
+							}
+						});
+						if (pls.isFolder && !bOpen && !openActions.has(shortcut.key)) {this.switchFolder(idx, false);}
+					}
+					folderRecurse(pls, z);
 				}
-				if (!bOpen && !openActions.has(shortcut.key)) {this.switchFolder(z, false);}
 			}
 		} else if (bMultiple) { // Multiple selection
 			const singleActions = new Set(['Multiple selection', 'Multiple selection (range)', 'Manage playlist']);
