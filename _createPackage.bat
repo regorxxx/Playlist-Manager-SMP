@@ -134,7 +134,7 @@ GOTO:EOF
 REM package variables
 REM usually only version needs to be changed
 REM any text must be JSON encoded
-SET version=0.5.3
+SET version=0.6.0
 SET name=Playlist-Manager-SMP
 SET id=2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D
 SET description=https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-manager-smp/\r\n\r\nPlaylist manager for foobar2000 and Spider Monkey Panel to save and load (auto)playlists on demand, synchronizing, ... along many more utilities.\r\n\r\n• Manages Playlist files, AutoPlaylists and Smart Playlists(XBMC or Kodi).\r\n• ListenBrainz integration: sync user's playlists, ...\r\n• Loads playlist files x100 times faster than standard foobar.\r\n• Multiple exporting options: compatible with Foobar2000 mobile, Kodi and XBMC systems, etc.\r\n• Group by categories, tags and inline searching.\r\n• Filters and Sorting.\r\n• Configurable UI.\r\n• Fully Wine - Unix - non IE SOs compatible.\r\n• Other scripts integration:\r\n   - Playlist-Tools-SMP\r\n   - ajquery-xxx\r\n   - SMP Dynamic menus
@@ -154,8 +154,10 @@ CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_helpers.js
 CALL :copy_file main\window\window_xxx_input.js
 CALL :copy_file main\window\window_xxx_scrollbar.js
-CALL :delete_file main\playlist_manager\playlist_manager_list_.js
-CALL :delete_file main\playlist_manager\playlist_manager_list_folder.js
+CALL :check_folder main\statistics
+CALL :copy_file main\statistics\statistics_xxx.js
+CALL :copy_file main\statistics\statistics_xxx_helper.js
+CALL :delete_file main\playlist_manager\playlist_manager_listenbrainz_extra.js
 REM readmes
 CALL :check_folder readmes
 CALL :copy_file readmes\playlist_manager.pdf
