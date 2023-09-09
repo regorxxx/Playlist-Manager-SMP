@@ -164,7 +164,7 @@ function _chart({
 		let valH;
 		let circleArr = [];
 		const labelCoord = [];
-		const c = {x:  x + w / 2, y: (y + h) / 2};
+		const c = {x:  x + (w - x) / 2, y: (y + h) / 2};
 		const ticks = r * 2 * Math.PI;
 		let iY, iX;
 		for (let j = 0; j < ticks; j++) {
@@ -207,7 +207,7 @@ function _chart({
 		let valH;
 		let circleArr = [];
 		const labelCoord = [];
-		const c = {x:  x + w / 2, y: (y + h) / 2};
+		const c = {x:  x + (w - x)/ 2, y: (y + h) / 2};
 		const ticks = r * 2 * Math.PI;
 		let iY, iX;
 		let alpha = 0;
@@ -378,7 +378,7 @@ function _chart({
 				this.dataDraw.forEach((serie, i) => {
 					const r = tickW * (series - i) / series;
 					const serieCoord = this.paintPie(gr, serie, i, x, y, w, h, maxY, r);
-					labelOver.coord.push([{from: {x: x + w / 2, y: (y + h) / 2}, to: {x: x + w / 2 + r, y: (y + h) / 2}, val: void(0), alpha: 0}, ...serieCoord]);
+					labelOver.coord.push([{from: {x: x + (w - x) / 2, y: (y + h) / 2}, to: {x: x + (w - x) / 2 + r, y: (y + h) / 2}, val: void(0), alpha: 0}, ...serieCoord]);
 					this.dataCoords[i].forEach((point) => {point.r1 = (series - i - 1) / series * r;});
 				});
 				labelOver.r = tickW;
@@ -397,7 +397,7 @@ function _chart({
 					const r1 = tickW * (series - i) / series;
 					const r2 = tickW * (series - i - 1) / series;
 					const serieCoord = this.paintDoughnut(gr, serie, i, x, y, w, h, maxY, r1, r2);
-					labelOver.coord.push([{from: {x: x + w / 2, y: (y + h) / 2}, to: {x: x + w / 2 + r1, y: (y + h) / 2}, val: void(0), alpha: 0}, ...serieCoord]);
+					labelOver.coord.push([{from: {x: x + (w - x) / 2, y: (y + h) / 2}, to: {x: x + (w - x) / 2 + r1, y: (y + h) / 2}, val: void(0), alpha: 0}, ...serieCoord]);
 					this.dataCoords[i].forEach((point) => {point.r1 = (series - i - 1) / series * r1;});
 				});
 				labelOver.r = tickW;
@@ -449,8 +449,10 @@ function _chart({
 									const xTickText = label.from.x + (border + tickW) * Math.cos(tetha) - tickW / 2;
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), 150);
-									gr.FillSolidRect(xTickText - _scale(2), yTickText, tickW + _scale(4), tickH, borderColor);
-									gr.GdiDrawText(labelText, this.gFont, this.colors[i][j], xTickText, yTickText, tickW, this.h, flags);
+									const offsetR = Math.max(Math.max(xTickText + tickW + _scale(2) + this.margin.right / 3, w) - w - x, 0);
+									const offsetL = Math.max(Math.max(xTickText, this.x + _scale(2) + this.margin.left / 3) - xTickText, 0);
+									gr.FillSolidRect(xTickText - _scale(2) - offsetR + offsetL, yTickText, tickW + _scale(4), tickH, borderColor);
+									gr.GdiDrawText(labelText, this.gFont, this.colors[i][j], xTickText - offsetR + offsetL, yTickText, tickW, this.h, flags);
 								}
 								prevLabel = label;
 							});
@@ -934,7 +936,7 @@ function _chart({
 			}
 		}
 		this.checkConfig();
-		if (data || dataManipulation) {this.initData();}
+		if (data || dataManipulation || graph) {this.initData();}
 		if (this.configuration.bLoadAsyncData && dataAsync) {this.initDataAsync();} // May be managed by the chart or externally
 		this.repaint();
 		return this;
@@ -968,6 +970,9 @@ function _chart({
 					for (let i = 0; i < series; i++) {
 						if (!this.colors[i]) {this.colors[i] = [];}
 					}
+				}
+				for (let i = 0; i < series; i++) {
+					if (!Array.isArray(this.colors[i])) {this.colors[i] = [];}
 				}
 				if (this.colors.some((arrCol, i) => arrCol.filter(Boolean).length !== this.dataDraw[i].length)) {
 					this.colors.forEach((arrCol, i) => {
@@ -1006,7 +1011,11 @@ function _chart({
 						}
 					});
 				}
+				break;
 		default:
+			for (let i = 0; i < this.colors.length; i++) {
+				if (Array.isArray(this.colors[i])) {this.colors[i] = this.colors[i][0];}
+			}
 			if (this.colors.filter(Boolean).length !== series) {
 				// Random colors or using Chroma scale with specific schems or array of colors
 				let schemeStr = this.chroma.scheme && typeof this.chroma.scheme === 'string' ? this.chroma.scheme.toLowerCase() : null;

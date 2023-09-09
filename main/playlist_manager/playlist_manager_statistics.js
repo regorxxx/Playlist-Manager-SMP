@@ -96,6 +96,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		const sortNat = (a, b) => {return a.y - b.y;};
 		const filtGreat = (num) => {return (a) => {return a.y > num;}};
 		const filtLow = (num) => {return (a) => {return a.y < num;}};
+		const fineGraphs = new Set(['bars', 'doughnut', 'pie']);
+		const sizeGraphs = new Set(['scatter', 'lines']);
 		// Header
 		menu.newEntry({entryText: this.title, flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
@@ -133,8 +135,10 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				{isEq: null,	key: this.graph.type, value: null,				newValue: 'scatter',		entryText: 'Scatter'},
 				{isEq: null,	key: this.graph.type, value: null,				newValue: 'bars',			entryText: 'Bars'},
 				{isEq: null,	key: this.graph.type, value: null,				newValue: 'lines',			entryText: 'Lines'},
+				{isEq: null,	key: this.graph.type, value: null,				newValue: 'doughnut',		entryText: 'Doughnut'},
+				{isEq: null,	key: this.graph.type, value: null,				newValue: 'pie',			entryText: 'Pie'},
 			].forEach(createMenuOption('graph', 'type', subMenu, void(0), (option) => {
-				this.graph.borderWidth = option.entryText !== 'Bars' ? _scale(4) : _scale(1);
+				this.graph.borderWidth = fineGraphs.has(option.newValue) ? _scale(1) : _scale(4);
 			}));
 		}
 		{
@@ -218,14 +222,12 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			].forEach(createMenuOption('axis', 'y', subMenu, false));
 		}
 		const type = this.graph.type.toLowerCase();
-		if (type === 'scatter' || type === 'lines') {
+		if (sizeGraphs.has(type)) {
 			const subMenu = menu.newMenu('Other config...');
-			if (type === 'scatter' || type === 'lines') {
-				const configSubMenu = menu.newMenu((type === 'lines' ? 'Line' : 'Point') + ' size...', subMenu);
-				[1, 2, 3, 4].map((val) => {
-					return {isEq: null,	key: this.graph.borderWidth, value: null, newValue: _scale(val), entryText: val.toString()};
-				}).forEach(createMenuOption('graph', 'borderWidth', configSubMenu));
-			}
+			const configSubMenu = menu.newMenu((type === 'lines' ? 'Line' : 'Point') + ' size...', subMenu);
+			[1, 2, 3, 4].map((val) => {
+				return {isEq: null,	key: this.graph.borderWidth, value: null, newValue: _scale(val), entryText: val.toString()};
+			}).forEach(createMenuOption('graph', 'borderWidth', configSubMenu));
 			if (type === 'scatter') {
 				const configSubMenu = menu.newMenu('Point type...', subMenu);
 				['circle', 'circumference', 'cross', 'triangle', 'plus'].map((val) => {
