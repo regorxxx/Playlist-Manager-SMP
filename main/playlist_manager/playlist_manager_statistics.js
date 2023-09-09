@@ -110,7 +110,6 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 									return keys.every((key) => val[key] === option.newValue[key]);
 								}
 							} else {
-								console.log(toString.call(option.newValue));
 								return option.isEq === null && option.value === null && (option.newValue === true || option.newValue === false)
 									? !!val
 									: (val === option.newValue);
