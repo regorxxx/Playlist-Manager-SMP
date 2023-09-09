@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/09/23
+//09/09/23
 
 include('statistics_xxx_helper.js');
 include('..\\..\\helpers\\popup_xxx.js');
@@ -14,7 +14,7 @@ function _chart({
 				dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot*/},
 				background = {/* color, image*/},
 				grid = {x: {/* show, color, width */}, y: {/* ... */}},
-				axis = {x: {/* show, color, width, ticks, labels, key *, singleLabels/}, y: {/* ... */}},
+				axis = {x: {/* show, color, width, ticks, labels, key, singleLabels, bAltLabels/}, y: {/* ... */}}, // singleLabels & bAltLabels only for X axis
 				margin = {/* left, right, top, bottom */}, 
 				x = 0,
 				y = 0,
@@ -451,6 +451,22 @@ function _chart({
 									const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), 150);
 									const offsetR = Math.max(Math.max(xTickText + tickW + _scale(2) + this.margin.right / 3, w) - w - x, 0);
 									const offsetL = Math.max(Math.max(xTickText, this.x + _scale(2) + this.margin.left / 3) - xTickText, 0);
+									// Lines to labels
+									if (this.axis.x.bAltLabels) {
+										const centroid = labelOver.r / series * ((series - (i + 1))/2 + (series - i)/2); // Set to zero to draw from center
+										const centerX = label.from.x + centroid * Math.cos(tetha);
+										const centerY = label.from.y + centroid * Math.sin(tetha); 
+										const borderX = xTickText - _scale(2) - offsetR + offsetL;
+										gr.DrawEllipse(centerX, centerY, 1, 1, 4, borderColor)
+										const anchorX = (borderX < centerX && borderX + tickW > centerX)
+											? centerX
+											: (borderX > label.from.x ? Math.min : Math.max)(borderX, borderX + tickW / 2);
+										const anchorY = (yTickText < centerY && yTickText + tickH > centerY)
+											? centerY
+											: (yTickText > label.from.y ? Math.min : Math.max)(yTickText, yTickText + tickH);
+										gr.DrawLine(label.from.x + centroid * Math.cos(tetha), label.from.y + centroid * Math.sin(tetha), anchorX, anchorY, this.graph.borderWidth, borderColor);
+									}
+									// Labels
 									gr.FillSolidRect(xTickText - _scale(2) - offsetR + offsetL, yTickText, tickW + _scale(4), tickH, borderColor);
 									gr.GdiDrawText(labelText, this.gFont, this.colors[i][j], xTickText - offsetR + offsetL, yTickText, tickW, this.h, flags);
 								}
@@ -490,6 +506,34 @@ function _chart({
 					}
 				}
 				break;
+			case 'bars':
+				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels) {
+					if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
+						[...xAsisValues].forEach((valueX,  i) => {
+							const xLabel= x + i * tickW;
+							valueX = this.configuration.bAltVerticalText ? valueX.flip() : valueX;
+							const xTickW = gr.CalcTextWidth(valueX, this.gFont);
+							if (this.configuration.bAltVerticalText) { // Flip chars
+								gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
+								gr.DrawString(valueX, this.gFont, this.axis.x.color, xLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
+								gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
+							} else {
+								const keyH = gr.CalcTextHeight(valueX, this.gFont);
+								const img = gdi.CreateImage(xTickW, keyH);
+								const _gr = img.GetGraphics();
+								_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(this.axis.x.color), 255), 0 ,0, xTickW, keyH, StringFormatFlags.NoWrap);
+								_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(this.axis.x.color), 123), 0 ,0, xTickW, keyH, StringFormatFlags.NoWrap);
+								img.RotateFlip(RotateFlipType.Rotate90FlipXY)
+								img.ReleaseGraphics(_gr);
+								gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
+								gr.DrawImage(img, xLabel, y - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+								gr.SetInterpolationMode(InterpolationMode.Default);
+							}
+						});
+					}
+				}
 			default:
 				// Y Axis ticks
 				if (this.axis.y.show) {
@@ -535,7 +579,7 @@ function _chart({
 						const last = xAsisValues.size - 1;
 						[...xAsisValues].forEach((valueX,  i) => {
 							const xLabel= x + i * tickW;
-							if (this.axis.x.labels) {
+							if (this.axis.x.labels && this.graph.type !== 'bars' || !this.axis.x.bAltLabels) {
 								if (i === 0 && offsetTickText) { // Fix for first label position
 									const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 									const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -1141,7 +1185,7 @@ function _chart({
 		this.background = {color: RGB(255 , 255, 255), image: null};
 		this.grid = {x: {show: false, color: RGB(0,0,0), width: _scale(1)}, y: {show: false, color: RGB(0,0,0), width: _scale(1)}};
 		this.axis = {
-				x: {show: true, color: RGB(0,0,0), width: _scale(2), ticks: 'auto', labels: true, singleLabels: true, key: '', showKey: true},
+				x: {show: true, color: RGB(0,0,0), width: _scale(2), ticks: 'auto', labels: true, singleLabels: true, key: '', showKey: true, bAltLabels: false},
 				y: {show: true, color: RGB(0,0,0), width: _scale(2), ticks: 10, labels: true, key: 'tracks', showKey: true}
 		};
 		this.margin = {left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20)};

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/09/23
+//09/09/23
 
 include('..\\statistics\\statistics_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
@@ -78,15 +78,43 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
 					menu.newEntry({menuName, entryText: option.entryText, func: () => {
 						if (addFunc) {addFunc(option);}
-						if (subKey) {this.changeConfig({[key]: {[subKey]: option.newValue}});}
+						if (subKey) {
+							if (Array.isArray(subKey)) {
+								const len = subKey.length - 1;
+								const obj = {[key]: {}};
+								let prev = obj[key];
+								subKey.forEach((curr, i) => {
+									prev[curr] = i === len ? option.newValue : {};
+									prev = prev[curr];
+								});
+								this.changeConfig(obj);
+							} else {
+								this.changeConfig({[key]: {[subKey]: option.newValue}});
+							}
+						}
 						else {this.changeConfig({[key]: option.newValue});}
 					}});
 					if (bCheck) {
 						menu.newCheckMenu(menuName, option.entryText, void(0), () => {
-							const val = subKey ? this[key][subKey] : this[key];
+							const val = subKey 
+								? Array.isArray(subKey)
+									? subKey.reduce((acc, curr) => acc[curr], this[key])
+									: this[key][subKey] 
+								: this[key];
 							if (option.newValue && typeof option.newValue === 'function') {return !!(val && val.name === option.newValue.name);}
-							if (option.newValue && typeof option.newValue === 'object') {return !!(val && val.toString() === option.newValue.toString());}
-							else {return (val === option.newValue);}
+							if (option.newValue && typeof option.newValue === 'object') {
+								if (Array.isArray(val)) {
+									return !!(val && val.toString() === option.newValue.toString());
+								} else if (val) {
+									const keys = Object.keys(option.newValue);
+									return keys.every((key) => val[key] === option.newValue[key]);
+								}
+							} else {
+								console.log(toString.call(option.newValue));
+								return option.isEq === null && option.value === null && (option.newValue === true || option.newValue === false)
+									? !!val
+									: (val === option.newValue);
+							}
 						});
 					}
 				}
@@ -220,6 +248,10 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			[
 				{isEq: null,	key: this.axis.y.labels, value: null,					newValue: {labels: !this.axis.y.labels},			entryText: (this.axis.y.labels ? 'Hide' : 'Show') + ' Y labels'}
 			].forEach(createMenuOption('axis', 'y', subMenu, false));
+			menu.newEntry({menuName: subMenu, entryText: 'sep'});
+			[
+				{isEq: null,	key: this.axis.x.bAltLabels, value: null,				newValue: !this.axis.x.bAltLabels,		entryText: 'Alt. X labels'},
+			].forEach(createMenuOption('axis', ['x', 'bAltLabels'], subMenu, true));
 		}
 		const type = this.graph.type.toLowerCase();
 		if (sizeGraphs.has(type)) {
@@ -283,7 +315,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			colors: [opaqueColor(list.colors.selectedPlaylistColor, 50)],
 			margin: {left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15)},
 			axis: {
-				x: {show: true, color: blendColors(panel.colors.highlight, panel.getColorBackground(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Key'}, 
+				x: {show: true, color: blendColors(panel.colors.highlight, panel.getColorBackground(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Key', bAltLabels: true}, 
 				y: {show: true, color: blendColors(panel.colors.highlight, panel.getColorBackground(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Playlists'}
 			},
 			x: 0,
