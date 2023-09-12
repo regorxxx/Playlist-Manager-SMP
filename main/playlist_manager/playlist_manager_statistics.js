@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/09/23
+//12/09/23
 
 include('..\\statistics\\statistics_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
@@ -45,7 +45,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		});
 
 		addEventListener('on_mouse_rbtn_up', (x, y) => {
-			if (!this.bEnabled) {return;}
+			if (!this.bEnabled) {return true;}
 			charts.some((chart) => {return chart.rbtn_up(x,y);});
 			return true; // left shift + left windows key will bypass this callback and will open default context menu.
 		});
@@ -63,7 +63,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					Object.keys(config).forEach((key) => {
 						if (!keys.has(key)) {delete config[key];}
 					});
-					config.data = {option: parent.option, arg: parent.arg};
+					config.data = {source: parent.source, arg: parent.arg};
 					list.properties['statsConfig'][1] = JSON.stringify(config);
 					overwriteProperties(list.properties);
 				}
@@ -277,7 +277,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	}
 	
 	this.getData = (source = 'property', arg = 'extension') => {
-		let data;
+		let data = [];
 		switch (source) {
 			case 'property': {
 				const count = new Map();
