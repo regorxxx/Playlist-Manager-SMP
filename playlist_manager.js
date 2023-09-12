@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/09/23
+//11/09/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -190,6 +190,7 @@ var properties = {
 		'File locks':				true,
 		'Quick-search':				true,
 		'Folders':					true,
+		'Statistics mode':			true,
 	})],
 	searchMethod			: ['Search settings', JSON.stringify({
 		bName:			true,
@@ -431,7 +432,12 @@ let autoUpdateRepeat;
 			list.resetFilter();
 		});
 	}
-	
+	// Stats mode available?
+	if (prop.bStatsMode[1]) {
+		const showMenus = JSON.parse(prop.showMenus[1]);
+		if (!showMenus['Statistics mode']) {prop.bStatsMode[1] = false;}
+		overwriteProperties(prop); // Updates panel
+	}
 	// Disable panel on init until it's done
 	if (!pop.isEnabled() && !prop.bLiteMode[1]) {pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.');} 
 }
