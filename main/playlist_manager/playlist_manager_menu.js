@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/09/23
+//11/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -3567,14 +3567,16 @@ function createMenuRightTop() {
 		list.manualRefresh();
 	}});
 	menu.newCheckMenu(void(0), 'Lite mode', void(0),  () => list.bLiteMode);
-	menu.newEntry({entryText: 'Statistics mode', func: () => {
-		stats.bEnabled = !stats.bEnabled;
-		list.properties['bStatsMode'][1] = stats.bEnabled;
-		if (stats.bEnabled) {stats.init();}
-		overwriteProperties(list.properties);
-		list.updateUIElements(); // Buttons, etc.
-	}});
-	menu.newCheckMenu(void(0), 'Statistics mode', void(0),  () => stats.bEnabled);
+	if (showMenus['Statistics mode']) {
+		menu.newEntry({entryText: 'Statistics mode', func: () => {
+			stats.bEnabled = !stats.bEnabled;
+			list.properties['bStatsMode'][1] = stats.bEnabled;
+			if (stats.bEnabled) {stats.init();}
+			overwriteProperties(list.properties);
+			list.updateUIElements(); // Buttons, etc.
+		}});
+		menu.newCheckMenu(void(0), 'Statistics mode', void(0),  () => stats.bEnabled);
+	}
 	menu.newEntry({entryText: 'sep'});
 	{	// Readme
 		const path = folders.xxx + 'readmes\\playlist_manager.pdf';

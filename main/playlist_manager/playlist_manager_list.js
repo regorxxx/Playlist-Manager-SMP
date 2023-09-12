@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/09/23
+//11/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -5895,12 +5895,28 @@ function _list(x, y, w, h) {
 		},
 		columns: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => {
-				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...';
-			}, func: () => {
-				this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
-				this.properties.uiElements[1] = JSON.stringify(this.uiElements);
-				overwriteProperties(this.properties);
-				this.updateUIElements();
+				const showMenus = JSON.parse(this.properties.showMenus[1]);
+				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...' + (
+					showMenus['Statistics mode'] ?
+						'\n----------------------------------------------\n' + '(Shift + L. Click to switch Statistics mode)'
+						: ''
+					);
+			}, func: (x, y, mask, parent) => {
+				if (mask === MK_SHIFT) {
+					const showMenus = JSON.parse(this.properties.showMenus[1]);
+					if (showMenus['Statistics mode']) {
+						stats.bEnabled = !stats.bEnabled;
+						this.properties['bStatsMode'][1] = stats.bEnabled;
+						if (stats.bEnabled) {stats.init();}
+						overwriteProperties(this.properties);
+						this.updateUIElements(); // Buttons, etc.
+					}
+				} else {
+					this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
+					this.properties.uiElements[1] = JSON.stringify(this.uiElements);
+					overwriteProperties(this.properties);
+					this.updateUIElements();
+				}
 			}
 		},
 		newPls: {x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask, parent) => createMenuRight().btn_up(x, y)},
@@ -5916,7 +5932,7 @@ function _list(x, y, w, h) {
 				) + (
 					this.bLiteMode 
 						?	''
-						: (!this.bTracking ? 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking'
+						: (!this.bTracking ? 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking)'
 				);
 			},
 			func: (x, y, mask, parent) => {
@@ -5943,7 +5959,7 @@ function _list(x, y, w, h) {
 					this.bLiteMode 
 						?	''
 						: '\n----------------------------------------------\n' +
-							'(Shift + L. Click to manual refresh'
+							'(Shift + L. Click to manual refresh)'
 				);
 			},
 			func: (x, y, mask, parent) => {
