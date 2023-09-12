@@ -78,6 +78,7 @@ CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_crc.js
+CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
@@ -92,6 +93,7 @@ CALL :copy_file helpers\helpers_xxx_tags.js
 CALL :copy_file helpers\helpers_xxx_tags_cache.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
+CALL :copy_file helpers\helpers_xxx_UI_flip.js
 CALL :copy_file helpers\map_xxx.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\popup_xxx.js
@@ -204,6 +206,7 @@ CALL :copy_file helpers\helpers_xxx_tags_cache.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_UI_draw.js
+CALL :copy_file helpers\helpers_xxx_UI_flip.js
 CALL :copy_file helpers\helpers_xxx_utils.js
 CALL :copy_file helpers\helpers_xxx_web.js
 CALL :copy_file helpers\menu_xxx.js

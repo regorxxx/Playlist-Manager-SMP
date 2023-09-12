@@ -3,6 +3,7 @@
 
 include('statistics_xxx_helper.js');
 include('..\\..\\helpers\\popup_xxx.js');
+include('..\\..\\helpers\\helpers_xxx_UI_flip.js');
 const Chroma = require('..\\helpers-external\\chroma.js-2.4.0\\chroma'); // Relative to helpers folder
 
 function _chart({
@@ -175,11 +176,13 @@ function _chart({
 				iX = r * Math.cos(alpha + iAlpha / sliceTicks * h)
 				circleArr.push(c.x + iX, c.y + iY);
 			}
-			gr.FillPolygon(this.colors[i][j], 0, circleArr);
-			if (bFocused) {gr.FillPolygon(borderColor, 0, circleArr);}
-			// Borders
-			if (this.graph.borderWidth) {
-				gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
+			if (circleArr.length) {
+				gr.FillPolygon(this.colors[i][j], 0, circleArr);
+				if (bFocused) {gr.FillPolygon(borderColor, 0, circleArr);}
+				// Borders
+				if (this.graph.borderWidth) {
+					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
+				}
 			}
 			circleArr.push(... Object.values(c));
 			alpha += iAlpha;
@@ -217,11 +220,13 @@ function _chart({
 				iX = r * Math.cos(alpha + iAlpha / sliceTicks * h)
 				circleArr.push(c.x + iX, c.y + iY);
 			}
-			gr.FillPolygon(this.colors[i][j], 0, circleArr);
-			if (bFocused) {gr.FillPolygon(borderColor, 0, circleArr);}
-			// Borders
-			if (this.graph.borderWidth) {
-				gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
+			if (circleArr.length) {
+				gr.FillPolygon(this.colors[i][j], 0, circleArr);
+				if (bFocused) {gr.FillPolygon(borderColor, 0, circleArr);}
+				// Borders
+				if (this.graph.borderWidth) {
+					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
+				}
 			}
 			circleArr.push(... Object.values(c));
 			alpha += iAlpha;
