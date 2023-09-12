@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/09/23
+//12/09/23
 
 include('statistics_xxx_helper.js');
 include('..\\..\\helpers\\popup_xxx.js');
@@ -23,22 +23,10 @@ function _chart({
 				title,
 				gFont = _gdiFont('Segoe UI', _scale(10)),
 				tooltipText = '',
-				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false */}
+				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false */}
 		} = {}) {
 	// Global tooltip
 	this.tooltip = new _tt(null);
-	
-	/* 
-	Animation
-	*/
-	this.pop = new _popup({
-		x, y, w, h: h - y,
-		offsetY: margin.top / 2 - (h - y) / 5,
-		offsetX: + margin.left,
-		UI: 'MATERIAL',
-		scale: 2,
-		configuration: {border: {enabled: false}, icon: {enabled: true}}
-	});
 	
 	/*
 		Paint
@@ -474,7 +462,7 @@ function _chart({
 							});
 						});
 					}
-					if (this.axis.y.key.length && this.axis.y.showKey) {
+					if (this.axis.y.key.length && this.axis.y.showKey && labelOver.coord.length) {
 						const key = this.configuration.bAltVerticalText ? this.axis.y.key.flip() : this.axis.y.key;
 						const maxTickW = gr.CalcTextWidth(tickText[tickText.length - 1], this.gFont);
 						const keyW = gr.CalcTextWidth(key, this.gFont);
@@ -500,7 +488,7 @@ function _chart({
 				}
 				// X Axis ticks
 				if (this.axis.x.show) {
-					if (this.axis.x.key.length && this.axis.x.showKey) {
+					if (this.axis.x.key.length && this.axis.x.showKey && labelOver.coord.length) {
 						const keyW = gr.CalcTextWidth(this.axis.x.key, this.gFont);
 						gr.GdiDrawText(this.axis.x.key, this.gFont, this.axis.x.color, labelOver.coord[0][0].from.x - keyW/2, y + this.axis.x.width, keyW, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					}
@@ -727,9 +715,14 @@ function _chart({
 				this.currPoint = [serie, idx];
 				if (bPaint) {this.repaint();}
 				if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
-					const point = this.dataDraw[serie][idx];
+					const serieData = this.dataDraw[serie];
+					const point = serieData[idx];
+					const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
+					const percent = bPercent ? Math.round(point.y * 100 / serieData.reduce((acc, point) => acc + point.y, 0)) : null;
 					this.tooltip.SetValue(
-						point.x + ': ' + point.y + (this.axis.y.key ?  ' ' + this.axis.y.key : '') + (this.tooltipText && this.tooltipText.length ? tooltipText : '')
+						point.x + ': ' + point.y + (this.axis.y.key ?  ' ' + this.axis.y.key : '') +
+						(bPercent ? ' ' + _p(percent + '%') : '') +
+						(this.tooltipText && this.tooltipText.length ? tooltipText : '')
 					, true);
 					return true;
 				} else {
@@ -936,7 +929,7 @@ function _chart({
 	
 	this.manipulateData = () => {
 		if (!this.data) {return false;}
-		this.dataDraw = this.data.map((serie) => {return [...serie];})
+		this.dataDraw = this.data.map((serie) => {return [...(serie || [])];})
 		this.cleanData();
 		this.filter();
 		if (!this.distribution()) {
@@ -1009,16 +1002,17 @@ function _chart({
 		const series = Math.max(this.series, this.dataDraw.length);
 		switch (this.graph.type) {
 			case 'doughnut':
-			case 'pie':
+			case 'pie': {
 				if (this.colors.filter(Boolean).length !== series) {
 					for (let i = 0; i < series; i++) {
 						if (!this.colors[i]) {this.colors[i] = [];}
 					}
 				}
-				for (let i = 0; i < series; i++) {
+				const len = this.colors.length;
+				for (let i = 0; i < len; i++) {
 					if (!Array.isArray(this.colors[i])) {this.colors[i] = [];}
 				}
-				if (this.colors.some((arrCol, i) => arrCol.filter(Boolean).length !== this.dataDraw[i].length)) {
+				if (series && this.colors.some((arrCol, i) => arrCol.filter(Boolean).length !== this.dataDraw[i].length)) {
 					this.colors.forEach((arrCol, i) => {
 						const serieLen = this.dataDraw[i].length;
 						// Random colors or using Chroma scale with specific scheme or array of colors
@@ -1056,41 +1050,44 @@ function _chart({
 					});
 				}
 				break;
-		default:
-			for (let i = 0; i < this.colors.length; i++) {
-				if (Array.isArray(this.colors[i])) {this.colors[i] = this.colors[i][0];}
 			}
-			if (this.colors.filter(Boolean).length !== series) {
-				// Random colors or using Chroma scale with specific schems or array of colors
-				let schemeStr = this.chroma.scheme && typeof this.chroma.scheme === 'string' ? this.chroma.scheme.toLowerCase() : null;
-				let bRandom = !this.chroma.scheme || schemeStr === 'random' || schemeStr === 'rand';
-				if (bRandom) {
-					this.colors.forEach((color, i) => {
-						if (!color) {this.colors[i] = this.randomColor();}
-					});
-					for (let i = this.colors.length; i < series; i++) {
-						this.colors.push(this.randomColor());
-					}
-				} else { // Chroma scale method
-					let scheme;
-					// May be a key to use a random colorbrewer palette: diverging, qualitative & sequential
-					if (schemeStr && colorbrewer.hasOwnProperty(schemeStr)) {
-						const arr = this.chroma.colorBlindSafe ? colorbrewer.colorBlind[schemeStr] : colorbrewer[schemeStr];
-						scheme = arr[Math.floor(Math.random() * arr.length)];
-					} else { // An array of colors or colorbrewer palette (string)
-						scheme = this.chroma.scheme;
-					}
-					const scale = this.chromaColor(scheme, series);
-					let j = 0;
-					this.colors.forEach((color, i) => {
-						if (!color) {
-							this.colors[i] = scale[j]; 
+			default: {
+				const len = this.colors.length;
+				for (let i = 0; i < len; i++) {
+					if (Array.isArray(this.colors[i])) {this.colors[i] = this.colors[i][0];}
+				}
+				if (this.colors.filter(Boolean).length !== series) {
+					// Random colors or using Chroma scale with specific schems or array of colors
+					let schemeStr = this.chroma.scheme && typeof this.chroma.scheme === 'string' ? this.chroma.scheme.toLowerCase() : null;
+					let bRandom = !this.chroma.scheme || schemeStr === 'random' || schemeStr === 'rand';
+					if (bRandom) {
+						this.colors.forEach((color, i) => {
+							if (!color) {this.colors[i] = this.randomColor();}
+						});
+						for (let i = this.colors.length; i < series; i++) {
+							this.colors.push(this.randomColor());
+						}
+					} else { // Chroma scale method
+						let scheme;
+						// May be a key to use a random colorbrewer palette: diverging, qualitative & sequential
+						if (schemeStr && colorbrewer.hasOwnProperty(schemeStr)) {
+							const arr = this.chroma.colorBlindSafe ? colorbrewer.colorBlind[schemeStr] : colorbrewer[schemeStr];
+							scheme = arr[Math.floor(Math.random() * arr.length)];
+						} else { // An array of colors or colorbrewer palette (string)
+							scheme = this.chroma.scheme;
+						}
+						const scale = this.chromaColor(scheme, series);
+						let j = 0;
+						this.colors.forEach((color, i) => {
+							if (!color) {
+								this.colors[i] = scale[j]; 
+								j++;
+							}
+						});
+						for (let i = this.colors.length; i < series; i++) {
+							this.colors.push(scale[j]);
 							j++;
 						}
-					});
-					for (let i = this.colors.length; i < series; i++) {
-						this.colors.push(scale[j]);
-						j++;
 					}
 				}
 			}
@@ -1222,6 +1219,23 @@ function _chart({
 	this.h = h;
 	this.title = typeof title !== 'undefined' ? title : window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
 	this.tooltipText = tooltipText;
-	this.configuration = {bLoadAsyncData: true, bAltVerticalText: false, ...(configuration || {})};
+	this.configuration = {bLoadAsyncData: true, bAltVerticalText: false, bPopupBackground: false, ...(configuration || {})};
+	/* 
+	Animation
+	*/
+	this.pop = new _popup({
+		x, y, w, h: h - y,
+		offsetY: margin.top / 2 - (h - y) / 5,
+		offsetX: + margin.left,
+		UI: 'MATERIAL',
+		scale: 2,
+		configuration: {
+			border: {enabled: false}, 
+			icon: {enabled: true}, 
+			...(this.configuration.bPopupBackground 
+				? {color: {panel: opaqueColor(0xFF4354AF, 30), text: invert(this.background.color, true)}} // Blue overlay
+				: {})
+			}
+	});
 	this.init();
 }

@@ -1,10 +1,7 @@
 ﻿'use strict';
-//05/04/23
+//12/09/23
 
-include('helpers_xxx.js');
-include('helpers_xxx_UI.js');
-include('helpers_xxx_prototypes.js');
-include('helpers_xxx_properties.js');
+if (typeof opaqueColor === 'undefined' || typeof invert === 'undefined' || typeof _scale === 'undefined') {include('helpers_xxx_UI.js');}
 
 function _popup({
 		x = 0, y = 0,
