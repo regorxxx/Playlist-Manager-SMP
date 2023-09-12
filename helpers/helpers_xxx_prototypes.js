@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/23
+//12/09/23
 
 /* 
 	Objects
@@ -199,6 +199,7 @@ if (!Promise.allSettled) {
 }
 
 // Promise.serial(['arg1', 'arg2',...], asyncFunc).then(...)
+// Process in chunks with [...].chunk(1000) for low latency non-blocking async processing
 Object.defineProperty(Promise, 'serial', {
 	enumerable: false,
 	configurable: false,
@@ -425,6 +426,16 @@ Array.prototype.shuffle = function() {
 Array.prototype.move = function(from, to, on) {
 	this.splice(to, 0, this.splice(from, on)[0]);
 };
+
+// [1, 2, 3, 4, 5, 6, 7].chunk(3) // => [[1, 2, 3], [4, 5, 6], [7]]
+Array.prototype.chunk = function(chunkSize) {
+	let R = [];
+	for (let i = 0; i < this.length; i += chunkSize) {
+		R.push(this.slice(i, i + chunkSize));
+	}
+	return R;
+};
+
 
 function zeroOrVal(e){
 	return (e === 0 || e);
