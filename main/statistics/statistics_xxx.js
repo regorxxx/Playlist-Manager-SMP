@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/23
+//13/09/23
 
 include('statistics_xxx_helper.js');
 include('..\\..\\helpers\\popup_xxx.js');
@@ -957,7 +957,7 @@ function _chart({
 		if (background) {this.background = {...this.background, ...background}; this.background.imageGDI = this.background.image ? gdi.Image(this.background.image) : null;}
 		if (colors) {this.colors = colors;}
 		if (chroma) {this.chroma = {...this.chroma, ...chroma}; this.checkScheme();}
-		if (colors || chroma) {this.checkColors();}
+		if ((colors || chroma) && !dataAsync && !this.dataAsync) {this.checkColors();}
 		if (axis) {
 			if (axis.x) {this.axis.x = {...this.axis.x, ...axis.x};}
 			if (axis.y) {this.axis.y = {...this.axis.y, ...axis.y};}
@@ -979,7 +979,10 @@ function _chart({
 		}
 		this.checkConfig();
 		if (data || dataManipulation || graph) {this.initData();}
-		if (this.configuration.bLoadAsyncData && dataAsync) {this.initDataAsync();} // May be managed by the chart or externally
+		if (this.configuration.bLoadAsyncData && dataAsync) {
+			this.initDataAsync();
+			if (colors || chroma) {this.checkColors();}
+		} // May be managed by the chart or externally
 		this.repaint();
 		return this;
 	};
@@ -1156,7 +1159,7 @@ function _chart({
 		this.cleanPoints();
 		// Missing colors
 		this.checkScheme();
-		this.checkColors();
+		if (this.data.length) {this.checkColors();}
 	}
 	
 	this.initDataAsync = () => {
