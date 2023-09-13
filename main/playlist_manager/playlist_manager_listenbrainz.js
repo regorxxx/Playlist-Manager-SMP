@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/09/23
+//13/09/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -1043,7 +1043,9 @@ listenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = 
 		},
 		(reject) => {
 			if (bLog) {console.log('retrieveUserResponse: ' + JSON.stringify(reject));}
-			return null;
+			return reject.status === 12007 
+				? {valid: null, code: 12007}
+				: null;
 		}
 	);
 };
