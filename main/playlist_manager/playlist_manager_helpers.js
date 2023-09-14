@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/08/23
+//14/09/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -853,12 +853,13 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 		if (_isFile(path + playlistName)) {
 			let answer = WshShell.Popup('There is a file with same name. Overwrite?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.no) {return bDone;}
-			bDone = _recycleFile(path);
+			bDone = _recycleFile(path + playlistName);
 		}
 		bDone = _copyFile(playlistPath, path + playlistName);
 		if (bDone) {
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
-		} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name);}
+		} else {fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.\n\n' + playlistPath, window.Name);}
+		return bDone;
 	});
 	bDone = bDone && bCopy.every(Boolean);
 	if (list.properties.bOpenOnExport[1] && bCopy.some(Boolean)) {_explorer(path);} 

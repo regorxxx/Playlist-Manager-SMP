@@ -46,6 +46,9 @@
 ### Changed
 ### Removed
 ### Fixed
+- Exporting Playlists: playlist files were not overwritten properly -if chosen to do so- using 'Copy playlist files to...' for multiple selection.
+- Exporting Playlists: output folder was not shown using 'Copy playlist files to...' for multiple selection.
+- Exporting Playlists: AutopPlaylists are now filtered 'Export and Copy Tracks to...' for multiple selection, instead of being logged as error.
 
 ## [0.6.0] - 2023-09-13
 - Folders: items may now be grouped in folders, with unlimited level depth support and the ability to be expanded/collapsed. Adding or removing items is done via drag n' drop, similar to the way manual sorting works. Folders have an unique contextual menu which allow to apply some actions to their content or multiple-select them. Feature can be disabled if desired.

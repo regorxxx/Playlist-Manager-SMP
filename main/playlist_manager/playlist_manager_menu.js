@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/09/23
+//14/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -953,7 +953,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				if (!path.length) {return;}
 				if (path === list.playlistsPath) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return;}
 				const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
-				indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
+				indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder).forEach((z, i) => {
 					const plsPath = path + (bSubFolder ? list.data[z].name + '\\' : '');
 					exportPlaylistFileWithTracks({list, z, bAsync: list.properties.bCopyAsync[1], bNoInput: true, defPath: plsPath, bOpenOnExport: false});
 				});
