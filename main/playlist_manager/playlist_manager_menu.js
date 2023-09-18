@@ -648,9 +648,10 @@ function createMenuLeft(forcedIndex = -1) {
 					const subMenuName = menu.newMenu('Move to folder...');
 					menu.newEntry({menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED});
 					menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-					const options = list.data.filter(isFolder).map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
+					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
+						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
 					options.forEach((opt) => {
-						menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => {
+						menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
 							list.addToFolder(pls, opt.folder);
 							list.save();
 							if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
@@ -1147,7 +1148,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 				const subMenuName = menu.newMenu('Move to folder...');
 				menu.newEntry({menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-				const options = list.data.filter(isFolder).map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
+				const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
+					.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
 				options.forEach((opt) => {
 					menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => {
 						playlists.forEach((pls) => {
