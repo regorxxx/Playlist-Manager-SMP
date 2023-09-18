@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/23
+//18/09/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -336,6 +336,8 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 								contextMenu = fb.CreateContextMenuManager();
 								contextMenu.InitContext(playlistItems);
 								contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
+							} else {
+								this.addToMenu({entryText: '   - No tracks -   ', menuName: subMenuName, flags: MF_GRAYED});
 							}
 						} else if (type === 'playlist') { // InitContextPlaylist()
 							contextMenu = fb.CreateContextMenuManager();
