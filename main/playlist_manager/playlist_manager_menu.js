@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/23
+//18/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -61,6 +61,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const bWritableFormat = writablePlaylistFormats.has(pls.extension);
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	const bManualSorting = list.methodState === list.manualMethodState();
+	const bHasFolders = list.data.some(isFolder);
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
@@ -574,7 +575,7 @@ function createMenuLeft(forcedIndex = -1) {
 				}
 			}
 		}
-		if (showMenus['File locks'] || showMenus['UI playlist locks'] && bIsPlsLoaded || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
+		if (showMenus['File locks'] || showMenus['UI playlist locks'] && bIsPlsLoaded || showMenus['Sorting'] && bManualSorting || showMenus['Folders'] && bHasFolders) {menu.newEntry({entryText: 'sep'});}
 		{	// File management
 			// Locks playlist file
 			if (showMenus['File locks']) {
@@ -624,23 +625,39 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags});
 				}
 			}
-			if (showMenus['Sorting'] && bManualSorting) {
+			if (showMenus['Sorting'] && bManualSorting || showMenus['Folders'] && bHasFolders) {
 				if (showMenus['File locks'] || showMenus['UI playlist locks'] &&  bIsPlsLoaded) {menu.newEntry({entryText: 'sep'});}
-				const subMenuName = menu.newMenu('Sorting...');
-				menu.newEntry({menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED});
-				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-				const options = [
-					{name: 'Up', idx: (i) => i - 1},
-					{name: 'Down', idx: (i) => i + 1},
-					{name: 'sep'},
-					{name: 'Send to top', idx: 0},
-					{name: 'Send to bottom', idx: Infinity},
-					
-				];
-				options.forEach((opt) => {
-					if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
-					menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls([pls], opt.idx)});
-				});
+				if (showMenus['Sorting'] && bManualSorting) {
+					const subMenuName = menu.newMenu('Sorting...');
+					menu.newEntry({menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED});
+					menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+					const options = [
+						{name: 'Up', idx: (i) => i - 1},
+						{name: 'Down', idx: (i) => i + 1},
+						{name: 'sep'},
+						{name: 'Send to top', idx: 0},
+						{name: 'Send to bottom', idx: Infinity},
+						
+					];
+					options.forEach((opt) => {
+						if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
+						menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls([pls], opt.idx)});
+					});
+				}
+				if (showMenus['Folders'] && bHasFolders) {
+					const subMenuName = menu.newMenu('Move to folder...');
+					menu.newEntry({menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED});
+					menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+					const options = list.data.filter(isFolder).map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
+					options.forEach((opt) => {
+						menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => {
+							list.addToFolder(pls, opt.folder);
+							list.save();
+							if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
+							list.sort();
+						}});
+					});
+				}
 			}
 			if (showMenus['File management']) {
 				menu.newEntry({entryText: 'sep'});
@@ -806,6 +823,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bWritableFormat = playlists.some((pls) => {return writablePlaylistFormats.has(pls.extension);});
 	const bManualSorting = list.methodState === list.manualMethodState();
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
+	const bHasFolders = list.data.some(isFolder);
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
@@ -1106,23 +1124,41 @@ function createMenuLeftMult(forcedIndexes = []) {
 				}, flags});
 			}
 		}
-		if (showMenus['Sorting'] && bManualSorting) {
+		if (showMenus['Sorting'] && bManualSorting || showMenus['Folders'] && bHasFolders) {
 			if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome)) {menu.newEntry({entryText: 'sep'});}
-			const subMenuName = menu.newMenu('Sorting...');
-			menu.newEntry({menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			const options = [
-				{name: 'Up', idx: (i) => i - 1},
-				{name: 'Down', idx: (i) => i + 1},
-				{name: 'sep'},
-				{name: 'Send to top', idx: 0},
-				{name: 'Send to bottom', idx: Infinity},
-				
-			];
-			options.forEach((opt) => {
-				if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
-				menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls(playlists, opt.idx)});
-			});
+			if (showMenus['Sorting'] && bManualSorting) {
+				const subMenuName = menu.newMenu('Sorting...');
+				menu.newEntry({menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				const options = [
+					{name: 'Up', idx: (i) => i - 1},
+					{name: 'Down', idx: (i) => i + 1},
+					{name: 'sep'},
+					{name: 'Send to top', idx: 0},
+					{name: 'Send to bottom', idx: Infinity},
+					
+				];
+				options.forEach((opt) => {
+					if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
+					menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls(playlists, opt.idx)});
+				});
+			}
+			if (showMenus['Folders'] && bHasFolders) {
+				const subMenuName = menu.newMenu('Move to folder...');
+				menu.newEntry({menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+				const options = list.data.filter(isFolder).map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
+				options.forEach((opt) => {
+					menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => {
+						playlists.forEach((pls) => {
+							list.addToFolder(pls, opt.folder);
+						});
+						list.save();
+						if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
+						list.sort();
+					}});
+				});
+			}
 		}
 		if (showMenus['File management']) {
 			menu.newEntry({entryText: 'sep'});
@@ -3160,7 +3196,7 @@ function createMenuRightTop() {
 					if (Object.values(item.icons).filter(Boolean).length !== 2) {
 						Object.keys(item.icons).forEach((key) => {
 							if (!item.icons[key]) {
-								const input = Input.string('unicode', list.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode)\n\nLook for values at:\nhttps://www.fontawesomecheatsheet.com', window.Name, chars.downOutline, void(0), false);
+								const input = Input.string('unicode', list.folders.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode)\n\nLook for values at:\nhttps://www.fontawesomecheatsheet.com', window.Name, chars.downOutline, void(0), false);
 								if (input === null) {return;}
 								item.icons[key] = input;
 							}
