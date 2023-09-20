@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.6.1](#061---2023-09-20)
 - [0.6.0](#060---2023-09-13)
 - [0.5.3](#053---2023-08-28)
 - [0.5.2](#052---2023-08-05)
@@ -43,7 +44,15 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.6.1] - 2023-09-20
+### Added
 - Folders: added a 'Move to folder...' submenu in the playlist and multiple selection contextual menu, to easily send playlists to a folder without using drag n' drop.
+- Folders: added submenu to create playlists/folders within folders (simplified version of the entries found at the list menu on the header).
+- Folders: color is now configurable (found at the general UI or the folders submenu).
 ### Changed
 ### Removed
 ### Fixed
@@ -51,6 +60,9 @@
 - Exporting Playlists: output folder was not shown using 'Copy playlist files to...' for multiple selection.
 - Exporting Playlists: AutopPlaylists are now filtered 'Export and Copy Tracks to...' for multiple selection, instead of being logged as error.
 - Folders: custom icon setting crash.
+- Lite mode: 'new playlist from active...' was not hidden while using lite mode.
+- Lite mode: minor fixes to separators on list menu while using lite mode.
+- Lite mode: minor fixes to separators on header buttons tooltips while using lite mode.
 
 ## [0.6.0] - 2023-09-13
 - Folders: items may now be grouped in folders, with unlimited level depth support and the ability to be expanded/collapsed. Adding or removing items is done via drag n' drop, similar to the way manual sorting works. Folders have an unique contextual menu which allow to apply some actions to their content or multiple-select them. Feature can be disabled if desired.
@@ -924,8 +936,9 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.0...HEAD
-[0.6.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.3...v0.6.,0
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.0...v0.5.1
