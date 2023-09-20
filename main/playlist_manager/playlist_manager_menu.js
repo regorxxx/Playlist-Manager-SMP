@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/09/23
+//20/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -650,13 +650,19 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-					options.forEach((opt) => {
+					options.forEach((opt, i) => {
+						if (i && i % 5 === 0) {
+							menu.newEntry({menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED});
+							menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+						}
+						const bSameFolder = opt.name === pls.inFolder;
 						menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
 							list.addToFolder(pls, opt.folder);
 							list.save();
 							if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
 							list.sort();
-						}});
+							if (opt.folder.isOpen) {list.showPlsByObj(pls);}
+						}, flags: bSameFolder ? MF_GRAYED : MF_STRING});
 					});
 				}
 			}
@@ -682,6 +688,12 @@ function createMenuFolder(menu, folder, z) {
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsUI = (pls) => {return pls.extension === '.ui';};
 	const isFolder = (pls) => {return pls.isFolder;};
+	const move = (pls) => {
+		list.addToFolder(pls, folder);
+		list.save();
+		if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
+		list.sort();
+	};
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
 	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs') || true;});
@@ -693,6 +705,16 @@ function createMenuFolder(menu, folder, z) {
 	menu.newEntry({entryText: 'Expand/collapse', func: () => {
 		list.switchFolder(z);
 	}});
+	menu.newEntry({entryText: 'sep'});
+	{ // New Playlists
+		const subMenuName = menu.newMenu('New child item...');
+		!list.bLiteMode && menu.newEntry({menuName: subMenuName, entryText: 'Playlist File...', func: () => {list.add({bEmpty: true, toFolder: folder});}});
+		menu.newEntry({menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => {list.addAutoplaylist(void(0), void(0), folder);}});
+		!list.bLiteMode && menu.newEntry({menuName: subMenuName, entryText: 'Smart Playlist...', func: () => {list.addSmartplaylist(void(0), void(0), folder);}});
+		menu.newEntry({menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => {list.addUIplaylist({bInputName: true, toFolder: folder});}});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		menu.newEntry({menuName: subMenuName, entryText: 'Folder...', func: () => {list.addFolder(void(0), folder);}});
+	}
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Rename...', func: () => {
 		const input = Input.string('string', folder.nameId, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
@@ -767,6 +789,28 @@ function createMenuFolder(menu, folder, z) {
 		options.forEach((opt) => {
 			if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
 			menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls([folder], opt.idx)});
+		});
+	}
+	menu.newEntry({entryText: 'sep'});
+	{
+		const subMenuName = menu.newMenu('Move to folder...');
+		menu.newEntry({menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
+			.map((f) => Object.fromEntries([['name', f.nameId], ['folder', f]]));
+		options.forEach((opt, i) => {
+			if (i && i % 5 === 0) {
+				menu.newEntry({menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED});
+				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+			}
+			const bSameFolder = opt.name === folder.inFolder;
+			menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+				list.addToFolder(folder, opt.folder);
+				list.save();
+				if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
+				list.sort();
+				if (opt.folder.isOpen) {list.showPlsByObj(folder);}
+			}, flags: bSameFolder ? MF_GRAYED : MF_STRING});
 		});
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -1150,15 +1194,21 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 					.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-				options.forEach((opt) => {
-					menu.newEntry({menuName: subMenuName, entryText: opt.name, func: () => {
+				options.forEach((opt, i) => {
+					if (i && i % 5 === 0) {
+						menu.newEntry({menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED});
+						menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+					}
+					const bSameFolder = playlists.every((pls) => opt.name === pls.inFolder);
+					menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
 						playlists.forEach((pls) => {
 							list.addToFolder(pls, opt.folder);
 						});
 						list.save();
 						if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
 						list.sort();
-					}});
+						if (opt.folder.isOpen) {list.showPlsByObj(playlists[0]);}
+					}, flags: bSameFolder ? MF_GRAYED : MF_STRING});
 				});
 			}
 		}
@@ -1197,7 +1247,7 @@ function createMenuRight() {
 			menu.newEntry({entryText: 'New Folder...', func: () => {list.addFolder();}});
 		}
 		menu.newEntry({entryText: 'sep'});
-		menu.newEntry({entryText: 'New playlist from active...', func: () => {list.add({bEmpty: false});}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
+		!list.bLiteMode && menu.newEntry({entryText: 'New playlist from active...', func: () => {list.add({bEmpty: false});}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
 			menu.newEntry({entryText: 'New AutoPlaylist from active ...', func: () => {
 				const pls = {name: plman.GetPlaylistName(plman.ActivePlaylist)};
@@ -1205,7 +1255,7 @@ function createMenuRight() {
 				list.addAutoplaylist(pls, true);
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 		}
-		menu.newEntry({entryText: 'New playlist from selection...', func: () => {
+		!list.bLiteMode && menu.newEntry({entryText: 'New playlist from selection...', func: () => {
 			const oldIdx = plman.ActivePlaylist;
 			if (oldIdx === -1) {return;}
 			const name = list.properties.bAutoSelTitle[1] 
@@ -1416,7 +1466,7 @@ function createMenuRight() {
 			}, flags: bListenBrainz ? MF_STRING : MF_GRAYED});
 		}
 	}
-	menu.newEntry({entryText: 'sep'});
+	if (!menu.isLastEntry('sep')) {menu.newEntry({entryText: 'sep'});}
 	{	// File management
 		if (!list.bLiteMode) {	// Refresh
 			menu.newEntry({entryText: 'Manual refresh', func: list.manualRefresh});
@@ -2460,17 +2510,19 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuName, 'Use bold version', void(0), () => {return panel.colors.bBold;});
 			}
 		}
-		{	// List colours
-			const subMenuName = menu.newMenu('Set custom colours...', menuName);
-			const options = ['AutoPlaylists...','Smart playlists...','UI-only playlists...','Locked Playlists...','Selection rectangle...'];
+		{	// List colors
+			const subMenuName = menu.newMenu('Set custom colors...', menuName);
+			const options = ['AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
+				if (!item) {return;}
 				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
 					if (i === 0) {list.colors.autoPlaylistColor = utils.ColourPicker(window.ID, list.colors.autoPlaylistColor);}
 					if (i === 1) {list.colors.smartPlaylistColor = utils.ColourPicker(window.ID, list.colors.smartPlaylistColor);}
 					if (i === 2) {list.colors.uiPlaylistColor = utils.ColourPicker(window.ID, list.colors.uiPlaylistColor);}
 					if (i === 3) {list.colors.lockedPlaylistColor = utils.ColourPicker(window.ID, list.colors.lockedPlaylistColor);}
 					if (i === 4) {list.colors.selectedPlaylistColor = utils.ColourPicker(window.ID, list.colors.selectedPlaylistColor);}
+					if (i === 5) {list.colors.folderColor = utils.ColourPicker(window.ID, list.colors.folderColor);}
 					// Update property to save between reloads
 					list.properties.listColors[1] = convertObjectToString(list.colors);
 					overwriteProperties(list.properties);
@@ -2644,6 +2696,7 @@ function createMenuRightTop() {
 							list.colors.uiPlaylistColor = preset.colors[2];
 							list.colors.lockedPlaylistColor = preset.colors[3];
 							list.colors.selectedPlaylistColor = preset.colors[4];
+							list.colors.folderColor = preset.colors[5];
 						}
 						list.properties.listColors[1] = convertObjectToString(list.colors);
 						panel.colorsChanged();
@@ -2670,6 +2723,7 @@ function createMenuRightTop() {
 								&& list.colors.uiPlaylistColor === blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8)
 								&& list.colors.lockedPlaylistColor === RGB(...toRGB(0xFFDC143C))
 								&& list.colors.selectedPlaylistColor === RGB(...toRGB(0xFF0080C0))
+								&& list.colors.folderColor === panel.colors.text
 							: panel.colors.mode === 2
 								&& panel.colors.customBackground === preset.colors[6] 
 								&& panel.colors.bCustomText === true
@@ -2679,6 +2733,7 @@ function createMenuRightTop() {
 								&& list.colors.uiPlaylistColor === preset.colors[2]
 								&& list.colors.lockedPlaylistColor === preset.colors[3]
 								&& list.colors.selectedPlaylistColor === preset.colors[4]
+								&& list.colors.folderColor === preset.colors[5]
 								&& (
 									preset.hasOwnProperty('buttonColors') && preset.buttonColors.length 
 									&& (
@@ -3214,6 +3269,9 @@ function createMenuRightTop() {
 				const idx = options.findIndex((option) => isArrayEqual(Object.values(option.icons), Object.values(list.folders.icons)));
 				return idx !== -1 ? idx : 3;
 			});
+		}
+		{	// Colors
+			menu.newEntry({menuName, entryText: 'Color...', func: () => createMenuRightTop().btn_up(void(0), void(0), void(0), 'Set custom colors...\\Folders...')});
 		}
 		menu.newEntry({entryText: 'sep'});
 	}

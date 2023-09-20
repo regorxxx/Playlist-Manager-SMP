@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/09/23
+//20/09/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -98,6 +98,11 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 	this.getNumEntries = () => {return entryArr.length;};
 	this.getEntries = () => {return [...entryArr];}; // To get all menu entries, but those created by conditional menus are not set yet!
 	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => {this.initMenu(object, bindArgs); const copy = [...entryArr]; this.clear(); return copy;}; // To get all menu entries, even cond ones!
+	this.getLastEntry = () => {return (entryArr.length !== 0 ? entryArr[entryArr.length - 1] : null);};
+	this.isLastEntry = (name, type = 'entry' /* entry, cond, menu*/) => { // Check if last entry matches a name by type easily
+		const last = this.getLastEntry();
+		return last && ((type === 'entry' || type === 'cond' && last.condFunc) && last.entryText === name || type === 'menu' && last.bIsMenu && last.menuName === name);
+	};
 	this.getMenus = () => {return [...menuArr];};
 	this.getMainMenuName = () => {return menuArr[0].menuName;};
 	this.hasMenu = (menuName, subMenuFrom = '') => {return (menuArr.findIndex((menu) => {return menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true);}) !== -1);};

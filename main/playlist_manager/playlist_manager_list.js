@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/09/23
+//20/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -639,6 +639,7 @@ function _list(x, y, w, h) {
 		const autoPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.autoPlaylistColor, 0.8);
 		const smartPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.smartPlaylistColor, 0.8);
 		const uiPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.uiPlaylistColor, 0.8);
+		const folderIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.folderColor, 0.8);
 		if (!this.categoryHeaderOffset) {this.categoryHeaderOffset = _scale(panel.fonts.size - 4);}
 		const categoryHeaderColor = blendColors(panelBgColor, panel.colors.text, 0.6);
 		const categoryHeaderLineColor = blendColors(panelBgColor, categoryHeaderColor, 0.5);
@@ -859,16 +860,16 @@ function _list(x, y, w, h) {
 			const folderText =  _b(folder.name) + (this.folders.bShowSize ? ' (' + (this.folders.bShowSizeDeep ? folder.pls.lengthFilteredDeep : folder.pls.lengthFiltered) + ')' : '');
 			const icon = folder.isOpen ? this.folders.icons.open : this.folders.icons.closed;
 			if (icon) {
-				gr.GdiDrawText(icon, gfontIconChar(), standardPlaylistIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
+				gr.GdiDrawText(icon, gfontIconChar(), folderIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
 			}
 			// Text
 			if (panel.colors.bFontOutline && shading.img) { // Outline current text
 				shading.gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, maxIconWidth + level.offset * 20, i * panel.row_height, Math.min(shading.img.Width,  this.textWidth - 25), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-				shading.pls.push([folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25]);
+				shading.pls.push([folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folderColor, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25]);
 			} else {
-				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, panel.colors.text, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
+				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folderColor, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
 			}
-			return panel.colors.text;
+			return this.colors.folderColor;
 		};
 		// Paint list
 		for (let i = 0; i < rows; i++) {
@@ -4511,7 +4512,7 @@ function _list(x, y, w, h) {
 			return key === 'width' ? void(0) : value;
 		}
 		
-		this.addFolder = (name = '') => {
+		this.addFolder = (name = '', toFolder = null) => {
 			if (!name.length) {
 				try {name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true);}
 				catch (e) {return false;}
@@ -4534,6 +4535,13 @@ function _list(x, y, w, h) {
 			this.addToData(folder);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
+			if (toFolder !== null) {
+				this.addToFolder(folder, toFolder);
+				this.save();
+				if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+				this.sort();
+				if (!toFolder.isOpen) {this.switchFolder(this.data.indexOf(toFolder)) && this.save();}
+			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(folder);
 			return folder;
@@ -4609,7 +4617,7 @@ function _list(x, y, w, h) {
 			return (pls.hasOwnProperty('inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
 		}
 		
-		this.addUIplaylist = ({name = 'New playlist', bInputName = !name.length} = {}) => {
+		this.addUIplaylist = ({name = 'New playlist', bInputName = !name.length, toFolder = null} = {}) => {
 			let input = name;
 			if (bInputName) {
 				input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
@@ -4624,15 +4632,25 @@ function _list(x, y, w, h) {
 			plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
 			// Set focus on new playlist if possible
 			if (plman.ActivePlaylist !== -1) {
-				setTimeout(() => { // Required since input popup invokes move callback after this func!
-					this.cacheLastPosition();
-					this.showCurrPls();
+				setTimeout(() => { // Required since input popup invokes move callback after this func
+					if (newName === plman.GetPlaylistName(plman.ActivePlaylist)) {
+						const objectPlaylist = this.data.find((pls) => {return pls.nameId === newName;})
+						if (toFolder !== null && objectPlaylist !== null) {
+							this.addToFolder(objectPlaylist, toFolder);
+							this.save();
+							if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+							this.sort();
+							if (!toFolder.isOpen) {this.switchFolder(this.data.indexOf(toFolder)) && this.save();}
+						}
+						this.cacheLastPosition();
+						this.showCurrPls();
+					}
 				}, 10);
 			}
 			return plman.ActivePlaylist;
 		}
 		
-		this.addAutoplaylist = (pls = null, bEdit = true) => {
+		this.addAutoplaylist = (pls = null, bEdit = true, toFolder = null) => {
 			// Check if there are initial values
 			const bPls = pls ? true : false;
 			const hasName = bPls && pls.hasOwnProperty('name'), hasQuery = bPls && pls.hasOwnProperty('query'), hasSort = bPls && pls.hasOwnProperty('sort');
@@ -4683,12 +4701,19 @@ function _list(x, y, w, h) {
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
+			if (toFolder !== null) {
+				this.addToFolder(objectPlaylist, toFolder);
+				this.save();
+				if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+				this.sort();
+				if (!toFolder.isOpen) {this.switchFolder(this.data.indexOf(toFolder)) && this.save();}
+			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(objectPlaylist);
 			return objectPlaylist;
 		}
 		
-		this.addSmartplaylist = (pls = null, bEdit = true) => {
+		this.addSmartplaylist = (pls = null, bEdit = true, toFolder = null) => {
 			this.xspPopup();
 			// Check if there are initial values
 			const bPls = pls ? true : false;
@@ -4765,12 +4790,19 @@ function _list(x, y, w, h) {
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
 			this.filter();
+			if (toFolder !== null) {
+				this.addToFolder(objectPlaylist, toFolder);
+				this.save();
+				if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+				this.sort();
+				if (!toFolder.isOpen) {this.switchFolder(this.data.indexOf(toFolder)) && this.save();}
+			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(objectPlaylist);
 			return objectPlaylist;
 		}
 		
-		this.add = ({bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length} = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
+		this.add = ({bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length, toFolder = null} = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
 			if (!bEmpty && plman.ActivePlaylist === -1) {return;}
 			const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 			const oldName = removeIdFromStr(oldNameId);
@@ -4873,6 +4905,13 @@ function _list(x, y, w, h) {
 			}
 			this.update(true, true); // We have already updated data
 			this.filter();
+			if (toFolder !== null) {
+				this.addToFolder(objectPlaylist, toFolder);
+				this.save();
+				if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+				this.sort();
+				if (!toFolder.isOpen) {this.switchFolder(this.data.indexOf(toFolder)) && this.save();}
+			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(objectPlaylist);
 			return objectPlaylist;
@@ -5274,14 +5313,16 @@ function _list(x, y, w, h) {
 				this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
 				this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); // Blue
 				this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
+				this.colors.folderColor = panel.colors.text;
 				bDone = true;
 			}
-			if (this.colors && Object.keys(this.colors).length !== 4) { // Fills missing colors
+			if (this.colors && Object.keys(this.colors).length !== 5) { // Fills missing colors
 				if (!this.colors.lockedPlaylistColor) {this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C));} // Red
 				if (!this.colors.autoPlaylistColor) {this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);}
 				if (!this.colors.smartPlaylistColor) {this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);}
 				if (!this.colors.selectedPlaylistColor) {this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0));} // Blue
 				if (!this.colors.uiPlaylistColor) {this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8);} // Blue
+				if (!this.colors.folderColor) {this.colors.folderColor = panel.colors.text;}
 				bDone = true;
 			}
 			if (this.searchInput) {
@@ -5924,8 +5965,9 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0,
 			inFocus: false,
 			text: (x, y, mask, parent) => {
-				return 'Playlist Manager settings...' + '\n----------------------------------------------\n' + (
-					parent.highlighting(x, y, mask, parent)
+				const bhighlighting = parent.highlighting(x, y, mask, parent);
+				return 'Playlist Manager settings...' + (bhighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
+					bhighlighting
 						? 'Library has changed since tracking was disabled.\n' +
 							'Paths cache needs rebuilding.'
 						: ''
@@ -5949,17 +5991,16 @@ function _list(x, y, w, h) {
 		folder: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => {
-				return 'Open playlists folder' + (
-					parent.highlighting(x, y, mask, parent)
-						? '\n----------------------------------------------\n' +
-							'Playlists tracked folder has new changes.\n' +
+				const bhighlighting = parent.highlighting(x, y, mask, parent);
+				return 'Open playlists folder' +  + (bhighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
+					bhighlighting
+						?  'Playlists tracked folder has new changes.\n' +
 							'Use manual refresh or enable auto-loading.'
 						: ''
 				) + (
 					this.bLiteMode 
-						?	''
-						: '\n----------------------------------------------\n' +
-							'(Shift + L. Click to manual refresh)'
+						? ''
+						: '(Shift + L. Click to manual refresh)'
 				);
 			},
 			func: (x, y, mask, parent) => {
