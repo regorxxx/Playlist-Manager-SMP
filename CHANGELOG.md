@@ -45,6 +45,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Helpers: updated helpers.
+- Documentation: updated readme PDF to be up to date with all latest changes.
 ### Removed
 ### Fixed
 
@@ -58,7 +60,7 @@
 ### Fixed
 - Exporting Playlists: playlist files were not overwritten properly -if chosen to do so- using 'Copy playlist files to...' for multiple selection.
 - Exporting Playlists: output folder was not shown using 'Copy playlist files to...' for multiple selection.
-- Exporting Playlists: AutopPlaylists are now filtered 'Export and Copy Tracks to...' for multiple selection, instead of being logged as error.
+- Exporting Playlists: AutoPlaylists are now filtered 'Export and Copy Tracks to...' for multiple selection, instead of being logged as error.
 - Folders: custom icon setting crash.
 - Lite mode: 'new playlist from active...' was not hidden while using lite mode.
 - Lite mode: minor fixes to separators on list menu while using lite mode.

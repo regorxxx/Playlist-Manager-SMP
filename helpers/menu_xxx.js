@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/09/23
+//25/09/23
 
 /* 
 	Contextual Menu helper v2.4.0
@@ -481,6 +481,8 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 	};
 	
 	// Helpers
+	this.isSeparator = (obj) => {return ((obj.entryText || obj.name) === 'separator' || (obj.entryText || obj.name) === 'sep');}
+	this.isNotSeparator = (obj) => {return !this.isSeparator(obj);}
 	this.getHiddenCharsRegEx = () => {return hiddenCharsRegEx;}
 	this.getNextId = () => {return invsId(true);}
 	const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
