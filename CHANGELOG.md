@@ -49,6 +49,7 @@
 - Documentation: updated readme PDF to be up to date with all latest changes.
 ### Removed
 ### Fixed
+- UI: wrong tooltip on folder button.
 
 ## [0.6.1] - 2023-09-20
 ### Added

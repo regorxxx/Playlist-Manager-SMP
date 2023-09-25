@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/09/23
+//25/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -5992,7 +5992,7 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bhighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Open playlists folder' +  + (bhighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
+				return 'Open playlists folder' +  (bhighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
 					bhighlighting
 						?  'Playlists tracked folder has new changes.\n' +
 							'Use manual refresh or enable auto-loading.'
