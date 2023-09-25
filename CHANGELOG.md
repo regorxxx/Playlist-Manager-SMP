@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.6.2](#062---2023-09-25)
 - [0.6.1](#061---2023-09-20)
 - [0.6.0](#060---2023-09-13)
 - [0.5.3](#053---2023-08-28)
@@ -43,6 +44,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.6.2] - 2023-09-25
 ### Added
 ### Changed
 - Helpers: updated helpers.
@@ -939,7 +946,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.5.2...v0.5.3
