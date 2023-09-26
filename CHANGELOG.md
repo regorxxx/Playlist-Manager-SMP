@@ -49,6 +49,13 @@
 ### Removed
 ### Fixed
 
+## [0.6.3] - 2023-09-26
+### Added
+### Changed
+### Removed
+### Fixed
+- UI: crash while using internal drag n' drop if the number of elements was lower than the available rows and mouse moved to an empty row.
+
 ## [0.6.2] - 2023-09-25
 ### Added
 ### Changed
