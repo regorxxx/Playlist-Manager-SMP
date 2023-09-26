@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/23
+//26/09/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2558,7 +2558,7 @@ function _list(x, y, w, h) {
 		const bValidPos = typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' &&  (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows;
 		if (this.methodState === this.manualMethodState()) {
 			return bValidPos;
-		} else {
+		} else if (bValidPos) {
 			const bToFolder = this.data[currSelIdx].isFolder;
 			const bFolder = bToFolder || this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !this.internalPlsDrop.every((idx) => this.data[idx].inFolder === this.data[currSelIdx].inFolder);
 			let level = bToFolder ? 1 : 0;
@@ -2573,7 +2573,7 @@ function _list(x, y, w, h) {
 					return bToFolder && this.data[idx].inFolder === this.data[currSelIdx].nameId || !bToFolder && this.data[idx].inFolder === this.data[currSelIdx].inFolder;
 				})
 				: false;
-			return bValidPos && bFolder && bMaxLevel && !bToSameFolder;
+			return bFolder && bMaxLevel && !bToSameFolder;
 		}
 	}
 	
