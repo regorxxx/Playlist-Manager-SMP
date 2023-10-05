@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/09/23
+//05/10/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -54,6 +54,41 @@ listenBrainz.getMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs 
 		}
 	}
 	return tags;
+};
+
+listenBrainz.lookupArtistMBIDsByName = async function lookupArtistMBIDsByName(names, bRetry) {
+	const rate = 50;
+	const retryMs = 500;
+	return Promise.serial(names, 
+			(name) => send({
+				method: 'GET', 
+				URL: 'https://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query=' + encodeURI(name)
+			}).then(
+				(resolve) => {
+					if (resolve) {
+						const response = JSON.parse(resolve); // [{artist_mbid, artist_name, artist_sortname, type}, ...]
+						if (response && response.artists) {
+							const artist = response.artists[0];
+							if (artist.score >= 90) {
+								return {name: artist.name, mbid: artist.id};
+							}
+						}
+					}
+					return null;
+				},
+				(reject) => {
+					if (!bRetry) {console.log('lookupArtistMBIDsByName: ' + reject.status + ' ' + reject.responseText);}
+					else {console.log('lookupArtistMBIDsByName: Retrying request for ' + name + ' to server on ' + retryMs + ' ms...');}
+					return bRetry ? Promise.wait(retryMs).then(() => this.lookupArtistMBIDsByName([name], false)) : null;
+				}
+			)
+		, rate).then((results) => {
+			const passed = results.filter(Boolean).length;
+			const total = names.length;
+			const nError = total - passed;
+			console.log('lookupArtistMBIDsByName: ' + total + ' artists' + (nError ? ' (' + nError + ' failed)' : ''));
+			return results;
+		}, (error) => {console.log(error.message); return null;});
 };
 
 listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, bLookupMBIDs = true, bAlbumArtist = true, bRetry = true) {
@@ -434,7 +469,7 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 			(reject) => {
 				if (!bRetry) {console.log('sendFeedback: ' + reject.status + ' ' + reject.responseText);}
 				else {console.log('sendFeedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...');}
-				return bRetry ? Promise.wait(retryMs).then(() => listenBrainz.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, true, false)) : false;
+				return bRetry ? Promise.wait(retryMs).then(() => this.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, true, false)) : false;
 			}
 		)
 	, rate).then((results) => {
@@ -625,7 +660,7 @@ listenBrainz.lookupMBIDs = function lookupMBIDs(handleList, token) { // Shorthan
 	);
 }
 
-listenBrainz.lookupArtistMBIDs = function getArtistMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
+listenBrainz.lookupArtistMBIDs = function lookupArtistMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
 	return this.lookupTracks(handleList, token).then(
 		(resolve) => {
 			if (resolve.length) {
