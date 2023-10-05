@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/23
+//29/09/23
 
 /* 
 	Global tags, queries, RegExp
@@ -14,7 +14,7 @@ function loadUserDefFile(def) {
 					if (def.hasOwnProperty(key)) {
 						def[key] = data[key];
 						// TODO: add TF checking?
-					}
+					} else {bSave = true;}
 				}
 			} else if (def._type === 'RegExp') {
 				for (let key in data) {
@@ -37,12 +37,14 @@ function loadUserDefFile(def) {
 								);
 								def[key] = back;
 							}
-						}
+						} else {bSave = true;}
 					}
 				}
 			}
-			const defKeys = Object.keys(def).filter((key) => key !== '_type' && key !== '_file');
-			if (defKeys.length !== Object.keys(data).length) {bSave = true;}
+			if (!bSave) {
+				const defKeys = Object.keys(def).filter((key) => key !== '_type' && key !== '_file');
+				if (defKeys.length !== Object.keys(data).length) {bSave = true;}
+			}
 		}
 	} else {bSave = true;}
 	if (bSave) {
@@ -62,7 +64,12 @@ function addGlobTags() { // Add calculated properties
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
+	globQuery.liveHifi = '(' + globQuery.live + ') AND (' + globQuery.hifi + ')';
+	globQuery.noLiveNone = 'NOT (' + globQuery.live + ')';
+	globQuery.noLive = globQuery.noLiveNone + ' OR (' + globQuery.liveHifi + ')';
+	globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
 	globQuery.remDuplBias = globTags.rating + '|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)';
+	
 }
 
 // Tags: user replaceable with a presets file at folders.data
@@ -103,9 +110,9 @@ const globQuery = {
 	shortLength: '%LENGTH_SECONDS% LESS 360',
 	stereo: '%CHANNELS% LESS 3 AND NOT COMMENT HAS quad',
 	noRating: globTags.rating + ' MISSING',
-	noLive: '(NOT ' + globTags.genre + ' IS live AND NOT ' + globTags.style + ' IS live) OR ((' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live) AND ' + globTags.style + ' IS hi-fi)',
-	noLiveNone: 'NOT ' + globTags.genre + ' IS live AND NOT ' + globTags.style + ' IS live',
-	noSACD: 'NOT %_PATH% HAS .iso AND NOT CODEC IS MLP AND NOT CODEC IS DSD64 AND NOT CODEC IS DST64',
+	live: globTags.genre + ' IS live OR ' + globTags.style + ' IS live',
+	hifi: globTags.style + ' IS hi-fi',
+	SACD: '%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64',
 };
 
 // RegExp: user replaceable with a presets file at folders.data
