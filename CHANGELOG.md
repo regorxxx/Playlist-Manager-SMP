@@ -46,6 +46,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Configuration: expanded user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' with new queries. File will be automatically updated with new values (maintaining the user settings).
+- Configuration: improved the user configurable files update check for missing keys.
 ### Removed
 ### Fixed
 
