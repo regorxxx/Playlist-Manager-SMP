@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.7.0](#070---2023-10-05)
 - [0.6.2](#062---2023-09-25)
 - [0.6.1](#061---2023-09-20)
 - [0.6.0](#060---2023-09-13)
@@ -46,8 +47,15 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.7.0] - 2023-10-05
+### Added
+### Changed
 - Configuration: expanded user configurable files at '[FOOBAR PROFILE FOLDER]\js_data\presets\global' with new queries. File will be automatically updated with new values (maintaining the user settings).
 - Configuration: improved the user configurable files update check for missing keys.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
@@ -955,7 +963,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.3...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.7.0...HEAD
+[0.7.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.3...v0.7.0
 [0.6.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.0...v0.6.1
