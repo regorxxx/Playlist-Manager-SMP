@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/23
+//15/10/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -4517,7 +4517,7 @@ function _list(x, y, w, h) {
 				try {name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true);}
 				catch (e) {return false;}
 				if (!name.length) {return false;}
-				if (this.dataAll.some((pls) => pls.name === name || pls.nameId === name)) {
+				if (this.dataAll.some((pls) => pls.nameId === name)) {
 					fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
 					return false;
 				}
@@ -4621,13 +4621,17 @@ function _list(x, y, w, h) {
 			let input = name;
 			if (bInputName) {
 				input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
-				if (input === null && !Input.isLastEqual) {return;}
+				if (input === null && !Input.isLastEqual) {return -1;}
 			}
 			let i = 0;
 			let newName;
 			while (!newName || plman.FindPlaylist(newName) !== -1) {
 				newName = (input || 'New playlist') + (i ? ' ' + _p(i) : '');
 				i++;
+			}
+			if (this.dataAll.some((pls) => pls.nameId === newName)) {
+				fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', window.Name);
+				return -1;
 			}
 			plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
 			// Set focus on new playlist if possible
@@ -4663,6 +4667,12 @@ function _list(x, y, w, h) {
 				catch (e) {return false;}
 				if (!newName.length) {return false;}
 			}
+			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
+			const nameId = newName + UUID;
+			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+				return false;
+			}
 			let newQuery = hasQuery ? pls.query : '';
 			if (!newQuery.length || bEdit) {
 				try {newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, newQuery, true);}
@@ -4675,7 +4685,6 @@ function _list(x, y, w, h) {
 			const handleList = hasSize && hasQuery && pls.query === newQuery ? null: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
 			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : handleList.Count;
 			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : handleList.CalcTotalDuration();
-			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
 			const objectPlaylist = new oPlaylist({
 				id: UUID,
 				name: newName,
@@ -4728,6 +4737,12 @@ function _list(x, y, w, h) {
 				catch (e) {return false;}
 				if (!newName.length) {return false;}
 			}
+			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
+			const nameId = newName + UUID;
+			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+				return false;
+			}
 			let newQuery = hasQuery ? pls.query : '';
 			if (!newQuery.length || bEdit) {
 				try {newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', window.Name, newQuery, true);}
@@ -4754,6 +4769,7 @@ function _list(x, y, w, h) {
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
 			const objectPlaylist = new oPlaylist({
+				id: UUID,
 				path: playlistPath,
 				name: newName,
 				extension: '.xsp',
@@ -4831,11 +4847,16 @@ function _list(x, y, w, h) {
 			// Save file
 			// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
 			if (!_isFile(oPlaylistPath)) { // Just for safety
+				const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
+				const nameId = newName + UUID;
+				if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+					fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+					return false;
+				}
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) {_createFolder(this.playlistsPath);} // For first playlist creation
-				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ?  new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
+				let done = savePlaylist({playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ?  new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM});
 				if (done) {
-					const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for pls playlists...
 					const now = Date.now();
 					objectPlaylist = new oPlaylist({
 						id: UUID,

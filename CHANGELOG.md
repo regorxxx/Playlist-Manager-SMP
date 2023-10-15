@@ -49,6 +49,8 @@
 ### Changed
 ### Removed
 ### Fixed
+- Renaming a playlist is not allowed if name (+UUID) matches any other item tracked by the manager.
+- Creating a playlist, Smart Playlist, AutoPlaylist or UI-only playlist is not allowed if name (+UUID) matches any other item tracked by the manager.
 
 ## [0.7.0] - 2023-10-05
 ### Added

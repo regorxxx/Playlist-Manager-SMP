@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/23
+//15/10/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1111,10 +1111,12 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 	const oldId = pls.id;
 	const newNameId = newName + ((list.bUseUUID && pls.id.length) ? pls.id : ''); // May have enabled/disabled UUIDs just before renamin
 	const newId = (list.bUseUUID && oldId.length) ? oldId : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
-	var duplicated = plman.FindPlaylist(newNameId);
+	const duplicated = plman.FindPlaylist(newNameId);
 	let bRenamedSucessfully = false;
 	if (bUpdatePlman && duplicated !== -1 || !bUpdatePlman && duplicated !== plman.ActivePlaylist) { // Playlist already exists on foobar2000...
-		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name);
+		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n\nChoose another unique name for renaming.', window.Name);
+	} else if (list.dataAll.some((pls) => pls.nameId === newNameId)) { // Playlist already exists on manager...
+		fb.ShowPopupMessage('Name already used: ' + newNameId + '\n\nChoose another unique name for renaming.', window.Name);
 	} else {
 		delayAutoUpdate();
 		if (newName.length && newName !== oldName) {
@@ -1198,8 +1200,8 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 
 function renamefolder(list, z, newName) {
 	const folder = list.data[z];
-	if (list.dataAll.some((pls) => pls.name === newName || pls.nameId === newName)) {
-		fb.ShowPopupMessage('Name already used: ' + newName + '\n' + 'Choose an unique name for renaming.', window.Name);
+	if (list.dataAll.some((pls) => pls.nameId === newName)) {
+		fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose an unique name for renaming.', window.Name);
 		return false;
 	} else {
 		list.dataAll.forEach((pls) => {
