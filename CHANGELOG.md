@@ -46,9 +46,11 @@
 
 ## [Unreleased][]
 ### Added
+- Search: last search may be reset or restored on startup. Configuration at search button.
 ### Changed
 ### Removed
 ### Fixed
+- Search: infinite search interval in some cases while using the search function along folders.
 - Renaming a playlist is not allowed if name (+UUID) matches any other item tracked by the manager.
 - Creating a playlist, Smart Playlist, AutoPlaylist or UI-only playlist is not allowed if name (+UUID) matches any other item tracked by the manager.
 

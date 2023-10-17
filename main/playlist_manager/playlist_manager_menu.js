@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/09/23
+//17/10/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -3867,6 +3867,12 @@ function createMenuSearch() {
 			overwriteProperties(list.properties);
 		}});
 		menu.newCheckMenu(subMenu, 'Reset along button filters', void(0),  () => list.searchMethod.bResetFilters);
+		menu.newEntry({menuName: subMenu, entryText: 'Reset search on startup', func: () => {
+			list.searchMethod.bResetStartup = !list.searchMethod.bResetStartup;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			overwriteProperties(list.properties);
+		}});
+		menu.newCheckMenu(subMenu, 'Reset search on startup', void(0),  () => list.searchMethod.bResetFilters);
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{	// Restore
 			menu.newEntry({menuName: subMenu, entryText: 'Restore defaults', func: () => {

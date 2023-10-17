@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/10/23
+//17/10/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -569,6 +569,10 @@ function _list(x, y, w, h) {
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
 						this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
+						if (this.searchMethod.text.length && !this.searchMethod.bResetStartup) {
+							this.searchInput.text = this.searchMethod.text;
+							this.search();
+						}
 						this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
 					}
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
@@ -2286,6 +2290,9 @@ function _list(x, y, w, h) {
 	this.search = (bFilter = true, str = this.searchInput ? this.searchInput.text : '') => {
 		if (this.searchInput.text.length && this.searhHistory.indexOf(this.searchInput.text) === -1) {this.searhHistory.push(this.searchInput.text);}
 		if (this.searhHistory.length > 10) {this.searhHistory.splice(10, Infinity);}
+		this.searchMethod.text = this.searchMethod.bResetStartup ? '' : str;
+		this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
+		overwriteProperties({searchMethod: this.properties['searchMethod']});
 		if (str.length) {
 			const found = [...this.dataAll].filter((pls) => {
 				let rgExp;
@@ -2314,11 +2321,11 @@ function _list(x, y, w, h) {
 				return false;
 			});
 			if (bFilter) { // Show found playlists or blank panel
-				this.filter({plsState: found.length ? found : [{}]});
+				this.filter({plsState: found.length ? found : [{}], bSkipSearch: true});
 			}
 			return {plsState: found.length ? found : [{}]};
 		} else if (bFilter) {
-			this.filter({plsState: []});
+			this.filter({plsState: [], bSkipSearch: true});
 		}
 		return {plsState: []};
 	}
@@ -3295,10 +3302,10 @@ function _list(x, y, w, h) {
 	this.isFilterActive = (filter = null) => {
 		return filter ? this.getFilter()[filter] : Object.values(this.getFilter()).some(Boolean);
 	};
-	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bRepaint = true} = {}) => {
+	this.filter = ({autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false, bRepaint = true} = {}) => {
 		// Apply current search
 		const bPlsFilter = plsState.length;
-		if (this.searchInput && this.searchInput.text.length) {
+		if (this.searchInput && this.searchInput.text.length && !bSkipSearch) {
 			if (!bReusePlsFilter || !bPlsFilter) {
 				plsState = this.search(false).plsState;
 			} else if (bReusePlsFilter && bPlsFilter) {
@@ -3464,13 +3471,13 @@ function _list(x, y, w, h) {
 		const bListenBrainz = this.properties.lBrainzToken[1].length > 0;
 		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type',  showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort((a,b) => a.localeCompare(b));
 	}
-	this.filterData = ({data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false} = {}) => {
+	this.filterData = ({data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false} = {}) => {
 		if (!data) {throw 'No data provided for filtering';}
 		if (!data.length) {return data;}
 		let outData;
 		// Apply current search
 		const bPlsFilter = plsState.length;
-		if (this.searchInput && this.searchInput.text.length) {
+		if (this.searchInput && this.searchInput.text.length && !bSkipSearch) {
 			if (!bReusePlsFilter || !bPlsFilter) {
 				plsState = this.search(false).plsState;
 			} else if (bReusePlsFilter && bPlsFilter) {
@@ -4552,7 +4559,7 @@ function _list(x, y, w, h) {
 			Object.defineProperty(folder.pls, 'filtered', {
 				configurable: true, enumerable: true,
 				get: function () {
-					return (this.length ? filterData({data: this, bReusePlsFilter: true}) : []);
+					return (this.length ? filterData({data: this, bReusePlsFilter: true, bSkipSearch: true}) : []);
 				}
 			});
 			Object.defineProperty(folder.pls, 'lengthFilteredAll', {
@@ -4572,7 +4579,7 @@ function _list(x, y, w, h) {
 				get: function () {
 					const count = (acc, item) => {
 						if (item.isFolder) {
-							return acc + filterData({data: item.pls, bReusePlsFilter: true}).reduce(count, 0);
+							return acc + filterData({data: item.pls, bReusePlsFilter: true, bSkipSearch: true}).reduce(count, 0);
 						} else {
 							return acc + 1;
 						}
@@ -5758,7 +5765,10 @@ function _list(x, y, w, h) {
 		if (!this.properties.bSetup[1]) {this.update(false, true, void(0), true);} // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
-		this.filter(); // Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
+		// Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
+		if (!this.uiElements['Search filter'].enabled || !this.searchMethod.text.length || this.searchMethod.bResetStartup) {
+			this.filter();
+		}
 		if (bProfile) {test.Print('Load playlists');}
 		if (this.bDynamicMenus) { // Init menus unless they will be init later after Autoplaylists processing
 			const queryItems = this.itemsAutoplaylist + this.itemsXsp;
