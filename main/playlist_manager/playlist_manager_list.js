@@ -5460,6 +5460,10 @@ function _list(x, y, w, h) {
 			if (!this.tagState || !this.tagState.length || (!this.bSaveFilterStates && !isArrayEqual(this.tagState, this.tags()))) {
 				this.tagState = this.tags(); // No need to save properties since it will be done at filter stage
 			}
+			// Force search reset when bound to filters
+			if (!this.bSaveFilterStates && this.searchMethod.bResetFilters && !this.searchMethod.bResetStartup) {
+				this.searchMethod.bResetStartup = true;
+			}
 			// Set tooltip timer values
 			this.tooltip.SetDelayTime(0, this.properties['iTooltipTimer'][1]); // TTDT_AUTOMATIC
 			if (bDone) {overwriteProperties(this.properties);}

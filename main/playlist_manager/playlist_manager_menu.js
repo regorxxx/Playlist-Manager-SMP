@@ -3863,16 +3863,17 @@ function createMenuSearch() {
 		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void(0),  () => list.searchMethod.bRegExp);
 		menu.newEntry({menuName: subMenu, entryText: 'Reset along button filters', func: () => {
 			list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
+			if (!list.bSaveFilterStates) {list.searchMethod.bResetStartup = list.searchMethod.bResetFilters;}
 			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 			overwriteProperties(list.properties);
 		}});
 		menu.newCheckMenu(subMenu, 'Reset along button filters', void(0),  () => list.searchMethod.bResetFilters);
-		menu.newEntry({menuName: subMenu, entryText: 'Reset search on startup', func: () => {
+		menu.newEntry({menuName: subMenu, entryText: 'Reset search on startup' + (!list.bSaveFilterStates && list.searchMethod.bResetFilters ? '\t[forced]' : ''), func: () => {
 			list.searchMethod.bResetStartup = !list.searchMethod.bResetStartup;
 			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 			overwriteProperties(list.properties);
-		}});
-		menu.newCheckMenu(subMenu, 'Reset search on startup', void(0),  () => list.searchMethod.bResetFilters);
+		}, flags: !list.bSaveFilterStates && list.searchMethod.bResetFilters ? MF_GRAYED : MF_STRING});
+		menu.newCheckMenu(subMenu, 'Reset search on startup', void(0),  () => list.searchMethod.bResetStartup);
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{	// Restore
 			menu.newEntry({menuName: subMenu, entryText: 'Restore defaults', func: () => {
