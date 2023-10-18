@@ -46,8 +46,13 @@
 
 ## [Unreleased][]
 ### Added
-- Search: last search may be reset or restored on startup. Configuration at search button.
+- Search: fuzzy search can be enabled by adding '~' to the beginning/end of the search term (when not using RegExp). There are 2 modes, one which only works with single words (fast) and a full fledged fuzzy search for multiple word input (slower).
+- Quick-search: pressing shift allows to find the pressed chars/words at any position of the name, contrary to the default behavior which only looks at the start of the name. Popup on Quick-search has been adjusted to indicate this.
 ### Changed
+- Configuration: the installation process now asks to enable the items contextual menu if desired.
+- Configuration: after changing the playlists path, a popup now asks to enable relative path handling menu entries.
+- Configuration: improved feature switching in some settings combinations.
+- Search: last search may be reset or restored on startup. Configuration at search button.
 ### Removed
 ### Fixed
 - Search: infinite search interval in some cases while using the search function along folders.
@@ -238,7 +243,7 @@
 ## [0.5.0-beta.21] - 2023-06-27
 ### Added
 - Tags: new auto-tags named 'bPinnedFirst' and 'bPinnedLast' which force showing the tagged playlists at top/bottom of the list, for any sorting/filtering combination.
-- UI: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
+- Configuration: script will be completely disabled after installing for the first time until user clicks on the setup button (which will initiate a serie of popups). This is a workaround for a [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210) during the installation process.
 - UI: added manual sorting. It must be enabled on the sorting button and works independently to the automatic sorting methods. Playlist can be reordered by drag n' dropping within the panel or using the sorting submenu. It also works with multiple selection. Pinned playlists are ignored in this mode. Sorting indexes are stored at '.\js_data\'.
 - UI: configurable columns to display playlist metadata. Width, metadata, font size, order, num of columns, borders and colors can be set. In the case of playlist's size, a configurable unit may be set. The entire feature may be disabled using the configurable UI elements submenu.
 - UI: added sorting by creation date.
