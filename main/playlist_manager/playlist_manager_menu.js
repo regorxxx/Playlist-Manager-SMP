@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/10/23
+//18/10/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -1689,7 +1689,7 @@ function createMenuRightTop() {
 	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({entryText: 'Set playlists folder...', func: () => {
 			let input = '';
-			try {input = sanitizePath(utils.InputBox(window.ID, 'Enter path of tracked folder:', window.Name, list.properties['playlistPath'][1], true));}
+			try {input = sanitizePath(utils.InputBox(window.ID, 'Enter path of tracked folder:\nRelative paths must begin with \'.\'.', window.Name, list.properties['playlistPath'][1], true));}
 			catch (e) {return;}
 			if (!input.length) {return;}
 			if (input === list.playlistsPath) {return;}
@@ -1704,13 +1704,21 @@ function createMenuRightTop() {
 			list.properties['playlistPath'][1] = input;
 			list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
 			list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
-			list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase();
+			list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase
+			// Tracking network drive?
 			if (mappedDrives.indexOf(list.playlistsPath.match(/^(.+?:)/g)[0]) !== -1) {
 				if (!list.properties['bNetworkPopup'][1]) {list.properties['bNetworkPopup'][1] = true;}
 				const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 				const readme = _open(file, utf8);
 				fb.ShowPopupMessage(readme, window.Name);
 			} else {list.properties['bNetworkPopup'][1] = false;}
+			// Related features
+			const answer = list.bLiteMode 
+				? popup.no
+				: WshShell.Popup('Enable \'Relative paths handling\' entries?\n\n(Only useful when tracking playlists which use relative paths for tracks)', 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				list.updateMenus({menus: {'Relative paths handling': true}, bSave: false});
+			}
 			overwriteProperties(list.properties);
 			bDone = list.checkConfig();
 			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
@@ -1720,7 +1728,6 @@ function createMenuRightTop() {
 			list.checkConfigPostUpdate(bDone);
 			list.filter();
 			test.Print();
-			// Tracking network drive?
 			window.Repaint();
 			window.Reload();
 		}});
@@ -3446,7 +3453,6 @@ function createMenuRightTop() {
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		{	// Keyboard
 			menu.newEntry({menuName: subMenuName, entryText: 'Enable F1-F12 keyboard actions', func: () => {
-				const showMenus = JSON.parse(list.properties.showMenus[1]);
 				list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1];
 				overwriteProperties(list.properties);
 				if (list.properties.bGlobalShortcuts[1]) {fb.ShowPopupMessage(list.listGlobalShortcuts(), window.Name);}
@@ -3476,17 +3482,13 @@ function createMenuRightTop() {
 	}
 	{	// Enabled menus
 		const showMenus = JSON.parse(list.properties.showMenus[1]);
-		const liteOmmit = ['Relative paths handling', 'Export and copy', 'File management', 'File locks'];
 		const subMenuName = menu.newMenu('Features...');
 		menu.newEntry({menuName: subMenuName, entryText: 'Menu entries / Features enabled:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		Object.keys(showMenus).forEach((key) => {
-			if (list.bLiteMode && liteOmmit.includes(key)) {return;}
+			if (list.bLiteMode && list.liteMenusOmmit.includes(key)) {return;}
 			menu.newEntry({menuName: subMenuName, entryText: key, func: () => {
-				showMenus[key] = !showMenus[key];
-				list.properties.showMenus[1] = JSON.stringify(showMenus);
-				overwriteProperties(list.properties);
-				list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+				list.updateMenus({menus: {[key] : !showMenus[key]}});
 			}});
 			menu.newCheckMenu(subMenuName, key, void(0), () => showMenus[key]);
 		});
@@ -3494,27 +3496,26 @@ function createMenuRightTop() {
 		{ // Presets
 			const defOpts = JSON.parse(list.properties.showMenus[3]);
 			const options = [
-				{name: 'Full', options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))},
-				{name: 'Bassic', options: {...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'].map((k) => [k, false]))}},
+				{name: 'Full', 
+					options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))
+				},
+				{name: 'Bassic', 
+					options: {...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'Statistics mode'].map((k) => [k, false]))}
+				},
+				{name: 'Online Sync', 
+					options: {'Online sync': true, 'Relative paths handling': false, 'Export and copy': false, 'File locks': false, 'UI playlist locks': false, 'Statistics mode': false, 'Sorting': false}
+				},
 			];
 			const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
 			options.forEach((preset) => {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: preset.name, func: () => {
-					Object.keys(preset.options).forEach((key) => {
-						if (list.bLiteMode && liteOmmit.includes(key)) {return;}
-						showMenus[key] = preset.options[key];
-					});
-					list.properties.showMenus[1] = JSON.stringify(showMenus);
-					overwriteProperties(list.properties);
-					list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+					list.updateMenus({menus: preset.options});;
 				}});
 			});
 		}
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
-			list.properties.showMenus[1] = list.properties.showMenus[3];
-			overwriteProperties(list.properties);
-			list.checkConfigPostUpdate(list.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+			list.updateMenus({menus: JSON.parse(list.properties.showMenus[3])});
 		}});
 	}
 	{	// Integration
@@ -3620,13 +3621,9 @@ function createMenuRightTop() {
 		list.bLiteMode = !list.bLiteMode;
 		list.properties['bLiteMode'][1] = list.bLiteMode;
 		if (list.bLiteMode) {
-			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'File locks'];
-			const otherFeatures = ['Advanced search tools'];
 			// Menus
-			features.forEach((key) => {
-				showMenus[key] = false;
-			});
-			list.properties.showMenus[3] = list.properties.showMenus[1] = JSON.stringify(showMenus); // Change default values
+			const menus = Object.fromEntries([...list.liteMenusOmmit, 'Tags', 'Online sync'].map((k) => [k, false]));
+			list.updateMenus({menus, bSave: false, bOverrideDefaults: true});
 			// Other tools
 			if (list.searchInput) {
 				list.searchMethod.bPath = list.searchMethod.bRegExp = false;
@@ -3647,7 +3644,7 @@ function createMenuRightTop() {
 			// Instances
 			removeInstance('Playlist Manager');
 		} else {
-			list.properties.showMenus[1] = list.properties.showMenus[3] = JSON.stringify(list.showMenusDef); // Restore default values from init
+			list.updateMenus({menus: list.showMenusDef, bSave: false, bOverrideDefaults: true}); // Restore default values from init
 			list.properties.autoSave[1] = list.properties.autoSave[3];
 			overwriteProperties(list.properties);
 			const autoBackTimer = Number(list.properties.autoBack[1]);
@@ -3861,6 +3858,20 @@ function createMenuSearch() {
 			}
 		}});
 		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void(0),  () => list.searchMethod.bRegExp);
+		menu.newEntry({menuName: subMenu, entryText: 'Advanced fuzzy search (~)', func: () => {
+			fb.ShowPopupMessage(
+				'Fuzzy search may be enabled adding \'~\' to the beginning/end of the string.\nFor ex:\n\t"smmer~"\t-> Would match "summer"\n\nThe basic fuzzy search will only match simple words, but not sentences. Enable the advanced fuzzy search for those use cases (it will use an external library and may be slower).'
+			, window.Name);
+			list.searchMethod.bSimpleFuzzy = !list.searchMethod.bSimpleFuzzy;
+			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+			list.checkConfigPostUpdate();
+			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prev_text.length) {
+				list.search();
+			}
+			overwriteProperties(list.properties);
+		}});
+		menu.newCheckMenu(subMenu, 'Advanced fuzzy search (~)', void(0),  () => !list.searchMethod.bSimpleFuzzy);
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		menu.newEntry({menuName: subMenu, entryText: 'Reset along button filters', func: () => {
 			list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
 			if (!list.bSaveFilterStates) {list.searchMethod.bResetStartup = list.searchMethod.bResetFilters;}

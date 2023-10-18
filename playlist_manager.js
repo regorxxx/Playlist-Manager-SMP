@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/10/23
+//18/10/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -202,6 +202,7 @@ var properties = {
 		bRegExp:		true,
 		bResetFilters:	false,
 		bResetStartup:	false,
+		bSimpleFuzzy:	true,
 		text:			'',
 	})],
 	uiElements				: ['UI elements', JSON.stringify({
@@ -369,6 +370,22 @@ let autoUpdateRepeat;
 				: WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				prop.bAllPls[1] = true;
+			}
+		}
+		{	// Contextual menus
+			const features = ['Playlist\'s items menu'];
+			const answer = prop.bLiteMode[1] 
+				? popup.yes
+				: prop.bAllPls[1]
+					? WshShell.Popup('Show native contextual menu on UI-playlists (applies to its items)?', 0, window.Name, popup.question + popup.yes_no)
+					: popup.no;
+			if (answer === popup.yes) {
+				// Menus
+				const showMenus = JSON.parse(prop.showMenus[1]);
+				features.forEach((key) => {
+					showMenus[key] = answer === popup.yes;
+				});
+				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
 			}
 		}
 		{	// Manual sorting

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/10/23
+//18/10/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -64,6 +64,7 @@ function _list(x, y, w, h) {
 	const regexUnicode = /[^\u0000-\u00ff]/;
 	const quickSearchRe = /[_A-z0-9]/;
 	const playlistRe = /playlist/gi;
+	let Fuse;
 	
 	// Global tooltip
 	// Timers follow the double click timer
@@ -78,6 +79,25 @@ function _list(x, y, w, h) {
 		}
 		this.size();
 		this.repaint();
+	}
+	
+	this.liteMenusOmmit = ['Relative paths handling', 'Export and copy', 'File management', 'File locks'];
+	this.updateMenus = ({menus = {/* key: boolean, ... */}, bSave = true, bOverrideDefaults = false} = {}) => {
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		Object.keys(menus).forEach((key) => {
+			showMenus[key] = menus[key];
+		});
+		if (this.bLiteMode) {
+			this.liteMenusOmmit.forEach((key) => {
+				showMenus[key] = false;
+			});
+		}
+		this.properties.showMenus[1] = JSON.stringify(showMenus);
+		if (bOverrideDefaults) {this.properties.showMenus[3] = this.properties.showMenus[1];}
+		if (bSave) {
+			overwriteProperties(this.properties);
+			this.checkConfigPostUpdate(this.checkConfig({bSilentSorting: true})); // Ensure related config is set properly
+		}
 	}
 	
 	this.updatePlaylistIcons = () => {
@@ -1025,6 +1045,13 @@ function _list(x, y, w, h) {
 			// Draw the box
 			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
+			switch (this.lastCharsPressed.mask) {
+				case kMask.shift:
+					gr.GdiDrawText('Contains:', panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+					break;
+				default: 
+					gr.GdiDrawText('Starts with:', panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+			}
 			// Draw the letter
 			if (idxHighlight === -1) { // Striked out when not found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylistColor, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
@@ -2156,9 +2183,18 @@ function _list(x, y, w, h) {
 							const bArray = isArray(pls[method]);
 							if (bArray && !pls[method].length) {return false;}
 							const val = bArray ? pls[method][0] : pls[method];
-							if (typeof val === 'string' && val.length) {return val.toLowerCase().startsWith(this.lastCharsPressed.str);} // Fuzzy search?
-							if (typeof val === 'number') {return val.toString().startsWith(this.lastCharsPressed.str);}
-							else {return false;}
+							this.lastCharsPressed.mask = getKeyboardMask();
+							if (typeof val === 'string' && val.length) {
+								return (this.lastCharsPressed.mask === kMask.shift
+									? val.toLowerCase().includes(this.lastCharsPressed.str)
+									: val.toLowerCase().startsWith(this.lastCharsPressed.str)
+								);
+							} else if (typeof val === 'number') {
+								return (this.lastCharsPressed.mask === kMask.shift
+									? val.toString().includes(this.lastCharsPressed.str)
+									: val.toString().startsWith(this.lastCharsPressed.str)
+								);
+							} else {return false;}
 						} else {return false;}
 					}
 					// Check the current playlist is a valid result when looking for next item
@@ -2295,28 +2331,61 @@ function _list(x, y, w, h) {
 		overwriteProperties({searchMethod: this.properties['searchMethod']});
 		if (str.length) {
 			const found = [...this.dataAll].filter((pls) => {
-				let rgExp;
-				if (this.searchMethod.bRegExp) {
-					let re, flag;
-					try {
-						[, re, flag] = str.match(/\/(.*)\/([a-z]+)?/);
-						rgExp = re ? new RegExp(re, flag) : null;
-					} catch(e) {}
-				}
-				if (!rgExp) {rgExp = new RegExp(escapeRegExp(str), 'gi');}
-				if (this.searchMethod.bName && rgExp.test(pls.name)) {return true;}
-				else if (this.searchMethod.bTags && pls.tags.some((tag) => rgExp.test(tag))) {return true;}
-				else if (this.searchMethod.bCategory && rgExp.test(pls.category)) {return true;}
-				else if (this.searchMethod.bPath && (pls.path.length || pls.extension === '.ui')) {
-					let paths;
-					if (pls.extension === '.ui') { // TODO match against meta found on M3U8 playlists...
-						const idx = plman.FindPlaylist(pls.nameId);
-						paths = idx !== -1 ? plman.GetPlaylistItems(idx).GetLibraryRelativePaths() : [];
+				if (str.startsWith('~') || str.endsWith('~')) {
+					const term = str.replace(/^~|~$/g, '');
+					const threshold = 0.75;
+					let fuzzy;
+					if (this.searchMethod.bSimpleFuzzy) {
+						const sepRegExp = /\(|\)| |,|-|_/g;
+						fuzzy = (val) => {
+							return Array.isArray(val) 
+								? val.some((subVal) => fuzzy(subVal))
+								: val.split(sepRegExp).some((s) => similarity(s, term) >= threshold);
+						};
 					} else {
-						paths = getFilePathsFromPlaylist(pls.path);
+						fuzzy = (val) => {
+							const fuse = new Fuse(Array.isArray(val) ? val : [val]);
+							return fuse.search(term, {isCaseSensitive: false, includeScore: false, threshold: 1 - threshold}).length
+						};
 					}
-					paths = paths.map((path) => path.split('\\').slice(- (this.searchMethod.pathLevel || Infinity)));
-					if (paths.some((path) => path.some((s) => rgExp.test(s)))) {return true;}
+					if (this.searchMethod.bName && fuzzy(pls.name)) {return true;}
+					else if (this.searchMethod.bTags && fuzzy(pls.tags)) {return true;}
+					else if (this.searchMethod.bCategory && fuzzy(pls.category)) {return true;}
+					else if (this.searchMethod.bPath && (pls.path.length || pls.extension === '.ui')) {
+						let paths;
+						if (pls.extension === '.ui') { // TODO match against meta found on M3U8 playlists...
+							const idx = plman.FindPlaylist(pls.nameId);
+							paths = idx !== -1 ? plman.GetPlaylistItems(idx).GetLibraryRelativePaths() : [];
+						} else {
+							paths = getFilePathsFromPlaylist(pls.path);
+						}
+						paths = paths.map((path) => path.split('\\').slice(- (this.searchMethod.pathLevel || Infinity)));
+						if (fuzzy(paths)) {return true;}
+					}
+				} else {
+					let rgExp;
+					if (this.searchMethod.bRegExp) {
+						let re, flag;
+						try {
+							[, re, flag] = str.match(/\/(.*)\/([a-z]+)?/);
+							rgExp = re ? new RegExp(re, flag) : null;
+						} catch(e) {}
+					}
+					if (!rgExp) {rgExp = new RegExp(escapeRegExp(str), 'gi');}
+					if (this.searchMethod.bName && rgExp.test(pls.name)) {return true;}
+					else if (this.searchMethod.bTags && pls.tags.some((tag) => rgExp.test(tag))) {return true;}
+					else if (this.searchMethod.bCategory && rgExp.test(pls.category)) {return true;}
+					else if (this.searchMethod.bPath && (pls.path.length || pls.extension === '.ui')) {
+						let paths;
+						if (pls.extension === '.ui') { // TODO match against meta found on M3U8 playlists...
+							const idx = plman.FindPlaylist(pls.nameId);
+							paths = idx !== -1 ? plman.GetPlaylistItems(idx).GetLibraryRelativePaths() : [];
+						} else {
+							paths = getFilePathsFromPlaylist(pls.path);
+						}
+						paths = paths.map((path) => path.split('\\').slice(- (this.searchMethod.pathLevel || Infinity)));
+						if (paths.some((path) => path.some((s) => rgExp.test(s)))) {return true;}
+					}
 				}
 				return false;
 			});
@@ -5464,6 +5533,12 @@ function _list(x, y, w, h) {
 			if (!this.bSaveFilterStates && this.searchMethod.bResetFilters && !this.searchMethod.bResetStartup) {
 				this.searchMethod.bResetStartup = true;
 			}
+			// Include extra helpers
+			if (this.searchMethod.bSimpleFuzzy) {
+				include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
+			} else {
+				Fuse = require('..\\helpers-external\\fuse\\fuse');
+			}
 			// Set tooltip timer values
 			this.tooltip.SetDelayTime(0, this.properties['iTooltipTimer'][1]); // TTDT_AUTOMATIC
 			if (bDone) {overwriteProperties(this.properties);}
@@ -5928,10 +6003,21 @@ function _list(x, y, w, h) {
 		search: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => {
 					return (this.searchInput.text.length || this.isFilterActive('Playlist')
-						? 'Clear search\n----------------------------------------------\n(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
-						: 'Search settings...\n----------------------------------------------\n(Escape to clear search text)\n(Ctrl + E sets focus on search box)') + (this.searchMethod.bPath 
-								? '\n(Drag n\' drop track(s) to copy filename(s))' 
-								: '');
+						? 'Clear search\n----------------------------------------------\n' +
+							(list.searchMethod.bRegExp 
+								? 'RegExp allowed | ' 
+								: ''
+							) + 
+							'Fuzzy search with ~\n' + 
+							'(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
+						: 'Search settings...\n----------------------------------------------\n' +
+							(list.searchMethod.bRegExp ? 'RegExp is allowed (for ex. /tag*/gi)\n' : '') + 
+							'Fuzzy search with ~ at beggining/end\n' + 
+							'(Escape to clear search text)\n(Ctrl + E sets focus on search box)') + 
+								(this.searchMethod.bPath 
+									? '\n(Drag n\' drop track(s) to copy filename(s))' 
+									: ''
+								);
 			}, func: (x, y, mask, parent) => {
 				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
 					this.searchInput.on_key_down(VK_ESCAPE); 
