@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.8.0](#080---2023-10-18)
 - [0.7.0](#070---2023-10-05)
 - [0.6.2](#062---2023-09-25)
 - [0.6.1](#061---2023-09-20)
@@ -45,6 +46,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.8.0] - 2023-10-18
 ### Added
 - Search: fuzzy search can be enabled by adding '~' to the beginning/end of the search term (when not using RegExp). There are 2 modes, one which only works with single words (fast) and a full fledged fuzzy search for multiple word input (slower).
 - Quick-search: pressing shift allows to find the pressed chars/words at any position of the name, contrary to the default behavior which only looks at the start of the name. Popup on Quick-search has been adjusted to indicate this.
@@ -972,8 +979,9 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.7.0...HEAD
-[0.7.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.3...v0.7.0
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.3...v0.7.0
 [0.6.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.0...v0.6.1
