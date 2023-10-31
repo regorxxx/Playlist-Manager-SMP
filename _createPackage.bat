@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.03/05/23
+REM Create packages (zip file) from js files v.30/10/23
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -23,9 +23,10 @@ ECHO ---------------------------------
 ECHO (1) World-Map-SMP
 ECHO (2) Playlist-Manager-SMP
 ECHO (3) Not-a-Waveform-Seekbar-SMP
+ECHO (4) Timeline-SMP
 ECHO.
 IF [%1]==[] (
-	CHOICE /C 123 /N /M "CHOOSE PACKAGE TO BUILD (1-3): "
+	CHOICE /C 1234 /N /M "CHOOSE PACKAGE TO BUILD (1-4): "
 ) ELSE (
 	IF [%1] EQU [0] (
 		ECHO 9| CHOICE /C 123456789 /N >NUL
@@ -36,7 +37,8 @@ IF [%1]==[] (
 IF %ERRORLEVEL% EQU 1 GOTO world_map
 IF %ERRORLEVEL% EQU 2 GOTO playlist_manager
 IF %ERRORLEVEL% EQU 3 GOTO not_a_waveform_seekbar
-IF ERRORLEVEL 4 (
+IF %ERRORLEVEL% EQU 4 GOTO timeline
+IF ERRORLEVEL 5 (
 	ECHO Package ^(%1^) not recognized.
 	GOTO:EOF
 )
@@ -47,12 +49,16 @@ REM ------------------------------
 
 :world_map
 REM package variables
-REM usually only version needs to be changed
+REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
-SET version=3.1.0
 SET name=World-Map-SMP
 SET id=FA5A85D5-5C81-4B9B-BF01-52872BA83EA7
 SET description=https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/world-map-smp/\r\n\r\nA foobar2000 UI Spider Monkey Panel which displays current artist's country on the world map and lets you generate autoplaylists based on selection and locale tag saving when integrated along WilB's Biography Script.\r\n\r\n• Map image configurable:\r\n   - Full.\r\n   - No Antarctica.\r\n   - Custom. (coordinates may need a transformation to work)\r\n• Configurable X and Y factors for transformation (along custom image maps).\r\n• 2 modes:\r\n   - Standard: Follow now playing track or selection.\r\n   - Library: display statistics of entire library (independtly of the selection/playback).\r\n• Works with multiple selected tracks (draws all points on the map), allowing to show statistics of an entire playlist or library.\r\n• Fully configurable UI.\r\n• On playback the panel fetches tags from (by order of preference):\r\n   - Track's tags.\r\n   - JSON database.\r\n   - WilB's Biography panel.\r\n• WilB's Biography integration\r\n• Tool-tip shows multiple info about the points and tracks selected.\r\n• AutoPlaylist creation on click over a point with any artist on your library from the selected country.\r\n• Fully Wine - Unix - non IE SOs compatible.
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" world_map.js`) DO (SET version=%%F)
+SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('World Map', {author:'regorxxx', version: '=%
+SET version=%version:', features: {drag_n_drop: false}});}=%
+REM features
 SET enableDragDrop=false
 SET shouldGrabFocus=false
 REM global variable
@@ -140,12 +146,16 @@ GOTO:EOF
 
 :playlist_manager
 REM package variables
-REM usually only version needs to be changed
+REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
-SET version=0.8.0
 SET name=Playlist-Manager-SMP
 SET id=2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D
 SET description=https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-manager-smp/\r\n\r\nPlaylist manager for foobar2000 and Spider Monkey Panel to save and load (auto)playlists on demand, synchronizing, ... along many more utilities.\r\n\r\n• Manages Playlist files, AutoPlaylists and Smart Playlists(XBMC or Kodi).\r\n• ListenBrainz integration: sync user's playlists, ...\r\n• Loads playlist files x100 times faster than standard foobar.\r\n• Multiple exporting options: compatible with Foobar2000 mobile, Kodi and XBMC systems, etc.\r\n• Group by categories, tags and inline searching.\r\n• Filters and Sorting.\r\n• Configurable UI.\r\n• Fully Wine - Unix - non IE SOs compatible.\r\n• Other scripts integration:\r\n   - Playlist-Tools-SMP\r\n   - ajquery-xxx\r\n   - SMP Dynamic menus
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" playlist_manager.js`) DO (SET version=%%F)
+SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'regorxxx', version: '=%
+SET version=%version:', features: {drag_n_drop: true, grab_focus: true}});}=%
+REM features
 SET enableDragDrop=true
 SET shouldGrabFocus=true
 REM global variable
@@ -257,12 +267,16 @@ GOTO:EOF
 
 :not_a_waveform_seekbar
 REM package variables
-REM usually only version needs to be changed
+REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
-SET version=1.0.6
 SET name=Not-A-Waveform-Seekbar-SMP
 SET id=293B12D8-CC8B-4D21-8883-1A29EAFC4074
 SET description=https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP\r\n\r\nA seekbar for foobar2000, using Spider Monkey Panel, audiowaveform or ffprobe. It's based on RMS, peak levels, the actual waveform or visualization presets.\r\n\r\n• Uses audiowaveform by default (included).\r\n• ffprobe can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\\ffprobe'.\r\n• Visualizer mode to simply show an animation which changes according to BPM (if tag exists).\r\n• Fully configurable using the R. Click menu:\r\n   - Colors\r\n   - Waveform modes\r\n   - Analysis modes\r\n   - Animations\r\n   - Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" seekbar.js`) DO (SET version=%%F)
+SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '=%
+SET version=%version:'});}=%
+REM features
 SET enableDragDrop=false
 SET shouldGrabFocus=false
 REM global variable
@@ -293,6 +307,66 @@ REM helpers external
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
+REM package info, zip and report
+CALL :create_package_info
+CALL :compress %name% %version%
+CALL :report
+GOTO:EOF
+
+:timeline
+REM package variables
+REM version is automatically retrieved from main js file
+REM any text must be JSON encoded
+SET name=Timeline-SMP
+SET id=EAEB88D1-44AC-4B13-8960-FB3AAD78828D
+SET description=https://github.com/regorxxx/Timeline-SMP\r\n\r\nA seekbar for foobar2000, using Spider Monkey Panel, audiowaveform or ffprobe. It's based on RMS, peak levels, the actual waveform or visualization presets.\r\n\r\n• Uses audiowaveform by default (included).\r\n• ffprobe can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\\ffprobe'.\r\n• Visualizer mode to simply show an animation which changes according to BPM (if tag exists).\r\n• Fully configurable using the R. Click menu:\r\n   - Colors\r\n   - Waveform modes\r\n   - Analysis modes\r\n   - Animations\r\n   - Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" timeline.js`) DO (SET version=%%F)
+SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Timeline', {author:'regorxxx', version: '=%
+SET version=%version:', features: {drag_n_drop: false}});}=%
+REM features
+SET enableDragDrop=false
+SET shouldGrabFocus=false
+REM global variable
+SET root=%packagesFolder%\%name: =-%
+REM package folder and file
+CALL :check_root
+CALL :copy_main timeline.js
+REM main
+CALL :copy_folder main\timeline
+CALL :copy_folder main\statistics
+CALL :check_folder main\filter_and_query
+CALL :copy_file main\filter_and_query\remove_duplicates.js
+REM helpers
+CALL :check_folder helpers
+CALL :copy_file helpers\callbacks_xxx.js
+CALL :copy_file helpers\helpers_xxx.js
+CALL :copy_file helpers\helpers_xxx_basic_js.js
+CALL :copy_file helpers\helpers_xxx_console.js
+CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_flags.js
+CALL :copy_file helpers\helpers_xxx_foobar.js
+CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_playlists.js
+CALL :copy_file helpers\helpers_xxx_prototypes.js
+CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
+CALL :copy_file helpers\helpers_xxx_so.js
+CALL :copy_file helpers\helpers_xxx_tags.js
+CALL :copy_file helpers\helpers_xxx_UI.js
+CALL :copy_file helpers\helpers_xxx_UI_chars.js
+CALL :copy_file helpers\helpers_xxx_UI_flip.js
+CALL :copy_file helpers\menu_xxx.js
+CALL :copy_file helpers\popup_xxx.js
+REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :check_folder helpers-external\chroma.js-2.4.0
+CALL :copy_file helpers-external\chroma.js-2.4.0\chroma.js
+CALL :copy_file helpers-external\chroma.js-2.4.0\LICENSE
+REM helpers external
+CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_button.js
+CALL :copy_file main\window\window_xxx_helpers.js
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
