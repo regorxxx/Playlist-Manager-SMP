@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/09/23
+//30/10/23
 
 /* 
 	Objects
@@ -438,6 +438,13 @@ function _bt(tag) {
 	return _b(_t(tag));
 }
 
+function _qCond(tag, bUnquote = false) {
+	return bUnquote 
+		? tag.replace(/(^")(.*\$+.*)("$)/g, '$2')
+		: tag.includes('$')
+			? _q(tag)
+			: tag;
+}
 
 function _ascii(tag) { // Don't miss quotes on queries!
 	return '$ascii(' + tag + ')';
@@ -581,7 +588,7 @@ Array.prototype.joinUpToChars = function(sep, chars) {
 	return str;
 };
 
-Array.prototype.multiIndexOf = function (el) { 
+Array.prototype.multiIndexOf = function(el) { 
 	const idxs = [];
 	for (let i = this.length - 1; i >= 0; i--) {
 		if (this[i] === el) {idxs.unshift(i);}
@@ -589,7 +596,7 @@ Array.prototype.multiIndexOf = function (el) {
 	return idxs;
 };
 
-Array.prototype.partialSort = function (order, bOptimze = true) {
+Array.prototype.partialSort = function(order, bOptimze = true) {
 	if (bOptimize) {order = [...(new Set(order).intersection(new Set(this)))];}
 	const profiler = new FbProfiler('partialSort');
 	const orderIndex = [];
@@ -612,6 +619,20 @@ Array.prototype.partialSort = function (order, bOptimze = true) {
 	}
 	profiler.Print();
 	return this;
+};
+
+// https://en.wikipedia.org/wiki/Schwartzian_transform
+Array.prototype.schwartzianSort = function(processFunc, sortFunc = (a, b) => a[1] - b[1]) { // or (a, b) => {return a[1].localeCompare(b[1]);}
+	return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
+}
+
+// https://github.com/aldo-gutierrez/bitmasksorterJS
+const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
+Array.prototype.radixSort = function(bReverse = false, start, end) {
+	return bReverse ? bitmask.sortNumber.call(this, this, start, end).reverse(): bitmask.sortNumber.call(this, this, start, end);
+};
+Array.prototype.radixSortInt = function(bReverse = false, start, end) {
+	return bReverse ? bitmask.sortInt.call(this, this, start, end).reverse() : bitmask.sortInt.call(this, this, start, end);
 };
 
 /* 

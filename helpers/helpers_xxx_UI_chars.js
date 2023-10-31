@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/09/23
+//26/10/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -52,6 +52,7 @@ const chars = {
 	columns			: '\uf0db',
 	table			: '\uf0ce',
 	chart			: '\uf201',
+	chartV2			: '\uf080',
 	// Files
 	folderOpenBlack	: '\uf07c',
 	folderOpenWhite	: '\uf115',
@@ -93,6 +94,8 @@ const chars = {
 	stop			: '\uf04D',
 	shuffle			: '\uf074',
 	// Carets
+	left 			: '\uf053',
+	right 			: '\uf054',
 	up 				: '\uf077',
 	down 			: '\uf078',
 	// Arrows

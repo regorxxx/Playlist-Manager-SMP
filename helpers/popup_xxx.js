@@ -1,7 +1,7 @@
 ﻿'use strict';
-//12/09/23
+//30/10/23
 
-if (typeof opaqueColor === 'undefined' || typeof invert === 'undefined' || typeof _scale === 'undefined') {include('helpers_xxx_UI.js');}
+if (typeof opaqueColor === 'undefined' || typeof invert === 'undefined' || typeof _scale === 'undefined' || typeof cyclicOffset === 'undefined') {include('helpers_xxx_UI.js');}
 
 function _popup({
 		x = 0, y = 0,
@@ -56,7 +56,7 @@ function _popup({
 		}
 	}
 	this.fontSize *= scale;
-	this.gFont = _gdiFont(globFonts.standard.name, this.fontSize, FontStyle.Bold);
+	this.gFont = _gdiFont(typeof globFonts !== 'undefined' ? globFonts.standard.name : 'Segoe UI', this.fontSize, FontStyle.Bold);
 	
 	// Paint
 	this.paint = (gr) => { // on_paint

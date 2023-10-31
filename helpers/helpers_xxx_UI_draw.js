@@ -1,13 +1,15 @@
 ﻿'use strict';
-//05/05/22
+//30/10/23
 
 include('helpers_xxx_UI.js');
 
 function _sb(t, x, y, w, h, v, fn) {
-	this.paint = (gr, colour) => {
-		gr.SetTextRenderingHint(4);
-		if (this.v()) {
-			gr.DrawString(this.t, this.font, colour, this.x, this.y, this.w, this.h, SF_CENTRE);
+	this.paint = (gr, colour, colorBg = null) => {
+		const bVisible = this.v();
+		if (bVisible || colorBg) {
+			gr.SetTextRenderingHint(4);
+			gr.DrawString(this.t, this.font, bVisible ? colour : colorBg, this.x, this.y, this.w, this.h, SF_CENTRE);
+			gr.SetTextRenderingHint(0);
 		}
 	};
 	this.trace = (x, y) => {
@@ -24,10 +26,14 @@ function _sb(t, x, y, w, h, v, fn) {
 			return false;
 		}
 	};
-	this.lbtn_up = (x, y) => {
+	this.lbtn_up = (x, y, mask, parent) => {
 		if (this.trace(x, y)) {
 			if (this.fn) {
-				this.fn(x, y);
+				if (parent) {
+					this.fn.call(parent, x, y, mask, parent);
+				} else {
+					this.fn(x, y, mask);
+				}
 			}
 			return true;
 		} else {
