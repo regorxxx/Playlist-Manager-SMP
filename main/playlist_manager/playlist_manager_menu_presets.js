@@ -1,7 +1,7 @@
 ﻿'use strict';
-//30/12/22
+//07/11/23
 
-const Chroma = require('..\\..\\helpers-external\\chroma.js-2.4.0\\chroma');
+const Chroma = require('..\\..\\helpers-external\\chroma.js\\chroma.min');
 const createMenuRightTopBack = createMenuRightTop;
 
 function createMenuRightTop() {
