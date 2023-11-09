@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/10/23
+//07/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -2916,14 +2916,8 @@ function _list(x, y, w, h) {
 	
 	this.getUpdateTrackTags = (handleList, pls) => { // Add tags to tracks according to playlist, only applied once per track. i.e. adding multiple copies will not add multiple times the tag
 		if (!pls.hasOwnProperty('trackTags') || !pls.trackTags || !pls.trackTags.length || !handleList || !handleList.Count) {return [new FbMetadbHandleList(), []];}
-		// const oldHandles = pls.path && !pls.isAutoPlaylist ? getHandlesFromPlaylist(pls.path, this.playlistsPath) : null;
 		const newHandles = handleList.Clone();
 		newHandles.Sort();
-		// if (oldHandles) {
-			// oldHandles.Sort();
-			// newHandles.Sort();
-			// newHandles.MakeDifference(oldHandles);
-		// }
 		let tagsArr = [];
 		const newHandlesNoTags = new FbMetadbHandleList();
 		if (newHandles.Count) {
