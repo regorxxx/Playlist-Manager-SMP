@@ -1,23 +1,22 @@
 ﻿'use strict';
-//30/10/23
+//07/11/23
 
 include('statistics_xxx_helper.js');
-const Chroma = module.exports;
 
 function _chart({
 				data /* [[{x, y}, ...]]*/,
 				dataAsync = null, /* function returning a promise or promise, resolving to data, see above*/
 				colors = [/* rgbSerie1, ... */],
 				chroma = {/* scheme, colorBlindSafe */}, // diverging, qualitative, sequential, random or [color, ...] see https://vis4.net/chromajs/#color-scales
-				graph = {/* type, multi, borderWidth, point */},
+				graph = {/* type, multi, borderWidth, point, pointAlpha */},
 				dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot, group*/},
 				background = {/* color, image*/},
 				grid = {x: {/* show, color, width */}, y: {/* ... */}},
 				axis = {x: {/* show, color, width, ticks, labels, key, singleLabels, bAltLabels */}, y: {/* ... */}, z: {/* ... */}}, // singleLabels & bAltLabels only for X axis
 				margin = {/* left, right, top, bottom */}, 
 				buttons = {/* xScroll , settings, display */},
-				callbacks = {point: {/* onLbtnUp, onRbtnUp */}, focus: {/* onMouseWwheel, onRbtnUp */}, settings: {/* onLbtnUp, onRbtnUp */}, display: {/* onLbtnUp, onRbtnUp */}},
-				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*/},
+				callbacks = {point: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, focus: {/* onMouseWwheel, onRbtnUp */}, settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, display: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, config: {/* change, backgroundColor */}},
+				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true */},
 				x = 0,
 				y = 0,
 				w = window.Width,
@@ -155,6 +154,7 @@ function _chart({
 		const xValues = x + i * barW;
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
+		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
 			valH = value.y / maxY / 2 * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
@@ -162,8 +162,8 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			this.dataCoords[i][j] = {x: xPoint, y: yPoint, w: barW, h: valH};
 			const point = this.dataCoords[i][j];
-			gr.FillSolidRect(point.x, point.y, point.w, point.h + (this.axis.x.show ? this.axis.x.width / 2 : 0), this.colors[i]);
-			gr.FillSolidRect(point.x, point.y + point.h + (this.axis.x.show ? this.axis.x.width * 3/2 : 0), point.w, point.h, this.colors[i]);
+			gr.FillSolidRect(point.x, point.y, point.w, point.h + (this.axis.x.show ? this.axis.x.width / 2 : 0), color);
+			gr.FillSolidRect(point.x, point.y + point.h + (this.axis.x.show ? this.axis.x.width * 3/2 : 0), point.w, point.h, color);
 			if (bFocused) {gr.FillSolidRect(point.x, point.y, point.w, point.h * 2 + (this.axis.x.show ? this.axis.x.width * 3/2 : 0), borderColor);}
 			// Borders
 			if (this.graph.borderWidth) {
@@ -265,7 +265,20 @@ function _chart({
 		this.dataCoords = this.dataDraw.map((serie) => {return [];});
 		let x, y, w, h, xOffsetKey, yOffsetKey;
 		let bHideToolbar;
-		
+		const bgColor = this.configuration.bDynColor && this.callbacks.config.backgroundColor 
+			? this.configuration.bDynColorBW 
+				? invert(this.callbacks.config.backgroundColor()[0], true) 
+				: Chroma.average(this.callbacks.config.backgroundColor(), void(0), [0.6, 0.4]).android()
+			: null;
+		const xAxisColor = bgColor || this.axis.x.color;
+		const xAxisColorInverted = xAxisColor === this.axis.x.color 
+			? xAxisColor 
+			: this.configuration.bDynColorBW 
+				? bgColor
+				: invert(xAxisColor, true);
+		const yAxisColor = bgColor || this.axis.y.color;
+		const xGridColor = bgColor || this.grid.x.color;
+		const yGridColor = bgColor || this.grid.y.color;
 		// Max Y value for all series
 		let maxY = 0, minY = 0;
 		this.dataDraw.forEach((serie, i) => {
@@ -335,13 +348,13 @@ function _chart({
 				// XY Axis
 				if (this.axis.x.show) {
 					if (this.graph.type === 'timeline') {
-						gr.DrawLine(x, (y - h) / 2 + this.margin.top + this.axis.x.width / 2, x + w - this.margin.leftAuto, (y - h) / 2 + this.margin.top + this.axis.x.width / 2, this.axis.x.width, this.axis.x.color);
+						gr.DrawLine(x, (y - h) / 2 + this.margin.top + this.axis.x.width / 2, x + w - this.margin.leftAuto, (y - h) / 2 + this.margin.top + this.axis.x.width / 2, this.axis.x.width, xAxisColor);
 					} else {
-						gr.DrawLine(x, y - this.axis.x.width / 2, x + w - this.margin.leftAuto, y - this.axis.x.width / 2, this.axis.x.width, this.axis.x.color);
+						gr.DrawLine(x, y - this.axis.x.width / 2, x + w - this.margin.leftAuto, y - this.axis.x.width / 2, this.axis.x.width, xAxisColor);
 					}
 				}
 				if (this.axis.y.show) {
-					gr.DrawLine(x, y, x, h, this.axis.y.width, this.axis.y.color);
+					gr.DrawLine(x, y, x, h, this.axis.y.width, yAxisColor);
 				}
 		}
 		x += this.axis.x.width / 2;
@@ -476,7 +489,7 @@ function _chart({
 									const yTickText = label.from.y + centroid * Math.sin(tetha) - tickH / 2;
 									const xTickText = label.from.x + centroid * Math.cos(tetha) - tickW / 2;
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-									gr.GdiDrawText(labelText, this.gFont, this.axis.y.color, xTickText, yTickText, tickW, tickH, flags);
+									gr.GdiDrawText(labelText, this.gFont, yAxisColor, xTickText, yTickText, tickW, tickH, flags);
 								}
 								if (this.axis.x.labels && i === 0 || !this.axis.x.singleLabels) { // keys
 									const labelText = xAxisValues[j];
@@ -519,15 +532,15 @@ function _chart({
 						const keyH = gr.CalcTextHeight(key, this.gFont);
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-							gr.DrawString(key, this.gFont, this.axis.y.color, labelOver.coord[0][0].from.x - labelOver.r - keyH * 2 , this.y + (this.h - this.y) / 2 - keyW*2/3, w, this.h, StringFormatFlags.DirectionVertical);
+							gr.DrawString(key, this.gFont, yAxisColor, labelOver.coord[0][0].from.x - labelOver.r - keyH * 2 , this.y + (this.h - this.y) / 2 - keyW*2/3, w, this.h, StringFormatFlags.DirectionVertical);
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
 							const _gr = img.GetGraphics();
 							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(this.axis.y.color), 200), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
+							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
 							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(this.axis.y.color), 123), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
+							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY)
 							img.ReleaseGraphics(_gr);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
@@ -540,7 +553,7 @@ function _chart({
 				if (this.axis.x.show) {
 					if (this.axis.x.key.length && this.axis.x.showKey && labelOver.coord.length) {
 						const keyW = gr.CalcTextWidth(this.axis.x.key, this.gFont);
-						gr.GdiDrawText(this.axis.x.key, this.gFont, this.axis.x.color, labelOver.coord[0][0].from.x - keyW/2, y + this.axis.x.width, keyW, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+						gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColorInverted, labelOver.coord[0][0].from.x - keyW/2, y + this.axis.x.width, keyW, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					}
 				}
 				break;
@@ -553,18 +566,18 @@ function _chart({
 						const yTickText = yTick - tickH / 2;
 						if (yTickText < 0) {return;}
 						if (i !== 0) {
-							gr.DrawLine(x - this.axis.x.width * 2, yTick + this.axis.x.width, x + this.axis.x.width, yTick + this.axis.x.width, this.axis.y.width / 2, this.axis.y.color);
-							gr.DrawLine(x - this.axis.x.width * 2, y + this.margin.top - yTick, x + this.axis.x.width, y + this.margin.top - yTick, this.axis.y.width / 2, this.axis.y.color);
+							gr.DrawLine(x - this.axis.x.width * 2, yTick + this.axis.x.width, x + this.axis.x.width, yTick + this.axis.x.width, this.axis.y.width / 2, yAxisColor);
+							gr.DrawLine(x - this.axis.x.width * 2, y + this.margin.top - yTick, x + this.axis.x.width, y + this.margin.top - yTick, this.axis.y.width / 2, yAxisColor);
 						} else {
-							gr.DrawLine(x - this.axis.x.width * 2, yTick, x + this.axis.x.width, yTick, this.axis.y.width / 2, this.axis.y.color);
+							gr.DrawLine(x - this.axis.x.width * 2, yTick, x + this.axis.x.width, yTick, this.axis.y.width / 2, yAxisColor);
 						}
 						if (this.axis.y.labels) {
 							const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 							if (i !== 0) {
-								gr.GdiDrawText(tickText[i], this.gFont, this.axis.y.color, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText + (this.axis.x.show ? this.axis.x.width : 0), this.margin.leftAuto, tickH, flags);
-								gr.GdiDrawText(tickText[i], this.gFont, this.axis.y.color, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, y - h + this.margin.top - yTick - this.axis.y.width / 2 + (this.axis.x.show ? this.axis.x.width : 0), this.margin.leftAuto, tickH, flags);
+								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText + (this.axis.x.show ? this.axis.x.width : 0), this.margin.leftAuto, tickH, flags);
+								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, y - h + this.margin.top - yTick - this.axis.y.width / 2 + (this.axis.x.show ? this.axis.x.width : 0), this.margin.leftAuto, tickH, flags);
 							} else {
-								gr.GdiDrawText(tickText[i], this.gFont, this.axis.y.color, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText, this.margin.leftAuto, tickH, flags);
+								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText, this.margin.leftAuto, tickH, flags);
 							}
 						}
 					});
@@ -578,20 +591,20 @@ function _chart({
 								const xLabel= x + i * tickW;
 								if (this.axis.x.labels) {
 									const tickH = gr.CalcTextHeight(valueX, this.gFont);
-									const borderColor = RGBA(...toRGB(invert(this.axis.x.color, true)), 150);
+									const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
 									const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									gr.FillSolidRect(xLabel + tickW / 2 + offsetTickText - _scale(3) - xTickW / 2, yPos + tickH / 6, xTickW + _scale(4), tickH, borderColor);
-									gr.GdiDrawText(valueX, this.gFont, this.axis.x.color, xLabel + offsetTickText, yPos + this.axis.y.width, tickW, this.h, flags);
+									gr.GdiDrawText(valueX, this.gFont, xAxisColorInverted, xLabel + offsetTickText, yPos + this.axis.y.width, tickW, this.h, flags);
 								}
 								const xLine = xLabel; // TODO centered or at left of first value?
-								gr.DrawLine(xLine, yPos + this.axis.x.width * 2, xLine, yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0), this.axis.x.width / 2, this.axis.x.color);
+								gr.DrawLine(xLine, yPos + this.axis.x.width * 2, xLine, yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0), this.axis.x.width / 2, xAxisColor);
 							});
 						}
 					}
 					if (this.axis.x.key.length && this.axis.x.showKey) {
 						const offsetH = this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0;
-						gr.GdiDrawText(this.axis.x.key, this.gFont, this.axis.x.color, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+						gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColorInverted, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					}
 				}
 			}
@@ -604,16 +617,16 @@ function _chart({
 							const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 							if (this.configuration.bAltVerticalText) { // Flip chars
 								gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-								gr.DrawString(valueX, this.gFont, this.axis.x.color, xLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
+								gr.DrawString(valueX, this.gFont, xAxisColor, xLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
 								gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 							} else {
 								const keyH = gr.CalcTextHeight(valueX, this.gFont);
 								const img = gdi.CreateImage(xTickW, keyH);
 								const _gr = img.GetGraphics();
 								_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(this.axis.x.color), 255), 0 ,0, xTickW, keyH, StringFormatFlags.NoWrap);
+								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0 ,0, xTickW, keyH, StringFormatFlags.NoWrap);
 								_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(this.axis.x.color), 123), 0 ,0, xTickW, keyH, StringFormatFlags.NoWrap);
+								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0 ,0, xTickW, keyH, StringFormatFlags.NoWrap);
 								img.RotateFlip(RotateFlipType.Rotate90FlipXY)
 								img.ReleaseGraphics(_gr);
 								gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
@@ -632,7 +645,7 @@ function _chart({
 								const xTickW = gr.CalcTextWidth(valueZ, this.gFont);
 								if (this.configuration.bAltVerticalText) { // Flip chars
 									gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-									gr.DrawString(valueZ, this.gFont, this.axis.x.color, zLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
+									gr.DrawString(valueZ, this.gFont, xAxisColor, zLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
 									gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 								} else { // TODO setting for overflow
 									const keyH = gr.CalcTextHeight(valueZ, this.gFont);
@@ -652,9 +665,9 @@ function _chart({
 										if (this.hasToolbar && (zLabel + keyH) >= this.buttonsCoords.x()) {bHideToolbar = true;}
 									}
 									_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(this.axis.x.color), 255), 0 ,0, topMax, keyH, StringFormatFlags.NoWrap);
+									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0 ,0, topMax, keyH, StringFormatFlags.NoWrap);
 									_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(this.axis.x.color), 123), 0 ,0, topMax, keyH, StringFormatFlags.NoWrap);
+									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0 ,0, topMax, keyH, StringFormatFlags.NoWrap);
 									img.RotateFlip(RotateFlipType.Rotate90FlipXY)
 									img.ReleaseGraphics(_gr);
 									gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
@@ -680,10 +693,10 @@ function _chart({
 							const tickH = gr.CalcTextHeight(tickText[i], this.gFont);
 							const yTickText = yTick - tickH / 2;
 							if (yTickText < 0) {return;}
-							gr.DrawLine(x - this.axis.x.width * 2, yTick, x + this.axis.x.width, yTick, this.axis.y.width / 2, this.axis.y.color);
+							gr.DrawLine(x - this.axis.x.width * 2, yTick, x + this.axis.x.width, yTick, this.axis.y.width / 2, yAxisColor);
 							if (this.axis.y.labels) {
 								const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-								gr.GdiDrawText(tickText[i], this.gFont, this.axis.y.color, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText, this.margin.leftAuto, tickH, flags);
+								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText, this.margin.leftAuto, tickH, flags);
 							}
 						});
 					}
@@ -694,15 +707,15 @@ function _chart({
 						const keyH = gr.CalcTextHeight(key, this.gFont);
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-							gr.DrawString(key, this.gFont, this.axis.y.color, x - yOffsetKey - maxTickW - _scale(4), this.y + (this.h - this.y) / 2 - keyW/2, w, this.h, StringFormatFlags.DirectionVertical);
+							gr.DrawString(key, this.gFont, yAxisColor, x - yOffsetKey - maxTickW - _scale(4), this.y + (this.h - this.y) / 2 - keyW/2, w, this.h, StringFormatFlags.DirectionVertical);
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
 							const _gr = img.GetGraphics();
 							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(this.axis.y.color), 200), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
+							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
 							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(this.axis.y.color), 123), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
+							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0 ,0, keyW, keyH, StringFormatFlags.NoWrap);
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY)
 							img.ReleaseGraphics(_gr);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
@@ -723,23 +736,23 @@ function _chart({
 										const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 										const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 										const zeroW = xLabel + offsetTickText + tickW - this.x - this.margin.leftAuto / 2;
-										gr.GdiDrawText(valueX, this.gFont, this.axis.x.color, this.x + this.margin.leftAuto / 2 + xOffsetKey, y + this.axis.y.width, zeroW, this.h, flags);
+										gr.GdiDrawText(valueX, this.gFont, xAxisColor, this.x + this.margin.leftAuto / 2 + xOffsetKey, y + this.axis.y.width, zeroW, this.h, flags);
 									} else if (i === last) { // Fix for last label position
 										const lastW = xLabel + offsetTickText + tickW > w - this.margin.right ? this.x + w - (xLabel + offsetTickText) + this.margin.right : tickW;
 										const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-										gr.GdiDrawText(valueX, this.gFont, this.axis.x.color, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
+										gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
 									} else {
 										const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-										gr.GdiDrawText(valueX, this.gFont, this.axis.x.color, xLabel + offsetTickText, y + this.axis.y.width, tickW, this.h, flags);
+										gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText, y + this.axis.y.width, tickW, this.h, flags);
 									}
 								}
 								const xLine = xLabel + barW;
-								gr.DrawLine(xLine, y + this.axis.x.width * 2, xLine, y - this.axis.x.width, this.axis.x.width / 2, this.axis.x.color);
+								gr.DrawLine(xLine, y + this.axis.x.width * 2, xLine, y - this.axis.x.width, this.axis.x.width / 2, xAxisColor);
 							});
 						}
 						if (this.axis.x.key.length && this.axis.x.showKey) {
 							const offsetH = this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0;
-							gr.GdiDrawText(this.axis.x.key, this.gFont, this.axis.x.color, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+							gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColor, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 						}
 					}
 				}
@@ -748,14 +761,14 @@ function _chart({
 					ticks.forEach((tick, i) => {
 						const yTick = y - tick / maxY * (y - h);
 						const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-						gr.DrawLine(x, yTick, w, yTick, this.grid.y.width, this.grid.y.color);
+						gr.DrawLine(x, yTick, w, yTick, this.grid.y.width, this.callbacks.config.backgroundColor ? invert(this.callbacks.config.backgroundColor()[0], true) : yGridColor);
 					});
 				}
 				if (this.grid.x.show) {
 					xAxisValues.forEach((tick, i) => {
 						const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 						const xLine = x + barW + i * tickW;
-						gr.DrawLine(xLine, y - this.grid.y.width, xLine, h, this.grid.x.width, this.grid.x.color);
+						gr.DrawLine(xLine, y - this.grid.y.width, xLine, h, this.grid.x.width, xGridColor);
 					});
 				}
 		}
@@ -763,7 +776,7 @@ function _chart({
 	};
 	
 	this.paintButtons = (gr, bHideToolbar = false) => {
-		const color = axis.x.color;
+		const color = invert(this.callbacks.config.backgroundColor ? this.callbacks.config.backgroundColor()[0] : this.background.color || this.axis.x.color, true);
 		const bPoint = !!this.getCurrentPoint();
 		if (this.buttons.xScroll) {
 			this.leftBtn.paint(gr, color);
@@ -773,6 +786,7 @@ function _chart({
 		if (!bHideToolbar) {
 			if (this.buttons.settings) {this.settingsBtn.paint(gr, color);}
 			if (this.buttons.display) {this.displayBtn.paint(gr, color);}
+			if (this.buttons.zoom) {this.zoomBtn.paint(gr, color);}
 		}
 	}
 	
@@ -898,14 +912,14 @@ function _chart({
 					}
 				} // For multiple series, points may be stacked and they are preferred by Y position
 				if (tracedPoints.length) {
-					tracedPoints.sort((a, b) => {return b.point.x - a.point.x + b.point.y - a.point.y});
+					tracedPoints.sort((a, b) => {return a.point.x - b.point.x + a.point.y - b.point.y});
 					if (bCacheNear) {this.nearPoint = [tracedPoints[0].serieIdx, tracedPoints[0].pointIdx];}
 					return [tracedPoints[0].serieIdx, tracedPoints[0].pointIdx];
 				}
 			}
 		}
 		if (bCacheNear && distances.length) {
-			this.nearPoint = distances.sort((a, b) => {return b.dist - a.dist})[0].idx;
+			this.nearPoint = distances.sort((a, b) => {return a.dist - b.dist})[0].idx;
 		}
 		return [-1, -1];
 	};
@@ -920,50 +934,60 @@ function _chart({
 			let bHand = false;
 			let bPaint = false;
 			let ttText = '';
-			if (this.buttons.xScroll) {
-				const bHover = this.leftBtn.hover || this.rightBtn.hover;
-				if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
-					bHand = true;
-					bPaint = true;
-					ttText = 'Click to scroll on X-axis...';
-				} else if ((this.leftBtn.hover || this.rightBtn.hover) !== bHover) {bPaint = true;}
-			}
-			if (this.buttons.settings) {
-				const bHover = this.settingsBtn.hover;
-				if (this.settingsBtn.move(x, y)) {
-					bHand = true;
-					bPaint = true;
-					ttText = 'Main settings...';
-				} else if (this.settingsBtn.hover !== bHover) {bPaint = true;}
-			}
-			if (this.buttons.display) {
-				const bHover = this.displayBtn.hover;
-				if (this.displayBtn.move(x, y)) {
-					bHand = true;
-					bPaint = true;
-					ttText = 'Display settings...';
-				} else if (this.displayBtn.hover !== bHover) {bPaint = true;}
-			}
 			this.mx = x;
 			this.my = y;
 			if (!this.inFocus) {bPaint = true;}
 			this.inFocus = true;
 			if (this.pop.isEnabled()) {this.pop.move(x, y);}
 			else {
+				if (this.buttons.xScroll) {
+					const bHover = this.leftBtn.hover || this.rightBtn.hover;
+					if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
+						bHand = true;
+						bPaint = true;
+						ttText = 'L. Click to scroll on X-axis...\nDouble L. Click to jump to ' + (this.rightBtn.hover ? 'right' : 'left');
+					} else if ((this.leftBtn.hover || this.rightBtn.hover) !== bHover) {bPaint = true;}
+				}
+				if (this.buttons.settings) {
+					const bHover = this.settingsBtn.hover;
+					if (this.settingsBtn.move(x, y)) {
+						bHand = true;
+						bPaint = true;
+						ttText = 'Main settings...';
+					} else if (this.settingsBtn.hover !== bHover) {bPaint = true;}
+				}
+				if (this.buttons.display) {
+					const bHover = this.displayBtn.hover;
+					if (this.displayBtn.move(x, y)) {
+						bHand = true;
+						bPaint = true;
+						ttText = 'Display settings...';
+					} else if (this.displayBtn.hover !== bHover) {bPaint = true;}
+				}
+				if (this.buttons.zoom) {
+					const bHover = this.zoomBtn.hover;
+					if (this.zoomBtn.move(x, y)) {
+						bHand = true;
+						bPaint = true;
+						ttText = 'Press Shift to zoom out...\nDouble CLick for max zoom in/out';
+					} else if (this.zoomBtn.hover !== bHover) {bPaint = true;}
+				}
 				const [serie, idx] = this.tracePoint(x, y, true);
 				bPaint = bPaint || this.currPoint[0] !== serie || this.currPoint[1] !== idx;
-				this.currPoint = [serie, idx];
 				if (bPaint) {this.repaint();}
-				if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
-					bHand = true;
-					const serieData = this.dataDraw[serie];
-					const point = serieData[idx];
-					const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
-					const percent = bPercent ? Math.round(point.y * 100 / serieData.reduce((acc, point) => acc + point.y, 0)) : null;
-					ttText = point.x + ': ' + point.y + (this.axis.y.key ?  ' ' + this.axis.y.key : '') +
-						(bPercent ? ' ' + _p(percent + '%') : '') +
-						(point.hasOwnProperty('z') ? ' - ' + point.z : '') +
-						(this.tooltipText && this.tooltipText.length ? tooltipText : '');
+				if (!bHand && !ttText) {
+					this.currPoint = [serie, idx];
+					if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+						bHand = true;
+						const serieData = this.dataDraw[serie];
+						const point = serieData[idx];
+						const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
+						const percent = bPercent ? Math.round(point.y * 100 / serieData.reduce((acc, point) => acc + point.y, 0)) : null;
+						ttText = point.x + ': ' + point.y + (this.axis.y.key ?  ' ' + this.axis.y.key : '') +
+							(bPercent ? ' ' + _p(percent + '%') : '') +
+							(point.hasOwnProperty('z') ? ' - ' + point.z : '') +
+							(this.tooltipText && this.tooltipText.length ? tooltipText : '');
+					}
 				}
 				if (ttText.length) {this.tooltip.SetValue(ttText, true);}
 				else {this.tooltip.SetValue(null);}
@@ -999,6 +1023,9 @@ function _chart({
 		if (this.buttons.display) {
 			this.displayBtn.hover = false;
 		}
+		if (this.buttons.zoom) {
+			this.zoomBtn.hover = false;
+		}
 		return this.leavePoints() || this.repaint();
 	};
 	
@@ -1008,19 +1035,38 @@ function _chart({
 		}
 	}
 	
+	this.getCurrentPointIndexFromFirst = () => {
+		const near = this.nearPoint[0] !== -1 && this.nearPoint[1] !== -1 ? this.getCurrentPoint(true) : null;
+		if (near) {
+			let i = 0;
+			for (let serie of this.dataDraw) {
+				const idx = serie.findIndex((point) => near.x === point.x);
+				if (idx !== -1) {return [i, idx];}
+				i++;
+			}
+		}
+		return null;
+	}
+	
 	this.getCurrentPointIndex = (bNear = false) => {
 		return this.currPoint[0] !== -1 && this.currPoint[1] !== -1
-			? this.currPoint
+			? [...this.currPoint]
 			: bNear 
 				? this.nearPoint[0] !== -1 && this.nearPoint[1] !== -1
-					? this.nearPoint
+					? [...this.nearPoint]
 					: null
 				: null;
 	}
 	
 	this.getCurrentPoint = (bNear = false) => {
 		const idx = this.getCurrentPointIndex(bNear);
-		return idx ? this.dataDraw[idx[0]][idx[1]] : null;
+		return idx ? {...this.dataDraw[idx[0]][idx[1]]} : null;
+	}
+	
+	this.getCurrentRange = () => {
+		const points = Math.max(...this.stats.points);
+		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
+		return Math.max(Math.min(currSlice[1] - currSlice[0], points), 1);
 	}
 	
 	let prevX = null;
@@ -1035,24 +1081,22 @@ function _chart({
 	};
 	this.scrollX = ({x, step, release = 0x01 /* VK_LBUTTON */, bThrottle = false} = {}) => {
 		if (bThrottle) {return this.scrollXThrottle({x, step, release, bThrottle: false});}
-		const currSlice = this.dataManipulation.slice;
 		const points = Math.max(...this.stats.points);
+		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
 		let left, right;
 		if (typeof x === 'undefined') {
 			[left, right] = [currSlice[0] + step, currSlice[1] + step];
-			if (right === Infinity && Number.isFinite(step)) {right = points + step;}
 		} else if (typeof step === 'undefined') {
 			[left, right] = this.calcScrollSlice(x, currSlice, points);
 			prevX = x;
 			cleanPrevX(release);
 		} else {return false;}
 		if (!left && !right) {return false;}
+		if (right > points) {right = points;}
+		if (right <= 0) {right = currSlice[1] - currSlice[0];}
+		if (left >= points) {left = points - (currSlice[1] - currSlice[0]);}
+		if (left < 0) {left = 0;}
 		if (currSlice[0] === left || currSlice[1] === right) {return false;}
-		if (right > points) {
-			if (currSlice[1] !== points && currSlice[1] !== Infinity) {right = points;}
-			else {return false;}
-		}
-		if (left < 0) {return false;}
 		this.changeConfig({bPaint: true, dataManipulation: {slice: [left, right === points ? Infinity : right]}});
 		this.move(this.mx, this.my);
 		return true;
@@ -1061,11 +1105,12 @@ function _chart({
 	
 	this.zoomX = (step, bThrottle) => {
 		if (bThrottle) {return this.zoomXThrottle(step, false);}
-		const currPoint = this.getCurrentPointIndex(true);
+		const currPoint = this.getCurrentPointIndexFromFirst(true);
 		if (!currPoint) {return false;}
 		const points = Math.max(...this.stats.points);
 		const pointsDraw = Math.max(...this.stats.pointsDraw);
-		const currSlice = this.dataManipulation.slice;
+		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
+		currPoint[1] += currSlice[0];
 		const range = Math.max(Math.min(currSlice[1] - currSlice[0], points), 1);
 		const newRange = range - step * Math.ceil(pointsDraw / 5) * 
 			(utils.IsKeyPressed(VK_CONTROL) 
@@ -1074,22 +1119,31 @@ function _chart({
 					? 2 
 					: 1
 				);
+		console.log(step, newRange);
 		if (range === points && newRange > range) {return false;}
 		let left, right;
-		if (currPoint[1] - currSlice[0] > currSlice[1] - currPoint[1]) {
-			left = right = currSlice[1];
-			left -= newRange;
+		if (Number.isFinite(newRange)) {
+			if (step < 0 && points - currPoint[1] < Math.round(newRange / 2)) {
+				left = points - newRange;
+			} else {
+				left = currPoint[1] - Math.round(newRange / 2);
+			}
+			left = Math.max(left, 0);
+			right = left + newRange;
+			right = Math.min(right, points);
+		} else if (newRange === Infinity) {
+			left = 0;
+			right = Infinity;
 		} else {
-			left = right = currSlice[0];
-			right += newRange;
+			left = right = Math.floor(points / 2);
 		}
-		left = Math.max(left, 0);
-		right = Math.min(right, points);
+		if (left === right) {right = left + 1;}
 		if ((left - right) >= points) {
 			right = Infinity;
 			if ((left - right) >= range) {return false;}
 		}
-		this.changeConfig({bPaint: true, dataManipulation: {slice: [left, right]}});
+		console.log(left, right);
+		this.changeConfig({bPaint: true, dataManipulation: {slice: [left, right === points ? Infinity : right]}});
 		this.move(this.mx, this.my);
 		return true;
 	};
@@ -1143,14 +1197,17 @@ function _chart({
 
 	this.lbtnUp = (x, y, mask) => {
 		if (this.trace(x,y)) {
-			if (this.buttons.xScroll) {
-				if (this.leftBtn.lbtn_up(x, y) || this.rightBtn.lbtn_up(x, y)) {return true;}
+			if (this.buttons.xScroll && (this.leftBtn.hover || this.rightBtn.hover)) {
+				if (this.leftBtn.lbtn_up(x, y, mask, this) || this.rightBtn.lbtn_up(x, y, mask, this)) {return true;}
 			}
 			if (this.buttons.settings && this.settingsBtn.hover && this.callbacks.settings.onLbtnUp) {
 				if (this.settingsBtn.lbtn_up(x, y, MK_LBUTTON, this)) {return true;}
 			}
 			if (this.buttons.display && this.displayBtn.hover && this.callbacks.display.onLbtnUp) {
 				if (this.displayBtn.lbtn_up(x, y, MK_LBUTTON, this)) {return true;}
+			}
+			if (this.buttons.zoom && this.zoomBtn.hover && this.callbacks.zoom.onLbtnUp) {
+				if (this.zoomBtn.lbtn_up(x, y, mask, this)) {return true;}
 			}
 			if (this.callbacks.point.onLbtnUp) {
 				const point = this.getCurrentPoint(false);
@@ -1161,6 +1218,26 @@ function _chart({
 		return false;
 	}
 	
+	this.lbtnDblClk = (x, y, mask) => {
+		mask -= MK_LBUTTON; // Remove useless mask here...
+		if (this.trace(x,y)) {
+			if (this.buttons.xScroll && (this.leftBtn.hover || this.rightBtn.hover)) {
+				if (this.leftBtn.lbtn_dblclk(x, y, mask, this) || this.rightBtn.lbtn_dblclk(x, y, mask, this)) {return true;}
+			}
+			if (this.buttons.settings && this.settingsBtn.hover) {
+				if (this.settingsBtn.lbtn_dblclk(x, y, mask, this)) {return true;}
+			}
+			if (this.buttons.display && this.displayBtn.hover) {
+				if (this.displayBtn.lbtn_dblclk(x, y, mask, this)) {return true;}
+			}
+			if (this.buttons.zoom && this.zoomBtn.hover) {
+				if (this.zoomBtn.lbtn_dblclk(x, y, mask, this)) {return true;}
+			}
+			return true;
+		}
+		return false;
+	};
+	
 	this.rbtnUp = (x, y, mask) => {
 		if (this.trace(x,y)) {
 			if (this.pop && this.pop.isEnabled()) {return false;}
@@ -1168,9 +1245,11 @@ function _chart({
 			if (point && this.callbacks.point.onRbtnUp) {
 				this.callbacks.point.onRbtnUp.call(this, point, x, y, mask);
 			} else if (this.buttons.settings && this.settingsBtn.hover && this.callbacks.settings.onRbtnUp) {
-				this.settingsBtn.lbtn_up(x, y, MK_RBUTTON, this);
+				this.settingsBtn.rbtn_up(x, y, mask, this);
 			} else if (this.buttons.display && this.displayBtn.hover && this.callbacks.display.onRbtnUp) {
-				this.displayBtn.lbtn_up(x, y, MK_RBUTTON, this);
+				this.displayBtn.rbtn_up(x, y, mask, this);
+			} else if (this.buttons.zoom && this.zoomBtn.hover && this.callbacks.zoom.onRbtnUp) {
+				this.zoomBtn.rbtn_up(x, y, mask, this);
 			} else if (this.callbacks.focus.onRbtnUp) {
 				this.callbacks.focus.onRbtnUp.call(this, x, y, mask);
 			}
@@ -1183,6 +1262,36 @@ function _chart({
 		if (this.inFocus) {
 			this.callbacks.focus.onMouseWwheel.call(this, step);
 			return true;
+		}
+		return false;
+	}
+	
+	this.keyUp = (vKey) => { // Switch animations when releasing keys
+		if (this.inFocus) {
+			switch (vKey) {
+				case VK_SHIFT: {
+					if (this.buttons.zoom) {
+						this.repaint(); 
+						return true;
+					}
+				}
+				default: return false;
+			}
+		}
+		return false;
+	}
+	
+	this.keyDown = (vKey) => {
+		if (this.inFocus) {
+			switch (vKey) {
+				case VK_SHIFT: {
+					if (this.buttons.zoom) {
+						this.repaint(); 
+						return true;
+					}
+				}
+				default: return false;
+			}
 		}
 		return false;
 	}
@@ -1461,12 +1570,25 @@ function _chart({
 		Config related
 	*/
 	
-	this.changeConfig = ({data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, margin, x, y, w, h, title, configuration, gFont, bPaint = true}) => {
+	this.changeConfig = ({data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, margin, x, y, w, h, title, configuration, gFont, bPaint = true, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null}) => {
 		if (gFont) {this.gFont = gFont;}
+		if (this.data && this.data.length && (this.dataManipulation.slice[0] !== 0 || this.dataManipulation.slice[1] !== Infinity)) {
+			if (data && data.length !== this.data.length || dataAsync) {
+				this.dataManipulation.slice = [0, Infinity]; // Draw all data on data type change
+			}
+		}
 		if (data) {this.data = data; this.dataDraw = data; this.series = data.length;}
 		if (dataAsync) {this.dataAsync = dataAsync;}
-		if (dataManipulation) {this.dataManipulation = {...this.dataManipulation, ...dataManipulation};}
-		if (graph) {this.graph = {...this.graph, ...graph};}
+		if (dataManipulation) {
+			this.dataManipulation = {...this.dataManipulation, ...dataManipulation};
+			if (dataManipulation.sort) {this.sortKey = null;}
+		}
+		if (graph) {
+			if (graph.type && graph.type !== this.graph.type && ['timeline', 'doughnut', 'pie'].some((t) => this.graph.type === t || graph.type === t)) {
+				this.colors = [];
+			}
+			this.graph = {...this.graph, ...graph};
+		}
 		if (background) {this.background = {...this.background, ...background}; this.background.imageGDI = this.background.image ? gdi.Image(this.background.image) : null;}
 		if (colors) {this.colors = colors;}
 		if (chroma) {this.chroma = {...this.chroma, ...chroma}; this.checkScheme();}
@@ -1492,11 +1614,12 @@ function _chart({
 		}
 		this.checkConfig();
 		if (data || dataManipulation || graph) {this.initData();}
-		if (this.configuration.bLoadAsyncData && dataAsync) {
-			this.initDataAsync();
-			if (colors || chroma) {this.checkColors();}
+		if (this.configuration.bLoadAsyncData) {
+			if (dataAsync) {this.initDataAsync();}
+			else if ((colors || chroma) && this.dataAsync) {this.dataAsync.then(() => this.checkColors());}
 		} // May be managed by the chart or externally
-		this.repaint();
+		if (callback && isFunction(callback)) {callback.call(this, this.exportConfig(), arguments[0], callbackArgs);}
+		if (bPaint) {this.repaint();}
 		return this;
 	};
 	
@@ -1647,18 +1770,28 @@ function _chart({
 		}
 		if (this.dataManipulation.sort) {
 			if (typeof this.dataManipulation.sort === 'string') {
-				switch (this.dataManipulation.sort.toLowerCase()) {
+				this.sortKey = this.convertSortLabel(this.dataManipulation.sort);
+				const type = this.sortKey[0];
+				const axis = this.sortKey[1];
+				const sorter = NatSort();
+				switch (type) {
 					case 'natural':
-						this.dataManipulation.sort = (a, b) => {return a.x - b.x;};
+						this.dataManipulation.sort = function natural(a, b) {return sorter(a[axis], b[axis])};
 						break;
 					case 'reverse':
-						this.dataManipulation.sort = (a, b) => {return b.x - a.x;};
+						this.dataManipulation.sort = function reverse(a, b) {return sorter(b[axis], a[axis])};;
+						break;
+					case 'natural num':
+						this.dataManipulation.sort = function naturalNum(a, b) {return a[axis] - b[axis];}
+						break;
+					case 'reverse num':
+						this.dataManipulation.sort = function reverseNum(a, b) {return b[axis] - a[axis];}
 						break;
 					case 'string natural':
-						this.dataManipulation.sort = (a, b) => {return a.x.localeCompare(b.x);}
+						this.dataManipulation.sort = function naturalString(a, b) {return a[axis].localeCompare(b[axis]);}
 						break;
 					case 'string reverse':
-						this.dataManipulation.sort = (a, b) => {return 0 - a.x.localeCompare(b.x);}
+						this.dataManipulation.sort = function reverseString(a, b) {return 0 - a[axis].localeCompare(b[axis]);}
 						break;
 					case 'random':
 						this.dataManipulation.sort = Array.prototype.shuffle;
@@ -1676,7 +1809,7 @@ function _chart({
 						this.dataManipulation.sort = [Array.prototype.radixSortInt, true];
 						break;
 					default:
-						console.log('Statistics: sort name ' + _p(this.dataManipulation.sort) + ' not recognized.');
+						console.log('Statistics: sort name ' + _p(type) + ' not recognized.');
 						bPass = false;
 				}
 			} else if (Array.isArray(this.dataManipulation.sort)) {
@@ -1686,16 +1819,18 @@ function _chart({
 				}
 				if (!isFunction(this.dataManipulation.sort[0])) {
 					if (typeof this.dataManipulation.sort[0] === 'string') {
-						if (['schwartzian transform', 'schwartzian'].includes(this.dataManipulation.sort[0].toLowerCase())) {
+						this.sortKey = this.convertSortLabel(this.dataManipulation.sort);
+						const type = this.sortKey[0];
+						if (['schwartzian transform', 'schwartzian'].includes(type)) {
 							this.dataManipulation.sort[0] = Array.prototype.schwartzianSort;
-						} else if (['radix reverse', 'radix'].includes(this.dataManipulation.sort[0].toLowerCase())) {
-							if (this.dataManipulation.sort[0].toLowerCase() === 'radix reverse') {this.dataManipulation.sort[1] = true;}
+						} else if (['radix reverse', 'radix'].includes(type)) {
+							if (type === 'radix reverse') {this.dataManipulation.sort[1] = true;}
 							this.dataManipulation.sort[0] = Array.prototype.radixSort;
-						} else if (['radix int reverse', 'radix int'].includes(this.dataManipulation.sort[0].toLowerCase())) {
-							if (this.dataManipulation.sort[0].toLowerCase() === 'radix int reverse') {this.dataManipulation.sort[1] = true;}
+						} else if (['radix int reverse', 'radix int'].includes(type)) {
+							if (type === 'radix int reverse') {this.dataManipulation.sort[1] = true;}
 							this.dataManipulation.sort[0] = Array.prototype.radixSortInt;
 						} else {
-							console.log('Statistics: sort name' + _p(this.dataManipulation.sort[0]) + ' not recognized');
+							console.log('Statistics: sort name' + _p(type) + ' not recognized');
 							bPass = false;
 						}
 					} else {
@@ -1714,7 +1849,7 @@ function _chart({
 		return bPass;
 	}
 	
-	this.exportConfig = () => {
+	this.exportConfig = (bPosition = false) => {
 		return {
 			colors:	[...this.colors],
 			chroma:	{...this.chroma},
@@ -1726,12 +1861,32 @@ function _chart({
 			margin: {...this.margin},
 			buttons:{...this.buttons},
 			configuration: {...this.configuration},
-			x:		this.x,
-			y:		this.y,
-			w:		this.w,
-			h:		this.h,
+			...(bPosition ? {x: this.x, y:this.y, w: this.w, h: this.h} : {}),
 			title:	this.title
 		};
+	}
+	
+	this.exportDataLabels = () => {
+		return {
+			x: {key: this.axis.x.key, tf: this.axis.x.tf},
+			y: {key: this.axis.y.key, tf: this.axis.y.tf},
+			z: {key: this.axis.z.key, tf: this.axis.z.tf}
+		};
+	}
+	
+	this.convertSortLabel = (input) => {
+		if (Array.isArray(input)) {
+			const sort = (input.length === 1 ? [...input, 'x'] : input.slice(0, 2)).join('|');
+			return sort;
+		} else {
+			const key = input.toLowerCase().split('|');
+			if (key.length === 1) {key.push('x');}
+			if (key.length > 2) {keylength = 2;}
+			return key;
+		}
+	}
+	this.exportSortLabel = (bConvert = true) => {
+		return (bConvert ? this.convertSortLabel(this.sortKey) : this.sortKey);
 	}
 	
 	this.initData = () => {
@@ -1769,8 +1924,8 @@ function _chart({
 	this.setDefaults = () => {
 		this.colors = [];
 		this.chroma = {scheme: 'sequential', colorBlindSafe: true}; // diverging, qualitative, sequential, random or [color, ...] see https://vis4.net/chromajs/#color-scales
-		this.graph = {type: 'bars', multi: false, borderWidth: _scale(1), point: null};
-		this.dataManipulation = {sort: (a, b) => {return b.y - a.y;}, filter: null, slice: [0, 10], distribution: null, probabilityPlot: null, group: 4};
+		this.graph = {type: 'bars', multi: false, borderWidth: _scale(1), point: null, pointAlpha: 255};
+		this.dataManipulation = {sort: 'natural', filter: null, slice: [0, 10], distribution: null, probabilityPlot: null, group: 4};
 		this.background = {color: RGB(255 , 255, 255), image: null};
 		this.grid = {x: {show: false, color: RGB(0,0,0), width: _scale(1)}, y: {show: false, color: RGB(0,0,0), width: _scale(1)}};
 		this.axis = {
@@ -1779,9 +1934,30 @@ function _chart({
 			z: {key: '', tf: ''},
 		};
 		this.margin = {left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20)};
-		this.buttons = {xScroll: false, settings: false, display: false};
-		this.callbacks = {point: {onLbtnUp: null, onRbtnUp: null}, focus: {onMouseWwheel: this.zoomX, onRbtnUp: null}, settings: {onLbtnUp: null, onRbtnUp: null}, display: {onLbtnUp: null, onRbtnUp: null}};
-		this.configuration = {bLoadAsyncData: true, bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true};
+		this.buttons = {xScroll: false, settings: false, display: false, zoom: false};
+		this.callbacks = {
+			point: {onLbtnUp: null, onRbtnUp: null, onDblLbtn: null}, 
+			focus: {
+				onMouseWwheel: this.zoomX, 
+				onRbtnUp: null
+			}, 
+			settings: {onLbtnUp: null, onRbtnUp: null, onDblLbtn: null}, 
+			display: {onLbtnUp: null, onRbtnUp: null, onDblLbtn: null}, 
+			zoom: {
+				onLbtnUp: (x, y, mask) => this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -1 : 1),
+				onDblLbtn: (x, y, mask) => {this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -Infinity : Infinity)},
+				onRbtnUp: null,
+			}, 
+			config: {change: null, backgroundColor: null}
+		};
+		this.configuration = {
+			bLoadAsyncData: true, 
+			bAltVerticalText: false, 
+			bPopupBackground: false, 
+			bProfile: false, 
+			bSlicePerKey: true, 
+			bDynColor: true, bDynColorBW: true
+		};
 		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
 		this.tooltipText = '';
 	}
@@ -1793,6 +1969,7 @@ function _chart({
 	this.dataDraw = data || [];
 	this.dataCoords = this.dataDraw.map((serie) => {return [];});
 	this.dataManipulation = {...this.dataManipulation, ...(dataManipulation || {})};
+	this.sortKey = null;
 	this.series = data ? data.length : 0;
 	this.graph = {...this.graph, ...(graph || {})};
 	this.background = {...this.background, ...(background || {})};
@@ -1814,6 +1991,8 @@ function _chart({
 		if (callbacks.focus) {this.callbacks.focus = {...this.callbacks.focus, ...callbacks.focus};}
 		if (callbacks.settings) {this.callbacks.settings = {...this.callbacks.settings, ...callbacks.settings};}
 		if (callbacks.display) {this.callbacks.display = {...this.callbacks.display, ...callbacks.display};}
+		if (callbacks.zoom) {this.callbacks.zoom = {...this.callbacks.zoom, ...callbacks.zoom};}
+		if (callbacks.config) {this.callbacks.config = {...this.callbacks.config, ...callbacks.config};}
 	}
 	this.currPoint = [-1, -1];
 	this.nearPoint = [-1, -1];
@@ -1834,7 +2013,8 @@ function _chart({
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true, 
 		scrollSteps: 1, scrollSpeed: 250,
-		lbtnFunc: (x, y, mask, parent, delta = 1) => {this.scrollX({step: - Math.round(delta), bThrottle: false});}
+		lbtnFunc: (x, y, mask, parent, delta = 1) => {this.scrollX({step: - Math.round(delta), bThrottle: false});},
+		lbtnDblFunc: (x, y, mask, parent) => {this.scrollX({step: - Infinity, bThrottle: false});}
 	});
 	this.rightBtn  = new _button({
 		text: chars.right, 
@@ -1842,33 +2022,35 @@ function _chart({
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true,
 		scrollSteps: 1, scrollSpeed: 250,
-		lbtnFunc: (x, y, mask, parent, delta = 1) => {this.scrollX({step: Math.round(delta), bThrottle: false});}
+		lbtnFunc: (x, y, mask, parent, delta = 1) => {this.scrollX({step: Math.round(delta), bThrottle: false});},
+		lbtnDblFunc: (x, y, mask, parent) => {this.scrollX({step: Infinity, bThrottle: false});}
+	});
+	this.zoomBtn  = new _button({
+		text: () => utils.IsKeyPressed(VK_SHIFT) || this.getCurrentRange() === 1 ? chars.searchMinus : chars.searchPlus, 
+		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
+		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
+		notVisibleMode: 25, bTimerOnVisible: true,
+		lbtnFunc: (x, y, mask, parent) =>  {this.callbacks.zoom.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.zoom.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.zoom.onDblLbtn.call(this, x, y, mask, parent);}
 	});
  	this.settingsBtn = new _button({
 		text: chars.cogs,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true,
-		lbtnFunc: (x, y, mask, parent) => {
-			if (mask === MK_RBUTTON && this.callbacks.settings.onRbtnUp) {
-				this.callbacks.settings.onRbtnUp.call(this, x, y);
-			} else if (mask === MK_LBUTTON && this.callbacks.settings.onLbtnUp) {
-				this.callbacks.settings.onLbtnUp.call(this, x, y);
-			}
-		}
+		lbtnFunc: (x, y, mask, parent) => {this.callbacks.settings.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.settings.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.settings.onDblLbtn.call(this, x, y, mask, parent);}
 	})
  	this.displayBtn = new _button({
 		text: chars.chartV2,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true,
-		lbtnFunc: (x, y, mask, parent) => {
-			if (mask === MK_RBUTTON && this.callbacks.display.onRbtnUp) {
-				this.callbacks.display.onRbtnUp.call(this, x, y);
-			} else if (mask === MK_LBUTTON && this.callbacks.display.onLbtnUp) {
-				this.callbacks.display.onLbtnUp.call(this, x, y);
-			}
-		}
+		lbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.display.onDblLbtn.call(this, x, y, mask, parent);}
 	})
 	/* 
 	Animation
