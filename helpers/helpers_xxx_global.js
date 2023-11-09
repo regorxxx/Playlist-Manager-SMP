@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/09/23
+//09/11/23
 
 /* 
 	Global tags, queries, RegExp
@@ -9,7 +9,7 @@ function loadUserDefFile(def) {
 	if (_isFile(def._file)) {
 		const data = _jsonParseFileCheck(def._file, 'User definition file', window.Name, utf8);
 		if (data) {
-			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font') {
+			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font' || def._type === 'Setting') {
 				for (let key in data) {
 					if (def.hasOwnProperty(key)) {
 						def[key] = data[key];
@@ -92,6 +92,9 @@ const globTags = {
 	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)',
 	folksonomy: 'FOLKSONOMY',
 	feedback: 'FEEDBACK',
+	camelotKey: '$if($stricmp(%KEY%,G#m),$puts(kTrans,1A))$if($stricmp(%KEY%,Abm),$puts(kTrans,1A))$if($stricmp(%KEY%,D#m),$puts(kTrans,2A))$if($stricmp(%KEY%,Ebm),$puts(kTrans,2A))$if($stricmp(%KEY%,A#m),$puts(kTrans,3A))$if($stricmp(%KEY%,Bbm),$puts(kTrans,3A))$if($stricmp(%KEY%,Fm),$puts(kTrans,4A))$if($stricmp(%KEY%,Cm),$puts(kTrans,5A))$if($stricmp(%KEY%,Gm),$puts(kTrans,6A))$if($stricmp(%KEY%,Dm),$puts(kTrans,7A))$if($stricmp(%KEY%,Am),$puts(kTrans,8A))$if($stricmp(%KEY%,Em),$puts(kTrans,9A))$if($stricmp(%KEY%,Bm),$puts(kTrans,10A))$if($stricmp(%KEY%,F#m),$puts(kTrans,11A))$if($stricmp(%KEY%,Gbm),$puts(kTrans,11A))$if($stricmp(%KEY%,C#m),$puts(kTrans,12A))$if($stricmp(%KEY%,Dbm),$puts(kTrans,12A))$if($stricmp(%KEY%,6m),$puts(kTrans,1A))$if($stricmp(%KEY%,7m),$puts(kTrans,2A))$if($stricmp(%KEY%,8m),$puts(kTrans,3A))$if($stricmp(%KEY%,9m),$puts(kTrans,4A))$if($stricmp(%KEY%,10m),$puts(kTrans,5A))$if($stricmp(%KEY%,11m),$puts(kTrans,6A))$if($stricmp(%KEY%,12m),$puts(kTrans,7A))$if($stricmp(%KEY%,1m),$puts(kTrans,8A))$if($stricmp(%KEY%,2m),$puts(kTrans,9A))$if($stricmp(%KEY%,3m),$puts(kTrans,10A))$if($stricmp(%KEY%,4m),$puts(kTrans,11A))$if($stricmp(%KEY%,5m),$puts(kTrans,12A))$if($stricmp(%KEY%,B),$puts(kTrans,1B))$if($stricmp(%KEY%,F#),$puts(kTrans,2B))$if($stricmp(%KEY%,Gb),$puts(kTrans,2B))$if($stricmp(%KEY%,C#),$puts(kTrans,3B))$if($stricmp(%KEY%,Db),$puts(kTrans,3B))$if($stricmp(%KEY%,G#),$puts(kTrans,4B))$if($stricmp(%KEY%,Ab),$puts(kTrans,4B))$if($stricmp(%KEY%,D#),$puts(kTrans,5B))$if($stricmp(%KEY%,Eb),$puts(kTrans,5B))$if($stricmp(%KEY%,A#),$puts(kTrans,6B))$if($stricmp(%KEY%,Bb),$puts(kTrans,6B))$if($stricmp(%KEY%,F),$puts(kTrans,7B))$if($stricmp(%KEY%,C),$puts(kTrans,8B))$if($stricmp(%KEY%,G),$puts(kTrans,9B))$if($stricmp(%KEY%,D),$puts(kTrans,10B))$if($stricmp(%KEY%,A),$puts(kTrans,11B))$if($stricmp(%KEY%,E),$puts(kTrans,12B))$if($stricmp(%KEY%,6d),$puts(kTrans,1B))$if($stricmp(%KEY%,7d),$puts(kTrans,2B))$if($stricmp(%KEY%,8d),$puts(kTrans,3B))$if($stricmp(%KEY%,9d),$puts(kTrans,4B))$if($stricmp(%KEY%,10d),$puts(kTrans,5B))$if($stricmp(%KEY%,11d),$puts(kTrans,6B))$if($stricmp(%KEY%,12d),$puts(kTrans,7B))$if($stricmp(%KEY%,1d),$puts(kTrans,8B))$if($stricmp(%KEY%,2d),$puts(kTrans,9B))$if($stricmp(%KEY%,3d),$puts(kTrans,10B))$if($stricmp(%KEY%,4d),$puts(kTrans,11B))$if($stricmp(%KEY%,5d),$puts(kTrans,12B))$if($get(kTrans),,$puts(kTrans,[%KEY%]))$get(kTrans)',
+	openKey: '$if($stricmp(%KEY%,G#m),$puts(kTrans,1A))$if($stricmp(%KEY%,Abm),$puts(kTrans,1A))$if($stricmp(%KEY%,D#m),$puts(kTrans,2A))$if($stricmp(%KEY%,Ebm),$puts(kTrans,2A))$if($stricmp(%KEY%,A#m),$puts(kTrans,3A))$if($stricmp(%KEY%,Bbm),$puts(kTrans,3A))$if($stricmp(%KEY%,Fm),$puts(kTrans,4A))$if($stricmp(%KEY%,Cm),$puts(kTrans,5A))$if($stricmp(%KEY%,Gm),$puts(kTrans,6A))$if($stricmp(%KEY%,Dm),$puts(kTrans,7A))$if($stricmp(%KEY%,Am),$puts(kTrans,8A))$if($stricmp(%KEY%,Em),$puts(kTrans,9A))$if($stricmp(%KEY%,Bm),$puts(kTrans,10A))$if($stricmp(%KEY%,F#m),$puts(kTrans,11A))$if($stricmp(%KEY%,Gbm),$puts(kTrans,11A))$if($stricmp(%KEY%,C#m),$puts(kTrans,12A))$if($stricmp(%KEY%,Dbm),$puts(kTrans,12A))$if($stricmp(%KEY%,B),$puts(kTrans,1B))$if($stricmp(%KEY%,F#),$puts(kTrans,2B))$if($stricmp(%KEY%,Gb),$puts(kTrans,2B))$if($stricmp(%KEY%,C#),$puts(kTrans,3B))$if($stricmp(%KEY%,Db),$puts(kTrans,3B))$if($stricmp(%KEY%,G#),$puts(kTrans,4B))$if($stricmp(%KEY%,Ab),$puts(kTrans,4B))$if($stricmp(%KEY%,D#),$puts(kTrans,5B))$if($stricmp(%KEY%,Eb),$puts(kTrans,5B))$if($stricmp(%KEY%,A#),$puts(kTrans,6B))$if($stricmp(%KEY%,Bb),$puts(kTrans,6B))$if($stricmp(%KEY%,F),$puts(kTrans,7B))$if($stricmp(%KEY%,C),$puts(kTrans,8B))$if($stricmp(%KEY%,G),$puts(kTrans,9B))$if($stricmp(%KEY%,D),$puts(kTrans,10B))$if($stricmp(%KEY%,A),$puts(kTrans,11B))$if($stricmp(%KEY%,E),$puts(kTrans,12B))$if($get(kTrans),,$puts(kTrans,[%KEY%]))$if($stricmp($get(kTrans),1A),$puts(kTrans,6m))$if($stricmp($get(kTrans),2A),$puts(kTrans,7m))$if($stricmp($get(kTrans),3A),$puts(kTrans,8m))$if($stricmp($get(kTrans),4A),$puts(kTrans,9m))$if($stricmp($get(kTrans),5A),$puts(kTrans,10m))$if($stricmp($get(kTrans),6A),$puts(kTrans,11m))$if($stricmp($get(kTrans),7A),$puts(kTrans,12m))$if($stricmp($get(kTrans),8A),$puts(kTrans,1m))$if($stricmp($get(kTrans),9A),$puts(kTrans,2m))$if($stricmp($get(kTrans),10A),$puts(kTrans,3m))$if($stricmp($get(kTrans),11A),$puts(kTrans,4m))$if($stricmp($get(kTrans),12A),$puts(kTrans,5m))$if($stricmp($get(kTrans),1B),$puts(kTrans,6d))$if($stricmp($get(kTrans),2B),$puts(kTrans,7d))$if($stricmp($get(kTrans),3B),$puts(kTrans,8d))$if($stricmp($get(kTrans),4B),$puts(kTrans,9d))$if($stricmp($get(kTrans),5B),$puts(kTrans,10d))$if($stricmp($get(kTrans),6B),$puts(kTrans,11d))$if($stricmp($get(kTrans),7B),$puts(kTrans,12d))$if($stricmp($get(kTrans),8B),$puts(kTrans,1d))$if($stricmp($get(kTrans),9B),$puts(kTrans,2d))$if($stricmp($get(kTrans),10B),$puts(kTrans,3d))$if($stricmp($get(kTrans),11B),$puts(kTrans,4d))$if($stricmp($get(kTrans),12B),$puts(kTrans,5d))$get(kTrans)',
+	
 };
 
 // Queries: user replaceable with a presets file at folders.data
@@ -149,4 +152,16 @@ const globFonts = {
 	standard: {name: 'Segoe UI', size: 10},
 	standardMedium: {name: 'Segoe UI', size: 12},
 	standardBig: {name: 'Segoe UI', size: 15}
+};
+
+// Fonts: user replaceable with a presets file at folders.data
+const globSettings = {
+	_type: 'Setting',
+	_file: folders.userPresetsGlobal + 'globSettings.json',
+	_description: 'Settings used by scripts at multiple places. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values). The fallback font can not be changed, is forced by SMP/foobar2000.',
+	_usage: 'Most users will probably not need to touch these, unless a setting wants to be applied to all new scripts installed by default',
+	bAutoUpdateCheck: true,
+	bAutoUpdateDownload: false,
+	bAutoUpdateOpenWeb: true,
+	// bAutoUpdateApply: false,
 };

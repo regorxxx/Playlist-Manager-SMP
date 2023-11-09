@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/08/22
+//08/11/23
 
 include('helpers_xxx_file.js');
 include('helpers_xxx_console.js');
@@ -8,19 +8,23 @@ include('helpers_xxx_console.js');
 	Panels
 */
 
-function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
-	let requiredVersion = requiredVersionStr.split('.');
-	let currentVersion = (target.toLowerCase === 'smp' ? utils : fb).Version.split('.'); // e.g. 0.1.0-alpha.2
-	if (currentVersion.length > 3) {
-		curraentVersion.length = 3; // We need only numbers
+function compareVersions(from, to, bNum = true) {
+	if (typeof from === 'string') {from = from.split('.');}
+	if (typeof to === 'string') {to = to.split('.');}
+	if (bNum) {
+		if (to.length > 3) {to.length = 3;}
+		if (from.length > 3) {from.length = 3;}
 	}
-
-	for(let i = 0; i< currentVersion.length; ++i) {
-		if (currentVersion[i] !== requiredVersion[i]) {
-			return currentVersion[i] > requiredVersion[i];
+	for (let i = 0; i < to.length; ++i) {
+		if (to[i] !== from[i]) {
+			return to[i].localeCompare(from[i], void(0), {numeric: true}) < 0;
 		}
 	}
+	return true;
+}
 
+function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
+	// return compareVersions((target.toLowerCase === 'smp' ? utils : fb).Version.split('.'), requiredVersionStr.split('.'));
 	return true;
 }
 

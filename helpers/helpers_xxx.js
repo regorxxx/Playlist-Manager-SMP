@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/05/23
+//09/11/23
 
 // Folders
 const folders = {};
@@ -54,7 +54,7 @@ if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry
 } else {initCheckFeatures(soFeat);}
 
 /* 
-	Global tags, queries, RegExp, Fonts
+	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
 // Load user files used at helpers_xxx_global.js
@@ -62,6 +62,7 @@ loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
 loadUserDefFile(globRegExp);
 loadUserDefFile(globFonts);
+loadUserDefFile(globSettings);
 addGlobTags();
 
 // Check user-set fonts

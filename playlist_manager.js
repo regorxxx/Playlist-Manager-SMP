@@ -1,12 +1,12 @@
 ﻿'use strict';
-//18/10/23
+//08/11/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'regorxxx', version: '0.8.0', features: {drag_n_drop: true, grab_focus: true}});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'regorxxx', version: '0.9.0', features: {drag_n_drop: true, grab_focus: true}});}
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 include('helpers\\helpers_xxx_playlists.js');
@@ -261,7 +261,8 @@ var properties = {
 		margin: {left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15)},
 		// grid = {x: {/* show, color, width */}, y: {/* ... */}},
 		// axis = {x: {/* show, color, width, ticks, labels, key *, singleLabels/}, y: {/* ... */}}
-	})]
+	})],
+	bAutoUpdateCheck		: ['Automatically check updates?', globSettings.bAutoUpdateCheck, {func: isBoolean}, globSettings.bAutoUpdateCheck],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -305,6 +306,10 @@ setProperties(properties, 'plm_');
 		}
 	});
 	if (bDone) {overwriteProperties(prop);}
+	if (prop.bAutoUpdateCheck[1]) {
+		include('helpers\\helpers_xxx_web_update.js');
+		setTimeout(checkUpdate, 120000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb});
+	}
 }
 // Panel
 const panel = new _panel(true, getPropertyByKey(properties, 'bSetup', 'plm_'));

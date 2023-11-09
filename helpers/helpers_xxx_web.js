@@ -1,22 +1,10 @@
 ﻿'use strict';
-//13/06/23
+//08/11/23
 
-function getText(link){
-	if (link.indexOf('http://') !== -1 || link.indexOf('https://') !== -1) {
-		let request = new ActiveXObject('Microsoft.XMLHTTP');
-		request.open('GET', link, true);
-		request.onreadystatechange = function () {
-			if (request.readyState === 4) {
-				if (request.status === 200) {
-					var type = request.getResponseHeader('Content-Type');
-					if (type.indexOf("text") !== 1) {
-						return request.responseText;
-					}
-				} else {console.log('HTTP error: ' + request.status);}
-			}
-		}
-		request.send();
-	} else {console.log('getText(): input is not a link. ' + link); return null;}
+function getText(URL){
+	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1 
+		? send({method: 'GET', URL, bypassCache: true})
+		: Promise.reject('Input is not a link.');
 }
 
 function onStateChange(timer, resolve, reject, func = null) {
