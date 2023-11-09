@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/05/23
+//08/11/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -367,6 +367,9 @@ function _explorer(fileOrFolder) {
 	} else if (_isFolder(fileOrFolder)) { // Folder
 		WshShell.Run('explorer /e,' + _q(fileOrFolder));
 		return true;
+	} else if (_isLink(fileOrFolder)) { // Link
+		WshShell.Run('explorer ' + _q(fileOrFolder));
+		return true;
 	}
 	return false;
 }
@@ -396,9 +399,9 @@ function _runHidden() {
 	}
 }
 
-function _runCmd(command, bWait) {
+function _runCmd(command, bWait = false, iShow = 0) {
 	try {
-		WshShell.Run(command, 0, bWait);
+		WshShell.Run(command, iShow, bWait);
 		return true;
 	} catch (e) {
 		console.log('_runCmd(): failed to run command ' + command + '(' + e + ')');

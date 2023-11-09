@@ -284,7 +284,7 @@ function RGB(r, g, b) {
 
 function toRGB(color) { // returns an array like [192, 0, 0]
 	const a = color - 0xFF000000;
-	return [a >> 16, a >> 8 & 0xFF, a & 0xFF];
+	return [a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF];
 }
 
 function blendColors(color1, color2, f) {

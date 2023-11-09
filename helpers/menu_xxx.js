@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/23
+//03/11/23
 
 /* 
 	Contextual Menu helper v2.5.0
@@ -110,17 +110,18 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		const found = menuArr.find((menu) => menu.menuName.replace(hiddenCharsRegEx, '') === menuName && menu.subMenuFrom.replace(hiddenCharsRegEx, '') === subMenuFrom);
 		return found ? found.menuName : null;
 	};
+	this.getCheckMenus = () => {return [...checkMenuArr];};
 	
 	// To create new elements
-	this.newMenu = (menuName = 'main', subMenuFrom = 'main', flags = MF_STRING, context = null /*{type, playlistIdx}*/, main = null /*{type}*/) => {
+	this.newMenu = (menuName = 'main', subMenuFrom = (menuArr.length ? this.getMainMenuName() : 'main'), flags = MF_STRING, context = null /*{type, playlistIdx}*/, main = null /*{type}*/) => {
 		const mType = typeof menuName, smType = typeof subMenuFrom;
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
 		if (eTypeToStr.indexOf(smType) !== -1) {subMenuFrom = subMenuFrom.toString();}
 		if (menuName === subMenuFrom) {subMenuFrom = '';}
 		// Replace & with && to display it right on window, but check for && first to not duplicate!
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
-		if (mType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (smType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (smType === 'string' && subMenuFrom.indexOf('&') !== - 1) {subMenuFrom = subMenuFrom.replace(/&&/g,'&').replace(/&/g,'&&');}
+		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (context && main) {
 			menuError({'function': 'newMenu\n', menuName, subMenuFrom, flags, context, main});
 			throw 'A menu can not be a contextual menu and main menu at the same time';
@@ -146,7 +147,7 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		return this.getMenuNameFrom(menuName, subMenuFrom) || this.newMenu(menuName, subMenuFrom, flags);
 	}
 	
-	this.newEntry = ({entryText = '', func = null, menuName = menuArr[0].menuName, flags = MF_STRING, data = null, bAddInvisibleIds = false}) => {
+	this.newEntry = ({entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, data = null, bAddInvisibleIds = false}) => {
 		const eType = typeof entryText, mType = typeof menuName;
 		if (eTypeToStr.indexOf(eType) !== -1) {	entryText = entryText.toString();}
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
@@ -271,6 +272,8 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 	
 	this.concat = (menuObj) => {
 		entryArr = entryArr.concat(menuObj.getEntries());
+		menuArr = menuArr.concat(menuObj.getMenus());
+		checkMenuArr = checkMenuArr.concat(menuObj.getCheckMenus());
 	};
 	
 	this.initMenu = (object, bindArgs = null /*{pos: -1, args: null}*/) => {
