@@ -3,7 +3,7 @@
 
 include('helpers_xxx_web.js');
 
-function checkUpdate({repository = 'https://github.com/' + window.ScriptInfo.Author +'/' + window.ScriptInfo.Name.replace(/ /g,'-') + '-SMP', bDownload = false, bOpenWeb = true, bDisableWarning = true} = {}) {
+function checkUpdate({repository = 'https://github.com/' + window.ScriptInfo.Author +'/' + window.ScriptInfo.Name.replace(/ /g,'-') + (window.ScriptInfo.Name.endsWith('-SMP') ? '' : '-SMP'), bDownload = false, bOpenWeb = true, bDisableWarning = true} = {}) {
 	const bGithub = repository.includes('github.com');
 	const versionURL = bGithub 
 		? repository.replace('github.com', 'raw.githubusercontent.com').replace(/\/$/, '') + '/main/VERSION' 
