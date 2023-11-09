@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.9.0](#090---2023-11-09)
 - [0.8.0](#080---2023-10-18)
 - [0.7.0](#070---2023-10-05)
 - [0.6.2](#062---2023-09-25)
@@ -47,7 +48,12 @@
 
 ## [Unreleased][]
 ### Added
+- Auto-update: added -optional- automatic checks for updates on script load; enabled by default. Compares version of current file against GitHub repository. Manual checking can also be found at the settings menu. Setting may also be globally switched at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bAutoUpdateCheck'. It will apply by default to any new installed script (previous scripts will still need to be manually configured to change them).
 ### Changed
+- UI: panel background can now use both 'Maintain proportions' and 'Fill panel' options at the same time when using the front cover.
+- Helpers: updated statistics mode with new graphs and features from the latest [Statistics-Framework-SMP](https://github.com/regorxxx/Statistics-Framework-SMP) version.
+- Helpers: replaced library [chroma.js with own version](https://regorxxx.github.io/chroma.js/).
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
