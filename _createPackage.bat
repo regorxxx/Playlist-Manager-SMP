@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.30/10/23
+REM Create packages (zip file) from js files v.07/11/23
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -100,15 +100,18 @@ CALL :copy_file helpers\helpers_xxx_tags_cache.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_UI_flip.js
+CALL :copy_file helpers\helpers_xxx_web.js
+CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\map_xxx.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\popup_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\world_map.txt
 REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\checkso
-CALL :copy_folder helpers-external\chroma.js-2.4.0
-CALL :delete_file helpers-external\chroma.js-2.4.0\chroma-light.js
+CALL :copy_folder helpers-external\chroma.js
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\countries-mercator
 CALL :delete_file helpers-external\countries-mercator\_Kosovo.png
@@ -141,6 +144,7 @@ CALL :copy_folder presets\"World Map"
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
+call :clean_root
 CALL :report
 GOTO:EOF
 
@@ -219,16 +223,18 @@ CALL :copy_file helpers\helpers_xxx_UI_draw.js
 CALL :copy_file helpers\helpers_xxx_UI_flip.js
 CALL :copy_file helpers\helpers_xxx_utils.js
 CALL :copy_file helpers\helpers_xxx_web.js
+CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\popup_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\input_box.txt
 CALL :copy_file helpers\readme\playlist_manager.txt
 REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\checkso
-CALL :copy_folder helpers-external\chroma.js-2.4.0
-CALL :delete_file helpers-external\chroma.js-2.4.0\chroma-light.js
+CALL :copy_folder helpers-external\chroma.js
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\fuse
 CALL :copy_folder helpers-external\keycode-2.2.0
@@ -262,6 +268,7 @@ CALL :copy_folder presets\Network
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
+call :clean_root
 CALL :report
 GOTO:EOF
 
@@ -302,14 +309,18 @@ CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
 CALL :copy_file helpers\helpers_xxx_so.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
+CALL :copy_file helpers\helpers_xxx_web.js
+CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
+call :clean_root
 CALL :report
 GOTO:EOF
 
@@ -319,11 +330,11 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Timeline-SMP
 SET id=EAEB88D1-44AC-4B13-8960-FB3AAD78828D
-SET description=https://github.com/regorxxx/Timeline-SMP\r\n\r\nA seekbar for foobar2000, using Spider Monkey Panel, audiowaveform or ffprobe. It's based on RMS, peak levels, the actual waveform or visualization presets.\r\n\r\n• Uses audiowaveform by default (included).\r\n• ffprobe can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\\ffprobe'.\r\n• Visualizer mode to simply show an animation which changes according to BPM (if tag exists).\r\n• Fully configurable using the R. Click menu:\r\n   - Colors\r\n   - Waveform modes\r\n   - Analysis modes\r\n   - Animations\r\n   - Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
+SET description=https://github.com/regorxxx/Timeline-SMP\r\n\r\nA timeline for foobar2000, using Spider Monkey Panel, and Statistics-Framework-SMP (https://github.com/regorxxx/Statistics-Framework-SMP).\r\n\r\n• Draws date (X) and nº tracks (Y) per artist (Z) by default.\r\n• Contextual menu to create playlists clicking on any point.\r\n• Fully customizable data per axis with TitleFormat.\r\n• Asynchronous data calculations. \r\n• Point statistics.\r\n• Scroll with buttons and mouse dragging.\r\n• Zoom with mouse wheel.\r\n• Configurable background.\r\n• Highly configurable chart and data manipulation.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" timeline.js`) DO (SET version=%%F)
 SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Timeline', {author:'regorxxx', version: '=%
-SET version=%version:', features: {drag_n_drop: false}});}=%
+SET version=%version:', features: {drag_n_drop: false, grab_focus: true}});}=%
 REM features
 SET enableDragDrop=false
 SET shouldGrabFocus=false
@@ -348,7 +359,9 @@ CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_playlists.js
+CALL :copy_file helpers\helpers_xxx_properties.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
 CALL :copy_file helpers\helpers_xxx_so.js
@@ -356,20 +369,26 @@ CALL :copy_file helpers\helpers_xxx_tags.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_UI_flip.js
+CALL :copy_file helpers\helpers_xxx_web.js
+CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
+CALL :copy_file helpers\menu_xxx_extras.js
 CALL :copy_file helpers\popup_xxx.js
 REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
-CALL :check_folder helpers-external\chroma.js-2.4.0
-CALL :copy_file helpers-external\chroma.js-2.4.0\chroma.js
-CALL :copy_file helpers-external\chroma.js-2.4.0\LICENSE
+CALL :copy_folder helpers-external\natsort
+CALL :copy_folder helpers-external\chroma.js
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM helpers external
 CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_button.js
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_helpers.js
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
+call :clean_root
 CALL :report
 GOTO:EOF
 
@@ -379,6 +398,13 @@ REM ------------------------------
 :delete_file
 SET filePath=%1
 IF EXIST %root%\%filePath% DEL /Q /F %root%\%filePath%
+GOTO:EOF
+
+:delete_folder
+IF EXIST %1 (
+	DEL /Q /F /S %1\*.* >NUL
+	RD /Q /S %1 >NUL
+)
 GOTO:EOF
 
 :copy_main
@@ -403,10 +429,7 @@ IF NOT EXIST %root%\%folderPath% MD %root%\%folderPath%
 GOTO:EOF
 
 :check_root
-IF EXIST %root% (
-	DEL /Q /F /S %root%\*.* >NUL
-	RD /Q /S %root% >NUL
-)
+CALL :delete_folder %root%
 MD %root%
 GOTO:EOF
 
@@ -461,6 +484,14 @@ IF EXIST %packagesFolder%\fileName DEL /Q /F  %packagesFolder%\fileName
 	) ELSE (
 		EXIT /B 1
 	)
+)
+GOTO:EOF
+
+:clean_root
+IF ERRORLEVEL 1 (
+	EXIT /B 1
+) ELSE (
+	CALL :delete_folder %root%
 )
 GOTO:EOF
 
