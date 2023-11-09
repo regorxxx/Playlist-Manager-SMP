@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/08/23
+//01/11/23
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -15,7 +15,7 @@ function _scrollBar({
 			bgColor = RGB(230, 230, 220),
 			color = RGB(210, 210, 210),
 			timer = 1500,
-			visibleFunc = (time) => Date.now() - time < this.timer || this.bHovered || this.bDrag,
+			visibleFunc = (time) => this.bHovered || this.bDrag || Date.now() - time < this.timer,
 			scrollFunc = () => void(0),
 			scrollSpeed = 60, // ms
 			dblclkFunc = () => void(0),
