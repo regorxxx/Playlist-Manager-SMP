@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/23
+//07/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -24,7 +24,7 @@ function _panel(customBackground = false, bSetup = false) {
 			mode: 1, 
 			art: {path: '', image: null}, 
 			transparency: 60, 
-			bProportions: false, 
+			bProportions: true, 
 			bFill: true,
 			blur: 10,
 			bTint: true
@@ -148,10 +148,18 @@ function _panel(customBackground = false, bSetup = false) {
 				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.transparency);
 			} else {
 				if (this.imageBackground.bFill) {
-					const prop = limits.w / limits.h - limits.offsetH;
-					const offsetX = prop > 1 ? prop * img.Width : 0;
-					const offsetY = prop < 1 ? prop * img.Height : 0;
-					gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, offsetX / 2, offsetY / 2, img.Width - offsetX / 2, img.Height - offsetY, 0, this.imageBackground.transparency);
+					if (this.imageBackground.bProportions) {
+						const prop = limits.w / (limits.h - limits.offsetH);
+						if (prop > 1) {
+							const offsetY = img.Height / prop;
+							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, 0, this.imageBackground.transparency);
+						} else {
+							const offsetX = img.Width * prop;
+							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.transparency);
+						}
+					} else {
+							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+					}
 				} else {
 					let w, h;
 					if (this.imageBackground.bProportions) {w = h = Math.min(limits.w, limits.h - limits.offsetH);}

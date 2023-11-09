@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/10/23
+//09/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2020,6 +2020,18 @@ function createMenuRightTop() {
 			}});
 			menu.newCheckMenu(menuName, 'Auto-backup interval...', void(0),  () => {return Number(list.properties['autoBack'][1]) !== 0;});
 		}
+		{
+			menu.newEntry({menuName, entryText: 'sep'});
+			menu.newEntry({menuName, entryText: 'Automatically check for updates', func: () => {
+				list.properties.bAutoUpdateCheck[1] = !list.properties.bAutoUpdateCheck[1];
+				overwriteProperties(list.properties);
+				if (list.properties.bAutoUpdateCheck[1]) {
+					if (typeof checkUpdate === 'undefined') {include('helpers\\helpers_xxx_web_update.js');}
+					setTimeout(checkUpdate, 1000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false});
+				}
+			}});
+			menu.newCheckMenu(menuName, 'Automatically check for updates', void(0),  () => list.properties.bAutoUpdateCheck[1]);
+		}
 		if (!list.bLiteMode) {	// Stop tracking library paths
 			menu.newEntry({menuName, entryText: 'sep'});
 			menu.newEntry({menuName, entryText: 'Don\'t track library (until next startup)', func: () => {
@@ -2834,7 +2846,6 @@ function createMenuRightTop() {
 				const subMenuNameTwo = menu.newMenu('Display mode...', subMenuName);
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Maintain proportions', func: () => {
 					panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
-					if (panel.imageBackground.bProportions) {panel.imageBackground.bFill = false;}
 					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 					overwriteProperties(panel.properties);
 					panel.updateImageBg();
@@ -2843,7 +2854,6 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuNameTwo, 'Maintain proportions', void(0), () => {return panel.imageBackground.bProportions;});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Fill panel', func: () => {
 					panel.imageBackground.bFill = !panel.imageBackground.bFill;
-					if (panel.imageBackground.bFill) {panel.imageBackground.bProportions = false;}
 					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 					overwriteProperties(panel.properties);
 					panel.updateImageBg();
@@ -3670,6 +3680,12 @@ function createMenuRightTop() {
 		}});
 		menu.newCheckMenu(void(0), 'Statistics mode', void(0),  () => stats.bEnabled);
 	}
+	menu.newEntry({entryText: 'sep'});
+	menu.newEntry({entryText: 'Check for updates...',  func: () => {
+		if (typeof checkUpdate === 'undefined') {include('helpers\\helpers_xxx_web_update.js');}
+		checkUpdate({bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false})
+			.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name));
+	}});
 	menu.newEntry({entryText: 'sep'});
 	{	// Readme
 		const path = folders.xxx + 'readmes\\playlist_manager.pdf';
