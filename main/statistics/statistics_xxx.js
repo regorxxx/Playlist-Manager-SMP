@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/23
+//12/11/23
 
 include('statistics_xxx_helper.js');
 
@@ -2030,27 +2030,27 @@ function _chart({
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true,
-		lbtnFunc: (x, y, mask, parent) =>  {this.callbacks.zoom.onLbtnUp.call(this, x, y, mask, parent);},
-		rbtnFunc: (x, y, mask, parent) => {this.callbacks.zoom.onRbtnUp.call(this, x, y, mask, parent);},
-		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.zoom.onDblLbtn.call(this, x, y, mask, parent);}
+		lbtnFunc: (x, y, mask, parent) => {this.callbacks.zoom.onLbtnUp && this.callbacks.zoom.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.zoom.onRbtnUp && this.callbacks.zoom.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.zoom.onDblLbtn && this.callbacks.zoom.onDblLbtn.call(this, x, y, mask, parent);}
 	});
  	this.settingsBtn = new _button({
 		text: chars.cogs,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true,
-		lbtnFunc: (x, y, mask, parent) => {this.callbacks.settings.onLbtnUp.call(this, x, y, mask, parent);},
-		rbtnFunc: (x, y, mask, parent) => {this.callbacks.settings.onRbtnUp.call(this, x, y, mask, parent);},
-		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.settings.onDblLbtn.call(this, x, y, mask, parent);}
+		lbtnFunc: (x, y, mask, parent) => {this.callbacks.settings.onLbtnUp && this.callbacks.settings.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.settings.onRbtnUp && this.callbacks.settings.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.settings.onDblLbtn && this.callbacks.settings.onDblLbtn.call(this, x, y, mask, parent);}
 	})
  	this.displayBtn = new _button({
 		text: chars.chartV2,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
 		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
 		notVisibleMode: 25, bTimerOnVisible: true,
-		lbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onLbtnUp.call(this, x, y, mask, parent);},
-		rbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onRbtnUp.call(this, x, y, mask, parent);},
-		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.display.onDblLbtn.call(this, x, y, mask, parent);}
+		lbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onLbtnUp && this.callbacks.display.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onRbtnUp && this.callbacks.display.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.display.onDblLbtn && this.callbacks.display.onDblLbtn.call(this, x, y, mask, parent);}
 	})
 	/* 
 	Animation

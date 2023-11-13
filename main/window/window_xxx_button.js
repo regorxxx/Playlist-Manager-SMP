@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/23
+//12/11/23
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -82,15 +82,17 @@ function _button({
 			this.bHover = true;
 			if (this.bHover) {
 				this.bDown = true;
-				draggingTime = 0;
-				downFunc = setInterval(() => {
-					if (this.bDown) {
-						const delta = 1 + (draggingTime > this.scrollSpeed * 3 ? Math.log(draggingTime / this.scrollSpeed)* this.scrollSteps : 0);
-						this.lbtnFunc.call(parent, x, y, mask, parent, delta);
-						this.repaint();
-					}
-					draggingTime += this.scrollSpeed;
-				}, this.scrollSpeed);
+				if (this.lbtnFunc) {
+					draggingTime = 0;
+					downFunc = setInterval(() => {
+						if (this.bDown) {
+							const delta = 1 + (draggingTime > this.scrollSpeed * 3 ? Math.log(draggingTime / this.scrollSpeed)* this.scrollSteps : 0);
+							this.lbtnFunc.call(parent, x, y, mask, parent, delta);
+							this.repaint();
+						}
+						draggingTime += this.scrollSpeed;
+					}, this.scrollSpeed);
+				}
 			}
 			this.repaint();
 			return true;
