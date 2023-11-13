@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/23
+//12/11/23
 
 /* 
 	Global tags, queries, RegExp
@@ -57,19 +57,19 @@ function getSoFeatures() {
 	return soFeat;
 }
 
-function checkSoFeatures(soFeat) {
+function checkSoFeatures(soFeat, bPopup = true) {
 	let bPass = true;
 	// Internals
 	if (!soFeat.gecko) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');
 		bPass = false;
 	} 
 	if (!soFeat.clipboard) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nclipboardData failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nclipboardData failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
 		bPass = false;
 	}
 	if (!soFeat.popup) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nHTML popups failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nHTML popups failed.\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.', 'SO features');
 		bPass = false;
 	}
 	// File system
@@ -79,25 +79,25 @@ function checkSoFeatures(soFeat) {
 	}
 	// Scripting
 	if (!soFeat.bio) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nMissing scripting components for vbs integration (BIO panel).\n\nFix:  Install \'wsh57\' and \'mdac28\' with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks wsh57 mdac28' + '\n\nFix: Also msado15 needs to be aded to the dll overrides in Winecfg:\n' + 'https://hydrogenaud.io/index.php?topic=121786.msg1005447#msg1005447' +'\n' + 'https://itectec.com/ubuntu/ubuntu-how-to-override-a-dll-without-using-the-winecfg-gui-in-wine/' + '\n' + 'https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nMissing scripting components for vbs integration (BIO panel).\n\nFix:  Install \'wsh57\' and \'mdac28\' with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks wsh57 mdac28' + '\n\nFix: Also msado15 needs to be aded to the dll overrides in Winecfg:\n' + 'https://hydrogenaud.io/index.php?topic=121786.msg1005447#msg1005447' +'\n' + 'https://itectec.com/ubuntu/ubuntu-how-to-override-a-dll-without-using-the-winecfg-gui-in-wine/' + '\n' + 'https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides', 'SO features');
 		bPass = false;
 	}
 	// UI
 	if (!soFeat.dpi) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nRegistry entry not found:\nHKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI\n\nFix: add entry to registry.\n' + 'HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI          --->     96\n\nCMD command:\n' + 'reg.exe ADD "HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics" /v AppliedDPI /t REG_DWORD /d 96', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nRegistry entry not found:\nHKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI\n\nFix: add entry to registry.\n' + 'HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI          --->     96\n\nCMD command:\n' + 'reg.exe ADD "HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics" /v AppliedDPI /t REG_DWORD /d 96', 'SO features');
 		bPass = false;
 	}
 	if (!soFeat.gdiplus) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nFonts are not found via utils.CheckFont() and gdi.Font().\n\nFix: install install \'gdiplus\' package with winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks gdiplus', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nFonts are not found via utils.CheckFont() and gdi.Font().\n\nFix: install install \'gdiplus\' package with winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks gdiplus', 'SO features');
 		bPass = false;
 	} else if (!soFeat.segoe) {
-		fb.ShowPopupMessage('Found an issue on current installation:\nSegoe UI font is missing.\n\nFix: install missing font.\n' + 'https://github.com/mrbvrz/segoe-ui-linux', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nSegoe UI font is missing.\n\nFix: install missing font.\n' + 'https://github.com/mrbvrz/segoe-ui-linux', 'SO features');
 		bPass = false;
 	}
 	return bPass;
 }
 
-function initCheckFeatures(soFeat) {
+function initCheckFeatures(soFeat, bPopup = true) {
 	let data = null;
 	const bPrevFile = utils.IsFile(soFeatFile);
 	let bCheck = false;
@@ -114,7 +114,7 @@ function initCheckFeatures(soFeat) {
 		}
 	}
 	if (bCheck) {
-		checkSoFeatures(soFeat); 
+		checkSoFeatures(soFeat, bPopup); 
 		utils.WriteTextFile(soFeatFile, JSON.stringify(soFeat), false);
 	}
 }

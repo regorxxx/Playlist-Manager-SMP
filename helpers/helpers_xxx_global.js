@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/11/23
+//12/11/23
 
 /* 
 	Global tags, queries, RegExp
@@ -164,4 +164,5 @@ const globSettings = {
 	bAutoUpdateDownload: false,
 	bAutoUpdateOpenWeb: true,
 	// bAutoUpdateApply: false,
+	bPopupOnCheckSOFeatures: true,
 };

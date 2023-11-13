@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/11/23
+//12/11/23
 
 // Folders
 const folders = {};
@@ -49,9 +49,6 @@ console.MaxSize = 5000000; // File size, in bytes. Setting to zero or null disab
 	SO features
 */
 const soFeat = getSoFeatures();
-if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry once if something fails
-	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then((resolve) => {initCheckFeatures(soFeat);});
-} else {initCheckFeatures(soFeat);}
 
 /* 
 	Global tags, queries, RegExp, Fonts, Settings
@@ -76,3 +73,10 @@ Object.keys(globFonts).forEach((key) => {
 		);
 	}
 });
+
+/* 
+	SO features
+*/
+if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry once if something fails
+	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then((resolve) => {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);});
+} else {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);}
