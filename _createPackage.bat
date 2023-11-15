@@ -122,6 +122,13 @@ CALL :delete_file helpers-external\countries-mercator\"_N. Cyprus.png"
 CALL :delete_file helpers-external\countries-mercator\_Somaliland.png
 CALL :delete_file helpers-external\countries-mercator\worldmap_natural.png
 CALL :delete_file helpers-external\countries-mercator\worldmap_shapes.png
+CALL :copy_folder helpers-external\countries-mercator-mask
+CALL :delete_file helpers-external\countries-mercator-mask\_Kosovo.png
+CALL :delete_file helpers-external\countries-mercator-mask\"_N. Cyprus.png"
+CALL :delete_file helpers-external\countries-mercator-mask\_Somaliland.png
+CALL :delete_file helpers-external\countries-mercator-mask\worldmap_natural.png
+CALL :delete_file helpers-external\countries-mercator-mask\worldmap_shapes.png
+CALL :copy_folder helpers-external\namethatcolor
 CALL :copy_folder helpers-external\natsort
 REM others
 CALL :check_folder _images
@@ -243,6 +250,7 @@ CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\fuse
 CALL :copy_folder helpers-external\keycode-2.2.0
+CALL :copy_folder helpers-external\namethatcolor
 CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\SimpleCrypto-js
 CALL :copy_folder helpers-external\xspf-to-jspf-parser
@@ -323,6 +331,7 @@ CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
+CALL :copy_folder helpers-external\namethatcolor
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
@@ -390,6 +399,7 @@ CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\chroma.js
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+CALL :copy_folder helpers-external\namethatcolor
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
