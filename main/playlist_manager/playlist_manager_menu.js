@@ -2561,7 +2561,7 @@ function createMenuRightTop() {
 				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuSecondName, entryText: item + (i == 1 ? '\t' + _b(getColorName(panel.colors.customText)) : ''), func: () => {
+					menu.newEntry({menuName: subMenuSecondName, entryText: item + (i === 1 ? '\t' + _b(getColorName(panel.colors.customText)) : ''), func: () => {
 						panel.colors.bCustomText = i !== 0;
 						panel.properties.bCustomText[1] = panel.colors.bCustomText;
 						if (panel.colors.bCustomText) {
