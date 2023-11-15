@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/23
+//15/11/23
 
 include('..\\statistics\\statistics_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
@@ -63,7 +63,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					Object.keys(config).forEach((key) => {
 						if (!keys.has(key)) {delete config[key];}
 					});
-					config.data = {source: parent.source, arg: parent.arg};
+					config.dataManipulation.sort = this.exportSortLabel();
+					config.data = {source: parent.source, arg: parent.arg}; // Similar to this.exportDataLabels()
 					list.properties['statsConfig'][1] = JSON.stringify(config);
 					overwriteProperties(list.properties);
 				}
@@ -101,6 +102,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 									? subKey.reduce((acc, curr) => acc[curr], this[key])
 									: this[key][subKey] 
 								: this[key];
+							if (key === 'dataManipulation' && subKey === 'sort' && option.newValue === this.convertSortLabel(this.sortKey)) {return true;}
+							if (key === 'data' && option.args.data.source === parent.source && option.args.data.arg === parent.arg) {return true;}
 							if (option.newValue && typeof option.newValue === 'function') {return !!(val && val.name === option.newValue.name);}
 							if (option.newValue && typeof option.newValue === 'object') {
 								if (Array.isArray(val)) {
@@ -143,7 +146,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					entryText: 'Folders', args: {axis: 'Type', data: {source: 'property', arg: 'isFolder'}}},
 				{isEq: null, key: this.data, value: null, newValue: null,
 					entryText: 'MBID',  args: {axis: 'MBID', data: {source: 'property', arg: 'playlist_mbid'}}},
-			].forEach(createMenuOption('data', null, subMenu, false, (option) => {
+			].forEach(createMenuOption('data', null, subMenu, true, (option) => {
 				option.newValue = Array(1).fill(...parent.getData(option.args.data.source, option.args.data.arg));
 				[parent.source, parent.arg] = [option.args.data.source, option.args.data.arg];
 				this.changeConfig(
@@ -180,8 +183,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			const subMenu = menu.newMenu('Sorting...');
 			if (this.dataManipulation.distribution === null) {
 				[
-					{isEq: null,	key: this.dataManipulation.sort, value: null,						newValue: sortNat,			entryText: 'Natural sorting'},
-					{isEq: null,	key: this.dataManipulation.sort, value: null,						newValue: sortInv,			entryText: 'Inverse sorting'},
+					{isEq: null,	key: this.dataManipulation.sort, value: null,						newValue: 'natural|x',			entryText: 'Natural sorting'},
+					{isEq: null,	key: this.dataManipulation.sort, value: null,						newValue: 'reverse|x',			entryText: 'Inverse sorting'},
 					{entryText: 'sep'},
 					{isEq: null,	key: this.dataManipulation.sort, value: null,						newValue: null,				entryText: 'No sorting'}
 				].forEach(createMenuOption('dataManipulation', 'sort', subMenu));
@@ -240,17 +243,38 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			menu.newEntry({entryText: 'sep'});
 		}
 		{
-			const subMenu = menu.newMenu('Axis...');
-			[
-				{isEq: null,	key: this.axis.x.labels, value: null,					newValue: {labels: !this.axis.x.labels},			entryText: (this.axis.x.labels ? 'Hide' : 'Show') + ' X labels'}
-			].forEach(createMenuOption('axis', 'x', subMenu, false));
-			[
-				{isEq: null,	key: this.axis.y.labels, value: null,					newValue: {labels: !this.axis.y.labels},			entryText: (this.axis.y.labels ? 'Hide' : 'Show') + ' Y labels'}
-			].forEach(createMenuOption('axis', 'y', subMenu, false));
-			menu.newEntry({menuName: subMenu, entryText: 'sep'});
-			[
-				{isEq: null,	key: this.axis.x.bAltLabels, value: null,				newValue: !this.axis.x.bAltLabels,		entryText: 'Alt. X labels'},
-			].forEach(createMenuOption('axis', ['x', 'bAltLabels'], subMenu, true));
+			const subMenu = menu.newMenu('Axis & labels...');
+			{
+				const subMenuTwo = menu.newMenu('Axis...', subMenu);
+				[
+					{isEq: null,	key: this.axis.x.show, value: null,					newValue: {show: !this.axis.x.show},			entryText: (this.axis.x.show ? 'Hide' : 'Show') + ' X axis'}
+				].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
+				[
+					{isEq: null,	key: this.axis.y.show, value: null,					newValue: {show: !this.axis.y.show},			entryText: (this.axis.y.show ? 'Hide' : 'Show') + ' Y axis'}
+				].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
+			}
+			{
+				const subMenuTwo = menu.newMenu('Labels...', subMenu);
+				[
+					{isEq: null,	key: this.axis.x.labels, value: null,					newValue: {labels: !this.axis.x.labels},			entryText: (this.axis.x.labels ? 'Hide' : 'Show') + ' X labels'}
+				].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
+				[
+					{isEq: null,	key: this.axis.y.labels, value: null,					newValue: {labels: !this.axis.y.labels},			entryText: (this.axis.y.labels ? 'Hide' : 'Show') + ' Y labels'}
+				].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
+				menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+				[
+					{isEq: null,	key: this.axis.x.bAltLabels, value: null,				newValue: !this.axis.x.bAltLabels,		entryText: 'Alt. X labels'},
+				].forEach(createMenuOption('axis', ['x', 'bAltLabels'], subMenuTwo, true));
+			}
+			{
+				const subMenuTwo = menu.newMenu('Titles...', subMenu);
+				[
+					{isEq: null,	key: this.axis.x.showKey, value: null,					newValue: {showKey: !this.axis.x.showKey},			entryText: (this.axis.x.showKey ? 'Hide' : 'Show') + ' X title'}
+				].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
+				[
+					{isEq: null,	key: this.axis.y.showKey, value: null,					newValue: {showKey: !this.axis.y.showKey},			entryText: (this.axis.y.showKey ? 'Hide' : 'Show') + ' Y title'}
+				].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
+			}
 		}
 		const type = this.graph.type.toLowerCase();
 		if (sizeGraphs.has(type)) {
@@ -309,7 +333,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	this.defaultConfig = () => {
 		return {
 			data: [], // No data is added by default to set no colors on first init
-			dataManipulation: {sort: (a, b) => {return a.y - b.y;}, filter: null, distribution: null},
+			dataManipulation: {sort: 'natural|x', filter: null, distribution: null},
 			background: {color: null},
 			colors: [opaqueColor(list.colors.selectedPlaylistColor, 50)],
 			margin: {left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15)},
