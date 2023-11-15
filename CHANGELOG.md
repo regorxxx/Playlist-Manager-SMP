@@ -2,7 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.9.0](#090---2023-11-09)
+- [0.9.0](#090---2023-11-15)
 - [0.8.0](#080---2023-10-18)
 - [0.7.0](#070---2023-10-05)
 - [0.6.2](#062---2023-09-25)
@@ -47,6 +47,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.9.0] - 2023-11-15
 ### Added
 - Auto-update: added -optional- automatic checks for updates on script load; enabled by default. Compares version of current file against GitHub repository. Manual checking can also be found at the settings menu. Setting may also be globally switched at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bAutoUpdateCheck'. It will apply by default to any new installed script (previous scripts will still need to be manually configured to change them).
 - Added setting to disable popups related to features not being supported by the OS (at startup). Found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bPopupOnCheckSOFeatures'. By default popups are always shown. This setting will never be exposed within foobar, only at this file.
@@ -986,7 +992,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.3...v0.7.0
 [0.6.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.2...v0.6.3
