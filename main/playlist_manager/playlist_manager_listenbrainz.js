@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/10/23
+//15/11/23
 
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -1067,7 +1067,7 @@ listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 };
 
 listenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = true) {
-	if (!token || !token.length) {console.log('retrieveUserResponse: no token provided'); return Promise.resolve(null);}
+	if ((!token || !token.length) && bLog) {console.log('retrieveUserResponse: no token provided'); return Promise.resolve(null);}
 	return send({
 		method: 'GET', 
 		URL: 'https://api.listenbrainz.org/1/validate-token?token=' + token,

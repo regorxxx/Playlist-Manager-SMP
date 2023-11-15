@@ -1,23 +1,31 @@
 ﻿'use strict';
-//09/11/23
+//15/11/23
 
 include('helpers_xxx_web.js');
 
-function checkUpdate({repository = 'https://github.com/' + window.ScriptInfo.Author +'/' + window.ScriptInfo.Name.replace(/ /g,'-') + (window.ScriptInfo.Name.endsWith('-SMP') ? '' : '-SMP'), bDownload = false, bOpenWeb = true, bDisableWarning = true} = {}) {
+function checkUpdate({
+	scriptName = window.ScriptInfo.Name,
+	repository = 'https://github.com/' + window.ScriptInfo.Author +'/' + scriptName.replace(/ /g,'-') + (scriptName.endsWith('-SMP') ? '' : '-SMP'),
+	version = window.ScriptInfo.Version,
+	bDownload = false,
+	bOpenWeb = true,
+	bDisableWarning = true
+} = {}) {
 	const bGithub = repository.includes('github.com');
 	const versionURL = bGithub 
 		? repository.replace('github.com', 'raw.githubusercontent.com').replace(/\/$/, '') + '/main/VERSION' 
 		: repository;
 	return getText(versionURL)
-		.then((version) => {
-			if (!compareVersions(window.ScriptInfo.Version, version.replace(/^v/i, ''))) {
-				console.log('A new version has been found for ' + window.ScriptInfo.Name + ' panel: ' + version.replace(/^v/i, ''));
-				const answer = WshShell.Popup('A new version is available: ' + version + (bGithub && bDownload ? '\nDownload?' : bOpenWeb ? '\nOpen script webpage?' : '') + (bDisableWarning ? '\n\n(Automatic update checking can be disabled at settings)' : ''), 0, window.Name, popup.info + popup.yes_no);
+		.then((lastVersion) => {
+			if (!compareVersions(version, lastVersion.replace(/^v/i, ''))) {
+				console.log('A new version has been found for ' + scriptName + ' script: ' + lastVersion.replace(/^v/i, ''));
+				const nameIsUUID = /{.{8}-.{4}-.{4}-.{4}-.{12}}/.test(window.Name);
+				const answer = WshShell.Popup('A new version is available: ' + lastVersion + (bGithub && bDownload ? '\nDownload?' : bOpenWeb ? '\nOpen script webpage?' : '') + (bDisableWarning ? '\n\n(Automatic update checking can be disabled at settings)' : ''), 0, nameIsUUID ? scriptName : window.Name + ': ' + scriptName, popup.info + popup.yes_no);
 				const packageName = repository.replace(/\/$/, '').split('/').slice(-1)[0];
 				if (bDownload && answer === popup.yes) {
 					let file, fileURL;
 					if (bGithub) {
-						file = packageName + '-' + version.replace(/^v/i, '').replace(/\./g, '-') + '-package.zip';
+						file = packageName + '-' + lastVersion.replace(/^v/i, '').replace(/\./g, '-') + '-package.zip';
 						fileURL = repository.replace(/\/$/, '') + '/releases/latest/download/' +  file;
 					}
 					const output = folders.xxx + 'packages\\' + file;
