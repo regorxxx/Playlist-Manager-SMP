@@ -1,11 +1,12 @@
 ﻿'use strict';
-//09/11/23
+//15/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\menu_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_input.js');
+include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 include('playlist_manager_helpers.js');
 include('playlist_manager_listenbrainz.js');
 include('playlist_manager_youtube.js');
@@ -1927,7 +1928,7 @@ function createMenuRightTop() {
 					list.properties['bAllPls'][1] = list.bAllPls;
 					overwriteProperties(list.properties);
 					if (list.bAllPls) {
-						fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom colour to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name);
+						fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom color to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name);
 					}
 					createMenuRight().btn_up(-1,-1, null, 'Manual refresh');
 				}});
@@ -2530,18 +2531,23 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
+			const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');} // From statistics
 			const subMenuName = menu.newMenu('Set custom colors...', menuName);
 			const options = ['AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
 				if (!item) {return;}
-				menu.newEntry({menuName: subMenuName, entryText: item, func: () => {
-					if (i === 0) {list.colors.autoPlaylistColor = utils.ColourPicker(window.ID, list.colors.autoPlaylistColor);}
-					if (i === 1) {list.colors.smartPlaylistColor = utils.ColourPicker(window.ID, list.colors.smartPlaylistColor);}
-					if (i === 2) {list.colors.uiPlaylistColor = utils.ColourPicker(window.ID, list.colors.uiPlaylistColor);}
-					if (i === 3) {list.colors.lockedPlaylistColor = utils.ColourPicker(window.ID, list.colors.lockedPlaylistColor);}
-					if (i === 4) {list.colors.selectedPlaylistColor = utils.ColourPicker(window.ID, list.colors.selectedPlaylistColor);}
-					if (i === 5) {list.colors.folderColor = utils.ColourPicker(window.ID, list.colors.folderColor);}
+				let key;
+				switch (i) {
+					case 0: key = 'autoPlaylistColor'; break;
+					case 1: key = 'smartPlaylistColor'; break;
+					case 2: key = 'uiPlaylistColor'; break;
+					case 3: key = 'lockedPlaylistColor'; break;
+					case 4: key = 'selectedPlaylistColor'; break;
+					case 5: key = 'folderColor'; break;
+				}
+				menu.newEntry({menuName: subMenuName, entryText: item + '\t' + _b(getColorName(list.colors[key])), func: () => {
+					list.colors[key] = utils.ColourPicker(window.ID, list.colors[key]);
 					// Update property to save between reloads
 					list.properties.listColors[1] = convertObjectToString(list.colors);
 					overwriteProperties(list.properties);
@@ -2550,15 +2556,18 @@ function createMenuRightTop() {
 				}});
 			});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			{	// Text colour
+			{	// Text color
 				const subMenuSecondName = menu.newMenu('Standard text...', subMenuName);
 				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+					menu.newEntry({menuName: subMenuSecondName, entryText: item + (i == 1 ? '\t' + _b(getColorName(panel.colors.customText)) : ''), func: () => {
 						panel.colors.bCustomText = i !== 0;
-						// Update property to save between reloads
 						panel.properties.bCustomText[1] = panel.colors.bCustomText;
+						if (panel.colors.bCustomText) {
+							panel.colors.customText = utils.ColourPicker(window.ID, panel.colors.customText);
+							panel.properties.customText[1] = panel.colors.customText;
+						}
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
 						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
@@ -2566,16 +2575,6 @@ function createMenuRightTop() {
 					}});
 				});
 				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return panel.colors.bCustomText ? 1 : 0;});
-				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuSecondName, entryText: 'Set custom colour...', func: () => {
-					panel.colors.customText = utils.ColourPicker(window.ID, panel.colors.customText);
-					// Update property to save between reloads
-					panel.properties.customText[1] = panel.colors.customText;
-					overwriteProperties(panel.properties);
-					panel.colorsChanged();
-					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
-					window.Repaint();
-				}, flags: panel.colors.bCustomText ? MF_STRING : MF_GRAYED,});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'Add font shading', func: () => {
 					panel.colors.bFontOutline = !panel.colors.bFontOutline;
@@ -2595,7 +2594,7 @@ function createMenuRightTop() {
 				const options = ['Use default', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+					menu.newEntry({menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsToolbarColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsToolbarColor)) : ''), func: () => {
 						panel.colors.buttonsToolbarColor = i ? utils.ColourPicker(window.ID, panel.colors.buttonsToolbarColor) : defaultCol;
 						panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor;
 						// Update property to save between reloads
@@ -2618,13 +2617,13 @@ function createMenuRightTop() {
 					window.Repaint();
 				}});
 			}
-			{	// Buttons' Text colour
+			{	// Buttons' Text color
 				const defaultCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
 				const subMenuSecondName = menu.newMenu('Buttons\' text...', subMenuName);
 				const options = ['Use default', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
-					menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+					menu.newEntry({menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsTextColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsTextColor)) : ''), func: () => {
 						panel.colors.buttonsTextColor = i ? utils.ColourPicker(window.ID, panel.colors.buttonsTextColor) : defaultCol;
 						panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor;
 						// Update property to save between reloads
@@ -2637,17 +2636,20 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return (panel.colors.buttonsTextColor === defaultCol ? 0 : 1);});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			{	// Background colour
+			{	// Background color
 				const defaultButtonsCol = invert(panel.getColorBackground());
 				const subMenuSecondName = menu.newMenu('Background...', subMenuName);
 				if (panel.customBackground) {
 					const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom'];
 					const optionsLength = options.length;
 					options.forEach((item, i) => {
-						menu.newEntry({menuName: subMenuSecondName, entryText: item, func: () => {
+						menu.newEntry({menuName: subMenuSecondName, entryText: item + (i == 2 ? '\t' + _b(getColorName(panel.colors.customBackground)) : ''), func: () => {
 							panel.colors.mode = i;
-							// Update property to save between reloads
 							panel.properties.colorsMode[1] = panel.colors.mode;
+							if (panel.colors.mode === 2) {
+								panel.colors.customBackground = utils.ColourPicker(window.ID, panel.colors.customBackground);
+								panel.properties.customBackground[1] = panel.colors.customBackground;
+							}
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
 							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
@@ -2657,21 +2659,9 @@ function createMenuRightTop() {
 						}});
 					});
 					menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return panel.colors.mode;});
-					menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
-					menu.newEntry({menuName: subMenuSecondName, entryText: 'Set custom colour...', func: () => {
-						panel.colors.customBackground = utils.ColourPicker(window.ID, panel.colors.customBackground);
-						// Update property to save between reloads
-						panel.properties.customBackground[1] = panel.colors.customBackground;
-						overwriteProperties(panel.properties);
-						panel.colorsChanged();
-						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
-						// Set defaults again
-						if (panel.setDefault({oldColor: defaultButtonsCol})) {overwriteProperties(panel.properties);}
-						window.Repaint();
-					}, flags: panel.colors.mode === 2 ? MF_STRING : MF_GRAYED,});
 				}
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
-				menu.newEntry({menuName: subMenuSecondName, entryText: 'Alternate rows background colour', func: () => {
+				menu.newEntry({menuName: subMenuSecondName, entryText: 'Alternate rows background color', func: () => {
 					panel.colors.bAltRowsColor = !panel.colors.bAltRowsColor;
 					panel.properties['bAltRowsColor'][1] = panel.colors.bAltRowsColor;
 					overwriteProperties(panel.properties);
@@ -2679,14 +2669,14 @@ function createMenuRightTop() {
 					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
 					window.Repaint();
 				}});
-				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background colour', void(0), () => {return panel.colors.bAltRowsColor;});
+				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background color', void(0), () => {return panel.colors.bAltRowsColor;});
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			{	// Presets
 				const subMenuSecondName = menu.newMenu('Presets...', subMenuName);
 				const presets = [ /*[autoPlaylistColor, smartPlaylistColor, uiPlaylistColor, lockedPlaylistColor, selectedPlaylistColor, standard text, buttons, background ]*/
-					{name: 'Colour Blindness (light)', colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.white[0]]},
-					{name: 'Colour Blindness (dark)', colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2]]},
+					{name: 'Color Blindness (light)', colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.white[0]]},
+					{name: 'Color Blindness (dark)', colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2]]},
 					{name: 'sep'},
 					{name: 'Gray Scale (dark)', colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.white[0], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0], colorBlind.black[0]]},
 					{name: 'Gray Scale (light)', colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.black[0], colorBlind.black[1], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0]]},
