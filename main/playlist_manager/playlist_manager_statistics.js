@@ -86,7 +86,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 								: this[key][subKey] 
 							: this[key];
 						if (key === 'dataManipulation' && subKey === 'sort' && option.newValue === this.convertSortLabel(this.sortKey)) {return true;}
-						if (key === 'data' && option.args.data.source === parent.source && option.args.data.arg === parent.arg) {return true;}
+						if ((key === 'data' || key === 'dataAsync') && option.args.data.source === parent.source && option.args.data.arg === parent.arg) {return true;}
 						if (option.newValue && typeof option.newValue === 'function') {return !!(val && val.name === option.newValue.name);}
 						if (option.newValue && typeof option.newValue === 'object') {
 							if (Array.isArray(val)) {
@@ -196,13 +196,13 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		const filtLow = (num) => {return (a) => {return a.y < num;}};
 		const fineGraphs = new Set(['bars', 'doughnut', 'pie']);
 		const sizeGraphs = new Set(['scatter', 'lines']);
+		const type = this.graph.type.toLowerCase();
 		// Header
 		menu.newEntry({entryText: this.title, flags: MF_GRAYED});
 		menu.newEntry({entryText: 'sep'});
 		// Menus
 		{
 			const subMenu = menu.newMenu('Chart type...');
-			const oldType = this.graph.type;
 			[
 				{isEq: null,	key: this.graph.type, value: null,				newValue: 'scatter',		entryText: 'Scatter'},
 				{isEq: null,	key: this.graph.type, value: null,				newValue: 'bars',			entryText: 'Bars'},
@@ -212,7 +212,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			].forEach(createMenuOption('graph', 'type', subMenu, void(0), (option) => {
 				this.graph.borderWidth = fineGraphs.has(option.newValue) ? _scale(1) : _scale(4);
 			}, (option) => {
-				if (['doughnut', 'pie'].includes(oldType) && oldType !== option.newValue) {
+				if (['doughnut', 'pie'].includes(type) && type !== option.newValue) {
 					this.colors = [list.colors.selectedPlaylistColor];
 					this.checkColors();
 				}
@@ -326,20 +326,21 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
 			}
 		}
-		const type = this.graph.type.toLowerCase();
-		if (sizeGraphs.has(type)) {
+		{
 			const subMenu = menu.newMenu('Other config...');
-			{
-				const configSubMenu = menu.newMenu((type === 'lines' ? 'Line' : 'Point') + ' size...', subMenu);
-				[1, 2, 3, 4].map((val) => {
-					return {isEq: null,	key: this.graph.borderWidth, value: null, newValue: _scale(val), entryText: val.toString()};
-				}).forEach(createMenuOption('graph', 'borderWidth', configSubMenu));
-			}
-			if (type === 'scatter') {
-				const configSubMenu = menu.newMenu('Point type...', subMenu);
-				['circle', 'circumference', 'cross', 'triangle', 'plus'].map((val) => {
-					return {isEq: null, key: this.graph.point, value: null, newValue: val, entryText: val};
-				}).forEach(createMenuOption('graph', 'point', configSubMenu));
+			if (sizeGraphs.has(type)) {
+				{
+					const configSubMenu = menu.newMenu((type === 'lines' ? 'Line' : 'Point') + ' size...', subMenu);
+					[1, 2, 3, 4].map((val) => {
+						return {isEq: null,	key: this.graph.borderWidth, value: null, newValue: _scale(val), entryText: val.toString()};
+					}).forEach(createMenuOption('graph', 'borderWidth', configSubMenu));
+				}
+				if (type === 'scatter') {
+					const configSubMenu = menu.newMenu('Point type...', subMenu);
+					['circle', 'circumference', 'cross', 'triangle', 'plus'].map((val) => {
+						return {isEq: null, key: this.graph.point, value: null, newValue: val, entryText: val};
+					}).forEach(createMenuOption('graph', 'point', configSubMenu));
+				}
 			}
 			{
 				const configSubMenu = menu.newMenu('Point transparency...', subMenu);
@@ -380,14 +381,16 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		return data;
 	}
 	
-	
 	this.defaultConfig = () => {
 		const onLbtnUpSettings = this.onLbtnUpSettings;
 		const onLbtnUpDisplay = this.onLbtnUpDisplay;
 		return {
 			data: [], // No data is added by default to set no colors on first init
-			graph: {pointAlpha: Math.round(40 * 255 / 100)},
-			chroma: {scheme: [opaqueColor(list.colors.selectedPlaylistColor, 100), opaqueColor(panel.getColorBackground(), 100)]},
+			graph: {type: 'doughnut', pointAlpha: Math.round(40 * 255 / 100)},
+			chroma: {scheme: [
+				opaqueColor(list.colors.selectedPlaylistColor, 100), 
+				Chroma.mix(opaqueColor(list.colors.selectedPlaylistColor, 100), invert(opaqueColor(list.colors.selectedPlaylistColor, 100)), 0.4)
+			]},
 			dataManipulation: {sort: 'natural|x', filter: null, distribution: null},
 			background: {color: null},
 			colors: [list.colors.selectedPlaylistColor],
@@ -402,7 +405,6 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			h: 0,
 			tooltipText: '\n\n(Right click to configure chart)',
 			callbacks: {
-				// point:		{onLbtnUp: onLbtnUpPoint},
 				settings:	{onLbtnUp: function(x, y, mask) {onLbtnUpSettings.call(this).btn_up(x, y);}},
 				display:	{onLbtnUp: function(x, y, mask) {onLbtnUpDisplay.call(this).btn_up(x, y);}},
 				custom:		{onLbtnUp: function() {
