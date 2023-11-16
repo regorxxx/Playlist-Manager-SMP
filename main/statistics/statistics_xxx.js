@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/23
+//16/11/23
 
 include('statistics_xxx_helper.js');
 
@@ -14,8 +14,8 @@ function _chart({
 				grid = {x: {/* show, color, width */}, y: {/* ... */}},
 				axis = {x: {/* show, color, width, ticks, labels, key, singleLabels, bAltLabels */}, y: {/* ... */}, z: {/* ... */}}, // singleLabels & bAltLabels only for X axis
 				margin = {/* left, right, top, bottom */}, 
-				buttons = {/* xScroll , settings, display */},
-				callbacks = {point: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, focus: {/* onMouseWwheel, onRbtnUp */}, settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, display: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, config: {/* change, backgroundColor */}},
+				buttons = {/* xScroll , settings, display, zoom, custom */},
+				callbacks = {point: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, focus: {/* onMouseWwheel, onRbtnUp */}, settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, display: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, custom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */}, config: {/* change, backgroundColor */}},
 				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true */},
 				x = 0,
 				y = 0,
@@ -45,6 +45,7 @@ function _chart({
 		const selBar = this.graph.borderWidth * 2;
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
+		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
 			valH = value.y / maxY * (y - h);
 			const xPoint = x + xAxisValues.indexOf(value.x) * tickW;
@@ -58,14 +59,14 @@ function _chart({
 				const paintPoint = (color) => {
 					gr.DrawEllipse(xPoint - this.graph.borderWidth / 2, yPoint - this.graph.borderWidth / 2, this.graph.borderWidth, this.graph.borderWidth, this.graph.borderWidth, color);
 				};
-				paintPoint(this.colors[i]);
+				paintPoint(color);
 				if (bFocused) {paintPoint(borderColor);}
 			} else if (this.graph.point.toLowerCase() === 'circumference') {
 				this.dataCoords[i][j] = {x: xPoint, y: yPoint -  this.graph.borderWidth / 2, w: selBar, h: valH};
 				const paintPoint = (color) => {
 					gr.DrawEllipse(xPoint - this.graph.borderWidth * 2 / 3, yPoint - this.graph.borderWidth  * 2 / 3, this.graph.borderWidth * 4 / 3, this.graph.borderWidth * 4 / 3, this.graph.borderWidth / 2, color);
 				};
-				paintPoint(this.colors[i]);
+				paintPoint(color);
 				if (bFocused) {paintPoint(borderColor);}
 			} else if (this.graph.point.toLowerCase() === 'cross') {
 				this.dataCoords[i][j] = {x: xPoint, y: yPoint -  this.graph.borderWidth, w: selBar, h: valH};
@@ -73,7 +74,7 @@ function _chart({
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint - this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, this.graph.borderWidth / 2, color);
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
 				};
-				paintPoint(this.colors[i]);
+				paintPoint(color);
 				if (bFocused) {paintPoint(borderColor);}
 			} else if (this.graph.point.toLowerCase() === 'plus') {
 				this.dataCoords[i][j] = {x: xPoint, y: yPoint -  this.graph.borderWidth, w: selBar, h: valH};
@@ -81,7 +82,7 @@ function _chart({
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint, xPoint + this.graph.borderWidth, yPoint, this.graph.borderWidth / 2, color);
 					gr.DrawLine(xPoint, yPoint + this.graph.borderWidth, xPoint, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
 				};
-				paintPoint(this.colors[i]);
+				paintPoint(color);
 				if (bFocused) {paintPoint(borderColor);}
 			} else if (this.graph.point.toLowerCase() === 'triangle') {
 				this.dataCoords[i][j] = {x: xPoint, y: yPoint -  this.graph.borderWidth, w: selBar, h: valH};
@@ -90,7 +91,7 @@ function _chart({
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth / 8, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
 					gr.DrawLine(xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint - this.graph.borderWidth / 8, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
 				};
-				paintPoint(this.colors[i]);
+				paintPoint(color);
 				if (bFocused) {paintPoint(borderColor);}
 			}
 		});
@@ -102,6 +103,7 @@ function _chart({
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
+		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
 			valH = value.y / maxY * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
@@ -120,7 +122,7 @@ function _chart({
 					const newYPoint = y - newValH;
 					gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
 				};
-				paintPoint(this.colors[i]);
+				paintPoint(color);
 				if (bFocused) {paintPoint(borderColor);}
 			}
 		});
@@ -132,6 +134,7 @@ function _chart({
 		const xValues = x + i * barW;
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
+		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
 			valH = value.y / maxY * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
@@ -139,7 +142,7 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			this.dataCoords[i][j] = {x: xPoint, y: yPoint, w: barW, h: valH};
 			const point = this.dataCoords[i][j];
-			gr.FillSolidRect(point.x, point.y, point.w, point.h, this.colors[i]);
+			gr.FillSolidRect(point.x, point.y, point.w, point.h, color);
 			if (bFocused) {gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);}
 			// Borders
 			if (this.graph.borderWidth) {
@@ -186,10 +189,11 @@ function _chart({
 			iX = r * Math.cos(2 * Math.PI / ticks * j)
 			circleArr.push(c.x + iX, c.y + iY);
 		}
-		gr.FillPolygon(invert(this.background.color, true), 0, circleArr);
+		gr.FillPolygon(RGBA(...toRGB(invert(this.background.color, true)), this.graph.pointAlpha / 2), 0, circleArr);
 		let alpha = 0;
 		serie.forEach((value, j, thisSerie) => {
 			const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), getBrightness(...toRGB(this.colors[i][j])) < 50 ? 300 : 25);
+			const color = RGBA(...toRGB(this.colors[i][j]), this.graph.pointAlpha);
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [...Object.values(c)];
 			const sumY = thisSerie.reduce((acc, val) => acc + val.y, 0);
@@ -202,7 +206,7 @@ function _chart({
 				circleArr.push(c.x + iX, c.y + iY);
 			}
 			if (circleArr.length) {
-				gr.FillPolygon(this.colors[i][j], 0, circleArr);
+				gr.FillPolygon(color, 0, circleArr);
 				if (bFocused) {gr.FillPolygon(borderColor, 0, circleArr);}
 				// Borders
 				if (this.graph.borderWidth) {
@@ -229,6 +233,7 @@ function _chart({
 		let alpha = 0;
 		serie.forEach((value, j, thisSerie) => {
 			const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), getBrightness(...toRGB(this.colors[i][j])) < 50 ? 300 : 25);
+			const color = RGBA(...toRGB(this.colors[i][j]), this.graph.pointAlpha);
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [];
 			const sumY = thisSerie.reduce((acc, val) => acc + val.y, 0);
@@ -246,7 +251,7 @@ function _chart({
 				circleArr.push(c.x + iX, c.y + iY);
 			}
 			if (circleArr.length) {
-				gr.FillPolygon(this.colors[i][j], 0, circleArr);
+				gr.FillPolygon(color, 0, circleArr);
 				if (bFocused) {gr.FillPolygon(borderColor, 0, circleArr);}
 				// Borders
 				if (this.graph.borderWidth) {
@@ -787,6 +792,7 @@ function _chart({
 			if (this.buttons.settings) {this.settingsBtn.paint(gr, color);}
 			if (this.buttons.display) {this.displayBtn.paint(gr, color);}
 			if (this.buttons.zoom) {this.zoomBtn.paint(gr, color);}
+			if (this.buttons.custom) {this.customBtn.paint(gr, color);}
 		}
 	}
 	
@@ -972,6 +978,16 @@ function _chart({
 						ttText = 'Press Shift to zoom out...\nDouble CLick for max zoom in/out';
 					} else if (this.zoomBtn.hover !== bHover) {bPaint = true;}
 				}
+				if (this.buttons.custom) {
+					const bHover = this.customBtn.hover;
+					if (this.customBtn.move(x, y)) {
+						bHand = true;
+						bPaint = true;
+						ttText = this.callbacks.custom.tooltip 
+							? isFunction(this.callbacks.custom.tooltip) ? this.callbacks.custom.tooltip() : this.callbacks.custom.tooltip
+							: '';
+					} else if (this.customBtn.hover !== bHover) {bPaint = true;}
+				}
 				const [serie, idx] = this.tracePoint(x, y, true);
 				bPaint = bPaint || this.currPoint[0] !== serie || this.currPoint[1] !== idx;
 				if (bPaint) {this.repaint();}
@@ -1025,6 +1041,9 @@ function _chart({
 		}
 		if (this.buttons.zoom) {
 			this.zoomBtn.hover = false;
+		}
+		if (this.buttons.custom) {
+			this.customBtn.hover = false;
 		}
 		return this.leavePoints() || this.repaint();
 	};
@@ -1119,7 +1138,6 @@ function _chart({
 					? 2 
 					: 1
 				);
-		console.log(step, newRange);
 		if (range === points && newRange > range) {return false;}
 		let left, right;
 		if (Number.isFinite(newRange)) {
@@ -1142,7 +1160,6 @@ function _chart({
 			right = Infinity;
 			if ((left - right) >= range) {return false;}
 		}
-		console.log(left, right);
 		this.changeConfig({bPaint: true, dataManipulation: {slice: [left, right === points ? Infinity : right]}});
 		this.move(this.mx, this.my);
 		return true;
@@ -1209,6 +1226,9 @@ function _chart({
 			if (this.buttons.zoom && this.zoomBtn.hover && this.callbacks.zoom.onLbtnUp) {
 				if (this.zoomBtn.lbtn_up(x, y, mask, this)) {return true;}
 			}
+			if (this.buttons.custom && this.customBtn.hover && this.callbacks.custom.onLbtnUp) {
+				if (this.customBtn.lbtn_up(x, y, mask, this)) {return true;}
+			}
 			if (this.callbacks.point.onLbtnUp) {
 				const point = this.getCurrentPoint(false);
 				if (point) {this.callbacks.point.onLbtnUp.call(this, point, x, y, mask);}
@@ -1233,6 +1253,9 @@ function _chart({
 			if (this.buttons.zoom && this.zoomBtn.hover) {
 				if (this.zoomBtn.lbtn_dblclk(x, y, mask, this)) {return true;}
 			}
+			if (this.buttons.custom && this.customBtn.hover) {
+				if (this.customBtn.lbtn_dblclk(x, y, mask, this)) {return true;}
+			}
 			return true;
 		}
 		return false;
@@ -1250,6 +1273,8 @@ function _chart({
 				this.displayBtn.rbtn_up(x, y, mask, this);
 			} else if (this.buttons.zoom && this.zoomBtn.hover && this.callbacks.zoom.onRbtnUp) {
 				this.zoomBtn.rbtn_up(x, y, mask, this);
+			} else if (this.buttons.custom && this.customBtn.hover && this.callbacks.custom.onRbtnUp) {
+				this.customBtn.rbtn_up(x, y, mask, this);
 			} else if (this.callbacks.focus.onRbtnUp) {
 				this.callbacks.focus.onRbtnUp.call(this, x, y, mask);
 			}
@@ -1934,7 +1959,7 @@ function _chart({
 			z: {key: '', tf: ''},
 		};
 		this.margin = {left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20)};
-		this.buttons = {xScroll: false, settings: false, display: false, zoom: false};
+		this.buttons = {xScroll: false, settings: false, display: false, zoom: false, custom: false};
 		this.callbacks = {
 			point: {onLbtnUp: null, onRbtnUp: null, onDblLbtn: null}, 
 			focus: {
@@ -1947,7 +1972,8 @@ function _chart({
 				onLbtnUp: (x, y, mask) => this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -1 : 1),
 				onDblLbtn: (x, y, mask) => {this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -Infinity : Infinity)},
 				onRbtnUp: null,
-			}, 
+			},
+			custom: {onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null},
 			config: {change: null, backgroundColor: null}
 		};
 		this.configuration = {
@@ -1992,6 +2018,7 @@ function _chart({
 		if (callbacks.settings) {this.callbacks.settings = {...this.callbacks.settings, ...callbacks.settings};}
 		if (callbacks.display) {this.callbacks.display = {...this.callbacks.display, ...callbacks.display};}
 		if (callbacks.zoom) {this.callbacks.zoom = {...this.callbacks.zoom, ...callbacks.zoom};}
+		if (callbacks.custom) {this.callbacks.custom = {...this.callbacks.custom, ...callbacks.custom};}
 		if (callbacks.config) {this.callbacks.config = {...this.callbacks.config, ...callbacks.config};}
 	}
 	this.currPoint = [-1, -1];
@@ -2051,6 +2078,15 @@ function _chart({
 		lbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onLbtnUp && this.callbacks.display.onLbtnUp.call(this, x, y, mask, parent);},
 		rbtnFunc: (x, y, mask, parent) => {this.callbacks.display.onRbtnUp && this.callbacks.display.onRbtnUp.call(this, x, y, mask, parent);},
 		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.display.onDblLbtn && this.callbacks.display.onDblLbtn.call(this, x, y, mask, parent);}
+	})
+ 	this.customBtn = new _button({
+		text: chars.close,
+		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size, 
+		isVisible: (time, timer) => {return this.inFocus || (Date.now() - time < timer);},
+		notVisibleMode: 25, bTimerOnVisible: true,
+		lbtnFunc: (x, y, mask, parent) => {this.callbacks.custom.onLbtnUp && this.callbacks.custom.onLbtnUp.call(this, x, y, mask, parent);},
+		rbtnFunc: (x, y, mask, parent) => {this.callbacks.custom.onRbtnUp && this.callbacks.custom.onRbtnUp.call(this, x, y, mask, parent);},
+		lbtnDblFunc: (x, y, mask, parent) => {this.callbacks.custom.onDblLbtn && this.callbacks.custom.onDblLbtn.call(this, x, y, mask, parent);}
 	})
 	/* 
 	Animation
