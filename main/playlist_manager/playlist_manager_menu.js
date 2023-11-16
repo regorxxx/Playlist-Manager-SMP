@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/23
+//16/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -2607,7 +2607,7 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => {return (panel.colors.buttonsToolbarColor === defaultCol ? 0 : 1);});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
-					const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n(0 to 100)', window.Name, 50);
+					const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 50);
 					if (input === null) {return;}
 					panel.properties.buttonsToolbarTransparency[1] = panel.colors.buttonsToolbarTransparency = input;
 					// Update property to save between reloads
@@ -2861,7 +2861,7 @@ function createMenuRightTop() {
 			}
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Set transparency...\t' + _b(panel.imageBackground.transparency), func: () => {
-				let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n(0-100)', window.Name, 50, [(n) => n >= 0 && n <= 100]);
+				let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(0-100)', window.Name, 50, [(n) => n >= 0 && n <= 100]);
 				if (input === null) {return;}
 				panel.imageBackground.transparency = input;
 				panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
