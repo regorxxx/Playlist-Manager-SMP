@@ -48,6 +48,10 @@
 
 ## [Unreleased][]
 ### Added
+- Statistics: added buttons to statistics mode. Menus are now opened via buttons, no longer with R. click. There is also a button to directly exit statistics mode.
+- Statistics: added sorting options according to Y axis.
+- Statistics: colors are now forced with a scheme based on selection color and background.
+- UI: transparency input menu entries now have a hint about which value is opaque and which transparent.
 ### Changed
 ### Removed
 ### Fixed
