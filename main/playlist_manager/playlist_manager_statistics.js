@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/11/23
+//17/11/23
 
 include('..\\statistics\\statistics_xxx.js');
 include('..\\..\\helpers\\menu_xxx.js');
@@ -36,17 +36,17 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 
 		addEventListener('on_mouse_move', (x, y, mask) => {
 			if (!window.ID || !this.bEnabled) {return;}
-			const bFound = charts.some((chart) => {return chart.move(x,y);});
+			const bFound = charts.some((chart) => {return chart.move(x,y, mask);});
 		});
 
-		addEventListener('on_mouse_leave', (x, y, mask) => {
+		addEventListener('on_mouse_leave', () => {
 			if (!this.bEnabled) {return;}
 			charts.forEach((chart) => {chart.leave();});
 		});
 
-		addEventListener('on_mouse_lbtn_up', (x, y) => {
+		addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 			if (!this.bEnabled) {return true;}
-			charts.some((chart) => {return chart.lbtnUp(x,y);});
+			charts.some((chart) => {return chart.lbtnUp(x,y, mask);});
 		});
 		
 		addEventListener('on_mouse_lbtn_dblclk', (x, y, mask) => {
@@ -119,7 +119,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						if (!keys.has(key)) {delete config[key];}
 					});
 					config.dataManipulation.sort = this.exportSortLabel();
-					config.data = {source: parent.source, arg: parent.arg}; // Similar to this.exportDataLabels()
+					config.data = {source: parent.source.toLowerCase(), arg: parent.arg}; // Similar to this.exportDataLabels()
 					list.properties['statsConfig'][1] = JSON.stringify(config);
 					overwriteProperties(list.properties);
 				}
@@ -161,12 +161,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			}));
 		}
 		menu.newEntry({entryText: 'sep'});
-		menu.newEntry({entryText: 'Exit statistics mode', func: () => {
-			parent.bEnabled = !parent.bEnabled;
-			list.properties['bStatsMode'][1] = parent.bEnabled;
-			overwriteProperties(list.properties);
-			list.updateUIElements(); // Buttons, etc.
-		}});
+		menu.newEntry({entryText: 'Exit statistics mode', func: parent.exit});
 		return menu;
 	}
 	
@@ -182,7 +177,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						if (!keys.has(key)) {delete config[key];}
 					});
 					config.dataManipulation.sort = this.exportSortLabel();
-					config.data = {source: parent.source, arg: parent.arg}; // Similar to this.exportDataLabels()
+					config.data = {source: parent.source.toLowerCase(), arg: parent.arg}; // Similar to this.exportDataLabels()
 					list.properties['statsConfig'][1] = JSON.stringify(config);
 					overwriteProperties(list.properties);
 				}
@@ -352,6 +347,54 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		return menu;
 	}
 	
+	this.onLbtnUpPoint = function onLbtnUpPoint(point, x, y, mask) {
+		const filters = [];
+		switch (parent.source) {
+			case 'property': {
+				switch (parent.arg) {
+					case 'extension':
+						filters.push({extState: point.x});
+						break;
+					case 'tags': 
+						filters.push({tagState: [point.x === 'No tag' ? list.tags(0) : point.x]});
+						break;
+					case 'category': 
+						filters.push({categoryState: [point.x === 'No category' ? list.categories(0) : point.x]});
+						break;
+					case 'playlist_mbid': 
+						filters.push({mbidState: point.x === 'No MBID' ? list.constMbidStates()[1] : list.constMbidStates()[2]});
+						break;
+					case 'isLocked':
+						filters.push({lockState: point.x});
+						break;
+					case 'query': 
+						switch (point.x) {
+							case 'Smart Pls.':	filters.push({autoPlaylistState: list.constAutoPlaylistStates()[1], extState: '.xsp'}); break;
+							case 'AutoPls.':	filters.push({plsState: list.dataAll.filter((pls) => pls.isAutoPlaylist)}); break;
+							case 'Std. Pls.':	filters.push({autoPlaylistState: list.constAutoPlaylistStates()[2]}); break;
+							case 'UI Pls.':		filters.push({autoPlaylistState: list.constAutoPlaylistStates()[3]}); break;
+						}
+						break;
+					case 'size': 
+						switch (point.x) {
+							case 'Not empty':	value = filters.push({plsState: list.dataAll.filter((pls) => pls.size !== 0)}); break;
+							case 'Empty':		value = filters.push({plsState: list.dataAll.filter((pls) => pls.size === 0)}); break;
+						}
+						break;
+					case 'isFolder': 
+						switch (point.x) {
+							case 'Folder':		value = filters.push({plsState: list.dataAll.filter((pls) => pls.isFolder)}); break;
+							case 'Playlist':	value = filters.push({plsState: list.dataAll.filter((pls) => !pls.isFolder)}); break;
+						}
+						break;
+				}
+			}
+		}
+		list.resetFilter();
+		parent.exit();
+		list.filter(filters.reduce((acc, curr) => {return {...acc, ...curr};}, {}));
+	};
+	
 	this.getData = (source = 'property', arg = 'extension') => {
 		let data = [];
 		switch (source) {
@@ -361,7 +404,14 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					let val = '';
 					switch (arg) {
 						case 'isFolder': val = pls[arg] ? 'Folder' : 'Playlist'; break;
-						case 'query': val = pls[arg].length ? (pls.extension === '.xsp' ? 'Smart Pls.' : 'AutoPls.') : 'Std. Pls.'; break;
+						case 'query': {
+							if (pls.hasOwnProperty(arg) && pls[arg].length) {
+								val = (pls.extension === '.xsp' ? 'Smart Pls.' : 'AutoPls.');
+							} else {
+								val = (pls.extension === '.ui' ? 'UI Pls.' : 'Std. Pls.');
+							}
+							break;
+						}
 						case 'isLocked': val = pls[arg] ? 'Locked' : 'Not locked'; break;
 						case 'size': val = pls[arg] ? 'Not empty' : 'Empty'; break;
 						case 'tags': val = pls[arg].length ? pls[arg] : ['No tag']; break;
@@ -382,8 +432,6 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	}
 	
 	this.defaultConfig = () => {
-		const onLbtnUpSettings = this.onLbtnUpSettings;
-		const onLbtnUpDisplay = this.onLbtnUpDisplay;
 		return {
 			data: [], // No data is added by default to set no colors on first init
 			graph: {type: 'doughnut', pointAlpha: Math.round(40 * 255 / 100)},
@@ -403,16 +451,12 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			w: 0,
 			y: 0,
 			h: 0,
-			tooltipText: '\n\n(Right click to configure chart)',
+		tooltipText: function(point, serie, mask) {return '\n\n(L. click to filter list by ' + this.axis.x.key + ')';},
 			callbacks: {
-				settings:	{onLbtnUp: function(x, y, mask) {onLbtnUpSettings.call(this).btn_up(x, y);}},
-				display:	{onLbtnUp: function(x, y, mask) {onLbtnUpDisplay.call(this).btn_up(x, y);}},
-				custom:		{onLbtnUp: function() {
-					parent.bEnabled = !parent.bEnabled;
-					list.properties['bStatsMode'][1] = parent.bEnabled;
-					overwriteProperties(list.properties);
-					list.updateUIElements(); // Buttons, etc.
-				}, tooltip: 'Exit statistics mode...'},
+				point:		{onLbtnUp: parent.onLbtnUpPoint},
+				settings:	{onLbtnUp: function(x, y, mask) {parent.onLbtnUpSettings.call(this).btn_up(x, y);}},
+				display:	{onLbtnUp: function(x, y, mask) {parent.onLbtnUpDisplay.call(this).btn_up(x, y);}},
+				custom:		{onLbtnUp: parent.exit, tooltip: 'Exit statistics mode...'},
 				config:		{
 					backgroundColor: () => [panel.getColorBackground()]
 				},
@@ -450,8 +494,15 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		charts = nCharts.flat(Infinity);
 	};
 	
+	this.exit = () => {
+		parent.bEnabled = !parent.bEnabled;
+		list.properties['bStatsMode'][1] = parent.bEnabled;
+		overwriteProperties(list.properties);
+		list.updateUIElements(); // Buttons, etc.
+	};
+	
 	this.bEnabled = bEnabled;
-	this.source = config && config.data ? config.data.source : 'property';
+	this.source = config && config.data ? config.data.source.toLowerCase() : 'property';
 	this.arg = config && config.data ? config.data.arg : 'extension';
 	if (this.bEnabled) {this.init();}
 }
