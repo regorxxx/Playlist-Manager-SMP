@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/10/23
+//17/11/23
 
 /* 
 	Objects
@@ -431,7 +431,7 @@ function _b(value) {
 }
 
 function _t(tag) {
-	return tag.indexOf('%') !== -1 ? tag : '%' + tag + '%';
+	return tag.indexOf('%') !== -1 || tag.indexOf('$') !== -1 ? tag : '%' + tag + '%';
 }
 
 function _bt(tag) {

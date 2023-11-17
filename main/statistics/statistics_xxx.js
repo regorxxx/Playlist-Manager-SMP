@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/11/23
+//17/11/23
 
 include('statistics_xxx_helper.js');
 
@@ -23,7 +23,7 @@ function _chart({
 				h = window.Height,
 				title,
 				gFont = _gdiFont('Segoe UI', _scale(10)),
-				tooltipText = ''
+				tooltipText = '' /* function or string */
 		} = {}) {
 	// Global tooltip
 	this.tooltip = new _tt(null);
@@ -943,7 +943,7 @@ function _chart({
 		return (x >= this.x && x <= this.x + this.w && y >= this.y && y <= this.y + this.h);
 	};
 	
-	this.move = (x, y) => {
+	this.move = (x, y, mask) => {
 		if (!window.ID) {return false;}
 		if (this.trace(x,y)) {
 			let bHand = false;
@@ -1011,7 +1011,10 @@ function _chart({
 						ttText = point.x + ': ' + point.y + (this.axis.y.key ?  ' ' + this.axis.y.key : '') +
 							(bPercent ? ' ' + _p(percent + '%') : '') +
 							(point.hasOwnProperty('z') ? ' - ' + point.z : '') +
-							(this.tooltipText && this.tooltipText.length ? tooltipText : '');
+							(this.tooltipText 
+								? isFunction(tooltipText) ? tooltipText.call(this, point, serie, mask) : tooltipText
+								: ''
+							);
 					}
 				}
 				if (ttText.length) {this.tooltip.SetValue(ttText, true);}
@@ -1247,6 +1250,7 @@ function _chart({
 		return false;
 	}
 	
+	// This callback must be used in case single click is also used, otherwise double clicking will result in 2 single click calls
 	this.lbtnDblClk = (x, y, mask) => {
 		mask -= MK_LBUTTON; // Remove useless mask here...
 		if (this.trace(x,y)) {
@@ -1605,6 +1609,7 @@ function _chart({
 	*/
 	
 	this.changeConfig = ({data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, margin, x, y, w, h, title, configuration, gFont, bPaint = true, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null}) => {
+		let bCheckColors = false;
 		if (gFont) {this.gFont = gFont;}
 		if (this.data && this.data.length && (this.dataManipulation.slice[0] !== 0 || this.dataManipulation.slice[1] !== Infinity)) {
 			if (data && data.length !== this.data.length || dataAsync) {
@@ -1624,9 +1629,10 @@ function _chart({
 			this.graph = {...this.graph, ...graph};
 		}
 		if (background) {this.background = {...this.background, ...background}; this.background.imageGDI = this.background.image ? gdi.Image(this.background.image) : null;}
-		if (colors) {this.colors = colors;}
-		if (chroma) {this.chroma = {...this.chroma, ...chroma}; this.checkScheme();}
-		if ((colors || chroma) && !dataAsync && !this.dataAsync) {this.checkColors();}
+		if (colors) {this.colors = colors; bCheckColors = true;}
+		if (chroma) {this.chroma = {...this.chroma, ...chroma}; this.checkScheme(); bCheckColors = true;}
+		if (dataManipulation && dataManipulation.slice && this.chroma.scheme) {this.colors = []; bCheckColors = true;}
+		if (bCheckColors && !dataAsync && !this.dataAsync) {this.checkColors();}
 		if (axis) {
 			if (axis.x) {this.axis.x = {...this.axis.x, ...axis.x};}
 			if (axis.y) {this.axis.y = {...this.axis.y, ...axis.y};}
@@ -1650,7 +1656,7 @@ function _chart({
 		if (data || dataManipulation || graph) {this.initData();}
 		if (this.configuration.bLoadAsyncData) {
 			if (dataAsync) {this.initDataAsync();}
-			else if ((colors || chroma) && this.dataAsync) {this.dataAsync.then(() => this.checkColors());}
+			else if (bCheckColors && this.dataAsync) {this.dataAsync.then(() => this.checkColors());}
 		} // May be managed by the chart or externally
 		if (callback && isFunction(callback)) {callback.call(this, this.exportConfig(), arguments[0], callbackArgs);}
 		if (bPaint) {this.repaint();}
