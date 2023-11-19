@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/23
+//19/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -6080,16 +6080,16 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0,
 			inFocus: false,
 			text: (x, y, mask, parent) => {
-				const bhighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Playlist Manager settings...' + (bhighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
-					bhighlighting
+				const bHighlighting = parent.highlighting(x, y, mask, parent);
+				return 'Playlist Manager settings...' + (bHighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
+					bHighlighting
 						? 'Library has changed since tracking was disabled.\n' +
 							'Paths cache needs rebuilding.'
 						: ''
 				) + (
 					this.bLiteMode 
 						?	''
-						: (!this.bTracking ? 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking)'
+						: (!this.bTracking ? (bHighlighting ? '\n' : '') + 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking)'
 				);
 			},
 			func: (x, y, mask, parent) => {
@@ -6106,9 +6106,9 @@ function _list(x, y, w, h) {
 		folder: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => {
-				const bhighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Open playlists folder' +  (bhighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
-					bhighlighting
+				const bHighlighting = parent.highlighting(x, y, mask, parent);
+				return 'Open playlists folder' +  (bHighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
+					bHighlighting
 						?  'Playlists tracked folder has new changes.\n' +
 							'Use manual refresh or enable auto-loading.'
 						: ''
