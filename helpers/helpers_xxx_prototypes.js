@@ -296,7 +296,7 @@ if (!Promise.allSettled) {
 	});
 }
 
-// Promise.serial(['arg1', 'arg2',...], asyncFunc).then(...)
+// Promise.serial(['arg1', 'arg2',...], asyncFunc, timeout).then(...)
 // Process in chunks with [...].chunk(1000) for low latency non-blocking async processing
 Object.defineProperty(Promise, 'serial', {
 	enumerable: false,
@@ -314,7 +314,7 @@ Object.defineProperty(Promise, 'serial', {
 	}
 });
 
-// Promise.parallel(['arg1', 'arg2',...], asyncFunc).then(...)
+// Promise.parallel(['arg1', 'arg2',...], asyncFunc, timeout).then(...)
 Object.defineProperty(Promise, 'parallel', {
 	enumerable: false,
 	configurable: false,
