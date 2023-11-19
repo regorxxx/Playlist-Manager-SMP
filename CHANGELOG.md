@@ -57,6 +57,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- UI: minor fix to settings button's tooltip.
 
 ## [0.9.0] - 2023-11-15
 ### Added
