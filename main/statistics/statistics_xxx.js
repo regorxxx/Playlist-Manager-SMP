@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/23
+//20/11/23
 
 include('statistics_xxx_helper.js');
 
@@ -1008,7 +1008,7 @@ function _chart({
 						const point = serieData[idx];
 						const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
 						const percent = bPercent ? Math.round(point.y * 100 / serieData.reduce((acc, point) => acc + point.y, 0)) : null;
-						ttText = point.x + ': ' + point.y + (this.axis.y.key ?  ' ' + this.axis.y.key : '') +
+						ttText = point.x + ': ' + round(point.y, 3) + (this.axis.y.key ?  ' ' + this.axis.y.key : '') +
 							(bPercent ? ' ' + _p(percent + '%') : '') +
 							(point.hasOwnProperty('z') ? ' - ' + point.z : '') +
 							(this.tooltipText 
@@ -1909,7 +1909,7 @@ function _chart({
 	this.exportDataLabels = () => {
 		return {
 			x: {key: this.axis.x.key, tf: this.axis.x.tf},
-			y: {key: this.axis.y.key, tf: this.axis.y.tf},
+			y: {key: this.axis.y.key, tf: this.axis.y.tf, bProportional: this.axis.y.bProportional},
 			z: {key: this.axis.z.key, tf: this.axis.z.tf}
 		};
 	}
@@ -1970,7 +1970,7 @@ function _chart({
 		this.grid = {x: {show: false, color: RGB(0,0,0), width: _scale(1)}, y: {show: false, color: RGB(0,0,0), width: _scale(1)}};
 		this.axis = {
 			x: {show: true, color: RGB(0,0,0), width: _scale(2), ticks: 'auto', labels: true, singleLabels: true, key: '', showKey: true, bAltLabels: false, tf: ''},
-			y: {show: true, color: RGB(0,0,0), width: _scale(2), ticks: 10, labels: true, key: 'tracks', showKey: true, tf: ''},
+			y: {show: true, color: RGB(0,0,0), width: _scale(2), ticks: 10, labels: true, key: 'tracks', showKey: true, tf: '', bProportional: false},
 			z: {key: '', tf: ''},
 		};
 		this.margin = {left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20)};

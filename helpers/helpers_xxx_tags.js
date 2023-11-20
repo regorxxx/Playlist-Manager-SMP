@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/23
+//20/11/23
 
 include('helpers_xxx.js');
 
@@ -71,7 +71,15 @@ function sanitizeTagValIds(val, bSpace = true) {
 function queryReplaceWithCurrent(query, handle, bDebug = false) {
 	if (bDebug) {console.log('Initial query:', query);}
 	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return '';}
-	else if (!handle) {
+	// global queries without handle required
+	if (/#MONTH#|#YEAR#|#DAY#/g.test(query)) {
+		const date = new Date();
+		query = query.replace(/#MONTH#/g, date.getMonth() + 1);
+		query = query.replace(/#YEAR#/g, date.getFullYear());
+		query = query.replace(/#DAY#/g, date.getDate());
+	}
+	// With handle
+	if (!handle) {
 		if ((query.match(/#/g) || []).length >= 2) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
 		else {return query;}
 	}
@@ -141,14 +149,16 @@ function query_join(queryArray, setLogic) {
 			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
 			return; //Array was null or not an array
 		}
-		
+		const allRegex = /ALL/;
+		const copy = [...queryArray].filter((q) => q && !allRegex.test(q));
+		arrayLength = copy.length;
 		let query = '';
 		let i = 0;
 		while (i < arrayLength) {
 			if (i === 0) {
-				query += (arrayLength > 1 ? '(' : '') + queryArray[i] + (arrayLength > 1 ? ')' : '');
+				query += (arrayLength > 1 ? '(' : '') + copy[i] + (arrayLength > 1 ? ')' : '');
 			} else {
-				query += ' ' + setLogic + ' (' + queryArray[i] + ')';
+				query += ' ' + setLogic + ' (' + copy[i] + ')';
 			}
 			i++;
 		}
