@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/23
+//20/11/23
 
 // Folders
 const folders = {};
@@ -43,7 +43,7 @@ const iDelayPlaylists = 120; // ms per step for playlist processing: playlist ma
 
 // Console log file used at helpers_xxx_console.js
 console.File = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
-console.MaxSize = 5000000; // File size, in bytes. Setting to zero or null disables logging too
+console.MaxSize = 1000000; // File size, in bytes. Setting to zero or null disables logging too
 
 /* 
 	SO features
