@@ -57,6 +57,7 @@
 - Lite mode: config json files are now saved with an UUID on filename, so they can't conflict with playlist managers panels associated to a physical tracking folder anymore.
 - Lite mode: it's now possible to have multiple playlist managers panels in lite mode tracking different AutoPlaylist or with different manual sorting/folder structures.
 - Helpers: updated helpers.
+- Console: reduced max log file size to 1 MB.
 ### Removed
 ### Fixed
 - UI: minor fix to settings button's tooltip.
