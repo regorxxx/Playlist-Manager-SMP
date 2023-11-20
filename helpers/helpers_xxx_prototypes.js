@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/23
+//20/11/23
 
 /* 
 	Objects
@@ -748,6 +748,14 @@ Math.randomNum = function randomNum(min, max, options = {integer: false, include
 
 Math.randomInt = function randomNum(min, max, includeMax = false) {
 	return Math.randomNum(min, max, {integer: true, includeMax});
+}
+
+/* 
+	UUID
+*/
+
+function isUUID(str) {
+	return /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(str);
 }
 
 /* 
