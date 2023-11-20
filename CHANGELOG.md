@@ -54,6 +54,8 @@
 - Statistics: colors are now forced with a scheme based on selection color and background.
 - UI: transparency input menu entries now have a hint about which value is opaque and which transparent.
 ### Changed
+- Lite mode: config json files are now saved with an UUID on filename, so they can't conflict with playlist managers panels associated to a physical tracking folder anymore.
+- Lite mode: it's now possible to have multiple playlist managers panels in lite mode tracking different AutoPlaylist or with different manual sorting/folder structures.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed

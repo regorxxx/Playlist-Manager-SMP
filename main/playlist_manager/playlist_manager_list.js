@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/11/23
+//20/11/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -5802,6 +5802,7 @@ function _list(x, y, w, h) {
 			this.bAllPls = this.properties['bAllPls'][1];
 			this.activePlsStartup = this.properties['activePlsStartup'][1];
 			this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
+			this.uuid = this.properties['panelUUID'][1];
 			this.bTracking = true;
 			this.trackedFolderChanged = false;
 		}
@@ -5825,10 +5826,15 @@ function _list(x, y, w, h) {
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
 		
 		if (!_isFolder(folders.data)) {_createFolder(folders.data);}
-		this.filename = folders.data + 'playlistManager_' + this.playlistsPathDirName.replace(':','') + '.json'; // Replace for relative paths folder names!
+		this.filename = folders.data + 'playlistManager_' + (this.bLiteMode ? this.uuid : this.playlistsPathDirName.replace(':','')) + '.json'; // Replace for relative paths folder names!
 		let test = bProfile ? new FbProfiler(window.Name + ': ' + 'Init') : null;
 		_recycleFile(this.filename + '.old', true); // recycle old backup
 		_copyFile(this.filename, this.filename + '.old'); // make new backup
+		const sortingFile = this.filename.replace('.json','_sorting.json');
+		if (_isFile(sortingFile)) {
+			_recycleFile(sortingFile + '.old', true);
+			_copyFile(sortingFile, sortingFile + '.old');
+		}
 		this.loadConfigFile(); // Extra json files available?
 		this.loadSortingFile();
 		this.initProperties(); // This only set properties if they have no values...
@@ -5981,6 +5987,7 @@ function _list(x, y, w, h) {
 	this.cacheLibTimer = null;
 	this.bLiteMode = this.properties['bLiteMode'][1];
 	// Other
+	this.uuid = this.properties['panelUUID'][1];
 	this.dropUp = this.dropDown = this.dropIn = false;
 	this.showMenusDef = JSON.parse(this.properties.showMenus[3]);
 	this.trackedFolderChanged = false;

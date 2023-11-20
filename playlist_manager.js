@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/11/23
+//20/11/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -253,8 +253,8 @@ var properties = {
 		bShowSizeDeep: true,
 		icons:		{open: chars.downOutline, closed: chars.leftOutline}
 	})],
-	bStatsMode			: ['Stats mode enabled?', false, {func: isBoolean}, false],
-	statsConfig			: ['Stats mode configuration', JSON.stringify({
+	bStatsMode				: ['Stats mode enabled?', false, {func: isBoolean}, false],
+	statsConfig				: ['Stats mode configuration', JSON.stringify({
 		// graph: {/* type, borderWidth, point */},
 		// dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot*/},
 		background: {color: null},
@@ -263,6 +263,7 @@ var properties = {
 		// axis = {x: {/* show, color, width, ticks, labels, key *, singleLabels/}, y: {/* ... */}}
 	})],
 	bAutoUpdateCheck		: ['Automatically check updates?', globSettings.bAutoUpdateCheck, {func: isBoolean}, globSettings.bAutoUpdateCheck],
+	panelUUID				: ['Panel UUID', UUID(), {func: isUUID}, UUID()],
 };
 properties['playlistPath'].push({func: isString, portable: true}, properties['playlistPath'][1]);
 properties['converterPreset'].push({func: isJSON}, properties['converterPreset'][1]);
@@ -309,6 +310,21 @@ setProperties(properties, 'plm_');
 	if (prop.bAutoUpdateCheck[1]) {
 		include('helpers\\helpers_xxx_web_update.js');
 		setTimeout(checkUpdate, 120000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb});
+	}
+	// Rename json file on lite mode the first time it runs
+	if (prop.panelUUID[1] === properties.panelUUID[1] && prop.bLiteMode[1]) {
+		const file = folders.data + 'playlistManager_' + prop.playlistPath[1].split('\\').filter(Boolean).pop().replace(':','');
+		if (_isFile(file + '.json')) {
+			const newFile = folders.data + 'playlistManager_' + prop.panelUUID[1];
+			const suffix = ['.json', '_sorting.json', '_config.json', '.json.old', '_sorting.json.old', '_config.json.old'];
+			if (suffix.every((s) => {!_isFile(file + s) || _copyFile(file + s, newFile + s);})) {
+				console.log(window.Name + ': creating UUID file from existing JSON ' + _p(file + '.json'));
+				suffix.forEach((s) => _recycleFile(file + s));
+			} else {
+				suffix.forEach((s) => _recycleFile(newFile + s))
+				console.popup(window.Name + ': error creating UUID file from existing JSON\n\n' + file, window.Name);
+			}
+		}
 	}
 }
 // Panel
