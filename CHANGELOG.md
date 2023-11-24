@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.10.0](#0100---2023-11-24)
 - [0.9.0](#090---2023-11-15)
 - [0.8.0](#080---2023-10-18)
 - [0.7.0](#070---2023-10-05)
@@ -47,6 +48,13 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+- UI: minor fix to settings button's tooltip.
+
+## [0.10.0] - 2023-11-24
 ### Added
 - Statistics: click on point to jump to list mode and filter by selected key.
 - Statistics: added buttons to statistics mode. Menus are now opened via buttons, no longer with R. click. There is also a button to directly exit statistics mode.
@@ -1003,7 +1011,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.6.3...v0.7.0
