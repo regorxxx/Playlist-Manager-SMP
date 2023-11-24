@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.07/11/23
+REM Create packages (zip file) from js files v.24/11/23
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -114,22 +114,22 @@ REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
-CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\countries-mercator
+CALL :copy_folder helpers-external\countries-mercator-mask
+CALL :copy_folder helpers-external\namethatcolor
+CALL :copy_folder helpers-external\natsort
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :delete_file helpers-external\countries-mercator\_Kosovo.png
 CALL :delete_file helpers-external\countries-mercator\"_N. Cyprus.png"
 CALL :delete_file helpers-external\countries-mercator\_Somaliland.png
 CALL :delete_file helpers-external\countries-mercator\worldmap_natural.png
 CALL :delete_file helpers-external\countries-mercator\worldmap_shapes.png
-CALL :copy_folder helpers-external\countries-mercator-mask
 CALL :delete_file helpers-external\countries-mercator-mask\_Kosovo.png
 CALL :delete_file helpers-external\countries-mercator-mask\"_N. Cyprus.png"
 CALL :delete_file helpers-external\countries-mercator-mask\_Somaliland.png
 CALL :delete_file helpers-external\countries-mercator-mask\worldmap_natural.png
 CALL :delete_file helpers-external\countries-mercator-mask\worldmap_shapes.png
-CALL :copy_folder helpers-external\namethatcolor
-CALL :copy_folder helpers-external\natsort
 REM others
 CALL :check_folder _images
 CALL :copy_file _images\_Installation_v1.5_v1.4.JPG
@@ -246,7 +246,6 @@ CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
-CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\fuse
 CALL :copy_folder helpers-external\keycode-2.2.0
@@ -255,6 +254,7 @@ CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\SimpleCrypto-js
 CALL :copy_folder helpers-external\xspf-to-jspf-parser
 CALL :copy_folder helpers-external\xsp-to-jsp-parser
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :check_folder _images
 CALL :copy_file _images\_Installation_v1.5_v1.4.JPG
@@ -368,6 +368,7 @@ CALL :copy_file main\window\window_xxx_button.js
 CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_helpers.js
+CALL :delete_file main\statistics\statistics_xxx_helper_fallback.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
@@ -400,8 +401,8 @@ REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\chroma.js
-CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\namethatcolor
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
@@ -418,6 +419,7 @@ IF EXIST %root%\%filePath% DEL /Q /F %root%\%filePath%
 GOTO:EOF
 
 :delete_folder
+REM Copy functions are Async, so put these at the end
 IF EXIST %1 (
 	DEL /Q /F /S %1\*.* >NUL
 	RD /Q /S %1 >NUL
