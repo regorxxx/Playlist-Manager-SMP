@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/23
+//24/11/23
 
 include('helpers_xxx_web.js');
 
@@ -11,7 +11,7 @@ function checkUpdate({
 	bOpenWeb = true,
 	bDisableWarning = true
 } = {}) {
-	const bGithub = repository.includes('github.com');
+	const bGithub = repository.startsWith('https://github.com/');
 	const versionURL = bGithub 
 		? repository.replace('github.com', 'raw.githubusercontent.com').replace(/\/$/, '') + '/main/VERSION' 
 		: repository;

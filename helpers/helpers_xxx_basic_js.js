@@ -286,8 +286,8 @@ module.exports = null;
 
 function require(script) { // Must be path relative to this file, not the parent one
 	let newScript = script;
-	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => {newScript.replace(new RegExp('^\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\');});
-	['helpers'].forEach((folder) => {newScript.replace(new RegExp('^\.\\\\' + folder + '\\\\', 'i'), '');});
+	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => {newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\');});
+	['helpers'].forEach((folder) => {newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '');});
 	include(newScript + '.js');
 	return module.exports;
 }
