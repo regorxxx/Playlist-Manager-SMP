@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/11/23
+//24/11/23
 
 include('helpers_xxx.js');
 
@@ -68,20 +68,24 @@ function sanitizeTagValIds(val, bSpace = true) {
 
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
-function queryReplaceWithCurrent(query, handle, bDebug = false) {
+function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 	if (bDebug) {console.log('Initial query:', query);}
 	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return '';}
 	// global queries without handle required
+	let bStatic = false;
 	if (/#MONTH#|#YEAR#|#DAY#/g.test(query)) {
 		const date = new Date();
 		query = query.replace(/#MONTH#/g, date.getMonth() + 1);
 		query = query.replace(/#YEAR#/g, date.getFullYear());
 		query = query.replace(/#DAY#/g, date.getDate());
+		bStatic = true;
 	}
 	// With handle
 	if (!handle) {
-		if ((query.match(/#/g) || []).length >= 2) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
-		else {return query;}
+		if ((query.match(/#/g) || []).length >= 2) {
+			if (bDebug) {console.log(tags);}
+			if (!tags) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
+		} else {return query;}
 	}
 	if (/#NEXTKEY#|#PREVKEY#/g.test(query)) {console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return;}
 	if (query.indexOf('#') !== -1) {
@@ -103,6 +107,7 @@ function queryReplaceWithCurrent(query, handle, bDebug = false) {
 			let tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
+				const tagKey = tfo;
 				const bIsFunc = tfo.indexOf('$') !== -1;
 				const prevChar = query[idx[i] - 1];
 				const nextChar = query[idx[i + 1] + 1];
@@ -112,9 +117,17 @@ function queryReplaceWithCurrent(query, handle, bDebug = false) {
 				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST\)/g, '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
-				if (bDebug) {console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc);}
-				tfo = fb.TitleFormat(tfo);
-				tfoVal = bIsFunc || bIsWithinFunc ? sanitizeTagTfo(tfo.EvalWithMetadb(handle)) : tfo.EvalWithMetadb(handle);
+				if (bDebug) {console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey);}
+				tfo = handle ? fb.TitleFormat(tfo) : null;
+				tfoVal = bIsFunc || bIsWithinFunc 
+					? sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : (tags[tagKey.toLowerCase()] || []).join('#')) 
+					: handle ? tfo.EvalWithMetadb(handle) : (tags[tagKey.toLowerCase()] || []).join('#');
+				// If no value is returned but using a static variable with no tags, retry without []
+				if (bStatic && (typeof tfoVal === 'undefined' || tfoVal === null || tfoVal === '')) {
+					tfo = fb.TitleFormat(tfo.Expression.slice(1, -1));
+					tfoVal = sanitizeTagTfo(tfo.EvalWithMetadb(handle));
+				}
+				if (bDebug) {console.log('tfoVal:', tfoVal);}
 				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interQueryStart = interText[0] === ')' ? interText.slice(0, interText.split('').findIndex((s) => {return s !== ')';})) : '';
@@ -126,7 +139,8 @@ function queryReplaceWithCurrent(query, handle, bDebug = false) {
 					});
 					tempQuery += interQuery + query_join(multiQuery, 'AND');
 				} else {
-					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal);
+					if (bDebug) {console.log(i > 0, startQuery.length, idx[i]);}
+					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal).trim();
 				}
 			}
 			query = startQuery + tempQuery + endQuery;
@@ -245,6 +259,10 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	}
 	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}  // Test query against empty handle list since it's much faster!
 	catch (e) {bPass = false;}
+	if (bPass) {
+		try {fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort));}  // Some expressions only thrown inside parentheses!
+		catch (e) {bPass = false;}
+	}
 	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
 	return bPass;
 }

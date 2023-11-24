@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/11/23
+//22/11/23
 
 include('statistics_xxx_helper.js');
 
@@ -1539,8 +1539,25 @@ function _chart({
 		}
 	};
 	
-	this.computeStatistics = (serie) => {
-		const statistics = {max: -Infinity, maxCount: 0, min: Infinity, minCount: 0, mean: null, sigma: 0, range: null, total: 0, count: 0};
+	this.computeStatistics = (serie, options = {bClampRange: true}) => {
+		options = {bClampRange: true, ...options};
+		const statistics = {
+			max: -Infinity,
+			min: +Infinity,
+			maxCount: 0, 
+			minCount: 0,
+			total: 0,
+			count: 0, 
+			mean: null, 
+			median: null, 
+			mode: null, 
+			sigma: 0,
+			range: null,
+			popRange: {
+				normal:		{'50%': [], '75%': [], '89%': [], '95%': []}, 
+				universal:	{'50%': [], '75%': [], '89%': [], '95%': []}
+			},
+		};
 		statistics.total = serie.length;
 		serie.forEach((p, i) => {
 			const val = p.y;
@@ -1558,8 +1575,55 @@ function _chart({
 			statistics.sigma += val * (i - statistics.mean) ** 2;
 		});
 		statistics.sigma = Math.sqrt(statistics.sigma / (statistics.count - 1));
+		statistics.popRange.universal['50%'].push(statistics.mean - Math.sqrt(2) * statistics.sigma, statistics.mean + Math.sqrt(2) * statistics.sigma);
+		statistics.popRange.universal['75%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
+		statistics.popRange.universal['89%'].push(statistics.mean - 3 * statistics.sigma, statistics.mean + 3 * statistics.sigma);
+		statistics.popRange.universal['95%'].push(statistics.mean - 4 * statistics.sigma, statistics.mean + 4 * statistics.sigma);
+		statistics.popRange.normal['50%'].push(statistics.mean - 0.674490 * statistics.sigma, statistics.mean + 0.674490 * statistics.sigma);
+		statistics.popRange.normal['75%'].push(statistics.mean - 1.149954 * statistics.sigma, statistics.mean + 1.149954 * statistics.sigma);
+		statistics.popRange.normal['89%'].push(statistics.mean - 1.644854 * statistics.sigma, statistics.mean + 1.644854 * statistics.sigma);
+		statistics.popRange.normal['95%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
+		if (options.bClampRange) {
+			for (let key in statistics.popRange) {
+				for (let subKey in statistics.popRange[key]) {
+					statistics.popRange[key][subKey][0] = Math.max(statistics.min, statistics.popRange[key][subKey][0]);
+					statistics.popRange[key][subKey][1] = Math.min(statistics.max, statistics.popRange[key][subKey][1]);
+				}
+			}
+		}
+		const binSize = 1;
+		const histogram = calcHistogram(dataArr, binSize, statistics.max, statistics.min);
+		const masxFreq = Math.max(...histogram);
+		statistics.mode = {value: statistics.min + histogram.indexOf(masxFreq) * binSize, frequency: masxFreq};
+		{
+			let i = 0, acumFreq = statistics.count / 2;
+			while (true) {
+				acumFreq -= histogram[i];
+				if (acumFreq <= 0) {break;} else {i++;}
+			}
+			statistics.median = statistics.min + (i > 0 ? (2 * i - 1) * binSize / 2 : 0);
+		}
 		return statistics;
 	};
+	
+	this.calcHistogram = (data, size, max, min) => {
+		if (typeof max === 'undefined' || typeof min === 'undefined') {
+			min = Infinity;
+			max = -Infinity;
+			for (const item of data) {
+				if (item < min) {min = item;}
+				if (item > max) {max = item;}
+			}
+		}
+		if (min === Infinity) {min = 0;}
+		if (max === -Infinity) {max = 0;}
+		let bins = Math.ceil((max - min + 1) / size);
+		const histogram = new Array(bins).fill(0);
+		for (const item of data) {
+			histogram[Math.floor((item - min) / size)]++;
+		}
+	return histogram;
+	}
 	
 	this.expandData = (group = this.dataManipulation.group) => {
 		if (this.graph.multi) { // 3-dimensional data with every point having multiple {Y,Z} points
@@ -1569,6 +1633,8 @@ function _chart({
 			series.forEach((serie, i) => {
 				serie.forEach((pointArr) => {
 					const len = pointArr.length;
+					this.stats.minGroup = Math.min(len, this.stats.maxGroup);
+					this.stats.maxGroup = Math.max(len, this.stats.maxGroup);
 					for (let j = 0; j < len; j++) {
 						if (j >= group) {break;}
 						const point = pointArr[j];
@@ -2038,7 +2104,7 @@ function _chart({
 	}
 	this.currPoint = [-1, -1];
 	this.nearPoint = [-1, -1];
-	this.stats = {maxY: 0, minY: 0, points: [], pointsDraw: []};
+	this.stats = {maxY: 0, minY: 0, points: [], pointsDraw: [], minGroup: 0, maxGroup: 0};
 	this.x = x;
 	this.y = y;
 	this.w = w;
