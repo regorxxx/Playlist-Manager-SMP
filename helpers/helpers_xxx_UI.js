@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/06/23
+//26/06/23
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
@@ -197,6 +197,7 @@ function removeIdFromStr(nameId) {
 
 function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.tooltip.size), width = 600) {
 	this.SetValue = (value,  bForceActivate = false) => {
+		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
 		if (value === null) {
 			this.Deactivate();
@@ -211,6 +212,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	};
 	
 	this.SetFont = (name, size, style = 0) => {
+		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.SetFont(name, size, style);
 		this.font = {name, size, style};
@@ -218,6 +220,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	};
 	
 	this.SetMaxWidth = (width) => {
+		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.SetMaxWidth(width);
 		this.width = width;
@@ -225,6 +228,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	};
 	
 	this.Activate = () => {
+		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.Activate();
 		this.bActive = true;
@@ -232,6 +236,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	};
 	
 	this.Deactivate = () => {
+		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.Deactivate();
 		this.bActive = false;
@@ -245,6 +250,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
     };
 	
 	this.GetDelayTime = (type) => {
+		if (!globSettings.bTooltip) {return;}
 		if (!this.tooltip && !this.init()) {return;}
 		return this.tooltip.GetDelayTime(type) ;
 	};
@@ -252,6 +258,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	this.init = () => {
 		this.tooltip = window.Tooltip;
 		if (!this.tooltip) {doOnce('tooltip fail', console.log)('Tooltip failed to initialize'); return false;} // Workaround for tooltip bug
+		if (!globSettings.bTooltip) {return true;}
 		if (utils.CheckFont(this.font.name)) {this.SetFont(this.font.name, this.font.size);} // Workaround for missing fonts
 		this.SetMaxWidth(this.width);
 		this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL

@@ -49,6 +49,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: added setting to disable tooltip on all scripts. Found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bTooltip'. By default tooltip is always shown. This setting will never be exposed within foobar, only at this file.
 ### Changed
 ### Removed
 ### Fixed
