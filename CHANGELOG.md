@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.11.0](#0110---2023-11-28)
 - [0.10.0](#0100---2023-11-24)
 - [0.9.0](#090---2023-11-15)
 - [0.8.0](#080---2023-10-18)
@@ -49,8 +50,16 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.11.0] - 2023-11-28
+### Added
 - UI: added setting to disable tooltip on all scripts. Found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bTooltip'. By default tooltip is always shown. This setting will never be exposed within foobar, only at this file.
 ### Changed
+- Helpers: updated helpers.
+- Improved error messages about features not working related to OS checks (at startup) with tips and warnings.
 ### Removed
 ### Fixed
 - UI: minor fix to settings button's tooltip.
@@ -1012,7 +1021,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.7.0...v0.8.0
