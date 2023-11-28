@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/10/23
+//27/11/23
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -86,6 +86,7 @@ const chars = {
 	bookmark		: '\uf02e',
 	send			: '\uf1d9',
 	eraser			: '\uf12d',
+	clock			: '\uf017',
 	// Playback
 	prev			: '\uf049',
 	next			: '\uf050',

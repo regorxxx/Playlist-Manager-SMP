@@ -1,8 +1,8 @@
 ﻿'use strict';
-//12/11/23
+//28/11/23
 
 /* 
-	Contextual Menu helper v2.5.0
+	Contextual Menu helper v2.6.0
 	Helper to create contextual menus on demand on panels without needing to create specific methods for
 	every script, calculate IDs, etc. Menus are pushed to a list and created automatically, linking the entries
 	to their idx without needing a 'switch' block or leaving holes to ensure idx get enough numbers to expand the script.
@@ -44,10 +44,17 @@
 		.newCheckMenu(menuName, entryTextA, entryTextB, idxFunc)
 			-menuName:				to which menu/submenu the check is associated
 			-entryTextA:			From entry A (idx gets calculated automatically)
-			-entryTextB:			To entry B (idx gets calculated automatically)
+			-entryTextB:			To entry B (idx gets calculated automatically) -for boolean checks, omit this arg-
 			-idxFunc:				Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
 										values between 0 and 5.
+									For Boleean checks of a single entry, just return true/false.
 			-NOTE:					All arguments (but 'idxFunc') may be a variable or a function (evaluated when creating the menu)
+
+		.newCheckMenuLast(boolFunc)
+			-boolFunc:				Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
+										values between 0 and 5.
+			-NOTE:					Shorthand for .newCheckMenu(menuName, entryTextA, void(0), boolFunc), where the entry is automatically
+										retrieved from the last one added to the menu.
 			
 		.newCondEntry({entryText: '', condFunc})
 			-condFunc:				Function called on .btn_up()
@@ -158,7 +165,7 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (bAddInvisibleIds) {entryText += invsId(true);} // At this point don't use other name than this!
 		entryArr.push({entryText, func, menuName, flags, bIsMenu: false, data});
-		return entryArr[entryArr.length -1];
+		return entryArr[entryArr.length - 1];
 	};
 	
 	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFun) => {
@@ -173,6 +180,11 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		if (mType === 'string' && !this.hasMenu(menuName)) {menuError({'function': 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFun}); throw 'There is no menu with such name';}
 		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
 		return true;
+	};
+	
+	this.newCheckMenuLast = (boolFun) => {
+		const lastEntry = entryArr [entryArr.length - 1];
+		return this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void(0), boolFun);
 	};
 	
 	this.newCondEntry = ({entryText = '', condFunc}) => {
