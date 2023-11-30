@@ -40,7 +40,6 @@ const FPL = {
 			playlist.meta.push({magic: fileMagic.join()});
 		}
 		const tracks = hexArr.map((s) => (s.startsWith('file://') ? s : null)).filter(Boolean);
-		subIdx = '\x00\x01\x00\x00\x00' // \x11
 		const tracksLen = tracks.length;
 		playlist.creator = 'foobar2000';
 		playlist.meta.push({playlistSize: tracksLen});
