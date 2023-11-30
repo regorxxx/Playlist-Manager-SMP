@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/23
+//30/11/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -9,6 +9,7 @@ include('helpers_xxx_tags.js');
 include('helpers_xxx_playlists.js');
 include('helpers_xxx_playlists_files_xspf.js');
 include('helpers_xxx_playlists_files_xsp.js');
+include('helpers_xxx_playlists_files_fpl.js');
 
 /* 
 	Global Variables 
@@ -46,6 +47,13 @@ const xspfCache = new Map(); // {PATH: JSPF playlist}
 // XSP cache
 // Not so slow than XSPF but doesn't hurt
 const xspCache = new Map(); // {PATH: JSP playlist}
+
+// FPL cache
+// Parser is too slow when retrieving tracks... so the object is cached for consecutive uses
+const fplCache = new Map(); // {PATH: FPL playlist}
+
+// XML Dom cache
+const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 
 // Query cache (Library)
 // Makes consecutive playlist loading by queries much faster (for ex. .xspf fuzzy matching)
