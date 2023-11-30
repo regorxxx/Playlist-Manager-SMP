@@ -1,0 +1,42 @@
+name: Create Package
+
+on:
+  workflow_dispatch:
+  push:
+  
+jobs:
+  # Build and attach package
+  package:
+    name: 'Build Package'
+    runs-on: windows-latest
+    
+    steps:
+      - uses: thaitype/actions-switch-case@v1
+        id: package
+        with:
+          default: '0'
+          conditionals-with-values: |
+            ${{ 'World-Map-SMP' == github.event.repository.name }} => '1'
+            ${{ 'Playlist-Manager-SMP' == github.event.repository.name }} => '2'
+            ${{ 'Not-a-Waveform-Seekbar-SMP' == github.event.repository.name }} => '3'
+            ${{ 'Timeline-SMP' == github.event.repository.name }} => '4'
+      - name: 'echo'
+        run: echo ${{ steps.package.outputs.match }}
+      - uses: actions/checkout@v4.1.1
+        if: ${{ steps.package.outputs.match != '0' }}
+      - name: 'Create package'
+        if: ${{ steps.package.outputs.match != '0' }}
+        run: ./_createPackage.bat ${{ steps.package.outputs.match }}
+      - name: 'Upload Artifact'
+        if: ${{ steps.package.outputs.match != '0' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: file
+          path: 'packages/*.zip'
+          retention-days: 1
+      - name: 'No package associated to repository'
+        if: ${{ steps.package.outputs.match == '0' }}
+        run: echo 'No package associated'
+      - name: 'Download the file (at artifacts) and extract the package'
+        if: ${{ steps.package.outputs.match != '0' }}
+        run: echo 'Download the file (at artifacts) and extract the package'
