@@ -15,7 +15,7 @@ on:
 jobs:
   # Create new release + Tag
   release:
-    name: "Create release"
+    name: 'Create release'
     runs-on: ubuntu-latest
     
     steps:
@@ -28,21 +28,21 @@ jobs:
       - uses: CSchoel/release-notes-from-changelog@v1.3.0
         with:
           version: ${{ inputs.tag }}
-      - name: "Create Release using GitHub CLI"
+      - name: 'Create Release using GitHub CLI'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           gh release create
           -F RELEASE.md
-          -t "${{ inputs.tag }} - ${{ inputs.title }}"
+          -t '${{ inputs.tag }} - ${{ inputs.title }}'
           ${{ inputs.tag }}
   # Attach assets
   mod:
-    name: "Attach SMP mod"
+    name: 'Attach SMP mod'
     runs-on: ubuntu-latest
     
     steps:
-      - name: "Get binaries"
+      - name: 'Get binaries'
         run: |
           curl -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
           -H 'Accept: application/vnd.github.v4.raw' \
@@ -50,35 +50,35 @@ jobs:
           -L https://api.github.com/repos/regorxxx/foobar2000-assets/contents/Spider%20Monkey%20Panel/foo_spider_monkey_panel-v1.6.1-mod.fb2k-component    
       - uses: AButler/upload-release-assets@v3.0
         with:
-          files: "foo_spider_monkey_panel-v1.6.1-mod.fb2k-component"
+          files: 'foo_spider_monkey_panel-v1.6.1-mod.fb2k-component'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-tag: ${{ inputs.tag }}
   # Build and attach package
   package:
-    name: "Attach Package"
+    name: 'Attach Package'
     runs-on: windows-latest
     
     steps:
       - uses: thaitype/actions-switch-case@v1
         id: switch-case
         with:
-          default: 0
+          default: '0'
           conditionals-with-values: |
-            ${{ 'World-Map-SMP' == github.event.repository.name }} => 1
-            ${{ 'Playlist-Manager-SMP' == github.event.repository.name }} => 2
-            ${{ 'Not-a-Waveform-Seekbar-SMP' == github.event.repository.name }} => 3
-            ${{ 'Timeline-SMP' == github.event.repository.name }} => 4
+            ${{ 'World-Map-SMP' == github.event.repository.name }} => '1'
+            ${{ 'Playlist-Manager-SMP' == github.event.repository.name }} => '2'
+            ${{ 'Not-a-Waveform-Seekbar-SMP' == github.event.repository.name }} => '3'
+            ${{ 'Timeline-SMP' == github.event.repository.name }} => '4'
       - uses: actions/checkout@v4.1.1
-        if: ${{ steps.switch-case.outputs.value != 0 }}
-      - name: "Create package"
-        if: ${{ steps.switch-case.outputs.value != 0 }}
-        run: ./_createPackage.bat ${{ steps.switch-case.outputs.value }}
+        if: ${{ steps.switch-case.outputs.match != '0' }}
+      - name: 'Create package'
+        if: ${{ steps.switch-case.outputs.match != '0'}}
+        run: ./_createPackage.bat ${{ steps.switch-case.outputs.match }}
       - uses: AButler/upload-release-assets@v3.0
-        if: ${{ steps.switch-case.outputs.value != 0 }}
+        if: ${{ steps.switch-case.outputs.match != '0' }}
         with:
-          files: "packages/*.zip"
+          files: 'packages/*.zip'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-tag: ${{ inputs.tag }}
-      - name: "No package associated to repository"
-        if: ${{ steps.switch-case.outputs.value == 0 }}
+      - name: 'No package associated to repository'
+        if: ${{ steps.switch-case.outputs.match == '0' }}
         run: echo 'No package associated'
