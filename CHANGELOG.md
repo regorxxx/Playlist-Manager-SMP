@@ -53,6 +53,7 @@
 - Playlist formats: .fpl format enhanced support. Tracks can now be read by path from .fpl files and playlist size calculated on startup (contrary to previous behavior which required loading of the file).
 - Playlists maintenance tools: added .fpl support, in particular: mixed paths, external paths, dead items, duplicates, size mismatch, duration mismatch and format errors.
 ### Changed
+- Playlist formats: optimization of .xsp and .xspf caching.
 - Playlists maintenance tools: optimization of all tools.
 ### Removed
 ### Fixed

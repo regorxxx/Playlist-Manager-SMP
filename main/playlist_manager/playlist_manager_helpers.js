@@ -230,8 +230,8 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 					limit = jPls.hasOwnProperty('limit') && jPls.limit ? jPls.limit : 0;
 					type = jPls.hasOwnProperty('type') && jPls.type ? jPls.type : '';
 				}
+				xmlDomCache.set(file, xmldom);
 			}
-			xmlDomCache.set(file, xmldom);
 		}
 		playlistArray[i] = new oPlaylist({
 			id: uuid,
