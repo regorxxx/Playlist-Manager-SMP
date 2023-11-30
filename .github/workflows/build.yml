@@ -1,4 +1,4 @@
-name: Create Package
+name: Package builds (automatic)
 
 on:
   workflow_dispatch:

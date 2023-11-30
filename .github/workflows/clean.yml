@@ -1,4 +1,4 @@
-name: Clean workflow runs
+name: Clean workflow runs (automatic)
 on:
   workflow_dispatch:
   schedule:
