@@ -179,6 +179,9 @@ Not properly following the installation instructions will result in scripts not 
 ## Documentation
 Full documentation notes can be found at the <a href="https://github.com/regorxxx/Playlist-Manager-SMP/raw/main/readmes/playlist_manager.pdf" target="_blank" class="image fit" type="application/pdf">PDF Manual.</a>
 
+## Nightly releases
+Automatic package [built from GitHub](https://nightly.link/regorxxx/Playlist-Manager-SMP/workflows/build/main/file.zip) (using the latest commit).
+
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg?include_prereleases
 [codacy_badge]: https://api.codacy.com/project/badge/Grade/329cf09cbffc46618a64d04e51f32011
