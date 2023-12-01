@@ -31,7 +31,7 @@ jobs:
         with:
           name: file
           path: 'packages/*.zip'
-          retention-days: 1
+          retention-days: 90
       - name: 'No package associated to repository'
         if: ${{ steps.package.outputs.match == '0' }}
         run: echo 'No package associated'
