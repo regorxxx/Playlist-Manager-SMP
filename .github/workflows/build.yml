@@ -11,7 +11,13 @@ jobs:
     runs-on: windows-latest
     
     steps:
-      - uses: thaitype/actions-switch-case@v1
+      - name: 'Debounce 5 minutes'
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: zachary95/github-actions-debounce@v0.1.0
+        with:
+          wait: 300
+      - name: 'Checkout'
+        uses: thaitype/actions-switch-case@v1
         id: package
         with:
           default: '0'
