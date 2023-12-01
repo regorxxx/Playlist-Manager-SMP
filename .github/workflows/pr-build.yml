@@ -1,0 +1,45 @@
+name: Pull Request builds (automatic)
+
+on:
+  pull_request:
+  
+jobs:
+  # Build and attach package
+  package:
+    name: 'Build Package'
+    runs-on: windows-latest
+    
+    steps:
+      - name: 'Debounce 5 minutes'
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: zachary95/github-actions-debounce@v0.1.0
+        with:
+          wait: 300
+      - name: 'Checkout'
+        uses: thaitype/actions-switch-case@v1
+        id: package
+        with:
+          default: '0'
+          conditionals-with-values: |
+            ${{ 'World-Map-SMP' == github.event.repository.name }} => '1'
+            ${{ 'Playlist-Manager-SMP' == github.event.repository.name }} => '2'
+            ${{ 'Not-a-Waveform-Seekbar-SMP' == github.event.repository.name }} => '3'
+            ${{ 'Timeline-SMP' == github.event.repository.name }} => '4'
+      - uses: actions/checkout@v4.1.1
+        if: ${{ steps.package.outputs.match != '0' }}
+      - name: 'Create package'
+        if: ${{ steps.package.outputs.match != '0' }}
+        run: ./_createPackage.bat ${{ steps.package.outputs.match }}
+      - name: 'Upload Artifact'
+        if: ${{ steps.package.outputs.match != '0' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: file
+          path: 'packages/*.zip'
+          retention-days: 90
+      - name: 'No package associated to repository'
+        if: ${{ steps.package.outputs.match == '0' }}
+        run: echo 'No package associated'
+      - name: 'Download the file (at artifacts) and extract the package'
+        if: ${{ steps.package.outputs.match != '0' }}
+        run: echo 'Download the file (at artifacts) and extract the package'
