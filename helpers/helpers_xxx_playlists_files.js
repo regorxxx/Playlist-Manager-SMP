@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/11/23
+//01/12/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -24,7 +24,7 @@ const playlistDescriptors = {
 	'.xspf':		{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf1e0', iconBg: null},
 	'.xsp':			{					isReadable: true,	isLoadable: true,	icon: '\uf0d0', iconBg: null},
 	'.strm':		{					isReadable: true,	isLoadable: true,	icon: '\uf0f6', iconBg: null},
-	'.fpl':			{										isLoadable: true,	icon: '\uf1c6', iconBg: null},
+	'.fpl':			{					isReadable: true,	isLoadable: true,	icon: '\uf1c6', iconBg: null},
 	// Abstract items
 	'.ui':			{															icon: '\uf26c', iconBg: null},
 	autoPlaylist:	{															icon: '\uf0e7', iconBg: '\uf15b'},
@@ -299,7 +299,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			// ---------------- XSPF
 			} else if (extension === '.xspf') {
 				const bCache = xspfCache.has(playlistPath);
-				const xmldom = bCache ? null : XSPF.XMLfromString(originalText);
+				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(originalText);
 				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom, false);
 				if (jspf.hasOwnProperty('playlist') && jspf.playlist && jspf.playlist.hasOwnProperty('track')) {bFound = true;} // Safety check
 				else {return false;} // Safety check
@@ -406,8 +406,9 @@ function getFilePathsFromPlaylist(playlistPath) {
 	}
 	if (_isFile(playlistPath)) { // TODO: skip blank lines ?
 		// Read original file
+		const bFpl = extension === '.fpl';
 		let originalText = _open(playlistPath);
-		if (typeof originalText !== 'undefined' && originalText.length) {
+		if (!bFpl && typeof originalText !== 'undefined' && originalText.length) {
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
 			if (codePage !== -1) {originalText = _open(playlistPath, codePage, true);}
@@ -432,7 +433,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 				}
 			} else if (extension === '.xspf') {
 				const bCache = xspfCache.has(playlistPath);
-				const xmldom = bCache ? null : XSPF.XMLfromString(originalText);
+				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(originalText);
 				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom);
 				if (!bCache) {xspfCache.set(playlistPath, jspf);}
 				const playlist = jspf.playlist;
@@ -447,6 +448,23 @@ function getFilePathsFromPlaylist(playlistPath) {
 						}
 						paths.push(path);
 					}
+				}
+			}
+		} else if (bFpl) {
+			const bCache = fplCache.has(playlistPath);
+			const jspf = bCache ? fplCache.get(playlistPath) : FPL.parseFile(file);
+			if (!bCache) {fplCache.set(playlistPath, jspf);}
+			const playlist = jspf.playlist;
+			const rows = playlist.track;
+			const rowsLength = rows.length;
+			for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
+				if (rows[i].hasOwnProperty('location') && rows[i].location && rows[i].location.length) {
+					let path = decodeURI(rows[i].location).replace('file:///','').replace(/\//g,'\\').replace(/%26/g,'&'); // file:///PATH/SUBPATH/...
+					if (rows[i].hasOwnProperty('meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
+						const metaSubSong = rows[i].meta.find((obj) => {return obj.hasOwnProperty('subSong');});
+						if (metaSubSong) {path +=  ',' + metaSubSong.subSong;}
+					}
+					paths.push(path);
 				}
 			}
 		}
@@ -580,7 +598,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				if (codePage !== -1) {playlistText = _open(playlistPath, codePage);}
 			} else {return;}
 		}
-		const xmldom = bCache ? null : XSP.XMLfromString(playlistText);
+		const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
 		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
 		if (!bCache) {xspCache.set(playlistPath, jsp);}
 		const query = XSP.getQuery(jsp, true);
@@ -683,7 +701,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const codePage = checkCodePage(playlistText, extension);
 				if (codePage !== -1) {playlistText = _open(playlistPath, codePage, true);}
 				const bCache = xspfCache.has(playlistPath);
-				const xmldom = bCache ? null : XSPF.XMLfromString(playlistText);
+				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(playlistText);
 				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom);
 				if (!bCache) {xspfCache.set(playlistPath, jspf);}
 				const playlist = jspf.playlist;
