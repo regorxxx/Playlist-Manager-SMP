@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/11/23
+//01/12/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -1401,7 +1401,7 @@ function findMixedPaths() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && !pls.extension === '.ui' && (!pls.hasOwnProperty('type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1431,7 +1431,7 @@ function findExternal() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!pls.hasOwnProperty('type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1479,7 +1479,7 @@ function findDead() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!pls.hasOwnProperty('type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1523,7 +1523,8 @@ function findDuplicates() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!pls.hasOwnProperty('type') || pls.type == 'songs') && !pls.isFolder);
+		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
 		playlists.forEach((playlist, i) => {
@@ -1550,7 +1551,7 @@ function findSizeMismatch() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && pls.extension !== '.fpl' && pls.extension !== '.ui' && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && pls.extension !== '.ui' && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1558,10 +1559,12 @@ function findSizeMismatch() {
 		playlists.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
+					const bFpl = playlist.extension === '.fpl';
 					const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
+					if (bFpl) {console.log(filePathsNum, playlist.path);}
 					let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 					let size;
-					if (text.length) {
+					if (!bFpl && typeof text !== 'undefined' && text.length) {
 						const codePage = checkCodePage(text, playlist.extension);
 						if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 						if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
@@ -1601,9 +1604,9 @@ function findSizeMismatch() {
 								}
 							}
 						}
-					}
+					} else if (bFpl) {size = playlist.size;} // Actual value
 					let bDone = false;
-					if (typeof text === 'undefined' || !text.length) {report.push(playlist.path + ' (blank)'); bDone = true;}
+					if ((typeof text === 'undefined' || !text.length) && !bFpl) {report.push(playlist.path + ' (blank)'); bDone = true;}
 					else if (typeof size === 'undefined') {report.push(playlist.path + ' (no size tag found)'); bDone = true;}
 					else if (filePathsNum !== size) {report.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')'); bDone = true;}
 					else if (playlist.extension === '.strm' && size > 1) {
@@ -1627,8 +1630,9 @@ function findDurationMismatch() {
 	const found = [];
 	const report = [];
 	return new Promise((resolve) => {
+		let bSave = false;
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && pls.extension !== '.fpl' && pls.extension !== '.ui' && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && pls.extension !== '.ui' && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1638,10 +1642,11 @@ function findDurationMismatch() {
 				setTimeout(() => {
 					const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
 					if (handleList) {
+						const bFpl = playlist.extension === '.fpl';
 						const calcDuration = handleList.CalcTotalDuration();
 						let text = _isFile(playlist.path) ? _open(playlist.path) : void(0);
 						let duration;
-						if (typeof text !== 'undefined' && text.length) {
+						if (!bFpl && typeof text !== 'undefined' && text.length) {
 							const codePage = checkCodePage(text, playlist.extension);
 							if (codePage !== -1) {text = _open(playlist.path, codePage, true);}
 							if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
@@ -1668,6 +1673,12 @@ function findDurationMismatch() {
 									}
 								}
 							}
+						} else if (bFpl) { // Cached value
+							duration = playlist.duration;
+							if (calcDuration !== duration) { // Also update value for future usage
+								playlist.duration = calcDuration;
+								bSave = true;
+							}
 						}
 						let bDone = false;
 						if (typeof duration === 'undefined') {report.push(playlist.path + ' (no duration tag found)'); bDone = true;}
@@ -1681,6 +1692,7 @@ function findDurationMismatch() {
 			}));
 		});
 		Promise.all(promises).then(() => {
+			if (bSave) {list.save();}
 			resolve({found, report});
 		});
 	});
@@ -1729,7 +1741,7 @@ function findSubSongs() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.fpl' && (!playlist.hasOwnProperty('type') || playlist.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!pls.hasOwnProperty('type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1799,7 +1811,6 @@ function findFormatErrors() {
 						}
 					} else if (playlist.extension === '.fpl') { // FPL not saved via 'Save playlist'
 						const jspf = fplCache.get(playlist.path) || FPL.parseFile(playlist.path);
-						console.log('hey', jspf.playlist.meta, jspf.playlist.meta[1].magic === FPL.MAGIC)
 						if (jspf.playlist.meta.some((m) => m.hasOwnProperty('magic') && m.magic !== FPL.MAGIC)) {
 							bDone = true;
 							errors.push('Non recognized magic number');
