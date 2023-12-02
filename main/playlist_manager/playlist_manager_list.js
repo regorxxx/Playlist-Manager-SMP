@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/11/23
+//01/12/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -4073,12 +4073,10 @@ function _list(x, y, w, h) {
 						if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
 							if (this.bFplLock) {item.isLocked = true;}
 							let fplPlaylist = this.dataFpl.find((pls) => {return pls.name === item.name;});
-							if (fplPlaylist) {
+							if (fplPlaylist) { // Size and author are read from file
 								item.category = fplPlaylist.category;
 								item.tags = fplPlaylist.tags;
-								item.size = fplPlaylist.size;
 								item.duration = fplPlaylist.duration;
-								item.author = fplPlaylist.author;
 								item.description = fplPlaylist.description;
 							}
 							if (!this.properties.bSetup[1]) {this.fplPopup();}
