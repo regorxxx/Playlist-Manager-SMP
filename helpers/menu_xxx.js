@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/11/23
+//02/12/23
 
 /* 
 	Contextual Menu helper v2.6.0
@@ -50,11 +50,16 @@
 									For Boleean checks of a single entry, just return true/false.
 			-NOTE:					All arguments (but 'idxFunc') may be a variable or a function (evaluated when creating the menu)
 
-		.newCheckMenuLast(boolFunc)
-			-boolFunc:				Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
+		.newCheckMenuLast(func, options = [])
+			-func:					Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
 										values between 0 and 5.
-			-NOTE:					Shorthand for .newCheckMenu(menuName, entryTextA, void(0), boolFunc), where the entry is automatically
-										retrieved from the last one added to the menu.
+									For Boleean checks of a single entry, just return true/false
+			-options:				When provided, its lenght is used to consider the last n entries. In case it's not provided,
+										length is one or zero, only a single entry is considered and the check is boolean.
+			-NOTE Idx check:		Shorthand for .newCheckMenu(menuName, entryTextA, void(0), boolFunc), where the entry is 
+										automatically retrieved from the last one added to the menu.
+			-NOTE Boolean check:	Shorthand for .newCheckMenu(menuName, options[0], options[options.length - 1], idxFunc), 
+										where the entries are automatically retrieved from the last ones added to the menu.
 			
 		.newCondEntry({entryText: '', condFunc})
 			-condFunc:				Function called on .btn_up()
@@ -168,7 +173,7 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		return entryArr[entryArr.length - 1];
 	};
 	
-	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFun) => {
+	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFunc) => {
 		const mType = typeof menuName, eAType = typeof entryTextA, eBType = typeof entryTextB;
 		if (eTypeToStr.indexOf(mType) !== -1) {menuName = menuName.toString();}
 		if (eTypeToStr.indexOf(eAType) !== -1) {entryTextA = entryTextA.toString();}
@@ -177,14 +182,18 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		if (eAType === 'string' && entryTextA.indexOf('&') !== - 1) {entryTextA = entryTextA.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (eBType === 'string' && entryTextB.indexOf('&') !== - 1) {entryTextB = entryTextB.replace(/&&/g,'&').replace(/&/g,'&&');}
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) {menuName = menuName.replace(/&&/g,'&').replace(/&/g,'&&');}
-		if (mType === 'string' && !this.hasMenu(menuName)) {menuError({'function': 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFun}); throw 'There is no menu with such name';}
-		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFun});
+		if (mType === 'string' && !this.hasMenu(menuName)) {menuError({'function': 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc}); throw 'There is no menu with such name';}
+		checkMenuArr.push({menuName, entryTextA, entryTextB, idxFunc});
 		return true;
 	};
 	
-	this.newCheckMenuLast = (boolFun) => {
-		const lastEntry = entryArr [entryArr.length - 1];
-		return this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void(0), boolFun);
+	this.newCheckMenuLast = (func, options = []) => {
+		const lastEntry = entryArr[entryArr.length - 1];
+		const len = options ? (Array.isArray(options) ? options.length : Number(options)) : 0;
+		return (len > 1
+			? this.newCheckMenu(lastEntry.menuName, entryArr[entryArr.length - options.length].entryText, lastEntry.entryText, func) /* idx check */
+			: this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void(0), func) /* boolean check */
+		);
 	};
 	
 	this.newCondEntry = ({entryText = '', condFunc}) => {
@@ -393,7 +402,7 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 		});
 		// Init checks
 		checkMenuArr.forEach((check) => {
-			this.checkMenu(check.menuName, check.entryTextA, check.entryTextB, check.idxFun);
+			this.checkMenu(check.menuName, check.entryTextA, check.entryTextB, check.idxFunc);
 		});
 		this.getCheckMenu().forEach( (func) => {
 			func();
