@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/11/23
+//01/12/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
@@ -1609,7 +1609,7 @@ function createMenuRight() {
 				if (!pop.isEnabled()) {pop.enable(true, 'Checking...', 'Checking playlist duration mismatch...\nPanel will be disabled during the process.');}
 				findDurationMismatch().then(({found, report}) => {
 					if (found.length) {list.filter({plsState: found});}
-					fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+					fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (report.length ? report.join('\n') : 'None.') + (list.itemsFpl && report.length ? '\n\nAll .fpl playlists cached duration tags have also been updated.' : ''), window.Name);
 					pop.disable(true);
 				});
 			}});
