@@ -51,13 +51,16 @@
 ## [Unreleased][]
 ### Added
 - Playlist formats: .fpl format enhanced support. Tracks can now be read by path from .fpl files and playlist size calculated on startup (contrary to previous behavior which required loading of the file).
-- Playlists maintenance tools: added .fpl support, in particular: mixed paths, external paths, dead items, duplicates, size mismatch, duration mismatch and format errors.
+- Playlists maintenance tools: added .fpl support, in particular: mixed paths, external items, dead items, duplicates, size mismatch, duration mismatch and format errors.
 ### Changed
 - Playlist formats: optimization of .xsp and .xspf caching.
+- Playlist formats: .fpl playlists update the duration tag whenever duration mismatch maintenance tool is used (no need to load the playlist anymore).
 - Playlists maintenance tools: optimization of all tools.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - Playlists maintenance tools: folders are now skipped (instead of being logged as errors on console).
+- Playlists maintenance tools: multiple fixes to maintenance tools and format compatibility.
 
 ## [0.11.0] - 2023-11-28
 ### Added
