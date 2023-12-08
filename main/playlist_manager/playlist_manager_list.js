@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/12/23
+//08/12/23
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
@@ -6059,7 +6059,7 @@ function _list(x, y, w, h) {
 				const showMenus = JSON.parse(this.properties.showMenus[1]);
 				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...' + (
 					showMenus['Statistics mode'] ?
-						'\n----------------------------------------------\n' + '(Shift + L. Click to switch Statistics mode)'
+						'\n----------------------------------------------\n' + '(Shift + L. Click to switch to Statistics mode)'
 						: ''
 					);
 			}, func: (x, y, mask, parent) => {
