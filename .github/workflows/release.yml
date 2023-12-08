@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag: (vX.X.X)'
+        description: 'Release tag: (X.X.X)'
         required: true
         type: string
       title:
@@ -25,7 +25,14 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: ${{ inputs.tag }}
-      - uses: CSchoel/release-notes-from-changelog@v1.3.0
+          tag_prefix: 'v'
+      - name: 'Create readme header'
+        shell: bash
+        working-directory: '.'
+        run: |
+          cp .github/RELEASE_HEAD.md RELEASE_HEAD.md
+      - name: 'Create release notes'
+        uses: CSchoel/release-notes-from-changelog@v1.3.0
         with:
           version: ${{ inputs.tag }}
       - name: 'Create Release using GitHub CLI'
@@ -33,11 +40,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           gh release create
+          --verify-tag
+          --latest
           -F RELEASE.md
-          -t '${{ inputs.tag }} - ${{ inputs.title }}'
-          ${{ inputs.tag }}
+          -t 'v${{ inputs.tag }} - ${{ inputs.title }}'
+          'v${{ inputs.tag }}'
   # Attach assets
   mod:
+    needs: release
     name: 'Attach SMP mod'
     runs-on: ubuntu-latest
     
@@ -52,9 +62,10 @@ jobs:
         with:
           files: 'foo_spider_monkey_panel-v1.6.1-mod.fb2k-component'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-tag: ${{ inputs.tag }}
+          release-tag: 'v${{ inputs.tag }}'
   # Build and attach package
   package:
+    needs: release
     name: 'Attach Package'
     runs-on: windows-latest
     
@@ -78,7 +89,7 @@ jobs:
         with:
           files: 'packages/*.zip'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-tag: ${{ inputs.tag }}
+          release-tag: 'v${{ inputs.tag }}'
       - name: 'No package associated to repository'
         if: ${{ steps.switch-case.outputs.match == '0' }}
         run: echo 'No package associated'
