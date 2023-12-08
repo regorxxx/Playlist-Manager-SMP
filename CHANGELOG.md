@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.12.0](#0120---2023-12-08)
 - [0.11.0](#0110---2023-11-28)
 - [0.10.0](#0100---2023-11-24)
 - [0.9.0](#090---2023-11-15)
@@ -49,6 +50,13 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+
+## [0.12.0] - 2023-12-08
 ### Added
 - Playlist formats: .fpl format enhanced support. Tracks can now be read by path from .fpl files and playlist size calculated on startup (contrary to previous behavior which required loading of the file).
 - Playlists maintenance tools: added .fpl support, in particular: mixed paths, external items, dead items, duplicates, size mismatch, duration mismatch and format errors.
@@ -1029,7 +1037,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.8.0...v0.9.0
