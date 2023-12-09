@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.12.1](#0121---2023-12-09)
 - [0.12.0](#0120---2023-12-08)
 - [0.11.0](#0110---2023-11-28)
 - [0.10.0](#0100---2023-11-24)
@@ -55,6 +56,14 @@
 ### Removed
 ### Fixed
 
+## [0.12.1] - 2023-12-09
+### Added
+### Changed
+- Helpers: updated helpers.
+### Removed
+### Fixed
+- Helpers: added missing helpers (namethatcolor) which made the script crash on init.
+- Package: update package builder with missing .fpl playlist helper.
 
 ## [0.12.0] - 2023-12-08
 ### Added
@@ -1037,7 +1046,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.9.0...v0.10.0
