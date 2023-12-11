@@ -352,11 +352,13 @@ CALL :copy_file helpers\helpers_xxx_web.js
 CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 REM helpers external
-CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\audiowaveform
+CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
 CALL :copy_folder helpers-external\namethatcolor
+CALL :delete_file helpers-external\chroma.js\chroma.min.js
 REM package info, zip and report
 IF NOT %hasErrors% == true (
 	CALL :create_package_info
