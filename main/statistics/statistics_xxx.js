@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/23
+//10/12/23
 
 include('statistics_xxx_helper.js');
 
@@ -16,7 +16,7 @@ function _chart({
 				margin = {/* left, right, top, bottom */}, 
 				buttons = {/* xScroll , settings, display, zoom, custom */},
 				callbacks = {point: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, focus: {/* onMouseWwheel, onRbtnUp */}, settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, display: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */}, custom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */}, config: {/* change, backgroundColor */}},
-				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true */},
+				configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true , maxSliceOnDataChange: 100 */},
 				x = 0,
 				y = 0,
 				w = window.Width,
@@ -1677,9 +1677,9 @@ function _chart({
 	this.changeConfig = ({data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, margin, x, y, w, h, title, configuration, gFont, bPaint = true, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null}) => {
 		let bCheckColors = false;
 		if (gFont) {this.gFont = gFont;}
-		if (this.data && this.data.length && (this.dataManipulation.slice[0] !== 0 || this.dataManipulation.slice[1] !== Infinity)) {
-			if (data && data.length !== this.data.length || dataAsync) {
-				this.dataManipulation.slice = [0, Infinity]; // Draw all data on data type change
+		if (this.data && this.data.length) {
+			if (data && data !== this.data || dataAsync) {
+				this.dataManipulation.slice = [0,  Math.max(this.configuration.maxSliceOnDataChange, 0)]; // Draw all data on data type change
 			}
 		}
 		if (data) {this.data = data; this.dataDraw = data; this.series = data.length;}
@@ -1952,6 +1952,11 @@ function _chart({
 		}
 		// Fix stringify/parse Infinity becoming null
 		if (this.dataManipulation.slice && this.dataManipulation.slice[1] === null) {this.dataManipulation.slice[1] = Infinity;}
+		if (this.configuration.maxSliceOnDataChange === null) {this.configuration.maxSliceOnDataChange = Infinity;}
+		if (this.configuration.maxSliceOnDataChange <= 0) {
+			console.log('Statistics: max slice on data change ' + _p(this.configuration.maxSliceOnDataChange) + ' is equal or lower than zero.');
+			bPass = false;
+		}
 		return bPass;
 	}
 	
@@ -2063,7 +2068,8 @@ function _chart({
 			bPopupBackground: false, 
 			bProfile: false, 
 			bSlicePerKey: true, 
-			bDynColor: true, bDynColorBW: true
+			bDynColor: true, bDynColorBW: true,
+			maxSliceOnDataChange: 50,
 		};
 		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
 		this.tooltipText = '';

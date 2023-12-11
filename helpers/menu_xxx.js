@@ -47,14 +47,14 @@
 			-entryTextB:			To entry B (idx gets calculated automatically) -for boolean checks, omit this arg-
 			-idxFunc:				Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
 										values between 0 and 5.
-									For Boleean checks of a single entry, just return true/false.
+									For Boolean checks of a single entry, just return true/false.
 			-NOTE:					All arguments (but 'idxFunc') may be a variable or a function (evaluated when creating the menu)
 
 		.newCheckMenuLast(func, options = [])
 			-func:					Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, idxFunc must return
 										values between 0 and 5.
-									For Boleean checks of a single entry, just return true/false
-			-options:				When provided, its lenght is used to consider the last n entries. In case it's not provided,
+									For Boolean checks of a single entry, just return true/false
+			-options:				When provided, its length is used to consider the last n entries. In case it's not provided,
 										length is one or zero, only a single entry is considered and the check is boolean.
 			-NOTE Idx check:		Shorthand for .newCheckMenu(menuName, entryTextA, void(0), boolFunc), where the entry is 
 										automatically retrieved from the last one added to the menu.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/23
+//10/12/23
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
@@ -14,6 +14,12 @@ const Input = Object.seal(Object.freeze({
 		} else {
 			return (this.data.last === this.data.lastInput);
 		}
+	},
+	get lastInput() {
+		return this.data.lastInput;
+	},
+	get previousInput() {
+		return this.data.last;
 	},
 	// Input methods
 	json: function (type, oldVal, message, title, example, checks = [], bFilterFalse = false) {
@@ -158,8 +164,12 @@ const Input = Object.seal(Object.freeze({
 					break;
 				}
 			}
-			if (checks && checks.length  && !checks.some((check) => {return check.call(this, newVal);})) {
-				throw new Error('Invalid checks');
+			if (checks) {
+				if (!Array.isArray(checks)) {
+					throw new Error('Invalid checks argument');
+				} else if (checks.length && !checks.some((check) => {return check.call(this, newVal);})) {
+					throw new Error('Invalid checks');
+				}
 			}
 		}
 		catch (e) {
@@ -167,6 +177,8 @@ const Input = Object.seal(Object.freeze({
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
 			} else if (e.message === 'Empty') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be a non zero length string.\n\nExample:\n' + example, title);
+			} else if (e.message === 'Invalid checks argument') {
+				fb.ShowPopupMessage('Checks is not an array:\n' + checks, title);
 			} else if (e.message === 'Invalid checks') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
