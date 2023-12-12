@@ -331,12 +331,17 @@ CALL :check_root
 CALL :copy_main seekbar.js
 REM main
 CALL :copy_folder main\seekbar
+CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
+CALL :copy_file main\window\window_xxx_helpers.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
 CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
 CALL :copy_file helpers\helpers_xxx_console.js
+CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
