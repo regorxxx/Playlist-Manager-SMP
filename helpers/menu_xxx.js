@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/12/23
+//12/12/23
 
 /* 
 	Contextual Menu helper v2.6.0
@@ -577,18 +577,22 @@ function _menu({bInit = true, bSupressDefaultMenu = true, properties = null, iMa
 
 // Adds a created menu to an already existing object (which is supposed to have a this.trace function
 // Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
-function _attachedMenu({rMenu = null, lMenu = null, popup = null} = {}) {
+function _attachedMenu({
+	rMenu = null,
+	lMenu = null,
+	popup = null
+} = {}) {
 	this.rMmenu = rMenu;
 	this.lMmenu = lMenu;
-	this.rbtn_up = (x,y) => {
+	this.rbtn_up = (x, y, ...rest) => {
 		if (this.trace(x,y) && rMenu) {
-			return popup && popup.isEnabled() ? false : this.rMmenu().btn_up(x, y);
+			return popup && popup.isEnabled() ? false : this.rMmenu().btn_up(x, y, ...rest);
 		}
 		return false;
 	}
-	this.lbtn_up = (x,y) => {
+	this.lbtn_up = (x, y, ...rest) => {
 		if (this.trace(x,y) && lMenu) {
-			return popup && popup.isEnabled() ? false : this.lMmenu().btn_up(x, y);
+			return popup && popup.isEnabled() ? false : this.lMmenu().btn_up(x, y, ...rest);
 		}
 		return false;
 	}

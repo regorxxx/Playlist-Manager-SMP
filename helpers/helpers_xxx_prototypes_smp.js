@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/23
+//11/12/23
 
 /* 
 	FbTitleFormat
@@ -64,22 +64,22 @@ Object.defineProperty(fb, 'tfCache', {
 	gr
 */
 // Augment gr.DrawRoundRect() with error handling
-function extendGR (gr , options = {DrawRoundRect: true, FillRoundRect: true}) {
+function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repaint: true}) {
 	if (!gr.Extended) {gr.Extended = options;}
 	else {Object.keys(options).forEach((opt) => {if (options[opt]) {gr.Extended[opt] = true;}});}
 	if (options.DrawRoundRect) {
-		const old = gr.DrawRoundRect;
+		const old = gr.DrawRoundRect.bind(gr);
 		gr.DrawRoundRect = function DrawRoundRect() { // x, y, w, h, arc_width, arc_height, line_width, colour
 			let that;
 			try {
-				that = old.apply(gr, [...arguments]);
+				that = old(...arguments);
 			} catch (e) {
 				let bRetry = true;
 				const newArgs = [...arguments];
 				newArgs[4] = newArgs[3] / 2 - Number.EPSILON;
 				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
-					that = old.apply(gr,[...arguments]);
+					that = old(...arguments);
 				} catch(e) {bRetry = false;}
 				if (typeof doOnce !== 'undefined') {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))(
@@ -99,18 +99,18 @@ function extendGR (gr , options = {DrawRoundRect: true, FillRoundRect: true}) {
 		}
 	}
 	if (options.FillRoundRect) {
-		const old = gr.FillRoundRect;
+		const old = gr.FillRoundRect.bind(gr);
 		gr.FillRoundRect = function FillRoundRect() { // x, y, w, h, arc_width, arc_height, colour
 			let that;
 			try {
-				that = old.apply(gr, [...arguments]);
+				that = old(...arguments);
 			} catch (e) {
 				let bRetry = true;
 				const newArgs = [...arguments];
 				newArgs[4] = newArgs[3] / 2 - Number.EPSILON;
 				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
-					that = old.apply(gr,[...arguments]);
+					that = old(...arguments);
 				} catch(e) {bRetry = false;}
 				if (typeof doOnce !== 'undefined') {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))(
@@ -128,6 +128,18 @@ function extendGR (gr , options = {DrawRoundRect: true, FillRoundRect: true}) {
 			}
 			return that;
 		}
+	}
+	if (options.Repaint && !window.debugPainting) {
+		window.debugPainting = true;
+		const old = window.RepaintRect.bind(window);
+		window.RepaintRect = (function() {
+			if (this.debugPainting) {
+				this.debugPaintingRects.push([...arguments].slice(0, 4));
+				this.Repaint();
+			} else {
+				old(...arguments);
+			}
+		}).bind(window);
 	}
 }
 
@@ -261,3 +273,33 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 		return true;
 	}
 };
+
+/*
+	Paint
+*/
+
+// Add caching
+Object.defineProperty(window, 'debugPainting', {
+	enumerable: true,
+	configurable: false,
+	writable: true,
+	value: false
+});
+Object.defineProperty(window, 'debugPaintingRects', {
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: []
+});
+Object.defineProperty(window, 'drawDebugRectAreas', {
+	enumerable: false,
+	configurable: false,
+	writable: false,
+	value: (function drawDebugRectAreas(gr, px = 2, color = 1694433280) { // Red 90%
+		if (!this.debugPaintingRects.length) {return;}
+		try {
+			this.debugPaintingRects.forEach((coords) => gr.DrawRect(...coords, px, color));
+			this.debugPaintingRects.length = 0;
+		} catch (e) {}
+	}).bind(window)
+});

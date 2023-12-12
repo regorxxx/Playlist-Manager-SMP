@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/11/23
+//12/12/23
 
 /* 
 	Global tags, queries, RegExp
@@ -150,6 +150,7 @@ const globFonts = {
 	button: {name: 'Segoe UI', size: 12},
 	buttonIcon: {name: 'FontAwesome', size: 12},
 	standard: {name: 'Segoe UI', size: 10},
+	standardSmall: {name: 'Segoe UI', size: 8},
 	standardMedium: {name: 'Segoe UI', size: 12},
 	standardBig: {name: 'Segoe UI', size: 15}
 };

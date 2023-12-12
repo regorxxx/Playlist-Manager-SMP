@@ -123,7 +123,7 @@ function themedButton(
 	};
 
 	this.draw = function (gr, bLast = false) {
-		extendGR(gr); // helpers_xxx_prototypes_smp.js
+		extendGR(gr, {DrawRoundRect: true, FillRoundRect: true}); // helpers_xxx_prototypes_smp.js
 		// Draw?
 		if (this.state === buttonStates.hide) {return;}
 		const bDrawBackground = buttonsPanel.config.partAndStateID === 1;

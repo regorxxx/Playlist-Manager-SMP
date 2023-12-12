@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/12/23
+//12/12/23
 
 include('statistics_xxx_helper.js');
 
@@ -817,8 +817,8 @@ function _chart({
 		this.pop.paint(gr);
 	};
 	
-	this.repaint = () => {
-		window.RepaintRect(this.x, this.y, this.x + this.w, this.y + this.h);
+	this.repaint = (x = this.x, y = this.y, w = x + this.w, h = y + this.h, bForce) => {
+		window.RepaintRect(x, y, w, h, bForce);
 	}
 	
 	/*
@@ -865,10 +865,27 @@ function _chart({
 		Callbacks
 	*/
 	
-	this.distanceToPoint = (x, y, point) => {
+	this.sizePoint = (point /* pointCoords */) => {
 		switch (this.graph.type) {
 			case 'doughnut':
-			case 'pie':
+			case 'pie': {
+				const r = point.r2;
+				const bToLeft = point.alpha1 > Math.PI / 2 && point.alpha1 <  Math.PI * 3 / 2 || point.alpha2 > Math.PI / 2 && point.alpha2 <  Math.PI * 3 / 2;
+				const x = point.c.x + (bToLeft ? -1 : 0) * point.r2;
+				const y = point.c.y;
+				return {x, y, w: r};
+			}
+			default: {
+				return {x: point.x, y: point.y, w: point.w, h: point.h}; 
+			}
+		}
+		return this.w;
+	};
+	
+	this.distanceToPoint = (x, y, point /* pointCoords */) => {
+		switch (this.graph.type) {
+			case 'doughnut':
+			case 'pie': {
 				const xc = x - point.c.x;
 				const yc = y - point.c.y;
 				const r = (xc**2 + yc**2)**(1/2);
@@ -880,7 +897,7 @@ function _chart({
 				const distPhi = phi >= point.alpha1 && phi <= point.alpha2 ? 0 : Math.min(Math.abs(phi - point.alpha1), Math.abs(phi - point.alpha2));
 				const distR = r >= point.r1 && r <= point.r2 ? 0 : Math.min(Math.abs(r - point.r1), Math.abs(r - point.r2));
 				return [distPhi, distR];
-				break;
+			}
 			default: {
 				const top = point.y + point.h + (this.graph.type === 'timeline' ? point.h + this.axis.x.width : 0);
 				const distX = x >= point.x && x <= point.x + point.w ? 0 : Math.min(Math.abs(x - point.x), Math.abs(x - point.x - point.w));
@@ -998,11 +1015,29 @@ function _chart({
 					} else if (this.customBtn.hover !== bHover) {bPaint = true;}
 				}
 				const [serie, idx] = this.tracePoint(x, y, true);
+				const bPoint = serie !== -1 && idx !== -1;
 				bPaint = bPaint || this.currPoint[0] !== serie || this.currPoint[1] !== idx;
-				if (bPaint) {this.repaint();}
+				if (bPaint) {
+					let xPoint = 0;
+					let wPoint = this.width;
+					// Repaint around current point
+					if (bPoint) {
+						const coords = this.sizePoint(this.dataCoords[serie][idx]);
+						xPoint = coords.x - coords.w * 0.25;
+						wPoint = coords.w * 1.5;
+					}
+					this.repaint(xPoint, void(0), wPoint, void(0));
+					// Repaint around old point
+					if (bPoint && this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+						const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]]);
+						xPoint = coords.x - coords.w * 0.25;
+						wPoint = coords.w * 1.5;
+						this.repaint(xPoint, void(0), wPoint, void(0));
+					}
+				}
 				if (!bHand && !ttText) {
 					this.currPoint = [serie, idx];
-					if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+					if (bPoint) {
 						bHand = true;
 						const serieData = this.dataDraw[serie];
 						const point = serieData[idx];
@@ -1030,8 +1065,15 @@ function _chart({
 	this.leavePoints = (cleanNear = true) => {
 		if (cleanNear) {this.nearPoint = [-1, -1];}
 		if (this.currPoint[0] !== -1 || this.currPoint[1] !== -1) {
+			let xPoint = 0;
+			let wPoint = this.width;
+			if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+				const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]]);
+				xPoint = coords.x - coords.w * 0.25;
+				wPoint = coords.w * 1.5;
+			}
 			this.currPoint = [-1, -1];
-			this.repaint();
+			this.repaint(xPoint, void(0), wPoint, void(0));
 			return true;
 		}
 		return false;
