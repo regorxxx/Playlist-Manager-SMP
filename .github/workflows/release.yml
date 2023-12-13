@@ -23,7 +23,7 @@ jobs:
       - name: Bump version and push tag
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN}}
           custom_tag: ${{ inputs.tag }}
           tag_prefix: 'v'
       - name: 'Create readme header'
@@ -37,8 +37,8 @@ jobs:
           version: ${{ inputs.tag }}
       - name: 'Create Release using GitHub CLI'
         env:
-          # Expires every year
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          # Expires every year, use bot as fallback
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: >
           gh release create
           --verify-tag
@@ -62,7 +62,7 @@ jobs:
       - uses: AButler/upload-release-assets@v3.0
         with:
           files: 'foo_spider_monkey_panel-v1.6.1-mod.fb2k-component'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           release-tag: 'v${{ inputs.tag }}'
   # Build and attach package
   package:
@@ -89,7 +89,7 @@ jobs:
         if: ${{ steps.switch-case.outputs.match != '0' }}
         with:
           files: 'packages/*.zip'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           release-tag: 'v${{ inputs.tag }}'
       - name: 'No package associated to repository'
         if: ${{ steps.switch-case.outputs.match == '0' }}
