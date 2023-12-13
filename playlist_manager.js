@@ -668,6 +668,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_paint', (gr) => {
+		// extendGR(gr, {Repaint: true}); // helpers_xxx_prototypes_smp.js
 		panel.paint(gr);
 		if (stats.bEnabled) {return;}
 		if (panel.imageBackground.bTint) {
@@ -689,6 +690,7 @@ if (!list.properties.bSetup[1]) {
 			}
 		}
 		pop.paint(gr);
+		if (window.debugPainting) {window.drawDebugRectAreas(gr);}
 	});
 
 	addEventListener('on_size', () => {
