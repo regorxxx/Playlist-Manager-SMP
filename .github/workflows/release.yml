@@ -37,7 +37,8 @@ jobs:
           version: ${{ inputs.tag }}
       - name: 'Create Release using GitHub CLI'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Expires every year
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: >
           gh release create
           --verify-tag
