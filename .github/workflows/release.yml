@@ -13,19 +13,80 @@ on:
         type: string
 
 jobs:
-  # Create new release + Tag
-  release:
-    name: 'Create release'
+  # Check signing key
+  check-key:
+    name: 'Check key'
     runs-on: ubuntu-latest
-    
+    outputs:
+      exists: ${{ steps.key-check.outputs.exists }}
+    steps:
+      - name: Check for signing key availability
+        id: key-check
+        shell: bash
+        run: |
+          if [ "${{ secrets.GPG_PRIVATE_KEY }}" != '' ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT;
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT;
+          fi
+      - name: Result
+        run: echo "Key found:" ${{ steps.key-check.outputs.exists }}
+  # Bump version
+  update-version:
+    needs: [check-key]
+    name: 'Bump version'
+    runs-on: ubuntu-latest
+    outputs:
+      commit_hash: ${{ steps.commit-and-push.outputs.commit_hash }}
+
     steps:
       - uses: actions/checkout@v4.1.1
+      - name: Write version to file
+        uses: "DamianReeves/write-file-action@master"
+        with:
+          path: VERSION
+          write-mode: overwrite
+          contents: v${{ inputs.tag }}
+      - name: Import GPG key
+        if: ${{ needs.check-key.outputs.exists == 'true' }}
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+      - name: Commit & Push
+        id: commit-and-push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Bump version by ${{ github.workflow}}
+          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+          commit_user_name: ${{ github.actor }}
+  # Create new release + Tag
+  release:
+    needs: [update-version,check-key]
+    name: 'Create release'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4.1.1
+        with:
+          ref: ${{ needs.update-version.outputs.commit_hash }}
+      - name: Import GPG key
+        if: ${{ needs.check-key.outputs.exists == 'true' }}
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
       - name: Bump version and push tag
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN}}
           custom_tag: ${{ inputs.tag }}
           tag_prefix: 'v'
+          commit_sha: ${{ needs.update-version.outputs.commit_hash }}
       - name: 'Create readme header'
         shell: bash
         working-directory: '.'
@@ -51,14 +112,14 @@ jobs:
     needs: release
     name: 'Attach SMP mod'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 'Get binaries'
         run: |
           curl -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
           -H 'Accept: application/vnd.github.v4.raw' \
           -O \
-          -L https://api.github.com/repos/regorxxx/foobar2000-assets/contents/Spider%20Monkey%20Panel/foo_spider_monkey_panel-v1.6.1-mod.fb2k-component    
+          -L https://api.github.com/repos/regorxxx/foobar2000-assets/contents/Spider%20Monkey%20Panel/foo_spider_monkey_panel-v1.6.1-mod.fb2k-component
       - uses: AButler/upload-release-assets@v3.0
         with:
           files: 'foo_spider_monkey_panel-v1.6.1-mod.fb2k-component'
@@ -69,7 +130,7 @@ jobs:
     needs: release
     name: 'Attach Package'
     runs-on: windows-latest
-    
+
     steps:
       - uses: thaitype/actions-switch-case@v1
         id: switch-case
