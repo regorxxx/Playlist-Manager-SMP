@@ -1,18 +1,28 @@
 ﻿'use strict';
-//01/12/23
+//17/12/23
+
+/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
+/* global globQuery:readable, iStepsLibrary:readable, iDelayLibraryPLM:readable */
 include('helpers_xxx_prototypes.js');
+/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable */
 include('helpers_xxx_file.js');
+/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable */
 include('helpers_xxx_tags.js');
+/* global checkQuery:readable, getSortObj:readable, getTagsValuesV4:readable */
 include('helpers_xxx_playlists.js');
+/* global getHandleFromUIPlaylists:readable */
 include('helpers_xxx_playlists_files_xspf.js');
+/* global XSPF:readable*/
 include('helpers_xxx_playlists_files_xsp.js');
+/* global XSP:readable*/
 include('helpers_xxx_playlists_files_fpl.js');
+/* global FPL:readable*/
 
-/* 
-	Global Variables 
+/*
+	Global Variables
 */
 
 // Playlists descriptors
@@ -62,8 +72,8 @@ const queryCache = new Map(); // {Query: handleList}
 // Path TitleFormat to compare tracks against library
 const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($get(path)),iso),\',\'%SUBSONG%,)';
 
-/* 
-	Playlist file manipulation 
+/*
+	Playlist file manipulation
 */
 
 //	For XSP playlists use this:
@@ -123,7 +133,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			} else { //  Else empty playlist
 				playlistText[8] += '0'; // Add number of tracks to size
 				playlistText[9] += '0'; // Add time to duration
-			} 
+			}
 		// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			// Header text
@@ -153,7 +163,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 				playlistText.push('NumberOfEntries=' + itemsCount); // Add number of tracks to size footer
 			} else { //  Else empty playlist footer
 				playlistText.push('NumberOfEntries=0');
-			} 
+			}
 			// End of Footer
 			playlistText.push('Version=2');
 		// ---------------- XSPF
@@ -193,7 +203,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 					totalDuration += Math.round(Number(tags[4][i][0])); // In s
 					const location = [
 						relPath.length && !_isLink(tags[5][i][0])
-							? getRelPath(tags[5][i][0], relPathSplit) 
+							? getRelPath(tags[5][i][0], relPathSplit)
 							: tags[5][i][0]
 					].map((path) => {
 						return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
@@ -359,7 +369,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			const bRel = relPath.length ? true : false;
 			let trackPath = '';
 			let pre = '' , post = '';
-			newTrackText = newTrackText.map((item, i) => { // Encode file paths as URI
+			newTrackText = newTrackText.map((item) => { // Encode file paths as URI
 				[pre, trackPath , post] = item.split(/<location>|<\/location>/);
 				trackPath = bRel && !_isLink(trackPath) ? getRelPath(trackPath, relPathSplit) : trackPath; // Relative path conversion
 				return pre + '<location>file:///' + encodeURI(trackPath.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26')) + '</location>' + post;
@@ -419,7 +429,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 					if (!originalText[j].startsWith('#')) { // Spaces are not allowed as well as black lines
 						let line = originalText[j].trim();
 						if (line.length) {paths.push(line.replace(/\//g,'\\'));} // PATH
-					} 
+					}
 				}
 			} else if (extension === '.pls') {
 				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
@@ -452,7 +462,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 			}
 		} else if (bFpl) {
 			const bCache = fplCache.has(playlistPath);
-			const jspf = bCache ? fplCache.get(playlistPath) : FPL.parseFile(file);
+			const jspf = bCache ? fplCache.get(playlistPath) : FPL.parseFile(playlistPath);
 			if (!bCache) {fplCache.set(playlistPath, jspf);}
 			const playlist = jspf.playlist;
 			const rows = playlist.track;
@@ -570,7 +580,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 				if (extension === '.xspf') {
 					// plman.AddLocations(playlistIndex, pathsNotFound);
 				} else {
-				
+					// Do nothing
 				}
 			} else {
 				plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
@@ -606,8 +616,12 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		if (XSP.hasQueryPlaylists(jsp)) { // Uses playlists as sources
 			const queryPlaylists = XSP.getQueryPlaylists(jsp);
 			// From playlist manager or loaded playlists
-			const toIncludeHandle = list && list.getHandleFromPlaylists ? list.getHandleFromPlaylists(queryPlaylists.is) : getHandleFromUIPlaylists(queryPlaylists.is);
-			const toExcludeHandle = list && list.getHandleFromPlaylists ? list.getHandleFromPlaylists(queryPlaylists.isnot) : getHandleFromUIPlaylists(queryPlaylists.isnot);
+			const toIncludeHandle = typeof list !== 'undefined'
+				? list.getHandleFromPlaylists(queryPlaylists.is) // eslint-disable-line no-undef
+				: getHandleFromUIPlaylists(queryPlaylists.is);
+			const toExcludeHandle = typeof list  !== 'undefined'
+				? list.getHandleFromPlaylists(queryPlaylists.isnot) // eslint-disable-line no-undef
+				: getHandleFromUIPlaylists(queryPlaylists.isnot);
 			// Difference
 			toIncludeHandle.Sort();
 			toExcludeHandle.Sort();
@@ -620,7 +634,9 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		if (handlePlaylist) {
 			handlePlaylist.Sort();
 			const sortObj = sort.length ? getSortObj(sort) : null;
-			if (remDupl && remDupl.length && removeDuplicatesV2) {handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle});}
+			if (remDupl && remDupl.length && typeof removeDuplicatesV2 !== 'undefined') {
+				handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle}); // eslint-disable-line no-undef
+			}
 			if (sortObj) {handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction);}
 			const limit = XSP.getLimit(jsp);
 			if (isFinite(limit)) {handlePlaylist.RemoveRange(limit, handlePlaylist.Count);}
@@ -634,9 +650,9 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		const poolItems = fb.GetLibraryItems();
 		const poolItemsCount = poolItems.Count;
 		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
-		const newLibItemsRelPaths = relPath.length 
-			? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count 
-				? libItemsRelPaths[relPath] 
+		const newLibItemsRelPaths = relPath.length
+			? (libItemsRelPaths.hasOwnProperty(relPath) && libItemsRelPaths[relPath].length === poolItems.Count
+				? libItemsRelPaths[relPath]
 				: getRelPaths(newLibItemsAbsPaths, relPath))
 			: null; // Faster than TF again
 		let pathPool = new Map();
@@ -692,7 +708,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				count++;
 			} else {notFound.add(i);}
 		}
-		
+
 		if (bXSPF && count !== playlistLength) {
 			bOmitNotFound = true; // Omit not found for xspf playlists, forced by specification
 			let playlistText = _open(playlistPath);
@@ -709,8 +725,8 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const rowsLength = rows.length;
 				const lookupKeys = [{xspfKey: 'title', queryKey: 'TITLE'}, {xspfKey: 'creator', queryKey: 'ARTIST'}, {xspfKey: 'album', queryKey: 'ALBUM'}, {xspfKey: 'trackNum', queryKey: 'TRACK'}, {xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}];
 				const conditions = [['TITLE','ARTIST','ALBUM','TRACK'], ['TITLE','ARTIST','ALBUM'], ['TRACK','ARTIST','ALBUM'], ['TITLE','ALBUM'],  ['TITLE','ARTIST'], ['IDENTIFIER']];
-				const regExListenBrainz = typeof listenBrainz !== 'undefined' 
-					? listenBrainz.regEx 
+				const regExListenBrainz = typeof listenBrainz !== 'undefined'
+					? listenBrainz.regEx // eslint-disable-line no-undef
 					: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 				const sort = globQuery.remDuplBias; // TODO: add as argument?
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;

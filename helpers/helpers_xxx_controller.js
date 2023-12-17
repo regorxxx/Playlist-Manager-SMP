@@ -1,10 +1,15 @@
 ﻿'use strict';
-//02/10/22
+//17/12/23
 
+/* exported exportDSP, exportDevices, exportComponents */
+
+include('helpers_xxx.js');
+/* global folders:readable */
 include('helpers_xxx_file.js');
-folders.ajquery = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\'
-folders.ajquerySMP = folders.ajquery  + 'SMP\\'
-folders.ajqueryCheck = () => {return utils.CheckComponent('foo_httpcontrol') && _isFolder(folders.ajquery);}
+/* global _isFolder:readable, _save:readable, _jsonParseFile:readable, utf8:readable */
+folders.ajquery = fb.ProfilePath + 'foo_httpcontrol_data\\ajquery-xxx\\';
+folders.ajquerySMP = folders.ajquery  + 'SMP\\';
+folders.ajqueryCheck = () => {return utils.CheckComponent('foo_httpcontrol') && _isFolder(folders.ajquery);};
 
 // Global scope
 function exportDSP(path) {
@@ -24,4 +29,3 @@ function exportComponents(path, newEntries /*{key: val, ...*/) {
 	for (let key in newEntries) {data[key] = newEntries[key];}
 	return _save(path + 'components.json', JSON.stringify(data, null, '\t'));
 }
-						

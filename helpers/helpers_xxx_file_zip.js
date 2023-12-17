@@ -1,8 +1,14 @@
 ﻿'use strict';
-//09/12/23
+//17/12/23
+
+/* exported _zip, _unzip */
 
 include('helpers_xxx.js');
+/* global folders:readable, soFeat:readable */
+include('helpers_xxx_prototypes.js');
+/* global _q:readable, isArrayStrings:readable */
 include('helpers_xxx_file.js');
+/* global _runCmd:readable */
 
 // _zip(folders.xxx + 'test.txt','test.zip');
 // _zip(['test.txt', 'test2.txt'], 'test.zip');

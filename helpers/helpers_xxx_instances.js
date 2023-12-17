@@ -1,12 +1,19 @@
 ﻿'use strict';
-//01/03/23
-include('helpers_xxx.js');
-include('helpers_xxx_file.js');
+//17/12/23
 
-/* 
+/* exported addInstance, getInstancesByKey, removeInstance */
+
+include('helpers_xxx.js');
+/* global folders:readable, lastStartup:readable */
+include('helpers_xxx_prototypes.js');
+/* global SetReplacer:readable */
+include('helpers_xxx_file.js');
+/* global _isFile:readable, _save:readable, _deleteFile:readable, _jsonParseFileCheck:readable, utf8:readable */
+
+/*
 	Instances Manager:
-	Workaround to using window.notifyOthers with other panels. Functions on intervals/timeouts don't update 
-	properly variables modified via callbacks, so the actual panels IDs must be read from files. 
+	Workaround to using window.notifyOthers with other panels. Functions on intervals/timeouts don't update
+	properly variables modified via callbacks, so the actual panels IDs must be read from files.
 	'removeInstance' must be called via 'on_script_unload' on every panel whenever a instance is logged
 	using 'addInstance'. This ensures the file is empty of IDs when foobar2000 closes. Otherwise, the file
 	is cleared on consecutive foobar2000 startups.

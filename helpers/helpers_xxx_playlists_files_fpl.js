@@ -1,8 +1,11 @@
 ﻿'use strict';
-//30/11/23
+//17/12/23
+
+/* exported FPL */
 
 // https://github.com/rr-/fpl_reader/blob/master/fpl-format.md
 include('..\\helpers-external\\xspf-to-jspf-parser\\xspf_parser.js');
+/* global XSPF:readable*/
 
 const FPL = {
 	MAGIC: ['\xE1', '\xA0', '\x9C', '\x91', '\xF8', '\x3C', '\x77', '\x42', '\x85', '\x2C', '\x3B', '\xCC', '\x14', '\x01', '\xD3', '\xF2'].join(),
@@ -31,7 +34,7 @@ const FPL = {
 	toJSPF: function(hexArr) {
 		const jspf = XSPF.emptyJSPF();
 		const playlist = jspf.playlist;
-		const fileMagic = hexArr.slice(0, 16); 
+		const fileMagic = hexArr.slice(0, 16);
 		if (fileMagic.join() === this.MAGIC) { // Exported FPL playlists
 			hexArr = hexArr.join('').split('\x00').slice(0, -1);
 			playlist.meta.push({magic: this.MAGIC});

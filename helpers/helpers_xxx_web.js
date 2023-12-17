@@ -1,8 +1,8 @@
 ﻿'use strict';
-//08/11/23
+//14/12/23
 
 function getText(URL){
-	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1 
+	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1
 		? send({method: 'GET', URL, bypassCache: true})
 		: Promise.reject('Input is not a link.');
 }
@@ -14,10 +14,8 @@ function onStateChange(timer, resolve, reject, func = null) {
 			if (this.status === 200) {
 				if (func) {return func(this.responseText);}
 				else {resolve(this.responseText);}
-				
-			} else {
-				if (!func) {reject({status: this.status, responseText: this.responseText});}
-			}
+
+			} else if (!func) {reject({status: this.status, responseText: this.responseText});}
 		}
 	} else if (!func) {reject({status: 408, responseText: this.responseText})}; // 408 Request Timeout
 	return null;
@@ -31,8 +29,8 @@ function send({method = 'GET', URL, body = void(0), func = null, requestHeader =
 		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
 		// Add ('&' + new Date().getTime()) to URLS to avoid caching
 		xmlhttp.open(
-			method, 
-			URL + (bypassCache 
+			method,
+			URL + (bypassCache
 				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime()
 				: '')
 		);
@@ -51,7 +49,7 @@ function send({method = 'GET', URL, body = void(0), func = null, requestHeader =
 				let status = 408;
 				try {status = xmlhttp.status;} catch(e) {}
 				reject({status, responseText: 'Request Timeout'});
-			} 
+			}
 		}, 30000, xmlhttp);
 		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func);
 		xmlhttp.send(method === 'POST' ? body : void(0));
@@ -62,7 +60,7 @@ function send({method = 'GET', URL, body = void(0), func = null, requestHeader =
 // Send consecutive GET request, incrementing queryParams.offset or queryParams.page
 // Keys are the response object path, which point to an array, to concatenate for the final response
 function paginatedFetch({URL, queryParams = {}, requestHeader, keys = [], increment = 1, previousResponse = []}) {
-	const urlParams = Object.keys(queryParams).length ? '?' + Object.entries(queryParams).map((pair) => {return pair[0] + '=' + pair[1];}).join('&') : '';
+	const urlParams = Object.keys(queryParams).length ? '?' + Object.entries(queryParams).map((pair) => pair[0] + '=' + pair[1]).join('&') : '';
 	return send({method: 'GET', URL: URL + urlParams, requestHeader, bypassCache: true})
 		.then(
 			(resolve) => {
@@ -74,7 +72,7 @@ function paginatedFetch({URL, queryParams = {}, requestHeader, keys = [], increm
 						: [];
 				}
 			},
-			(reject) => {return [];}
+			(reject) => []
 		)
 		.then((newResponse) => {
 			const response = [...previousResponse, ...newResponse];

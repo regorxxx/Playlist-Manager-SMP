@@ -1,5 +1,7 @@
 ﻿'use strict';
-//28/06/22
+//17/12/23
+
+/* exported _getClipboardData, _setClipboardData */
 
 const doc = new ActiveXObject('htmlfile');
 

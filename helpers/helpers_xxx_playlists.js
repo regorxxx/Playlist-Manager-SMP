@@ -1,10 +1,13 @@
 ﻿'use strict';
-//19/12/22
+//17/12/23
+
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandleFromUIPlaylists, getLocks */
 
 include('helpers_xxx_prototypes.js');
+/* global range:readable, isArrayNumbers:readable */
 
-/* 
-	Playlist manipulation 
+/*
+	Playlist manipulation
 */
 
 // Count locked playlist by type
@@ -22,7 +25,7 @@ function playlistCountLocked(type = []) {
 
 // Select n tracks from playlist and remove the rest
 // Start is zero by default
-// When nTracks is negative, then the count is done 
+// When nTracks is negative, then the count is done
 // reversed from start to zero
 // When nTracks is negative and start is zero or not provided,
 // then start is set to playlist length
@@ -56,7 +59,7 @@ function getPlaylistIndexArray(name) {
 }
 
 // Removes all playlists with that name
-function removePlaylistByName(name) { 
+function removePlaylistByName(name) {
 	let index = plman.FindPlaylist(name);
 	while (index !== -1){
 		plman.RemovePlaylist(index);
@@ -65,7 +68,7 @@ function removePlaylistByName(name) {
 }
 
 // Clears all playlists with that name
-function clearPlaylistByName(name) { 
+function clearPlaylistByName(name) {
 	let index = getPlaylistIndexArray(name);
 	if (isArrayNumbers(index)) {
 		for (let i of index){
@@ -117,7 +120,7 @@ function sendToPlaylist(handleList, playlistName) {
 		} else {
 			i++;
 		}
-	}	
+	}
 	if (i === plc) { //if no playlist was found before
 		plman.CreatePlaylist(plc, playlistName);
 		plman.ActivePlaylist = plc;

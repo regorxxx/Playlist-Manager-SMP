@@ -1,13 +1,13 @@
 ﻿'use strict';
-//26/06/23
+//14/12/23
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx.js');
 include('helpers_xxx_UI_chars.js');
 include('callbacks_xxx.js');
 
-/* 
-	Global Variables 
+/*
+	Global Variables
 */
 
 // Callbacks
@@ -67,13 +67,13 @@ const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
 
 function _scale(size, bRound = true) {
 	if (scaleDPI.factor === -1) {
-		try {scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference;} 
+		try {scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference;}
 		catch (e) {scaleDPI.factor = 1;}
 	}
 	return (bRound ? Math.round(size * scaleDPI.factor) : size * scaleDPI.factor);
 }
 
-/* 
+/*
 	IDs
 */
 
@@ -118,12 +118,12 @@ const nextIdInvisible = (function() {
 			let c = nextIndex[2];
 			let d = nextIndex[3];
 			let e = nextIndex[4];
-			let id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
-		
+			const id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
+
 			a = ++a % num;
-		
+			
 			if (!a) {
-				b = ++b % num; 
+				b = ++b % num;
 				if (!b) {
 					c = ++c % num;
 					if (!c) {
@@ -155,12 +155,12 @@ const nextIdLetters = (function() {
 			let c = nextIndex[2];
 			let d = nextIndex[3];
 			let e = nextIndex[4];
-			let id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
-		
+			const id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
+
 			a = ++a % num;
-		
+			
 			if (!a) {
-				b = ++b % num; 
+				b = ++b % num;
 				if (!b) {
 					c = ++c % num;
 					if (!c) {
@@ -191,7 +191,7 @@ function removeIdFromStr(nameId) {
 	return name;
 }
 
-/* 
+/*
 	Tooltip
 */
 
@@ -247,7 +247,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.SetDelayTime(type, time);
 		return true;
-    };
+	};
 	
 	this.GetDelayTime = (type) => {
 		if (!globSettings.bTooltip) {return;}
@@ -275,13 +275,13 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	this.init();
 }
 
-/* 
+/*
 	Colours
 */
 
 function RGBA(r, g, b, a) {
-	let res = 0xff000000 | (r << 16) | (g << 8) | (b);
-	if (typeof a !== 'undefined') {res = (res & 0x00ffffff) | (a << 24);}
+	const res = 0xff000000 | (r << 16) | (g << 8) | (b);
+	if (typeof a !== 'undefined') {return (res & 0x00ffffff) | (a << 24);}
 	return res;
 }
 
@@ -297,7 +297,7 @@ function toRGB(color) { // returns an array like [192, 0, 0]
 function blendColors(color1, color2, f) {
 	// When factor is 0, result is 100% color1, when factor is 1, result is 100% color2.
 	const [c1, c2] = [toRGB(color1), toRGB(color2)];
-	return RGB(...c1.map((_, i) => {return Math.round(c1[i] + f * (c2[i] - c1[i]));}));
+	return RGB(...c1.map((_, i) => Math.round(c1[i] + f * (c2[i] - c1[i]))));
 }
 
 function getAlpha(color) {
@@ -328,7 +328,7 @@ function darkenColor(color, percent) {
 
 function tintColor(color, percent) {
 	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
-	return isDark(r, g, b) 
+	return isDark(r, g, b)
 		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
 		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));;
 }
@@ -365,12 +365,12 @@ function invert(color, bBW = false) {
 	}
 }
 
-/* 
+/*
 	Fonts
 */
 
 function _gdiFont(name, size, style) {
-	let id = name.toLowerCase() + '_' + size + '_' + (style || 0);
+	const id = name.toLowerCase() + '_' + size + '_' + (style || 0);
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}

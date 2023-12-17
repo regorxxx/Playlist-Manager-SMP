@@ -1,12 +1,19 @@
 ﻿'use strict';
-//08/11/23
+//17/12/23
+
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
+/* global convertCharsetToCodepage:readable */
 include('helpers_xxx.js');
+/* global folders:readable, isCompatible:readable, lastStartup:readable, VK_SHIFT:readable */
+include('helpers_xxx_basic_js.js');
+/* global tryMethod:readable */
 include('helpers_xxx_prototypes.js');
+/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */
 
-/* 
-	Global Variables 
+/*
+	Global Variables
 */
 const fso = new ActiveXObject('Scripting.FileSystemObject');
 const WshShell = new ActiveXObject('WScript.Shell');
@@ -53,8 +60,8 @@ if (!_isFile(systemCodePageFile) || lastStartup() > lastModified(systemCodePageF
 }
 const systemCodePage = _isFile(systemCodePageFile) ? _open(systemCodePageFile).split(': ').pop() : -1;
 
-/* 
-	File manipulation 
+/*
+	File manipulation
 */
 
 function _hasRecycleBin(drive) {
@@ -73,7 +80,7 @@ function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which
 }
 
 function _isFile(file) {
-	if (isCompatible('1.4.0', 'smp')) {try {return utils.IsFile(file);} catch (e) {return false;}} 
+	if (isCompatible('1.4.0', 'smp')) {try {return utils.IsFile(file);} catch (e) {return false;}}
 	else { //TODO: Deprecated
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		return isString(file) ? fso.FileExists(file) : false;
@@ -81,7 +88,7 @@ function _isFile(file) {
 }
 
 function _isFolder(folder) {
-	if (isCompatible('1.4.0', 'smp')) {try {return utils.IsDirectory(folder);} catch (e) {return false;}} 
+	if (isCompatible('1.4.0', 'smp')) {try {return utils.IsDirectory(folder);} catch (e) {return false;}}
 	else { //TODO: Deprecated
 		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
 		return isString(folder) ? fso.FolderExists(folder) : false;
@@ -199,8 +206,8 @@ function _recycleFile(file, bCheckBin = false) {
 			} catch (e) {
 				try {
 					if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
-						app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
-						// fso.GetFile(file).Delete(true);
+					app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
+					// fso.GetFile(file).Delete(true);
 				} catch (e) {
 					try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true);} // cmdUtils as fallback
 					catch (e) {return false;}
@@ -212,7 +219,7 @@ function _recycleFile(file, bCheckBin = false) {
 	return false;
 }
 
-// Restores file from the recycle Bin, you must pass the original path. 
+// Restores file from the recycle Bin, you must pass the original path.
 // Beware of collisions... same file deleted 2 times has the same virtual name on bin...
 function _restoreFile(file) {
 	if (!_isFile(file)) {
@@ -230,7 +237,7 @@ function _restoreFile(file) {
 				break;
 			}
 		}
-		let bFound = _isFile(file);
+		const bFound = _isFile(file);
 		if (!bFound){console.log('_restoreFile(): Can not restore file, \'' + OriginalFileName + '\' was not found at the bin.');}
 		return bFound;
 	} else {
@@ -249,7 +256,7 @@ function _getAttrFile(file) {
 function _parseAttrFile(file) {
 	let attr = _getAttrFile(file);
 	if (!attr) {return null;}
-	const attrObj = Object.fromEntries(Object.keys(fileAttr).map((_) => {return [_, false];}));
+	const attrObj = Object.fromEntries(Object.keys(fileAttr).map((_) => [_, false]));
 	if (attr === fileAttr.Normal) {attrObj.Normal = true;}
 	else {Object.keys(fileAttr).reverse().forEach((key) => {if (attr && attr >= fileAttr[key]) {attr -= fileAttr[key]; attrObj[key] = true;}});}
 	return attrObj;
@@ -280,16 +287,16 @@ function _saveFSO(file, value, bUTF16) {
 	if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) {_createFolder(filePath);}
-    if (_isFolder(filePath)) {
-        try {
-            const fileObj = fso.CreateTextFile(file, true, bUTF16);
-            fileObj.Write(value);
-            fileObj.Close();
-            return true;
-        } catch (e) {}
-    }
-    console.log('Error saving to ' + file); 
-    return false;
+	if (_isFolder(filePath)) {
+		try {
+			const fileObj = fso.CreateTextFile(file, true, bUTF16);
+			fileObj.Write(value);
+			fileObj.Close();
+			return true;
+		} catch (e) { /* log error later */ }
+	}
+	console.log('Error saving to ' + file);
+	return false;
 }
 
 function _saveSplitJson(file, value, replacer = void(0), space = void(0), splitBy = 50000, bBOM = false) {
@@ -314,7 +321,7 @@ function _saveSplitJson(file, value, replacer = void(0), space = void(0), splitB
 
 function _jsonParse(value) {
 	try {
-		let data = JSON.parse(value);
+		const data = JSON.parse(value);
 		return data;
 	} catch (e) {
 		return null;
@@ -325,12 +332,12 @@ function _jsonParseFile(file, codePage = 0) {
 	return _jsonParse(_open(file, codePage));
 }
 
-function _jsonParseFileSplit(filePath, reportName = 'Json', popupName = window.Name, codePage = 0) {
+function _jsonParseFileSplit(filePath, codePage = 0) {
 	const [path, fileName, extension] = utils.SplitFilePath(filePath);
 	const files = utils.Glob(path + '\\' + fileName + '*' + extension);
 	let result = [];
 	const rgex = new RegExp(fileName + '[0-9]*' + extension); // Only allow numbers as suffix
-	for (let file of files) {
+	for (const file of files) {
 		if (rgex.test(file)) {
 			const data = _jsonParseFile(file, codePage);
 			if (data) {result = result.concat(data);}
@@ -383,7 +390,7 @@ function getFiles(folderPath, extensionSet) {
 
 function _run() {
 	try {
-		WshShell.Run([...arguments].map((arg) => {return _q(arg);}).join(' '));
+		WshShell.Run([...arguments].map((arg) => _q(arg)).join(' '));
 		return true;
 	} catch (e) {
 		return false;
@@ -392,7 +399,7 @@ function _run() {
 
 function _runHidden() {
 	try {
-		WshShell.Run([...arguments].map((arg) => {return _q(arg);}).join(' '), 0, true);
+		WshShell.Run([...arguments].map((arg) => _q(arg)).join(' '), 0, true);
 		return true;
 	} catch (e) {
 		return false;
@@ -437,7 +444,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 			if (isArray(originalString) && isArray(newString) && originalString.length === newString.length) {
 				originalString = originalString.filter(Boolean); // '' values makes no sense to be replaced
 				if (isArrayStrings(originalString) && isArrayStrings(newString, true) && originalString.length === newString.length) { //newString may have blank values but both arrays must have same length
-					let replacements = newString.length;
+					const replacements = newString.length;
 					for (let i = 0; i < replacements; i++) {
 						fileTextNew = fileTextNew.replace(originalString[i], newString[i]);
 					}
@@ -449,7 +456,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 				bDone = utils.WriteTextFile(filePath, fileTextNew, bBOM);
 				// Check
 				if (_isFile(filePath) && bDone) {
-					let check = _open(filePath, utf8);
+					const check = _open(filePath, utf8);
 					bDone = (check === fileTextNew);
 				} else {reason = -1;}
 			} else {reason = 1;}
@@ -471,8 +478,8 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	} else if (bAdvancedCheck) {
 		if (plsText.length && plsText.some((line) => {
 			line = line.toLowerCase();
-			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1) ;
-			})) {
+			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1);
+		})) {
 			codepage = utf8;
 		} else if (plsText.length && plsText.some((line) => {line = line.toLowerCase(); return (line.indexOf('�') !== -1);})) {
 			codepage = systemCodePage;
@@ -531,6 +538,7 @@ function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 	return finalPath;
 }
 
+/* eslint-disable no-useless-escape */
 function sanitize(value) {
 	return value && value.length ? value.replace(/[\/\\|:–]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '') : '';
 }
@@ -540,10 +548,12 @@ function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
 	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/[\/]/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
 }
+/* eslint-enable  no-useless-escape */
 
 function UUID() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g , function(c) {
-		const rnd = Math.random() * 16 | 0, v = c === 'x' ? rnd : (rnd&0x3|0x8) ;
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g , (c) => {
+		const rnd = Math.random() * 16 | 0;
+		const v = c === 'x' ? rnd : (rnd&0x3|0x8);
 		return v.toString(16);
 	});
 }

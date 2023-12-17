@@ -1,5 +1,8 @@
 ﻿'use strict';
-//29/10/22
+//17/12/23
+
+/* global VK_CONTROL:readable, VK_ALT:readable, VK_SHIFT:readable, MK_LBUTTON:readable, MK_CONTROL:readable, MK_SHIFT:readable */
+/* exported buttonStates, getKeyboardMask, dropEffect, dropMask, VK_LWIN, VK_RWIN */
 
 const kMask = {
 	none: 0,

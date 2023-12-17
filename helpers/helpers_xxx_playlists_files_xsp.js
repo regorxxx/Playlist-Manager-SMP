@@ -1,9 +1,10 @@
 ﻿'use strict';
-//27/03/23
+//17/12/23
 
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
+/* global XSP:readable*/
 
-XSP.isFoec = (typeof isEnhPlayCount !== 'undefined' && isEnhPlayCount) || (typeof isEnhPlayCount === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount'));
+XSP.isFoec = (typeof isEnhPlayCount !== 'undefined' && isEnhPlayCount) || (typeof isEnhPlayCount === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount')); // eslint-disable-line no-undef
 
 XSP.getQuerySort = function(jsp) {
 	let query = this.getQuery(jsp);
@@ -28,7 +29,7 @@ XSP.getQuery = function(jsp, bOmitPlaylist = false) {
 		const op = rule.operator;
 		const valueArr = rule.value;
 		const fbTag = this.getFbTag(tag);
-		if (!fbTag.length || (bOmitPlaylist && fbTag === '#PLAYLIST#')) {continue;} 
+		if (!fbTag.length || (bOmitPlaylist && fbTag === '#PLAYLIST#')) {continue;}
 		let queryRule = '';
 		// Check operators match specific tags
 		switch (op) {
@@ -130,7 +131,7 @@ XSP.getQueryPlaylists = function(jsp) {
 		const tag = rule.field;
 		const op = rule.operator;
 		const valueArr = rule.value;
-		if (tag !== 'playlist') {console.log('Warning: XSP Playlist with mixed standard queries and playlists as sources.'); continue;} 
+		if (tag !== 'playlist') {console.log('Warning: XSP Playlist with mixed standard queries and playlists as sources.'); continue;}
 		switch (op) {
 			case 'is': {
 				query.is = query.is.concat(valueArr);
@@ -294,33 +295,12 @@ XSP.getRules = function(querySort) {
 	let match = '';
 	let query = stripSort(querySort); // Ensure there is no sort clause
 	if (query.length) {
-		// const searches = [
-			// {regexp: /\) AND /g, split: [')','AND']},
-			// {regexp: /AND \(/g, split: ['AND', '(']},
-			// {regexp: /\) AND \(/g, split: [')','AND', '(']},
-			// {regexp: /\) AND NOT /g, split: [')','AND NOT']},
-			// {regexp: / AND NOT \(/g, split: ['AND NOT','(']},
-			// {regexp: /\) AND NOT \(/g, split: [')','AND NOT','(']},
-			// {regexp: / AND NOT /g, split: 'AND NOT'},
-			// {regexp: / AND /g, split: 'AND'},
-			// {regexp: / OR NOT /g, split: 'OR NOT'},
-			// {regexp: / OR /g, split: 'OR'},
-			// {regexp: / NOT /g, split: 'NOT'},
-			// {regexp: /^\(/g, split: '('},
-			// {regexp: /\)$/g, split: ')'}
-		// ];
 		const searches = [
 			{regexp: /\) AND /g, split: [')','AND']},
 			{regexp: /AND \(/g, split: ['AND', '(']},
 			{regexp: /\) AND \(/g, split: [')','AND', '(']},
-			// {regexp: /\) AND NOT /g, split: [')','AND NOT']},
-			// {regexp: / AND NOT \(/g, split: ['AND NOT','(']},
-			// {regexp: /\) AND NOT \(/g, split: [')','AND NOT','(']},
-			// {regexp: / AND NOT /g, split: 'AND NOT'},
 			{regexp: / AND /g, split: 'AND'},
-			// {regexp: / OR NOT /g, split: 'OR NOT'},
 			{regexp: / OR /g, split: 'OR'},
-			// {regexp: / NOT /g, split: 'NOT'},
 			{regexp: / *NOT \(/g, split: ['NOT','(']},
 			{regexp: /^\(/g, split: '('},
 			{regexp: /\)$/g, split: ')'}
@@ -330,7 +310,7 @@ XSP.getRules = function(querySort) {
 		for (let search of searches) {
 			querySplit = recursiveSplit(querySplit, search.regexp, search.split).flat(Infinity);
 		}
-		
+
 		let idx = [];
 		querySplit.forEach((q, i) => {
 			if (q === '(' || q === ')') {idx.push(i);}
@@ -339,7 +319,7 @@ XSP.getRules = function(querySort) {
 			if (index % 2 === 0) {result.push(array.slice(index, index + 2));}
 			return result;
 		}, []);
-		
+
 		let querySplitCopy = [];
 		if (idx.length) {
 			querySplit.forEach((q, j) => {
@@ -436,27 +416,6 @@ XSP.getRules = function(querySort) {
 				else {rulesV4.push(rule);}
 			}
 		});
-		// let rulesV5 = [];
-		// const v4len = rulesV4.length;
-		// if (v4len === 1) {rulesV5.push(rule);}
-		// rulesV4.forEach((rule, i) => {
-			// let bDone = false;
-			// let j = i - 1;
-			// if (j >= 0) {
-				// const prevRule = rulesV4[j];
-				// if (prevRule.field == rule.field && prevRule.operator == rule.operator) {
-					// const newRule = rulesV4[i];
-					// newRule.value = [...new Set(newRule.value.concat(prevRule.value))];
-					// rulesV5.push(newRule);
-					// bDone = true;
-				// } else {
-					// if (j === 0) {rulesV5.push(prevRule);}
-					// rulesV5.push(rule);
-				// }
-			// }
-		// });
-		// match = rulesV5.length === 1 || rulesV5.every((item) => {return item !== 'OR' && item !== 'OR NOT';}) ? 'all' : 'one';
-		// rulesV5 = rulesV5.filter((rule) => {return typeof rule === 'object';});
 		if (bDebug) {
 			console.log(match);
 			console.log('Split query in groups:\n', querySplitCopy);
@@ -464,7 +423,6 @@ XSP.getRules = function(querySort) {
 			console.log('Tags:\n', rulesV2);
 			console.log('Values:\n', rulesV3);
 			console.log('Final rules after discarding and grouping:\n', rulesV4);
-			// console.log('Rules V5:\n', rulesV5);
 		}
 		rules = (rulesV4 || []).filter((rule) => {return (typeof rule === 'object' && rule.field.length && rule.operator.length && rule.value.length);});
 	}
@@ -553,29 +511,29 @@ if (!query_join) {
 	const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR NOT'];
 	// Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 	var query_join = function(queryArray, setLogic) {
-			if (logicDic.indexOf(setLogic) === -1) {
-				console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
-				return '';
+		if (logicDic.indexOf(setLogic) === -1) {
+			console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
+			return '';
+		}
+		let arrayLength = queryArray.length;
+		// Wrong array
+		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
+		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
+			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
+			return ''; //Array was null or not an array
+		}
+
+		let query = '';
+		let i = 0;
+		while (i < arrayLength) {
+			if (i === 0) {
+				query += (arrayLength > 1 ? '(' : '') + queryArray[i] + (arrayLength > 1 ? ')' : '');
+			} else {
+				query += ' ' + setLogic + ' (' + queryArray[i] + ')';
 			}
-			let arrayLength = queryArray.length;
-			// Wrong array
-			let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
-			if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-				console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
-				return ''; //Array was null or not an array
-			}
-			
-			let query = '';
-			let i = 0;
-			while (i < arrayLength) {
-				if (i === 0) {
-					query += (arrayLength > 1 ? '(' : '') + queryArray[i] + (arrayLength > 1 ? ')' : '');
-				} else {
-					query += ' ' + setLogic + ' (' + queryArray[i] + ')';
-				}
-				i++;
-			}
-			return query;
+			i++;
+		}
+		return query;
 	};
 }
 

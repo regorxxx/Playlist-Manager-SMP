@@ -1,7 +1,12 @@
 ﻿'use strict';
-//27/11/23
+//17/12/23
 
-/* 
+/* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
+
+include('helpers_xxx.js');
+/* global soFeatFile:readable */
+
+/*
 	Global tags, queries, RegExp
 */
 
@@ -16,7 +21,7 @@ function getSoFeatures() {
 		let clText = 'test', cache = null;
 		try {cache = doc.parentWindow.clipboardData.getData('Text');} catch (e) {}
 		try {
-			doc.parentWindow.clipboardData.setData('Text', clText); 
+			doc.parentWindow.clipboardData.setData('Text', clText);
 			clText = doc.parentWindow.clipboardData.getData('Text');
 		} catch (e) {soFeat.clipboard = false;}
 		if (cache) {try {doc.parentWindow.clipboardData.setData('Text', cache);} catch (e) {}} // Just in case previous clipboard data is needed
@@ -50,7 +55,7 @@ function getSoFeatures() {
 	const soArchFile = folders.temp + 'soArch.txt';
 	if (!utils.IsFile(soArchFile)) {
 		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
-		const run = function () {try {WshShell.Run([...arguments].map((arg) => {return '"' + arg + '"';}).join(' '), 0, true);} catch (e) {}};
+		const run = function () {try {WshShell.Run([...arguments].map((arg) => '"' + arg + '"').join(' '), 0, true);} catch (e) {}};
 		run(soBat, soArchFile);
 	}
 	if (utils.IsFile(soArchFile) && (utils.ReadTextFile(soArchFile) || '').slice(0,3) !== 'x64') {soFeat.x64 = false;}
@@ -64,7 +69,7 @@ function checkSoFeatures(soFeat, bPopup = true) {
 	if (!soFeat.gecko) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.' + '\n\nFeatures affected:\nHTML file manipulation may not work (usually used for clipboard manipulation).' + tip + '\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');
 		bPass = false;
-	} 
+	}
 	if (!soFeat.clipboard) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nclipboardData failed.' + '\n\nFeatures affected:\nClipboard manipulation will not work.' + tip + '\n\nFix (Windows): Install IE11.\n' + 'https://www.microsoft.com/en-us/download/details.aspx?id=40902\t(32 bit)\nhttps://www.microsoft.com/en-us/download/details.aspx?id=40901\t(64 bit)' + '\n\nFix (Wine): Install IE8 with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n' + 'https://askubuntu.com/questions/1194126/problem-in-installing-internet-explorer-8' + '\n\nWARNING (Wine):\nApplying this fix will break internet connection on current profile.\ni.e. Bio Script config popup will work but image downloading will be broken. It\'s therefore recommended to don\'t apply this fix on online systems.','SO features');
 		bPass = false;
@@ -110,12 +115,12 @@ function initCheckFeatures(soFeat, bPopup = true) {
 		data = soFeat;
 		bCheck = true;
 	} else {
-		for (let key in soFeat) {
+		for (const key in soFeat) {
 			if (!data.hasOwnProperty(key) || data[key] !== soFeat[key]) {bCheck = true; break;}
 		}
 	}
 	if (bCheck) {
-		checkSoFeatures(soFeat, bPopup); 
+		checkSoFeatures(soFeat, bPopup);
 		utils.WriteTextFile(soFeatFile, JSON.stringify(soFeat), false);
 	}
 }

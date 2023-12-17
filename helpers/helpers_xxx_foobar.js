@@ -1,10 +1,15 @@
 ﻿'use strict';
-//08/11/23
+//17/12/23
+
+/* exported checkCompatible, memoryUsed, isPortable, lastStartup*/
 
 include('helpers_xxx_file.js');
+/* global _isFile, lastModified */
+include('helpers_xxx_prototypes.js');
+/* global round, isArray */
 include('helpers_xxx_console.js');
 
-/* 
+/*
 	Panels
 */
 
@@ -24,8 +29,7 @@ function compareVersions(from, to, bNum = true) {
 }
 
 function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
-	// return compareVersions((target.toLowerCase === 'smp' ? utils : fb).Version.split('.'), requiredVersionStr.split('.'));
-	return true;
+	return compareVersions((target.toLowerCase === 'smp' ? utils : fb).Version.split('.'), requiredVersionStr.split('.'));
 }
 
 function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
@@ -43,7 +47,7 @@ function memoryUsed(bConsole = false) { // In Mbs
 }
 
 function isPortable(propertyText, bWarn = true) {
-	let bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
+	const bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
 	if (bPort && bWarn) {
 		if (isArray(propertyText)) {propertyText = propertyText.join('\n');}
 		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n' + propertyText, window.Name);

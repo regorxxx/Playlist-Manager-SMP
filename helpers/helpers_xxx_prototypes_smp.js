@@ -1,7 +1,7 @@
 ﻿'use strict';
-//11/12/23
+//14/12/23
 
-/* 
+/*
 	FbTitleFormat
 */
 // Add async calculation
@@ -84,11 +84,11 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 				if (typeof doOnce !== 'undefined') {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))(
 						'SMP bug drawing: DrawRoundRect\n' +
-						e.message + '\n\n' + 
+						e.message + '\n\n' +
 						'x, y, w, h, arc: ' + [...arguments].join(', ') + '\n' +
 						(
-							bRetry 
-								? 'Bypassed on second retry: ' + '\n' + 'x, y, w, h, arc: ' + [...newArgs].join(', ') 
+							bRetry
+								? 'Bypassed on second retry: ' + '\n' + 'x, y, w, h, arc: ' + [...newArgs].join(', ')
 								: ''
 						)
 						, window.Name
@@ -115,11 +115,11 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 				if (typeof doOnce !== 'undefined') {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))(
 						'SMP bug drawing: FillRoundRect\n' +
-						e.message + '\n\n' + 
+						e.message + '\n\n' +
 						'x, y, w, h, arc: ' + [...arguments].join(', ') + '\n' +
 						(
-							bRetry 
-								? 'Bypassed on second retry: ' + '\n' + 'x, y, w, h, arc: ' + [...newArgs].join(', ') 
+							bRetry
+								? 'Bypassed on second retry: ' + '\n' + 'x, y, w, h, arc: ' + [...newArgs].join(', ')
 								: ''
 						)
 						, window.Name
@@ -143,7 +143,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 	}
 }
 
-/* 
+/*
 	FbMetadbHandleList
 */
 // Sort handleList following another handleList; orderHandleList may differ in size
@@ -170,7 +170,7 @@ FbMetadbHandleList.partialSort = (handleList, orderHandleList) => { // 600 ms on
 	return bOutputList ? new FbMetadbHandleList(output.filter(Boolean)) : output.filter(Boolean);
 };
 
-/* 
+/*
 	fb
 */
 // Add caching
@@ -194,7 +194,7 @@ fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query, bCache = fals
 	return outputHandleList;
 }
 
-/* 
+/*
 	plman
 */
 
@@ -227,8 +227,8 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 		}
 	};
 	const processItem = (item) => {
-		let type = typeof item.RawPath !== 'undefined'
-			? 'handle' 
+		const type = typeof item.RawPath !== 'undefined'
+			? 'handle'
 			: typeof item.Count !== 'undefined'
 				? 'handleList'
 				: 'path';
@@ -244,7 +244,7 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 			return Promise.resolve();
 		} else {
 			if (type !== lastType) {
-				sendQueue(item, lastType); 
+				sendQueue(item, lastType);
 				lastType = type;
 			}
 			addToQueue(item, type);

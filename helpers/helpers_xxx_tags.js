@@ -3,20 +3,20 @@
 
 include('helpers_xxx.js');
 
-/* 
-	Global Variables 
+/*
+	Global Variables
 */
-// Tags descriptors: 
+// Tags descriptors:
 // Always use .toLowerCase first before checking if the set has the string. For ex
 // numericTags.has(tagName.toLowerCase())
 const dynamicTags = new Set(['rating', globTags.date.toLowerCase()]); // Only found by title formatting
-const numericTags = new Set(['date', 'year', 'bpm', 'dynamic range', 'album dynamic range', 'rating',globTags.date.toLowerCase()]);  // Always a number
+const numericTags = new Set(['date', 'year', 'bpm', 'dynamic range', 'album dynamic range', 'rating', globTags.date.toLowerCase()]);  // Always a number
 const cyclicTags = new Set(['dynamic_genre']); // Numeric tags with limited range: {0...K, k + 1 = 0}
 const keyTags = new Set(['KEY_BACKUP1', 'KEY_BACKUP2', 'INITIAL KEY', 'INITIALKEY', 'KEY_START', 'KEY', 'KEY_CAMELOT', 'KEY_OPENKEY']);
 
 // Put here the corresponding function for the cyclic tag. Swap lower/upper values before return if required. They must be always ordered.
 // ALWAYS RETURN [valueLower, valueUpper, lowerLimit, upperLimit];
-// Object keys must match the tag names at cyclicTags... 
+// Object keys must match the tag names at cyclicTags...
 const cyclicTagsDescriptor ={
 	//dyngenre_map_xxx.js
 	dynamic_genre(tagValue, valueRange, bReturnLimits) {return dynGenreRange(tagValue, valueRange, bReturnLimits);},
@@ -25,8 +25,8 @@ const cyclicTagsDescriptor ={
 var bLoadTags; // This tells the helper to load tags descriptors extra files. False by default
 if (bLoadTags) {
 	let externalPath = 	[
-						folders.xxx + 'helpers\\dyngenre_map_xxx.js', //for dynamic_genre range function
-					];
+		folders.xxx + 'helpers\\dyngenre_map_xxx.js', //for dynamic_genre range function
+	];
 
 	for (let i = 0; i < externalPath.length; i++) {
 		const path = externalPath[i];
@@ -41,8 +41,8 @@ if (bLoadTags) {
 
 const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR NOT'];
 
-/* 
-	Query and tag manipulation 
+/*
+	Query and tag manipulation
 */
 
 // Quote special chars according to https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Titleformat_Reference#Syntax
@@ -60,8 +60,8 @@ function sanitizeTagIds(tag, bSpace = true) {
 	return '$ascii($lower($trim($replace(' + tag.toUpperCase() + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),' + (bSpace ? ', ,' : '') + '))))';
 }
 function sanitizeTagValIds(val, bSpace = true) {
-	return _asciify(val).trim().replace((bSpace 
-		? /['`’\-/\\ :"]/g 
+	return _asciify(val).trim().replace((bSpace
+		? /['`’\-/\\ :"]/g
 		: /['`’\-/\\:"]/g)
 	,'').toLowerCase();
 }
@@ -119,8 +119,8 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 					.replace(/\$meta\(ALBUM ARTIST\)/g, '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
 				if (bDebug) {console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey);}
 				tfo = handle ? fb.TitleFormat(tfo) : null;
-				tfoVal = bIsFunc || bIsWithinFunc 
-					? sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : (tags[tagKey.toLowerCase()] || []).join('#')) 
+				tfoVal = bIsFunc || bIsWithinFunc
+					? sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : (tags[tagKey.toLowerCase()] || []).join('#'))
 					: handle ? tfo.EvalWithMetadb(handle) : (tags[tagKey.toLowerCase()] || []).join('#');
 				// If no value is returned but using a static variable with no tags, retry without []
 				if (bStatic && (typeof tfoVal === 'undefined' || tfoVal === null || tfoVal === '')) {
@@ -152,101 +152,101 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 function query_join(queryArray, setLogic) {
-		if (logicDic.indexOf(setLogic) === -1) {
-			console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
-			return;
+	if (logicDic.indexOf(setLogic) === -1) {
+		console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
+		return;
+	}
+	let arrayLength = queryArray.length;
+	// Wrong array
+	let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
+	if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
+		console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
+		return; //Array was null or not an array
+	}
+	const allRegex = /ALL/;
+	const copy = [...queryArray].filter((q) => q && !allRegex.test(q));
+	arrayLength = copy.length;
+	let query = '';
+	let i = 0;
+	while (i < arrayLength) {
+		if (i === 0) {
+			query += (arrayLength > 1 ? '(' : '') + copy[i] + (arrayLength > 1 ? ')' : '');
+		} else {
+			query += ' ' + setLogic + ' (' + copy[i] + ')';
 		}
-		let arrayLength = queryArray.length;
-		// Wrong array
-		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
-		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
-			return; //Array was null or not an array
-		}
-		const allRegex = /ALL/;
-		const copy = [...queryArray].filter((q) => q && !allRegex.test(q));
-		arrayLength = copy.length;
-		let query = '';
-		let i = 0;
-		while (i < arrayLength) {
-			if (i === 0) {
-				query += (arrayLength > 1 ? '(' : '') + copy[i] + (arrayLength > 1 ? ')' : '');
-			} else {
-				query += ' ' + setLogic + ' (' + copy[i] + ')';
-			}
-			i++;
-		}
-		return query;
+		i++;
+	}
+	return query;
 }
 
-// It gets either a 2D array of tag values [[,],...], output from k_combinations(), or 1D array, and creates a query for all those combinations. 
+// It gets either a 2D array of tag values [[,],...], output from k_combinations(), or 1D array, and creates a query for all those combinations.
 // For 2D, every subset uses 'subtagsArrayLogic' between the tags. And then 'tagsArrayLogic' between subsets. QueryKey is the tag name.
 // So that means you can create queries like:
 // '(MOOD IS mood1 AND MOOD IS mood2) OR (MOOD IS mood1 AND MOOD IS mood3) OR ...'
 // Currently configurable only AND (NOT) / OR (NOT) logics.
 // For 1D arrays, only 'tagsArrayLogic' is used. i.e. 'STYLE IS style1 OR STYLE IS style2 ...'
 function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subtagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
-		// Wrong tagsArray
-		if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
-			console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
-			return; //Array was null or not an array
+	// Wrong tagsArray
+	if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
+		console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
+		return; //Array was null or not an array
+	}
+	if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
+		console.log('query_combinations(): queryKey not set. tagsArray = ' + tagsArray);
+		return;
+	}
+	if (isArrayStrings(queryKey)) {
+		let queryKeyLength = queryKey.length;
+		let i = 0;
+		let queryArray = [];
+		while (i < queryKeyLength) {
+			queryArray.push(query_combinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match));
+			i++;
 		}
-		if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
-			console.log('query_combinations(): queryKey not set. tagsArray = ' + tagsArray);
+		return queryArray;
+	}
+	let tagsArrayLength = tagsArray.length;
+	let query = '';
+	let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
+	if (!isArray) { //no subtagsArrays
+		if (logicDic.indexOf(tagsArrayLogic) === -1) {
+			console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
 			return;
 		}
-		if (isArrayStrings(queryKey)) {
-			let queryKeyLength = queryKey.length;
-			let i = 0;
-			let queryArray = [];
-			while (i < queryKeyLength) {
-				queryArray.push(query_combinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match));
-				i++;
+		let i = 0;
+		while (i < tagsArrayLength) {
+			if (i === 0) {
+				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[0]);
+			} else {
+				query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i]);
 			}
-			return queryArray;
+			i++;
 		}
-		let tagsArrayLength = tagsArray.length;
-		let query = '';
-		let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
-		if (!isArray) { //no subtagsArrays
-			if (logicDic.indexOf(tagsArrayLogic) === -1) {
-				console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
-				return;
+	} else {
+		if (logicDic.indexOf(tagsArrayLogic) === -1 || !logicDic.indexOf(subtagsArrayLogic) === -1) {
+			console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
+			return;
+		}
+		let k = tagsArray[0].length; //SubtagsArrays length
+		let i = 0;
+		while (i < tagsArrayLength) {
+			if (i !== 0) {
+				query += ' ' + tagsArrayLogic + ' ';
 			}
-			let i = 0;
-			while (i < tagsArrayLength) {
-				if (i === 0) {
-					query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[0]);
+			let j = 0;
+			while (j < k) {
+				if (j === 0) {
+					query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][0]); // only adds pharentesis when more than one subtag! Estetic fix...
 				} else {
-					query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i]);
+					query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' '+ sanitizeQueryVal(tagsArray[i][j]);
 				}
-				i++;
+				j++;
 			}
-		} else {
-			if (logicDic.indexOf(tagsArrayLogic) === -1 || !logicDic.indexOf(subtagsArrayLogic) === -1) {
-				console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
-				return;
-			}
-			let k = tagsArray[0].length; //SubtagsArrays length
-			let i = 0;
-			while (i < tagsArrayLength) {
-				if (i !== 0) {
-					query += ' ' + tagsArrayLogic + ' ';
-				}
-				let j = 0;
-				while (j < k) {
-					if (j === 0) {
-						query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][0]); // only adds pharentesis when more than one subtag! Estetic fix...
-					} else {
-						query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' '+ sanitizeQueryVal(tagsArray[i][j]);
-					}
-					j++;
-				}
-				query += (k > 1 ? ')' : '');
-				i++;
-			}
+			query += (k > 1 ? ')' : '');
+			i++;
 		}
-		return query;
+	}
+	return query;
 }
 
 function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
@@ -260,7 +260,7 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}  // Test query against empty handle list since it's much faster!
 	catch (e) {bPass = false;}
 	if (bPass) {
-		try {fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort));}  // Some expressions only thrown inside parentheses!
+		try {fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort));}  // Some expressions only throw inside parentheses!
 		catch (e) {bPass = false;}
 	}
 	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
@@ -305,12 +305,12 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 function getTagsValues(handle, tagsArray, bMerged = false) {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
-	
+
 	const handleInfo = handle.GetFileInfo();
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
 	let i = 0;
-	
+
 	while (i < tagArray_length) {
 		let tagValues = [];
 		const tagIdx = handleInfo.MetaFind(tagsArray[i]);
@@ -325,7 +325,7 @@ function getTagsValues(handle, tagsArray, bMerged = false) {
 		outputArray.push(tagValues);
 		i++;
 	}
-	
+
 	if (bMerged) {outputArray = outputArray.flat();}
 	return outputArray;
 }
@@ -333,17 +333,17 @@ function getTagsValues(handle, tagsArray, bMerged = false) {
 function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
-	
+
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
 	let i = 0;
 	let tagString = '';
 	const outputArray_length = handle.Count;
 	while (i < tagArray_length) {
-		const tagStr = tagsArray[i].indexOf('$') === -1 
-			? tagsArray[i].indexOf('%') === -1 
-				? '%' + tagsArray[i] + '%' 
-				: tagsArray[i] 
+		const tagStr = tagsArray[i].indexOf('$') === -1
+			? tagsArray[i].indexOf('%') === -1
+				? '%' + tagsArray[i] + '%'
+				: tagsArray[i]
 			: tagsArray[i];
 		if (bMerged) {tagString += _b((i === 0 ? '' : ', ') + tagStr);} // We have all values separated by comma
 		else {tagString += (i === 0 ? '' : '| ') + _b(tagStr);} // We have tag values separated by comma and different tags by |
@@ -369,7 +369,7 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
 	if (!isArrayStrings (tagsArray)) {return null;}
 	if (!handle) {return null;}
-	
+
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handle.Count;
 	let outputArray = [];
@@ -381,14 +381,14 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 			continue;
 		}
 		// Tagname or TF expression, with or without empty values
-		let tagString = tagsArray[i].indexOf('$') === -1 
-			? tagsArray[i].indexOf('%') === -1 
-				? '%' + tagsArray[i] + '%' 
-				: tagsArray[i] 
+		let tagString = tagsArray[i].indexOf('$') === -1
+			? tagsArray[i].indexOf('%') === -1
+				? '%' + tagsArray[i] + '%'
+				: tagsArray[i]
 			: tagsArray[i];
-		tagString = bEmptyVal 
-				? tagString 
-				: '[' + tagString + ']';
+		tagString = bEmptyVal
+			? tagString
+			: '[' + tagString + ']';
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
 		if (splitBy && splitBy.length) {
@@ -409,7 +409,7 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
 	if (!isArray (tagsArray)) {return null;}
 	if (!handle) {return null;}
-	
+
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handle.Count;
 	let outputArray = [];
@@ -456,12 +456,12 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 }
 
 function compareTagsValues(handle, tagsArray, bMerged = false) {
-	
+
 	let tags = getTagsValuesV3(handle, ['genre', 'composer'], true).flat();
 	let genre = getTagsValuesV4(handle, ['genre', 'composer'], bMerged).flat(2);
 	console.log(genre);
 	console.log(tags);
-	
+
 	// let tagSet = new Set(tags[0][0].concat(tags[1][0]));
 	// console.log(genreSet.difference(tagSet).size);
 	// console.log(tagSet.difference(genreSet).size);

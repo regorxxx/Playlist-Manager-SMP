@@ -1,24 +1,29 @@
 ﻿'use strict';
-//20/11/23
+//17/12/23
 
-/* 
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, biMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
+
+include('helpers_xxx_basic_js.js');
+/* global require:readable */
+
+/*
 	Objects
 */
 
 // https://github.com/ReactiveSets/toubkal/blob/master/lib/util/value_equals.js
 function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
-	return a === b			// strick equality should be enough unless zero
+	return a === b			// strict equality should be enough unless zero
 		&& a !== 0			// because 0 === -0, requires test by _equals()
 		|| _equals(a, b);	// handles not strictly equal or zero values
-	
+
 	function _equals(a, b) {
 		// a and b have already failed test for strict equality or are zero
 		const toString = Object.prototype.toString;
 		let s, l, p, x, y;
-		
+
 		// They should have the same toString() signature
 		if ((s = toString.call(a)) !== toString.call(b)) return false;
-		
+
 		switch(s) {
 			default: { // Boolean, Date, String
 				return a.valueOf() === b.valueOf();
@@ -28,11 +33,11 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 				// This is required also for NaN test bellow
 				a = +a;
 				b = +b;
-				
+
 				return a 				// a is Non-zero and Non-NaN
 					? a === b 			// a is 0, -0 or NaN
-					: a === a			// a is 0 or -O             
-						? 1/a === 1/b	// 1/0 !== 1/-0 because Infinity !== -Infinity     
+					: a === a			// a is 0 or -O
+						? 1/a === 1/b	// 1/0 !== 1/-0 because Infinity !== -Infinity
 						: b !== b; 		// NaN, the only Number not equal to itself!
 			}
 			case '[object RegExp]': {
@@ -59,7 +64,7 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 				if (cyclic && (x = reference_equals(a, b)) !== null) return x; // intentionally duplicated from above for [object Array]
 				l = 0; // counter of own properties
 				if (enforcePropertiesOrder) {
-					let properties = [];
+					const properties = [];
 					for (p in a) {
 						if (a.hasOwnProperty(p)) {
 							properties.push(p);
@@ -88,9 +93,9 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 			}
 		}
 	}
-	
+
 	function reference_equals(a, b) {
-		let object_references = [];
+		const object_references = [];
 		return (reference_equals = _reference_equals)(a, b);
 		function _reference_equals(a, b) {
 			let l = object_references.length;
@@ -117,11 +122,11 @@ function isJSON(str) {
 }
 
 function roughSizeOfObject(object) {
-	let objectList = [];
-	let stack = [object];
+	const objectList = [];
+	const stack = [object];
 	let bytes = 0;
 	while (stack.length) {
-		let value = stack.pop();
+		const value = stack.pop();
 		if (typeof value === 'boolean') {
 			bytes += 4;
 		}
@@ -133,7 +138,7 @@ function roughSizeOfObject(object) {
 		}
 		else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
 			objectList.push(value);
-			for (let i in value) {if (!value.hasOwnProperty(i)) {continue;} stack.push(value[i]);}
+			for (const i in value) {if (!value.hasOwnProperty(i)) {continue;} stack.push(value[i]);}
 		}
 	} // TODO Handle lists? TF?
 	return bytes;
@@ -170,7 +175,7 @@ function deepAssign(options = {nonEnum: false, symbols: false, descriptors: fals
 			}
 			//default: omit prototype's own properties
 			if (options.proto) {
-				// Copy souce prototype's own properties into target prototype's own properties
+				// Copy source prototype's own properties into target prototype's own properties
 				deepAssign(Object.assign({},options,{proto:false})) (// Prevent deeper copy of the prototype chain
 					Object.getPrototypeOf(target),
 					Object.getPrototypeOf(source)
@@ -187,7 +192,7 @@ function toType(a) {
 }
 
 function isDeepObject(obj) {
-	return "Object" === toType(obj);
+	return 'Object' === toType(obj);
 }
 
 // Throw errors when trying to get length from objects
@@ -199,31 +204,31 @@ Object.defineProperty(Object.prototype, 'toStr', {
 	configurable: false,
 	value: function toStr({bClosure = false, bCapitalizeKeys = false, separator = ', '} = {}) {
 		return (bClosure ? '{' : '') + Object.entries(this).map((entry) => {
-			return (typeof entry[0] === 'object' 
-				? entry[0].toStr() 
-				: bCapitalizeKeys 
-					? capitalize(entry[0].toString()) 
+			return (typeof entry[0] === 'object'
+				? entry[0].toStr()
+				: bCapitalizeKeys
+					? capitalize(entry[0].toString())
 					: entry[0].toString()
-			) + ': ' + (typeof entry[1] === 'object' 
-					? entry[1] === null ? 'null' : entry[1].toStr() 
-					:  typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
+			) + ': ' + (typeof entry[1] === 'object'
+				? entry[1] === null ? 'null' : entry[1].toStr()
+				:  typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
 			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
 
-/* 
+/*
 	Maps
 */
 
 class biMap {
 	constructor(map) {
-	   this.map = map;
-	   this.uniMap = {...this.map};
-	   for (const key in map) {
-		  const value = map[key];
-		  this.map[value] = key;   
-	   }
+		this.map = map;
+		this.uniMap = {...this.map};
+		for (const key in map) {
+			const value = map[key];
+			this.map[value] = key;
+		}
 	}
 	get(key) {return this.map[key];}
 	has(key) {return this.map.hasOwnProperty(key);}
@@ -234,10 +239,10 @@ class biMap {
 	entries() {return Object.entries(this.map);}
 	uniEntries() {return Object.entries(this.uniMap);}
 	set(key, value) {this.map[key] = value; this.uniMap[key] = value;}
-	unset(key) {delete this.map[key]; delete this.uniMap[key]}
+	unset(key) {delete this.map[key]; delete this.uniMap[key];}
 }
 
-/* 
+/*
 	Functions
 */
 
@@ -248,31 +253,31 @@ function isFunction(obj) {
 Function.prototype.applyInChunks = function applyInChunks() {
 	const len = arguments.length;
 	const max = 32768;
-	let result = [];
+	const result = [];
 	for (let i = 0; i < len; i++) {
 		const arg = [...arguments[i]];
 		const subLen = arg.length;
-		let subResult = [];
+		const subResult = [];
 		for (let j = 0; j < subLen; j++) {
 			subResult.push(this.apply(null, arg.slice(j, Math.min(j + max, subLen))));
 		}
 		result[i] = this.apply(null, subResult);
 	}
 	return this.apply(null, result);
-}
+};
 
 // JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
 function $args(func) {
 	return (func + '')
 		.replace(/[/][/].*$/mg,'') // strip single-line comments
 		.replace(/\s+/g, '') // strip white space
-		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments  
-		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters  
-		.replace(/=[^,]+/g, '') // strip any ES6 defaults  
+		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments
+		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters
+		.replace(/=[^,]+/g, '') // strip any ES6 defaults
 		.split(',').filter(Boolean); // split & filter [""]
 }
 
-/* 
+/*
 	Promises
 */
 
@@ -306,9 +311,9 @@ Object.defineProperty(Promise, 'serial', {
 		const reducer = (acc$, inputValue, i) =>
 			acc$.then(acc => {
 				return (timeout
-						? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
-						: mapper(inputValue, i)
-					).then(result => acc.push(result) && acc);
+					? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
+					: mapper(inputValue, i)
+				).then(result => acc.push(result) && acc);
 			});
 		return inputValues.reduce(reducer, Promise.resolve([]));
 	}
@@ -338,18 +343,18 @@ Object.defineProperty(Promise, 'wait', {
 	}
 });
 
-/* 
+/*
 	Strings
 */
 
 // https://www.dotnetforall.com/difference-between-typeof-and-valueof-in-javascript/
 // We don't care about object-wrapped strings, they are deprecated and not recommended.
 function isString(str){
-	return (typeof str === 'string' && str.length > 0) ? true : false;
+	return (typeof str === 'string' && str.length > 0);
 }
 
 function isStringWeak(str){
-	return (typeof str === 'string') ? true : false;
+	return (typeof str === 'string');
 }
 
 String.prototype.replaceLast = function replaceLast(word, newWord) {
@@ -363,7 +368,7 @@ String.prototype.replaceAll = function replaceAll(word, newWord) {
 	return copy;
 };
 
-String.prototype.count = function count(c) { 
+String.prototype.count = function count(c) {
 	let result = 0, i = 0;
 	for (i; i < this.length; i++) {
 		if (this[i] == c) {result++;}
@@ -382,7 +387,7 @@ function matchCase(text, pattern, bFirst = true) {
 	const len = bFirst ? 1 : text.length;
 	for (let i = 0; i < len; i++) {
 		const p = pattern.charAt(i);
-		result += p === p.toUpperCase() 
+		result += p === p.toUpperCase()
 			? text.charAt(i).toUpperCase()
 			: text.charAt(i).toLowerCase();
 	}
@@ -415,7 +420,7 @@ function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as sepa
 		}
 		return copy.join('');
 	}
-	return s.split(sep).map( (subS) => {return subS.charAt(0).toUpperCase() + subS.slice(1).toLowerCase();}).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
+	return s.split(sep).map((subS) => subS.charAt(0).toUpperCase() + subS.slice(1).toLowerCase()).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
 }
 
 function _p(value) {
@@ -439,7 +444,7 @@ function _bt(tag) {
 }
 
 function _qCond(tag, bUnquote = false) {
-	return bUnquote 
+	return bUnquote
 		? tag.replace(/(^")(.*\$+.*)("$)/g, '$2')
 		: tag.includes('$')
 			? _q(tag)
@@ -453,7 +458,7 @@ function _ascii(tag) { // Don't miss quotes on queries!
 function _asciify(value) { // Mimics $ascii() Title Format function
 	return (isStringWeak(value) ? value : String(value)).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0142/g, 'l');
 }
-/* 
+/*
 	Arrays
 */
 
@@ -512,7 +517,7 @@ Array.prototype.rotate = (function() {
 	};
 })();
 
-Array.prototype.swap = function(i, j) { 
+Array.prototype.swap = function(i, j) {
 	[this[i], this[j]] = [this[j], this[i]];
 	return this;
 };
@@ -534,7 +539,7 @@ Array.prototype.move = function(from, to, on) {
 
 // [1, 2, 3, 4, 5, 6, 7].chunk(3) // => [[1, 2, 3], [4, 5, 6], [7]]
 Array.prototype.chunk = function(chunkSize) {
-	let R = [];
+	const R = [];
 	for (let i = 0; i < this.length; i += chunkSize) {
 		R.push(this.slice(i, i + chunkSize));
 	}
@@ -554,9 +559,9 @@ Array.shuffle = function() {
 	let last = 0;
 	const argsLength = arguments.length;
 	for (let idx = 0; idx < argsLength; idx++) {
-		if (!isArray(arguments[idx])) {throw new TypeError("Argument is not an array.");}
+		if (!isArray(arguments[idx])) {throw new TypeError('Argument is not an array.');}
 		if (idx === 0) {last = arguments[0].length;}
-		if (last !== arguments[idx].length) {throw new RangeError("Array lengths do not match.");}
+		if (last !== arguments[idx].length) {throw new RangeError('Array lengths do not match.');}
 	}
 	let n;
 	while (last > 0) {
@@ -587,7 +592,7 @@ Array.prototype.joinUpToChars = function(sep, chars) {
 	return str;
 };
 
-Array.prototype.multiIndexOf = function(el) { 
+Array.prototype.multiIndexOf = function(el) {
 	const idxs = [];
 	for (let i = this.length - 1; i >= 0; i--) {
 		if (this[i] === el) {idxs.unshift(i);}
@@ -595,7 +600,7 @@ Array.prototype.multiIndexOf = function(el) {
 	return idxs;
 };
 
-Array.prototype.partialSort = function(order, bOptimze = true) {
+Array.prototype.partialSort = function(order, bOptimize = true) {
 	if (bOptimize) {order = [...(new Set(order).intersection(new Set(this)))];}
 	const profiler = new FbProfiler('partialSort');
 	const orderIndex = [];
@@ -623,7 +628,7 @@ Array.prototype.partialSort = function(order, bOptimze = true) {
 // https://en.wikipedia.org/wiki/Schwartzian_transform
 Array.prototype.schwartzianSort = function(processFunc, sortFunc = (a, b) => a[1] - b[1]) { // or (a, b) => {return a[1].localeCompare(b[1]);}
 	return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
-}
+};
 
 // https://github.com/aldo-gutierrez/bitmasksorterJS
 const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
@@ -634,12 +639,12 @@ Array.prototype.radixSortInt = function(bReverse = false, start, end) {
 	return bReverse ? bitmask.sortInt.call(this, this, start, end).reverse() : bitmask.sortInt.call(this, this, start, end);
 };
 
-/* 
+/*
 	Sets
 */
 
 Set.prototype.isSuperset = function(subset) {
-	for (let elem of subset) {
+	for (const elem of subset) {
 		if (!this.has(elem)) {
 			return false;
 		}
@@ -648,16 +653,16 @@ Set.prototype.isSuperset = function(subset) {
 };
 
 Set.prototype.union = function(setB) {
-	let union = new Set(this);
-	for (let elem of setB) {
+	const union = new Set(this);
+	for (const elem of setB) {
 		union.add(elem);
 	}
 	return union;
 };
 
 Set.prototype.intersection = function(setB) {
-	let intersection = new Set();
-	for (let elem of setB) {
+	const intersection = new Set();
+	for (const elem of setB) {
 		if (this.has(elem)) {
 			intersection.add(elem);
 		}
@@ -666,8 +671,8 @@ Set.prototype.intersection = function(setB) {
 };
 
 Set.prototype.difference = function(setB) {
-	let difference = new Set(this);
-	for (let elem of setB) {
+	const difference = new Set(this);
+	for (const elem of setB) {
 		difference.delete(elem);
 	}
 	return difference;
@@ -679,7 +684,7 @@ Set.prototype.isEqual = function(subset) {
 
 Set.prototype.unionSize = function(setB) {
 	let size = 0;
-	for (let elem of setB) {
+	for (const elem of setB) {
 		if (!this.has(elem)) {size++;}
 	}
 	return size;
@@ -687,7 +692,7 @@ Set.prototype.unionSize = function(setB) {
 
 Set.prototype.intersectionSize = function(setB) {
 	let size = 0;
-	for (let elem of setB) {
+	for (const elem of setB) {
 		if (this.has(elem)) {size++;}
 	}
 	return size;
@@ -695,44 +700,44 @@ Set.prototype.intersectionSize = function(setB) {
 
 Set.prototype.differenceSize = function(setB) {
 	let size = this.size;
-	for (let elem of setB) {
+	for (const elem of setB) {
 		if (this.has(elem)) {size--;}
 	}
 	return size;
 };
 
-/* 
+/*
 	Numbers
 */
 
 function isInt(n){
-    return Number(n) === n && Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER && n % 1 === 0;
+	return Number(n) === n && Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER && n % 1 === 0;
 }
 
 function isFloat(n){
-    return Number(n) === n && Number.isFinite(n) && n % 1 !== 0;
+	return Number(n) === n && Number.isFinite(n) && n % 1 !== 0;
 }
 
 // Adds/subtracts 'offset' to 'reference' considering the values must follow cyclic logic within 'limits' range (both values included)
 // Ex: [1,8], x = 5 -> x + 4 = 1 <=> cyclicOffset(5, 4, [1,8])
 function cyclicOffset(reference, offset, limits) {
-		if (offset && reference >= limits[0] && reference <= limits[1]) {
-			reference += offset;
-			if (reference < limits[0]) {reference += limits[1];}
-			if (reference > limits[1]) {reference -= limits[1];}
-		}
-		return reference;
+	if (offset && reference >= limits[0] && reference <= limits[1]) {
+		reference += offset;
+		if (reference < limits[0]) {reference += limits[1];}
+		if (reference > limits[1]) {reference -= limits[1];}
+	}
+	return reference;
 }
 
 const range = (start, stop, step) => new Array(Math.round((stop - start) / step + 1)).fill(void(0)).map((_, i) => start + (i * step));
 
 function round(floatnum, decimals, eps = 10**-14){
-	let result;
-	if (decimals > 0) {
-		if (decimals === 15) {result = floatnum;}
-		else {result = Math.round(floatnum * Math.pow(10, decimals) + eps) / Math.pow(10, decimals);}
-	} else {result =  Math.round(floatnum);}
-	return result;
+	return (decimals > 0
+		? decimals === 15
+			? floatnum
+			: Math.round(floatnum * Math.pow(10, decimals) + eps) / Math.pow(10, decimals)
+		: Math.round(floatnum)
+	);
 }
 
 Math.randomNum = function randomNum(min, max, options = {integer: false, includeMax: false}) {
@@ -743,13 +748,13 @@ Math.randomNum = function randomNum(min, max, options = {integer: false, include
 	} else {
 		return Math.random() * (max - min + (options.includeMax ? 1 : 0)) + min;
 	}
-}
+};
 
 Math.randomInt = function randomNum(min, max, includeMax = false) {
 	return Math.randomNum(min, max, {integer: true, includeMax});
-}
+};
 
-/* 
+/*
 	UUID
 */
 
@@ -757,24 +762,24 @@ function isUUID(str) {
 	return /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(str);
 }
 
-/* 
+/*
 	Booleans
 */
 
-// From Underscore 
+// From Underscore
 function isBoolean(obj) {
 	return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
 }
 
 const regExBool = /^b[A-Z]\w*/;
 
-/* 
+/*
 	Maps
 */
 // Allows forward and backward iteration
 try {include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js');} catch (e) {/* continue regardless of error */}
 
-/* 
+/*
 	SMP
 */
 include('helpers_xxx_prototypes_smp.js');

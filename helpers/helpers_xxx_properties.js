@@ -1,9 +1,12 @@
 ﻿'use strict';
-//23/02/22
+//17/12/23
+
+/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
 include('helpers_xxx_file.js');
+/* global _isFile:readable, _isFolder:readable*/
 
-/* 
+/*
 	Properties
 	propertiesObj 	--->	{propertyKey: [description, defaultValue, check, fallbackValue]}
 	property			---> 	[description, defaultValue, check, fallbackValue]
@@ -12,13 +15,13 @@ include('helpers_xxx_file.js');
 */
 
 // Sets all properties at once using an object like this: {propertyKey : ['description',defaultValue]}
-// Note it uses the get method by default. Change bForce to use Set method. 
+// Note it uses the get method by default. Change bForce to use Set method.
 // For ex. for setting properties with UI buttons after initialization.
 function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
-	let bNumber = count > 0 ? true : false;
-	for (let k in propertiesDescriptor){
+	const bNumber = count > 0 ? true : false;
+	for (const k in propertiesDescriptor){
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
-		let description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
+		const description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 		if (bForce) { // Only use set when overwriting... this is done to have default values set first and then overwriting if needed.
 			if (!checkProperty(propertiesDescriptor[k])) {window.SetProperty(description, propertiesDescriptor[k][3]);}
 			else {window.SetProperty(description, propertiesDescriptor[k][1]);}
@@ -34,7 +37,7 @@ function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 // Overwrites all properties at once
 // For ex. for saving properties within a constructor (so this.propertiesDescriptor already contains count, padding, etc.).
 function overwriteProperties(propertiesDescriptor) { // Equivalent to setProperties(propertiesDescriptor,'',0,false,true);
-	for (let k in propertiesDescriptor){
+	for (const k in propertiesDescriptor){
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		if (!checkProperty(propertiesDescriptor[k])) {
 			window.SetProperty(propertiesDescriptor[k][0], propertiesDescriptor[k][3]);
@@ -47,8 +50,8 @@ function overwriteProperties(propertiesDescriptor) { // Equivalent to setPropert
 
 // Deletes all properties at once
 // Omits property checking so allows setting one to null and delete it, while overwriteProperties() will throw a checking popup
-function deleteProperties(propertiesDescriptor) { 
-	for (let k in propertiesDescriptor) {
+function deleteProperties(propertiesDescriptor) {
+	for (const k in propertiesDescriptor) {
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		window.SetProperty(propertiesDescriptor[k][0], null);
 	}
@@ -58,9 +61,9 @@ function deleteProperties(propertiesDescriptor) {
 // Recreates the property object like this: {propertyKey : ['description',defaultValue]} -> {propertyKey : userSetValue}
 // Returns the entire list of values
 function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true) {
-	let bNumber = count > 0 ? true : false;
-	let output = {};
-	for (let k in propertiesDescriptor){
+	const bNumber = count > 0 ? true : false;
+	const output = {};
+	for (const k in propertiesDescriptor){
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		output[k] = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 		if (bNumber) {count++;}
@@ -70,9 +73,9 @@ function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 
 // // Recreates the property object and gets the property variable associated to propertyKey: {propertyKey : ['description', defaultValue]} -> userSetValue
 function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPadding = true) {
-	let bNumber = count > 0 ? true : false;
+	const bNumber = count > 0 ? true : false;
 	let output = null;
-	for (let k in propertiesDescriptor){
+	for (const k in propertiesDescriptor){
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		if (k === key) {
 			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
@@ -86,11 +89,11 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPa
 // Recreates the property object and returns it: {propertyKey : ['description',defaultValue]} -> {propertyKey : ['prefix + count(padded) + 'description', userSetValue]}
 // Use this to get descriptions along the values, instead of the previous ones
 function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bOnlyValues = false) {
-	let bNumber = count > 0 ? true : false;
-	let output = {};
+	const bNumber = count > 0 ? true : false;
+	const output = {};
 	if (bOnlyValues) { // only outputs values, without description
 		let cacheDescription = null;
-		for (let k in propertiesDescriptor){
+		for (const k in propertiesDescriptor){
 			if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 			output[k] = null;
 			cacheDescription = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
@@ -101,7 +104,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 			if (bNumber) {count++;}
 		}
 	} else {
-		for (let k in propertiesDescriptor){ // entire properties object with fixed descriptions
+		for (const k in propertiesDescriptor){ // entire properties object with fixed descriptions
 			if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 			output[k] = [null,null];
 			output[k][0] =  prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
@@ -121,15 +124,15 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 
 // Like getProperties() but outputs just an array of values: {propertyKey : ['description',defaultValue]} -> [userSetValue1, userSetValue2, ...]
 function getPropertiesValues(propertiesDescriptor, prefix = '', count = 1, skip = -1, bPadding = true) {
-	let properties = getProperties(propertiesDescriptor, prefix, count, bPadding);
-	let propertiesValues = [];
+	const properties = getProperties(propertiesDescriptor, prefix, count, bPadding);
+	const propertiesValues = [];
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
-	for (let k in properties){
+	for (const k in properties){
 		if (!properties.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
-			let property = properties[k];
+			const property = properties[k];
 			if (property !== null) {propertiesValues.push(property);}
 		}
 	}
@@ -138,11 +141,11 @@ function getPropertiesValues(propertiesDescriptor, prefix = '', count = 1, skip 
 
 // Like getPropertiesValues() but the array of keys: {propertyKey : ['description',defaultValue]} -> [propertyKey1, propertyKey2, ...]
 function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = -1, bPadding = true) {
-	let bNumber = count > 0 ? true : false;
-	let propertiesKeys = [];
+	const bNumber = count > 0;
+	const propertiesKeys = [];
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
-	for (let k in propertiesDescriptor){
+	for (const k in propertiesDescriptor){
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
@@ -156,15 +159,15 @@ function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = 
 // Recreates the property object and returns user set values: {propertyKey : ['description',defaultValue]} -> userSetValue1 , userSetValue2, ...
 // Only returns an array of values; useful for enumerating properties at once (like tags, etc.)
 function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1, sep = '|', skip = -1, bPadding = true) {
-	let bNumber = count > 0 ? true : false;
+	const bNumber = count > 0;
 	let output = '';
 	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
 	let i = 0;
-	for (let k in propertiesDescriptor){
+	for (const k in propertiesDescriptor){
 		if (!propertiesDescriptor.hasOwnProperty(k)) {continue;}
 		i++;
 		if (i < skip) {
-			let value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]));
+			const value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]));
 			output += (output === '') ? value : sep + value ;
 			if (bNumber) {count++;}
 		}
@@ -172,7 +175,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 	return output;
 }
 
-// Checks property against given conditions. This is called everytime a property is set, overwritten
+// Checks property against given conditions. This is called every-time a property is set, overwritten
 // or get from/to the properties panel. Therefore allows for generic error checking.
 // propertiesObj 	--->	{propertyKey: [description, defaultValue, check, fallbackValue]}
 // property			---> 	[description, defaultValue, check, fallbackValue]
@@ -199,7 +202,7 @@ function checkProperty(property, withValue) {
 	if (checks.hasOwnProperty('eq') && checks['eq'].indexOf(valToCheck) === -1) {
 		bPass = false; report += 'Value must be equal to (any) ' + checks['eq'].join(', ') + '\n';
 	}
-	if (checks.hasOwnProperty('range') && !checks['range'].some( (pair) => {return (valToCheck >= pair[0] && valToCheck <= pair[1]);})) {
+	if (checks.hasOwnProperty('range') && !checks['range'].some((pair) => (valToCheck >= pair[0] && valToCheck <= pair[1]))) {
 		bPass = false; report += 'Value must be within range(any) ' + checks['range'].join(' or ') + '\n';
 	}
 	if (checks.hasOwnProperty('func') && checks['func'] && !checks['func'](valToCheck)) {

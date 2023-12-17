@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/02/22
+//17/12/23
 
 // https://wiki.xiph.org/XSPF_v1_Notes_and_Errata
 // https://wiki.xiph.org/XSPF_Examples_in_the_wild
@@ -7,6 +7,7 @@
 // https://wiki.xiph.org/XSPF_Conformance_Tests
 include('helpers_xxx.js');
 include('..\\helpers-external\\xspf-to-jspf-parser\\xspf_parser.js');
+/* global XSPF:readable*/
 
 // https://xspf.org/xspf-v1.html#rfc.section.1
 XSPF.toXSPF = function(jspf) {
@@ -16,8 +17,9 @@ XSPF.toXSPF = function(jspf) {
 	const nameSpacesHeader = new Map();
 	let code = [];
 	// XML Header
-	code.push('<?xml version=\"1.0\" encoding=\"UTF-8\"?>');
-	code.push('<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">'); // Name-spaces are added at the end after retrieving them on all objects
+	// Name-spaces are added at the end after retrieving them on all objects
+	code.push('<?xml version=\"1.0\" encoding=\"UTF-8\"?>'); // eslint-disable-line no-useless-escape
+	code.push('<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">'); // eslint-disable-line no-useless-escape
 	// Playlist Header
 	const headerKeys = ['title', 'creator', 'annotation', 'info', 'location', 'identifier', 'image', 'date', 'license', /* Arrays*/ 'link', 'meta', 'extension'];
 	headerKeys.forEach((key) => {
@@ -125,7 +127,7 @@ XSPF.toXSPF = function(jspf) {
 			if (ver && ver.length) {spaceStr += ' xmlns:' + key + '="' + value.replace(ver,'/ns' + ver + '/') + '"';}
 		});
 		if (spaceStr.length) {
-			const defSpace = 'xmlns=\"http://xspf.org/ns/0/\"';
+			const defSpace = 'xmlns=\"http://xspf.org/ns/0/\"'; // eslint-disable-line no-useless-escape
 			const idx = code.indexOf(defSpace) + defSpace.length;
 			code = code.slice(0, idx) + spaceStr + code.slice(idx);
 		}

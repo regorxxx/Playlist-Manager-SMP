@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/08/23
+//17/12/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -14,6 +14,7 @@ Object.defineProperty(console, 'Throttling', {enumerable: false, configurable: f
 Object.defineProperty(console, 'Timer', {enumerable: false, configurable: false, writable: true});
 Object.defineProperty(console, 'Cache', {enumerable: false, configurable: false, writable: true, value: []});
 
+/* global fso:readable */
 const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
 
 // Override logging
@@ -77,7 +78,7 @@ function consoleLog() {
 								if (typeof v !== 'undefined' && v !== null) {
 									if (v.RawPath && v.Path) {
 										return 'FbMetadbHandle ' + JSON.stringify({FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong}, null, ' ').replace(/{\n /,'{').replace(/"|\n/g,'').replace(/\\\\/g, '\\');
-									} 
+									}
 									else if (v instanceof FbMetadbHandleList) {
 										return 'FbMetadbHandleList ' + JSON.stringify({Count: v.Count}, null, ' ').replace(/{\n /,'{').replace(/"|\n/g,'')
 									}

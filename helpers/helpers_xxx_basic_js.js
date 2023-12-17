@@ -1,5 +1,7 @@
 ﻿'use strict';
-//18/02/23
+//17/12/23
+
+/* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require */
 
 // https://github.com/angus-c/just
 /*
@@ -11,9 +13,9 @@ function clone(obj) {
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();
-		for (let value of obj) {
+		for (const value of obj) {
 			// include prototype properties
-			let type = {}.toString.call(value).slice(8, -1);
+			const type = {}.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result.add(clone(value));
 			} else if (type === 'Date') {
@@ -29,7 +31,7 @@ function clone(obj) {
 		result = new Map();
 		for (let [key, value] of obj) {
 			// include prototype properties
-			let type = {}.toString.call(value).slice(8, -1);
+			const type = {}.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result.set(key, clone(value));
 			} else if (type === 'Date') {
@@ -43,10 +45,10 @@ function clone(obj) {
 		return result;
 	} else {
 		result = Array.isArray(obj) ? [] : {};
-		for (let key in obj) {
+		for (const key in obj) {
 			// include prototype properties
-			let value = obj[key];
-			let type = {}.toString.call(value).slice(8, -1);
+			const value = obj[key];
+			const type = {}.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result[key] = clone(value);
 			} else if (type === 'Date') {
@@ -71,14 +73,13 @@ function setNested(obj, value, ...args) {
 		if (obj && len === idx && obj.hasOwnProperty(level)) {obj[level] = value;}
 		return obj && obj[level];
 	}, obj);
-	return obj;
 }
-		
+
 function getRegExpFlags(regExp) {
-		if (typeof regExp.source.flags === 'string') {
+	if (typeof regExp.source.flags === 'string') {
 		return regExp.source.flags;
 	} else {
-		let flags = [];
+		const flags = [];
 		regExp.global && flags.push('g');
 		regExp.ignoreCase && flags.push('i');
 		regExp.multiline && flags.push('m');
@@ -92,12 +93,12 @@ function baseToString(value) {
 	if (typeof value == 'string') {
 		return value;
 	}
-	var result = (value + '');
+	const result = (value + '');
 	return (result === '0' && (1 / value) === -Infinity) ? '-0' : result;
 }
 
 function toString(value) {
-  return value == null ? '' : baseToString(value);
+	return value == null ? '' : baseToString(value);
 }
 
 const escapeRegExpCache = {};
@@ -118,7 +119,7 @@ function randomString(len, charSet) {
 	charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	let randomString = '';
 	for (let i = 0; i < len; i++) {
-		let randomPoz = Math.floor(Math.random() * charSet.length);
+		const randomPoz = Math.floor(Math.random() * charSet.length);
 		randomString += charSet.substring(randomPoz, randomPoz + 1);
 	}
 	return randomString;
@@ -164,9 +165,9 @@ const throttle = (fn, delay, immediate = false, parent = this) => {
 		if (immediate && !timerId) {boundFunc();}
 		timerId = setTimeout(() => {
 			if(!immediate) {
-				boundFunc(); 
+				boundFunc();
 			}
-			timerId = null; 
+			timerId = null;
 		}, delay);
 	};
 };
@@ -210,8 +211,8 @@ function memoize(fn) {
 	};
 }
 
-/* 
-	Array and objects manipulation 
+/*
+	Array and objects manipulation
 */
 
 // Expects key,value,key,value,...
@@ -222,12 +223,12 @@ function convertStringToObject(string, valueType, separator = ',', secondSeparat
 	if (string === null || string === '') {
 		return null;
 	} else {
-		let output = {};
+		const output = {};
 		let array = [];
 		if (secondSeparator) { // Split 2 times
 			array = string.split(secondSeparator);
 			for (let j = 0; j < array.length; j++) {
-				let subArray = array[j].split(separator);
+				const subArray = array[j].split(separator);
 				if (subArray.length >= 2) {
 					output[subArray[0]] = []; // First value is always the key
 					for (let i = 1; i < subArray.length; i++) {
@@ -261,7 +262,7 @@ function convertObjectToString(object, separator = ',') {
 	if (!object || !Object.keys(object).length) {
 		return '';
 	} else {
-		let keys = Object.keys(object);
+		const keys = Object.keys(object);
 		let output = '';
 		for(let i = 0; i < keys.length; i++) {
 			output += (output.length) ? separator + keys[i] + separator + object[keys[i]] : keys[i] + separator + object[keys[i]];

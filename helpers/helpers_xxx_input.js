@@ -1,5 +1,7 @@
 ﻿'use strict';
-//10/12/23
+//17/12/23
+
+/* exported Input */
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
@@ -67,12 +69,12 @@ const Input = Object.seal(Object.freeze({
 			}
 			if (checks && checks.length) {
 				if (type.startsWith('array')) {
-					if (!newVal.some((row) => {return !checks.some((check) => {return check.call(this, row);});})) {
+					if (!newVal.some((row) => !checks.some((check) => check.call(this, row)))) {
 						throw new Error('Invalid checks');
 					}
-				} else if (type.startsWith('object')) { 
-					for (let key in newVal) {
-						if (!checks.some((check) => {return check.call(this, newVal[key]);})) {
+				} else if (type.startsWith('object')) {
+					for (const key in newVal) {
+						if (!checks.some((check) => check.call(this, newVal[key]))) {
 							throw new Error('Invalid checks');
 						}
 					}
@@ -124,7 +126,7 @@ const Input = Object.seal(Object.freeze({
 					break;
 				}
 			}
-			if (checks && checks.length && !checks.some((check) => {return check.call(this, newVal);})) {
+			if (checks && checks.length && !checks.some((check) => check.call(this, newVal))) {
 				throw new Error('Invalid checks');
 			}
 		}
@@ -155,11 +157,11 @@ const Input = Object.seal(Object.freeze({
 			else {newVal = String(input);}
 			switch (type) {
 				case 'string': {
-					if (bFilterEmpty && !newVal.length) {throw new Error('Empty')}
+					if (bFilterEmpty && !newVal.length) {throw new Error('Empty');}
 					break;
 				}
 				case 'unicode': { // https://www.rapidtables.com/code/text/unicode-characters.html
-					if (bFilterEmpty && !newVal.length) {throw new Error('Empty')}
+					if (bFilterEmpty && !newVal.length) {throw new Error('Empty');}
 					newVal = newVal.split(' ').map((s) => s !== '' ? String.fromCharCode(parseInt(s, 16)) : '').join(' ');
 					break;
 				}
@@ -167,7 +169,7 @@ const Input = Object.seal(Object.freeze({
 			if (checks) {
 				if (!Array.isArray(checks)) {
 					throw new Error('Invalid checks argument');
-				} else if (checks.length && !checks.some((check) => {return check.call(this, newVal);})) {
+				} else if (checks.length && !checks.some((check) => check.call(this, newVal))) {
 					throw new Error('Invalid checks');
 				}
 			}
@@ -197,20 +199,22 @@ const Input = Object.seal(Object.freeze({
 			newVal = this.string('string', oldVal, message, title, example);
 			if (newVal === null) {throw new Error('Invalid string');}
 			if (!newVal.length && bFilterEmpty) {newVal = 'ALL';}
-			try {fb.GetQueryItems(new FbMetadbHandleList(), newVal);} // Sanity check
-			catch (e) {throw new Error('Invalid query');}
+			try { // Sanity check
+				fb.GetQueryItems(new FbMetadbHandleList(), newVal);
+				fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND (' + newVal + ')');
+			} catch (e) {throw new Error('Invalid query');}
 			if (bFilterEmpty && fb.GetQueryItems(fb.GetLibraryItems(), newVal).Count === 0) {throw new Error('Zero items query');}
-			if (checks && checks.length  && !checks.some((check) => {return check.call(this, newVal);})) {
+			if (checks && checks.length  && !checks.some((check) => check.call(this, newVal))) {
 				throw new Error('Invalid checks');
 			}
 		}
 		catch (e) {
 			if (e.message === 'Invalid query') {
-				fb.ShowPopupMessage('Query not valid:\n' + input + '\n\nValue must follow query syntax:\nhttps://wiki.hydrogenaud.io/index.php?title=Foobar2000:Query_syntax', title);
+				fb.ShowPopupMessage('Query not valid:\n' + newVal + '\n\nValue must follow query syntax:\nhttps://wiki.hydrogenaud.io/index.php?title=Foobar2000:Query_syntax', title);
 			} else if (e.message === 'Zero items query') {
-				fb.ShowPopupMessage('Query returns no items (on current library):\n' + input, title);
+				fb.ShowPopupMessage('Query returns no items (on current library):\n' + newVal, title);
 			} else if (e.message === 'Invalid checks') {
-				fb.ShowPopupMessage('Query is not valid:\n' + input + '\n\nQuery must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
+				fb.ShowPopupMessage('Query is not valid:\n' + newVal + '\n\nQuery must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
 				fb.ShowPopupMessage(e.name + '\n\n' + e.message, title);
 			}
