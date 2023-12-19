@@ -71,8 +71,8 @@ IF "%version%"=="" (
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('World Map', {author:'regorxxx', version: '=%
-SET version=%version:', features: {drag_n_drop: false}});}=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('World Map', { author: 'regorxxx', version: '=%
+SET version=%version:', features: { drag_n_drop: false } }); }=%
 REM features
 SET enableDragDrop=false
 SET shouldGrabFocus=false
@@ -191,8 +191,8 @@ IF "%version%"=="" (
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Playlist Manager', {author: 'regorxxx', version: '=%
-SET version=%version:', features: {drag_n_drop: true, grab_focus: true}});}=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '=%
+SET version=%version:', features: { drag_n_drop: true, grab_focus: true } }); }=%
 REM features
 SET enableDragDrop=true
 SET shouldGrabFocus=true
@@ -321,8 +321,8 @@ IF "%version%"=="" (
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '=%
-SET version=%version:'});}=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '=%
+SET version=%version:' }); }=%
 REM features
 SET enableDragDrop=false
 SET shouldGrabFocus=false
@@ -383,8 +383,8 @@ IF "%version%"=="" (
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.PackageId) {window.DefineScript('Timeline', {author:'regorxxx', version: '=%
-SET version=%version:', features: {drag_n_drop: false, grab_focus: true}});}=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Timeline', { author: 'regorxxx', version: '=%
+SET version=%version:', features: { drag_n_drop: false, grab_focus: true } }); }=%
 REM features
 SET enableDragDrop=false
 SET shouldGrabFocus=false
@@ -525,8 +525,8 @@ ECHO 	"id": "{%id%}",>> %root%\%filePath%
 ECHO 	"name": "%name%",>> %root%\%filePath%
 ECHO 	"shouldGrabFocus": %shouldGrabFocus%,>> %root%\%filePath%
 ECHO 	"version": "%version%">> %root%\%filePath%
-ECHO | SET /p dummyName="}">> %root%\%filePath% 
-REM omit new line at end 
+ECHO | SET /p dummyName="}">> %root%\%filePath%
+REM omit new line at end
 REM https://stackoverflow.com/questions/7105433/windows-batch-echo-without-new-line
 GOTO:EOF
 
