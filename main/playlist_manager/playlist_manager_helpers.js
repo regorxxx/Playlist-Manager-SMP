@@ -1,7 +1,7 @@
 ﻿'use strict';
 //19/12/23
 
-/* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renamefolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
+/* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
 /* global list:readable, delayAutoUpdate:readable */
 include(fb.ComponentPath + 'docs\\Codepages.js');
@@ -1234,7 +1234,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 	return bRenamedSucessfully;
 }
 
-function renamefolder(list, z, newName) {
+function renameFolder(list, z, newName) {
 	const folder = list.data[z];
 	if (list.dataAll.some((pls) => pls.nameId === newName)) {
 		fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose an unique name for renaming.', window.Name);

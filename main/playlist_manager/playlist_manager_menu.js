@@ -250,7 +250,7 @@ function createMenuLeft(forcedIndex = -1) {
 						const entry = menu.newEntry({menuName, entryText: tag, func: () => {
 							let tags;
 							if (i === 0) {tags = [];}
-							else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
+							else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];}
 							else {tags = [...pls.tags, tag];}
 							setTag(tags, list, z);
 						}, bAddInvisibleIds});
@@ -261,7 +261,7 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 					let tags = '';
 					const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
-					try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);} 
+					try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true);}
 					catch(e) {return;}
 					const tagsString = tags;
 					if (tags.length) {
@@ -385,7 +385,7 @@ function createMenuLeft(forcedIndex = -1) {
 						} else {
 							console.log('Exporting playlist to ListenBrainz: ' + pls.name);
 							playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
-							if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;} 
+							if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) {bUpdateMBID = true;}
 						}
 						if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) {lb.consoleError('Playlist was not exported.');}
 						if (list.properties.bSpotify[1]) {
@@ -561,7 +561,7 @@ function createMenuLeft(forcedIndex = -1) {
 									return bDone;
 								});
 						} else {
-							console.log('Playlist file not found: ' + pls.path); 
+							console.log('Playlist file not found: ' + pls.path);
 							return Promise.resolve(bDone);
 						}
 					}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED});
@@ -638,7 +638,7 @@ function createMenuLeft(forcedIndex = -1) {
 						{name: 'sep'},
 						{name: 'Send to top', idx: 0},
 						{name: 'Send to bottom', idx: Infinity},
-						
+
 					];
 					options.forEach((opt) => {
 						if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
@@ -720,7 +720,7 @@ function createMenuFolder(menu, folder, z) {
 	menu.newEntry({entryText: 'Rename...', func: () => {
 		const input = Input.string('string', folder.nameId, 'Enter playlist name:', window.Name, 'My playlist', void(0), true);
 		if (input === null) {return;}
-		renamefolder(list, z, input);
+		renameFolder(list, z, input);
 	}});
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Multi-select child items...' + '\t' + _b(indexes.length), func: () => {
@@ -785,7 +785,7 @@ function createMenuFolder(menu, folder, z) {
 			{name: 'sep'},
 			{name: 'Send to top', idx: 0},
 			{name: 'Send to bottom', idx: Infinity},
-			
+
 		];
 		options.forEach((opt) => {
 			if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
@@ -923,7 +923,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			const menuName = menu.newMenu('Set category...', void(0), !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({menuName, entryText: 'New category...', func: () => {
 				let category = '';
-				try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, playlists[0].category !== null ? playlists[0].category : '', true);} 
+				try {category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, playlists[0].category !== null ? playlists[0].category : '', true);}
 				catch(e) {return;}
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
@@ -951,7 +951,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			const menuName = menu.newMenu('Set playlist tag(s)...', void(0), !bIsLockPlsEvery &&  bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({menuName, entryText: 'New tag(s)...', func: () => {
 				let tags = '';
-				try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, playlists[0].tags.join(';'), true);} 
+				try {tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, playlists[0].tags.join(';'), true);}
 				catch(e) {return;}
 				tags = tags.split(';').filter(Boolean); // This filters blank values
 				indexes.forEach((z, i) => {
@@ -972,7 +972,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						const pls = playlists[j];
 						if (!isLockPls(pls) && isPlsEditable(pls)) {
 							if (i === 0) {tags = [];}
-							else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];} 
+							else if (pls.tags.indexOf(tag) !== -1) {tags = [...new Set(pls.tags).difference(new Set([tag]))];}
 							else {tags = [...pls.tags, tag];}
 							setTag(tags, list, z);
 						}
@@ -985,7 +985,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newEntry({entryText: 'Automatically add tag(s) to tracks...', func: () => {
 				let tags = '';
 				const currValue = playlists[0].trackTags && playlists[0].trackTags.length ? JSON.stringify(playlists[0].trackTags) : '';
-				try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true);} 
+				try {tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true);}
 				catch(e) {return;}
 				const tagsString = tags;
 				if (tags.length) {
@@ -1012,7 +1012,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		{	// Export and copy
 			menu.newEntry({entryText: 'Export and Copy Tracks to...', func: () => {
 				let path = '';
-				try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, list.playlistsPath + 'Export\\', true));} 
+				try {path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, list.playlistsPath + 'Export\\', true));}
 				catch(e) {return;}
 				if (!path.length) {return;}
 				if (path === list.playlistsPath) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return;}
@@ -1047,7 +1047,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
 						if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-							if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);} 
+							if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);}
 							else {exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);}
 						}
 					});
@@ -1182,7 +1182,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					{name: 'sep'},
 					{name: 'Send to top', idx: 0},
 					{name: 'Send to bottom', idx: Infinity},
-					
+
 				];
 				options.forEach((opt) => {
 					if (opt.name === 'sep') {menu.newEntry({menuName: subMenuName, entryText: 'sep', flags: MF_GRAYED}); return;}
@@ -1259,7 +1259,7 @@ function createMenuRight() {
 		!list.bLiteMode && menu.newEntry({entryText: 'New playlist from selection...', func: () => {
 			const oldIdx = plman.ActivePlaylist;
 			if (oldIdx === -1) {return;}
-			const name = list.properties.bAutoSelTitle[1] 
+			const name = list.properties.bAutoSelTitle[1]
 				? list.plsNameFromSelection(oldIdx)
 				: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
 			const pls = list.add({bEmpty: true, name, bInputName: true});
@@ -1714,7 +1714,7 @@ function createMenuRightTop() {
 				fb.ShowPopupMessage(readme, window.Name);
 			} else {list.properties['bNetworkPopup'][1] = false;}
 			// Related features
-			const answer = list.bLiteMode 
+			const answer = list.bLiteMode
 				? popup.no
 				: WshShell.Popup('Enable \'Relative paths handling\' entries?\n\n(Only useful when tracking playlists which use relative paths for tracks)', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
@@ -1724,7 +1724,7 @@ function createMenuRightTop() {
 			bDone = list.checkConfig();
 			let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 			list.headerTextUpdate();
-			list.bUpdateAutoplaylist = true; 
+			list.bUpdateAutoplaylist = true;
 			list.update(void(0), true, z); // Forces AutoPlaylist size update according to query and tags
 			list.checkConfigPostUpdate(bDone);
 			list.filter();
@@ -2043,7 +2043,7 @@ function createMenuRightTop() {
 	}
 	{	// Playlists behavior
 		const menuName = menu.newMenu('Playlists behavior');
-		if (!list.bLiteMode) {	
+		if (!list.bLiteMode) {
 			{	// UUID
 				const subMenuName = menu.newMenu('Use UUIDs for playlist names...', menuName);
 				const options = list.optionsUUID();
@@ -2441,7 +2441,7 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Personalize playlist icons...', func: () => {
 				let input;
-				try {input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name, list.properties['playlistIcons'][1], true);} 
+				try {input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name, list.properties['playlistIcons'][1], true);}
 				catch(e) {return;}
 				if (!input.length) {input = '{}';}
 				if (input === list.properties['playlistIcons'][1]) {return;}
@@ -2503,7 +2503,7 @@ function createMenuRightTop() {
 							}
 						} else {
 							let input;
-							try {input = Number(utils.InputBox(window.ID, 'Input a number:', window.Name, panel.fonts.size, true));} 
+							try {input = Number(utils.InputBox(window.ID, 'Input a number:', window.Name, panel.fonts.size, true));}
 							catch(e) {return;}
 							if (input === panel.fonts.size) {return;}
 							if (!Number.isSafeInteger(input)) {return;}
@@ -2722,7 +2722,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}});
 					menu.newCheckMenu(subMenuSecondName, preset.name, void(0), () => {
-						return preset.name.toLowerCase() === 'default' 
+						return preset.name.toLowerCase() === 'default'
 							? panel.colors.mode === 0
 								&& panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground())
 								&& panel.colors.buttonsTextColor === invert(panel.getColorBackground())
@@ -2734,7 +2734,7 @@ function createMenuRightTop() {
 								&& list.colors.selectedPlaylistColor === RGB(...toRGB(0xFF0080C0))
 								&& list.colors.folderColor === panel.colors.text
 							: panel.colors.mode === 2
-								&& panel.colors.customBackground === preset.colors[6] 
+								&& panel.colors.customBackground === preset.colors[6]
 								&& panel.colors.bCustomText === true
 								&& panel.colors.customText === preset.colors[5]
 								&& list.colors.autoPlaylistColor === preset.colors[0]
@@ -2744,12 +2744,12 @@ function createMenuRightTop() {
 								&& list.colors.selectedPlaylistColor === preset.colors[4]
 								&& list.colors.folderColor === preset.colors[5]
 								&& (
-									preset.hasOwnProperty('buttonColors') && preset.buttonColors.length 
+									preset.hasOwnProperty('buttonColors') && preset.buttonColors.length
 									&& (
 										(preset.buttonColors[0] !== null && panel.colors.buttonsTextColor === preset.buttonColors[0] || preset.buttonColors[0] === null)
-										&& 
+										&&
 										(preset.buttonColors[1] !== null && panel.colors.buttonsToolbarColor === preset.buttonColors[1] || preset.buttonColors[1] === null)
-									) 
+									)
 									|| !preset.hasOwnProperty('buttonColors')
 								);
 					});
@@ -3026,7 +3026,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 				options.forEach((opt) => {
 					menu.newEntry({menuName: subMenuNameTwo, entryText: capitalize(opt) + '\t' + _b(list.columns.sizeUnits[opt]), func: () => {
-						const mode = WshShell.Popup('Use unicode char codes?\nFor example: (escape | input | display)\n\\u2665 | 2665 | \u2665\n\\u266A | 266A | \u266A\n\nMore info:\nhttps://www.rapidtables.com/code/text/unicode-characters.html', 0, window.Name, popup.question + popup.yes_no) === popup.yes 
+						const mode = WshShell.Popup('Use unicode char codes?\nFor example: (escape | input | display)\n\\u2665 | 2665 | \u2665\n\\u266A | 266A | \u266A\n\nMore info:\nhttps://www.rapidtables.com/code/text/unicode-characters.html', 0, window.Name, popup.question + popup.yes_no) === popup.yes
 							? 'unicode'
 							: 'string';
 						const input = Input.string(mode, list.columns.sizeUnits[opt], 'Enter string to show as prefix/suffix:' + (mode === 'unicode' ? '\n(unicode chars are split by blank spaces)' : ''), window.Name, mode === 'unicode' ? '' : ' t.');
@@ -3055,7 +3055,7 @@ function createMenuRightTop() {
 				const subElement = list.uiElements[key];
 				if (subElement.hasOwnProperty('elements')) {
 					const subMenuNameTwo = menu.newMenu(key, subMenuName);
-					const keys = list.bLiteMode 
+					const keys = list.bLiteMode
 						? Object.keys(subElement.elements).filter((subKey) => subKey !== 'Folder')
 						: Object.keys(subElement.elements);
 					const bCanHideSettings = (subKey) => {
@@ -3104,7 +3104,7 @@ function createMenuRightTop() {
 					{name: 'Full', elements: {
 						'Search filter':			{enabled: true},
 						'Columns':					{enabled: true},
-						'Header buttons':			{enabled: true, elements: 
+						'Header buttons':			{enabled: true, elements:
 							{
 								'Power actions':	{enabled: true},
 								'Reset filters':	{enabled: true},
@@ -3117,7 +3117,7 @@ function createMenuRightTop() {
 					},
 					{name: 'Essential + Search', elements: {
 						'Search filter':			{enabled: true},
-						'Header buttons':			{enabled: true, elements: 
+						'Header buttons':			{enabled: true, elements:
 							{
 								'Power actions':	{enabled: true},
 								'Reset filters':	{enabled: true},
@@ -3130,7 +3130,7 @@ function createMenuRightTop() {
 					},
 					{name: 'Essential', elements: {
 						'Search filter':			{enabled: false},
-						'Header buttons':			{enabled: true, elements: 
+						'Header buttons':			{enabled: true, elements:
 							{
 								'Power actions':	{enabled: true},
 								'Reset filters':	{enabled: true},
@@ -3143,7 +3143,7 @@ function createMenuRightTop() {
 					},
 					{name: 'Simple header', elements: {
 						'Search filter':			{enabled: false},
-						'Header buttons':			{enabled: false, elements: 
+						'Header buttons':			{enabled: false, elements:
 							{
 								'Power actions':	{enabled: false},
 								'Reset filters':	{enabled: false},
@@ -3496,13 +3496,13 @@ function createMenuRightTop() {
 		{ // Presets
 			const defOpts = JSON.parse(list.properties.showMenus[3]);
 			const options = [
-				{name: 'Full', 
+				{name: 'Full',
 					options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))
 				},
-				{name: 'Bassic', 
+				{name: 'Bassic',
 					options: {...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'Statistics mode'].map((k) => [k, false]))}
 				},
-				{name: 'Online Sync', 
+				{name: 'Online Sync',
 					options: {'Online sync': true, 'Relative paths handling': false, 'Export and copy': false, 'File locks': false, 'UI playlist locks': false, 'Statistics mode': false, 'Sorting': false}
 				},
 			];
@@ -3536,7 +3536,7 @@ function createMenuRightTop() {
 					list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
 					overwriteProperties(list.properties);
 					// And create / delete menus
-					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});} 
+					if (list.bDynamicMenus) {list.createMainMenuDynamic().then(() => {list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();});}
 					else {list.deleteMainMenuDynamic(); list.deleteExportInfo(); list.listenNames = false;}
 					if (folders.ajqueryCheck()) {exportComponents(folders.ajquerySMP);}
 				}, flags});
@@ -3593,7 +3593,7 @@ function createMenuRightTop() {
 			const nameUI = plman.GetPlaylistName(plman.ActivePlaylist);
 			const idx = list.dataAll.findIndex((pls, idx) => {return pls.nameId === nameUI;});
 			const name = idx !== -1 ? list.dataAll[idx].name : nameUI;
-			
+
 			const subMenuName = menu.newMenu('Startup active playlist...', menuName);
 			menu.newEntry({menuName: subMenuName, entryText: 'Set active playlist at startup:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
@@ -3770,7 +3770,7 @@ function createMenuSearch() {
 	menu.clear(true); // Reset one every call
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
-	
+
 	menu.newEntry({entryText: 'Search filter:', func: null, flags: MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
 	{
@@ -3813,12 +3813,12 @@ function createMenuSearch() {
 				}
 				if (opt.key === 'bPath' && list.searchMethod[opt.key]) {
 					fb.ShowPopupMessage(
-						'This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.' + 
-						'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.' + 
+						'This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.' +
+						'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.' +
 						'\n\nFor ex:' +
-						'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' + 
-						'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' + 
-						'\n\nDrag n\' drop integration:' + 
+						'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' +
+						'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' +
+						'\n\nDrag n\' drop integration:' +
 						'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
 						, window.Name
 					);
@@ -3855,10 +3855,10 @@ function createMenuSearch() {
 			if (list.searchMethod.bRegExp) {
 				fb.ShowPopupMessage(
 					'This option will parse RegExp expressions on the input box and apply it to the list. For ex:' +
-					'\n\n/Top/ would match \'Top tracks\' but /top/ would not.\Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.' + 
+					'\n\n/Top/ would match \'Top tracks\' but /top/ would not.\Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.' +
 					'\n\nFor more info see:' +
 					'\nhttps://regexr.com/' +
-					'\n\nDrag n\' drop integration:' + 
+					'\n\nDrag n\' drop integration:' +
 					'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
 				, window.Name);
 			}
@@ -3908,7 +3908,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 		const lb = listenBrainz;
 		const encryptToken = '********-****-****-****-************';
 		const currToken = list.properties.lBrainzEncrypt[1] ? encryptToken : list.properties.lBrainzToken[1];
-		try {lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name, currToken, true);} 
+		try {lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name, currToken, true);}
 		catch(e) {return false;}
 		if (lBrainzToken === currToken || lBrainzToken === encryptToken) {return false;}
 		if (lBrainzToken.length) {
@@ -3919,7 +3919,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				let pass = '';
-				try {pass = utils.InputBox(window.ID, 'Enter a passowrd:\n(will be required on every use)', window.Name, pass, true);} 
+				try {pass = utils.InputBox(window.ID, 'Enter a passowrd:\n(will be required on every use)', window.Name, pass, true);}
 				catch(e) {return false;}
 				if (!pass.length) {return false;}
 				lBrainzToken = new SimpleCrypto(pass).encrypt(lBrainzToken);

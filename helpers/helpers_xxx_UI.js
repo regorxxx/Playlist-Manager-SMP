@@ -330,7 +330,7 @@ function tintColor(color, percent) {
 	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
 	return isDark(r, g, b)
 		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
-		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));;
+		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));
 }
 
 function darkenColorVal(color, percent) {
