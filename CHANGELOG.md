@@ -53,9 +53,13 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Code cleanup.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Exporting Playlists: error while exporting an AutoPlaylist with sorting.
+- Exporting Playlists: crash while reporting malformed .xsp playlist.
+- Minor fixes.
 
 ## [0.12.1] - 2023-12-09
 ### Added
