@@ -1,5 +1,7 @@
 ﻿'use strict';
-//28/06/23
+//19/12/23
+
+/* global list:readable, chars:readable, _gr:readable, addButton:readable, buttonsPanel:readable, ThemedButton:readable, calcNextButtonCoordinates:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable */
 
 //Always loaded along other buttons and panel
 include('..\\..\\helpers\\buttons_panel_xxx.js');
@@ -9,9 +11,9 @@ var buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + button
 buttonsPanel.config.orientation = 'x';
 
 addButton({
-	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed. 
+	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed.
 	// Since the opposite sort state (Az -> Za) is expected to be on even indexes, we use that to toggle icon and tooltip for any method.
-	sortButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
+	sortButton: new ThemedButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void(0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => {return list.getSortState();}, function () {
 		const test = new FbProfiler(window.Name + ': ' + 'Sorting - ' + list.getMethodState() + ' - ' + list.getSortState());
 		let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
 		list.setSortState(newSortState);
@@ -19,11 +21,11 @@ addButton({
 		test.Print();
 	}, null, void(0), sortTooltip, 'plm_', void(0), sortIcon),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
-	filterOneButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
+	filterOneButton: new ThemedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void(0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
 		doFilter(this);
 	}, null, void(0), filterTooltip, 'plm_', void(0), filterIcon),
 	// Cycle filtering between playlist lock states: all, not locked, locked
-	filterTwoButton: new themedButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
+	filterTwoButton: new ThemedButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void(0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
 	}, null, void(0), filterTooltip, 'plm_', void(0), filterIcon),
 });
@@ -35,19 +37,19 @@ buttonsPanel.buttons.filterTwoButton.method = 'Lock state';
 buttonsPanel.buttons.filterTwoButton.coord = buttonCoordinatesThree;
 recalcWidth();
 
-/* 
-	Helpers 
+/*
+	Helpers
 */
 // Recalc size
 function recalcWidth () {
 	let bResize = false;
 	for (const key in buttonsPanel.buttons) {
-		if (buttonsPanel.buttons.hasOwnProperty(key) && buttonsPanel.buttons[key].hasOwnProperty('method') && (buttonsPanel.buttons[key].method === 'Lock state' || buttonsPanel.buttons[key].method === 'MBID')) {bResize = true;}
+		if (Object.prototype.hasOwnProperty.call(buttonsPanel.buttons, key) && Object.prototype.hasOwnProperty.call(buttonsPanel.buttons[key], 'method') && (buttonsPanel.buttons[key].method === 'Lock state' || buttonsPanel.buttons[key].method === 'MBID')) {bResize = true;}
 	}
 	for (const key in buttonsPanel.buttons) {
-		if (buttonsPanel.buttons.hasOwnProperty(key)) {
+		if (Object.prototype.hasOwnProperty.call(buttonsPanel.buttons, key)) {
 			const button = buttonsPanel.buttons[key];
-			if (button.hasOwnProperty('method')) {
+			if (Object.prototype.hasOwnProperty.call(button, 'method')) {
 				if (button.method === 'Lock state' || button.method === 'MBID') {
 					button.coord.w = button.w = () => {return window.Width / 7 * 3;};
 				} else if (!bResize) {
@@ -110,7 +112,7 @@ function doFilter(parent) {
 			const defaultState = list.constExtStates()[0];
 			list.extStates.rotate(1);
 			// Filter non present extensions
-			if (list.extStates[0] !== defaultState) { 
+			if (list.extStates[0] !== defaultState) {
 				while (!list.dataAll.some((pls) => {return pls.extension === list.extStates[0] || list.extStates[0] === defaultState;})) {
 					list.extStates.rotate(1);
 				}
@@ -220,7 +222,7 @@ function sortIcon() {
 }
 
 function filterIcon() {
-	const processChar = (c) => {return String.fromCharCode(parseInt(c, 16));}
+	const processChar = (c) => {return String.fromCharCode(parseInt(c, 16));};
 	const icons = list.playlistIcons;
 	switch (this.method) {
 		case 'Category': {
@@ -232,7 +234,7 @@ function filterIcon() {
 		case 'Extension': {
 			const curr = list.extStates[0];
 			const states = list.constExtStates();
-			if (curr !== states[0] && icons.hasOwnProperty(curr) && icons[curr].icon) {return processChar(icons[curr].icon);}
+			if (curr !== states[0] && Object.prototype.hasOwnProperty.call(icons, curr) && icons[curr].icon) {return processChar(icons[curr].icon);}
 			else {return chars.filter;}
 		}
 		case 'Lock state': {
@@ -252,9 +254,9 @@ function filterIcon() {
 		case 'Playlist type': {
 			const curr = list.autoPlaylistStates[0];
 			const states = list.constAutoPlaylistStates();
-			if (curr === states[1] && icons.hasOwnProperty('autoPlaylist') && icons['autoPlaylist'].icon) {return processChar(icons['autoPlaylist'].icon);}
-			else if (curr === states[2] && icons.hasOwnProperty('.m3u') && icons['.m3u8'].icon) {return processChar(icons['.m3u'].icon);}
-			else if (curr === states[3] && icons.hasOwnProperty('.ui') && icons['.ui'].icon) {return processChar(icons['.ui'].icon);}
+			if (curr === states[1] && Object.prototype.hasOwnProperty.call(icons, 'autoPlaylist') && icons['autoPlaylist'].icon) {return processChar(icons['autoPlaylist'].icon);}
+			else if (curr === states[2] && Object.prototype.hasOwnProperty.call(icons, '.m3u') && icons['.m3u8'].icon) {return processChar(icons['.m3u'].icon);}
+			else if (curr === states[3] && Object.prototype.hasOwnProperty.call(icons, '.ui') && icons['.ui'].icon) {return processChar(icons['.ui'].icon);}
 			else {return chars.filter;}
 		}
 		case 'Tag': {

@@ -1,5 +1,27 @@
 ﻿'use strict';
-//14/12/23
+//19/12/23
+
+/* exported extendGR */
+
+/*
+	Object
+*/
+
+// Add ES2022 method
+// https://github.com/tc39/proposal-accessible-object-hasownproperty
+if (!Object.hasOwn) {
+	Object.defineProperty(Object, 'hasOwn', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: function (object, property) {
+			if (object === null) {
+				throw new TypeError('Cannot convert undefined or null to object');
+			}
+			return Object.prototype.hasOwnProperty.call(Object(object), property); // NOSONAR
+		}
+	});
+}
 
 /*
 	FbTitleFormat
@@ -19,14 +41,14 @@ FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(han
 					const iItems = new FbMetadbHandleList(items.slice((i - 1) * slice, i === total ? count : i * slice));
 					tags.push(...this.EvalWithMetadbs(iItems));
 					const progress = Math.round(i / total * 100);
-					if (progress % 25 === 0 && progress > prevProgress) {prevProgress = progress; console.log('EvalWithMetadbsAsync ' + _p(this.Expression) + ' ' + progress + '%.');}
+					if (progress % 25 === 0 && progress > prevProgress) {prevProgress = progress; console.log('EvalWithMetadbsAsync (' + this.Expression + ') ' + progress + '%.');}
 					resolve('done');
 				}, 25);
 			});
 		}
 		resolve(tags);
 	});
-}
+};
 
 // Add caching
 Object.defineProperty(fb, 'tfCache', {
@@ -40,24 +62,24 @@ Object.defineProperty(fb, 'tfCache', {
 {
 	const old = fb.TitleFormat;
 	fb.TitleFormat = function TitleFormat() {
-		const bCache = fb.tfCache.hasOwnProperty(arguments[0]);
+		const bCache = Object.prototype.hasOwnProperty.call(fb.tfCache, arguments[0]);
 		const that = bCache ? fb.tfCache[arguments[0]] : old.apply(fb, [...arguments]);
 		that.Expression = arguments[0];
 		if (!bCache) {fb.tfCache[arguments[0]] = that;}
 		return that;
-	}
+	};
 }
 
 // Augment FbTitleFormat() constructor with 'Expression' property and add caching
 {
 	const old = FbTitleFormat;
-	FbTitleFormat = function FbTitleFormat() {
-		const bCache = fb.tfCache.hasOwnProperty(arguments[0]);
+	FbTitleFormat = function FbTitleFormat() { // NOSONAR
+		const bCache = Object.prototype.hasOwnProperty.call(fb.tfCache, arguments[0]);
 		const that = bCache ? fb.tfCache[arguments[0]] : old(...arguments);
 		that.Expression = arguments[0];
 		if (!bCache) {fb.tfCache[arguments[0]] = that;}
 		return that;
-	}
+	};
 }
 
 /*
@@ -82,7 +104,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 					that = old(...arguments);
 				} catch(e) {bRetry = false;}
 				if (typeof doOnce !== 'undefined') {
-					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))(
+					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: DrawRoundRect\n' +
 						e.message + '\n\n' +
 						'x, y, w, h, arc: ' + [...arguments].join(', ') + '\n' +
@@ -96,7 +118,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 				}
 			}
 			return that;
-		}
+		};
 	}
 	if (options.FillRoundRect) {
 		const old = gr.FillRoundRect.bind(gr);
@@ -113,7 +135,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 					that = old(...arguments);
 				} catch(e) {bRetry = false;}
 				if (typeof doOnce !== 'undefined') {
-					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))(
+					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: FillRoundRect\n' +
 						e.message + '\n\n' +
 						'x, y, w, h, arc: ' + [...arguments].join(', ') + '\n' +
@@ -127,7 +149,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 				}
 			}
 			return that;
-		}
+		};
 	}
 	if (options.Repaint && !window.debugPainting) {
 		window.debugPainting = true;
@@ -157,13 +179,11 @@ FbMetadbHandleList.partialSort = (handleList, orderHandleList) => { // 600 ms on
 		const prev = (dic.get(id) || []).concat([i]);
 		dic.set(id, prev);
 	});
-	const count = handleList.length;
 	const output = new Array(handleList.length);
-	handleList.forEach((handle, i) => {
+	handleList.forEach((handle) => {
 		const id = handle.RawPath + ',' + handle.SubSong;
 		const arrIdx = dic.get(id);
-		let idx = i;
-		idx = arrIdx.pop();
+		const idx = arrIdx.pop();
 		if (!arrIdx.length) {dic.delete(id);}
 		output[idx] = handle;
 	});
@@ -181,18 +201,18 @@ Object.defineProperty(fb, 'queryCache', {
 	value: {}
 });
 
-fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query, bCache = false) => {
+fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query = 'ALL', bCache = false) => {
 	let outputHandleList;
 	const id = handleList.Count + ' - ' + query;
-	bCache = bCache && fb.queryCache.hasOwnProperty(id);
+	bCache = bCache && fb.queryCache.hasOwnProperty(id); // eslint-disable-line no-prototype-builtins
 	if (bCache) {
 		outputHandleList = fb.queryCache[id];
 	} else {
-		try {outputHandleList = fb.GetQueryItems(handleList, query);} catch (e) {outputHandleList = null}
+		try {outputHandleList = fb.GetQueryItems(handleList, query);} catch (e) {outputHandleList = null;}
 		fb.queryCache[id] = outputHandleList;
 	}
 	return outputHandleList;
-}
+};
 
 /*
 	plman
@@ -250,7 +270,7 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 			addToQueue(item, type);
 			return true;
 		}
-	}
+	};
 	// Add items to playlist
 	if (bSync) {
 		return Promise.serial([...items], processItem).then(() => {
@@ -300,6 +320,6 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		try {
 			this.debugPaintingRects.forEach((coords) => gr.DrawRect(...coords, px, color));
 			this.debugPaintingRects.length = 0;
-		} catch (e) {}
+		} catch (e) { /* Continue */ }
 	}).bind(window)
 });

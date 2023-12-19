@@ -78,7 +78,7 @@ function addGlobTags() { // Add calculated properties
 	globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
 	globQuery.remDuplBias = globTags.rating + '|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)';
 }
-/* eslint-enable  no-useless-escape */
+/* eslint-enable no-useless-escape */
 
 // Tags: user replaceable with a presets file at folders.data
 const globTags = {
@@ -146,7 +146,7 @@ const globRegExp = {
 	}
 };
 Object.keys(globRegExp).filter((k) => !k.startsWith('_')).forEach((k) => globRegExp[k].default = globRegExp[k].re); // Add default values
-/* eslint-enable  no-useless-escape */
+/* eslint-enable no-useless-escape */
 
 // Fonts: user replaceable with a presets file at folders.data
 const globFonts = {

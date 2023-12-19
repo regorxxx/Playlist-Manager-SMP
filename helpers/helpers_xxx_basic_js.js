@@ -70,7 +70,7 @@ function getNested(obj, ...args) {
 function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
-		if (obj && len === idx && obj.hasOwnProperty(level)) {obj[level] = value;}
+		if (obj && len === idx && Object.prototype.hasOwnProperty.call(obj, level)) {obj[level] = value;}
 		return obj && obj[level];
 	}, obj);
 }
@@ -97,14 +97,14 @@ function baseToString(value) {
 	return (result === '0' && (1 / value) === -Infinity) ? '-0' : result;
 }
 
-function toString(value) {
+function toString(value) { // eslint-disable-line no-redeclare
 	return value == null ? '' : baseToString(value);
 }
 
 const escapeRegExpCache = {};
 function escapeRegExp(s) {
 	s = toString(s);
-	if (s && !escapeRegExpCache.hasOwnProperty(s)) {escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1');}
+	if (s && !Object.prototype.hasOwnProperty.call(escapeRegExpCache, s)) {escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1');}
 	return s ? escapeRegExpCache[s] : s; // Can not be safer than this
 }
 
@@ -204,8 +204,8 @@ function memoize(fn) {
 	return (...args) => {
 		// Create key for cache
 		const argsKey = JSON.stringify(args);
-		if (!results.hasOwnProperty(argsKey)) {
-			results[argsKey] = fn(...args)
+		if (!Object.prototype.hasOwnProperty.call(results, argsKey)) {
+			results[argsKey] = fn(...args);
 		}
 		return results[argsKey];
 	};
@@ -219,7 +219,7 @@ function memoize(fn) {
 // or key,value,value;key,value,...
 // Outputs {key: value, key: value, ...}
 // or  {key: [value, ...], key: [value, ...]}
-function convertStringToObject(string, valueType, separator = ',', secondSeparator) {
+function convertStringToObject(string, valueType, separator = ',', secondSeparator = void(0)) {
 	if (string === null || string === '') {
 		return null;
 	} else {
@@ -227,8 +227,8 @@ function convertStringToObject(string, valueType, separator = ',', secondSeparat
 		let array = [];
 		if (secondSeparator) { // Split 2 times
 			array = string.split(secondSeparator);
-			for (let j = 0; j < array.length; j++) {
-				const subArray = array[j].split(separator);
+			for (const element of array) {
+				const subArray = element.split(separator);
 				if (subArray.length >= 2) {
 					output[subArray[0]] = []; // First value is always the key
 					for (let i = 1; i < subArray.length; i++) {
@@ -264,8 +264,8 @@ function convertObjectToString(object, separator = ',') {
 	} else {
 		const keys = Object.keys(object);
 		let output = '';
-		for(let i = 0; i < keys.length; i++) {
-			output += (output.length) ? separator + keys[i] + separator + object[keys[i]] : keys[i] + separator + object[keys[i]];
+		for(const key of keys) {
+			output += (output.length) ? separator + key + separator + object[key] : key + separator + object[key];
 		}
 		return output;
 	}

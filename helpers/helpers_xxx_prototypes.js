@@ -1,10 +1,15 @@
 ﻿'use strict';
 //17/12/23
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, biMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable */
+
+/*
+	SMP
+*/
+include('helpers_xxx_prototypes_smp.js');
 
 /*
 	Objects
@@ -24,10 +29,7 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 		// They should have the same toString() signature
 		if ((s = toString.call(a)) !== toString.call(b)) return false;
 
-		switch(s) {
-			default: { // Boolean, Date, String
-				return a.valueOf() === b.valueOf();
-			}
+		switch (s) {
 			case '[object Number]': {
 				// Converts Number instances into primitive values
 				// This is required also for NaN test bellow
@@ -36,88 +38,91 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 
 				return a 				// a is Non-zero and Non-NaN
 					? a === b 			// a is 0, -0 or NaN
-					: a === a			// a is 0 or -O
-						? 1/a === 1/b	// 1/0 !== 1/-0 because Infinity !== -Infinity
-						: b !== b; 		// NaN, the only Number not equal to itself!
+					: !Number.isNaN(a)	// a is 0 or -O
+						? 1 / a === 1 / b	// 1/0 !== 1/-0 because Infinity !== -Infinity
+						: true; 		// NaN, the only Number not equal to itself!
 			}
 			case '[object RegExp]': {
-				return a.source		== b.source
-					&& a.global		== b.global
-					&& a.ignoreCase	== b.ignoreCase
-					&& a.multiline	== b.multiline
-					&& a.lastIndex	== b.lastIndex;
+				return a.source == b.source
+					&& a.global == b.global
+					&& a.ignoreCase == b.ignoreCase
+					&& a.multiline == b.multiline
+					&& a.lastIndex == b.lastIndex;
 			}
 			case '[object Function]': {
 				return false; // functions should be strictly equal because of closure context
 			}
 			case '[object Array]': {
-				if (cyclic && (x = reference_equals(a, b)) !== null) return x; // intentionally duplicated bellow for [object Object]
+				if (cyclic && (x = referenceEquals(a, b)) !== null) return x; // intentionally duplicated bellow for [object Object]
 				if ((l = a.length) != b.length) return false;
 				// Both have as many elements
 				while (l--) {
-					if ((x = a[ l ]) === (y = b[ l ]) && x !== 0 || _equals(x, y)) continue;
+					if ((x = a[l]) === (y = b[l]) && x !== 0 || _equals(x, y)) continue;
 					return false;
 				}
 				return true;
 			}
 			case '[object Object]': {
-				if (cyclic && (x = reference_equals(a, b)) !== null) return x; // intentionally duplicated from above for [object Array]
+				if (cyclic && (x = referenceEquals(a, b)) !== null) return x; // intentionally duplicated from above for [object Array]
 				l = 0; // counter of own properties
 				if (enforcePropertiesOrder) {
 					const properties = [];
 					for (p in a) {
-						if (a.hasOwnProperty(p)) {
+						if (Object.hasOwn(a, p)) {
 							properties.push(p);
-							if ((x = a[ p ]) === (y = b[ p ]) && x !== 0 || _equals(x, y)) {continue;}
+							if ((x = a[p]) === (y = b[p]) && x !== 0 || _equals(x, y)) { continue; }
 							return false;
 						}
 					}
 					// Check if 'b' has as the same properties as 'a' in the same order
 					for (p in b) {
-						if (b.hasOwnProperty(p) && properties[ l++ ] != p) {return false;}
+						if (Object.hasOwn(b, p) && properties[l++] != p) { return false; }
 					}
 				} else {
 					for (p in a) {
-						if (a.hasOwnProperty(p)) {
+						if (Object.hasOwn(a, p)) {
 							++l;
-							if ((x = a[ p ]) === (y = b[ p ]) && x !== 0 || _equals(x, y)) {continue;}
+							if ((x = a[p]) === (y = b[p]) && x !== 0 || _equals(x, y)) { continue; }
 							return false;
 						}
 					}
 					// Check if 'b' has as not more own properties than 'a'
 					for (p in b) {
-						if (b.hasOwnProperty(p) && --l < 0) {return false;}
+						if (Object.hasOwn(b, p) && --l < 0) { return false; }
 					}
 				}
 				return true;
 			}
+			default: { // Boolean, Date, String
+				return a.valueOf() === b.valueOf();
+			}
 		}
 	}
 
-	function reference_equals(a, b) {
-		const object_references = [];
-		return (reference_equals = _reference_equals)(a, b);
-		function _reference_equals(a, b) {
-			let l = object_references.length;
+	function referenceEquals(a, b) {
+		const objectReferences = [];
+		return (referenceEquals = _referenceEquals)(a, b); // eslint-disable-line no-func-assign
+		function _referenceEquals(a, b) {
+			let l = objectReferences.length;
 			while (l--) {
-				if (object_references[ l-- ] === b) {return object_references[ l ] === a;}
+				if (objectReferences[l--] === b) { return objectReferences[l] === a; }
 			}
-			object_references.push(a, b);
+			objectReferences.push(a, b);
 			return null;
 		}
 	}
 }
 
 function compareKeys(a, b) {
-	const aKeys = Object.keys(a).sort();
-	const bKeys = Object.keys(b).sort();
+	const aKeys = Object.keys(a).sort((a, b) => a.localeCompare(b));
+	const bKeys = Object.keys(b).sort((a, b) => a.localeCompare(b));
 	return JSON.stringify(aKeys) === JSON.stringify(bKeys);
 }
 
 function isJSON(str) {
 	let bDone = true;
-	try {JSON.parse(str);}
-	catch (e) {bDone = false;}
+	try { JSON.parse(str); }
+	catch (e) { bDone = false; }
 	return bDone;
 }
 
@@ -138,18 +143,18 @@ function roughSizeOfObject(object) {
 		}
 		else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
 			objectList.push(value);
-			for (const i in value) {if (!value.hasOwnProperty(i)) {continue;} stack.push(value[i]);}
+			for (const i in value) { if (!Object.hasOwn(value, i)) { continue; } stack.push(value[i]); }
 		}
-	} // TODO Handle lists? TF?
+	} // TODO: Handle lists? TF?
 	return bytes;
 }
 
 // deepAssign()(x,y)
 // https://stackoverflow.com/a/48579540
-function deepAssign(options = {nonEnum: false, symbols: false, descriptors: false, proto: false}) {
-	return function deepAssignWithOptions (target, ...sources) {
-		sources.forEach( (source) => {
-			if (!isDeepObject(source) || !isDeepObject(target)){return;}
+function deepAssign(options = { nonEnum: false, symbols: false, descriptors: false, proto: false }) {
+	return function deepAssignWithOptions(target, ...sources) {
+		sources.forEach((source) => {
+			if (!isDeepObject(source) || !isDeepObject(target)) { return; }
 			// Copy source's own properties into target's own properties
 			function copyProperty(property) {
 				const descriptor = Object.getOwnPropertyDescriptor(source, property);
@@ -176,14 +181,14 @@ function deepAssign(options = {nonEnum: false, symbols: false, descriptors: fals
 			//default: omit prototype's own properties
 			if (options.proto) {
 				// Copy source prototype's own properties into target prototype's own properties
-				deepAssign(Object.assign({},options,{proto:false})) (// Prevent deeper copy of the prototype chain
+				deepAssign(Object.assign({}, options, { proto: false }))( // NOSONAR Prevent deeper copy of the prototype chain
 					Object.getPrototypeOf(target),
 					Object.getPrototypeOf(source)
 				);
 			}
 		});
 		return target;
-	}
+	};
 }
 
 function toType(a) {
@@ -197,12 +202,12 @@ function isDeepObject(obj) {
 
 // Throw errors when trying to get length from objects
 // Forces using typeof recipe === 'string' and similar but leads to cleaner code and no errors
-Object.defineProperty(Object.prototype, 'length', {get() {throw new Error('No length property on objects. Probably a coding error.');}});
+Object.defineProperty(Object.prototype, 'length', { get() { throw new Error('No length property on objects. Probably a coding error.'); } }); // NOSONAR
 
 // Stringify without quotes
-Object.defineProperty(Object.prototype, 'toStr', {
+Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 	configurable: false,
-	value: function toStr({bClosure = false, bCapitalizeKeys = false, separator = ', '} = {}) {
+	value: function toStr({ bClosure = false, bCapitalizeKeys = false, separator = ', ' } = {}) {
 		return (bClosure ? '{' : '') + Object.entries(this).map((entry) => {
 			return (typeof entry[0] === 'object'
 				? entry[0].toStr()
@@ -211,7 +216,7 @@ Object.defineProperty(Object.prototype, 'toStr', {
 					: entry[0].toString()
 			) + ': ' + (typeof entry[1] === 'object'
 				? entry[1] === null ? 'null' : entry[1].toStr()
-				:  typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
+				: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
 			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
@@ -221,25 +226,25 @@ Object.defineProperty(Object.prototype, 'toStr', {
 	Maps
 */
 
-class biMap {
+class BiMap {
 	constructor(map) {
 		this.map = map;
-		this.uniMap = {...this.map};
+		this.uniMap = { ...this.map };
 		for (const key in map) {
 			const value = map[key];
 			this.map[value] = key;
 		}
 	}
-	get(key) {return this.map[key];}
-	has(key) {return this.map.hasOwnProperty(key);}
-	keys() {return Object.keys(this.map);}
-	uniKeys() {return Object.keys(this.uniMap);}
-	values() {return Object.values(this.map);}
-	uniValues() {return Object.values(this.uniMap);}
-	entries() {return Object.entries(this.map);}
-	uniEntries() {return Object.entries(this.uniMap);}
-	set(key, value) {this.map[key] = value; this.uniMap[key] = value;}
-	unset(key) {delete this.map[key]; delete this.uniMap[key];}
+	get(key) { return this.map[key]; }
+	has(key) { return this.map.hasOwnProperty(key); } // eslint-disable-line no-prototype-builtins
+	keys() { return Object.keys(this.map); }
+	uniKeys() { return Object.keys(this.uniMap); }
+	values() { return Object.values(this.map); }
+	uniValues() { return Object.values(this.uniMap); }
+	entries() { return Object.entries(this.map); }
+	uniEntries() { return Object.entries(this.uniMap); }
+	set(key, value) { this.map[key] = value; this.uniMap[key] = value; }
+	unset(key) { delete this.map[key]; delete this.uniMap[key]; }
 }
 
 /*
@@ -250,7 +255,7 @@ function isFunction(obj) {
 	return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
-Function.prototype.applyInChunks = function applyInChunks() {
+Function.prototype.applyInChunks = function applyInChunks() { // NOSONAR
 	const len = arguments.length;
 	const max = 32768;
 	const result = [];
@@ -269,7 +274,7 @@ Function.prototype.applyInChunks = function applyInChunks() {
 // JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
 function $args(func) {
 	return (func + '')
-		.replace(/[/][/].*$/mg,'') // strip single-line comments
+		.replace(/[/][/].*$/mg, '') // strip single-line comments
 		.replace(/\s+/g, '') // strip white space
 		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments
 		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters
@@ -311,7 +316,7 @@ Object.defineProperty(Promise, 'serial', {
 		const reducer = (acc$, inputValue, i) =>
 			acc$.then(acc => {
 				return (timeout
-					? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
+					? new Promise((resolve) => { setTimeout(() => resolve(mapper(inputValue, i)), timeout); })
 					: mapper(inputValue, i)
 				).then(result => acc.push(result) && acc);
 			});
@@ -327,7 +332,7 @@ Object.defineProperty(Promise, 'parallel', {
 	value: (inputValues, mapper, timeout = 0) => {
 		const reducer = (inputValue, i) => {
 			return timeout
-				? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
+				? new Promise((resolve) => { setTimeout(() => resolve(mapper(inputValue, i)), timeout); })
 				: mapper(inputValue, i);
 		};
 		return Promise.allSettled(inputValues.map(reducer));
@@ -349,36 +354,36 @@ Object.defineProperty(Promise, 'wait', {
 
 // https://www.dotnetforall.com/difference-between-typeof-and-valueof-in-javascript/
 // We don't care about object-wrapped strings, they are deprecated and not recommended.
-function isString(str){
+function isString(str) {
 	return (typeof str === 'string' && str.length > 0);
 }
 
-function isStringWeak(str){
+function isStringWeak(str) {
 	return (typeof str === 'string');
 }
 
-String.prototype.replaceLast = function replaceLast(word, newWord) {
+String.prototype.replaceLast = function replaceLast(word, newWord) { // NOSONAR
 	const n = this.lastIndexOf(word);
 	return this.slice(0, n) + this.slice(n).replace(word, newWord);
 };
 
-String.prototype.replaceAll = function replaceAll(word, newWord) {
+String.prototype.replaceAll = function replaceAll(word, newWord) { // NOSONAR
 	let copy = this;
-	while (copy.indexOf(word) !== -1) {copy = copy.replace(word, newWord);}
+	while (copy.indexOf(word) !== -1) { copy = copy.replace(word, newWord); }
 	return copy;
 };
 
-String.prototype.count = function count(c) {
+String.prototype.count = function count(c) { // NOSONAR
 	let result = 0, i = 0;
 	for (i; i < this.length; i++) {
-		if (this[i] == c) {result++;}
+		if (this[i] == c) { result++; }
 	}
 	return result;
 };
 
 const cutRegex = {};
-String.prototype.cut = function cut(c) {
-	if (!cutRegex.hasOwnProperty(c)) {cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g');}
+String.prototype.cut = function cut(c) { // NOSONAR
+	if (!cutRegex.hasOwnProperty(c)) { cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g'); } // eslint-disable-line no-prototype-builtins
 	return this.replace(cutRegex[c], '$1…');
 };
 
@@ -391,22 +396,22 @@ function matchCase(text, pattern, bFirst = true) {
 			? text.charAt(i).toUpperCase()
 			: text.charAt(i).toLowerCase();
 	}
-	if (bFirst) {result += text.slice(1);}
+	if (bFirst) { result += text.slice(1); }
 	return result;
 }
 
 function capitalize(s) {
-	if (!isString(s)) {return '';}
+	if (!isString(s)) { return ''; }
 	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
 function capitalizePartial(s) {
-	if (!isString(s)) {return '';}
+	if (!isString(s)) { return ''; }
 	return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
-	if (typeof s !== 'string') {return '';}
+	if (typeof s !== 'string') { return ''; }
 	if (isArray(sep)) {
 		const copy = [...s.toLowerCase()];
 		const len = s.length;
@@ -463,18 +468,15 @@ function _asciify(value) { // Mimics $ascii() Title Format function
 */
 
 function isArray(checkKeys) {
-	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0){
-		return false; //Array was null or not an array
-	}
-	return true;
+	return !(checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0);
 }
 
 function isArrayStrings(checkKeys, bAllowEmpty = false) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		return false; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
-		while (i--){
+		while (i--) {
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]') {
 				return false; //values were null or not strings
 			}
@@ -487,11 +489,11 @@ function isArrayStrings(checkKeys, bAllowEmpty = false) {
 }
 
 function isArrayNumbers(checkKeys) {
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		return false; //Array was null or not an array
 	} else {
 		let i = checkKeys.length;
-		while (i--){
+		while (i--) {
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object Number]') {
 				return false; //values were null or not numbers
 			}
@@ -507,9 +509,9 @@ function isArrayEqual(arrayA, arrayB) {
 // Cycles an array n times. Changes the original variable.
 // Use this to change states on buttons on click. So every click changes to next state.
 // arr = [0,1,2]; arr.rotate(1); -> [1,2,0]
-Array.prototype.rotate = (function() {
+Array.prototype.rotate = (function () { // NOSONAR
 	const unshift = Array.prototype.unshift, splice = Array.prototype.splice;
-	return function(count) {
+	return function (count) {
 		const len = this.length >>> 0;
 		count = count >> 0;
 		unshift.apply(this, splice.call(this, count % len, len));
@@ -517,13 +519,13 @@ Array.prototype.rotate = (function() {
 	};
 })();
 
-Array.prototype.swap = function(i, j) {
+Array.prototype.swap = function (i, j) { // NOSONAR
 	[this[i], this[j]] = [this[j], this[i]];
 	return this;
 };
 
 // Randomly rearranges the items in an array, modifies original. Fisher-Yates algorithm
-Array.prototype.shuffle = function() {
+Array.prototype.shuffle = function () { // NOSONAR
 	let last = this.length, n;
 	while (last > 0) {
 		n = Math.floor(Math.random() * last--);
@@ -533,12 +535,12 @@ Array.prototype.shuffle = function() {
 };
 
 // [3, 4, 5, 1, 2].move(3, 0, 2) // => [1, 2, 3, 4, 5]
-Array.prototype.move = function(from, to, on) {
+Array.prototype.move = function (from, to, on) { // NOSONAR
 	this.splice(to, 0, this.splice(from, on)[0]);
 };
 
 // [1, 2, 3, 4, 5, 6, 7].chunk(3) // => [[1, 2, 3], [4, 5, 6], [7]]
-Array.prototype.chunk = function(chunkSize) {
+Array.prototype.chunk = function (chunkSize) { // NOSONAR
 	const R = [];
 	for (let i = 0; i < this.length; i += chunkSize) {
 		R.push(this.slice(i, i + chunkSize));
@@ -546,22 +548,22 @@ Array.prototype.chunk = function(chunkSize) {
 	return R;
 };
 
-function zeroOrVal(e){
+function zeroOrVal(e) {
 	return (e === 0 || e);
 }
 
-function emptyOrVal(e){
+function emptyOrVal(e) {
 	return (e === '' || e);
 }
 
 // Fisher-Yates algorithm on multiple arrays at the same time
-Array.shuffle = function() {
+Array.shuffle = function () {
 	let last = 0;
 	const argsLength = arguments.length;
 	for (let idx = 0; idx < argsLength; idx++) {
-		if (!isArray(arguments[idx])) {throw new TypeError('Argument is not an array.');}
-		if (idx === 0) {last = arguments[0].length;}
-		if (last !== arguments[idx].length) {throw new RangeError('Array lengths do not match.');}
+		if (!isArray(arguments[idx])) { throw new TypeError('Argument is not an array.'); }
+		if (idx === 0) { last = arguments[0].length; }
+		if (last !== arguments[idx].length) { throw new RangeError('Array lengths do not match.'); }
 	}
 	let n;
 	while (last > 0) {
@@ -574,7 +576,7 @@ Array.shuffle = function() {
 };
 
 // Join array and split lines every n elements joined
-Array.prototype.joinEvery = function(sep, n, newLineChar = '\n') {
+Array.prototype.joinEvery = function (sep, n, newLineChar = '\n') { // NOSONAR
 	const len = this.length;
 	let i = 0;
 	let str = '';
@@ -585,29 +587,29 @@ Array.prototype.joinEvery = function(sep, n, newLineChar = '\n') {
 	return str;
 };
 
-Array.prototype.joinUpToChars = function(sep, chars) {
+Array.prototype.joinUpToChars = function (sep, chars) { // NOSONAR
 	let str = '';
 	str = this.join(sep);
-	if (str.length > chars) {str = str.slice(0, chars) + '...';}
+	if (str.length > chars) { str = str.slice(0, chars) + '...'; }
 	return str;
 };
 
-Array.prototype.multiIndexOf = function(el) {
+Array.prototype.multiIndexOf = function (el) { // NOSONAR
 	const idxs = [];
 	for (let i = this.length - 1; i >= 0; i--) {
-		if (this[i] === el) {idxs.unshift(i);}
+		if (this[i] === el) { idxs.unshift(i); }
 	}
 	return idxs;
 };
 
-Array.prototype.partialSort = function(order, bOptimize = true) {
-	if (bOptimize) {order = [...(new Set(order).intersection(new Set(this)))];}
+Array.prototype.partialSort = function (order, bOptimize = true) { // NOSONAR
+	if (bOptimize) { order = [...(new Set(order).intersection(new Set(this)))]; }
 	const profiler = new FbProfiler('partialSort');
 	const orderIndex = [];
 	const orderLen = order.length;
 	for (let i = 0; i < orderLen; i++) {
 		const idx = this.indexOf(order[i]);
-		if (idx != -1) {orderIndex[i] = idx;}
+		if (idx != -1) { orderIndex[i] = idx; }
 	}
 	const orderIdxLen = orderIndex.length;
 	for (let i = 0; i < orderIdxLen; i++) {
@@ -626,16 +628,17 @@ Array.prototype.partialSort = function(order, bOptimize = true) {
 };
 
 // https://en.wikipedia.org/wiki/Schwartzian_transform
-Array.prototype.schwartzianSort = function(processFunc, sortFunc = (a, b) => a[1] - b[1]) { // or (a, b) => {return a[1].localeCompare(b[1]);}
+// or (a, b) => {return a[1].localeCompare(b[1]);}
+Array.prototype.schwartzianSort = function (processFunc, sortFunc = (a, b) => a[1] - b[1]) { // NOSONAR
 	return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
 };
 
 // https://github.com/aldo-gutierrez/bitmasksorterJS
 const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
-Array.prototype.radixSort = function(bReverse = false, start, end) {
-	return bReverse ? bitmask.sortNumber.call(this, this, start, end).reverse(): bitmask.sortNumber.call(this, this, start, end);
+Array.prototype.radixSort = function (bReverse = false, start, end) { // NOSONAR
+	return bReverse ? bitmask.sortNumber.call(this, this, start, end).reverse() : bitmask.sortNumber.call(this, this, start, end);
 };
-Array.prototype.radixSortInt = function(bReverse = false, start, end) {
+Array.prototype.radixSortInt = function (bReverse = false, start, end) { // NOSONAR
 	return bReverse ? bitmask.sortInt.call(this, this, start, end).reverse() : bitmask.sortInt.call(this, this, start, end);
 };
 
@@ -643,7 +646,7 @@ Array.prototype.radixSortInt = function(bReverse = false, start, end) {
 	Sets
 */
 
-Set.prototype.isSuperset = function(subset) {
+Set.prototype.isSuperset = function (subset) { // NOSONAR
 	for (const elem of subset) {
 		if (!this.has(elem)) {
 			return false;
@@ -652,7 +655,7 @@ Set.prototype.isSuperset = function(subset) {
 	return true;
 };
 
-Set.prototype.union = function(setB) {
+Set.prototype.union = function (setB) { // NOSONAR
 	const union = new Set(this);
 	for (const elem of setB) {
 		union.add(elem);
@@ -660,7 +663,7 @@ Set.prototype.union = function(setB) {
 	return union;
 };
 
-Set.prototype.intersection = function(setB) {
+Set.prototype.intersection = function (setB) { // NOSONAR
 	const intersection = new Set();
 	for (const elem of setB) {
 		if (this.has(elem)) {
@@ -670,7 +673,7 @@ Set.prototype.intersection = function(setB) {
 	return intersection;
 };
 
-Set.prototype.difference = function(setB) {
+Set.prototype.difference = function (setB) { // NOSONAR
 	const difference = new Set(this);
 	for (const elem of setB) {
 		difference.delete(elem);
@@ -678,30 +681,30 @@ Set.prototype.difference = function(setB) {
 	return difference;
 };
 
-Set.prototype.isEqual = function(subset) {
+Set.prototype.isEqual = function (subset) { // NOSONAR
 	return (this.size === subset.size && this.isSuperset(subset));
 };
 
-Set.prototype.unionSize = function(setB) {
+Set.prototype.unionSize = function (setB) { // NOSONAR
 	let size = 0;
 	for (const elem of setB) {
-		if (!this.has(elem)) {size++;}
+		if (!this.has(elem)) { size++; }
 	}
 	return size;
 };
 
-Set.prototype.intersectionSize = function(setB) {
+Set.prototype.intersectionSize = function (setB) { // NOSONAR
 	let size = 0;
 	for (const elem of setB) {
-		if (this.has(elem)) {size++;}
+		if (this.has(elem)) { size++; }
 	}
 	return size;
 };
 
-Set.prototype.differenceSize = function(setB) {
+Set.prototype.differenceSize = function (setB) { // NOSONAR
 	let size = this.size;
 	for (const elem of setB) {
-		if (this.has(elem)) {size--;}
+		if (this.has(elem)) { size--; }
 	}
 	return size;
 };
@@ -710,11 +713,11 @@ Set.prototype.differenceSize = function(setB) {
 	Numbers
 */
 
-function isInt(n){
+function isInt(n) {
 	return Number(n) === n && Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER && n % 1 === 0;
 }
 
-function isFloat(n){
+function isFloat(n) {
 	return Number(n) === n && Number.isFinite(n) && n % 1 !== 0;
 }
 
@@ -723,15 +726,15 @@ function isFloat(n){
 function cyclicOffset(reference, offset, limits) {
 	if (offset && reference >= limits[0] && reference <= limits[1]) {
 		reference += offset;
-		if (reference < limits[0]) {reference += limits[1];}
-		if (reference > limits[1]) {reference -= limits[1];}
+		if (reference < limits[0]) { reference += limits[1]; }
+		if (reference > limits[1]) { reference -= limits[1]; }
 	}
 	return reference;
 }
 
-const range = (start, stop, step) => new Array(Math.round((stop - start) / step + 1)).fill(void(0)).map((_, i) => start + (i * step));
+const range = (start, stop, step) => new Array(Math.round((stop - start) / step + 1)).fill(void (0)).map((_, i) => start + (i * step));
 
-function round(floatnum, decimals, eps = 10**-14){
+function round(floatnum, decimals, eps = 10 ** -14) {
 	return (decimals > 0
 		? decimals === 15
 			? floatnum
@@ -740,7 +743,7 @@ function round(floatnum, decimals, eps = 10**-14){
 	);
 }
 
-Math.randomNum = function randomNum(min, max, options = {integer: false, includeMax: false}) {
+Math.randomNum = function randomNum(min, max, options = { integer: false, includeMax: false }) {
 	if (options.integer) {
 		min = Math.ceil(min);
 		max = Math.floor(max) + (options.includeMax ? 1 : 0);
@@ -751,7 +754,7 @@ Math.randomNum = function randomNum(min, max, options = {integer: false, include
 };
 
 Math.randomInt = function randomNum(min, max, includeMax = false) {
-	return Math.randomNum(min, max, {integer: true, includeMax});
+	return Math.randomNum(min, max, { integer: true, includeMax });
 };
 
 /*
@@ -777,9 +780,4 @@ const regExBool = /^b[A-Z]\w*/;
 	Maps
 */
 // Allows forward and backward iteration
-try {include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js');} catch (e) {/* continue regardless of error */}
-
-/*
-	SMP
-*/
-include('helpers_xxx_prototypes_smp.js');
+try { include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js'); } catch (e) {/* continue regardless of error */ }
