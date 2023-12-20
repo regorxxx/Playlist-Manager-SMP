@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/23
+//20/12/23
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists */
 
@@ -9,7 +9,7 @@ include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 /* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable */
 include('helpers_xxx_file.js');
-/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable */
+/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable */
 include('helpers_xxx_tags.js');
 /* global checkQuery:readable, getSortObj:readable, getTagsValuesV4:readable */
 include('helpers_xxx_playlists.js');
@@ -28,26 +28,26 @@ include('helpers_xxx_playlists_files_fpl.js');
 // Playlists descriptors
 const playlistDescriptors = {
 	// Physical items
-	'.m3u':			{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf15c', iconBg: null},
-	'.m3u8':		{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf15c', iconBg: null},
-	'.pls':			{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf15c', iconBg: null},
-	'.xspf':		{isWritable: true,	isReadable: true,	isLoadable: true,	icon: '\uf1e0', iconBg: null},
-	'.xsp':			{					isReadable: true,	isLoadable: true,	icon: '\uf0d0', iconBg: null},
-	'.strm':		{					isReadable: true,	isLoadable: true,	icon: '\uf0f6', iconBg: null},
-	'.fpl':			{					isReadable: true,	isLoadable: true,	icon: '\uf1c6', iconBg: null},
+	'.m3u': /* .... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
+	'.m3u8': /* ... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
+	'.pls': /* .... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
+	'.xspf': /* ... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf1e0', iconBg: null },
+	'.xsp': /* ...................... */ { isReadable: true, isLoadable: true, icon: '\uf0d0', iconBg: null },
+	'.strm': /* ..................... */ { isReadable: true, isLoadable: true, icon: '\uf0f6', iconBg: null },
+	'.fpl': /* ...................... */ { isReadable: true, isLoadable: true, icon: '\uf1c6', iconBg: null },
 	// Abstract items
-	'.ui':			{															icon: '\uf26c', iconBg: null},
-	autoPlaylist:	{															icon: '\uf0e7', iconBg: '\uf15b'},
-	blank:			{															icon: '\uf15b', iconBg: null},
-	locked:			{															icon: '\uf023', iconBg: null}
+	'.ui': /* ........................................................... */ { icon: '\uf26c', iconBg: null },
+	autoPlaylist: /* ................................................ */ { icon: '\uf0e7', iconBg: '\uf15b' },
+	blank: /* ........................................................... */ { icon: '\uf15b', iconBg: null },
+	locked: /* ........................................................... */ { icon: '\uf023', iconBg: null }
 };
-const writablePlaylistFormats = new Set(); // Playlist formats which are writable
-const readablePlaylistFormats = new Set(); // Playlist formats which are readable to retrieve paths
-const loadablePlaylistFormats = new Set(); // Playlist formats which are loadable into the manager (shown as files)
+const writablePlaylistFormats = new Set(); // Writable Formats
+const readablePlaylistFormats = new Set(); // Readable Formats (to retrieve paths)
+const loadablePlaylistFormats = new Set(); // loadable Formats (shown as files)
 Object.keys(playlistDescriptors).forEach((key) => {
-	if (playlistDescriptors[key].isWritable) {writablePlaylistFormats.add(key);}
-	if (playlistDescriptors[key].isReadable) {readablePlaylistFormats.add(key);}
-	if (playlistDescriptors[key].isLoadable) {loadablePlaylistFormats.add(key);}
+	if (playlistDescriptors[key].isWritable) { writablePlaylistFormats.add(key); }
+	if (playlistDescriptors[key].isReadable) { readablePlaylistFormats.add(key); }
+	if (playlistDescriptors[key].isLoadable) { loadablePlaylistFormats.add(key); }
 });
 
 // XSPF cache
@@ -81,19 +81,19 @@ const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($
 //		... (set rules) ...
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
-function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false}) {
-	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) {console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', ' + !!handleList)); return false;}
+function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false }) {
+	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) { console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', ' + !!handleList)); return false; }
 	const extension = ext.toLowerCase();
-	if (!writablePlaylistFormats.has(extension)){
+	if (!writablePlaylistFormats.has(extension)) {
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
 		return false;
 	}
 	if (!_isFile(playlistPath)) {
-		if (!handleList) {handleList = plman.GetPlaylistItems(playlistIndex);}
+		if (!handleList) { handleList = plman.GetPlaylistItems(playlistIndex); }
 		const itemsCount = handleList.Count;
 		const arr = utils.SplitFilePath(playlistPath);
 		playlistPath = playlistPath.replaceLast(arr[2], extension);
-		if (!playlistName.length) {playlistName = (arr[1].endsWith(arr[2])) ? arr[1].replace(arr[2],'') : arr[1];} // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+		if (!playlistName.length) { playlistName = (arr[1].endsWith(arr[2])) ? arr[1].replace(arr[2], '') : arr[1]; } // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let playlistText = [];
 		const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
 		// -------------- m3u
@@ -102,7 +102,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			playlistText.push('#EXTM3U');
 			playlistText.push('#EXTENC:UTF-8');
 			playlistText.push('#PLAYLIST:' + playlistName);
-			if (!UUID) {UUID = useUUID ? nextId(useUUID) : '';} // May be visible or invisible chars!
+			if (!UUID) { UUID = useUUID ? nextId(useUUID) : ''; } // May be visible or invisible chars!
 			playlistText.push('#UUID:' + UUID);
 			playlistText.push('#LOCKED:' + bLocked);
 			playlistText.push('#CATEGORY:' + category);
@@ -134,7 +134,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 				playlistText[8] += '0'; // Add number of tracks to size
 				playlistText[9] += '0'; // Add time to duration
 			}
-		// ---------------- PLS
+			// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			// Header text
 			playlistText.push('[playlist]');
@@ -166,7 +166,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			}
 			// End of Footer
 			playlistText.push('Version=2');
-		// ---------------- XSPF
+			// ---------------- XSPF
 		} else if (extension === '.xspf') {
 			const jspf = XSPF.emptyJSPF();
 			const playlist = jspf.playlist;
@@ -179,17 +179,17 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 			playlist.date = new Date().toISOString();
 			playlist.identifier = playlist_mbid.length ? 'https://listenbrainz.org/playlist/' + playlist_mbid : '';
 			playlist.location = playlist.identifier;
-			if (bHasAuthor) {playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';}
-			if (bHasAnnotation) {playlist.annotation = description;}
+			if (bHasAuthor) { playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/'; }
+			if (bHasAnnotation) { playlist.annotation = description; }
 			playlist.meta = [
-				{uuid: (useUUID ? nextId(useUUID) : '')},
-				{locked: bLocked},
-				{category},
-				{tags: (isArrayStrings(tags) ? tags.join(';') : '')},
-				{trackTags: (isArray(trackTags) ? JSON.stringify(trackTags) : '')},
-				{playlistSize: 0},
-				{duration: totalDuration},
-				{playlist_mbid}
+				{ uuid: (useUUID ? nextId(useUUID) : '') },
+				{ locked: bLocked },
+				{ category },
+				{ tags: (isArrayStrings(tags) ? tags.join(';') : '') },
+				{ trackTags: (isArray(trackTags) ? JSON.stringify(trackTags) : '') },
+				{ playlistSize: 0 },
+				{ duration: totalDuration },
+				{ playlist_mbid }
 			];
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
@@ -206,18 +206,18 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 							? getRelPath(tags[5][i][0], relPathSplit)
 							: tags[5][i][0]
 					].map((path) => {
-						return encodeURI(path.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26'));
+						return encodeURI(path.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26'));
 					});
 					const subSong = Number(tags[6][i][0]);
-					const meta = location[0].endsWith('.iso') ? [{subSong}] : [];
+					const meta = location[0].endsWith('.iso') ? [{ subSong }] : [];
 					const identifier = [tags[7][i][0]];
 					playlist.track.push({
 						location,
-						annotation: void(0),
+						annotation: void (0),
 						title,
 						creator,
-						info: void(0),
-						image: void(0),
+						info: void (0),
+						image: void (0),
 						album,
 						duration,
 						trackNum,
@@ -228,8 +228,8 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 					});
 				}
 				// Update total duration of playlist
-				playlist.meta.find((obj) => {return Object.prototype.hasOwnProperty.call(obj, 'duration');}).duration = totalDuration;
-				playlist.meta.find((obj) => {return Object.prototype.hasOwnProperty.call(obj, 'playlistSize');}).playlistSize = itemsCount;
+				playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
+				playlist.meta.find((obj) => { return Object.hasOwn(obj, 'playlistSize'); }).playlistSize = itemsCount;
 			}
 			playlistText = XSPF.toXSPF(jspf);
 		}
@@ -248,7 +248,7 @@ function savePlaylist({playlistIndex, handleList, playlistPath, ext = '.m3u8', p
 
 function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = false) {
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
-	if (!writablePlaylistFormats.has(extension)){
+	if (!writablePlaylistFormats.has(extension)) {
 		console.log('addHandleToPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
 		return false;
 	}
@@ -257,7 +257,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		let originalText = _open(playlistPath);
 		let bFound = false;
 		const addSize = handleList.Count;
-		if (!addSize) {return false;}
+		if (!addSize) { return false; }
 		const addDuration = handleList.CalcTotalDuration();
 		let trackText = [];
 		let size;
@@ -265,7 +265,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		if (typeof originalText !== 'undefined' && originalText.length) { // We don't check if it's a playlist by its content! Can break things if used wrong...
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
-			if (codePage !== -1) {originalText = _open(playlistPath, codePage);}
+			if (codePage !== -1) { originalText = _open(playlistPath, codePage); }
 			// ---------------- M3U
 			if (extension === '.m3u8' || extension === '.m3u') {
 				bFound = true; // no check for m3u8 since it can be anything
@@ -290,8 +290,8 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 					}
 					j++;
 				}
-				while (!originalText[originalText.length -1].trim().length) {originalText.pop();} // Remove blank lines at end
-			// ---------------- PLS
+				while (!originalText[originalText.length - 1].trim().length) { originalText.pop(); } // Remove blank lines at end
+				// ---------------- PLS
 			} else if (extension === '.pls') {
 				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
 				const lines = originalText.length;
@@ -302,26 +302,26 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 					const newSize = size + addSize;
 					trackText.push('NumberOfEntries=' + newSize);
 					trackText.push('Version=2');
-					while (!originalText[originalText.length -1].trim().length) {originalText.pop();} // Remove blank lines at end
+					while (!originalText[originalText.length - 1].trim().length) { originalText.pop(); } // Remove blank lines at end
 					originalText.pop(); //Removes old NumberOfEntries=..
 					originalText.pop(); //Removes old Version=..
-				} else {return false;} // Safety check
-			// ---------------- XSPF
+				} else { return false; } // Safety check
+				// ---------------- XSPF
 			} else if (extension === '.xspf') {
 				const bCache = xspfCache.has(playlistPath);
-				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(originalText);
-				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom, false);
-				if (Object.prototype.hasOwnProperty.call(jspf, 'playlist') && jspf.playlist && Object.prototype.hasOwnProperty.call(jspf.playlist, 'track')) {bFound = true;} // Safety check
-				else {return false;} // Safety check
+				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(originalText); // NOSONAR [cache filled elsewhere]
+				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom, false); // NOSONAR [cache filled elsewhere]
+				if (Object.hasOwn(jspf, 'playlist') && jspf.playlist && Object.hasOwn(jspf.playlist, 'track')) { bFound = true; } // Safety check
+				else { return false; } // Safety check
 				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
-				while (!originalText[originalText.length -1].trim().length) {originalText.pop();} // Remove blank lines at end
+				while (!originalText[originalText.length - 1].trim().length) { originalText.pop(); } // Remove blank lines at end
 				originalText.pop(); //Removes </trackList>
 				originalText.pop(); //Removes </playlist>
 				trackText.push('	</trackList>');
 				trackText.push('</playlist>');
 			}
 		}
-		if (!bFound) {return false;} // Safety check
+		if (!bFound) { return false; } // Safety check
 		// New text
 		const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
 		// -------------- M3U
@@ -339,7 +339,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				});
 			}
 			trackText = [...newTrackText, ...trackText];
-		// ---------------- PLS
+			// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			// Tracks text
 			const trackInfoPre = 'File#placeholder#=';
@@ -361,30 +361,30 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				trackText[i] = trackText[i].replace('#placeholder#', size + 1).replace('#placeholder#', size + 1).replace('#placeholder#', size + 1);
 				trackText[i] += '\r\n'; // EoL after every track info group... just for readability
 			}
-		// ---------------- XSPF
+			// ---------------- XSPF
 		} else if (extension === '.xspf') {
 			const durationTF = '$puts(l,%LENGTH_SECONDS_FP%)$puts(d,$strchr($get(l),.))$puts(i,$substr($get(l),0,$sub($get(d),1)))$puts(f,$substr($get(l),$add($get(d),1),$add($get(d),3)))$add($mul($get(i),1000),$get(f))';
 			const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>$put(path,%_PATH_RAW%)</location>$crlf()$tab(3)<title>%TITLE%</title>$crlf()$tab(3)<creator>%ARTIST%</creator>$crlf()$tab(3)<album>%ALBUM%</album>$crlf()$tab(3)<duration>' + durationTF + '</duration>$crlf()$tab(3)<trackNum>%TRACK%</trackNum>$crlf()$tab(3)<identifier>%MUSICBRAINZ_TRACKID%</identifier>$if($stricmp($ext($get(path)),iso),$crlf()$tab(3)<subSong>%subsong%<subSong>,)$crlf()$tab(2)</track>');
 			let newTrackText = tfo.EvalWithMetadbs(handleList);
 			const bRel = relPath.length ? true : false;
 			let trackPath = '';
-			let pre = '' , post = '';
+			let pre = '', post = '';
 			newTrackText = newTrackText.map((item) => { // Encode file paths as URI
-				[pre, trackPath , post] = item.split(/<location>|<\/location>/);
+				[pre, trackPath, post] = item.split(/<location>|<\/location>/);
 				trackPath = bRel && !_isLink(trackPath) ? getRelPath(trackPath, relPathSplit) : trackPath; // Relative path conversion
-				return pre + '<location>file:///' + encodeURI(trackPath.replace('file://', 'file:///').replace(/\\/g,'/').replace(/&/g,'%26')) + '</location>' + post;
+				return pre + '<location>file:///' + encodeURI(trackPath.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26')) + '</location>' + post;
 			});
 			trackText = [...newTrackText, ...trackText];
 			// Update size
-			let idx = originalText.findIndex((line) => {return line.indexOf('<meta rel="playlistSize">') !== -1;});
+			let idx = originalText.findIndex((line) => { return line.indexOf('<meta rel="playlistSize">') !== -1; });
 			if (idx !== -1) {
-				const size = Number(originalText[idx].replace('<meta rel="playlistSize">','').replace('</meta>','').trim()) + addSize;
+				const size = Number(originalText[idx].replace('<meta rel="playlistSize">', '').replace('</meta>', '').trim()) + addSize;
 				originalText[idx] = '	<meta rel="playlistSize">' + size + '</meta>';
 			}
 			// Update duration
-			idx = originalText.findIndex((line) => {return line.indexOf('<meta rel="duration">') !== -1;});
+			idx = originalText.findIndex((line) => { return line.indexOf('<meta rel="duration">') !== -1; });
 			if (idx !== -1) {
-				const size = Number(originalText[idx].replace('<meta rel="duration">','').replace('</meta>','').trim()) + Math.round(addDuration);
+				const size = Number(originalText[idx].replace('<meta rel="duration">', '').replace('</meta>', '').trim()) + Math.round(addDuration);
 				originalText[idx] = '	<meta rel="duration">' + size + '</meta>';
 			}
 		}
@@ -392,12 +392,23 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		trackText = trackText.join('\r\n');
 		originalText = originalText.join('\r\n');
 		let playlistText = originalText.concat('\r\n', trackText);
+		const backPath = playlistPath + '.back';
+		_copyFile(playlistPath, backPath);
 		let bDone = _save(playlistPath, playlistText, bBOM);
 		// Check
 		if (_isFile(playlistPath) && bDone) {
 			let check = _open(playlistPath, utf8);
 			bDone = (check === playlistText);
+			// Delete cache after edit
+			if (extension === '.xspf') {
+				xmlDomCache.delete(playlistPath); // NOSONAR [cache filled elsewhere]
+				xspfCache.delete(playlistPath); // NOSONAR [cache filled elsewhere]
+			}
 		}
+		if (!bDone) {
+			_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+			console.log('Playlist manager: Restoring backup...');
+		} else if (_isFile(backPath)) { _deleteFile(backPath); }
 		return bDone ? playlistPath : false;
 	}
 	return false;
@@ -410,7 +421,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 		return paths;
 	}
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
-	if (!readablePlaylistFormats.has(extension)){
+	if (!readablePlaylistFormats.has(extension)) {
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
 		return paths;
 	}
@@ -421,14 +432,14 @@ function getFilePathsFromPlaylist(playlistPath) {
 		if (!bFpl && typeof originalText !== 'undefined' && originalText.length) {
 			// Safe checks to ensure proper encoding detection
 			const codePage = checkCodePage(originalText, extension);
-			if (codePage !== -1) {originalText = _open(playlistPath, codePage, true);}
+			if (codePage !== -1) { originalText = _open(playlistPath, codePage, true); }
 			if (extension === '.m3u8' || extension === '.m3u' || extension === '.strm') {
 				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
 				const lines = originalText.length;
 				for (let j = 0; j < lines; j++) {
 					if (!originalText[j].startsWith('#')) { // Spaces are not allowed as well as black lines
 						let line = originalText[j].trim();
-						if (line.length) {paths.push(line.replace(/\//g,'\\'));} // PATH
+						if (line.length) { paths.push(line.replace(/\//g, '\\')); } // PATH
 					}
 				}
 			} else if (extension === '.pls') {
@@ -437,24 +448,25 @@ function getFilePathsFromPlaylist(playlistPath) {
 				for (let j = 0; j < lines; j++) {
 					if (originalText[j].startsWith('File')) { // Spaces are not allowed on variable no need to trim
 						// Path may contain '=' so get anything past first '='
-						let path = originalText[j].split('=').slice(1).join('=').replace(/\//g,'\\'); // fileX=PATH
+						let path = originalText[j].split('=').slice(1).join('=').replace(/\//g, '\\'); // fileX=PATH
 						paths.push(path);
 					}
 				}
 			} else if (extension === '.xspf') {
 				const bCache = xspfCache.has(playlistPath);
 				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(originalText);
+				if (!xmlDomCache.has(playlistPath)) { xmlDomCache.set(playlistPath, xmldom); }
 				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom);
-				if (!bCache) {xspfCache.set(playlistPath, jspf);}
+				if (!bCache) { xspfCache.set(playlistPath, jspf); }
 				const playlist = jspf.playlist;
 				const rows = playlist.track;
 				const rowsLength = rows.length;
 				for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
-					if (Object.prototype.hasOwnProperty.call(rows[i], 'location') && rows[i].location && rows[i].location.length) { // TODO multiple locations allowed
-						let path = decodeURI(rows[i].location).replace('file:///','').replace(/\//g,'\\').replace(/%26/g,'&'); // file:///PATH/SUBPATH/...
-						if (Object.prototype.hasOwnProperty.call(rows[i], 'meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
-							const metaSubSong = rows[i].meta.find((obj) => {return Object.prototype.hasOwnProperty.call(obj, 'subSong');});
-							if (metaSubSong) {path +=  ',' + metaSubSong.subSong;}
+					if (Object.hasOwn(rows[i], 'location') && rows[i].location && rows[i].location.length) { // TODO multiple locations allowed
+						let path = decodeURI(rows[i].location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+						if (Object.hasOwn(rows[i], 'meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
+							const metaSubSong = rows[i].meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
+							if (metaSubSong) { path += ',' + metaSubSong.subSong; }
 						}
 						paths.push(path);
 					}
@@ -463,16 +475,16 @@ function getFilePathsFromPlaylist(playlistPath) {
 		} else if (bFpl) {
 			const bCache = fplCache.has(playlistPath);
 			const jspf = bCache ? fplCache.get(playlistPath) : FPL.parseFile(playlistPath);
-			if (!bCache) {fplCache.set(playlistPath, jspf);}
+			if (!bCache) { fplCache.set(playlistPath, jspf); }
 			const playlist = jspf.playlist;
 			const rows = playlist.track;
 			const rowsLength = rows.length;
 			for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
-				if (Object.prototype.hasOwnProperty.call(rows[i], 'location') && rows[i].location && rows[i].location.length) {
-					let path = decodeURI(rows[i].location).replace('file:///','').replace(/\//g,'\\').replace(/%26/g,'&'); // file:///PATH/SUBPATH/...
-					if (Object.prototype.hasOwnProperty.call(rows[i], 'meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
-						const metaSubSong = rows[i].meta.find((obj) => {return Object.prototype.hasOwnProperty.call(obj, 'subSong');});
-						if (metaSubSong) {path +=  ',' + metaSubSong.subSong;}
+				if (Object.hasOwn(rows[i], 'location') && rows[i].location && rows[i].location.length) {
+					let path = decodeURI(rows[i].location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+					if (Object.hasOwn(rows[i], 'meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
+						const metaSubSong = rows[i].meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
+						if (metaSubSong) { path += ',' + metaSubSong.subSong; }
 					}
 					paths.push(path);
 				}
@@ -484,8 +496,8 @@ function getFilePathsFromPlaylist(playlistPath) {
 
 // Cache paths: calc once the paths for every item on library and share it with the other panels
 // Relative paths are only calculated by specific panels, and is fast so it can be done on demand
-var libItemsAbsPaths = [];
-var libItemsRelPaths = {};
+var libItemsAbsPaths = []; // NOSONAR
+var libItemsRelPaths = {}; // NOSONAR
 
 // Calculate paths in x steps to not freeze the UI
 function precacheLibraryPaths(iSteps, iDelay) {
@@ -503,9 +515,9 @@ function precacheLibraryPaths(iSteps, iDelay) {
 						const iItems = new FbMetadbHandleList(items.slice((i - 1) * iSteps, i === total ? count : i * iSteps));
 						libCopy = libCopy.concat(fb.TitleFormat(pathTF).EvalWithMetadbs(iItems));
 						const progress = Math.round(i / total * 100);
-						if (progress % 10 === 0 && progress > prevProgress) {prevProgress = progress; console.log('Caching library paths ' + progress + '%.');}
-						if (libItemsAbsPaths.length === count) {new Error('already cached');}
-						else {resolve('done');}
+						if (progress % 10 === 0 && progress > prevProgress) { prevProgress = progress; console.log('Caching library paths ' + progress + '%.'); }
+						if (libItemsAbsPaths.length === count) { throw new Error('already cached'); }
+						else { resolve('done'); }
 					}
 				}, iDelay * i);
 			}));
@@ -513,16 +525,16 @@ function precacheLibraryPaths(iSteps, iDelay) {
 		Promise.all(promises).then(() => {
 			libItemsAbsPaths = libCopy;
 			resolve('precacheLibraryPaths: got paths from ' + count + ' items.');
-		}, (error) => {new Error(error);});
+		}, (error) => { throw new Error(error); });
 	});
 }
 
 async function precacheLibraryPathsAsync(iSteps = iStepsLibrary, iDelay = iDelayLibraryPLM) {
-	return await precacheLibraryPaths(iSteps, iDelay);
+	return precacheLibraryPaths(iSteps, iDelay);
 }
 
 function precacheLibraryRelPaths(relPath) {
-	if (libItemsAbsPaths.length && relPath.length && (!Object.prototype.hasOwnProperty.call(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) {
+	if (libItemsAbsPaths.length && relPath.length && (!Object.hasOwn(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) {
 		libItemsRelPaths[relPath] = getRelPaths(libItemsAbsPaths, relPath);
 		console.log('precacheLibraryRelPaths: got rel paths (' + relPath + ') from ' + libItemsRelPaths[relPath].length + ' items.');
 	}
@@ -546,10 +558,10 @@ function getRelPath(itemPath, relPathSplit) {
 	relPathSplit.forEach((folder) => {
 		const level = new RegExp(escapeRegExp(folder) + '\\\\', 'i');
 		cache = itemPath.replace(level, '');
-		if (itemPath === cache) {itemPath = '..\\' + cache;}
-		else {itemPath = cache;}
+		if (itemPath === cache) { itemPath = '..\\' + cache; }
+		else { itemPath = cache; }
 	});
-	if (!itemPath.startsWith('..\\')) {itemPath = '.\\' + itemPath;}
+	if (!itemPath.startsWith('..\\')) { itemPath = '.\\' + itemPath; }
 	return itemPath;
 }
 
@@ -562,7 +574,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		return bDone;
 	}
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
-	if (!readablePlaylistFormats.has(extension)){
+	if (!readablePlaylistFormats.has(extension)) {
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
 		return bDone;
 	}
@@ -574,7 +586,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {
-		const {handlePlaylist, pathsNotFound} = getHandlesFromPlaylist(playlistPath, relPath, void(0), remDupl, true);
+		const { handlePlaylist, pathsNotFound } = getHandlesFromPlaylist(playlistPath, relPath, void (0), remDupl, true);
 		if (handlePlaylist) {
 			if (pathsNotFound && pathsNotFound.length) {
 				if (extension === '.xspf') {
@@ -605,12 +617,13 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			if (typeof playlistText !== 'undefined' && playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, extension);
-				if (codePage !== -1) {playlistText = _open(playlistPath, codePage);}
-			} else {return;}
+				if (codePage !== -1) { playlistText = _open(playlistPath, codePage); }
+			} else { return; }
 		}
 		const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
+		if (!xmlDomCache.has(playlistPath)) { xmlDomCache.set(playlistPath, xmldom); }
 		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
-		if (!bCache) {xspCache.set(playlistPath, jsp);}
+		if (!bCache) { xspCache.set(playlistPath, jsp); }
 		const query = XSP.getQuery(jsp, true);
 		const sort = XSP.getSort(jsp);
 		if (XSP.hasQueryPlaylists(jsp)) { // Uses playlists as sources
@@ -619,7 +632,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			const toIncludeHandle = typeof list !== 'undefined'
 				? list.getHandleFromPlaylists(queryPlaylists.is) // eslint-disable-line no-undef
 				: getHandleFromUIPlaylists(queryPlaylists.is);
-			const toExcludeHandle = typeof list  !== 'undefined'
+			const toExcludeHandle = typeof list !== 'undefined'
 				? list.getHandleFromPlaylists(queryPlaylists.isnot) // eslint-disable-line no-undef
 				: getHandleFromUIPlaylists(queryPlaylists.isnot);
 			// Difference
@@ -628,30 +641,30 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			toIncludeHandle.MakeDifference(toExcludeHandle);
 			// Filter if needed
 			handlePlaylist = toIncludeHandle;
-			if (query.length) {handlePlaylist = checkQuery(query, false) ? fb.GetQueryItems(handlePlaylist, query) : null;}
-		} else if (checkQuery(query, false)) {handlePlaylist = fb.GetQueryItems(fb.GetLibraryItems(), query);}
-		else {console.log('Error on XSP Playlist: ' + query);}
+			if (query.length) { handlePlaylist = checkQuery(query, false) ? fb.GetQueryItems(handlePlaylist, query) : null; }
+		} else if (checkQuery(query, false)) { handlePlaylist = fb.GetQueryItems(fb.GetLibraryItems(), query); }
+		else { console.log('Error on XSP Playlist: ' + query); }
 		if (handlePlaylist) {
 			handlePlaylist.Sort();
 			const sortObj = sort.length ? getSortObj(sort) : null;
 			if (remDupl && remDupl.length && typeof removeDuplicatesV2 !== 'undefined') {
-				handlePlaylist = removeDuplicatesV2({handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle}); // eslint-disable-line no-undef
+				handlePlaylist = removeDuplicatesV2({ handleList: handlePlaylist, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle }); // eslint-disable-line no-undef
 			}
-			if (sortObj) {handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction);}
+			if (sortObj) { handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction); }
 			const limit = XSP.getLimit(jsp);
-			if (isFinite(limit)) {handlePlaylist.RemoveRange(limit, handlePlaylist.Count);}
+			if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count); }
 			console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort);
 		}
 	} else {
-		const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => {return path.toLowerCase();});
-		if (!filePaths.some((path) => {return !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
+		const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => { return path.toLowerCase(); });
+		if (!filePaths.some((path) => { return !/[A-Z]*:\\/.test(path); })) { relPath = ''; } // No need to check rel paths if they are all absolute
 		const playlistLength = filePaths.length;
 		handlePlaylist = [...Array(playlistLength)];
 		const poolItems = fb.GetLibraryItems();
 		const poolItemsCount = poolItems.Count;
 		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
 		const newLibItemsRelPaths = relPath.length
-			? (Object.prototype.hasOwnProperty.call(libItemsRelPaths, relPath) && libItemsRelPaths[relPath].length === poolItems.Count
+			? (Object.hasOwn(libItemsRelPaths, relPath) && libItemsRelPaths[relPath].length === poolItems.Count
 				? libItemsRelPaths[relPath]
 				: getRelPaths(newLibItemsAbsPaths, relPath))
 			: null; // Faster than TF again
@@ -680,7 +693,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 						continue;
 					}
 				}
-				if (filePool.size === 0) {break;}
+				if (filePool.size === 0) { break; }
 			}
 		} else {
 			for (let i = 0; i < poolItemsCount; i++) {
@@ -690,7 +703,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 					pathPool.set(path, i);
 					continue;
 				}
-				if (filePool.size === 0) {break;}
+				if (filePool.size === 0) { break; }
 			}
 		}
 		let count = 0;
@@ -706,7 +719,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 					break;
 				}
 				count++;
-			} else {notFound.add(i);}
+			} else { notFound.add(i); }
 		}
 
 		if (bXSPF && count !== playlistLength) {
@@ -715,50 +728,50 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			if (typeof playlistText !== 'undefined' && playlistText.length) {
 				// Safe checks to ensure proper encoding detection
 				const codePage = checkCodePage(playlistText, extension);
-				if (codePage !== -1) {playlistText = _open(playlistPath, codePage, true);}
+				if (codePage !== -1) { playlistText = _open(playlistPath, codePage, true); }
 				const bCache = xspfCache.has(playlistPath);
 				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(playlistText);
+				if (!xmlDomCache.has(playlistPath)) { xmlDomCache.set(playlistPath, xmldom); }
 				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom);
-				if (!bCache) {xspfCache.set(playlistPath, jspf);}
+				if (!bCache) { xspfCache.set(playlistPath, jspf); }
 				const playlist = jspf.playlist;
 				const rows = playlist.track;
 				const rowsLength = rows.length;
-				const lookupKeys = [{xspfKey: 'title', queryKey: 'TITLE'}, {xspfKey: 'creator', queryKey: 'ARTIST'}, {xspfKey: 'album', queryKey: 'ALBUM'}, {xspfKey: 'trackNum', queryKey: 'TRACK'}, {xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID'}];
-				const conditions = [['TITLE','ARTIST','ALBUM','TRACK'], ['TITLE','ARTIST','ALBUM'], ['TRACK','ARTIST','ALBUM'], ['TITLE','ALBUM'],  ['TITLE','ARTIST'], ['IDENTIFIER']];
+				const lookupKeys = [{ xspfKey: 'title', queryKey: 'TITLE' }, { xspfKey: 'creator', queryKey: 'ARTIST' }, { xspfKey: 'album', queryKey: 'ALBUM' }, { xspfKey: 'trackNum', queryKey: 'TRACK' }, { xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID' }];
+				const conditions = [['TITLE', 'ARTIST', 'ALBUM', 'TRACK'], ['TITLE', 'ARTIST', 'ALBUM'], ['TRACK', 'ARTIST', 'ALBUM'], ['TITLE', 'ALBUM'], ['TITLE', 'ARTIST'], ['IDENTIFIER']];
 				const regExListenBrainz = typeof listenBrainz !== 'undefined'
 					? listenBrainz.regEx // eslint-disable-line no-undef
 					: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 				const sort = globQuery.remDuplBias; // TODO: add as argument?
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
-					if (!notFound.has(i)) {continue;}
+					if (!notFound.has(i)) { continue; }
 					let query = '';
 					let lookup = {};
 					lookupKeys.forEach((look) => {
 						const key = look.xspfKey;
 						const queryKey = look.queryKey;
-						if (Object.prototype.hasOwnProperty.call(rows[i], key) && rows[i][key] && rows[i][key].length) {
+						if (Object.hasOwn(rows[i], key) && rows[i][key] && rows[i][key].length) {
 							lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz, '') : rows[i][key]);
 						}
 					});
 					for (let condition of conditions) {
-						if (condition.every((tag) => {return Object.prototype.hasOwnProperty.call(lookup, tag);})) {
-							query = condition.map((tag) => {return lookup[tag];}).join(' AND ');
+						if (condition.every((tag) => { return Object.hasOwn(lookup, tag); })) {
+							query = condition.map((tag) => { return lookup[tag]; }).join(' AND ');
 							const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(poolItems, query) : null);
-							if (!queryCache.has(query)) {queryCache.set(query, matches);}
+							if (!queryCache.has(query)) { queryCache.set(query, matches); }
 							if (matches && matches.Count) {
-								if (sortTF) {matches.OrderByFormat(sortTF, -1);}
+								if (sortTF) { matches.OrderByFormat(sortTF, -1); }
 								handlePlaylist[i] = matches[0];
 								count++;
 								break;
 							}
 						}
 					}
-					// if (!handlePlaylist[i]) {console.log(filePaths[i]);}
 				}
 			}
 		}
-		pathsNotFound = [...notFound].map((idx) => {return filePaths[idx];});
+		pathsNotFound = [...notFound].map((idx) => { return filePaths[idx]; });
 		if (playlistLength) {
 			if (count === playlistLength) {
 				console.log(playlistPath.split('\\').pop() + ': found all tracks on library.');
@@ -775,41 +788,39 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			handlePlaylist = null;
 		}
 		if (handlePlaylist !== null) {
-			if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
-			if (relPath.length && (!Object.prototype.hasOwnProperty.call(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
+			if (!libItemsAbsPaths.length) { libItemsAbsPaths = newLibItemsAbsPaths; }
+			if (relPath.length && (!Object.hasOwn(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) { libItemsRelPaths[relPath] = newLibItemsRelPaths; }
 		}
 	}
 	test.Print();
-	return (!bReturnNotFound ? handlePlaylist : {handlePlaylist, pathsNotFound});
+	return (!bReturnNotFound ? handlePlaylist : { handlePlaylist, pathsNotFound });
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function arePathsInMediaLibrary(filePaths, relPath = '') {
-	// let test = new FbProfiler('arePathsInMediaLibrary');
-	if (!filePaths.some((path) => {return !/[A-Z]*:\\/.test(path);})) {relPath = '';} // No need to check rel paths if they are all absolute
+	if (!filePaths.some((path) => { return !/[A-Z]*:\\/.test(path); })) { relPath = ''; } // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
 	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItemsCount ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
-	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((path) => {return path.toLowerCase();}));
-	const newLibItemsRelPaths = relPath.length ? (Object.prototype.hasOwnProperty.call(libItemsRelPaths, relPath) && libItemsRelPaths[relPath].length === poolItemsCount ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than tf again
-	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((path) => {return path.toLowerCase();})) : null;
-	let filePool = new Set(filePaths.map((path) => {return path.toLowerCase();}));
+	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((path) => { return path.toLowerCase(); }));
+	const newLibItemsRelPaths = relPath.length ? (Object.hasOwn(libItemsRelPaths, relPath) && libItemsRelPaths[relPath].length === poolItemsCount ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than tf again
+	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((path) => { return path.toLowerCase(); })) : null;
+	let filePool = new Set(filePaths.map((path) => { return path.toLowerCase(); }));
 	const filePoolSize = filePool.size;
 	let count = 0;
 	if (relPath.length) {
 		filePool.forEach((path) => {
-			if (poolItemsAbsPaths.has(path)) {count++; return;}
-			else if (poolItemsRelPaths.has(path)) {count++; return;}
-			else if (poolItemsRelPaths.has('.\\' + path)) {count++; return;}
+			if (poolItemsAbsPaths.has(path) || poolItemsRelPaths.has(path) || poolItemsRelPaths.has('.\\' + path)) {
+				count++;
+			}
 		});
 	} else {
 		count = poolItemsAbsPaths.intersectionSize(filePool);
 	}
-	// test.Print();
-	if (!libItemsAbsPaths.length) {libItemsAbsPaths = newLibItemsAbsPaths;}
-	if (relPath.length && (!Object.prototype.hasOwnProperty.call(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) {libItemsRelPaths[relPath] = newLibItemsRelPaths;}
+	if (!libItemsAbsPaths.length) { libItemsAbsPaths = newLibItemsAbsPaths; }
+	if (relPath.length && (!Object.hasOwn(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) { libItemsRelPaths[relPath] = newLibItemsRelPaths; }
 	return (count === filePoolSize || count === playlistLength);
 }
 
