@@ -2544,7 +2544,7 @@ function _list(x, y, w, h) {
 				].filter(Boolean);
 				break;
 			}
-			case 'R': 
+			case 'R':
 			case 'M': {
 				shortcuts.options = [
 					{ key: 'Ctrl', mask: MK_CONTROL },
@@ -3380,7 +3380,7 @@ function _list(x, y, w, h) {
 		}
 		// Process folders
 		this.collapseFolders();
-		this.processFolders();
+		this.processFolders({ plsState });
 		// AutoPlaylists
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// As is
@@ -3892,12 +3892,12 @@ function _list(x, y, w, h) {
 		return true;
 	};
 
-	this.processFolders = () => {
+	this.processFolders = ({ plsState = [] } = {}) => {
 		if (this.data.some((item) => item.isFolder)) {
 			const expandedData = this.data.filter((item) => !this.isInFolder(item));
 			expandedData.forEach((item, i) => { // Reuse the same object
 				if (item.isFolder && item.isOpen && item.pls.length) {
-					this.processFolder(item, i, expandedData);
+					this.processFolder(item, i, expandedData, plsState);
 				}
 			});
 			this.data = [...new Set(expandedData)]; // Deduplicate
@@ -3905,12 +3905,17 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.processFolder = (item, i, expandedData) => {
-		const pls = this.sortFolder([...item.pls].filter((subItem) => subItem.inFolder === item.nameId));
+	this.processFolder = (item, i, expandedData, plsState = []) => {
+		const pls = this.sortFolder(
+			(plsState.length
+				? this.filterData({ data: [...item.pls], plsState, bReusePlsFilter: false, bSkipSearch: true })
+				: [...item.pls]
+			).filter((subItem) => subItem.inFolder === item.nameId)
+		);
 		if (pls.some((subItem) => subItem.isFolder)) {
 			pls.forEach((subItem, j) => {
 				if (subItem.isFolder && subItem.isOpen && subItem.pls.length) {
-					this.processFolder(subItem, j, pls);
+					this.processFolder(subItem, j, pls, plsState);
 				}
 			});
 		}
