@@ -83,7 +83,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const bIsPlsActive = isPlsActive(pls);
 	const bIsAutoPls = isAutoPls(pls);
 	const bIsFolder = isFolder(pls);
-	const bIsValidXSP = pls.extension !== '.xsp' || Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs';
+	const bIsValidXSP = pls.extension !== '.xsp' || Object.hasOwn(pls, 'type') && pls.type === 'songs';
 	const bIsLockPls = isLockPls(pls);
 	const bIsLockPlsRename = bIsPlsLoaded && (plman.GetPlaylistLockedActions(uiIdx) || []).includes('RenamePlaylist');
 	const bIsPlsEditable = isPlsEditable(pls);
@@ -429,8 +429,8 @@ function createMenuLeft(forcedIndex = -1) {
 						const dsp = preset.dsp;
 						let dspName = (dsp !== '...' ? dsp : '(DSP)');
 						const tf = preset.tf;
-						let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-						const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
+						let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 						const extensionName = extension.length ? '[' + extension + ']' : '';
 						if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
 						if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
@@ -621,7 +621,7 @@ function createMenuLeft(forcedIndex = -1) {
 													if (!Array.isArray(track.identifier)) { track.identifier = [track.identifier]; }
 												});
 												// Update total duration of playlist
-												playlist.meta.find((obj) => { return Object.prototype.hasOwnProperty.call(obj, 'duration'); }).duration = totalDuration;
+												playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
 												let xspf = XSPF.toXSPF(jspf);
 												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 												xspf = xspf.join('\r\n');
@@ -788,7 +788,7 @@ function createMenuFolder(menu, folder, z) {
 	const isFolder = (pls) => { return pls.isFolder; };
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => { return isPlsLoaded(pls); });
-	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs') || true; });
+	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true; });
 	const bIsFolderEvery = playlists.every((pls) => { return isFolder(pls); });
 	const bManualSorting = list.methodState === list.manualMethodState();
 	// Enabled menus
@@ -863,7 +863,7 @@ function createMenuFolder(menu, folder, z) {
 				const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
 				zArr.forEach((z) => {
 					const pls = list.data[z];
-					if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { return; }
+					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
 					if (!isPlsUI(pls) && !isFolder(pls)) {
 						if (pls.isAutoPlaylist) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
@@ -958,8 +958,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsPlsLoadedEvery = playlists.every((pls) => { return isPlsLoaded(pls); });
 	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => { return isPlsLoaded(pls); });
 	const bIsAutoPlsEvery = playlists.every((pls) => { return isAutoPls(pls); });
-	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs') || true; });
-	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => { return (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs'); });
+	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true; });
+	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs'); });
 	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => { return isAutoPls(pls); });
 	const bIsLockPlsEvery = nonPlsUI.length && nonPlsUI.every((pls) => { return isLockPls(pls); });
 	const bIsFolderEvery = playlists.every((pls) => { return isFolder(pls); });
@@ -1011,7 +1011,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			entryText: 'Clone playlists in UI', func: () => {
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
-					if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { return; }
+					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
 					if (!isPlsUI(pls) && !isFolder(pls)) {
 						if (pls.isAutoPlaylist) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
@@ -1156,8 +1156,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 				const dsp = preset.dsp;
 				let dspName = (dsp !== '...' ? dsp : '(DSP)');
 				const tf = preset.tf;
-				let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-				const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
+				let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+				const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 				const extensionName = extension.length ? '[' + extension + ']' : '';
 				if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
 				if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
@@ -1166,7 +1166,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
 							const pls = playlists[i];
-							if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { return; }
+							if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
 							if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
 								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 								if (!pls.isAutoPlaylist) { exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); }
@@ -1574,7 +1574,7 @@ function createMenuRight() {
 											if (!Array.isArray(track.identifier)) { track.identifier = [track.identifier]; }
 										});
 										// Update total duration of playlist
-										playlist.meta.find((obj) => { return Object.prototype.hasOwnProperty.call(obj, 'duration'); }).duration = totalDuration;
+										playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
 										const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
 										const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
 										let xspf = XSPF.toXSPF(jspf);
@@ -2526,8 +2526,8 @@ function createMenuRightTop() {
 					let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp : '(DSP)');
-					let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-					const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
+					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+					const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 					const extensionName = extension.length ? '[' + extension + ']' : '';
 					if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
 					if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
@@ -2595,9 +2595,9 @@ function createMenuRightTop() {
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set name...', func: () => {
-							const hasName = Object.prototype.hasOwnProperty.call(preset, 'name') ? true : false;
+							const hasName = Object.hasOwn(preset, 'name') ? true : false;
 							let input = '';
-							try { input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, Object.prototype.hasOwnProperty.call(preset, 'name') ? preset.name : '', true); }
+							try { input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, Object.hasOwn(preset, 'name') ? preset.name : '', true); }
 							catch (e) { return; }
 							if (!input.length) { return; }
 							if (!hasName || hasName && input !== preset.name) {
@@ -2624,7 +2624,7 @@ function createMenuRightTop() {
 					let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp : '(DSP)');
-					let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 					if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
 					if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
 					if (tfName.length > 40) { tfName = tfName.substr(0, 40) + '...'; }
@@ -3001,7 +3001,7 @@ function createMenuRightTop() {
 							panel.colorsChanged();
 							panel.setDefault({ all: true });
 							// Buttons
-							if (Object.prototype.hasOwnProperty.call(preset, 'buttonColors') && preset.buttonColors.length) {
+							if (Object.hasOwn(preset, 'buttonColors') && preset.buttonColors.length) {
 								if (preset.buttonColors[0] !== null) { panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor = preset.buttonColors[0]; }
 								if (preset.buttonColors[1] !== null) { panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor = preset.buttonColors[1]; }
 								panel.colorsChanged();
@@ -3035,13 +3035,13 @@ function createMenuRightTop() {
 							&& list.colors.selectedPlaylistColor === preset.colors[4]
 							&& list.colors.folderColor === preset.colors[5]
 							&& (
-								Object.prototype.hasOwnProperty.call(preset, 'buttonColors') && preset.buttonColors.length
+								Object.hasOwn(preset, 'buttonColors') && preset.buttonColors.length
 								&& (
 									(preset.buttonColors[0] !== null && panel.colors.buttonsTextColor === preset.buttonColors[0] || preset.buttonColors[0] === null)
 									&&
 									(preset.buttonColors[1] !== null && panel.colors.buttonsToolbarColor === preset.buttonColors[1] || preset.buttonColors[1] === null)
 								)
-								|| !Object.prototype.hasOwnProperty.call(preset, 'buttonColors')
+								|| !Object.hasOwn(preset, 'buttonColors')
 							);
 					});
 				});
@@ -3386,15 +3386,15 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			Object.keys(list.uiElements).forEach((key) => {
 				const subElement = list.uiElements[key];
-				if (Object.prototype.hasOwnProperty.call(subElement, 'elements')) {
+				if (Object.hasOwn(subElement, 'elements')) {
 					const subMenuNameTwo = menu.newMenu(key, subMenuName);
 					const keys = list.bLiteMode
 						? Object.keys(subElement.elements).filter((subKey) => subKey !== 'Folder')
 						: Object.keys(subElement.elements);
 					const bCanHideSettings = (subKey) => {
 						if (!list.uiElements['Search filter'].enabled) { return true; }
-						else if (subKey === 'Settings menu') { return Object.prototype.hasOwnProperty.call(subElement.elements, 'Power actions') && subElement.elements['Power actions'].enabled; }
-						else if (subKey === 'Power actions') { return Object.prototype.hasOwnProperty.call(subElement.elements, 'Settings menu') && subElement.elements['Settings menu'].enabled; }
+						else if (subKey === 'Settings menu') { return Object.hasOwn(subElement.elements, 'Power actions') && subElement.elements['Power actions'].enabled; }
+						else if (subKey === 'Power actions') { return Object.hasOwn(subElement.elements, 'Settings menu') && subElement.elements['Settings menu'].enabled; }
 						else { return true; }
 					};
 					keys.forEach((subKey) => {
@@ -3513,7 +3513,7 @@ function createMenuRightTop() {
 							Object.keys(preset.elements).forEach((key) => {
 								const subElement = preset.elements[key];
 								const subElementList = list.uiElements[key];
-								if (Object.prototype.hasOwnProperty.call(subElement, 'elements')) {
+								if (Object.hasOwn(subElement, 'elements')) {
 									const keys = Object.keys(subElement.elements);
 									keys.forEach((subKey) => {
 										subElementList.elements[subKey].enabled = subElement.elements[subKey].enabled;
@@ -4159,7 +4159,7 @@ function createMenuRightFilter(buttonKey) {
 						// Resize buttons
 						recalcWidth();
 						// Save properties
-						list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => { return (Object.prototype.hasOwnProperty.call(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
+						list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => { return (Object.hasOwn(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
 						overwriteProperties(list.properties);
 					}
 				});

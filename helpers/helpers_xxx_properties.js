@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//20/12/23
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
@@ -19,17 +19,17 @@ include('helpers_xxx_file.js');
 // For ex. for setting properties with UI buttons after initialization.
 function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
 	const bNumber = count > 0 ? true : false;
-	for (const k in propertiesDescriptor){
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+	for (const k in propertiesDescriptor) {
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		const description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 		if (bForce) { // Only use set when overwriting... this is done to have default values set first and then overwriting if needed.
-			if (!checkProperty(propertiesDescriptor[k])) {window.SetProperty(description, propertiesDescriptor[k][3]);}
-			else {window.SetProperty(description, propertiesDescriptor[k][1]);}
+			if (!checkProperty(propertiesDescriptor[k])) { window.SetProperty(description, propertiesDescriptor[k][3]); }
+			else { window.SetProperty(description, propertiesDescriptor[k][1]); }
 		} else {
-			if (!checkProperty(propertiesDescriptor[k])) {checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][3]));}
-			else {checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][1]));}
+			if (!checkProperty(propertiesDescriptor[k])) { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][3])); }
+			else { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][1])); }
 		}
-		if (bNumber) {count++;}
+		if (bNumber) { count++; }
 	}
 	return propertiesDescriptor;
 }
@@ -37,8 +37,8 @@ function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 // Overwrites all properties at once
 // For ex. for saving properties within a constructor (so this.propertiesDescriptor already contains count, padding, etc.).
 function overwriteProperties(propertiesDescriptor) { // Equivalent to setProperties(propertiesDescriptor,'',0,false,true);
-	for (const k in propertiesDescriptor){
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+	for (const k in propertiesDescriptor) {
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		if (!checkProperty(propertiesDescriptor[k])) {
 			window.SetProperty(propertiesDescriptor[k][0], propertiesDescriptor[k][3]);
 		} else {
@@ -52,7 +52,7 @@ function overwriteProperties(propertiesDescriptor) { // Equivalent to setPropert
 // Omits property checking so allows setting one to null and delete it, while overwriteProperties() will throw a checking popup
 function deleteProperties(propertiesDescriptor) {
 	for (const k in propertiesDescriptor) {
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		window.SetProperty(propertiesDescriptor[k][0], null);
 	}
 	return propertiesDescriptor;
@@ -63,10 +63,10 @@ function deleteProperties(propertiesDescriptor) {
 function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true) {
 	const bNumber = count > 0 ? true : false;
 	const output = {};
-	for (const k in propertiesDescriptor){
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+	for (const k in propertiesDescriptor) {
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		output[k] = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
-		if (bNumber) {count++;}
+		if (bNumber) { count++; }
 	}
 	return output;
 }
@@ -75,13 +75,13 @@ function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPadding = true) {
 	const bNumber = count > 0 ? true : false;
 	let output = null;
-	for (const k in propertiesDescriptor){
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+	for (const k in propertiesDescriptor) {
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		if (k === key) {
 			output = window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
 			break;
 		}
-		if (bNumber) {count++;}
+		if (bNumber) { count++; }
 	}
 	return output;
 }
@@ -93,30 +93,30 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 	const output = {};
 	if (bOnlyValues) { // only outputs values, without description
 		let cacheDescription = null;
-		for (const k in propertiesDescriptor){
-			if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+		for (const k in propertiesDescriptor) {
+			if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 			output[k] = null;
 			cacheDescription = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k] = window.GetProperty(cacheDescription);
 			if (!checkProperty(propertiesDescriptor[k], output[k])) {
 				output[k] = propertiesDescriptor[k][3];
 			}
-			if (bNumber) {count++;}
+			if (bNumber) { count++; }
 		}
 	} else {
-		for (const k in propertiesDescriptor){ // entire properties object with fixed descriptions
-			if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
-			output[k] = [null,null];
-			output[k][0] =  prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
+		for (const k in propertiesDescriptor) { // entire properties object with fixed descriptions
+			if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
+			output[k] = [null, null];
+			output[k][0] = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k][1] = window.GetProperty(output[k][0]);
 			if (propertiesDescriptor[k].length === 4) {
 				if (!checkProperty(propertiesDescriptor[k], output[k][1])) {
 					output[k][1] = propertiesDescriptor[k][3];
 				}
-				output[k][2] =  propertiesDescriptor[k][2];
-				output[k][3] =  propertiesDescriptor[k][3];
+				output[k][2] = propertiesDescriptor[k][2];
+				output[k][3] = propertiesDescriptor[k][3];
 			}
-			if (bNumber) {count++;}
+			if (bNumber) { count++; }
 		}
 	}
 	return output;
@@ -126,14 +126,14 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 function getPropertiesValues(propertiesDescriptor, prefix = '', count = 1, skip = -1, bPadding = true) {
 	const properties = getProperties(propertiesDescriptor, prefix, count, bPadding);
 	const propertiesValues = [];
-	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
+	if (skip === -1) { skip = Object.keys(propertiesDescriptor).length + 1; }
 	let i = 0;
-	for (const k in properties){
-		if (!Object.prototype.hasOwnProperty.call(properties, k)) {continue;}
+	for (const k in properties) {
+		if (!Object.hasOwn(properties, k)) { continue; }
 		i++;
 		if (i < skip) {
 			const property = properties[k];
-			if (property !== null) {propertiesValues.push(property);}
+			if (property !== null) { propertiesValues.push(property); }
 		}
 	}
 	return propertiesValues;
@@ -143,14 +143,14 @@ function getPropertiesValues(propertiesDescriptor, prefix = '', count = 1, skip 
 function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = -1, bPadding = true) {
 	const bNumber = count > 0;
 	const propertiesKeys = [];
-	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
+	if (skip === -1) { skip = Object.keys(propertiesDescriptor).length + 1; }
 	let i = 0;
-	for (const k in propertiesDescriptor){
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+	for (const k in propertiesDescriptor) {
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		i++;
 		if (i < skip) {
 			propertiesKeys.push(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]);
-			if (bNumber) {count++;}
+			if (bNumber) { count++; }
 		}
 	}
 	return propertiesKeys;
@@ -161,15 +161,15 @@ function getPropertiesKeys(propertiesDescriptor, prefix = '', count = 1, skip = 
 function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1, sep = '|', skip = -1, bPadding = true) {
 	const bNumber = count > 0;
 	let output = '';
-	if (skip === -1) {skip = Object.keys(propertiesDescriptor).length + 1;}
+	if (skip === -1) { skip = Object.keys(propertiesDescriptor).length + 1; }
 	let i = 0;
-	for (const k in propertiesDescriptor){
-		if (!Object.prototype.hasOwnProperty.call(propertiesDescriptor, k)) {continue;}
+	for (const k in propertiesDescriptor) {
+		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		i++;
 		if (i < skip) {
 			const value = String(window.GetProperty(prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0]));
-			output += (output === '') ? value : sep + value ;
-			if (bNumber) {count++;}
+			output += (output === '') ? value : sep + value;
+			if (bNumber) { count++; }
 		}
 	}
 	return output;
@@ -184,31 +184,31 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 function checkProperty(property, withValue) {
 	let bPass = true;
 	let report = '';
-	if (property.length < 4) {return true;}  // No checks needed (?)
+	if (property.length < 4) { return true; }  // No checks needed (?)
 	const valToCheck = (typeof withValue !== 'undefined' ? withValue : property[1]);
 	const checks = property[2];
-	if (Object.prototype.hasOwnProperty.call(checks, 'lower') && valToCheck >= checks['lower']) {
+	if (Object.hasOwn(checks, 'lower') && valToCheck >= checks['lower']) {
 		bPass = false; report += 'Value must be lower than ' + checks['lower'] + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'lowerEq') && valToCheck > checks['lowerEq']) {
+	if (Object.hasOwn(checks, 'lowerEq') && valToCheck > checks['lowerEq']) {
 		bPass = false; report += 'Value must be lower than or equal to ' + checks['lowerEq'] + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'greater') && valToCheck <= checks['greater']) {
+	if (Object.hasOwn(checks, 'greater') && valToCheck <= checks['greater']) {
 		bPass = false; report += 'Value must be greater than ' + checks['greater'] + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'greaterEq') && valToCheck < checks['greaterEq']) {
+	if (Object.hasOwn(checks, 'greaterEq') && valToCheck < checks['greaterEq']) {
 		bPass = false; report += 'Value must be greater than or equal to' + checks['greaterEQ'] + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'eq') && checks['eq'].indexOf(valToCheck) === -1) {
+	if (Object.hasOwn(checks, 'eq') && checks['eq'].indexOf(valToCheck) === -1) {
 		bPass = false; report += 'Value must be equal to (any) ' + checks['eq'].join(', ') + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'range') && !checks['range'].some((pair) => (valToCheck >= pair[0] && valToCheck <= pair[1]))) {
+	if (Object.hasOwn(checks, 'range') && !checks['range'].some((pair) => (valToCheck >= pair[0] && valToCheck <= pair[1]))) {
 		bPass = false; report += 'Value must be within range(any) ' + checks['range'].join(' or ') + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'func') && checks['func'] && !checks['func'](valToCheck)) {
+	if (Object.hasOwn(checks, 'func') && checks['func'] && !checks['func'](valToCheck)) {
 		bPass = false; report += 'Value obey this condition: ' + checks['func'] + '\n';
 	}
-	if (Object.prototype.hasOwnProperty.call(checks, 'portable') && checks['portable'] && valToCheck !== property[3] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
+	if (Object.hasOwn(checks, 'portable') && checks['portable'] && valToCheck !== property[3] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
 		console.log(window.Name + ' - Portable installation: property \'' + property[0] + '\'\nReplacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
 	}
 	if (!bPass) {

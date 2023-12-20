@@ -52,10 +52,13 @@
 
 ## [Unreleased][]
 ### Added
+- Backup: added more backup procedures when editing playlists. Original file is restored in case of errors.
 - Statistics: new 'size' data mode for statistics, which shows statistics according to playlist's size (num of tracks) grouped by 25. Ex. Empty, >0, >25, >50, ... Clicking on any data point will filter the panel, as usual, with playlists with such condition.
 ### Changed
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
 - Helpers: updated helpers.
+- XSP: improved caching in multiple playlist actions.
+- XSPF: improved caching in multiple playlist actions.
 - Code cleanup.
 ### Removed
 ### Fixed
@@ -64,6 +67,7 @@
 - Exporting Playlists: crash when clicking on a point -to filter- while using folders data.
 - Exporting Playlists: error while exporting an AutoPlaylist with sorting.
 - Exporting Playlists: crash while reporting malformed .xsp playlist.
+- XSP: wrong cache handling for .xsp playlist when rewriting the queries.
 - Minor fixes.
 
 ## [0.12.1] - 2023-12-09

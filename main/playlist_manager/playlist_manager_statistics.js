@@ -455,7 +455,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					switch (arg) {
 						case 'isFolder': val = pls[arg] ? 'Folder' : 'Playlist'; break;
 						case 'query': {
-							if (Object.prototype.hasOwnProperty.call(pls, arg) && pls[arg].length) {
+							if (Object.hasOwn(pls, arg) && pls[arg].length) {
 								val = (pls.extension === '.xsp' ? 'Smart Pls.' : 'AutoPls.');
 							} else {
 								val = (pls.extension === '.ui' ? 'UI Pls.' : 'Std. Pls.');
@@ -467,7 +467,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						case 'category': val = pls[arg].length ? pls[arg] : 'No category'; break;
 						case 'playlist_mbid': val = pls[arg].length ? 'Exported' : 'No MBID'; break;
 						case 'size': {
-							if (pls.isFolder) {val = null;} // Just skip
+							if (pls.isFolder) { val = null; } // Just skip
 							else {
 								if (pls.size) {
 									val = !Number.isNaN(pls.size) && pls.size !== '?'
@@ -482,7 +482,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						default: val = pls[arg];
 					}
 					(isArray(val) ? val : [val]).forEach((subVal) => {
-						if (subVal === null) {return;}
+						if (subVal === null) { return; }
 						if (!count.has(subVal)) { count.set(subVal, 1); }
 						else { count.set(subVal, count.get(subVal) + 1); }
 					});

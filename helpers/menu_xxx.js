@@ -594,6 +594,8 @@ function _attachedMenu({
 	};
 }
 
+// Add ES2022 method
+// https://github.com/tc39/proposal-accessible-object-hasownproperty
 if (!Object.hasOwn) {
 	Object.defineProperty(Object, 'hasOwn', {
 		enumerable: false,

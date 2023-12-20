@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/23
+//20/12/23
 
 /* exported _list */
 
@@ -120,8 +120,8 @@ function _list(x, y, w, h) {
 	this.updatePlaylistIcons = () => {
 		for (let key in iconCharPlaylistWidth) {
 			let icon = playlistDescriptors[key].icon;
-			if (Object.prototype.hasOwnProperty.call(this.playlistIcons, key)) {
-				if (Object.prototype.hasOwnProperty.call(this.playlistIcons[key], 'icon')) {
+			if (Object.hasOwn(this.playlistIcons, key)) {
+				if (Object.hasOwn(this.playlistIcons[key], 'icon')) {
 					icon = this.playlistIcons[key].icon ? String.fromCharCode(parseInt(this.playlistIcons[key].icon, 16)) : null;
 				}
 			}
@@ -380,7 +380,7 @@ function _list(x, y, w, h) {
 		switch (mode.toLowerCase()) {
 			case 'traditional': {
 				const panelBgColor = panel.getColorBackground();
-				const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.prototype.hasOwnProperty.call(this.configFile.ui.icons.category, this.categoryState[0]);
+				const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.hasOwn(this.configFile.ui.icons.category, this.categoryState[0]);
 				const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
 				const offsetHeader = yOffset / 10;
 				const gfontHeader = _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
@@ -443,7 +443,7 @@ function _list(x, y, w, h) {
 					{	// Folder
 						parent: this.uiElements['Header buttons'].elements['Folder'].enabled && !this.bLiteMode ? this.headerButtons.folder : null,
 						position: this.uiElements['Header buttons'].elements['Folder'].position,
-						icon: this.categoryState.length === 1 && this.configFile && Object.prototype.hasOwnProperty.call(this.configFile.ui.icons.category, this.categoryState[0])
+						icon: this.categoryState.length === 1 && this.configFile && Object.hasOwn(this.configFile.ui.icons.category, this.categoryState[0])
 							? this.configFile.ui.icons.category[this.categoryState[0]]
 							: iconCharHeader, // Try setting customized button from json
 						color: this.headerButtons.folder.inFocus
@@ -622,7 +622,7 @@ function _list(x, y, w, h) {
 						);
 					}
 				} else {
-					const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.prototype.hasOwnProperty.call(this.configFile.ui.icons.category, this.categoryState[0]);
+					const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.hasOwn(this.configFile.ui.icons.category, this.categoryState[0]);
 					const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : null; // Try setting customized button from json
 					const iconW = catIcon ? gr.CalcTextWidth(catIcon, gfontHeader) : 0;
 					if (catIcon) {
@@ -824,23 +824,23 @@ function _list(x, y, w, h) {
 			if (this.bShowIcons) {
 				let icon = playlistDescriptors[extension].icon;
 				let iconBg = playlistDescriptors[extension].iconBg;
-				if (Object.prototype.hasOwnProperty.call(this.playlistIcons, extension)) {
+				if (Object.hasOwn(this.playlistIcons, extension)) {
 					let bFallback = false;
-					if (Object.prototype.hasOwnProperty.call(this.playlistIcons[extension], 'icon')) {
+					if (Object.hasOwn(this.playlistIcons[extension], 'icon')) {
 						icon = this.playlistIcons[extension].icon ? String.fromCharCode(parseInt(this.playlistIcons[extension].icon, 16)) : null;
 						if (!icon && extension !== plsExtension) { // When playlist state icon is null (locked or blank), fallback to playlist type
 							icon = playlistDescriptors[plsExtension].icon ? playlistDescriptors[plsExtension].icon : null;
-							if (Object.prototype.hasOwnProperty.call(this.playlistIcons, plsExtension) && Object.prototype.hasOwnProperty.call(this.playlistIcons[plsExtension], 'icon')) {
+							if (Object.hasOwn(this.playlistIcons, plsExtension) && Object.hasOwn(this.playlistIcons[plsExtension], 'icon')) {
 								icon = this.playlistIcons[plsExtension].icon ? String.fromCharCode(parseInt(this.playlistIcons[plsExtension].icon, 16)) : null;
 							}
 							bFallback = icon ? true : false;
 						}
 					}
-					if (Object.prototype.hasOwnProperty.call(this.playlistIcons[extension], 'iconBg')) {
+					if (Object.hasOwn(this.playlistIcons[extension], 'iconBg')) {
 						iconBg = this.playlistIcons[extension].iconBg ? String.fromCharCode(parseInt(this.playlistIcons[extension].iconBg, 16)) : null;
 						if (bFallback && !iconBg && extension !== plsExtension) { // When playlist state icon is null (locked or blank), fallback to playlist type
 							iconBg = playlistDescriptors[plsExtension].iconBg ? playlistDescriptors[plsExtension].iconBg : null;
-							if (Object.prototype.hasOwnProperty.call(this.playlistIcons, plsExtension) && Object.prototype.hasOwnProperty.call(this.playlistIcons[plsExtension], 'iconBg')) {
+							if (Object.hasOwn(this.playlistIcons, plsExtension) && Object.hasOwn(this.playlistIcons[plsExtension], 'iconBg')) {
 								iconBg = this.playlistIcons[plsExtension].iconBg ? String.fromCharCode(parseInt(this.playlistIcons[plsExtension].iconBg, 16)) : null;
 							}
 						}
@@ -1432,7 +1432,7 @@ function _list(x, y, w, h) {
 								}
 								// Adding Duplicates on selection hint
 								let warningText = '';
-								if (Object.prototype.hasOwnProperty.call(lShortcuts, mask) && lShortcuts[mask].key === 'Copy selection to playlist' || Object.prototype.hasOwnProperty.call(mShortcuts, mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
+								if (Object.hasOwn(lShortcuts, mask) && lShortcuts[mask].key === 'Copy selection to playlist' || Object.hasOwn(mShortcuts, mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
 									if (pls.isAutoPlaylist || pls.query) { warningText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)'; }
 									else if (pls.extension === '.fpl') { warningText += '\n(.fpl playlists are non editable, convert it first)'; }
 									else if (pls.isLocked) { warningText += '\n(Locked playlists are non editable, unlock it first)'; }
@@ -1587,7 +1587,7 @@ function _list(x, y, w, h) {
 			const z = this.index;
 			if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
 				const shortcuts = this.getShortcuts('R');
-				const sgShortcut = shortcuts[Object.prototype.hasOwnProperty.call(shortcuts, mask) ? mask : 'SG_CLICK'];
+				const sgShortcut = shortcuts[Object.hasOwn(shortcuts, mask) ? mask : 'SG_CLICK'];
 				if (sgShortcut) { // Select all from current view or clean selection
 					this.executeAction(z, x, y, sgShortcut, false);
 				}
@@ -1633,7 +1633,7 @@ function _list(x, y, w, h) {
 				case this.up_btn.lbtn_up(x, y):
 				case this.down_btn.lbtn_up(x, y):
 				case !this.inRange:
-					if (!Object.prototype.hasOwnProperty.call(shortcuts, mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') { this.resetMultSelect(); }
+					if (!Object.hasOwn(shortcuts, mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') { this.resetMultSelect(); }
 					if (this.isInternalDrop()) { this.internalPlsDrop = []; this.move(this.mx + 0.01, this.my, mask); return false; }
 					break;
 				default: {
@@ -1689,7 +1689,7 @@ function _list(x, y, w, h) {
 								}
 							}
 							this.internalPlsDrop = [];
-						} else if (Object.prototype.hasOwnProperty.call(shortcuts, mask)) {
+						} else if (Object.hasOwn(shortcuts, mask)) {
 							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
 								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
 								const cache = [this.offset, this.index];
@@ -1769,7 +1769,7 @@ function _list(x, y, w, h) {
 					this.searchInput.check('up', x, y);
 				} else if (bActionButton || this.modeUI === 'traditional' || !this.uiElements['Header buttons'].elements['Power actions'].enabled) {
 					const shortcuts = this.getShortcuts('L', 'HEADER');
-					const sgShortcut = shortcuts[Object.prototype.hasOwnProperty.call(shortcuts, mask) ? mask : 'SG_CLICK'];
+					const sgShortcut = shortcuts[Object.hasOwn(shortcuts, mask) ? mask : 'SG_CLICK'];
 					if (sgShortcut) { // Select all from current view or clean selection
 						if (!this.bDoubleclick) { // It's not a second lbtn click
 							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void (0), x, y, sgShortcut, false);
@@ -1780,7 +1780,7 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else {
-			if (!Object.prototype.hasOwnProperty.call(shortcuts, mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') { this.resetMultSelect(); }
+			if (!Object.hasOwn(shortcuts, mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') { this.resetMultSelect(); }
 			this.searchInput && this.searchInput.select && this.searchInput.edit && this.searchInput.check('up', this.searchInput.x + (x > (this.x + this.w) ? this.searchInput.w : 1), this.searchInput.y + 1); // Allow finishing selection outside panel
 			return false;
 		}
@@ -1788,7 +1788,7 @@ function _list(x, y, w, h) {
 
 	this.mbtn_up = (x, y, mask) => {
 		const shortcuts = this.getShortcuts('M');
-		const sgShortcut = shortcuts[Object.prototype.hasOwnProperty.call(shortcuts, mask) ? mask : 'SG_CLICK'];
+		const sgShortcut = shortcuts[Object.hasOwn(shortcuts, mask) ? mask : 'SG_CLICK'];
 		if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			switch (true) { // NOSONAR
@@ -1798,7 +1798,7 @@ function _list(x, y, w, h) {
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
-						if (Object.prototype.hasOwnProperty.call(shortcuts, mask)) {
+						if (Object.hasOwn(shortcuts, mask)) {
 							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
 								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
 								const cache = [this.offset, this.index];
@@ -1842,7 +1842,7 @@ function _list(x, y, w, h) {
 			}
 			if (!bButtonTrace && (bActionButton || this.modeUI === 'traditional' || !this.uiElements['Header buttons'].elements['Power actions'].enabled)) {
 				const shortcuts = this.getShortcuts('M', 'HEADER');
-				const sgShortcut = shortcuts[Object.prototype.hasOwnProperty.call(shortcuts, mask) ? mask : 'SG_CLICK'];
+				const sgShortcut = shortcuts[Object.hasOwn(shortcuts, mask) ? mask : 'SG_CLICK'];
 				if (sgShortcut) {
 					this.executeAction(void (0), x, y, sgShortcut, false);
 				}
@@ -1906,7 +1906,7 @@ function _list(x, y, w, h) {
 			}
 			return true;
 		} else {
-			if (!Object.prototype.hasOwnProperty.call(shortcuts, mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') { this.resetMultSelect(); }
+			if (!Object.hasOwn(shortcuts, mask) || shortcuts[mask].key === 'Multiple selection' || shortcuts[mask].key === 'Multiple selection (range)') { this.resetMultSelect(); }
 			return false;
 		}
 	};
@@ -2029,7 +2029,7 @@ function _list(x, y, w, h) {
 									const indexes = playlists.map((p) => this.data.indexOf(p));
 									indexes.forEach((z, i) => {
 										const subPls = playlists[i];
-										if (subPls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(subPls, 'type') && subPls.type !== 'songs') { return; }
+										if (subPls.extension === '.xsp' && Object.hasOwn(subPls, 'type') && subPls.type !== 'songs') { return; }
 										if (subPls.extension !== '.ui' && !subPls.isFolder) {
 											if (subPls.isAutoPlaylist) {
 												const remDupl = (subPls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (subPls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
@@ -2181,7 +2181,7 @@ function _list(x, y, w, h) {
 					if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
 					let method = this.methodState.split('\t')[0].replace('By ', '');
-					if (method === 'name' || !Object.prototype.hasOwnProperty.call(new oPlaylist(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
+					if (method === 'name' || !Object.hasOwn(new oPlaylist(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 					let bNext = false;
 					const bCycle = this.properties.bQuicSearchCycle[1];
 					if (!this.properties.bQuicSearchNext[1]) {
@@ -2192,7 +2192,7 @@ function _list(x, y, w, h) {
 					}
 					// Helper
 					const searchStr = (pls) => {
-						if (Object.prototype.hasOwnProperty.call(pls, method) && pls[method] !== null && pls[method] !== void (0)) {
+						if (Object.hasOwn(pls, method) && pls[method] !== null && pls[method] !== void (0)) {
 							const bArray = isArray(pls[method]);
 							if (bArray && !pls[method].length) { return false; }
 							const val = bArray ? pls[method][0] : pls[method];
@@ -2906,7 +2906,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.getUpdateTrackTags = (handleList, pls) => { // Add tags to tracks according to playlist, only applied once per track. i.e. adding multiple copies will not add multiple times the tag
-		if (!Object.prototype.hasOwnProperty.call(pls, 'trackTags') || !pls.trackTags || !pls.trackTags.length || !handleList || !handleList.Count) { return [new FbMetadbHandleList(), []]; }
+		if (!Object.hasOwn(pls, 'trackTags') || !pls.trackTags || !pls.trackTags.length || !handleList || !handleList.Count) { return [new FbMetadbHandleList(), []]; }
 		const newHandles = handleList.Clone();
 		newHandles.Sort();
 		let tagsArr = [];
@@ -2927,7 +2927,7 @@ function _list(x, y, w, h) {
 					} else if (expression.indexOf('JS:') !== -1) { // JS expression by function name at 'helpers_xxx_utils.js'
 						bFunc = true;
 						let funcName = expression.replace('JS:', '');
-						if (Object.prototype.hasOwnProperty.call(funcDict, funcName)) {
+						if (Object.hasOwn(funcDict, funcName)) {
 							try { ({ value, bOverWrite, bMultiple } = funcDict[funcName](pls)); }
 							catch (e) { fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name); }
 						} else { fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name); }
@@ -3189,7 +3189,7 @@ function _list(x, y, w, h) {
 				if (!bAllExt) { return ''; }
 				else if (bAllExt) {
 					if (pls.extension !== '.fpl' && pls.extension !== '.xsp') { return ''; }
-					if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
+					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
 						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 						return '';
 					}
@@ -3210,7 +3210,7 @@ function _list(x, y, w, h) {
 			idx.forEach((i) => {
 				const pls = this.data[i];
 				if ((pls.extension === '.fpl' || pls.extension === '.xsp') && bAllExt) {
-					if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
+					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
 						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 						return;
 					}
@@ -3268,9 +3268,9 @@ function _list(x, y, w, h) {
 			});
 		} else if (answer === popup.no) {
 			data.forEach((item) => { // TODO: .fpl importing?
-				if (!Object.prototype.hasOwnProperty.call(item, 'query') || !Object.prototype.hasOwnProperty.call(item, 'isAutoPlaylist') || !item.isAutoPlaylist) { return; } // May be a non AutoPlaylist item
+				if (!Object.hasOwn(item, 'query') || !Object.hasOwn(item, 'isAutoPlaylist') || !item.isAutoPlaylist) { return; } // May be a non AutoPlaylist item
 				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return; } // Don't allow empty but allow sort
-				if (item.extension === '.xsp' && Object.prototype.hasOwnProperty.call(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
+				if (item.extension === '.xsp' && Object.hasOwn(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
 					fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 					return;
 				}
@@ -3964,7 +3964,7 @@ function _list(x, y, w, h) {
 					if (diffKeys.size) { diffKeys.forEach((key) => { item[key] = defPls[key]; }); }
 					// Process
 					if (item.isAutoPlaylist || item.query) {
-						if (!Object.prototype.hasOwnProperty.call(item, 'duration')) { item.duration = -1; }
+						if (!Object.hasOwn(item, 'duration')) { item.duration = -1; }
 						i++;
 						if (bUpdateSize) { // Updates size for AutoPlaylists. Warning takes a lot of time! Only when required...
 							// Only re-checks query when forcing update of size for performance reasons
@@ -3978,7 +3978,7 @@ function _list(x, y, w, h) {
 										pop.enable(true, 'Updating AutoPls...', 'Updating AutoPlaylists...\nPanel will be disabled during the process.');
 									}
 									if (handleList && item.size && bUpdateTags) {
-										if (Object.prototype.hasOwnProperty.call(item, 'trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
+										if (Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
 											const bUpdated = this.updateTags(handleList, item);
 											if (bUpdated) { console.log('Playlist Manager: Auto-tagging playlist ' + item.name); }
 										}
@@ -3986,7 +3986,7 @@ function _list(x, y, w, h) {
 									if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
 										console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 										if (item.extension === '.xsp') {
-											if (Object.prototype.hasOwnProperty.call(item, 'type') && item.type === 'songs') {
+											if (Object.hasOwn(item, 'type') && item.type === 'songs') {
 												let xspPlaylist = this.dataXsp.find((pls) => { return pls.name === item.name; });
 												if (xspPlaylist) {
 													xspPlaylist.size = item.size;
@@ -4003,7 +4003,7 @@ function _list(x, y, w, h) {
 							if (bUpdateTags) {
 								const cacheSize = item.size;
 								const cacheDuration = item.duration;
-								if (Object.prototype.hasOwnProperty.call(item, 'trackTags') && item.trackTags && item.trackTags.length) {
+								if (Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) {
 									promises.push(new Promise((resolve) => {
 										loadAutoPlaylistAsync(item, i).then((handleList = null) => {
 											if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
@@ -4016,7 +4016,7 @@ function _list(x, y, w, h) {
 											if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
 												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 												if (item.extension === '.xsp') {
-													if (Object.prototype.hasOwnProperty.call(item, 'type') && item.type === 'songs') {
+													if (Object.hasOwn(item, 'type') && item.type === 'songs') {
 														let xspPlaylist = this.dataXsp.find((pls) => { return pls.name === item.name; });
 														if (xspPlaylist) {
 															xspPlaylist.size = item.size;
@@ -4430,7 +4430,7 @@ function _list(x, y, w, h) {
 				});
 				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI, ...this.dataFolder]);
 				const formatFolder = (pls) => {
-					if (Object.prototype.hasOwnProperty.call(pls, 'pls')) {
+					if (Object.hasOwn(pls, 'pls')) {
 						const list = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
 						pls.pls = pls.pls.map((subPls) => {
 							const id = subPls.nameId + subPls.extension;
@@ -4458,7 +4458,7 @@ function _list(x, y, w, h) {
 				data.forEach((pls) => {
 					stripMeta.forEach((key) => delete pls[key]);
 					// Strip unnecessary folder data and filter duplicates
-					if (Object.prototype.hasOwnProperty.call(pls, 'pls')) {
+					if (Object.hasOwn(pls, 'pls')) {
 						formatFolder(pls);
 					}
 				});
@@ -4680,7 +4680,7 @@ function _list(x, y, w, h) {
 		};
 
 		this.isInFolder = (pls) => {
-			return (Object.prototype.hasOwnProperty.call(pls, 'inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
+			return (Object.hasOwn(pls, 'inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
 		};
 
 		this.addUIplaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
@@ -4723,9 +4723,9 @@ function _list(x, y, w, h) {
 		this.addAutoplaylist = (pls = null, bEdit = true, toFolder = null) => {
 			// Check if there are initial values
 			const bPls = pls ? true : false;
-			const hasName = bPls && Object.prototype.hasOwnProperty.call(pls, 'name'), hasQuery = bPls && Object.prototype.hasOwnProperty.call(pls, 'query'), hasSort = bPls && Object.prototype.hasOwnProperty.call(pls, 'sort');
-			const hasSize = bPls && Object.prototype.hasOwnProperty.call(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.prototype.hasOwnProperty.call(pls, 'category');
-			const hasTags = bPls && Object.prototype.hasOwnProperty.call(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.prototype.hasOwnProperty.call(pls, 'trackTags') && pls.trackTags.length;
+			const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
+			const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
+			const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
 			// Create oPlaylist
 			let newName = hasName ? pls.name : '';
 			if (!newName.length || bEdit) {
@@ -4792,10 +4792,10 @@ function _list(x, y, w, h) {
 			this.xspPopup();
 			// Check if there are initial values
 			const bPls = pls ? true : false;
-			const hasName = bPls && Object.prototype.hasOwnProperty.call(pls, 'name'), hasQuery = bPls && Object.prototype.hasOwnProperty.call(pls, 'query'), hasSort = bPls && Object.prototype.hasOwnProperty.call(pls, 'sort');
-			const hasSize = bPls && Object.prototype.hasOwnProperty.call(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.prototype.hasOwnProperty.call(pls, 'category');
-			const hasTags = bPls && Object.prototype.hasOwnProperty.call(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.prototype.hasOwnProperty.call(pls, 'trackTags') && pls.trackTags.length;
-			const hasLimit = bPls && Object.prototype.hasOwnProperty.call(pls, 'limit') && pls.limit;
+			const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
+			const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
+			const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
+			const hasLimit = bPls && Object.hasOwn(pls, 'limit') && pls.limit;
 			// Create oPlaylist
 			let newName = hasName ? pls.name : '';
 			if (!newName.length || bEdit) {
@@ -5027,7 +5027,7 @@ function _list(x, y, w, h) {
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
-			if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+			if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 				return;
 			}
@@ -5364,7 +5364,7 @@ function _list(x, y, w, h) {
 				this.bUseUUID = false;
 			}
 			// Check sorting is valid
-			if (!Object.prototype.hasOwnProperty.call(this.sortMethods(false), this.methodState)) {
+			if (!Object.hasOwn(this.sortMethods(false), this.methodState)) {
 				if (!bSilenSorting) {
 					fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
 				}
@@ -5372,7 +5372,7 @@ function _list(x, y, w, h) {
 				this.properties['methodState'][1] = this.methodState;
 				bDone = true;
 			}
-			if (!Object.prototype.hasOwnProperty.call(this.sortMethods(false)[this.methodState], this.sortState)) {
+			if (!Object.hasOwn(this.sortMethods(false)[this.methodState], this.sortState)) {
 				if (!bSilenSorting) {
 					fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
 				}
@@ -5420,7 +5420,7 @@ function _list(x, y, w, h) {
 				if (!this.lShortcuts) { this.lShortcuts = {}; }
 				const shortcutsLActions = shortcutsL.actions.map((_) => { return _.key; });
 				shortcutsLKeys.forEach((key) => {
-					if (!Object.prototype.hasOwnProperty.call(this.lShortcuts, key)) { this.lShortcuts[key] = shortcutsLActions[0]; }
+					if (!Object.hasOwn(this.lShortcuts, key)) { this.lShortcuts[key] = shortcutsLActions[0]; }
 				});
 				Object.keys(this.lShortcuts).forEach((key) => {
 					if (shortcutsLKeys.indexOf(key) === -1) { delete this.lShortcuts[key]; }
@@ -5434,7 +5434,7 @@ function _list(x, y, w, h) {
 				if (!this.mShortcuts) { this.mShortcuts = {}; }
 				const shortcutsMActions = shortcutsL.actions.map((_) => { return _.key; });
 				shortcutsMKeys.forEach((key) => {
-					if (!Object.prototype.hasOwnProperty.call(this.mShortcuts, key)) { this.mShortcuts[key] = shortcutsMActions[0]; }
+					if (!Object.hasOwn(this.mShortcuts, key)) { this.mShortcuts[key] = shortcutsMActions[0]; }
 				});
 				Object.keys(this.mShortcuts).forEach((key) => {
 					if (shortcutsMKeys.indexOf(key) === -1) { delete this.mShortcuts[key]; }
@@ -5570,8 +5570,8 @@ function _list(x, y, w, h) {
 						if (menu.skipProp.some((key) => {
 							const notKey = key.startsWith('!') ? key.slice(1) : null;
 							return (notKey
-								? Object.prototype.hasOwnProperty.call(pls, notKey) && !pls[notKey] && !isString(pls[notKey]) && !isArrayStrings(pls[notKey])
-								: Object.prototype.hasOwnProperty.call(pls, key) && (isBoolean(pls[key]) && pls[key] || isString(pls[key]) || isArrayStrings(pls[notKey]))
+								? Object.hasOwn(pls, notKey) && !pls[notKey] && !isString(pls[notKey]) && !isArrayStrings(pls[notKey])
+								: Object.hasOwn(pls, key) && (isBoolean(pls[key]) && pls[key] || isString(pls[key]) || isArrayStrings(pls[notKey]))
 							);
 						})) { return; }
 						const type = menu.type;
@@ -5600,8 +5600,8 @@ function _list(x, y, w, h) {
 						const path = preset.path;
 						const dsp = preset.dsp;
 						const tf = preset.tf;
-						let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-						const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
+						let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 						const menu = clone(defaultMenu);
 						menu.arg = [preset];
 						menu.name += ' ' + _b(tfName);
@@ -6078,16 +6078,23 @@ function _list(x, y, w, h) {
 			inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bHighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Playlist Manager settings...' + (bHighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
-					bHighlighting
-						? 'Library has changed since tracking was disabled.\n' +
-						'Paths cache needs rebuilding.'
-						: ''
-				) + (
-					this.bLiteMode
-						? ''
-						: (!this.bTracking ? (bHighlighting ? '\n' : '') + 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking)'
-				);
+				return 'Playlist Manager settings...' +
+					(
+						bHighlighting || !this.bLiteMode
+							? '\n----------------------------------------------\n'
+							: ''
+					) +
+					(
+						bHighlighting
+							? 'Library has changed since tracking was disabled.\n' +
+							'Paths cache needs rebuilding.'
+							: ''
+					) +
+					(
+						this.bLiteMode
+							? ''
+							: (!this.bTracking ? (bHighlighting ? '\n' : '') + 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking)'
+					);
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (!this.bLiteMode && mask === MK_SHIFT) {
@@ -6104,16 +6111,23 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bHighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Open playlists folder' + (bHighlighting || !this.bLiteMode ? '\n----------------------------------------------\n' : '') + (
-					bHighlighting
-						? 'Playlists tracked folder has new changes.\n' +
-						'Use manual refresh or enable auto-loading.'
-						: ''
-				) + (
-					this.bLiteMode
-						? ''
-						: '(Shift + L. Click to manual refresh)'
-				);
+				return 'Open playlists folder' +
+					(
+						bHighlighting || !this.bLiteMode
+							? '\n----------------------------------------------\n'
+							: ''
+					) +
+					(
+						bHighlighting
+							? 'Playlists tracked folder has new changes.\n' +
+							'Use manual refresh or enable auto-loading.'
+							: ''
+					) +
+					(
+						this.bLiteMode
+							? ''
+							: '(Shift + L. Click to manual refresh)'
+					);
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (!this.bLiteMode && mask === MK_SHIFT) {
