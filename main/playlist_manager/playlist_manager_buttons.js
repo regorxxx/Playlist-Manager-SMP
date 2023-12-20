@@ -5,9 +5,9 @@
 
 //Always loaded along other buttons and panel
 include('..\\..\\helpers\\buttons_panel_xxx.js');
-var buttonCoordinatesOne = {x: 1, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
-var buttonCoordinatesTwo = {x: () => {return buttonCoordinatesOne.x + buttonCoordinatesOne.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
-var buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + buttonCoordinatesTwo.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 3 - 1;}, h: 22};
+const buttonCoordinatesOne = {x: 1, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
+const buttonCoordinatesTwo = {x: () => {return buttonCoordinatesOne.x + buttonCoordinatesOne.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 2;}, h: 22};
+const buttonCoordinatesThree = {x: () => {return buttonCoordinatesTwo.x() + buttonCoordinatesTwo.w();}, y: () => {return window.Height - 22;}, w: () => {return window.Width / 7 * 3 - 1;}, h: 22};
 buttonsPanel.config.orientation = 'x';
 
 addButton({

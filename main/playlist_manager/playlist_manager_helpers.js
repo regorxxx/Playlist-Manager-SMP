@@ -1201,7 +1201,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 							} else if (pls.extension === '.xsp') {
 								let originalStrings = ['<name>' + oldName];
 								let newStrings = ['<name>' + newName];
-								[bDone, reason] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
+								[bDone, ] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
 							} else { bDone = true; }
 							if (!bDone) {
 								fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);

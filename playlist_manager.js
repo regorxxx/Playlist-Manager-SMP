@@ -478,7 +478,7 @@ let autoUpdateRepeat;
 		setTimeout(callback, 6000);
 		const id = addEventListener('on_notify_data', (name, info) => {
 			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
-			switch (name) {
+			switch (name) { // NOSONAR
 				case 'Playlist manager: playlistPath': {
 					if (info) {
 						if (info === list.playlistsPath) {
