@@ -59,6 +59,8 @@
 - Code cleanup.
 ### Removed
 ### Fixed
+- Search: crash on multiple settings menu entries due to a typo on variable.
+- ListenBrainz: crash when importing an existing playlist in some cases.
 - Exporting Playlists: crash when clicking on a point -to filter- while using folders data.
 - Exporting Playlists: error while exporting an AutoPlaylist with sorting.
 - Exporting Playlists: crash while reporting malformed .xsp playlist.
