@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/23
+//20/12/23
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -165,22 +165,22 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 			}
 		} else if (extension === '.fpl') { // AddLocations is async so it doesn't work...
 			const jspf = FPL.parseFile(file);
-			if (Object.prototype.hasOwnProperty.call(jspf, 'playlist') && jspf.playlist) {
+			if (Object.hasOwn(jspf, 'playlist') && jspf.playlist) {
 				const jPls = jspf.playlist;
-				name = Object.prototype.hasOwnProperty.call(jPls, 'title') && jPls.title ? jPls.title : '';
-				if (Object.prototype.hasOwnProperty.call(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+				name = Object.hasOwn(jPls, 'title') && jPls.title ? jPls.title : '';
+				if (Object.hasOwn(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
 					for (let metaData of jPls.meta) {
-						if (Object.prototype.hasOwnProperty.call(metaData, 'uuid')) { uuid = metaData.uuid ? metaData.uuid : ''; }
-						if (Object.prototype.hasOwnProperty.call(metaData, 'category')) { category = metaData.category ? metaData.category : ''; }
-						if (Object.prototype.hasOwnProperty.call(metaData, 'tags')) { tags = metaData.tags ? metaData.tags.split(';') : []; }
-						if (Object.prototype.hasOwnProperty.call(metaData, 'trackTags')) { trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : []; }
-						if (Object.prototype.hasOwnProperty.call(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
-						if (Object.prototype.hasOwnProperty.call(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? Number(metaData.duration) : null; }
-						if (Object.prototype.hasOwnProperty.call(metaData, 'playlist_mbid')) { playlist_mbid = metaData.playlist_mbid ? metaData.playlist_mbid : ''; }
+						if (Object.hasOwn(metaData, 'uuid')) { uuid = metaData.uuid ? metaData.uuid : ''; }
+						if (Object.hasOwn(metaData, 'category')) { category = metaData.category ? metaData.category : ''; }
+						if (Object.hasOwn(metaData, 'tags')) { tags = metaData.tags ? metaData.tags.split(';') : []; }
+						if (Object.hasOwn(metaData, 'trackTags')) { trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : []; }
+						if (Object.hasOwn(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
+						if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? Number(metaData.duration) : null; }
+						if (Object.hasOwn(metaData, 'playlist_mbid')) { playlist_mbid = metaData.playlist_mbid ? metaData.playlist_mbid : ''; }
 					}
 				}
-				if (Object.prototype.hasOwnProperty.call(jPls, 'author')) { author = jPls.author; }
-				if (Object.prototype.hasOwnProperty.call(jPls, 'annotation')) { description = jPls.description; }
+				if (Object.hasOwn(jPls, 'author')) { author = jPls.author; }
+				if (Object.hasOwn(jPls, 'annotation')) { description = jPls.description; }
 			}
 			fplCache.set(file, jspf);
 		} else if (extension === '.pls') {
@@ -209,30 +209,30 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 				if (codePage !== -1) { text = _open(file, codePage); }
 				const xmldom = XSPF.XMLfromString(text);
 				const jspf = XSPF.toJSPF(xmldom, false);
-				if (Object.prototype.hasOwnProperty.call(jspf, 'playlist') && jspf.playlist) {
+				if (Object.hasOwn(jspf, 'playlist') && jspf.playlist) {
 					const jPls = jspf.playlist;
-					name = Object.prototype.hasOwnProperty.call(jPls, 'title') && jPls.title ? jPls.title : '';
-					if (Object.prototype.hasOwnProperty.call(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+					name = Object.hasOwn(jPls, 'title') && jPls.title ? jPls.title : '';
+					if (Object.hasOwn(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
 						let bLockedFound = false;
 						for (let metaData of jPls.meta) {
-							if (Object.prototype.hasOwnProperty.call(metaData, 'uuid')) { uuid = metaData.uuid ? metaData.uuid : ''; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'locked')) { bLocked = metaData.locked && metaData.locked.length ? metaData.locked === 'true' : true; bLockedFound = true; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'category')) { category = metaData.category ? metaData.category : ''; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'tags')) { tags = metaData.tags ? metaData.tags.split(';') : []; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'trackTags')) { trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : []; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? Number(metaData.duration) : null; }
-							if (Object.prototype.hasOwnProperty.call(metaData, 'playlist_mbid')) { playlist_mbid = metaData.playlist_mbid ? metaData.playlist_mbid : ''; }
+							if (Object.hasOwn(metaData, 'uuid')) { uuid = metaData.uuid ? metaData.uuid : ''; }
+							if (Object.hasOwn(metaData, 'locked')) { bLocked = metaData.locked && metaData.locked.length ? metaData.locked === 'true' : true; bLockedFound = true; }
+							if (Object.hasOwn(metaData, 'category')) { category = metaData.category ? metaData.category : ''; }
+							if (Object.hasOwn(metaData, 'tags')) { tags = metaData.tags ? metaData.tags.split(';') : []; }
+							if (Object.hasOwn(metaData, 'trackTags')) { trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : []; }
+							if (Object.hasOwn(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
+							if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? Number(metaData.duration) : null; }
+							if (Object.hasOwn(metaData, 'playlist_mbid')) { playlist_mbid = metaData.playlist_mbid ? metaData.playlist_mbid : ''; }
 						}
 						if (!bLockedFound) { bLocked = true; } // Locked by default if meta not present
 					}
-					else if (Object.prototype.hasOwnProperty.call(jPls, 'identifier') && jPls.identifier && jPls.identifier.startsWith('https://listenbrainz.org/playlist/')) {
+					else if (Object.hasOwn(jPls, 'identifier') && jPls.identifier && jPls.identifier.startsWith('https://listenbrainz.org/playlist/')) {
 						playlist_mbid = jPls.identifier.replace('https://listenbrainz.org/playlist/', ''); // MBID for playlists retrieved from ListenBrainz
 					}
-					if (Object.prototype.hasOwnProperty.call(jPls, 'author')) { author = jPls.author; }
-					if (Object.prototype.hasOwnProperty.call(jPls, 'annotation')) { description = jPls.description; }
-					if (size === null) { size = Object.prototype.hasOwnProperty.call(jPls, 'track') && jPls.track ? jPls.track.length : null; } // Prefer playlist info over track count
-					else if (Object.prototype.hasOwnProperty.call(jPls, 'track') && jPls.track && size !== jPls.track.length) { fb.ShowPopupMessage('.xspf playlist size mismatch: ' + file + '\nReported size (' + size + ') is not equal to track count (' + jPls.track.length + ')', window.Name); }
+					if (Object.hasOwn(jPls, 'author')) { author = jPls.author; }
+					if (Object.hasOwn(jPls, 'annotation')) { description = jPls.description; }
+					if (size === null) { size = Object.hasOwn(jPls, 'track') && jPls.track ? jPls.track.length : null; } // Prefer playlist info over track count
+					else if (Object.hasOwn(jPls, 'track') && jPls.track && size !== jPls.track.length) { fb.ShowPopupMessage('.xspf playlist size mismatch: ' + file + '\nReported size (' + size + ') is not equal to track count (' + jPls.track.length + ')', window.Name); }
 				}
 				xmlDomCache.set(file, xmldom);
 			}
@@ -243,13 +243,13 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 				if (codePage !== -1) { text = _open(file, codePage); }
 				const xmldom = XSP.XMLfromString(text);
 				const jsp = XSP.toJSP(xmldom, false);
-				if (Object.prototype.hasOwnProperty.call(jsp, 'playlist') && jsp.playlist) {
+				if (Object.hasOwn(jsp, 'playlist') && jsp.playlist) {
 					const jPls = jsp.playlist;
-					name = Object.prototype.hasOwnProperty.call(jPls, 'name') && jPls.name ? jPls.name : '';
+					name = Object.hasOwn(jPls, 'name') && jPls.name ? jPls.name : '';
 					queryObj = { query: XSP.getQuery(jsp), sort: XSP.getSort(jsp), bSortForced: false };
 					bLocked = true;
-					limit = Object.prototype.hasOwnProperty.call(jPls, 'limit') && jPls.limit ? jPls.limit : 0;
-					type = Object.prototype.hasOwnProperty.call(jPls, 'type') && jPls.type ? jPls.type : '';
+					limit = Object.hasOwn(jPls, 'limit') && jPls.limit ? jPls.limit : 0;
+					type = Object.hasOwn(jPls, 'type') && jPls.type ? jPls.type : '';
 				}
 				xmlDomCache.set(file, xmldom);
 			}
@@ -284,7 +284,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 function setTrackTags(trackTags, list, z) {
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -441,7 +441,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 	if (pls.isFolder) { return bDone; }
 	if (playlist_mbid !== pls.playlist_mbid) {
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+			if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 				return bDone;
 			}
@@ -652,7 +652,7 @@ function convertToRelPaths(list, z) {
 function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -667,7 +667,7 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist 
 function cloneAsSmartPls(list, z) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -682,7 +682,7 @@ function cloneAsSmartPls(list, z) { // May be used only to copy an Auto-Playlist
 function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -725,7 +725,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 	let bDone = false;
 	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
 	const bUI = pls.extension === '.ui';
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -772,7 +772,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 	for (let z of zArr) {
 		const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
 		const bUI = pls.extension === '.ui';
-		if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return false;
 		}
@@ -843,7 +843,7 @@ function clonePlaylistFile(list, z, ext) {
 function exportPlaylistFile(list, z, defPath = '') {
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -873,7 +873,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 	if (!zArr.length) { return bDone; }
 	const playlists = zArr.map((z) => list.data[z]);
 	if (playlists.some((pls) => {
-		const bError = pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs';
+		const bError = pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs';
 		if (bError) {
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		}
@@ -906,7 +906,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 function exportPlaylistFileWithRelPaths({ list, z, ext = '', defPath = '', bNoInput = false } = {}) {
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -953,7 +953,7 @@ function exportPlaylistFileWithTracks({ list, z, defPath = '', bAsync = true, bN
 	if (!newPath.length) { return false; }
 	if (bDone) {
 		const pls = list.data[z];
-		if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return bDone;
 		}
@@ -999,7 +999,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -1082,7 +1082,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
 	const pls = list.data[z];
-	if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
@@ -1201,7 +1201,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 							} else if (pls.extension === '.xsp') {
 								let originalStrings = ['<name>' + oldName];
 								let newStrings = ['<name>' + newName];
-								[bDone, ] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
+								[bDone,] = editTextFile(newPath, originalStrings, newStrings, list.bBOM); // No BOM
 							} else { bDone = true; }
 							if (!bDone) {
 								fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name);
@@ -1285,7 +1285,7 @@ function cycleTags() {
 function rewriteXSPQuery(pls, newQuery) {
 	let bDone = false;
 	if (pls.extension === '.xsp') {
-		if (Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+		if (Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return bDone;
 		}
@@ -1304,11 +1304,12 @@ function rewriteXSPQuery(pls, newQuery) {
 			}
 			const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
 			const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
-			if (!bCache) { xspCache.set(playlistPath, jsp); }
 			jsp.playlist.rules = rules;
 			jsp.playlist.match = match;
 			const xspText = XSP.toXSP(jsp);
 			if (xspText && xspText.length) {
+				xspCache.set(playlistPath, jsp);
+				xmlDomCache.delete(playlistPath);
 				// Backup
 				const backPath = playlistPath + '.back';
 				_copyFile(playlistPath, backPath);
@@ -1326,7 +1327,7 @@ function rewriteXSPQuery(pls, newQuery) {
 function rewriteXSPSort(pls, newSort) {
 	let bDone = false;
 	if (pls.extension === '.xsp') {
-		if (Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+		if (Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return bDone;
 		}
@@ -1364,7 +1365,7 @@ function rewriteXSPSort(pls, newSort) {
 function rewriteXSPLimit(pls, newLimit) {
 	let bDone = false;
 	if (pls.extension === '.xsp') {
-		if (Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+		if (Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return bDone;
 		}
@@ -1418,7 +1419,7 @@ function findMixedPaths() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && !pls.extension === '.ui' && (!Object.prototype.hasOwnProperty.call(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && !pls.extension === '.ui' && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1448,7 +1449,7 @@ function findExternal() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.prototype.hasOwnProperty.call(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1496,7 +1497,7 @@ function findDead() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.prototype.hasOwnProperty.call(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1540,7 +1541,7 @@ function findDuplicates() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.prototype.hasOwnProperty.call(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1611,11 +1612,11 @@ function findSizeMismatch() {
 							const bCache = xspfCache.has(playlist.path);
 							const xmldom = bCache ? null : xmlDomCache.get(playlist.path) || XSPF.XMLfromString(text);
 							const jspf = bCache ? xspfCache.get(playlist.path) : XSPF.toJSPF(xmldom, false);
-							if (Object.prototype.hasOwnProperty.call(jspf, 'playlist') && jspf.playlist) {
+							if (Object.hasOwn(jspf, 'playlist') && jspf.playlist) {
 								const jPls = jspf.playlist;
-								if (Object.prototype.hasOwnProperty.call(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+								if (Object.hasOwn(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
 									for (let metaData of jPls.meta) {
-										if (Object.prototype.hasOwnProperty.call(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
+										if (Object.hasOwn(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
 									}
 								}
 							}
@@ -1680,11 +1681,11 @@ function findDurationMismatch() {
 								const bCache = xspfCache.has(playlist.path);
 								const xmldom = bCache ? null : xmlDomCache.get(playlist.path) || XSPF.XMLfromString(text);
 								const jspf = bCache ? xspfCache.get(playlist.path) : XSPF.toJSPF(xmldom, false);
-								if (Object.prototype.hasOwnProperty.call(jspf, 'playlist') && jspf.playlist) {
+								if (Object.hasOwn(jspf, 'playlist') && jspf.playlist) {
 									const jPls = jspf.playlist;
-									if (Object.prototype.hasOwnProperty.call(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+									if (Object.hasOwn(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
 										for (let metaData of jPls.meta) {
-											if (Object.prototype.hasOwnProperty.call(metaData, 'duration')) { duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null; }
+											if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null; }
 										}
 									}
 								}
@@ -1757,7 +1758,7 @@ function findSubSongs() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.prototype.hasOwnProperty.call(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1809,7 +1810,7 @@ function findFormatErrors() {
 						}
 					}
 					if (playlist.extension === '.xsp') {
-						if (Object.prototype.hasOwnProperty.call(playlist, 'type') && playlist.type !== 'songs') { // Type on XSP playlists
+						if (Object.hasOwn(playlist, 'type') && playlist.type !== 'songs') { // Type on XSP playlists
 							bDone = true;
 							errors.push('Invalid type');
 						}
@@ -1827,7 +1828,7 @@ function findFormatErrors() {
 						}
 					} else if (playlist.extension === '.fpl') { // FPL not saved via 'Save playlist'
 						const jspf = fplCache.get(playlist.path) || FPL.parseFile(playlist.path);
-						if (jspf.playlist.meta.some((m) => Object.prototype.hasOwnProperty.call(m, 'magic') && m.magic !== FPL.MAGIC)) {
+						if (jspf.playlist.meta.some((m) => Object.hasOwn(m, 'magic') && m.magic !== FPL.MAGIC)) {
 							bDone = true;
 							errors.push('Non recognized magic number');
 						}
