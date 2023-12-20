@@ -1,15 +1,46 @@
 ﻿'use strict';
-//01/12/23
+//20/12/23
 
+/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
+
+/* global list:readable, popup:readable, delayAutoUpdate:readable, buttonsPanel:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, recalcWidth:readable */
+/* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable */
+include('..\\..\\helpers\\helpers_xxx_controller.js');
+/* global exportComponents:readable */
+include('..\\..\\helpers\\callbacks_xxx.js');
+/* global callbacksListener:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
+/* global overwriteProperties:readable, checkProperty:readable */
+include('..\\..\\helpers\\helpers_xxx_file.js');
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable */
 include('..\\..\\helpers\\menu_xxx.js');
+/* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
+/* global Input:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
+/* global ntc:readable */
+include('..\\..\\helpers\\helpers_xxx_playlists.js');
+/* global getPlaylistIndexArray:readable, sendToPlaylist:readable */
+include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
+/* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable */
+include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
+/* global XSPF:readable */
+include('..\\..\\helpers\\helpers_xxx_tags.js');
+/* global checkQuery:readable, stripSort:readable, getTagsValuesV4:readable */
+include('..\\..\\helpers\\helpers_xxx_UI.js');
+/* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
+include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
+/* global chars:readable */
 include('playlist_manager_helpers.js');
+/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable,findDuplicates:readable */
 include('playlist_manager_listenbrainz.js');
+/* global listenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
+/* global isYouTube:readable, youtube:readable */
 
 // Menus
 const menuRbtn = new _menu();
@@ -39,7 +70,6 @@ function createMenuLeft(forcedIndex = -1) {
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const lb = listenBrainz;
 	// Helpers
-	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
 	const isAutoPls = (pls) => {return pls.isAutoPlaylist || pls.query || isPlsUI(pls) && plman.IsAutoPlaylist(plman.FindPlaylist(pls.nameId));};
 	const isLockPls = (pls) => {return pls.isLocked;};
@@ -53,7 +83,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const bIsPlsActive = isPlsActive(pls);
 	const bIsAutoPls = isAutoPls(pls);
 	const bIsFolder = isFolder(pls);
-	const bIsValidXSP = pls.extension !== '.xsp' || pls.hasOwnProperty('type') && pls.type === 'songs';
+	const bIsValidXSP = pls.extension !== '.xsp' || Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs';
 	const bIsLockPls = isLockPls(pls);
 	const bIsLockPlsRename = bIsPlsLoaded && (plman.GetPlaylistLockedActions(uiIdx) || []).includes('RenamePlaylist');
 	const bIsPlsEditable = isPlsEditable(pls);
@@ -68,7 +98,7 @@ function createMenuLeft(forcedIndex = -1) {
 	// Header
 	if (list.bShowMenuHeader) {
 		let header = (bIsFolder ? '[' : '--- ');
-		switch (pls.extension) {
+		switch (pls.extension) { // NOSONAR [open to future edits]
 			case '.xsp': header += 'Smart Playlist'; break;
 			default:
 				if (bIsAutoPls) {header += 'AutoPlaylist';}
@@ -202,7 +232,7 @@ function createMenuLeft(forcedIndex = -1) {
 						const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 						const newNameId = pls.nameId;
 						const newName = pls.name;
-						var duplicated = plman.FindPlaylist(newNameId);
+						const duplicated = plman.FindPlaylist(newNameId);
 						if (duplicated !== -1) {
 							fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 binded to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 						} else {
@@ -283,13 +313,13 @@ function createMenuLeft(forcedIndex = -1) {
 				!list.bLiteMode && menu.newEntry({entryText: 'Clone as standard playlist...', func: () => {
 					const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 					cloneAsStandardPls(list, z, remDupl, list.bAdvTitle);
-				}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
+				}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED});
 				menu.newEntry({entryText: 'Clone as AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
 					cloneAsAutoPls(list, z);
-				}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
+				}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED});
 				!list.bLiteMode && menu.newEntry({entryText: 'Clone as Smart Playlist and edit...', func: () => { // Here creates a Kodi XSP smart no matter the original format
 					cloneAsSmartPls(list, z);
-				}, flags: bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED});
+				}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED});
 				if (showMenus['Export and copy']) {
 					!list.bLiteMode && menu.newEntry({entryText: 'Export as json file...', func: () => {
 						const path = list.exportJson({idx: z, bAllExt: true});
@@ -351,8 +381,8 @@ function createMenuLeft(forcedIndex = -1) {
 						const dsp = preset.dsp;
 						let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 						const tf = preset.tf;
-						let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
-						const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+						let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+						const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
 						const extensionName = extension.length ? '[' + extension + ']' : '';
 						if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
 						if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
@@ -412,6 +442,7 @@ function createMenuLeft(forcedIndex = -1) {
 										const handleArr = data.handleArr;
 										const notFound = data.notFound;
 										const bXSPF = pls.extension === '.xspf';
+										const backPath = pls.path + '.back';
 										if (!bXSPF) {
 											let bYouTube = false;
 											if (notFound.length && isYouTube) {
@@ -422,7 +453,6 @@ function createMenuLeft(forcedIndex = -1) {
 												let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
 												if (answer === popup.no) {return false;}
 											}
-											const backPath = pls.path + '.back';
 											// Find missing tracks on youtube
 											if (bYouTube) {
 												// Add MBIDs to youtube track metadata
@@ -432,7 +462,7 @@ function createMenuLeft(forcedIndex = -1) {
 													let j = 0;
 													const itemsLen = handleArr.length;
 													let foundLinks = 0;
-													results.forEach((result, i) => {
+													results.forEach((result) => {
 														for (void(0); j <= itemsLen; j++) {
 															if (result.status !== 'fulfilled') {break;}
 															const link = result.value;
@@ -538,11 +568,11 @@ function createMenuLeft(forcedIndex = -1) {
 												if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
 											});
 											// Update total duration of playlist
-											playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
-											const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
+											playlist.meta.find((obj) => {return Object.prototype.hasOwnProperty.call(obj, 'duration');}).duration = totalDuration;
 											let xspf = XSPF.toXSPF(jspf);
 											const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 											xspf = xspf.join('\r\n');
+											if (_isFile(pls.path)) {_renameFile(pls.path, backPath);}
 											bDone = _save(pls.path, xspf, list.bBOM);
 											// Check
 											if (_isFile(pls.path) && bDone) {bDone = (_open(pls.path, utf8) === xspf);}
@@ -550,7 +580,7 @@ function createMenuLeft(forcedIndex = -1) {
 											if (!bDone) {console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path);}
 											else if (_isFile(backPath)) {_deleteFile(backPath);}
 											if (bDone && plman.FindPlaylist(pls.nameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), pls.nameId);}
-											if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
+											if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
 											clearInterval(delay);
 											return bDone;
 										}
@@ -658,10 +688,7 @@ function createMenuLeft(forcedIndex = -1) {
 						}
 						const bSameFolder = opt.name === pls.inFolder;
 						menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
-							list.addToFolder(pls, opt.folder);
-							list.save();
-							if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
-							list.sort();
+							list.moveToFolder(pls, opt.folder);
 							if (opt.folder.isOpen) {list.showPlsByObj(pls);}
 						}, flags: bSameFolder ? MF_GRAYED : MF_STRING});
 					});
@@ -689,15 +716,9 @@ function createMenuFolder(menu, folder, z) {
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
 	const isPlsUI = (pls) => {return pls.extension === '.ui';};
 	const isFolder = (pls) => {return pls.isFolder;};
-	const move = (pls) => {
-		list.addToFolder(pls, folder);
-		list.save();
-		if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
-		list.sort();
-	};
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
-	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs') || true;});
+	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs') || true;});
 	const bIsFolderEvery = playlists.every((pls) => {return isFolder(pls);});
 	const bManualSorting = list.methodState === list.manualMethodState();
 	// Enabled menus
@@ -741,8 +762,7 @@ function createMenuFolder(menu, folder, z) {
 			if (!bOpen) {list.switchFolder(z);}
 			const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
-				const remDupl = [];
-				clonePlaylistMergeInUI(list, zArr);
+				clonePlaylistMergeInUI(list, zArr, []);
 			}
 			if (!bOpen) {list.switchFolder(z);}
 		}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
@@ -750,8 +770,7 @@ function createMenuFolder(menu, folder, z) {
 			if (!bOpen) {list.switchFolder(z);}
 			const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
-				const remDupl = list.removeDuplicatesAutoPls;
-				clonePlaylistMergeInUI(list, zArr, remDupl, list.bAdvTitlem, true);
+				clonePlaylistMergeInUI(list, zArr, list.removeDuplicatesAutoPls, list.bAdvTitlem, true);
 			}
 			if (!bOpen) {list.switchFolder(z);}
 		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
@@ -761,7 +780,7 @@ function createMenuFolder(menu, folder, z) {
 			const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
 			zArr.forEach((z) => {
 				const pls = list.data[z];
-				if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
+				if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') {return;}
 				if (!isPlsUI(pls) && !isFolder(pls)) {
 					if (pls.isAutoPlaylist) {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
@@ -806,10 +825,7 @@ function createMenuFolder(menu, folder, z) {
 			}
 			const bSameFolder = opt.name === folder.inFolder;
 			menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
-				list.addToFolder(folder, opt.folder);
-				list.save();
-				if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
-				list.sort();
+				list.moveToFolder(folder, opt.folder);
 				if (opt.folder.isOpen) {list.showPlsByObj(folder);}
 			}, flags: bSameFolder ? MF_GRAYED : MF_STRING});
 		});
@@ -842,7 +858,6 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const lb = listenBrainz;
 	// Helpers
 	const isPlsLoaded = (pls) => {return plman.FindPlaylist(pls.nameId) !== -1;};
-	const isPlsActive = (pls) => {return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId;};
 	const isAutoPls = (pls) => {return pls.isAutoPlaylist || pls.query;};
 	const isLockPls = (pls) => {return pls.isLocked;};
 	const isPlsEditable = (pls) => {return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl'  || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui' || pls.isFolder;};
@@ -857,8 +872,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsPlsLoadedEvery = playlists.every((pls) => {return isPlsLoaded(pls);});
 	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => {return isPlsLoaded(pls);});
 	const bIsAutoPlsEvery = playlists.every((pls) => {return isAutoPls(pls);});
-	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs') || true;});
-	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => {return (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type === 'songs');});
+	const bIsValidXSPEveryOnly = playlists.every((pls) => {return (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs') || true;});
+	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => {return (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type === 'songs');});
 	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => {return isAutoPls(pls);});
 	const bIsLockPlsEvery = nonPlsUI.length && nonPlsUI.every((pls) => {return isLockPls(pls);});
 	const bIsFolderEvery = playlists.every((pls) => {return isFolder(pls);});
@@ -890,22 +905,20 @@ function createMenuLeftMult(forcedIndexes = []) {
 		menu.newEntry({entryText: 'Merge-load playlists', func: () => {
 			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
-				const remDupl = [];
-				clonePlaylistMergeInUI(list, zArr);
+				clonePlaylistMergeInUI(list, zArr, []);
 			}
 		}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		menu.newEntry({entryText: 'Merge-load (no duplicates)', func: () => {
 			const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 			if (zArr.length) {
-				const remDupl = list.removeDuplicatesAutoPls;
-				clonePlaylistMergeInUI(list, zArr, remDupl, list.bAdvTitle);
+				clonePlaylistMergeInUI(list, zArr, list.removeDuplicatesAutoPls, list.bAdvTitle);
 			}
 		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 		// Clone in UI
 		menu.newEntry({entryText: 'Clone playlists in UI', func: () => {
 			indexes.forEach((z, i) => {
 				const pls = playlists[i];
-				if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
+				if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') {return;}
 				if (!isPlsUI(pls) && !isFolder(pls)) {
 					if (pls.isAutoPlaylist) {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
@@ -1017,7 +1030,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				if (!path.length) {return;}
 				if (path === list.playlistsPath) {console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return;}
 				const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
-				indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder).forEach((z, i) => {
+				indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder).forEach((z) => {
 					const plsPath = path + (bSubFolder ? list.data[z].name + '\\' : '');
 					exportPlaylistFileWithTracks({list, z, bAsync: list.properties.bCopyAsync[1], bNoInput: true, defPath: plsPath, bOpenOnExport: false});
 				});
@@ -1035,8 +1048,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 				const dsp = preset.dsp;
 				let dspName = (dsp !== '...' ? dsp  : '(DSP)');
 				const tf = preset.tf;
-				let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
-				const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+				let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+				const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
 				const extensionName = extension.length ? '[' + extension + ']' : '';
 				if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
 				if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
@@ -1044,7 +1057,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 					indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
 						const pls = playlists[i];
-						if (pls.extension === '.xsp' && pls.hasOwnProperty('type') && pls.type !== 'songs') {return;}
+						if (pls.extension === '.xsp' && Object.prototype.hasOwnProperty.call(pls, 'type') && pls.type !== 'songs') {return;}
 						if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 							if (!pls.isAutoPlaylist) {exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);}
@@ -1056,15 +1069,15 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 	}
 	if (showMenus['Online sync']) { // ListenBrainz
-			const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSPEvery ? MF_STRING : MF_GRAYED);
-			const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
-			menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-				list.exportToListenbrainz(playlists);
-			}, flags});
-			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (playlists.some((pls) => pls.playlist_mbid.length) ? '' : '\t(no MBID)'), func: async () => {
-				console.popup('Playlist URL:\n\t' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t'), window.Name);
-			}, flags: playlists.some((pls) => pls.playlist_mbid.length) ? MF_STRING : MF_GRAYED});
+		const subMenuName = menu.newMenu('Online sync...', void(0), bIsValidXSPEvery ? MF_STRING : MF_GRAYED);
+		const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
+		menu.newEntry({menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
+			list.exportToListenbrainz(playlists);
+		}, flags});
+		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
+		menu.newEntry({menuName: subMenuName, entryText: 'Get URL...' + (playlists.some((pls) => pls.playlist_mbid.length) ? '' : '\t(no MBID)'), func: async () => {
+			console.popup('Playlist URL:\n\t' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t'), window.Name);
+		}, flags: playlists.some((pls) => pls.playlist_mbid.length) ? MF_STRING : MF_GRAYED});
 	}
 	if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome) || showMenus['Sorting'] && bManualSorting) {menu.newEntry({entryText: 'sep'});}
 	{	// File management
@@ -1090,9 +1103,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 					{type: 'ExecuteDefaultAction', entryText: 'Default action'}
 				];
 				let bSMPLock = false, lockName = new Set();
-				playlistsLoaded.forEach((pls, i) => {
+				playlistsLoaded.forEach((pls) => {
 					const index = plman.FindPlaylist(pls.nameId);
-					const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 					const lockNamePls = plman.GetPlaylistLockName(index);
 					if (!bSMPLock) {bSMPLock = (lockNamePls === 'foo_spider_monkey_panel' || !lockNamePls);}
 					if (!bSMPLock) {lockName.add(lockNamePls);}
@@ -1105,7 +1117,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				lockTypes.forEach((lock) => {
 					menu.newEntry({menuName: subMenuName, entryText: lock.entryText, func: () => {
 						const report = [];
-						playlistsLoaded.forEach((pls, i) => {
+						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 							const lockName = plman.GetPlaylistLockName(index);
@@ -1118,7 +1130,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								}
 								plman.SetPlaylistLockedActions(index, [...currentLocks]);
 							} else {
-								report.push('\t- ' + pls.nameId + ': ' + lockName)
+								report.push('\t- ' + pls.nameId + ': ' + lockName);
 							}
 						});
 						if (report.length) {
@@ -1126,7 +1138,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						}
 					}, flags});
 					menu.newCheckMenu(subMenuName, lock.entryText, void(0), () => {
-						return playlistsLoaded.every((pls, i) => {
+						return playlistsLoaded.every((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 							return currentLocks.has(lock.type);
@@ -1136,15 +1148,14 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 				menu.newEntry({menuName: subMenuName, entryText: 'All locks', func: () => {
 					const report = [];
-					playlistsLoaded.forEach((pls, i) => {
+					playlistsLoaded.forEach((pls) => {
 						const index = plman.FindPlaylist(pls.nameId);
-						const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 						const lockName = plman.GetPlaylistLockName(index);
 						const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
 						if (bSMPLock) {
 							plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
 						} else {
-							report.push('\t- ' + pls.nameId + ': ' + lockName)
+							report.push('\t- ' + pls.nameId + ': ' + lockName);
 						}
 					});
 					if (report.length) {
@@ -1153,15 +1164,14 @@ function createMenuLeftMult(forcedIndexes = []) {
 				}, flags});
 				menu.newEntry({menuName: subMenuName, entryText: 'None', func: () => {
 					const report = [];
-					playlistsLoaded.forEach((pls, i) => {
+					playlistsLoaded.forEach((pls) => {
 						const index = plman.FindPlaylist(pls.nameId);
-						const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 						const lockName = plman.GetPlaylistLockName(index);
 						const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
 						if (bSMPLock) {
 							plman.SetPlaylistLockedActions(index, []);
 						} else {
-							report.push('\t- ' + pls.nameId + ': ' + lockName)
+							report.push('\t- ' + pls.nameId + ': ' + lockName);
 						}
 					});
 					if (report.length) {
@@ -1202,12 +1212,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					}
 					const bSameFolder = playlists.every((pls) => opt.name === pls.inFolder);
 					menu.newEntry({menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
-						playlists.forEach((pls) => {
-							list.addToFolder(pls, opt.folder);
-						});
-						list.save();
-						if (list.methodState === list.manualMethodState()) {list.saveManualSorting();}
-						list.sort();
+						list.moveToFolder(playlists, opt.folder);
 						if (opt.folder.isOpen) {list.showPlsByObj(playlists[0]);}
 					}, flags: bSameFolder ? MF_GRAYED : MF_STRING});
 				});
@@ -1217,7 +1222,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newEntry({entryText: 'sep'});
 			// Deletes playlist file and playlist loaded
 			menu.newEntry({entryText: 'Delete', func: () => {
-				playlists.forEach((pls, i) => {
+				playlists.forEach((pls) => {
 					// Index change on every removal so it has to be recalculated
 					const z = list.data.indexOf(pls);
 					if (z !== -1) {list.removePlaylist(z);}
@@ -1240,7 +1245,7 @@ function createMenuRight() {
 	// Entries
 	{ // New Playlists
 		!list.bLiteMode && menu.newEntry({entryText: 'New Playlist File...', func: () => {list.add({bEmpty: true});}});
-			menu.newEntry({entryText: 'New AutoPlaylist...', func: () => {list.addAutoplaylist();}});
+		menu.newEntry({entryText: 'New AutoPlaylist...', func: () => {list.addAutoplaylist();}});
 		!list.bLiteMode && menu.newEntry({entryText: 'New Smart Playlist...', func: () => {list.addSmartplaylist();}});
 		menu.newEntry({entryText: 'New UI-only Playlist...', func: () => {list.addUIplaylist({bInputName: true});}});
 		if (showMenus['Folders']) {
@@ -1267,7 +1272,7 @@ function createMenuRight() {
 				const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 				const newIdx = plman.ActivePlaylist;
 				plman.ActivePlaylist = oldIdx;
-				const bSucess = list.sendSelectionToPlaylist({playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: false});
+				list.sendSelectionToPlaylist({playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: false});
 				// Don't reload the list but just paint with changes to avoid jumps
 				plman.ActivePlaylist = newIdx;
 				list.showCurrPls();
@@ -1327,7 +1332,7 @@ function createMenuRight() {
 											let j = 0;
 											const itemsLen = handleArr.length;
 											let foundLinks = 0;
-											results.forEach((result, i) => {
+											results.forEach((result) => {
 												for (void(0); j <= itemsLen; j++) {
 													if (result.status !== 'fulfilled') {break;}
 													const link = result.value;
@@ -1438,7 +1443,7 @@ function createMenuRight() {
 										if (!Array.isArray(track.identifier)) {track.identifier = [track.identifier];}
 									});
 									// Update total duration of playlist
-									playlist.meta.find((obj) => {return obj.hasOwnProperty('duration');}).duration = totalDuration;
+									playlist.meta.find((obj) => {return Object.prototype.hasOwnProperty.call(obj, 'duration');}).duration = totalDuration;
 									const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
 									const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
 									let xspf = XSPF.toXSPF(jspf);
@@ -1452,7 +1457,7 @@ function createMenuRight() {
 									if (!bDone) {console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath);}
 									else if (_isFile(backPath)) {_deleteFile(backPath);}
 									if (bDone && plman.FindPlaylist(playlistNameId) !== -1) {sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId);}
-									if (bDone) {list.update(false, true, list.lastIndex); list.filter()}
+									if (bDone) {list.update(false, true, list.lastIndex); list.filter();}
 									clearInterval(delay);
 									return bDone;
 								}
@@ -1705,7 +1710,7 @@ function createMenuRightTop() {
 			list.properties['playlistPath'][1] = input;
 			list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
 			list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
-			list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase
+			list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':','').toUpperCase;
 			// Tracking network drive?
 			if (mappedDrives.indexOf(list.playlistsPath.match(/^(.+?:)/g)[0]) !== -1) {
 				if (!list.properties['bNetworkPopup'][1]) {list.properties['bNetworkPopup'][1] = true;}
@@ -1739,7 +1744,6 @@ function createMenuRightTop() {
 		const subMenuName = menu.newMenu('Categories shown...');
 		const options = list.categories();
 		const defOpt = options[0];
-		const optionsLength = options.length;
 		menu.newEntry({menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
@@ -1766,7 +1770,6 @@ function createMenuRightTop() {
 		const subMenuName = menu.newMenu('Tags shown...');
 		const options = list.tags();
 		const defOpt = options[0];
-		const optionsLength = options.length;
 		menu.newEntry({menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		menu.newEntry({menuName: subMenuName, entryText: 'Restore all', func: () => {
@@ -2159,8 +2162,7 @@ function createMenuRightTop() {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED});
 				menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED});
 				const options = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
-				const optionsLength = options.length;
-				options.forEach((item, i) => {
+				options.forEach((item) => {
 					const itemKey = item + 'Tag';
 					menu.newEntry({menuName: subMenuNameTwo, entryText: item, func: () => {
 						list[itemKey] = !list[itemKey];
@@ -2282,9 +2284,8 @@ function createMenuRightTop() {
 					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-					const tf = preset.tf;
-					let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
-					const extension = preset.hasOwnProperty('extension') && preset.extension.length ? preset.extension : '';
+					let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+					const extension = Object.prototype.hasOwnProperty.call(preset, 'extension') && preset.extension.length ? preset.extension : '';
 					const extensionName = extension.length ? '[' + extension + ']' : '';
 					if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
 					if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
@@ -2343,9 +2344,9 @@ function createMenuRightTop() {
 					}});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'sep'});
 					menu.newEntry({menuName: subMenuNameTwo, entryText: 'Set name...', func: () => {
-						const hasName = preset.hasOwnProperty('name') ? true : false;
+						const hasName = Object.prototype.hasOwnProperty.call(preset, 'name') ? true : false;
 						let input = '';
-						try {input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, preset.hasOwnProperty('name') ? preset.name : '', true);}
+						try {input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, Object.prototype.hasOwnProperty.call(preset, 'name') ? preset.name : '', true);}
 						catch(e) {return;}
 						if (!input.length) {return;}
 						if (!hasName  || hasName && input !== preset.name) {
@@ -2369,8 +2370,7 @@ function createMenuRightTop() {
 					let pathName = (path.length ? '(' + path.split('\\')[0] +'\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp  : '(DSP)');
-					const tf = preset.tf;
-					let tfName = preset.hasOwnProperty('name') && preset.name.length ? preset.name : preset.tf;
+					let tfName = Object.prototype.hasOwnProperty.call(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 					if (pathName.length > 20) {pathName = pathName.substr(0, 20) + '...';}
 					if (dspName.length > 20) {dspName = dspName.substr(0, 20) + '...';}
 					if (tfName.length > 40) {tfName = tfName.substr(0, 40) + '...';}
@@ -2445,7 +2445,7 @@ function createMenuRightTop() {
 				catch(e) {return;}
 				if (!input.length) {input = '{}';}
 				if (input === list.properties['playlistIcons'][1]) {return;}
-				try {JSON.parse(input)} catch(e) {return;}
+				try {JSON.parse(input);} catch(e) {return;}
 				list.playlistIcons = JSON.parse(input);
 				list.properties['playlistIcons'][1] = input;
 				overwriteProperties(list.properties);
@@ -2531,10 +2531,9 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
-			const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');} // From statistics
+			const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');}; // From statistics
 			const subMenuName = menu.newMenu('Set custom colors...', menuName);
 			const options = ['AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
-			const optionsLength = options.length;
 			options.forEach((item, i) => {
 				if (!item) {return;}
 				let key;
@@ -2711,7 +2710,7 @@ function createMenuRightTop() {
 						panel.colorsChanged();
 						panel.setDefault({all: true});
 						// Buttons
-						if (preset.hasOwnProperty('buttonColors') && preset.buttonColors.length) {
+						if (Object.prototype.hasOwnProperty.call(preset, 'buttonColors') && preset.buttonColors.length) {
 							if (preset.buttonColors[0] !== null) {panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor = preset.buttonColors[0];}
 							if (preset.buttonColors[1] !== null) {panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor = preset.buttonColors[1];}
 							panel.colorsChanged();
@@ -2744,13 +2743,13 @@ function createMenuRightTop() {
 								&& list.colors.selectedPlaylistColor === preset.colors[4]
 								&& list.colors.folderColor === preset.colors[5]
 								&& (
-									preset.hasOwnProperty('buttonColors') && preset.buttonColors.length
+									Object.prototype.hasOwnProperty.call(preset, 'buttonColors') && preset.buttonColors.length
 									&& (
 										(preset.buttonColors[0] !== null && panel.colors.buttonsTextColor === preset.buttonColors[0] || preset.buttonColors[0] === null)
 										&&
 										(preset.buttonColors[1] !== null && panel.colors.buttonsToolbarColor === preset.buttonColors[1] || preset.buttonColors[1] === null)
 									)
-									|| !preset.hasOwnProperty('buttonColors')
+									|| !Object.prototype.hasOwnProperty.call(preset, 'buttonColors')
 								);
 					});
 				});
@@ -3042,7 +3041,7 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 				list.properties.columns[1] = list.properties.columns[3];
-				list.columns =  JSON.parse(list.properties.columns[1])
+				list.columns =  JSON.parse(list.properties.columns[1]);
 				overwriteProperties(list.properties);
 				list.repaint();
 			}});
@@ -3053,17 +3052,17 @@ function createMenuRightTop() {
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 			Object.keys(list.uiElements).forEach((key) => {
 				const subElement = list.uiElements[key];
-				if (subElement.hasOwnProperty('elements')) {
+				if (Object.prototype.hasOwnProperty.call(subElement, 'elements')) {
 					const subMenuNameTwo = menu.newMenu(key, subMenuName);
 					const keys = list.bLiteMode
 						? Object.keys(subElement.elements).filter((subKey) => subKey !== 'Folder')
 						: Object.keys(subElement.elements);
 					const bCanHideSettings = (subKey) => {
 						if (!list.uiElements['Search filter'].enabled) {return true;}
-						else if (subKey === 'Settings menu') {return subElement.elements.hasOwnProperty('Power actions') && subElement.elements['Power actions'].enabled;}
-						else if (subKey === 'Power actions') {return subElement.elements.hasOwnProperty('Settings menu') && subElement.elements['Settings menu'].enabled;}
+						else if (subKey === 'Settings menu') {return Object.prototype.hasOwnProperty.call(subElement.elements, 'Power actions') && subElement.elements['Power actions'].enabled;}
+						else if (subKey === 'Power actions') {return Object.prototype.hasOwnProperty.call(subElement.elements, 'Settings menu') && subElement.elements['Settings menu'].enabled;}
 						else {return true;}
-					}
+					};
 					keys.forEach((subKey) => {
 						const flags = bCanHideSettings(subKey)
 							? MF_STRING
@@ -3161,7 +3160,7 @@ function createMenuRightTop() {
 						Object.keys(preset.elements).forEach((key) => {
 							const subElement = preset.elements[key];
 							const subElementList = list.uiElements[key];
-							if (subElement.hasOwnProperty('elements')) {
+							if (Object.prototype.hasOwnProperty.call(subElement, 'elements')) {
 								const keys = Object.keys(subElement.elements);
 								keys.forEach((subKey) => {
 									subElementList.elements[subKey].enabled = subElement.elements[subKey].enabled;
@@ -3198,7 +3197,7 @@ function createMenuRightTop() {
 				menu.newCheckMenu(subMenuName, 'Jump to next item on multiple presses', void(0), () => list.properties.bQuicSearchNext[1]);
 				menu.newEntry({menuName: subMenuName, entryText: 'Cycle on last result?', func: () => {
 					list.properties.bQuicSearchCycle[1] = !list.properties.bQuicSearchCycle[1];
-					overwriteProperties(list.properties)
+					overwriteProperties(list.properties);
 					if (list.properties.bQuicSearchCycle[1]) {
 						fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name);
 					}
@@ -3229,7 +3228,7 @@ function createMenuRightTop() {
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'Show size along name:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			options.forEach((item, i) => {
+			options.forEach((item) => {
 				menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
 					Object.keys(item.settings).forEach((key) => {
 						list.folders[key] = item.settings[key];
@@ -3255,7 +3254,7 @@ function createMenuRightTop() {
 			const optionsLength = options.length;
 			menu.newEntry({menuName: subMenuName, entryText: 'Icons for folders:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuName, entryText: 'sep'});
-			options.forEach((item, i) => {
+			options.forEach((item) => {
 				menu.newEntry({menuName: subMenuName, entryText: item.name, func: () => {
 					if (Object.values(item.icons).filter(Boolean).length !== 2) {
 						Object.keys(item.icons).forEach((key) => {
@@ -3288,7 +3287,7 @@ function createMenuRightTop() {
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		{	// List L. Click
 			const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
-			const subMenuNameL = menu.newMenu('Left Click', subMenuName)
+			const subMenuNameL = menu.newMenu('Left Click', subMenuName);
 			const shortcuts =  list.getDefaultShortcuts('L');
 			const modifiers = shortcuts.options.map((_) => {return _.key;});
 			const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -3323,7 +3322,7 @@ function createMenuRightTop() {
 		}
 		{	// List R. Click
 			const bListButton = list.uiElements['Header buttons'].elements['List menu'].enabled;
-			const subMenuNameR = menu.newMenu('Right Click' + (bListButton ? '' : '\t(enable List Menu button)'), subMenuName, bListButton ? MF_STRING : MF_GRAYED)
+			const subMenuNameR = menu.newMenu('Right Click' + (bListButton ? '' : '\t(enable List Menu button)'), subMenuName, bListButton ? MF_STRING : MF_GRAYED);
 			const shortcuts =  list.getDefaultShortcuts('R');
 			const modifiers = shortcuts.options.map((_) => {return _.key;});
 			const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -3354,7 +3353,7 @@ function createMenuRightTop() {
 			}});
 		}
 		{	// List M. Click
-			const subMenuNameM = menu.newMenu('Middle Click', subMenuName)
+			const subMenuNameM = menu.newMenu('Middle Click', subMenuName);
 			const shortcuts =  list.getDefaultShortcuts('M');
 			const modifiers = shortcuts.options.map((_) => {return _.key;});
 			const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -3386,7 +3385,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({menuName: subMenuName, entryText: 'sep'});
 		{	// Header L. Click
-			const subMenuNameL = menu.newMenu('Left Click (header)', subMenuName)
+			const subMenuNameL = menu.newMenu('Left Click (header)', subMenuName);
 			const shortcuts =  list.getDefaultShortcuts('L', 'HEADER');
 			const modifiers = shortcuts.options.map((_) => {return _.key;});
 			const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -3419,7 +3418,7 @@ function createMenuRightTop() {
 			}});
 		}
 		{	// Header M. Click
-			const subMenuNameM = menu.newMenu('Middle Click (header)', subMenuName)
+			const subMenuNameM = menu.newMenu('Middle Click (header)', subMenuName);
 			const shortcuts =  list.getDefaultShortcuts('M', 'HEADER');
 			const modifiers = shortcuts.options.map((_) => {return _.key;});
 			const actions = shortcuts.actions.map((_) => {return _.key;});
@@ -3509,7 +3508,7 @@ function createMenuRightTop() {
 			const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
 			options.forEach((preset) => {
 				menu.newEntry({menuName: subMenuNameTwo, entryText: preset.name, func: () => {
-					list.updateMenus({menus: preset.options});;
+					list.updateMenus({menus: preset.options});
 				}});
 			});
 		}
@@ -3545,7 +3544,7 @@ function createMenuRightTop() {
 		}
 		if (showMenus['Online sync']) {	// ListenBrainz
 			const subMenuName = menu.newMenu('ListenBrainz...', menuName);
-			menu.newEntry({menuName: subMenuName, entryText: 'Set token...', func: async () => {return await checkLBToken('');}});
+			menu.newEntry({menuName: subMenuName, entryText: 'Set token...', func: async () => {return checkLBToken('');}});
 			menu.newCheckMenu(subMenuName, 'Set token...', void(0), () => {return list.properties.lBrainzToken[1].length ? true : false;});
 			menu.newEntry({menuName: subMenuName, entryText: 'Retrieve token from other panels...', func: () => {
 				callbacksListener.lBrainzTokenListener = true;
@@ -3591,7 +3590,7 @@ function createMenuRightTop() {
 		}
 		{	// Startup active playlist
 			const nameUI = plman.GetPlaylistName(plman.ActivePlaylist);
-			const idx = list.dataAll.findIndex((pls, idx) => {return pls.nameId === nameUI;});
+			const idx = list.dataAll.findIndex((pls) => {return pls.nameId === nameUI;});
 			const name = idx !== -1 ? list.dataAll[idx].name : nameUI;
 
 			const subMenuName = menu.newMenu('Startup active playlist...', menuName);
@@ -3610,14 +3609,14 @@ function createMenuRightTop() {
 				list.activePlsStartup = input;
 				list.properties.activePlsStartup[1] = list.activePlsStartup;
 				overwriteProperties(list.properties);
-				window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup)
+				window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup);
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED});
 			menu.newCheckMenu(subMenuName, 'Input name...', void(0), () => {return (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name);});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Lite mode', func: () => {
-		fb.ShowPopupMessage('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled.\n\nNote on lite mode, manager exclusively tracks UI-only playlists.', window.Name)
+		fb.ShowPopupMessage('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled.\n\nNote on lite mode, manager exclusively tracks UI-only playlists.', window.Name);
 		list.bLiteMode = !list.bLiteMode;
 		list.properties['bLiteMode'][1] = list.bLiteMode;
 		if (list.bLiteMode) {
@@ -3631,7 +3630,7 @@ function createMenuRightTop() {
 			}
 			// Auto-save
 			list.properties.autoSave[1] = 1000;
-			debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
+			debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]); // NOSONAR [shared on files]
 			// Tracking
 			list.bAllPls = list.properties.bAllPls[1] = true;
 			overwriteProperties(list.properties);
@@ -3648,9 +3647,9 @@ function createMenuRightTop() {
 			list.properties.autoSave[1] = list.properties.autoSave[3];
 			overwriteProperties(list.properties);
 			const autoBackTimer = Number(list.properties.autoBack[1]);
-			autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
+			autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null; // NOSONAR [shared on files]
 			const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
-			autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null;
+			autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null; // NOSONAR [shared on files]
 			debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 			addInstance('Playlist Manager');
 			list.switchTracking(true);
@@ -3691,7 +3690,6 @@ function createMenuRightTop() {
 
 function createMenuRightSort() {
 	// Constants
-	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtnSort;
 	menu.clear(true); // Reset one every call
 	// Entries
@@ -3715,11 +3713,8 @@ function createMenuRightSort() {
 
 function createMenuRightFilter(buttonKey) {
 	// Constants
-	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuRbtnSort;
 	menu.clear(true); // Reset one every call
-	// Enabled menus
-	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{	// Filter
 		const options = list.availableFilters();
@@ -3738,7 +3733,7 @@ function createMenuRightFilter(buttonKey) {
 					// Resize buttons
 					recalcWidth();
 					// Save properties
-					list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => {return (button.hasOwnProperty('method') ? button.method : '');}).filter(Boolean).join(',');
+					list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => {return (Object.prototype.hasOwnProperty.call(button, 'method') ? button.method : '');}).filter(Boolean).join(',');
 					overwriteProperties(list.properties);
 				}});
 			});
@@ -3765,7 +3760,6 @@ function createMenuRightFilter(buttonKey) {
 
 function createMenuSearch() {
 	// Constants
-	const z = (list.index !== -1) ? list.index : list.getCurrentItemIndex();
 	const menu = menuSearch;
 	menu.clear(true); // Reset one every call
 	// Enabled menus
@@ -3799,7 +3793,6 @@ function createMenuSearch() {
 			showMenus['Category'] ? {entryText: 'By categories', key: 'bCategory'} : null,
 			{entryText: 'By file and folder names', key: 'bPath'}
 		].filter(Boolean).sort();
-		const optionsLength = options.length;
 		menu.newEntry({menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		options.forEach((opt) => {
@@ -3808,7 +3801,7 @@ function createMenuSearch() {
 				// Save properties
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				overwriteProperties(list.properties);
-				if (list.searchInput.text.length || list.searchInput.prev_text.length) {
+				if (list.searchInput.text.length || list.searchInput.prevText.length) {
 					list.search();
 				}
 				if (opt.key === 'bPath' && list.searchMethod[opt.key]) {
@@ -3840,7 +3833,7 @@ function createMenuSearch() {
 			list.searchInput.autovalidation = list.searchMethod.bAutoSearch;
 			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 			overwriteProperties(list.properties);
-			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prev_text.length) {
+			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prevText.length) {
 				list.search();
 			}
 		}});
@@ -3849,29 +3842,31 @@ function createMenuSearch() {
 			list.searchMethod.bRegExp = !list.searchMethod.bRegExp;
 			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 			overwriteProperties(list.properties);
-			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prev_text.length) {
+			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prevText.length) {
 				list.search();
 			}
 			if (list.searchMethod.bRegExp) {
 				fb.ShowPopupMessage(
 					'This option will parse RegExp expressions on the input box and apply it to the list. For ex:' +
-					'\n\n/Top/ would match \'Top tracks\' but /top/ would not.\Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.' +
+					'\n\n/Top/ would match \'Top tracks\' but /top/ would not. Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.' +
 					'\n\nFor more info see:' +
 					'\nhttps://regexr.com/' +
 					'\n\nDrag n\' drop integration:' +
 					'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
-				, window.Name);
+					, window.Name
+				);
 			}
 		}});
 		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void(0),  () => list.searchMethod.bRegExp);
 		menu.newEntry({menuName: subMenu, entryText: 'Advanced fuzzy search (~)', func: () => {
 			fb.ShowPopupMessage(
 				'Fuzzy search may be enabled adding \'~\' to the beginning/end of the string.\nFor ex:\n\t"smmer~"\t-> Would match "summer"\n\nThe basic fuzzy search will only match simple words, but not sentences. Enable the advanced fuzzy search for those use cases (it will use an external library and may be slower).'
-			, window.Name);
+				, window.Name
+			);
 			list.searchMethod.bSimpleFuzzy = !list.searchMethod.bSimpleFuzzy;
 			list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 			list.checkConfigPostUpdate();
-			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prev_text.length) {
+			if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prevText.length) {
 				list.search();
 			}
 			overwriteProperties(list.properties);
