@@ -4655,9 +4655,9 @@ function _list(x, y, w, h) {
 
 		this.moveToFolder = (item, toFolder) => {
 			const itemsArr = isArray(item) ? item : [item];
-			itemsArr.forEach((subItem) => {this.addToFolder(subItem, toFolder);});
+			itemsArr.forEach((subItem) => { this.addToFolder(subItem, toFolder); });
 			this.save();
-			if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 			this.sort();
 		};
 
