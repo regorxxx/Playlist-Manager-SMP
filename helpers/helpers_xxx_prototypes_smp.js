@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/23
+//20/12/23
 
 /* exported extendGR */
 
@@ -29,7 +29,8 @@ if (!Object.hasOwn) {
 // Add async calculation
 FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(handleList, slice = 1000) {
 	const size = handleList.Count;
-	return new Promise(async (resolve) => {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (resolve) => { // NOSONAR
 		const items = handleList.Convert();
 		const count = items.length;
 		const total = Math.ceil(size / slice);
@@ -62,7 +63,7 @@ Object.defineProperty(fb, 'tfCache', {
 {
 	const old = fb.TitleFormat;
 	fb.TitleFormat = function TitleFormat() {
-		const bCache = Object.prototype.hasOwnProperty.call(fb.tfCache, arguments[0]);
+		const bCache = Object.hasOwn(fb.tfCache, arguments[0]);
 		const that = bCache ? fb.tfCache[arguments[0]] : old.apply(fb, [...arguments]);
 		that.Expression = arguments[0];
 		if (!bCache) {fb.tfCache[arguments[0]] = that;}
@@ -74,7 +75,7 @@ Object.defineProperty(fb, 'tfCache', {
 {
 	const old = FbTitleFormat;
 	FbTitleFormat = function FbTitleFormat() { // NOSONAR
-		const bCache = Object.prototype.hasOwnProperty.call(fb.tfCache, arguments[0]);
+		const bCache = Object.hasOwn(fb.tfCache, arguments[0]);
 		const that = bCache ? fb.tfCache[arguments[0]] : old(...arguments);
 		that.Expression = arguments[0];
 		if (!bCache) {fb.tfCache[arguments[0]] = that;}

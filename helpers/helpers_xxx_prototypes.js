@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//20/12/23
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -101,7 +101,8 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 
 	function referenceEquals(a, b) {
 		const objectReferences = [];
-		return (referenceEquals = _referenceEquals)(a, b); // eslint-disable-line no-func-assign
+		// eslint-disable-next-line no-func-assign
+		return (referenceEquals = _referenceEquals)(a, b); // MOSONAR
 		function _referenceEquals(a, b) {
 			let l = objectReferences.length;
 			while (l--) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/23
+//20/12/23
 
 // Dummy file to load existing helpers or independent file
 {
@@ -10,6 +10,7 @@
 		include('..\\..\\helpers\\helpers_xxx.js');
 		include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 		include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+		/* global require:readable, module:readable */
 		include('..\\..\\helpers\\helpers_xxx_prototypes_smp.js');
 		include('..\\..\\helpers\\helpers_xxx_UI.js');
 		include('..\\..\\helpers\\helpers_xxx_UI_flip.js');
@@ -27,3 +28,4 @@
 const Chroma = module.exports.Chroma;
 const NatSort = module.exports.NatSort;
 module.exports = {};
+/* exported Chroma, NatSort */

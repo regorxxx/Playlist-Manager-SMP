@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/12/23
+//20/12/23
 
 /* exported _chart */
 
@@ -303,7 +303,7 @@ function _chart({
 		this.stats.maxY = maxY;
 		this.stats.minY = minY;
 		// Ticks
-		const ticks = this.steps(0, maxY, this.axis.y.ticks === 'auto' ? void (0) : Number(this.axis.y.ticks));
+		const ticks = this.steps(0, maxY, this.axis.y.ticks === 'auto' ? void (0) : Number(this.axis.y.ticks)); // NOSONAR
 		const tickText = ticks.map((tick) => { return this.nFormatter(tick, 1); });
 		// Retrieve all different label on all series
 		const points = [];
@@ -571,7 +571,7 @@ function _chart({
 					}
 				}
 				break;
-			case 'timeline': {
+			case 'timeline': { // NOSONAR [fallthrough]
 				if (this.axis.y.show) {
 					ticks.reverse().forEach((tick, i) => {
 						const yTick = y - tick / maxY * (y - h) / 2 || y;
@@ -621,7 +621,8 @@ function _chart({
 					}
 				}
 			}
-			case 'bars': // eslint-disable-line no-fallthrough
+			// eslint-disable-next-line no-fallthrough
+			case 'bars': // NOSONAR [fallthrough]
 				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels && this.graph.type !== 'timeline') {
 					if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
 						xAxisValues.forEach((valueX, i) => {
@@ -673,9 +674,7 @@ function _chart({
 												valueZ = valueZ.cut(Math.floor((topMax - this.axis.x.width) / (wPerChar) - 3));
 											}
 										} else { valueZ = valueZ.cut(1); }
-									} else {
-										if (this.hasToolbar && (zLabel + keyH) >= this.buttonsCoords.x()) { bHideToolbar = true; }
-									}
+									} else if (this.hasToolbar && (zLabel + keyH) >= this.buttonsCoords.x()) { bHideToolbar = true; }
 									_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
 									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
 									_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
@@ -811,7 +810,7 @@ function _chart({
 		this.pop.paint(gr);
 	};
 
-	this.repaint = (x = this.x, y = this.y, w = x + this.w, h = y + this.h, bForce) => {
+	this.repaint = (x = this.x, y = this.y, w = x + this.w, h = y + this.h, bForce = false) => {
 		window.RepaintRect(x, y, w, h, bForce);
 	};
 
@@ -943,7 +942,7 @@ function _chart({
 			}
 		}
 		if (bCacheNear && distances.length) {
-			this.nearPoint = distances.sort((a, b) => { return a.dist - b.dist; })[0].idx;
+			this.nearPoint = distances.sort((a, b) => { return a.dist - b.dist; })[0].idx; // NOSONAR
 		}
 		return [-1, -1];
 	};
@@ -1037,7 +1036,7 @@ function _chart({
 						const percent = bPercent ? Math.round(point.y * 100 / serieData.reduce((acc, point) => acc + point.y, 0)) : null;
 						ttText = point.x + ': ' + round(point.y, 3) + (this.axis.y.key ? ' ' + this.axis.y.key : '') +
 							(bPercent ? ' ' + _p(percent + '%') : '') +
-							(Object.prototype.hasOwnProperty.call(point, 'z') ? ' - ' + point.z : '') +
+							(Object.hasOwn(point, 'z') ? ' - ' + point.z : '') +
 							(this.tooltipText
 								? isFunction(tooltipText) ? tooltipText.call(this, point, serie, mask) : tooltipText
 								: ''
@@ -1239,7 +1238,7 @@ function _chart({
 		let i = 0;
 		Object.keys(this.buttons).forEach((label) => {
 			const key = label + 'Btn';
-			if (Object.prototype.hasOwnProperty.call(this, key) && this.buttons[label]) {
+			if (Object.hasOwn(this, key) && this.buttons[label]) {
 				this[key].x = this.buttonsCoords.x();
 				this[key].y = this.buttonsCoords.y() + i * this.buttonsCoords.size;
 				this[key].w = this[key].h = this.buttonsCoords.size;
@@ -1354,7 +1353,7 @@ function _chart({
 
 	this.keyUp = (vKey) => { // Switch animations when releasing keys
 		if (this.inFocus) {
-			switch (vKey) {
+			switch (vKey) { // NOSONAR
 				case VK_SHIFT: {
 					if (this.buttons.zoom) {
 						this.repaint();
@@ -1370,7 +1369,7 @@ function _chart({
 
 	this.keyDown = (vKey) => {
 		if (this.inFocus) {
-			switch (vKey) {
+			switch (vKey) { // NOSONAR
 				case VK_SHIFT: {
 					if (this.buttons.zoom) {
 						this.repaint();
@@ -1409,7 +1408,7 @@ function _chart({
 		this.dataDraw = this.dataDraw
 			.map((serie) => {
 				return serie.filter((point) => {
-					return (Object.prototype.hasOwnProperty.call(point, 'x') && point.x !== null && point.x !== '' && Object.prototype.hasOwnProperty.call(point, 'y') && Number.isFinite(point.y));
+					return (Object.hasOwn(point, 'x') && point.x !== null && point.x !== '' && Object.hasOwn(point, 'y') && Number.isFinite(point.y));
 				});
 			});
 	};
@@ -1421,7 +1420,7 @@ function _chart({
 
 	this.slice = () => { // Draw only selected points
 		const slice = this.dataManipulation.slice;
-		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return; }
+		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return; } // NOSONAR
 		// If end is greater than the length of the array, it uses the length of the array
 		if (this.configuration.bSlicePerKey) {
 			const xKeys = new Set();
@@ -1472,7 +1471,7 @@ function _chart({
 		const sort = bInverse ? (a, b) => { return b.y - a.y; } : (a, b) => { return a.y - b.y; };
 		series = series.map((serie) => { return serie.sort(sort).reduceRight((acc, val, i) => { return i % 2 === 0 ? [...acc, val] : [val, ...acc]; }, []); });
 		const slice = this.dataManipulation.slice;
-		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return series; }
+		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return series; } // NOSONAR
 		series = series.map((serie) => {
 			const len = serie.length;
 			const tail = slice[1];
@@ -1513,7 +1512,7 @@ function _chart({
 	this.probabilityPlot = (pPlot = this.dataManipulation.probabilityPlot || '') => {
 		let bCumulative = false;
 		switch (pPlot.toLowerCase()) {
-			case 'cdf plot': { bCumulative = true; }
+			case 'cdf plot': { bCumulative = true; } // NOSONAR
 			case 'cumulative distribution plot': { bCumulative = true; } // eslint-disable-line no-fallthrough
 			case 'distribution plot': { // eslint-disable-line no-fallthrough
 				let newSerie;
@@ -1742,11 +1741,11 @@ function _chart({
 		if (dataAsync) { this.dataAsync = dataAsync; }
 		if (dataManipulation) {
 			this.dataManipulation = { ...this.dataManipulation, ...dataManipulation };
-			if (Object.prototype.hasOwnProperty.call(dataManipulation, 'sort')) { this.sortKey = null; }
-			if (Object.prototype.hasOwnProperty.call(dataManipulation, 'distribution')) {
+			if (Object.hasOwn(dataManipulation, 'sort')) { this.sortKey = null; }
+			if (Object.hasOwn(dataManipulation, 'distribution')) {
 				if (dataManipulation.distribution && dataManipulation.distribution.toLowerCase() !== 'none') {
 					this.dataManipulation.sort = this.sortKey = null;
-				} else if (!Object.prototype.hasOwnProperty.call(dataManipulation, 'sort')) {
+				} else if (!Object.hasOwn(dataManipulation, 'sort')) {
 					this.dataManipulation.sort = 'natural';
 					this.sortKey = null;
 				}
@@ -1800,7 +1799,7 @@ function _chart({
 				let schemeStr = this.chroma.scheme.toLowerCase();
 				if (schemeStr === 'random' || schemeStr === 'rand') { return true; }
 				else {
-					if (Object.prototype.hasOwnProperty.call(colorbrewer, schemeStr)) { return true; }
+					if (Object.hasOwn(colorbrewer, schemeStr)) { return true; }
 					for (let key in colorbrewer) {
 						if (colorbrewer[key].indexOf(this.chroma.scheme) !== -1) { return true; }
 					}
@@ -1842,7 +1841,7 @@ function _chart({
 						} else { // Chroma scale method
 							let scheme;
 							// May be a key to use a random colorbrewer palette: diverging, qualitative & sequential
-							if (schemeStr && Object.prototype.hasOwnProperty.call(colorbrewer, schemeStr)) {
+							if (schemeStr && Object.hasOwn(colorbrewer, schemeStr)) {
 								const arr = this.chroma.colorBlindSafe ? colorbrewer.colorBlind[schemeStr] : colorbrewer[schemeStr];
 								scheme = arr[Math.floor(Math.random() * arr.length)];
 							} else { // An array of colors or colorbrewer palette (string)
@@ -1884,7 +1883,7 @@ function _chart({
 					} else { // Chroma scale method
 						let scheme;
 						// May be a key to use a random colorbrewer palette: diverging, qualitative & sequential
-						if (schemeStr && Object.prototype.hasOwnProperty.call(colorbrewer, schemeStr)) {
+						if (schemeStr && Object.hasOwn(colorbrewer, schemeStr)) {
 							const arr = this.chroma.colorBlindSafe ? colorbrewer.colorBlind[schemeStr] : colorbrewer[schemeStr];
 							scheme = arr[Math.floor(Math.random() * arr.length)];
 						} else { // An array of colors or colorbrewer palette (string)

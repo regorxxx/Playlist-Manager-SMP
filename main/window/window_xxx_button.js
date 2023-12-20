@@ -1,33 +1,37 @@
 ﻿'use strict';
-//12/11/23
+//20/12/23
+
+/* exported _button */
 
 include('window_xxx_helpers.js');
+/* global RGBA:readable, toRGB:readable, getBrightness:readable, debounce:readable, _gdiFont:readable, _tt:readable, RGBA:readable,  */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
+/* global SF_CENTRE:readable, IDC_HAND:readable  */
 
 function _button({
-			text = '',
-			x, y, w, h,
-			isVisible = (time, timer) => this.hover || Date.now() - time < (timer || this.timer),
-			notVisibleMode = 'invisible', // invisible | alpha
-			lbtnFunc = () => void(0),
-			lbtnDblFunc = () => void(0),
-			rbtnFunc = () => void(0),
-			scrollSpeed = 60, // ms
-			scrollSteps = 3, // ms
-			timer = 1500, // ms
-			bTimerOnVisible = false, // ms
-			tt = '',
-			iDoubleClickTimer = 250, // ms
-		} = {}) {
+	text = '',
+	x, y, w, h,
+	isVisible = (time, timer) => this.hover || Date.now() - time < (timer || this.timer),
+	notVisibleMode = 'invisible', // invisible | alpha
+	lbtnFunc = () => void(0),
+	lbtnDblFunc = () => void(0),
+	rbtnFunc = () => void(0),
+	scrollSpeed = 60, // ms
+	scrollSteps = 3, // ms
+	timer = 1500, // ms
+	bTimerOnVisible = false, // ms
+	tt = '',
+	iDoubleClickTimer = 250, // ms
+} = {}) {
 	this.paint = (gr, color) => {
-		if (this.w <= 0) {return;} 
+		if (this.w <= 0) {return;}
 		// Smooth visibility switch
 		let bLastStep = false;
 		if (this.isVisible && !this.isVisible(this.time, this.timer)) {
 			if (this.bVisible) {
 				this.bVisible = false;
 			} else {
-				switch (this.notVisibleMode) {
+				switch (this.notVisibleMode) { // NOSONAR
 					case 'invisible': return;
 					default: {
 						color = RGBA(...toRGB(color), this.notVisibleMode);
@@ -38,21 +42,21 @@ function _button({
 		}
 		if (!this.hover) {color = RGBA(...toRGB(color), getBrightness(...toRGB(color)) < 50 ? 100 : 25);}
 		gr.SetTextRenderingHint(4);
-		const text = !!(this.text && this.text.constructor && this.text.call && this.text.apply) ? this.text.call(this, this) : this.text;
+		const text = this.text && this.text.constructor && this.text.call && this.text.apply ? this.text.call(this, this) : this.text; // NOSONAR [support both this]
 		gr.DrawString(text, this.font, color, this.x, this.y, this.w, this.h, SF_CENTRE);
 		gr.SetTextRenderingHint(0);
 		if (!bLastStep && this.isVisible) {this.repaint(this.timer);} // Smooth visibility switch
 	};
 	const debounced = {
 		[this.timer]: debounce(window.RepaintRect, this.timer, false, window)
-	}
+	};
 	this.repaint = (timeout = 0) => {
 		if (timeout === 0) {window.RepaintRect(this.x, this.y, this.x + this.w, this.y + this.h);}
 		else {
-			if (!debounced.hasOwnProperty(timeout)) {debounced[timeout] = debounce(window.RepaintRect, timeout, false, window)}
+			if (!Object.hasOwn(debounced, timeout)) {debounced[timeout] = debounce(window.RepaintRect, timeout, false, window);}
 			debounced[timeout](this.x, this.y, this.x + this.w, this.y + this.h, true);
 		}
-	}
+	};
 	this.trace = (x, y) => {
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h && this.isVisible();
 	};
@@ -69,7 +73,6 @@ function _button({
 		} else {
 			if (this.tooltip.Text) {this.tooltip.SetValue(null);}
 			if (this.bTimerOnVisible && this.isVisible()) {this.time = Date.now();}
-			//window.SetCursor(IDC_ARROW);
 			this.hover = this.bDown = false;
 			return false;
 		}
@@ -96,7 +99,7 @@ function _button({
 			}
 			this.repaint();
 			return true;
-		} else { 
+		} else {
 			this.bHover = this.bDown = false;
 		}
 		return false;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//20/12/23
 
 /* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require */
 
@@ -70,7 +70,7 @@ function getNested(obj, ...args) {
 function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
-		if (obj && len === idx && Object.prototype.hasOwnProperty.call(obj, level)) {obj[level] = value;}
+		if (obj && len === idx && Object.hasOwn(obj, level)) {obj[level] = value;}
 		return obj && obj[level];
 	}, obj);
 }
@@ -104,7 +104,7 @@ function toString(value) { // eslint-disable-line no-redeclare
 const escapeRegExpCache = {};
 function escapeRegExp(s) {
 	s = toString(s);
-	if (s && !Object.prototype.hasOwnProperty.call(escapeRegExpCache, s)) {escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1');}
+	if (s && !Object.hasOwn(escapeRegExpCache, s)) {escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1');}
 	return s ? escapeRegExpCache[s] : s; // Can not be safer than this
 }
 
@@ -204,7 +204,7 @@ function memoize(fn) {
 	return (...args) => {
 		// Create key for cache
 		const argsKey = JSON.stringify(args);
-		if (!Object.prototype.hasOwnProperty.call(results, argsKey)) {
+		if (!Object.hasOwn(results, argsKey)) {
 			results[argsKey] = fn(...args);
 		}
 		return results[argsKey];
