@@ -102,7 +102,7 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 	function referenceEquals(a, b) {
 		const objectReferences = [];
 		// eslint-disable-next-line no-func-assign
-		return (referenceEquals = _referenceEquals)(a, b); // MOSONAR
+		return (referenceEquals = _referenceEquals)(a, b); // NOSONAR
 		function _referenceEquals(a, b) {
 			let l = objectReferences.length;
 			while (l--) {
@@ -275,9 +275,9 @@ Function.prototype.applyInChunks = function applyInChunks() { // NOSONAR
 // JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
 function $args(func) {
 	return (func + '')
-		.replace(/[/][/].*$/mg, '') // strip single-line comments
+		.replace(/\/\/.*$/mg, '') // strip single-line comments
 		.replace(/\s+/g, '') // strip white space
-		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments
+		.replace(/\/\*[^/*]*\*\//g, '') // strip multi-line comments
 		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters
 		.replace(/=[^,]+/g, '') // strip any ES6 defaults
 		.split(',').filter(Boolean); // split & filter [""]

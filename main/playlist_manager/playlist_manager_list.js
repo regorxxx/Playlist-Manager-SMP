@@ -72,14 +72,14 @@ function _list(x, y, w, h) {
 	);
 
 	// Helpers
-	const headerRe = /\n[-]*$/;
+	const headerRe = /\n-*$/;
 	const regexHours = /^\d*:\d*:/;
 	const regexWeek = /^\d*wk/;
 	const regexDay = /^\dd/;
 	const regexTwoDecs = /^(\d*\.\d{2,3})/;
 	const regexHundreds = /^(\d{3,4})/;
 	const regexUnit = /(^\d*.*\d* )(\w*)/;
-	const quickSearchRe = /[_A-z0-9]/;
+	const quickSearchRe = /[0-z]/; // Equal to [_A-z0-9]
 	const playlistRe = /playlist/gi;
 	let Fuse;
 
@@ -2345,11 +2345,11 @@ function _list(x, y, w, h) {
 		if (str.length) {
 			const found = [...this.dataAll].filter((pls) => {
 				if (str.startsWith('~') || str.endsWith('~')) {
-					const term = str.replace(/^~|~$/g, '');
+					const term = str.replace(/(^~)|(~$)/g, '');
 					const threshold = 0.75;
 					let fuzzy;
 					if (this.searchMethod.bSimpleFuzzy) {
-						const sepRegExp = /\(|\)| |,|-|_/g;
+						const sepRegExp = /[() ,\-_]/g;
 						fuzzy = (val) => {
 							return Array.isArray(val)
 								? val.some((subVal) => fuzzy(subVal))
@@ -4651,6 +4651,14 @@ function _list(x, y, w, h) {
 					return this.reduce(count, 0);
 				}
 			});
+		};
+
+		this.moveToFolder = (item, toFolder) => {
+			const itemsArr = isArray(item) ? item : [item];
+			itemsArr.forEach((subItem) => {this.addToFolder(subItem, toFolder);});
+			this.save();
+			if (this.methodState === this.manualMethodState()) {this.saveManualSorting();}
+			this.sort();
 		};
 
 		this.addToFolder = (pls, folderObj) => {
