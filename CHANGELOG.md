@@ -59,6 +59,7 @@
 - Helpers: updated helpers.
 - XSP: improved caching in multiple playlist actions.
 - XSPF: improved caching in multiple playlist actions.
+- UI: optimized repainting to use less resources on statistics mode.
 - Code cleanup.
 ### Removed
 ### Fixed

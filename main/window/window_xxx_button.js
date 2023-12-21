@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//21/12/23
 
 /* exported _button */
 
@@ -13,9 +13,9 @@ function _button({
 	x, y, w, h,
 	isVisible = (time, timer) => this.hover || Date.now() - time < (timer || this.timer),
 	notVisibleMode = 'invisible', // invisible | alpha
-	lbtnFunc = () => void(0),
-	lbtnDblFunc = () => void(0),
-	rbtnFunc = () => void(0),
+	lbtnFunc = () => void (0),
+	lbtnDblFunc = () => void (0),
+	rbtnFunc = () => void (0),
 	scrollSpeed = 60, // ms
 	scrollSteps = 3, // ms
 	timer = 1500, // ms
@@ -24,7 +24,7 @@ function _button({
 	iDoubleClickTimer = 250, // ms
 } = {}) {
 	this.paint = (gr, color) => {
-		if (this.w <= 0) {return;}
+		if (this.w <= 0) { return; }
 		// Smooth visibility switch
 		let bLastStep = false;
 		if (this.isVisible && !this.isVisible(this.time, this.timer)) {
@@ -40,21 +40,21 @@ function _button({
 				}
 			}
 		}
-		if (!this.hover) {color = RGBA(...toRGB(color), getBrightness(...toRGB(color)) < 50 ? 100 : 25);}
+		if (!this.hover) { color = RGBA(...toRGB(color), getBrightness(...toRGB(color)) < 50 ? 100 : 25); }
 		gr.SetTextRenderingHint(4);
 		const text = this.text && this.text.constructor && this.text.call && this.text.apply ? this.text.call(this, this) : this.text; // NOSONAR [support both this]
 		gr.DrawString(text, this.font, color, this.x, this.y, this.w, this.h, SF_CENTRE);
 		gr.SetTextRenderingHint(0);
-		if (!bLastStep && this.isVisible) {this.repaint(this.timer);} // Smooth visibility switch
+		if (!bLastStep && this.isVisible) { this.repaint(this.timer); } // Smooth visibility switch
 	};
 	const debounced = {
 		[this.timer]: debounce(window.RepaintRect, this.timer, false, window)
 	};
 	this.repaint = (timeout = 0) => {
-		if (timeout === 0) {window.RepaintRect(this.x, this.y, this.x + this.w, this.y + this.h);}
+		if (timeout === 0) { window.RepaintRect(this.x, this.y, this.w, this.h); }
 		else {
-			if (!Object.hasOwn(debounced, timeout)) {debounced[timeout] = debounce(window.RepaintRect, timeout, false, window);}
-			debounced[timeout](this.x, this.y, this.x + this.w, this.y + this.h, true);
+			if (!Object.hasOwn(debounced, timeout)) { debounced[timeout] = debounce(window.RepaintRect, timeout, false, window); }
+			debounced[timeout](this.x, this.y, this.w, this.h, true);
 		}
 	};
 	this.trace = (x, y) => {
@@ -64,23 +64,30 @@ function _button({
 		if (this.trace(x, y)) {
 			this.time = Date.now();
 			window.SetCursor(IDC_HAND);
-			this.hover = true;
+			if (!this.hover) {
+				this.hover = true;
+				this.repaint();
+			}
 			if (this.hover && this.tt) {
-				if (this.tooltip.Text) {this.tooltip.Deactivate();}
+				if (this.tooltip.Text) { this.tooltip.Deactivate(); }
 				this.tooltip.SetValue(this.tt, true);
 			}
 			return true;
 		} else {
-			if (this.tooltip.Text) {this.tooltip.SetValue(null);}
-			if (this.bTimerOnVisible && this.isVisible()) {this.time = Date.now();}
-			this.hover = this.bDown = false;
+			if (this.tooltip.Text) { this.tooltip.SetValue(null); }
+			if (this.bTimerOnVisible && this.isVisible()) { this.time = Date.now(); }
+			this.bDown = false;
+			if (this.hover) {
+				this.hover = false;
+				this.repaint();
+			}
 			return false;
 		}
 	};
 	let downFunc = null;
 	let draggingTime = 0;
 	this.lbtn_down = (x, y, mask, parent) => {
-		if (!this.scrollSpeed) {return false;}
+		if (!this.scrollSpeed) { return false; }
 		if (this.trace(x, y)) {
 			this.bHover = true;
 			if (this.bHover) {
@@ -89,7 +96,7 @@ function _button({
 					draggingTime = 0;
 					downFunc = setInterval(() => {
 						if (this.bDown) {
-							const delta = 1 + (draggingTime > this.scrollSpeed * 3 ? Math.log(draggingTime / this.scrollSpeed)* this.scrollSteps : 0);
+							const delta = 1 + (draggingTime > this.scrollSpeed * 3 ? Math.log(draggingTime / this.scrollSpeed) * this.scrollSteps : 0);
 							this.lbtnFunc.call(parent, x, y, mask, parent, delta);
 							this.repaint();
 						}
@@ -106,7 +113,7 @@ function _button({
 	};
 	this.lbtn_up = (x, y, mask, parent) => {
 		this.bDown = false;
-		if (downFunc) {clearInterval(downFunc); downFunc = null; draggingTime = 0;}
+		if (downFunc) { clearInterval(downFunc); downFunc = null; draggingTime = 0; }
 		if (this.trace(x, y)) {
 			if (this.lbtnFunc) {
 				if (!this.bDblClk) {
@@ -115,7 +122,7 @@ function _button({
 					} else {
 						this.timeoutLclk = setTimeout(() => this.lbtnFunc(x, y, mask, 1), this.iDoubleClickTimer);
 					}
-				} else {this.bDblClk = false;}
+				} else { this.bDblClk = false; }
 			}
 			return true;
 		} else {
@@ -138,7 +145,7 @@ function _button({
 	};
 	this.lbtn_dblclk = (x, y, mask, parent) => {
 		if (this.trace(x, y)) {
-			if (!this.hover || !this.isVisible()) {return false;}
+			if (!this.hover || !this.isVisible()) { return false; }
 			else if (this.lbtnDblFunc) {
 				if (parent) {
 					this.lbtnDblFunc.call(parent, x, y, mask, parent);
@@ -169,7 +176,7 @@ function _button({
 	this.rbtnFunc = rbtnFunc;
 	this.tt = tt;
 	this.font = _gdiFont('FontAwesome', this.h);
-	this.tooltip = new _tt(null, void(0), void(0), 600);
+	this.tooltip = new _tt(null, void (0), void (0), 600);
 	this.time = Date.now();
 	this.timer = timer;
 	this.bDblClk = false;

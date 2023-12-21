@@ -625,13 +625,20 @@ function _chart({
 			case 'bars': // NOSONAR [fallthrough]
 				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels && this.graph.type !== 'timeline') {
 					if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
+						const yLabel = (y - h) / 2;
 						xAxisValues.forEach((valueX, i) => {
-							const xLabel = x + i * tickW;
+							let xLabel = x + i * tickW;
 							valueX = this.configuration.bAltVerticalText ? valueX.flip() : valueX;
 							const xTickW = gr.CalcTextWidth(valueX, this.gFont);
+							const xtickH = gr.CalcTextHeight(valueX, this.gFont);
+							// Draw line and rectangle
+							const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+							gr.DrawLine(xLabel, y, xLabel, yLabel, this.axis.x.width / 2, xAxisColor);
+							xLabel -= (i === 0 ? 0 : xtickH / 2);
+							gr.FillSolidRect(xLabel, yLabel - xTickW - _scale(5), xtickH, xTickW + _scale(5), borderColor);
 							if (this.configuration.bAltVerticalText) { // Flip chars
 								gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-								gr.DrawString(valueX, this.gFont, xAxisColor, xLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
+								gr.DrawString(valueX, this.gFont, xAxisColor, xLabel, yLabel - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
 								gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 							} else {
 								const keyH = gr.CalcTextHeight(valueX, this.gFont);
@@ -644,7 +651,7 @@ function _chart({
 								img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 								img.ReleaseGraphics(_gr);
 								gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-								gr.DrawImage(img, xLabel, y - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+								gr.DrawImage(img, xLabel, yLabel - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
 								gr.SetInterpolationMode(InterpolationMode.Default);
 							}
 						});
@@ -740,18 +747,26 @@ function _chart({
 					if (this.graph.type !== 'timeline') {
 						if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
 							const last = xAxisValuesLen - 1;
+							const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
 							xAxisValues.forEach((valueX, i) => {
+								const xtickH = gr.CalcTextHeight(valueX, this.gFont);
+								const xtickW = gr.CalcTextWidth(valueX, this.gFont);
 								const xLabel = x + i * tickW;
 								if (this.axis.x.labels && (this.graph.type !== 'bars' || !this.axis.x.bAltLabels)) {
 									if (i === 0 && offsetTickText) { // Fix for first label position
-										const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 										const zeroW = xLabel + offsetTickText + tickW - this.x - this.margin.leftAuto / 2;
+										if (this.axis.x.bAltLabels) { gr.FillSolidRect(this.x + this.margin.leftAuto + xOffsetKey - xtickW / 2 + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+										const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 										gr.GdiDrawText(valueX, this.gFont, xAxisColor, this.x + this.margin.leftAuto / 2 + xOffsetKey, y + this.axis.y.width, zeroW, this.h, flags);
 									} else if (i === last) { // Fix for last label position
-										const lastW = xLabel + offsetTickText + tickW > w - this.margin.right ? this.x + w - (xLabel + offsetTickText) + this.margin.right : tickW;
+										const lastW = xLabel + offsetTickText + tickW > w - this.margin.right
+											? this.x + w - (xLabel + offsetTickText) + this.margin.right
+											: tickW;
+										if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel + offsetTickText + xOffsetKey + (lastW / 2 - xtickW) + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
 										const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 										gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
 									} else {
+										if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel - xtickW / 2 - _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
 										const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 										gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText, y + this.axis.y.width, tickW, this.h, flags);
 									}
@@ -858,20 +873,36 @@ function _chart({
 		Callbacks
 	*/
 
-	this.sizePoint = (point /* pointCoords */) => {
+	this.sizePoint = (point /* pointCoords */, bWithOffset = false) => {
+		const size = { x: void (0), y: void (0), w: void (0), h: void (0) };
+		let bEntireChart = false;
 		switch (this.graph.type) {
 			case 'doughnut':
 			case 'pie': {
 				const r = point.r2;
 				const bToLeft = point.alpha1 > Math.PI / 2 && point.alpha1 < Math.PI * 3 / 2 || point.alpha2 > Math.PI / 2 && point.alpha2 < Math.PI * 3 / 2;
+				const bTop = point.alpha1 > Math.PI || point.alpha2 > Math.PI;
+				bEntireChart = point.alpha2 - point.alpha1 > Math.PI;
 				const x = point.c.x + (bToLeft ? -1 : 0) * point.r2;
-				const y = point.c.y;
-				return { x, y, w: r };
+				const y = point.c.y + (bTop ? -1 : 0) * point.r2;
+				size.x = x;
+				size.y = y;
+				size.w = bEntireChart ? 2 * r : r;
+				size.h = bEntireChart ? 2 * r : r;
+				break;
 			}
 			default: {
-				return { x: point.x, y: point.y, w: point.w, h: point.h };
+				size.x = point.x;
+				size.y = point.y;
+				size.w = point.w;
+				size.h = point.h;
 			}
 		}
+		if (bWithOffset && !bEntireChart) {
+			size.x -= size.w * 0.25;
+			size.w *= 1.5;
+		}
+		return size;
 	};
 
 	this.distanceToPoint = (x, y, point /* pointCoords */) => {
@@ -955,75 +986,58 @@ function _chart({
 		if (!window.ID) { return false; }
 		if (this.trace(x, y)) {
 			let bHand = false;
-			let bPaint = false;
 			let ttText = '';
 			this.mx = x;
 			this.my = y;
-			if (!this.inFocus) { bPaint = true; }
 			this.inFocus = true;
 			if (this.pop.isEnabled()) { this.pop.move(x, y); }
 			else {
 				if (this.buttons.xScroll) {
-					const bHover = this.leftBtn.hover || this.rightBtn.hover;
 					if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
 						bHand = true;
-						bPaint = true;
 						ttText = 'L. Click to scroll on X-axis...\nDouble L. Click to jump to ' + (this.rightBtn.hover ? 'right' : 'left');
-					} else if ((this.leftBtn.hover || this.rightBtn.hover) !== bHover) { bPaint = true; }
+					}
 				}
 				if (this.buttons.settings) {
-					const bHover = this.settingsBtn.hover;
 					if (this.settingsBtn.move(x, y)) {
 						bHand = true;
-						bPaint = true;
 						ttText = 'Main settings...';
-					} else if (this.settingsBtn.hover !== bHover) { bPaint = true; }
+					}
 				}
 				if (this.buttons.display) {
-					const bHover = this.displayBtn.hover;
 					if (this.displayBtn.move(x, y)) {
 						bHand = true;
-						bPaint = true;
 						ttText = 'Display settings...';
-					} else if (this.displayBtn.hover !== bHover) { bPaint = true; }
+					}
 				}
 				if (this.buttons.zoom) {
-					const bHover = this.zoomBtn.hover;
 					if (this.zoomBtn.move(x, y)) {
 						bHand = true;
-						bPaint = true;
 						ttText = 'Press Shift to zoom out...\nDouble CLick for max zoom in/out';
-					} else if (this.zoomBtn.hover !== bHover) { bPaint = true; }
+					}
 				}
 				if (this.buttons.custom) {
-					const bHover = this.customBtn.hover;
 					if (this.customBtn.move(x, y)) {
 						bHand = true;
-						bPaint = true;
 						ttText = this.callbacks.custom.tooltip
 							? isFunction(this.callbacks.custom.tooltip) ? this.callbacks.custom.tooltip() : this.callbacks.custom.tooltip
 							: '';
-					} else if (this.customBtn.hover !== bHover) { bPaint = true; }
+					}
 				}
 				const [serie, idx] = this.tracePoint(x, y, true);
 				const bPoint = serie !== -1 && idx !== -1;
-				bPaint = bPaint || this.currPoint[0] !== serie || this.currPoint[1] !== idx;
+				const bPaint = this.currPoint[0] !== serie || this.currPoint[1] !== idx;
 				if (bPaint) {
-					let xPoint = 0;
-					let wPoint = this.width;
+					let coords;
 					// Repaint around current point
 					if (bPoint) {
-						const coords = this.sizePoint(this.dataCoords[serie][idx]);
-						xPoint = coords.x - coords.w * 0.25;
-						wPoint = coords.w * 1.5;
+						coords = this.sizePoint(this.dataCoords[serie][idx], true);
+						this.repaint(...Object.values(coords));
 					}
-					this.repaint(xPoint, void (0), wPoint, void (0));
 					// Repaint around old point
-					if (bPoint && this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
-						const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]]);
-						xPoint = coords.x - coords.w * 0.25;
-						wPoint = coords.w * 1.5;
-						this.repaint(xPoint, void (0), wPoint, void (0));
+					if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+						coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true);
+						this.repaint(...Object.values(coords));
 					}
 				}
 				if (!bHand && !ttText) {
@@ -1059,9 +1073,7 @@ function _chart({
 			let xPoint = 0;
 			let wPoint = this.width;
 			if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
-				const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]]);
-				xPoint = coords.x - coords.w * 0.25;
-				wPoint = coords.w * 1.5;
+				({ x: xPoint, w: wPoint } = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true));
 			}
 			this.currPoint = [-1, -1];
 			this.repaint(xPoint, void (0), wPoint, void (0));
