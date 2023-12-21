@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/23
+//21/12/23
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -699,7 +699,10 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_paint', (gr) => {
 		// extendGR(gr, {Repaint: true}); // helpers_xxx_prototypes_smp.js
 		panel.paint(gr);
-		if (stats.bEnabled) { return; }
+		if (stats.bEnabled) {
+			if (window.debugPainting) { window.drawDebugRectAreas(gr); }
+			return;
+		}
 		if (panel.imageBackground.bTint) {
 			panel.paintImage(
 				gr,
@@ -1070,7 +1073,7 @@ if (!list.properties.bSetup[1]) {
 			list.dragDropText = '';
 			return;
 		} else { // List
-			if (list.index === -1 || list.index >= list.items) { list.dragDropText = 'Create new Playlist'; }
+			if (list.index === -1 || list.index >= list.items) { list.dragDropText = 'Create new Playlist'; } // NOSONAR [structure]
 			else if (list.data[list.index].isFolder) { list.dragDropText = 'To selected Folder'; }
 			else { list.dragDropText = 'To selected Playlist'; }
 		}
@@ -1101,7 +1104,8 @@ if (!list.properties.bSetup[1]) {
 					if (list.searchMethod.bAutoSearch) { list.search(); }
 				}
 			} else {
-				if ((mask & 32) === 32 || list.index === -1) { // Create new playlist when pressing alt
+				// Create new playlist when pressing alt
+				if ((mask & 32) === 32 || list.index === -1) {  // NOSONAR [structure]
 					const name = list.properties.bAutoSelTitle[1]
 						? list.plsNameFromSelection(oldIdx)
 						: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
