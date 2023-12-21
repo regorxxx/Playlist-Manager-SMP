@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//21/12/23
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -22,8 +22,8 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 		console.log('There are empty or non recognized rules.');
 	}
 	let query = [];
-	const textTags = new Set(['GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '%PLAY_COUNT%', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%', '#PLAYLIST#']);
-	const numTags = new Set(['TRACKNUMBER', '%RATING%', 'DATE', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '%PLAY_COUNT%']);
+	const textTags = new Set(['GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '%PLAY_COUNT%', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%', '#PLAYLIST#']);
+	const numTags = new Set(['TRACKNUMBER', '%RATING%', 'DATE', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '%PLAY_COUNT%']);
 	const dateTags = new Set(['DATE', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%']);
 	for (let rule of rules) {
 		const tag = rule.field;
@@ -203,7 +203,7 @@ XSP.getFbTag = function (tag) {
 		case 'themes': { fbTag = 'THEME'; break; }
 		case 'styles': { fbTag = 'STYLE'; break; }
 		case 'albumartist': { fbTag = '"ALBUM ARTIST"'; break; }
-		case 'playcount': { fbTag = XSP.isFoec ? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"' : '%PLAY_COUNT%'; break; } // Requires foo_enhanced_playcount or foo_playcount
+		case 'playcount': { fbTag = XSP.isFoec ? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"' : '%PLAY_COUNT%'; break; } // Requires foo_enhanced_playcount or foo_playcount
 		case 'lastplayed': { fbTag = XSP.isFoec ? '%LAST_PLAYED_ENHANCED%' : '%LAST_PLAYED%'; break; } // Requires foo_enhanced_playcount or foo_playcount
 		case 'datenew':
 		case 'dateadded': { fbTag = XSP.isFoec ? '%ADDED_ENHANCED%' : '%ADDED%'; break; } // Requires foo_playcount

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//21/12/23
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -18,17 +18,17 @@ function loadUserDefFile(def) {
 		if (data) {
 			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font' || def._type === 'Setting') {
 				for (const key in data) {
-					if (def.hasOwnProperty(key)) {
+					if (Object.hasOwn(def, key)) {
 						def[key] = data[key];
 						// TODO: add TF checking?
 					} else {bSave = true;}
 				}
 			} else if (def._type === 'RegExp') {
 				for (const key in data) {
-					if (def.hasOwnProperty(key)) {
+					if (Object.hasOwn(def, key)) {
 						const back = {...def[key]};
 						def[key] = data[key];
-						if (def[key].hasOwnProperty('re')) { // Parse RegExp from strings and make sure it's valid or use default value
+						if (Object.hasOwn(def[key], 're')) { // Parse RegExp from strings and make sure it's valid or use default value
 							let re, flag;
 							try {
 								[, re, flag] = def[key].re.match(/\/(.*)\/([a-z]+)?/);
@@ -63,12 +63,23 @@ function loadUserDefFile(def) {
 /* eslint-disable no-useless-escape */
 function addGlobTags() { // Add calculated properties
 	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
-	globTags.artist = globTags.artistRaw.indexOf('%') === -1 && globTags.artistRaw.indexOf('$') === -1 ? '%' + globTags.artistRaw + '%' : globTags.artistRaw;
+	globTags.artist = !globTags.artistRaw.includes('%') && !globTags.artistRaw.includes('$')
+		? '%' + globTags.artistRaw + '%'
+		: globTags.artistRaw;
 	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,\'#\'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
+	globTags.isLoved =  !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
+		? '$ifequal(%' + globTags.feedback + '%,1,1$not(0),0)'
+		: '$ifequal(' + globTags.feedback + ',1,1$not(0),0)';
+	globTags.isHated =  !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
+		? '$ifequal(%' + globTags.feedback + '%,-1,1$not(0),0)'
+		: '$ifequal(' + globTags.feedback + ',-1,1$not(0),0)';
+	globTags.isRatedTop =  !globTags.rating.includes('%') && !globTags.rating.includes('$')
+		? '$ifequal(%' + globTags.rating + '%,5,1$not(0),0)'
+		: '$ifequal(' + globTags.rating + ',5,1$not(0),0)';
 	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
-	globQuery.compareTitle = '"$stricmp(' + (globTags.title.indexOf('$') === -1 ? '%' + globTags.title + '%' : globTags.title) + ',#' + globTags.title + '#)" IS 1';
+	globQuery.compareTitle = '"$stricmp(' + (!globTags.title.includes('$') ? '%' + globTags.title + '%' : globTags.title) + ',#' + globTags.title + '#)" IS 1';
 	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
 	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
 	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
@@ -97,7 +108,7 @@ const globTags = {
 	rating: '%RATING%',
 	acoustidFP: 'ACOUSTID_FINGERPRINT_RAW',
 	fooidFP: 'FINGERPRINT_FOOID',
-	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)',
+	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)',
 	folksonomy: 'FOLKSONOMY',
 	feedback: 'FEEDBACK',
 	camelotKey: '$if($stricmp(%KEY%,G#m),$puts(kTrans,1A))$if($stricmp(%KEY%,Abm),$puts(kTrans,1A))$if($stricmp(%KEY%,D#m),$puts(kTrans,2A))$if($stricmp(%KEY%,Ebm),$puts(kTrans,2A))$if($stricmp(%KEY%,A#m),$puts(kTrans,3A))$if($stricmp(%KEY%,Bbm),$puts(kTrans,3A))$if($stricmp(%KEY%,Fm),$puts(kTrans,4A))$if($stricmp(%KEY%,Cm),$puts(kTrans,5A))$if($stricmp(%KEY%,Gm),$puts(kTrans,6A))$if($stricmp(%KEY%,Dm),$puts(kTrans,7A))$if($stricmp(%KEY%,Am),$puts(kTrans,8A))$if($stricmp(%KEY%,Em),$puts(kTrans,9A))$if($stricmp(%KEY%,Bm),$puts(kTrans,10A))$if($stricmp(%KEY%,F#m),$puts(kTrans,11A))$if($stricmp(%KEY%,Gbm),$puts(kTrans,11A))$if($stricmp(%KEY%,C#m),$puts(kTrans,12A))$if($stricmp(%KEY%,Dbm),$puts(kTrans,12A))$if($stricmp(%KEY%,6m),$puts(kTrans,1A))$if($stricmp(%KEY%,7m),$puts(kTrans,2A))$if($stricmp(%KEY%,8m),$puts(kTrans,3A))$if($stricmp(%KEY%,9m),$puts(kTrans,4A))$if($stricmp(%KEY%,10m),$puts(kTrans,5A))$if($stricmp(%KEY%,11m),$puts(kTrans,6A))$if($stricmp(%KEY%,12m),$puts(kTrans,7A))$if($stricmp(%KEY%,1m),$puts(kTrans,8A))$if($stricmp(%KEY%,2m),$puts(kTrans,9A))$if($stricmp(%KEY%,3m),$puts(kTrans,10A))$if($stricmp(%KEY%,4m),$puts(kTrans,11A))$if($stricmp(%KEY%,5m),$puts(kTrans,12A))$if($stricmp(%KEY%,B),$puts(kTrans,1B))$if($stricmp(%KEY%,F#),$puts(kTrans,2B))$if($stricmp(%KEY%,Gb),$puts(kTrans,2B))$if($stricmp(%KEY%,C#),$puts(kTrans,3B))$if($stricmp(%KEY%,Db),$puts(kTrans,3B))$if($stricmp(%KEY%,G#),$puts(kTrans,4B))$if($stricmp(%KEY%,Ab),$puts(kTrans,4B))$if($stricmp(%KEY%,D#),$puts(kTrans,5B))$if($stricmp(%KEY%,Eb),$puts(kTrans,5B))$if($stricmp(%KEY%,A#),$puts(kTrans,6B))$if($stricmp(%KEY%,Bb),$puts(kTrans,6B))$if($stricmp(%KEY%,F),$puts(kTrans,7B))$if($stricmp(%KEY%,C),$puts(kTrans,8B))$if($stricmp(%KEY%,G),$puts(kTrans,9B))$if($stricmp(%KEY%,D),$puts(kTrans,10B))$if($stricmp(%KEY%,A),$puts(kTrans,11B))$if($stricmp(%KEY%,E),$puts(kTrans,12B))$if($stricmp(%KEY%,6d),$puts(kTrans,1B))$if($stricmp(%KEY%,7d),$puts(kTrans,2B))$if($stricmp(%KEY%,8d),$puts(kTrans,3B))$if($stricmp(%KEY%,9d),$puts(kTrans,4B))$if($stricmp(%KEY%,10d),$puts(kTrans,5B))$if($stricmp(%KEY%,11d),$puts(kTrans,6B))$if($stricmp(%KEY%,12d),$puts(kTrans,7B))$if($stricmp(%KEY%,1d),$puts(kTrans,8B))$if($stricmp(%KEY%,2d),$puts(kTrans,9B))$if($stricmp(%KEY%,3d),$puts(kTrans,10B))$if($stricmp(%KEY%,4d),$puts(kTrans,11B))$if($stricmp(%KEY%,5d),$puts(kTrans,12B))$if($get(kTrans),,$puts(kTrans,[%KEY%]))$get(kTrans)',
@@ -117,12 +128,16 @@ const globQuery = {
 	notLowRating: 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1)',
 	ratingGr2: globTags.rating + ' GREATER 2',
 	ratingGr3: globTags.rating + ' GREATER 3',
+	ratingTop: globTags.rating + ' EQUAL 5',
 	shortLength: '%LENGTH_SECONDS% LESS 360',
 	stereo: '%CHANNELS% LESS 3 AND NOT COMMENT HAS quad',
 	noRating: globTags.rating + ' MISSING',
 	live: globTags.genre + ' IS live OR ' + globTags.style + ' IS live',
 	hifi: globTags.style + ' IS hi-fi',
 	SACD: '%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64',
+	recent: '%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS', name: 'Played this month',
+	loved: globTags.feedback + ' IS 1',
+	hated: globTags.feedback + ' IS -1',
 };
 
 /* eslint-disable no-useless-escape */
@@ -133,7 +148,7 @@ const globRegExp = {
 	_description: 'RegExp expressions mostly used for track matching on duplicates removal. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values).',
 	_usage: 'Most users will probably not need to touch these. Edit the "re" value, "default" is only provided for reference. Special characters like single quotes (\') or backslash (\\) must be properly escaped.',
 	title: {
-		re: /(?!\s+[\(\[](?:part.*|pt.*|act.*|A|B|I+V?X?|V+I{0,3})[\)\]])(?:\s+[\(\[].*[\)\]])(?=\||$)/i,
+		re: /(?!\s+[\(\[](?:part.*|pt.*|act.*|A|B|I+V?X?|V+I{0,3})[\)\]])(?:\s+[\(\[].*[\)\]])(?=\||$)/i, // NOSONAR [must be a single regEx]
 		desc: 'Identifies duplicates with advanced partial title matching. For example, tracks like these would be considered to be duplicates:\nMy track (live) | My track (acoustic) | My track (2022 remix) | ...\n\nTracks containing these keywords on parentheses or brackets are skipped:\npart |pt. | act | A | B | Roman numerals\n\nI.E. these tracks would not be considered to be the \'same track\' (unless the entire title is matched):\nMy track (part 1) | My track (pt. 2) | My track (act 2) | ....\n\nObviously these are no real \'duplicates\', but the philosophy behind the \'remove duplicates\' concept is not having 2 times the same song on a playlist, so having multiple versions of the same track is undesirable in many cases.'
 	},
 	ingAposVerbs: {
@@ -141,7 +156,7 @@ const globRegExp = {
 		desc: 'Replaces verb-in\' words with verb-ing versions'
 	},
 	ingVerbs: {
-		re: /\b(?:walk|talk|rock|kick|mak|shak|work|look|knock|sneak|park|break|makin|fuck|smok|drink|chok|tak|pick|shak|reel|truck|pack|cook|break|someth|check|think|juk|jerk|speak|fak|mack|suck|skank|folk|stack)(in)(?=\s+)/i,
+		re: /\b(?:walk|talk|rock|kick|mak|shak|work|look|knock|sneak|park|break|makin|fuck|smok|drink|chok|tak|pick|shak|reel|truck|pack|cook|break|someth|check|think|juk|jerk|speak|fak|mack|suck|skank|folk|stack)(in)(?=\s+)/i, // NOSONAR [must be a single regEx]
 		desc: 'Replaces verb-in words with verb-ing versions'
 	}
 };
