@@ -284,11 +284,17 @@ function MapReplacer(key, value) {
 */
 let module = {}, exports = {};
 module.exports = null;
+module.imports = {};
 
 function require(script) { // Must be path relative to this file, not the parent one
 	let newScript = script;
 	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => {newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\');});
 	['helpers'].forEach((folder) => {newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '');});
-	include(newScript + '.js');
+	if (!module.imports[newScript]) {
+		include(newScript + '.js');
+		module.imports[newScript] = module.exports;
+	} else {
+		module.exports = module.imports[newScript];
+	}
 	return module.exports;
 }

@@ -1,10 +1,10 @@
 ﻿'use strict';
-//20/12/23
+//24/12/23
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
 include('helpers_xxx_file.js');
-/* global _isFile:readable, _isFolder:readable*/
+/* global _isFile:readable, _isFolder:readable, doOnce:readable*/
 
 /*
 	Properties
@@ -212,7 +212,10 @@ function checkProperty(property, withValue) {
 		console.log(window.Name + ' - Portable installation: property \'' + property[0] + '\'\nReplacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
 	}
 	if (!bPass) {
-		fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\n\nWrong value: ' + valToCheck + '\n\nReplaced with: ' + property[3] + '\n\n' + report);
+		doOnce(
+			property[0] + ': ' + valToCheck + ' -> ' + property[3],
+			fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\n\nWrong value: ' + valToCheck + '\n\nReplaced with: ' + property[3] + '\n\n' + report)
+		);
 	}
 	return bPass;
 }

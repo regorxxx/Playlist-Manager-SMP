@@ -1,11 +1,15 @@
 ﻿'use strict';
-//27/07/23
+//24/12/23
 
+/* global list:readable, folders:readable */
 include('..\\window\\window_xxx.js');
+/* global _window:readable */
 include('..\\..\\helpers\\menu_xxx.js');
+/* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
+/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-
+/* global _createFolder:readable, _isFile:readable, _open:readable, utf8:readable, */
 // Set default properties (used on data later)
 let propertiesOptions = {
 	bOptions:	['Options panel opened?'		, false		], // To maintain the same window on script reload (would be an ID when having multiple windows)
@@ -25,7 +29,7 @@ options.save = () => {
 	overwriteProperties(options.properties);
 	const jsonData = options.getTabData('Config');
 	if (jsonData && jsonData.length) {utils.WriteTextFile(folders.data + 'options_data.json', JSON.stringify(options.getTabData('Config'), null, '\t'), true);}
-}
+};
 options.load = () => {
 	options.properties = getPropertiesPairs(options.properties, '', 0);
 	// Only config tab is saved as json
@@ -36,10 +40,11 @@ options.load = () => {
 			if (data) {options.configTab('Config', {data});}
 		}
 	}
-}
+};
 
 // Add tabs with its data
 options.addTab({title: 'Playlist saving', columns: 1, data: [
+	/* eslint-disable indent */
 	[
 		{title: 'Playlist File handling'},
 			{subTitle: 'Format', values: [
@@ -56,9 +61,11 @@ options.addTab({title: 'Playlist saving', columns: 1, data: [
 						}
 			]},
 	]
+	/* eslint-enable indent */
 ], description: 'This tab modifies data saved on properties panel'});
 
 options.addTab({title: 'Playlist behaviour', columns: 4, data: [
+	/* eslint-disable indent */
 	[
 		{title: 'Track handling'},
 			{subTitle: 'Duplicates entries', values: [
@@ -112,9 +119,11 @@ options.addTab({title: 'Playlist behaviour', columns: 4, data: [
 				{name: 'Apply actions based on tags (lock, load)', pId: 'bApplyAutoTags', pIdx: 1, constructor: Boolean},
 			]}
 	]
+	/* eslint-enable indent */
 ], description: 'This tab modifies data saved on properties panel'});
 
 options.addTab({title: 'Panel behaviour', columns: 1, data: [
+	/* eslint-disable indent */
 	[
 		{title: 'List view'},
 			{values: [
@@ -133,6 +142,7 @@ options.addTab({title: 'Panel behaviour', columns: 1, data: [
 ], description: 'This tab modifies data saved on properties panel'});
 
 options.addTab({title: 'UI', columns: 1, data: [
+	/* eslint-disable indent */
 	[
 		{title: 'List view'},
 			{values: [
@@ -145,11 +155,12 @@ options.addTab({title: 'UI', columns: 1, data: [
 				{name: 'Usage text on tooltips', pId: 'bShowTips', pIdx: 1, constructor: Boolean},
 			]},
 	]
+	/* eslint-enable indent */
 ], description: 'This tab modifies data saved on properties panel'});
 
 // Add a menu to swap windows
 // Since auto-save is disabled, data saving is done when returning to the main window. Only exception to this rule is saving at script unload
 // Using .loadAll() or .saveAll() instead of .load() / .save() will also apply for any embedded object
-var menu = new _menu();
-menu.newEntry({entryText: 'Show Options', func: () => {options.loadAll(); options.properties.bOptions[1] = true; options.saveAll(); window.Repaint(true);}});
-menu.newEntry({entryText: 'Show Main', func: () => {options.properties.bOptions[1] = false; options.saveAll(); window.Repaint(true);}});
+const windowMenu = new _menu();
+windowMenu.newEntry({entryText: 'Show Options', func: () => {options.loadAll(); options.properties.bOptions[1] = true; options.saveAll(); window.Repaint(true);}});
+windowMenu.newEntry({entryText: 'Show Main', func: () => {options.properties.bOptions[1] = false; options.saveAll(); window.Repaint(true);}});

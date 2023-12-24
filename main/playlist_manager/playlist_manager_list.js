@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//24/12/23
 
 /* exported _list */
 
@@ -7,7 +7,7 @@
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable */
 include('..\\window\\window_xxx_input.js');
-/* global _inputbox:readable, kMask:readable, getKeyboardMask:readable */
+/* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, _gdiFont:readable, RGB:readable, blendColors:readable, getBrightness:readable, toRGB:readable, _gr:readable, CENTRE:readable, _tt:readable, LEFT:readable, RIGHT:readable, RGBA:readable, scaleDPI:readable, lightenColor:readable, removeIdFromStr:readable, _sb:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -604,7 +604,7 @@ function _list(x, y, w, h) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputbox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
+						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
 						if (this.searchMethod.text.length && !this.searchMethod.bResetStartup) {
 							this.searchInput.text = this.searchMethod.text;
 							this.search();
