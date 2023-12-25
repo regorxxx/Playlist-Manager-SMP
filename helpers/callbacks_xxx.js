@@ -1,5 +1,5 @@
 'use strict';
-//17/12/23
+//25/12/23
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, registerAllCallbacks */
 
@@ -103,7 +103,7 @@ const parentWindow = this; // This is Window in this context without SMP wrappin
 parentWindow.eventListener = {event: null, id: null};
 
 function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
-	if (!callbacks.hasOwnProperty(event)) {console.log('addEventListener: event does not exist -> ' + event); return false;}
+	if (!Object.hasOwn(callbacks, event)) {console.log('addEventListener: event does not exist -> ' + event); return false;}
 	const id = UUID();
 	callbacks[event].listeners.push({id, listener});
 	if (bRegister && !callbacks[event].bRegistered) {registerCallback(event);} // Only add those callbacks needed to the global context
@@ -111,13 +111,13 @@ function addEventListener(event, listener, bRegister = true) { // eslint-disable
 }
 
 function findEventListener(event, listener = null, id = null) {
-	if (!callbacks.hasOwnProperty(event)) {return -1;}
+	if (!Object.hasOwn(callbacks, event)) {return -1;}
 	if (!listener && !id) {return -1;}
 	return callbacks[event].listeners.findIndex((event) => (event.id === id || event.listener === listener));
 }
 
 function removeEventListener(event, listener = null, id = null) { // eslint-disable-line no-redeclare
-	if (!callbacks.hasOwnProperty(event)) {return false;}
+	if (!Object.hasOwn(callbacks, event)) {return false;}
 	if (!listener && !id) {return false;}
 	const idx = findEventListener(event, listener, id);
 	return idx !== -1 && callbacks[event].listeners.splice(idx, 1);
@@ -127,7 +127,7 @@ function removeEventListeners(event) {
 	if (Array.isArray(event)) {
 		event.forEach((ev) => {removeEventListeners(ev);});
 	} else {
-		if (!callbacks.hasOwnProperty(event)) {console.log('removeEventListeners: event does not exist -> ' + event); return false;}
+		if (!Object.hasOwn(callbacks, event)) {console.log('removeEventListeners: event does not exist -> ' + event); return false;}
 		callbacks[event].listeners = [];
 	}
 	return true;
@@ -175,7 +175,7 @@ function registerAllCallbacks() {
 	Helpers
 */
 if (typeof UUID === 'undefined') {
-	var UUID = () => {
+	var UUID = () => { // NOSONAR[global]
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g , (c) => {
 			const rnd = Math.random() * 16 | 0;
 			const v = c === 'x' ? rnd : (rnd&0x3|0x8);

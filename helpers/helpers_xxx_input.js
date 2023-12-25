@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//25/12/23
 
 /* exported Input */
 
@@ -106,7 +106,7 @@ const Input = Object.seal(Object.freeze({
 			else {newVal = Number(input);}
 			if (newVal.toString() !== input) {throw new Error('Invalid type');} // No fancy number checks, just allow proper input
 			if (type.startsWith('int') && Number.isFinite(newVal) && !Number.isInteger(newVal)) {throw new Error('Invalid type');}
-			else if (type.startsWith('float') && Number.isFinite(newVal) && Number.isInteger(newVal)) {throw new Error('Invalid type');}
+			else if (type.startsWith('float') && Number.isFinite(newVal) && Number.isInteger(newVal)) {throw new Error('Invalid type');} // NOSONAR[more clear errors]
 			switch (type) {
 				case 'float':
 				case 'real':

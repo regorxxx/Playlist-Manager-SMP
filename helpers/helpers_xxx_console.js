@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//25/12/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -14,6 +14,8 @@ Object.defineProperty(console, 'Throttling', { enumerable: false, configurable: 
 // Interval use
 Object.defineProperty(console, 'Timer', { enumerable: false, configurable: false, writable: true });
 Object.defineProperty(console, 'Cache', { enumerable: false, configurable: false, writable: true, value: [] });
+// Global switch
+Object.defineProperty(console, 'Enabled', { enumerable: false, configurable: false, writable: true, value: true });
 
 /* global fso:readable */
 const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
@@ -152,6 +154,7 @@ console.popup = (arg, popupName, bPopup = true, bSplit = true) => {
 if (console.File && console.File.length && console.MaxSize && console.log) {
 	console.logUI = console.log;
 	console.log = function () {
+		if (!console.Enabled) {return;}
 		console.logUI(...arguments);
 		if (console.Throttling) {
 			clearTimeout(console.Timer);
@@ -165,6 +168,9 @@ if (console.File && console.File.length && console.MaxSize && console.log) {
 	};
 	console.checkSize();
 }
+
+console.enable = () => {console.Enabled = true;};
+console.disable = () => {console.flush(); console.Enabled = false;};
 
 // Rewrap FbProfiler to expose Name variable
 if (FbProfiler.prototype) {

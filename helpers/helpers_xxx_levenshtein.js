@@ -1,5 +1,7 @@
 ﻿'use strict';
-//21/11/21
+//25/12/23
+
+/* exported similarity */
 
 // Levenshtein distance
 // https://stackoverflow.com/questions/10473745/compare-strings-javascript-return-of-likely
@@ -20,7 +22,7 @@ function similarity(s1, s2) {
 function editDistance(s1, s2) {
 	s1 = s1.toLowerCase();
 	s2 = s2.toLowerCase();
-	
+
 	let costs = new Array();
 	for (let i = 0; i <= s1.length; i++) {
 		let lastValue = i;
@@ -31,8 +33,7 @@ function editDistance(s1, s2) {
 				if (j > 0) {
 					let newValue = costs[j - 1];
 					if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-						newValue = Math.min(Math.min(newValue, lastValue),
-						costs[j]) + 1;
+						newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
 					}
 					costs[j - 1] = lastValue;
 					lastValue = newValue;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//25/12/23
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta */
 
@@ -29,11 +29,17 @@ _createFolder(folders.temp);
 _createFolder(folders.userPresets);
 _createFolder(folders.userPresetsGlobal);
 // Add info files
-_save(folders.data + '_XXX-SCRIPTS_CONFIG_FILES', null);
-_save(folders.userHelpers + '_XXX-SCRIPTS_CONFIG_FILES', null);
-_save(folders.userPresets + '_XXX-SCRIPTS_CONFIG_FILES', null);
-_save(folders.userPresetsGlobal + '_DELETE_globQuery_TO_USE_SET_TAGS', null);
-_save(folders.temp + '_SAFE_TO_REMOVE_TEMP_FILES', null);
+console.disable();
+[
+	folders.data + '_XXX-SCRIPTS_CONFIG_FILES',
+	folders.userHelpers + '_XXX-SCRIPTS_CONFIG_FILES',
+	folders.userPresets + '_XXX-SCRIPTS_CONFIG_FILES',
+	folders.userPresetsGlobal + '_DELETE_globQuery_TO_REFRESH_TAGS',
+	folders.temp + '_SAFE_TO_REMOVE_TEMP_FILES'
+].forEach((file) => {
+	if (!_isFile(file)) {_save(file, '');}
+});
+console.enable();
 
 // Additional code to check for network drives: these don't have recycle bin so _recycleFile would always fail or show a prompt
 const mappedDrivesFile = folders.temp + 'mappedDrives.txt';
@@ -69,7 +75,7 @@ function _hasRecycleBin(drive) {
 }
 
 function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which is only usable on _explorer()
-	const folder = app.NameSpace(spaces.hasOwnProperty(name.toLowerCase()) ? spaces[name.toLowerCase()] : name);
+	const folder = app.NameSpace(Object.hasOwn(spaces, name.toLowerCase()) ? spaces[name.toLowerCase()] : name);
 	if (folder) {
 		const selfObj = folder.Self;
 		if (selfObj) {
@@ -81,7 +87,7 @@ function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which
 
 function _isFile(file) {
 	if (isCompatible('1.4.0', 'smp')) {try {return utils.IsFile(file);} catch (e) {return false;}}
-	else { //TODO: Deprecated
+	else {
 		if (file.startsWith('.\\')) {file = fb.FoobarPath + file.replace('.\\','');}
 		return isString(file) ? fso.FileExists(file) : false;
 	}
@@ -89,7 +95,7 @@ function _isFile(file) {
 
 function _isFolder(folder) {
 	if (isCompatible('1.4.0', 'smp')) {try {return utils.IsDirectory(folder);} catch (e) {return false;}}
-	else { //TODO: Deprecated
+	else {
 		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
 		return isString(folder) ? fso.FolderExists(folder) : false;
 	}
@@ -201,11 +207,11 @@ function _recycleFile(file, bCheckBin = false) {
 		if (bCheckBin && !_hasRecycleBin(file.match(/^(.+?:)/g)[0])) {bIsBin = false;}
 		if (bIsBin) {
 			try {
-				if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
+				if (utils.IsKeyPressed(VK_SHIFT)) {throw new Error('Shift');}
 				app.NameSpace(spaces.bin).MoveHere(file); // First nameSpace method (may not work on Unix systems)
 			} catch (e) {
 				try {
-					if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
+					if (utils.IsKeyPressed(VK_SHIFT)) {throw new Error('Shift');}
 					app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
 					// fso.GetFile(file).Delete(true);
 				} catch (e) {
@@ -473,7 +479,7 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 		const codepageName = plsText[1].split(':').pop();
 		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
 	} else if ((extension === '.xspf' || extension === '.asx' || extension === '.xsp') && plsText.length >= 2 && plsText[0].indexOf('encoding=') !== -1) {
-		const codepageName = plsText[0].match(/encoding="([\S]*)"/).pop();
+		const codepageName = plsText[0].match(/encoding="(\S*)"/).pop();
 		if (codepageName) {codepage = convertCharsetToCodepage(codepageName);}
 	} else if (bAdvancedCheck) {
 		if (plsText.length && plsText.some((line) => {
@@ -546,7 +552,7 @@ function sanitize(value) {
 function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	if (!value || !value.length) {return '';}
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
-	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/[\/]/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
+	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
 }
 /* eslint-enable  no-useless-escape */
 

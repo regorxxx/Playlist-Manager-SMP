@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//25/12/23
 
 /* exported addInstance, getInstancesByKey, removeInstance */
 
@@ -27,7 +27,7 @@ instances.id = window.ID; // Could be changed to an arbitrary Id per panel
 if (!_isFile(folders.xxxInstances)) {_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, '\t'));}
 else {
 	const newInstances = getInstances();
-	if (!newInstances || !newInstances.hasOwnProperty('date') || instances.date !== newInstances.date) {
+	if (!newInstances || !Object.hasOwn(newInstances, 'date') || instances.date !== newInstances.date) {
 		_deleteFile(folders.xxxInstances);
 		_save(folders.xxxInstances, JSON.stringify({date: instances.date}, null, '\t'));
 	}
@@ -37,7 +37,7 @@ function addInstance(newKey = window.Name) {
 	const newInstances = getInstances();
 	let bDone = false;
 	if (newInstances) {
-		if (newInstances.hasOwnProperty(newKey)) {newInstances[newKey].add(instances.id); bDone = true;}
+		if (Object.hasOwn(newInstances, newKey)) {newInstances[newKey].add(instances.id); bDone = true;}
 		else {newInstances[newKey] =  new Set([instances.id]); bDone = true;}
 	}
 	if (bDone) {_save(folders.xxxInstances, JSON.stringify(newInstances, (k, v) => {return SetReplacer(null, v);}, '\t'));}
@@ -59,7 +59,7 @@ function getInstancesByKey(key = window.Name) {
 function removeInstance(key = window.Name) {
 	const newInstances = getInstances();
 	let bDone = false;
-	if (newInstances && newInstances.hasOwnProperty(key) && newInstances[key].has(instances.id)) {
+	if (newInstances && Object.hasOwn(newInstances, key) && newInstances[key].has(instances.id)) {
 		newInstances[key].delete(instances.id);
 		if (newInstances[key].size === 0) {delete newInstances[key];}
 		bDone = true;

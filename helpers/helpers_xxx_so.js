@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//25/12/23
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -112,7 +112,6 @@ function initCheckFeatures(soFeat, bPopup = true) {
 		data = data ? JSON.parse(data) : null;
 	}
 	if (!bPrevFile || !data) {
-		data = soFeat;
 		bCheck = true;
 	} else {
 		for (const key in soFeat) {

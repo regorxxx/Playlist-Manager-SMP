@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//25/12/23
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists */
 
@@ -41,9 +41,9 @@ const playlistDescriptors = {
 	blank: /* ........................................................... */ { icon: '\uf15b', iconBg: null },
 	locked: /* ........................................................... */ { icon: '\uf023', iconBg: null }
 };
-const writablePlaylistFormats = new Set(); // Writable Formats
-const readablePlaylistFormats = new Set(); // Readable Formats (to retrieve paths)
-const loadablePlaylistFormats = new Set(); // loadable Formats (shown as files)
+const writablePlaylistFormats = new Set(); // NOSONAR [Writable Formats]
+const readablePlaylistFormats = new Set(); // NOSONAR [Readable Formats (to retrieve paths)]
+const loadablePlaylistFormats = new Set(); // NOSONAR [loadable Formats (shown as files)]
 Object.keys(playlistDescriptors).forEach((key) => {
 	if (playlistDescriptors[key].isWritable) { writablePlaylistFormats.add(key); }
 	if (playlistDescriptors[key].isReadable) { readablePlaylistFormats.add(key); }
@@ -67,7 +67,7 @@ const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 
 // Query cache (Library)
 // Makes consecutive playlist loading by queries much faster (for ex. .xspf fuzzy matching)
-const queryCache = new Map(); // {Query: handleList}
+const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
 const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($get(path)),iso),\',\'%SUBSONG%,)';
@@ -82,7 +82,10 @@ const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
 function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false }) {
-	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) { console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', ' + !!handleList)); return false; }
+	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) {
+		console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', handleList === false'));
+		return false;
+	}
 	const extension = ext.toLowerCase();
 	if (!writablePlaylistFormats.has(extension)) {
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
@@ -741,7 +744,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const conditions = [['TITLE', 'ARTIST', 'ALBUM', 'TRACK'], ['TITLE', 'ARTIST', 'ALBUM'], ['TRACK', 'ARTIST', 'ALBUM'], ['TITLE', 'ALBUM'], ['TITLE', 'ARTIST'], ['IDENTIFIER']];
 				const regExListenBrainz = typeof listenBrainz !== 'undefined'
 					? listenBrainz.regEx // eslint-disable-line no-undef
-					: /^(https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
+					: /(^https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
 				const sort = globQuery.remDuplBias; // TODO: add as argument?
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
