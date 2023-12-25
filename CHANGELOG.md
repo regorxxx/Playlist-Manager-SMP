@@ -54,6 +54,7 @@
 ### Added
 - Backup: added more backup procedures when editing playlists. Original file is restored in case of errors.
 - Statistics: new 'size' data mode for statistics, which shows statistics according to playlist's size (num of tracks) grouped by 25. Ex. Empty, >0, >25, >50, ... Clicking on any data point will filter the panel, as usual, with playlists with such condition.
+- Added integrity checks to global user settings files, found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\[...].json'. In particular queries are now check to ensure they are valid and will throw a popup at init otherwise. Other settings are check to ensure they contain valid values too.
 ### Changed
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
 - Helpers: updated helpers.

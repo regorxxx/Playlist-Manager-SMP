@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/23
+//25/12/23
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -16,11 +16,62 @@ function loadUserDefFile(def) {
 	if (_isFile(def._file)) {
 		const data = _jsonParseFileCheck(def._file, 'User definition file', window.Name, utf8);
 		if (data) {
+			const handleList = new FbMetadbHandleList();
+			const skipCheckKeys = ['_description', '_usage'];
 			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font' || def._type === 'Setting') {
 				for (const key in data) {
 					if (Object.hasOwn(def, key)) {
 						def[key] = data[key];
-						// TODO: add TF checking?
+						if (!skipCheckKeys.includes(key)) {
+							if (def._type === 'Query' || def._type === 'TF') {
+								if (!def[key] || !def[key].length) {
+									fb.ShowPopupMessage(
+										'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
+										'\n\nValue is empty. It must be filled.'
+										, 'Loading config from ' + def._file
+									);
+								}
+								if (def._type === 'Query') {
+									try {
+										fb.GetQueryItems(handleList, def[key]);
+										fb.GetQueryItems(handleList, '* HAS \'\' AND (' + def[key] + ')');
+									} catch (e) {
+										fb.ShowPopupMessage(
+											'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
+											'\n' + def[key] +
+											'\n\nQuery non valid.'
+											, 'Loading config from ' + def._file
+										);
+									}
+								}
+							} else if (def._type === 'Setting') {
+								if (typeof def[key] !== 'boolean') {
+									fb.ShowPopupMessage(
+										'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
+										'\n' + def[key] +
+										'\n\nNot a boolean value (true/false).'
+										, 'Loading config from ' + def._file
+									);
+								}
+							} else if (def._type === 'Font') {
+								if (!def[key] || !def[key].name || !def[key].name.length) {
+									fb.ShowPopupMessage(
+										'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
+										'\n' + def[key] +
+										'\n\nNo font name provided.'
+										, 'Loading config from ' + def._file
+									);
+								} else if (!def[key].size || typeof def[key].size !== 'number') {
+									fb.ShowPopupMessage(
+										'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
+										'\n' + def[key] +
+										'\n\nNo font size provided.'
+										, 'Loading config from ' + def._file
+									);
+									def[key].size = 10;
+								}
+							}
+						}
 					} else {bSave = true;}
 				}
 			} else if (def._type === 'RegExp') {
@@ -135,7 +186,7 @@ const globQuery = {
 	live: globTags.genre + ' IS live OR ' + globTags.style + ' IS live',
 	hifi: globTags.style + ' IS hi-fi',
 	SACD: '%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64',
-	recent: '%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS', name: 'Played this month',
+	recent: '%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS',
 	loved: globTags.feedback + ' IS 1',
 	hated: globTags.feedback + ' IS -1',
 };
