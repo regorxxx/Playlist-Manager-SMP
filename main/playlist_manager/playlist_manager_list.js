@@ -5061,7 +5061,7 @@ function _list(x, y, w, h) {
 						// But it will fail as soon as any track is not found on library
 						// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 						const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl);
+						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl, this.bAdvTitle);
 						if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
 						else if (pls.query) { // Update size on load for smart playlists
 							const handleList = plman.GetPlaylistItems(fbPlaylistIndex);

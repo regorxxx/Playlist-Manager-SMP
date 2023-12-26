@@ -71,6 +71,7 @@
 - Exporting Playlists: crash while reporting malformed .xsp playlist.
 - XSP: wrong cache handling for .xsp playlist when rewriting the queries.
 - XSP: UI-only playlists were not working as playlist sources.
+- Remove duplicates: advanced RegEx title matching option not being applied in some cases.
 - Minor fixes.
 
 ## [0.12.1] - 2023-12-09
