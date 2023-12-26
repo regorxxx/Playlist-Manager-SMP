@@ -1,7 +1,7 @@
 ﻿'use strict';
-//17/12/23
+//26/12/23
 
-/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandleFromUIPlaylists, getLocks */
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandleFromUIPlaylists, getLocks, setLocks */
 
 include('helpers_xxx_prototypes.js');
 /* global range:readable, isArrayNumbers:readable */
@@ -88,7 +88,7 @@ function arePlaylistNamesDuplicated() {
 		names.add(plman.GetPlaylistName(i));
 		i++;
 	}
-	return !(names.size === count);
+	return (names.size !== count);
 }
 
 // Playlists with same name
@@ -153,4 +153,29 @@ function getLocks(plsName) {
 	const isSMPLock = name === 'foo_spider_monkey_panel' || !name;
 	const isLocked = types.length ? true : false;
 	return {isLocked , isSMPLock, name, types, index};
+}
+
+function setLocks(playlistIndex, lockTypes, logic = 'add' /* add|switch|remove*/) {
+	if (playlistIndex === -1) {return false;}
+	let newLocks = new Set(plman.GetPlaylistLockedActions(playlistIndex) || []);
+	const lockName = plman.GetPlaylistLockName(playlistIndex);
+	if (lockName === 'foo_spider_monkey_panel' || !lockName) {
+		switch (logic.toLowerCase()) {
+			case 'switch':
+				lockTypes.forEach((lock) => {
+					if (newLocks.has(lock)) {newLocks.delete(lock);}
+					else {newLocks.add(lock.type);}
+				});
+				break;
+			case 'remove':
+				newLocks = newLocks.difference(new Set(lockTypes));
+				break;
+			case 'add':
+			default:
+				newLocks = newLocks.union(new Set(lockTypes));
+		}
+		plman.SetPlaylistLockedActions(playlistIndex, [...newLocks]);
+		return true;
+	}
+	return false;
 }

@@ -19,7 +19,7 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getLocks:readable, getPlaylistIndexArray:readable, getHandleFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable */
+/* global getLocks:readable, getPlaylistIndexArray:readable, getHandleFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global oPlaylist:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, xspfCache:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, xspCache:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
@@ -5071,6 +5071,9 @@ function _list(x, y, w, h) {
 							}, true);
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 								this.updateTags(handleList, pls);
+							}
+							if (pls.extension === '.xsp') {
+								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '','ExecuteDefaultAction'].filter(Boolean));
 							}
 						}
 						if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...

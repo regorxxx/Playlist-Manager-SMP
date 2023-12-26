@@ -58,6 +58,7 @@
 ### Changed
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
 - Helpers: updated helpers.
+- XSP: Smart playlists are now locked when loading them, similar to AutoPlaylists behavior. If there is no sorting, then tracks can be reorder, otherwise sorting is also locked.
 - XSP: improved caching in multiple playlist actions.
 - XSPF: improved caching in multiple playlist actions.
 - UI: optimized repainting to use less resources on statistics mode.
