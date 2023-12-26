@@ -3067,9 +3067,9 @@ function _list(x, y, w, h) {
 				this.dataXsp.forEach((plsXsp) => {
 					if (plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId)) {
 						const { handlePlaylist } = getHandlesFromPlaylist(plsXsp.path, this.playlistsPath, void (0), remDupl, this.bAdvTitle);
-						if (!handlePlaylist) {return;}
+						if (!handlePlaylist) { return; }
 						const duplicated = getPlaylistIndexArray(plsXsp.nameId);
-						if (duplicated.length === 1 ) {
+						if (duplicated.length === 1) {
 							setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'remove');
 							plman.UndoBackup(duplicated[0]);
 							plman.ClearPlaylist(duplicated[0]);
@@ -5108,7 +5108,7 @@ function _list(x, y, w, h) {
 								this.updateTags(handleList, pls);
 							}
 							if (pls.extension === '.xsp') {
-								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '','ExecuteDefaultAction'].filter(Boolean));
+								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
 							}
 						}
 						if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
