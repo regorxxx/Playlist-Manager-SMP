@@ -2296,7 +2296,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.properties['bUpdateAutoplaylist'][1] = (i === 0) ? true : false; // True will force a refresh on script loading
+						list.properties['bUpdateAutoplaylist'][1] = i === 0; // True will force a refresh on script loading
 						overwriteProperties(list.properties);
 						if (list.properties['bUpdateAutoplaylist'][1]) {
 							fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
@@ -2314,6 +2314,22 @@ function createMenuRightTop() {
 				}, flags: list.bAutoTrackTagAutoPlsInit ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenu(subMenuName, 'Block panel while updating?', void (0), () => { return list.properties.bBlockUpdateAutoPls[1]; });
+		}
+		if (!list.bLiteMode) {	// Smart Playlists
+			const subMenuName = menu.newMenu('Update Smart Playlists...', menuName);
+			const options = ['Yes: Automatically on source(s) changes', 'No: Only when loading them'];
+			const optionsLength = options.length;
+			menu.newEntry({ menuName: subMenuName, entryText: 'Refresh tracks and metadata:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			options.forEach((item, i) => {
+				menu.newEntry({
+					menuName: subMenuName, entryText: item, func: () => {
+						list.bAutoRefreshXsp = list.properties['bAutoRefreshXsp'][1] = i === 0;
+						overwriteProperties(list.properties);
+					}
+				});
+			});
+			menu.newCheckMenuLast(() => (list.properties['bAutoRefreshXsp'][1] ? 0 : 1), optionsLength);
 		}
 		{	// AutoPlaylist / Smart Playlists loading duplicates
 			const subMenuName = menu.newMenu('Duplicates filter...', menuName);
@@ -4270,10 +4286,10 @@ function createMenuSearch() {
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Auto-search', func: () => {
 				list.searchMethod.bAutoSearch = !list.searchMethod.bAutoSearch;
-				list.searchInput.autovalidation = list.searchMethod.bAutoSearch;
+				list.searchInput.autoValidation = list.searchMethod.bAutoSearch;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				overwriteProperties(list.properties);
-				if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prevText.length) {
+				if (list.searchInput.autoValidation && list.searchInput.text.length || list.searchInput.prevText.length) {
 					list.search();
 				}
 			}
@@ -4284,7 +4300,7 @@ function createMenuSearch() {
 				list.searchMethod.bRegExp = !list.searchMethod.bRegExp;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				overwriteProperties(list.properties);
-				if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prevText.length) {
+				if (list.searchInput.autoValidation && list.searchInput.text.length || list.searchInput.prevText.length) {
 					list.search();
 				}
 				if (list.searchMethod.bRegExp) {
@@ -4310,7 +4326,7 @@ function createMenuSearch() {
 				list.searchMethod.bSimpleFuzzy = !list.searchMethod.bSimpleFuzzy;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				list.checkConfigPostUpdate();
-				if (list.searchInput.autovalidation && list.searchInput.text.length || list.searchInput.prevText.length) {
+				if (list.searchInput.autoValidation && list.searchInput.text.length || list.searchInput.prevText.length) {
 					list.search();
 				}
 				overwriteProperties(list.properties);
@@ -4365,7 +4381,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				let pass = '';
-				try { pass = utils.InputBox(window.ID, 'Enter a passowrd:\n(will be required on every use)', window.Name, pass, true); }
+				try { pass = utils.InputBox(window.ID, 'Enter a password:\n(will be required on every use)', window.Name, pass, true); }
 				catch (e) { return false; }
 				if (!pass.length) { return false; }
 				lBrainzToken = new SimpleCrypto(pass).encrypt(lBrainzToken);

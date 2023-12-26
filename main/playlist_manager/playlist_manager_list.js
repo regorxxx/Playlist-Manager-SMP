@@ -609,7 +609,7 @@ function _list(x, y, w, h) {
 							this.searchInput.text = this.searchMethod.text;
 							this.search();
 						}
-						this.searchInput.autovalidation = this.searchMethod.bAutoSearch;
+						this.searchInput.autoValidation = this.searchMethod.bAutoSearch;
 					}
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
 					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
@@ -3050,12 +3050,48 @@ function _list(x, y, w, h) {
 		// playlistIndex: We have a foobar2000 playlist and we iterate over playlist files
 		// Or we have the playlist file and we iterate over foobar2000 playlists
 		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) { return false; }
+		const playlistNameId = (bCallback) ? plman.GetPlaylistName(playlistIndex) : this.data[playlistIndex].nameId;
+		if (this.itemsXsp && this.bAutoRefreshXsp) { // Refresh XSP playlists using playlist sources
+			let bRefresh = true;
+			if (bCallback) {
+				if (this.lastPlsLoaded.length) { // skip auto-update for the last loaded playlists
+					const idx = this.lastPlsLoaded.findIndex((pls) => { return playlistNameId === pls.nameId; });
+					if (idx !== -1) {
+						const pls = this.lastPlsLoaded[idx];
+						if (pls.isAutoPlaylist || pls.query || pls.extension === '.ui' || pls.size === plman.PlaylistItemCount(playlistIndex)) { bRefresh = false; }
+					}
+				}
+			}
+			if (bRefresh) {
+				const remDupl = this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+				this.dataXsp.forEach((plsXsp) => {
+					if (plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId)) {
+						const { handlePlaylist } = getHandlesFromPlaylist(plsXsp.path, this.playlistsPath, void (0), remDupl, this.bAdvTitle);
+						if (!handlePlaylist) {return;}
+						const duplicated = getPlaylistIndexArray(plsXsp.nameId);
+						if (duplicated.length === 1 ) {
+							setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'remove');
+							plman.UndoBackup(duplicated[0]);
+							plman.ClearPlaylist(duplicated[0]);
+							plman.InsertPlaylistItems(duplicated[0], 0, handlePlaylist);
+							setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'add');
+						}
+						this.editData(plsXsp, {
+							size: handlePlaylist.Count,
+							duration: handlePlaylist.CalcTotalDuration()
+						}, true);
+						if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handlePlaylist.Count) {
+							this.updateTags(handlePlaylist, plsXsp);
+						}
+					}
+				});
+			}
+		}
 		if (bCallback) {
 			if (playlistIndex >= plman.PlaylistCount) { return false; } //May have deleted a playlist before delaying the update... so there is nothing to update
 			if (plman.IsAutoPlaylist(playlistIndex)) { return false; } // Always skip updates for AutoPlaylists
 			if (this.lastPlsLoaded.length) { // skip auto-update for the last loaded playlists
-				const nameId = plman.GetPlaylistName(playlistIndex);
-				const idx = this.lastPlsLoaded.findIndex((pls) => { return nameId === pls.nameId; });
+				const idx = this.lastPlsLoaded.findIndex((pls) => { return playlistNameId === pls.nameId; });
 				if (idx !== -1) {
 					const pls = this.lastPlsLoaded.splice(idx, 1)[0]; // Remove from list
 					// Always skip updates for AutoPlaylists, ui-only playlists and skip update if no change was made (omits reordering before autosave fires!)
@@ -3081,7 +3117,6 @@ function _list(x, y, w, h) {
 		else if (this.data[playlistIndex].extension === '.ui') { return false; } // Always skip updates for ui only playlists
 		// TODO: Allow linking an AutoPlaylist to a file and convert it to standard playlist on saving (?)
 		const numPlaylist = (bCallback) ? this.itemsAll : plman.PlaylistCount;
-		const playlistNameId = (bCallback) ? plman.GetPlaylistName(playlistIndex) : this.data[playlistIndex].nameId;
 		const playlistName = removeIdFromStr(playlistNameId);
 		for (let i = 0; i < numPlaylist; i++) {
 			const i_pnameId = (bCallback) ? this.dataAll[i].nameId : plman.GetPlaylistName(i);
@@ -5929,6 +5964,7 @@ function _list(x, y, w, h) {
 	this.optionUUID = this.properties['optionUUID'][1];
 	this.bFplLock = this.properties['bFplLock'][1];
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
+	this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
 	// UI
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bShowSep = this.properties['bShowSep'][1];
