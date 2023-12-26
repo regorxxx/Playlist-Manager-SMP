@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//26/12/23
 
 /* exported _list */
 
@@ -5140,15 +5140,18 @@ function _list(x, y, w, h) {
 					handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 					this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); // Update size on load
 				}
-			} else { // Or file
-				if (_isFile(pls.path)) {
-					// Try to load handles from library first, greatly speeds up non fpl large playlists
-					// But it will fail as soon as any track is not found on library
-					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-					handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void (0), remDupl);
-					if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
-				} else { console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
+			} else if (pls.extension === '.ui') {
+				handleList = getHandleFromUIPlaylists([pls.nameId], false);
+				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }
+			} else if (_isFile(pls.path)) { // Or file
+				// Try to load handles from library first, greatly speeds up non fpl large playlists
+				// But it will fail as soon as any track is not found on library
+				// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
+				const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+				handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void (0), remDupl);
+				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
+			} else {
+				console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
 			}
 			return handleList || new FbMetadbHandleList();
 		};
@@ -5408,10 +5411,10 @@ function _list(x, y, w, h) {
 				bDone = true;
 			}
 			if (this.searchInput) {
-				this.searchInput.textcolor = panel.colors.highlight;
-				this.searchInput.backcolor = panel.getColorBackground();
-				this.searchInput.bordercolor = panel.getColorBackground();
-				this.searchInput.backselectioncolor = this.colors.selectedPlaylistColor;
+				this.searchInput.textColor = panel.colors.highlight;
+				this.searchInput.backColor = panel.getColorBackground();
+				this.searchInput.borderColor = panel.getColorBackground();
+				this.searchInput.backSelectionColor = this.colors.selectedPlaylistColor;
 			}
 			// Check Shortcuts
 			const shortcutsL = this.getDefaultShortcuts('L');

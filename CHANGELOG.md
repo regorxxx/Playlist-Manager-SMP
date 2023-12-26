@@ -70,6 +70,7 @@
 - Exporting Playlists: error while exporting an AutoPlaylist with sorting.
 - Exporting Playlists: crash while reporting malformed .xsp playlist.
 - XSP: wrong cache handling for .xsp playlist when rewriting the queries.
+- XSP: UI-only playlists were not working as playlist sources.
 - Minor fixes.
 
 ## [0.12.1] - 2023-12-09
