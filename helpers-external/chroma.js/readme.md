@@ -1,6 +1,6 @@
-# Chroma.js
+# ![chromaicon](docs/assets/favicon/web-icon.png) Chroma.js
 
-[Chroma.js](https://vis4.net/chromajs/) is a ~~tiny~~ [small-ish](https://bundlephobia.com/result?p=chroma-js) zero-dependency JavaScript library ([13.5kB](https://bundlephobia.com/result?p=chroma-js)) for all kinds of color conversions and color scales.
+[Chroma.js](https://regorxxx.github.io/chroma.js/) is a ~~tiny~~ [small-ish](https://bundlephobia.com/result?p=chroma-js) zero-dependency JavaScript library ([13.5kB](https://bundlephobia.com/result?p=chroma-js)) for all kinds of color conversions and color scales. **Revived with new features and maintained.**
 
 [![Build Status](https://api.travis-ci.com/gka/chroma.js.svg?branch=master)](https://travis-ci.com/gka/chroma.js)
 
@@ -51,7 +51,7 @@ chroma.scale(['lightyellow', 'navy']).domain([1, 100000], 7, 'log');
 
 ### Like it?
 
-Why not dive into the [interactive documentation](http://gka.github.io/chroma.js/) (there's a [static version](https://github.com/gka/chroma.js/blob/master/docs/src/index.md), too). You can download [chroma.min.js](https://raw.github.com/gka/chroma.js/master/chroma.min.js) or use the [hosted version on cdnjs.com](https://cdnjs.com/libraries/chroma-js).
+Why not dive into the [interactive documentation](https://regorxxx.github.io/chroma.js/) (there's a [static version](https://github.com/regorxxx/chroma.js/blob/master/docs/src/index.md), too). You can download [chroma.min.js](https://raw.github.com/regorxxx/chroma.js/master/chroma.min.js).
 
 You can use it in node.js, too!
 
@@ -63,7 +63,7 @@ Or you can use it in SASS using [chromatic-sass](https://github.com/bugsnag/chro
 
 First clone the repository and install the dev dependencies:
 
-    git clone git@github.com:gka/chroma.js.git
+    git clone git@github.com:regorxxx/chroma.js.git
     cd chroma.js
     npm install
 
@@ -85,6 +85,7 @@ To preview the docs locally you can use
 
 ### Similar Libraries / Prior Art
 
+* [Original chroma.js](https://github.com/gka/chroma.js)
 * [Chromatist](https://github.com/jrus/chromatist)
 * [GrapeFruit](https://github.com/xav/Grapefruit) (Python)
 * [colors.py](https://github.com/mattrobenolt/colors.py) (Python)
@@ -93,7 +94,7 @@ To preview the docs locally you can use
 
 ### Author
 
-Chroma.js is written by [Gregor Aisch](http://driven-by-data.net).
+Chroma.js is written by [Gregor Aisch](http://driven-by-data.net) and updated by [regoxxx](https://github.com/regorxxx).
 
 ### License
 
@@ -109,4 +110,4 @@ Versions prior to 0.4 were released under [GPL](http://www.gnu.org/licenses/gpl-
 
 **There have been no commits in X weeks. Is chroma.js dead?**
 
-No! It's just that the author of this library has other things to do than devoting every week of his life to making cosmetic changes to a piece of software that is working just fine as it is, just so that people like you don't feel like it's abandoned and left alone in this world to die. Bugs will be fixed. Some new things will come at some point. Patience.
+Yes! That's why it has been forked and now maintained here.
