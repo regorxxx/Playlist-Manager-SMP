@@ -576,7 +576,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	this.prevText = '';
 	this.func = func;
 	let timer = false;
-	this.autovalidation = false;
+	this.autoValidation = false;
 	this.edit = false;
 	this.select = false;
 	this.hover = false;
@@ -1502,7 +1502,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		}
 
 		// autosearch: has text changed after on_key or on_char ?
-		if (this.autovalidation && this.func) {
+		if (this.autoValidation && this.func) {
 			if (this.text !== this.prevText) {
 				// launch timer to process the search
 				timer && window.ClearTimeout(timer);
@@ -1553,7 +1553,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		}
 
 		// autosearch: has text changed after on_key or on_char ?
-		if (this.autovalidation && this.func) {
+		if (this.autoValidation && this.func) {
 			if (this.text !== this.prevText) {
 				// launch timer to process the search
 				timer && window.ClearTimeout(timer);
