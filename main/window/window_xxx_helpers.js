@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//26/12/23
 
 // Dummy file to load existing helpers or independent file
 {
@@ -10,7 +10,10 @@
 		include('..\\..\\helpers\\helpers_xxx.js');
 		include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 		include('..\\..\\helpers\\helpers_xxx_prototypes_smp.js');
+		include('..\\..\\helpers\\menu_xxx.js');
 	} else {
 		include('window_xxx_helpers_fallback.js');
+		include('menu_xxx.js');
+		include(fb.ComponentPath + 'docs\\Flags.js');
 	}
 }

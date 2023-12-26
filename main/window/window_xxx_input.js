@@ -1,10 +1,10 @@
 ﻿'use strict';
-//24/12/23
+//26/12/23
 
-/* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox */
+/* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
 include('window_xxx_helpers.js');
-/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _gr:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, */
+/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _gr:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, IDC_HAND:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_SINGLELINE:readable, DT_END_ELLIPSIS:readable, IDC_IBEAM:readable, IDC_ARROW:readable, DT_END_ELLIPSIS:readable, MF_STRING:readable, MF_GRAYED:readable, MF_DISABLED:readable, VK_DELETE:readable, VK_HOME:readable, VK_SHIFT:readable, VK_ESCAPE:readable, VK_BACK:readable, VK_RETURN:readable, VK_LEFT:readable, VK_END:readable , VK_RIGHT:readable */
 
@@ -323,7 +323,141 @@ function _dropdownList({ x, y, size = 4, value = false, shape = 'square', color 
 	};
 }
 
-function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), description = '', icon = null, gFontIcon = _gdiFont('FontAwesome', 12)) {
+function _buttonList(
+	x, y, w, h,
+	text,
+	func,
+	gFont = _gdiFont('Segoe UI', 12),
+	description = '',
+	icon = function () {
+		return this.opened
+			? '\u25BC '
+			: '\u25B6';
+	},
+	gFontIcon = _gdiFont('FontAwesome', 12)
+) {
+	this.state = buttonStates.normal;
+	this.x = x;
+	this.y = y;
+	this.w = w;
+	this.h = h;
+	this.originalWindowWidth = window.Width;
+	this.gTheme = window.CreateThemeManager('Button');
+	this.gFont = gFont;
+	this.gFontIcon = gFontIcon;
+	this.description = description;
+	this.tt = '';
+	this.text = text;
+	this.textWidth = isFunction(this.text) ? () => { return _gr.CalcTextWidth(this.text(), gFont); } : _gr.CalcTextWidth(this.text, gFont);
+	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+	this.iconWidth = isFunction(this.icon) ? () => { return _gr.CalcTextWidth(this.icon(), gFontIcon); } : _gr.CalcTextWidth(this.icon, gFontIcon);
+	this.opened = false;
+	this.menuFunc = (values, current) => {
+		this.opened = true;
+		const menu = new _menu({ onBtnUp: () => { this.opened = false; } });
+		values.forEach((item) => {
+			const padWidth = _gr.CalcTextWidth(' ', _gdiFont('Arial', _scale(11)));
+			const count = this.w  / padWidth;
+			let padText = ' '.repeat(count / 2);
+			let entryText = padText + item + padText;
+			let diff = _gr.CalcTextWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
+			while (Math.abs(diff) > padWidth) {
+				if (diff > 0) { padText = padText.substring(1); }
+				else { padText += ' '; }
+				entryText = padText + item + padText;
+				diff = _gr.CalcTextWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
+			}
+			menu.newEntry({ entryText, func: () => { this.text = item; } });
+		});
+		menu.newCheckMenuLast(() => values.indexOf(current), values.length);
+		menu.btn_up(this.x, this.y + this.h, void (0), void (0), void (0), void (0), TPM_TOPALIGN);
+		return true;
+	};
+	this.func = func;
+
+	this.containXY = function (x, y) {
+		const xCalc = isFunction(this.x) ? this.x() : this.x;
+		const yCalc = isFunction(this.y) ? this.y() : this.y;
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		return (xCalc <= x) && (x <= xCalc + wCalc) && (yCalc <= y) && (y <= yCalc + hCalc);
+	};
+
+	this.move = function (x, y, tt) {
+		if (this.containXY(x, y)) {
+			this.changeState(buttonStates.hover, tt);
+		} else {
+			this.changeState(buttonStates.normal, tt);
+		}
+	};
+
+	this.changeState = function (state, ttArg) {
+		let old = this.state;
+		this.state = state;
+		if (state === buttonStates.hover) {
+			this.tt = isFunction(this.description) ? this.description(ttArg).toString() : this.description;
+			window.SetCursor(IDC_HAND);
+		} else { this.tt = ''; }
+		if (state !== old) { this.repaint(); }
+		return old;
+	};
+
+	this.paint = function (gr, x = this.x, y = this.y) {
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		if (wCalc <= 0 || hCalc <= 0) { return; }
+		if (this.state === buttonStates.hide) {
+			return;
+		}
+
+		switch (this.state) {
+			case buttonStates.normal:
+				this.gTheme.SetPartAndStateID(1, 1);
+				break;
+
+			case buttonStates.hover:
+				this.gTheme.SetPartAndStateID(1, 2);
+				break;
+
+			case buttonStates.down:
+				this.gTheme.SetPartAndStateID(1, 3);
+				break;
+
+			case buttonStates.hide:
+				return;
+		}
+
+		const xCalc = isFunction(x) ? x() : x;
+		const yCalc = isFunction(y) ? y() : y;
+
+		this.gTheme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
+		const offset = 10;
+		if (this.icon !== null) {
+			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
+			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(iconCalculated, this.gFontIcon, RGB(0, 0, 0), xCalc + offset, yCalc, wCalc - iconWidthCalculated - offset, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
+			if (wCalc > iconWidthCalculated * 4 + offset * 4) {
+				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + iconWidthCalculated, yCalc, wCalc - offset, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			} else {
+				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + offset * 2 + iconWidthCalculated, yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			}
+		} else {
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+		}
+	};
+
+	this.repaint = () => {
+		window.RepaintRect(this.x, this.y, this.w, this.h);
+	};
+
+	this.onClick = function (values, current) {
+		return this.menuFunc(values, current) && (this.func && this.func(values, current) || !this.func);
+	};
+}
+
+function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), description = '', icon = null, gFontIcon = _gdiFont('FontAwesome', 12)) {
 	this.state = buttonStates.normal;
 	this.x = x;
 	this.y = y;
@@ -425,20 +559,20 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
 // Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
-function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercolor, backselectioncolor, func, parent = null, helpFile = null) {
+function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.fontItalic = _gdiFont('Segoe UI', _scale(10), 2);
 	this.w = w;
 	this.h = h;
-	this.textcolor = textcolor;
-	this.backcolor = backcolor;
-	this.bordercolor = bordercolor;
-	this.backselectioncolor = backselectioncolor;
+	this.textColor = textColor;
+	this.backColor = backColor;
+	this.borderColor = borderColor;
+	this.backSelectionColor = backSelectionColor;
 	this.defaultText = defaultText;
 	this.text = defaultText;
 	this.emptyText = emptyText;
-	this.stext = '';
+	this.sText = '';
 	this.prevText = '';
 	this.func = func;
 	let timer = false;
@@ -469,18 +603,18 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 			: DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT | DT_END_ELLIPSIS;
 		// draw bg
 		gr.SetSmoothingMode(0);
-		if (this.bordercolor) {
-			gr.FillSolidRect(x - 2, y + 0, (this.w + 4), this.h - 0, this.bordercolor);
+		if (this.borderColor) {
+			gr.FillSolidRect(x - 2, y + 0, (this.w + 4), this.h - 0, this.borderColor);
 		}
-		gr.FillSolidRect(x - 1, y + 1, (this.w + 2), this.h - 2, this.backcolor);
+		gr.FillSolidRect(x - 1, y + 1, (this.w + 2), this.h - 2, this.backColor);
 
 		// adjust offset to always see the cursor
 		if (!this.drag && !this.select) {
-			this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
+			this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset, this.Cpos), this.font);
 			if (this.Cx) {
 				while (this.Cx >= this.w - this.rightMargin) {
 					this.offset++;
-					this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
+					this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset, this.Cpos), this.font);
 				}
 			}
 		}
@@ -499,9 +633,9 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 				this.textSelected = this.text.substring(this.SelEnd, this.SelBegin);
 			}
 			if ((this.x + px1 + (px2 - px1)) > this.x + this.w) {
-				gr.FillSolidRect(this.x + px1, this.y + 2, this.w - px1, this.h - 4, blendColors(this.backselectioncolor, this.backcolor, 0.2));
+				gr.FillSolidRect(this.x + px1, this.y + 2, this.w - px1, this.h - 4, blendColors(this.backSelectionColor, this.backColor, 0.2));
 			} else {
-				gr.FillSolidRect(this.x + px1, this.y + 2, px2 - px1, this.h - 4, blendColors(this.backselectioncolor, this.backcolor, 0.2));
+				gr.FillSolidRect(this.x + px1, this.y + 2, px2 - px1, this.h - 4, blendColors(this.backSelectionColor, this.backColor, 0.2));
 			}
 		} else {
 			this.select = false;
@@ -512,30 +646,30 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 		if (this.text.length > 0) {
 			if (this.select && this.offset < this.SelBegin || this.offset < this.SelEnd) {
 				if (this.offset < this.SelBegin) {
-					const text = this.SelBegin < this.SelEnd ? [this.text.substring(this.offset, this.SelBegin), this.text.substring(this.SelBegin, this.SelEnd), this.text.substr(this.SelEnd)] : [this.text.substring(this.offset, this.SelEnd), this.text.substring(this.SelEnd, this.SelBegin), this.text.substr(this.SelBegin)];
+					const text = this.SelBegin < this.SelEnd ? [this.text.substring(this.offset, this.SelBegin), this.text.substring(this.SelBegin, this.SelEnd), this.text.substring(this.SelEnd)] : [this.text.substring(this.offset, this.SelEnd), this.text.substring(this.SelEnd, this.SelBegin), this.text.substring(this.SelBegin)];
 					const textWidth = text.map((t) => { return gr.CalcTextWidth(t, this.font); });
-					gr.GdiDrawText(text[0], this.font, this.edit ? this.textcolor : blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, textWidth[0], this.h, DT);
+					gr.GdiDrawText(text[0], this.font, this.edit ? this.textColor : blendColors(this.textColor, (this.backColor == 0 ? 0xff000000 : this.backColor), 0.35), this.x, this.y, textWidth[0], this.h, DT);
 					gr.GdiDrawText(text[1], this.font, 0xFFFFFFFF, this.x + textWidth[0], this.y, this.w - textWidth[0], this.h, DT);
-					gr.GdiDrawText(text[2], this.font, this.edit ? this.textcolor : blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x + textWidth[0] + textWidth[1], this.y, this.w - textWidth[0] - textWidth[1], this.h, DT);
+					gr.GdiDrawText(text[2], this.font, this.edit ? this.textColor : blendColors(this.textColor, (this.backColor == 0 ? 0xff000000 : this.backColor), 0.35), this.x + textWidth[0] + textWidth[1], this.y, this.w - textWidth[0] - textWidth[1], this.h, DT);
 				} else if (this.offset < this.SelEnd) {
-					const text = [this.text.substring(this.offset, this.SelEnd), this.text.substr(this.SelEnd)];
+					const text = [this.text.substring(this.offset, this.SelEnd), this.text.substring(this.SelEnd)];
 					const textWidth = text.map((t) => { return gr.CalcTextWidth(t, this.font); });
 					gr.GdiDrawText(text[0], this.font, 0xFFFFFFFF, this.x, this.y, this.w > textWidth[0] ? textWidth[0] : this.w, this.h, DT);
-					gr.GdiDrawText(text[1], this.font, this.textcolor, this.x + textWidth[0], this.y, this.w - textWidth[0], this.h, DT);
+					gr.GdiDrawText(text[1], this.font, this.textColor, this.x + textWidth[0], this.y, this.w - textWidth[0], this.h, DT);
 				}
 			} else {
-				gr.GdiDrawText(this.text.substr(this.offset), this.font, this.edit ? this.textcolor : blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
+				gr.GdiDrawText(this.text.substring(this.offset), this.font, this.edit ? this.textColor : blendColors(this.textColor, (this.backColor == 0 ? 0xff000000 : this.backColor), 0.35), this.x, this.y, this.w, this.h, DT);
 			}
 		} else {
-			gr.GdiDrawText(this.emptyText, this.fontItalic, blendColors(this.textcolor, (this.backcolor === 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
+			gr.GdiDrawText(this.emptyText, this.fontItalic, blendColors(this.textColor, (this.backColor === 0 ? 0xff000000 : this.backColor), 0.35), this.x, this.y, this.w, this.h, DT);
 		}
 		// draw cursor
 		if (this.edit && !this.select) {
-			this.drawcursor(gr);
+			this.drawCursor(gr);
 		}
 	};
 
-	this.drawcursor = function (gr) {
+	this.drawCursor = function (gr) {
 		if (cInputbox.cursorState) {
 			if (this.Cpos >= this.offset) {
 				this.Cx = this.getCx(this.Cpos);
@@ -544,7 +678,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 				const y1 = this.y + 1;
 				const y2 = this.y + this.h - 3;
 				const lt = 1;
-				gr.DrawLine(x1, y1, x2, y2, lt, this.textcolor);
+				gr.DrawLine(x1, y1, x2, y2, lt, this.textColor);
 			}
 		}
 	};
@@ -560,11 +694,11 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 	};
 
 	this.calcText = function () {
-		this.TWidth = _gr.CalcTextWidth(this.text.substr(this.offset), this.font);
+		this.TWidth = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
 	};
 
 	this.getCx = function (pos) {
-		return (pos >= this.offset ? _gr.CalcTextWidth(this.text.substr(this.offset, pos - this.offset), this.font) : 0);
+		return (pos >= this.offset ? _gr.CalcTextWidth(this.text.substring(this.offset, pos), this.font) : 0);
 	};
 
 	this.getCPos = function (x) {
@@ -572,7 +706,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 		let pos = 0;
 		let i;
 		for (i = this.offset; i < this.text.length; i++) {
-			pos += _gr.CalcTextWidth(this.text.substr(i, 1), this.font);
+			pos += _gr.CalcTextWidth(this.text.substring(i, i + 1), this.font);
 			if (pos >= tx + 3) {
 				break;
 			}
@@ -750,7 +884,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 	this.showContextMenu = function (x, y) {
 		const _menu = window.CreatePopupMenu();
 		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
-		_menu.AppendMenuItem(this.stext.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Undo');
+		_menu.AppendMenuItem(this.sText.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Undo');
 		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Copy');
@@ -765,7 +899,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 		const idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
 			case 1:
-				if (this.edit && this.stext.length) {
+				if (this.edit && this.sText.length) {
 					this.on_key(90, kMask.ctrl);
 				}
 				break;
@@ -851,7 +985,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					break;
 				case VK_ESCAPE:
 					if (this.text.length) {
-						this.stext = this.text;
+						this.sText = this.text;
 						this.text = '';
 						this.Cpos = 0;
 						this.SelBegin = 0;
@@ -864,7 +998,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					break;
 				case VK_BACK:
 					//save text before update
-					this.stext = this.text;
+					this.sText = this.text;
 					if (this.edit) {
 						if (this.select) {
 							if (this.textSelected.length == this.text.length) {
@@ -881,7 +1015,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 							}
 						} else {
 							if (this.Cpos > 0) {
-								this.text = this.text.substr(0, this.Cpos - 1) + this.text.substr(this.Cpos, this.text.length - this.Cpos);
+								this.text = this.text.substring(0, this.Cpos - 1) + this.text.substring(this.Cpos);
 								if (this.offset > 0) {
 									this.offset--;
 								}
@@ -900,7 +1034,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					break;
 				case VK_DELETE:
 					//save text before update
-					this.stext = this.text;
+					this.sText = this.text;
 					if (this.edit) {
 						if (this.select) {
 							if (this.textSelected.length == this.text.length) {
@@ -917,7 +1051,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 							}
 						} else {
 							if (this.Cpos < this.text.length) {
-								this.text = this.text.substr(0, this.Cpos) + this.text.substr(this.Cpos + 1, this.text.length - this.Cpos - 1);
+								this.text = this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + 1);
 								this.repaint();
 							}
 						}
@@ -1038,10 +1172,10 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 									this.Cpos = this.text.length;
 								}
 							}
-							this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
+							this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
 							while (this.Cx >= this.w - this.rightMargin) {
 								this.offset++;
-								this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
+								this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
 							}
 							this.repaint();
 						}
@@ -1124,7 +1258,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					}
 					if (vkey == 88) { // CTRL + X
 						if (this.edit && this.select) {
-							this.stext = this.text;
+							this.sText = this.text;
 							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
 							const p1 = this.SelBegin;
 							const p2 = this.SelEnd;
@@ -1139,14 +1273,14 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					}
 					if (vkey == 90) { // CTRL + Z
 						if (this.edit) {
-							this.text = this.stext;
+							this.text = this.sText;
 							this.repaint();
 						}
 					}
 					if (vkey == 86) { // CTRL + V
 						cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
 						if (this.edit && cInputbox.clipboard) {
-							this.stext = this.text;
+							this.sText = this.text;
 							if (this.select) {
 								const p1 = this.SelBegin;
 								const p2 = this.SelEnd;
@@ -1182,7 +1316,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					}
 					if (vkey == VK_BACK) { // CTRL + BACK
 						//save text before update
-						this.stext = this.text;
+						this.sText = this.text;
 						if (this.edit) {
 							if (this.select) {
 								if (this.textSelected.length == this.text.length) {
@@ -1202,7 +1336,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 									const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
 									const idx = leftTrim.search(/\b /);
 									this.text = idx !== -1
-										? this.text.substr(0, this.Cpos - idx) + this.text.substring(this.Cpos)
+										? this.text.substring(0, this.Cpos - idx) + this.text.substring(this.Cpos)
 										: '';
 									this.Cpos = idx !== -1 ? this.Cpos - idx : 0;
 									this.repaint();
@@ -1219,7 +1353,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 					}
 					if (vkey === VK_DELETE) { // CTRL + SUPR
 						//save text before update
-						this.stext = this.text;
+						this.sText = this.text;
 						if (this.edit) {
 							if (this.select) {
 								if (this.textSelected.length == this.text.length) {
@@ -1247,8 +1381,8 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 										while (right[old] === ' ' && right[idx] === ' ') { idx++; }
 									}
 									this.text = idx !== -1
-										? this.text.substr(0, this.Cpos) + this.text.substr(this.Cpos + idx, this.text.length)
-										: this.text.substr(0, this.Cpos);
+										? this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + idx)
+										: this.text.substring(0, this.Cpos);
 									this.repaint();
 								}
 							}
@@ -1386,7 +1520,7 @@ function _inputBox(w, h, defaultText, emptyText, textcolor, backcolor, bordercol
 		if (code === 127 && mask === kMask.ctrl) { return; } // CTRL+BACK
 		if (code > 31 && this.edit) {
 			//save text before update
-			this.stext = this.text;
+			this.sText = this.text;
 			let p1, p2;
 			if (this.select) {
 				p1 = this.SelBegin;
