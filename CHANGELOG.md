@@ -52,13 +52,14 @@
 
 ## [Unreleased][]
 ### Added
+- XSP: Smart Playlists are now automatically refreshed whenever a playlist source changes (not in any other case, use AutoPlaylists for that). i.e. if a Smart Playlist has a query like "#PLAYLIST# IS A", and "A" playlist changes, the Smart Playlist is automatically refreshed now (tracks added/removed). If the playlist is not loaded, only metadata is updated (like duration or size). This behavior can be disabled at settings.
 - Backup: added more backup procedures when editing playlists. Original file is restored in case of errors.
 - Statistics: new 'size' data mode for statistics, which shows statistics according to playlist's size (num of tracks) grouped by 25. Ex. Empty, >0, >25, >50, ... Clicking on any data point will filter the panel, as usual, with playlists with such condition.
 - Added integrity checks to global user settings files, found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\[...].json'. In particular queries are now check to ensure they are valid and will throw a popup at init otherwise. Other settings are check to ensure they contain valid values too.
 ### Changed
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
 - Helpers: updated helpers.
-- XSP: Smart playlists are now locked when loading them, similar to AutoPlaylists behavior. If there is no sorting, then tracks can be reorder, otherwise sorting is also locked.
+- XSP: Smart Playlists are now locked when loading them, similar to AutoPlaylists behavior. If there is no sorting, then tracks can be reorder, otherwise sorting is also locked.
 - XSP: improved caching in multiple playlist actions.
 - XSPF: improved caching in multiple playlist actions.
 - UI: optimized repainting to use less resources on statistics mode.
