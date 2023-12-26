@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//26/12/23
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -432,9 +432,9 @@ function createMenuLeft(forcedIndex = -1) {
 						let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 						const extensionName = extension.length ? '[' + extension + ']' : '';
-						if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
-						if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
-						if (tfName.length > 40) { tfName = tfName.substr(0, 40) + '...'; }
+						if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
+						if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
+						if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 						menu.newEntry({
 							menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
@@ -1159,9 +1159,9 @@ function createMenuLeftMult(forcedIndexes = []) {
 				let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 				const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 				const extensionName = extension.length ? '[' + extension + ']' : '';
-				if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
-				if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
-				if (tfName.length > 40) { tfName = tfName.substr(0, 40) + '...'; }
+				if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
+				if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
+				if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 				menu.newEntry({
 					menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
@@ -2529,9 +2529,9 @@ function createMenuRightTop() {
 					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 					const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 					const extensionName = extension.length ? '[' + extension + ']' : '';
-					if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
-					if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
-					if (tfName.length > 40) { tfName = tfName.substr(0, 40) + '...'; }
+					if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
+					if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
+					if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
@@ -2625,9 +2625,9 @@ function createMenuRightTop() {
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp : '(DSP)');
 					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-					if (pathName.length > 20) { pathName = pathName.substr(0, 20) + '...'; }
-					if (dspName.length > 20) { dspName = dspName.substr(0, 20) + '...'; }
-					if (tfName.length > 40) { tfName = tfName.substr(0, 40) + '...'; }
+					if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
+					if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
+					if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 							presets.splice(i, 1);
@@ -4202,7 +4202,7 @@ function createMenuSearch() {
 		if (list.searhHistory.length) {
 			list.searhHistory.slice(-5).forEach((text) => {
 				menu.newEntry({
-					entryText: text.length > 20 ? text.substr(0, 20) + '...' : text, func: () => {
+					entryText: text.length > 20 ? text.substring(0, 20) + '...' : text, func: () => {
 						list.searchCurrent = text;
 						window.Repaint();
 					}
