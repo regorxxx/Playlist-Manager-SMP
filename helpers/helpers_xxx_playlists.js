@@ -1,7 +1,7 @@
 ﻿'use strict';
-//26/12/23
+//27/12/23
 
-/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandleFromUIPlaylists, getLocks, setLocks */
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks */
 
 include('helpers_xxx_prototypes.js');
 /* global range:readable, isArrayNumbers:readable */
@@ -13,12 +13,11 @@ include('helpers_xxx_prototypes.js');
 // Count locked playlist by type
 function playlistCountLocked(type = []) {
 	const playlistsNum = plman.PlaylistCount;
-	const bAll = type.length ? false : true;
+	const bAll = !type.length;
 	let count = 0;
 	for (let i = 0; i < playlistsNum; i++) {
 		const lockActions = plman.GetPlaylistLockedActions(i);
-		if (bAll && lockActions.length) {count++;}
-		else if (!bAll && new Set(lockActions).isSuperset(new Set(type))) {count++;}
+		if (bAll && lockActions.length || !bAll && new Set(lockActions).isSuperset(new Set(type))) { count++; }
 	}
 	return count;
 }
@@ -32,7 +31,7 @@ function playlistCountLocked(type = []) {
 function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
 	plman.ClearPlaylistSelection(playlistIndex);
 	const sign = Math.sign(nTracks);
-	start = sign < 0 && !start ?  plman.PlaylistItemCount(playlistIndex) - 1 : start;
+	start = sign < 0 && !start ? plman.PlaylistItemCount(playlistIndex) - 1 : start;
 	const selection = range(start, start + sign * (Math.abs(nTracks) - 1), sign);
 	plman.SetPlaylistSelection(playlistIndex, selection, true);
 	plman.RemovePlaylistSelection(playlistIndex, true);
@@ -41,7 +40,7 @@ function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
 // Outputs indexes of all playlists with that name
 function getPlaylistNames() {
 	let names = [];
-	for (let i = 0; i < plman.PlaylistCount; i++) {names.push({name: plman.GetPlaylistName(i), idx: i});}
+	for (let i = 0; i < plman.PlaylistCount; i++) { names.push({ name: plman.GetPlaylistName(i), idx: i }); }
 	return names;
 }
 
@@ -61,7 +60,7 @@ function getPlaylistIndexArray(name) {
 // Removes all playlists with that name
 function removePlaylistByName(name) {
 	let index = plman.FindPlaylist(name);
-	while (index !== -1){
+	while (index !== -1) {
 		plman.RemovePlaylist(index);
 		index = plman.FindPlaylist(name);
 	}
@@ -71,7 +70,7 @@ function removePlaylistByName(name) {
 function clearPlaylistByName(name) {
 	let index = getPlaylistIndexArray(name);
 	if (isArrayNumbers(index)) {
-		for (let i of index){
+		for (let i of index) {
 			plman.UndoBackup(i);
 			plman.ClearPlaylist(i);
 		}
@@ -132,17 +131,17 @@ function sendToPlaylist(handleList, playlistName) {
 		console.log('Playlist used: ' + playlistName);
 	}
 	// Create playlist
-	console.log('Final selection: ' +  handleList.Count  + ' tracks');
+	console.log('Final selection: ' + handleList.Count + ' tracks');
 	plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
 	return handleList;
 }
 
-function getHandleFromUIPlaylists(names = [], bSort = true) {
+function getHandlesFromUIPlaylists(names = [], bSort = true) {
 	let playlists = new Set();
-	names.forEach((name) => {playlists = playlists.union(new Set(getPlaylistIndexArray(name)));});
+	names.forEach((name) => { playlists = playlists.union(new Set(getPlaylistIndexArray(name))); });
 	let output = new FbMetadbHandleList();
-	playlists.forEach((idx) => {output.AddRange(plman.GetPlaylistItems(idx));});
-	if (bSort) {output.Sort();}
+	playlists.forEach((idx) => { output.AddRange(plman.GetPlaylistItems(idx)); });
+	if (bSort) { output.Sort(); }
 	return output;
 }
 
@@ -151,20 +150,20 @@ function getLocks(plsName) {
 	const types = index !== -1 ? [...new Set(plman.GetPlaylistLockedActions(index))] : [];
 	const name = index !== -1 ? plman.GetPlaylistLockName(index) : '';
 	const isSMPLock = name === 'foo_spider_monkey_panel' || !name;
-	const isLocked = types.length ? true : false;
-	return {isLocked , isSMPLock, name, types, index};
+	const isLocked = !!types.length;
+	return { isLocked, isSMPLock, name, types, index };
 }
 
 function setLocks(playlistIndex, lockTypes, logic = 'add' /* add|switch|remove*/) {
-	if (playlistIndex === -1) {return false;}
+	if (playlistIndex === -1) { return false; }
 	let newLocks = new Set(plman.GetPlaylistLockedActions(playlistIndex) || []);
 	const lockName = plman.GetPlaylistLockName(playlistIndex);
 	if (lockName === 'foo_spider_monkey_panel' || !lockName) {
 		switch (logic.toLowerCase()) {
 			case 'switch':
 				lockTypes.forEach((lock) => {
-					if (newLocks.has(lock)) {newLocks.delete(lock);}
-					else {newLocks.add(lock.type);}
+					if (newLocks.has(lock)) { newLocks.delete(lock); }
+					else { newLocks.add(lock.type); }
 				});
 				break;
 			case 'remove':

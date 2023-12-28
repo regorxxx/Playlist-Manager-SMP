@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//27/12/23
 
 /* exported _menu, _attachedMenu */
 
@@ -513,9 +513,9 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		let nextIndex = [0, 0, 0, 0, 0];
 		const chars = hiddenChars;
 		const num = chars.length;
-		let prevId = nextIndex.length;
+		let prevId = '';
 		return (bNext = true, bReset = false) => {
-			if (bReset) { nextIndex = [0, 0, 0, 0, 0]; return nextIndex; }
+			if (bReset) { nextIndex = [0, 0, 0, 0, 0]; prevId = ''; return prevId; }
 			if (!bNext) { return prevId; }
 			let a = nextIndex[0];
 			let b = nextIndex[1];
@@ -545,8 +545,8 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	}
 
 	function compareKeys(a, b) {
-		const aKeys = Object.keys(a).sort();
-		const bKeys = Object.keys(b).sort();
+		const aKeys = Object.keys(a).sort((a, b) => a.localeCompare(b));
+		const bKeys = Object.keys(b).sort((a, b) => a.localeCompare(b));
 		return JSON.stringify(aKeys) === JSON.stringify(bKeys);
 	}
 

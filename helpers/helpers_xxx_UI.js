@@ -1,8 +1,12 @@
 ﻿'use strict';
-//14/12/23
+//27/12/23
+
+/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
+/* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
 include('helpers_xxx.js');
+/* global globFonts:readable, globSettings:readable, doOnce:readable, folders:readable, globSettings:readable,  */
 include('helpers_xxx_UI_chars.js');
 include('callbacks_xxx.js');
 
@@ -37,7 +41,7 @@ const colorbrewer = {
 		qualitative: ['Set2','Dark2','Paired'],
 		sequential: ['OrRd','PuBu','BuPu','Oranges','BuGn','YlOrBr','YlGn','Reds','RdPu','Greens','YlGnBu','Purples','GnBu','Greys','YlOrRd','PuRd','Blues','PuBuGn']
 	}
-}
+};
 
 // Cache
 const scaleDPI = {factor: -1, reference: 72}; // Caches _scale() values;
@@ -86,14 +90,15 @@ function nextId(method, bNext = true, bCharsForced = true, bReset = false) {
 		case method === 'indicator':
 			return nextIdIndicator(bNext);
 		default:
-			return null;
+			return '';
 	}
 }
 
 function getIdRegEx(method, bCharsForced = true) {
 	switch (true) {
 		case method === 'invisible':
-			return (bCharsForced ? / \(\*[\u200b\u200c\u200d\u200e]{5}\)$/g : /[\u200b\u200c\u200d\u200e]{5}$/g);
+			// eslint-disable-next-line no-misleading-character-class
+			return (bCharsForced ? / \(\*[\u200b\u200c\u200d\u200e]{5}\)$/g : /[\u200b\u200c\u200d\u200e]{5}$/g); // NOSONAR
 		case method === 'letters':
 			return (bCharsForced ? / \([abcdf]{5}\)$/g : /[abcdf]{5}$/g);
 		case method === 'indicator':
@@ -104,83 +109,77 @@ function getIdRegEx(method, bCharsForced = true) {
 }
 
 const nextIdInvisible = (function() {
-		let nextIndex = [0,0,0,0,0];
-		const chars = hiddenChars;
-		const charsForced = [' (*',')'];
-		const num = chars.length;
-		let prevId = nextIndex.length + charsForced.join('').length;
-
-		return function(bNext = true, bCharsForced = true, bReset = false) {
-			if (bReset) {nextIndex = [0,0,0,0,0]; return nextIndex;}
-			if (!bNext) {return prevId;}
-			let a = nextIndex[0];
-			let b = nextIndex[1];
-			let c = nextIndex[2];
-			let d = nextIndex[3];
-			let e = nextIndex[4];
-			const id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
-
-			a = ++a % num;
-			
-			if (!a) {
-				b = ++b % num;
-				if (!b) {
-					c = ++c % num;
-					if (!c) {
-						d = ++d % num;
-						if (!d) {
-							e = ++e % num;
-						}
+	let nextIndex = [0,0,0,0,0];
+	const chars = hiddenChars;
+	const charsForced = [' (*',')'];
+	const num = chars.length;
+	let prevId = '';
+	return function(bNext = true, bCharsForced = true, bReset = false) {
+		if (bReset) {nextIndex = [0,0,0,0,0]; prevId = ''; return prevId;}
+		if (!bNext) {return prevId;}
+		let a = nextIndex[0];
+		let b = nextIndex[1];
+		let c = nextIndex[2];
+		let d = nextIndex[3];
+		let e = nextIndex[4];
+		const id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
+		a = ++a % num;
+		if (!a) {
+			b = ++b % num;
+			if (!b) {
+				c = ++c % num;
+				if (!c) {
+					d = ++d % num;
+					if (!d) {
+						e = ++e % num;
 					}
 				}
 			}
-			nextIndex = [a, b, c, d, e];
-			prevId = id;
-			return id;
-		};
+		}
+		nextIndex = [a, b, c, d, e];
+		prevId = id;
+		return id;
+	};
 }());
 
 const nextIdLetters = (function() {
-		let nextIndex = [0,0,0,0,0];
-		const chars = ['a','b','c','d','f'];
-		const charsForced = [' (',')'];
-		const num = chars.length;
-		let prevId = nextIndex.length + charsForced.join('').length;
-
-		return function(bNext = true, bCharsForced = true, bReset = false) {
-			if (bReset) {nextIndex = [0,0,0,0,0]; return;}
-			if (!bNext) {return prevId;}
-			let a = nextIndex[0];
-			let b = nextIndex[1];
-			let c = nextIndex[2];
-			let d = nextIndex[3];
-			let e = nextIndex[4];
-			const id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
-
-			a = ++a % num;
-			
-			if (!a) {
-				b = ++b % num;
-				if (!b) {
-					c = ++c % num;
-					if (!c) {
-						d = ++d % num;
-						if (!d) {
-							e = ++e % num;
-						}
+	let nextIndex = [0,0,0,0,0];
+	const chars = ['a','b','c','d','f'];
+	const charsForced = [' (',')'];
+	const num = chars.length;
+	let prevId = '';
+	return function(bNext = true, bCharsForced = true, bReset = false) {
+		if (bReset) {nextIndex = [0,0,0,0,0]; prevId = ''; return prevId;}
+		if (!bNext) {return prevId;}
+		let a = nextIndex[0];
+		let b = nextIndex[1];
+		let c = nextIndex[2];
+		let d = nextIndex[3];
+		let e = nextIndex[4];
+		const id = (bCharsForced ? charsForced[0] : '') + chars[a] + chars[b] + chars[c] + chars[d] + chars[e] + (bCharsForced ? charsForced[1] : '');
+		a = ++a % num;
+		if (!a) {
+			b = ++b % num;
+			if (!b) {
+				c = ++c % num;
+				if (!c) {
+					d = ++d % num;
+					if (!d) {
+						e = ++e % num;
 					}
 				}
 			}
-			nextIndex = [a, b, c, d, e];
-			prevId = id;
-			return id;
-		};
+		}
+		nextIndex = [a, b, c, d, e];
+		prevId = id;
+		return id;
+	};
 }());
 
 const nextIdIndicator = (function() { // Same structure to ease compatibility
-		return function() {
-			return ' (*)';
-		};
+	return function() {
+		return ' (*)';
+	};
 }());
 
 function removeIdFromStr(nameId) {
@@ -210,7 +209,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		}
 		return true;
 	};
-	
+
 	this.SetFont = (name, size, style = 0) => {
 		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
@@ -218,7 +217,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		this.font = {name, size, style};
 		return true;
 	};
-	
+
 	this.SetMaxWidth = (width) => {
 		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
@@ -226,7 +225,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		this.width = width;
 		return true;
 	};
-	
+
 	this.Activate = () => {
 		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
@@ -234,7 +233,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		this.bActive = true;
 		return true;
 	};
-	
+
 	this.Deactivate = () => {
 		if (!globSettings.bTooltip) {return true;}
 		if (!this.tooltip && !this.init()) {return false;}
@@ -242,19 +241,19 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		this.bActive = false;
 		return true;
 	};
-	
+
 	this.SetDelayTime = (type, time) => {
 		if (!this.tooltip && !this.init()) {return false;}
 		this.tooltip.SetDelayTime(type, time);
 		return true;
 	};
-	
+
 	this.GetDelayTime = (type) => {
 		if (!globSettings.bTooltip) {return;}
 		if (!this.tooltip && !this.init()) {return;}
 		return this.tooltip.GetDelayTime(type) ;
 	};
-	
+
 	this.init = () => {
 		this.tooltip = window.Tooltip;
 		if (!this.tooltip) {doOnce('tooltip fail', console.log)('Tooltip failed to initialize'); return false;} // Workaround for tooltip bug
@@ -264,8 +263,8 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
 		this.tooltip.Text = this.text;
 		return true;
-	}
-	
+	};
+
 	this.tooltip = null;
 	this.width = width;
 	this.text = value;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//27/12/23
 
 /* global SimpleCrypto:readable */
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
@@ -9,18 +9,18 @@ include('..\\..\\helpers\\helpers_xxx_web.js');
 /* global send:readable */
 include('playlist_manager_listenbrainz.js');
 
-const youtube = {
+const youTube = {
 	regEx: /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/g, // NOSONAR [nothing to simplify]
 	key: new SimpleCrypto('xxx').decrypt('2bb4f0f02b806d21c6845503a2a7217144fd704bc2f5575c321492466bd126bbczJl0PQ45sUqh6aFpWaHzIq4SFOZiZlgCWF6n0TK2Lw1YweE7OU0/OpN358conVS56fcf54cc4120a2f24b985f5e6b496c57c24908b5a0cde72d8bda082efb3ed43')
 };
 
 // Tags object should only contain one value per tag.Multi-valued tags are encoded with '; ' as separator.
-youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => { return void (0); } } = {}) {
+youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => { return void (0); } } = {}) {
 	const id = creator.toLowerCase() + ' ' + title.toLowerCase();
 	const regex = /MUSICBRAINZ_TRACKID/gi;
 	const mbidKey = tags ? Object.keys(tags).find((key) => regex.test(key)) : null;
 	const mbid = mbidKey ? tags[mbidKey] : null;
-	const ytItem = youtube.cache.get(mbid || id) || null;
+	const ytItem = youTube.cache.get(mbid || id) || null;
 	// Add tags from input
 	if (tags && ytItem) {
 		ytItem.url += Object.entries(tags).map((entry) => {
@@ -36,7 +36,7 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 	// Retrieve cached item or new one
 	return ytItem || send({
 		method: 'POST',
-		URL: 'https://www.youtube.com/youtubei/v1/search?' + (youtube.key.length ? 'key=' + youtube.key : ''),
+		URL: 'https://www.youtube.com/youtubei/v1/search?' + (youTube.key.length ? 'key=' + youTube.key : ''),
 		body: JSON.stringify({
 			'context': {
 				'client': {
@@ -114,8 +114,8 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 						url
 					};
 					// Add to cache, without the input tags (which may change)
-					if (!youtube.cache.has(id)) { youtube.cache.set(id, ytItem); }
-					if (mbid && !youtube.cache.has(mbid)) { youtube.cache.set(mbid, ytItem); }
+					if (!youTube.cache.has(id)) { youTube.cache.set(id, ytItem); }
+					if (mbid && !youTube.cache.has(mbid)) { youTube.cache.set(mbid, ytItem); }
 					// Add tags from input
 					if (tags) {
 						ytItem.url += Object.entries(tags).map((entry) => {
@@ -150,11 +150,11 @@ youtube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 	);
 };
 
-youtube.cleanTitle = function cleanTitle(title) {
+youTube.cleanTitle = function cleanTitle(title) {
 	return title.replace(/&amp(;|)/g, '&').replace(/&quot(;|)/g, '"').replace(/&#39(;|)/g, '\'').replace(/&gt(;|)/g, '>').replace(/&nbsp(;|)/g, '').replace(/(\.mv4|1080p|1080i|1080|\d(\d|)(\.|\s-)|explicit( version|)|full HD|HD full|full HQ|full song|(high |HD - |HD-|HD )quality|( |with |& |w( |)\/( |)|\+ )lyric(s(!|) on Screen|s|)|(official |)music video( |)|official (music|version|video)( |)|(song |official (fan |)|)audio( version| only| clean|)|( |\+ |)official( solo| |)|uncensored|vevo presents|video( |))|\.wmv/gi, '').replace(/(HD|HQ)(\s-\s|)/g, '').replace(/\((\s*)\)/g, '').replace(/\[(\s*)\]/g, '').replace(/\(\)/g, '').replace(/\[\]/g, '').replace(/\s+/g, ' ').replace(/[\s-/\\+]+$/g, '').trim(); // NOSONAR [nothing to simplify]
 };
 
-youtube.cache = new Map(
+youTube.cache = new Map(
 	/*
 		[creator + ' ' + title, {title, artist, length, url}]
 	*/

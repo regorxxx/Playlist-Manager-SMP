@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/23
+//27/12/23
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists */
 
@@ -13,7 +13,7 @@ include('helpers_xxx_file.js');
 include('helpers_xxx_tags.js');
 /* global checkQuery:readable, getSortObj:readable, getTagsValuesV4:readable */
 include('helpers_xxx_playlists.js');
-/* global getHandleFromUIPlaylists:readable */
+/* global getHandlesFromUIPlaylists:readable */
 include('helpers_xxx_playlists_files_xspf.js');
 /* global XSPF:readable*/
 include('helpers_xxx_playlists_files_xsp.js');
@@ -634,10 +634,10 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 			// From playlist manager or loaded playlists
 			const toIncludeHandle = typeof list !== 'undefined'
 				? list.getHandleFromPlaylists(queryPlaylists.is) // eslint-disable-line no-undef
-				: getHandleFromUIPlaylists(queryPlaylists.is);
+				: getHandlesFromUIPlaylists(queryPlaylists.is);
 			const toExcludeHandle = typeof list !== 'undefined'
 				? list.getHandleFromPlaylists(queryPlaylists.isnot) // eslint-disable-line no-undef
-				: getHandleFromUIPlaylists(queryPlaylists.isnot);
+				: getHandlesFromUIPlaylists(queryPlaylists.isnot);
 			// Difference
 			toIncludeHandle.Sort();
 			toExcludeHandle.Sort();

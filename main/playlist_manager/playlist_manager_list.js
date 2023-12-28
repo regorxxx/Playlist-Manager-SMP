@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/12/23
+//27/12/23
 
 /* exported _list */
 
@@ -19,9 +19,9 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getLocks:readable, getPlaylistIndexArray:readable, getHandleFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable */
+/* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global oPlaylist:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, xspfCache:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, xspCache:readable */
+/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, xspfCache:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, xspCache:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getTagsValuesV4:readable, getTagsValues:readable, checkQuery:readable, stripSort:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -39,8 +39,8 @@ include('playlist_manager_helpers.js');
 function _list(x, y, w, h) {
 	const bProfile = false;
 	// Pls Keys
-	const defPls = new oPlaylist();
-	const defPlsKeys = new Set(Object.keys(new oPlaylist()));
+	const defPls = new PlaylistObj();
+	const defPlsKeys = new Set(Object.keys(new PlaylistObj()));
 	// Icons
 	const gfontIconChar = () => { return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 8 : _scale(72) > 96 ? 6 : 4)), 0); }; // Icon may overlap on high DPI systems without this adjustment
 	const gfontIconCharAlt = () => { return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 10 : _scale(72) > 96 ? 8 : 6)), 0); };
@@ -694,14 +694,14 @@ function _list(x, y, w, h) {
 			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
-				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
+				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 			}
 			if (this.lastCharsPressed.bDraw) { animation.bHighlight = false; }
 			if (animation.bHighlight) {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
 				}
 				animation.bHighlight = false;
 				animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
@@ -833,7 +833,7 @@ function _list(x, y, w, h) {
 							if (Object.hasOwn(this.playlistIcons, plsExtension) && Object.hasOwn(this.playlistIcons[plsExtension], 'icon')) {
 								icon = this.playlistIcons[plsExtension].icon ? String.fromCharCode(parseInt(this.playlistIcons[plsExtension].icon, 16)) : null;
 							}
-							bFallback = icon ? true : false;
+							bFallback = !!icon;
 						}
 					}
 					if (Object.hasOwn(this.playlistIcons[extension], 'iconBg')) {
@@ -971,7 +971,7 @@ function _list(x, y, w, h) {
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylistColor);
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylistColor);
 				}
 			}
 		}
@@ -1081,8 +1081,8 @@ function _list(x, y, w, h) {
 				const currSelIdx = idxHighlight;
 				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 80));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) ? currSelIdx : currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 50));
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 80));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 50));
 				}
 			}
 			this.lastCharsPressed.bDraw = false;
@@ -1649,15 +1649,15 @@ function _list(x, y, w, h) {
 										const name = currItem.nameId;
 										const cache = [...this.sortingFile];
 										const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
-										if (bInverted) { this.sortingFile = this.sortingFile.reverse(); } // For reverse sorting, list must be sorted first too!
-										const toMove = this.internalPlsDrop.reverse().map((idx) => {
+										if (bInverted) { this.sortingFile.reverse(); } // For reverse sorting, list must be sorted first too!
+										const toMove = [...this.internalPlsDrop].reverse().map((idx) => {
 											const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
 											return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
 										}).filter((n) => n !== null).reverse();
 										const toIdx = this.sortingFile.findIndex((n) => n === name);
 										if (toIdx !== -1) {
 											this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
-											if (bInverted) { this.sortingFile = this.sortingFile.reverse(); } // And revert back
+											if (bInverted) { this.sortingFile.reverse(); } // And revert back
 											// TODO sort within folder
 											if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
 												this.internalPlsDrop.forEach((idx) => {
@@ -1735,9 +1735,7 @@ function _list(x, y, w, h) {
 								}
 							} else { this.bDoubleclick = false; }
 						}
-					} else {
-						if (this.isInternalDrop()) { this.internalPlsDrop = []; }
-					}
+					} else if (this.isInternalDrop()) { this.internalPlsDrop = []; }
 					break;
 				}
 			}
@@ -2084,7 +2082,7 @@ function _list(x, y, w, h) {
 							if (this.bLiteMode) {
 								this.addUIplaylist({ bInputName: true });
 							} else {
-								if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) {
+								if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) { // NOSONAR
 									this.addFolder();
 								} else {
 									this.add({ bEmpty: true });
@@ -2118,13 +2116,16 @@ function _list(x, y, w, h) {
 									}
 									found.sort((a, b) => a.category.localeCompare(b.category));
 									for (let i = 0, prevCat = null; i < found.length; i++) {
-										if (prevCat !== found[i].category) { prevCat = found[i].category; found.splice(i, 0, found[i].category); }
+										if (prevCat !== found[i].category) {
+											prevCat = found[i].category;
+											found.splice(i, 0, {category: found[i].category});
+										}
 									}
 									for (let i = 0; i < found.length; i++) {
-										if (found[i].name) {
+										if (Object.hasOwn(found[i], 'name')) {
 											found[i] = '\t- ' + found[i].name;
 										} else {
-											found[i] = (found[i] || 'No category') + ':';
+											found[i] = (found[i].category || 'No category') + ':';
 										}
 									}
 									fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
@@ -2181,13 +2182,13 @@ function _list(x, y, w, h) {
 					if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
 					let method = this.methodState.split('\t')[0].replace('By ', '');
-					if (method === 'name' || !Object.hasOwn(new oPlaylist(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
+					if (method === 'name' || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 					let bNext = false;
 					const bCycle = this.properties.bQuicSearchCycle[1];
 					if (!this.properties.bQuicSearchNext[1]) {
 						this.lastCharsPressed.str += keyChar;
 					} else { // Jump to next item with same char
-						if (this.lastCharsPressed.str !== keyChar) { this.lastCharsPressed.str += keyChar; }
+						if (this.lastCharsPressed.str !== keyChar) { this.lastCharsPressed.str += keyChar; } // NOSONAR
 						else { bNext = true; }
 					}
 					// Helper
@@ -2463,7 +2464,8 @@ function _list(x, y, w, h) {
 				if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(z, x, y); }
 				else { shortcut.func(z); }
 			} else {
-				if (shortcut.key === 'Multiple selection' && this.indexes.includes(z)) { // Deselect folder or select/deselect all items within
+				// Deselect folder or select/deselect all items within
+				if (shortcut.key === 'Multiple selection' && this.indexes.includes(z)) { // NOSONAR
 					shortcut.func(z);
 				} else {
 					let bEverySelected = false;
@@ -2481,11 +2483,11 @@ function _list(x, y, w, h) {
 								const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 								shortcut.func(zz, remDupl, this.bAdvTitle);
 							} else {
-								if (this.data[zz].isFolder) {
+								if (this.data[zz].isFolder) { // NOSONAR
 									if (shortcut.key === 'Multiple selection' && this.indexes.includes(zz)) { shortcut.func(zz); }
 									folderRecurse(this.data[zz], zz);
 								} else {
-									if (shortcut.key === 'Multiple selection') {
+									if (shortcut.key === 'Multiple selection') { // NOSONAR
 										if (!this.indexes.includes(zz) || bEverySelected) {
 											shortcut.func(zz);
 										}
@@ -2519,11 +2521,11 @@ function _list(x, y, w, h) {
 				const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 				shortcut.func(z, remDupl, this.bAdvTitle);
 			} else {
-				if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(z, x, y); }
+				if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(z, x, y); } // NOSONAR
 				else { shortcut.func(z); }
 			}
 		} else { // Header
-			if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(-1, x, y); }
+			if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(-1, x, y); } // NOSONAR
 			else { shortcut.func(-1); }
 		}
 	};
@@ -2699,35 +2701,33 @@ function _list(x, y, w, h) {
 				.map((item) => this.checkSelectionDuplicatesPlaylist({ pls: item }))
 				.flat(Infinity)
 				.every((result) => result === true);
-		} else {
-			if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && !pls.isFolder && pls.size) {
-				const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-				if (selItems && selItems.Count) {
-					const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandleFromUIPlaylists([pls.nameId])));
-					const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
-					if (filePaths.intersectionSize(new Set(selItemsPaths))) {
-						if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsPaths }; }
+		} else if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && pls.size) {
+			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+			if (selItems && selItems.Count) {
+				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])));
+				const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
+				if (filePaths.intersectionSize(new Set(selItemsPaths))) {
+					if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsPaths }; }
+					bDup = true;
+				} else {
+					const relPathSplit = this.playlistsPath.length ? this.playlistsPath.split('\\').filter(Boolean) : null;
+					const selItemsRelPaths = selItemsPaths.map((path) => { return path.replace(this.playlistsPath, '.\\'); });
+					const selItemsRelPathsTwo = selItemsPaths.map((path) => { return path.replace(this.playlistsPath, ''); });
+					const selItemsRelPathsThree = selItemsPaths.map((path) => { return getRelPath(path, relPathSplit); });
+					if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {
+						if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsRelPaths }; }
 						bDup = true;
-					} else {
-						const relPathSplit = this.playlistsPath.length ? this.playlistsPath.split('\\').filter(Boolean) : null;
-						const selItemsRelPaths = selItemsPaths.map((path) => { return path.replace(this.playlistsPath, '.\\'); });
-						const selItemsRelPathsTwo = selItemsPaths.map((path) => { return path.replace(this.playlistsPath, ''); });
-						const selItemsRelPathsThree = selItemsPaths.map((path) => { return getRelPath(path, relPathSplit); });
-						if (filePaths.intersectionSize(new Set(selItemsRelPaths))) {
-							if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsRelPaths }; }
-							bDup = true;
-						} else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {
-							if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsRelPathsTwo }; }
-							bDup = true;
-						} else if (filePaths.intersectionSize(new Set(selItemsRelPathsThree))) {
-							if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsRelPathsThree }; }
-							bDup = true;
-						}
+					} else if (filePaths.intersectionSize(new Set(selItemsRelPathsTwo))) {
+						if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsRelPathsTwo }; }
+						bDup = true;
+					} else if (filePaths.intersectionSize(new Set(selItemsRelPathsThree))) {
+						if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsRelPathsThree }; }
+						bDup = true;
 					}
-					if (bDup) {
-						if (this.bForbidDuplicates) { this.selPaths.pls = filePaths; }
-					} else { this.clearSelPlaylistCache(); }
 				}
+				if (bDup) {
+					if (this.bForbidDuplicates) { this.selPaths.pls = filePaths; }
+				} else { this.clearSelPlaylistCache(); }
 			}
 		}
 		return bDup;
@@ -2774,7 +2774,7 @@ function _list(x, y, w, h) {
 		if (pls.isFolder) { // Only check allowed destinations
 			const plsArr = pls.pls.filtered.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl');
 			const total = plsArr.length;
-			return plsArr.map((item, i) => this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: bPaint && total === (i + 1) ? true : false, bDelSource: bDelSource && total === (i + 1) ? true : false, bAlsoHidden: true }))
+			return plsArr.map((item, i) => this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: !!(bPaint && total === (i + 1)), bDelSource: !!(bDelSource && total === (i + 1)), bAlsoHidden: true }))
 				.flat(Infinity)
 				.some((result) => result === true);
 		} else {
@@ -2789,7 +2789,7 @@ function _list(x, y, w, h) {
 					this.selPaths.sel.forEach((path, idx) => {
 						if (this.selPaths.pls.has(path)) { toRemove.add(idx); } // Remove items already on pls
 						else {
-							if (!selPathsSet.has(path)) { selPathsSet.add(path); }
+							if (!selPathsSet.has(path)) { selPathsSet.add(path); } // NOSONAR
 							else { toRemove.add(idx); } // And duplicated items on selection
 						}
 					});
@@ -2915,7 +2915,7 @@ function _list(x, y, w, h) {
 			console.log('Playlist Manager: Auto-tagging enabled, retrieving tags for new tracks...');
 			for (let i = 0; i < newHandles.Count; ++i) {
 				let tags = {};
-				pls.trackTags.forEach((tagObj) => { // TODO: Don't rewrite tags but add?
+				pls.trackTags.forEach((tagObj) => {
 					const name = Object.keys(tagObj)[0];
 					const expression = tagObj[name];
 					let bFunc = false, bOverWrite = false, bMultiple = false;
@@ -2944,7 +2944,7 @@ function _list(x, y, w, h) {
 								if (bOverWrite) { tags[name] = value.length ? value : ['']; }
 								else if (bMultiple && value.length && !isArrayEqual(currVal, value)) { newVal = [...new Set([...currVal, ...value])]; } // Don't duplicate values
 							} else {
-								if (!value.length) { newVal = ['']; } // Delete
+								if (!value.length) { newVal = ['']; } // NOSONAR [Delete]
 								else if (!isArrayEqual(currVal, value)) { newVal = [...new Set([...currVal, ...value])]; } // Don't duplicate values
 							}
 							// Double check there are changes
@@ -3004,11 +3004,9 @@ function _list(x, y, w, h) {
 				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
 				return this.updateTrackTags(handleUpdate, tagsUpdate);
 			}
-		} else {
-			if ((pls.isLocked && this.bAutoTrackTagLockPls) || (!pls.isLocked && this.bAutoTrackTagPls)) {
-				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
-				return this.updateTrackTags(handleUpdate, tagsUpdate);
-			}
+		} else if ((pls.isLocked && this.bAutoTrackTagLockPls) || (!pls.isLocked && this.bAutoTrackTagPls)) {
+			const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
+			return this.updateTrackTags(handleUpdate, tagsUpdate);
 		}
 		return false;
 	};
@@ -3115,7 +3113,6 @@ function _list(x, y, w, h) {
 		}
 		else if (this.data[playlistIndex].isAutoPlaylist || this.data[playlistIndex].query) { return false; } // Always skip updates for AutoPlaylists
 		else if (this.data[playlistIndex].extension === '.ui') { return false; } // Always skip updates for ui only playlists
-		// TODO: Allow linking an AutoPlaylist to a file and convert it to standard playlist on saving (?)
 		const numPlaylist = (bCallback) ? this.itemsAll : plman.PlaylistCount;
 		const playlistName = removeIdFromStr(playlistNameId);
 		for (let i = 0; i < numPlaylist; i++) {
@@ -3289,7 +3286,7 @@ function _list(x, y, w, h) {
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
-				const oAutoPlaylistItem = new oPlaylist({
+				const oAutoPlaylistItem = new PlaylistObj({
 					name: item.name,
 					size,
 					bAutoPlaylist: true,
@@ -3319,10 +3316,10 @@ function _list(x, y, w, h) {
 			});
 		}
 		// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
-		dataExternalPlaylists.forEach((oPlaylist) => {
-			if (this.bAutoLoadTag && oPlaylist.tags.indexOf('bAutoLoad') === -1) { oPlaylist.tags.push('bAutoLoad'); }
-			if (this.bMultMenuTag && oPlaylist.tags.indexOf('bMultMenu') === -1) { oPlaylist.tags.push('bMultMenu'); }
-			if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (tag !== 'bAutoLock' && !new Set(oPlaylist.tags).has(tag)) { oPlaylist.tags.push(tag); } }); }
+		dataExternalPlaylists.forEach((PlaylistObj) => {
+			if (this.bAutoLoadTag && PlaylistObj.tags.indexOf('bAutoLoad') === -1) { PlaylistObj.tags.push('bAutoLoad'); }
+			if (this.bMultMenuTag && PlaylistObj.tags.indexOf('bMultMenu') === -1) { PlaylistObj.tags.push('bMultMenu'); }
+			if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (tag !== 'bAutoLock' && !new Set(PlaylistObj.tags).has(tag)) { PlaylistObj.tags.push(tag); } }); }
 		});
 		if (dataExternalPlaylists.length) { this.addToData(dataExternalPlaylists); } // Add to database
 		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
@@ -3864,8 +3861,8 @@ function _list(x, y, w, h) {
 			if (!this.sortingFile.length) { this.sort(); }
 			const cache = [...this.sortingFile];
 			const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
-			if (bInverted) { this.sortingFile = this.sortingFile.reverse(); } // For reverse sorting, list must be sorted first too!
-			const toMove = plsArr.reverse().map((pls) => {
+			if (bInverted) { this.sortingFile.reverse(); } // For reverse sorting, list must be sorted first too!
+			const toMove = [...plsArr].reverse().map((pls) => {
 				const sortIdx = this.sortingFile.findIndex((n) => n === pls.nameId);
 				return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
 			}).filter((n) => n !== null).reverse();
@@ -3878,7 +3875,7 @@ function _list(x, y, w, h) {
 					if (toIdx > this.sortingFile.length) { toIdx = this.sortingFile.length; }
 					this.sortingFile.splice(toIdx, 0, ...toMove);
 					if (this.indexes.length) { this.indexes = toMove.map((_, i) => toIdx + i); }
-					if (bInverted) { this.sortingFile = this.sortingFile.reverse(); } // And revert back
+					if (bInverted) { this.sortingFile.reverse(); } // And revert back
 					this.saveManualSorting();
 					this.sort();
 				} else { this.sortingFile = cache; }
@@ -4034,39 +4031,37 @@ function _list(x, y, w, h) {
 									resolve('done');
 								});
 							}));
-						} else { // Updates tags for AutoPlaylists. Warning takes a lot of time! Only when required...
-							if (bUpdateTags) {
-								const cacheSize = item.size;
-								const cacheDuration = item.duration;
-								if (Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) {
-									promises.push(new Promise((resolve) => {
-										loadAutoPlaylistAsync(item, i).then((handleList = null) => {
-											if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
-												pop.enable(true, 'Updating AutoPls...', 'Updating AutoPlaylists...\nPanel will be disabled during the process.');
-											}
-											if (handleList && item.size) {
-												const bUpdated = this.updateTags(handleList, item);
-												if (bUpdated) { console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name); }
-											}
-											if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
-												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
-												if (item.extension === '.xsp') {
-													if (Object.hasOwn(item, 'type') && item.type === 'songs') {
-														let xspPlaylist = this.dataXsp.find((pls) => { return pls.name === item.name; });
-														if (xspPlaylist) {
-															xspPlaylist.size = item.size;
-															xspPlaylist.duration = item.duration;
-														}
+						} else if (bUpdateTags) { // Updates tags for AutoPlaylists. Warning takes a lot of time! Only when required...
+							const cacheSize = item.size;
+							const cacheDuration = item.duration;
+							if (Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) {
+								promises.push(new Promise((resolve) => {
+									loadAutoPlaylistAsync(item, i).then((handleList = null) => {
+										if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
+											pop.enable(true, 'Updating AutoPls...', 'Updating AutoPlaylists...\nPanel will be disabled during the process.');
+										}
+										if (handleList && item.size) {
+											const bUpdated = this.updateTags(handleList, item);
+											if (bUpdated) { console.log('Playlist Manager: Auto-tagging done for playlist ' + item.name); }
+										}
+										if (handleList && (cacheSize !== item.size || cacheDuration !== item.duration)) {
+											console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
+											if (item.extension === '.xsp') {
+												if (Object.hasOwn(item, 'type') && item.type === 'songs') {
+													let xspPlaylist = this.dataXsp.find((pls) => { return pls.name === item.name; });
+													if (xspPlaylist) {
+														xspPlaylist.size = item.size;
+														xspPlaylist.duration = item.duration;
 													}
 												}
-												this.repaint();
 											}
-											resolve('done');
-										});
-									}));
-								} else {
-									promises.push(Promise.resolve('done')); // To ensure logging, saving and dynamic menu update
-								}
+											this.repaint();
+										}
+										resolve('done');
+									});
+								}));
+							} else {
+								promises.push(Promise.resolve('done')); // To ensure logging, saving and dynamic menu update
 							}
 						}
 						if (item.isAutoPlaylist) { this.dataAutoPlaylists.push(item); }
@@ -4184,7 +4179,7 @@ function _list(x, y, w, h) {
 				if (!this.dataAll.some((dataPls) => { return dataPls.nameId === pls.name; })) {
 					if (!this.dataFoobar.some((dataPls) => { return dataPls.nameId === pls.name; })) { // Remove duplicates
 						const now = Date.now();
-						const item = new oPlaylist({
+						const item = new PlaylistObj({
 							name: pls.name,
 							extension: '.ui',
 							size: plman.PlaylistItemCount(pls.idx),
@@ -4608,15 +4603,15 @@ function _list(x, y, w, h) {
 		this.addFolder = (name = '', toFolder = null) => {
 			if (!name.length) {
 				try { name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true); }
-				catch (e) { return false; }
-				if (!name.length) { return false; }
+				catch (e) { return null; }
+				if (!name.length) { return null; }
 				if (this.dataAll.some((pls) => pls.nameId === name)) {
 					fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
-					return false;
+					return null;
 				}
 			}
 			const now = Date.now();
-			const defaults = new oPlaylist({ name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now });
+			const defaults = new PlaylistObj({ name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now });
 			const folder = { ...defaults, isFolder: true, isOpen: false, pls: [] };
 			this.addFolderProperties(folder);
 			// Add tags of current view
@@ -4757,36 +4752,36 @@ function _list(x, y, w, h) {
 
 		this.addAutoplaylist = (pls = null, bEdit = true, toFolder = null) => {
 			// Check if there are initial values
-			const bPls = pls ? true : false;
+			const bPls = !!pls;
 			const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
 			const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
 			const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
-			// Create oPlaylist
+			// Create PlaylistObj
 			let newName = hasName ? pls.name : '';
 			if (!newName.length || bEdit) {
 				try { newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', window.Name, newName, true); }
-				catch (e) { return false; }
-				if (!newName.length) { return false; }
+				catch (e) { return null; }
+				if (!newName.length) { return null; }
 			}
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
 			const nameId = newName + UUID;
 			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
 				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
-				return false;
+				return null;
 			}
 			let newQuery = hasQuery ? pls.query : '';
 			if (!newQuery.length || bEdit) {
 				try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, newQuery, true); }
-				catch (e) { return false; }
+				catch (e) { return null; }
 			}
-			if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false; }
+			if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
 			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern:\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 			const newForced = (newSort.length ? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) : popup.no) === popup.yes;
 			const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
 			const handleList = hasSize && hasQuery && pls.query === newQuery ? null : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
 			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : handleList.Count;
 			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : handleList.CalcTotalDuration();
-			const objectPlaylist = new oPlaylist({
+			const objectPlaylist = new PlaylistObj({
 				id: UUID,
 				name: newName,
 				size: queryCount,
@@ -4826,33 +4821,33 @@ function _list(x, y, w, h) {
 		this.addSmartplaylist = (pls = null, bEdit = true, toFolder = null) => {
 			this.xspPopup();
 			// Check if there are initial values
-			const bPls = pls ? true : false;
+			const bPls = !!pls;
 			const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
 			const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
 			const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
 			const hasLimit = bPls && Object.hasOwn(pls, 'limit') && pls.limit;
-			// Create oPlaylist
+			// Create PlaylistObj
 			let newName = hasName ? pls.name : '';
 			if (!newName.length || bEdit) {
 				try { newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', window.Name, newName, true); }
-				catch (e) { return false; }
-				if (!newName.length) { return false; }
+				catch (e) { return null; }
+				if (!newName.length) { return null; }
 			}
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
 			const nameId = newName + UUID;
 			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
 				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
-				return false;
+				return null;
 			}
 			let newQuery = hasQuery ? pls.query : '';
 			if (!newQuery.length || bEdit) {
 				try { newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', window.Name, newQuery, true); }
-				catch (e) { return false; }
+				catch (e) { return null; }
 			}
 			const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
-			if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return false; }
+			if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
 			const { rules, match } = XSP.getRules(newQuery);
-			if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return false; }
+			if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return null; }
 			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n\n(optional)', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 			const newForced = false;
 			const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
@@ -4864,12 +4859,12 @@ function _list(x, y, w, h) {
 				if (isFinite(pls.limit)) { newLimit = pls.limit; }
 			} else if (bEdit) {
 				try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true)); }
-				catch (e) { return false; }
-				if (Number.isNaN(newLimit)) { return false; }
+				catch (e) { return null; }
+				if (Number.isNaN(newLimit)) { return null; }
 				if (!Number.isFinite(newLimit)) { newLimit = 0; }
 			}
 			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
-			const objectPlaylist = new oPlaylist({
+			const objectPlaylist = new PlaylistObj({
 				id: UUID,
 				path: playlistPath,
 				name: newName,
@@ -4902,7 +4897,7 @@ function _list(x, y, w, h) {
 				jspPls.playlist.sort = XSP.getOrder(newSort);
 				const xspText = XSP.toXSP(jspPls);
 				if (xspText && xspText.length) { bDone = _save(playlistPath, xspText.join('\r\n')); }
-			} else { return false; }
+			} else { return null; }
 			// Save
 			this.addToData(objectPlaylist);
 			this.update(true, true); // We have already updated data before only for the variables changed
@@ -4920,15 +4915,15 @@ function _list(x, y, w, h) {
 		};
 
 		this.add = ({ bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length, toFolder = null } = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
-			if (!bEmpty && plman.ActivePlaylist === -1) { return; }
+			if (!bEmpty && plman.ActivePlaylist === -1) { return null; }
 			const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 			const oldName = removeIdFromStr(oldNameId);
 			let input = name || '';
 			if (bInputName) {
 				let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
 				try { input = utils.InputBox(window.ID, boxText, window.Name, (bEmpty ? '' : oldName) || input, true); }
-				catch (e) { return false; }
-				if (!input.length) { return false; }
+				catch (e) { return null; }
+				if (!input.length) { return null; }
 			}
 			const newName = input;
 			const oPlaylistPath = this.playlistsPath + sanitize(newName) + this.playlistsExtension;
@@ -4952,14 +4947,14 @@ function _list(x, y, w, h) {
 				const nameId = newName + UUID;
 				if (this.dataAll.some((pls) => pls.nameId === nameId)) {
 					fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
-					return false;
+					return null;
 				}
 				// Creates the file on the folder
 				if (!_isFolder(this.playlistsPath)) { _createFolder(this.playlistsPath); } // For first playlist creation
 				let done = savePlaylist({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
 				if (done) {
 					const now = Date.now();
-					objectPlaylist = new oPlaylist({
+					objectPlaylist = new PlaylistObj({
 						id: UUID,
 						path: oPlaylistPath,
 						name: newName,
@@ -4992,7 +4987,7 @@ function _list(x, y, w, h) {
 							}
 						}
 					} else { // If we changed the name of the playlist but created it using the active playlist, then clone with new name
-						if (newName !== oldName) {
+						if (newName !== oldName) { // NOSONAR
 							let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, newName + UUID);
 							plman.ActivePlaylist = new_playlist;
 						} else if (UUID.length) {
@@ -5019,11 +5014,11 @@ function _list(x, y, w, h) {
 						'\nadd' + _p({ bEmpty, name, bShowPopups, bInputName }.toStr()) +
 						'\n\nsavePlaylist' + _p({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? 'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
 						, window.Name, bShowPopups);
-					return false;
+					return null;
 				}
 			} else {
 				console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
-				return false;
+				return null;
 			}
 			this.update(true, true); // We have already updated data
 			this.filter();
@@ -5089,7 +5084,7 @@ function _list(x, y, w, h) {
 						this.updateTags(handleList, pls);
 					}
 				} else { // Or file
-					if (_isFile(pls.path)) {
+					if (_isFile(pls.path)) { // NOSONAR
 						if (!fbPlaylistIndex) { fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, oldNameId); } //If it was not loaded on foobar2000, then create a new one
 						plman.ActivePlaylist = fbPlaylistIndex;
 						// Try to load handles from library first, greatly speeds up non fpl large playlists
@@ -5179,7 +5174,7 @@ function _list(x, y, w, h) {
 					this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); // Update size on load
 				}
 			} else if (pls.extension === '.ui') {
-				handleList = getHandleFromUIPlaylists([pls.nameId], false);
+				handleList = getHandlesFromUIPlaylists([pls.nameId], false);
 				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }
 			} else if (_isFile(pls.path)) { // Or file
 				// Try to load handles from library first, greatly speeds up non fpl large playlists

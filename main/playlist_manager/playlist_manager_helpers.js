@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//27/12/23
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -17,7 +17,7 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 /* global _setClipboardData:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getPlaylistIndexArray:readable, getHandlesFromPlaylist:readable, getHandleFromUIPlaylists:readable,  */
+/* global getPlaylistIndexArray:readable, getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable,  */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global loadablePlaylistFormats:readable, fplCache:readable, xmlDomCache:readable , getFilePathsFromPlaylist:readable, _explorer:readable, savePlaylist:readable, xspCache:readable, xspfCache:readable, arePathsInMediaLibrary:readable, pathTF:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_fpl.js');
@@ -31,7 +31,7 @@ include('..\\..\\helpers\\helpers_xxx_tags.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 /* global removeDuplicatesV2:readable */
 
-function oPlaylist({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1 } = {}) {
+function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1 } = {}) {
 	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
 		const sfp = utils.SplitFilePath(path);
 		if (typeof extension === 'undefined') { extension = sfp[2]; }
@@ -254,7 +254,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 				xmlDomCache.set(file, xmldom);
 			}
 		}
-		playlistArray[i] = new oPlaylist({
+		playlistArray[i] = new PlaylistObj({
 			id: uuid,
 			path: file,
 			name: name.length ? name : void (0), // Pass undefined to retrieve from path
@@ -263,7 +263,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 			fileSize,
 			bLocked,
 			bAutoPlaylist: false,
-			queryObj: queryObj ? queryObj : void (0),
+			queryObj: queryObj || void (0),
 			category,
 			tags: isArrayStrings(tags) ? tags : void (0),
 			trackTags: isArray(trackTags) ? trackTags : void (0),
@@ -659,7 +659,7 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist 
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
-	bDone = list.addAutoplaylist(objectPlaylist) ? true : false;
+	bDone = !!list.addAutoplaylist(objectPlaylist);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
@@ -674,7 +674,7 @@ function cloneAsSmartPls(list, z) { // May be used only to copy an Auto-Playlist
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
-	bDone = list.addSmartplaylist(objectPlaylist) ? true : false;
+	bDone = !!list.addSmartplaylist(objectPlaylist);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
@@ -734,7 +734,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 		? pls.isAutoPlaylist
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
 			: getHandlesFromPlaylist(pls.path, list.playlistsPath, true)
-		: getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList && handleList.Count) {
 		if (pls.isAutoPlaylist && pls.sort.length) {
 			const sort = getSortObj(pls.sort);
@@ -781,7 +781,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 			? pls.isAutoPlaylist
 				? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
 				: getHandlesFromPlaylist(pls.path, list.playlistsPath, true)
-			: getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+			: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 		if (bDone && handleListZ) {
 			bDone = true;
 			if (handleListZ.Count) {
@@ -817,7 +817,7 @@ function clonePlaylistFile(list, z, ext) {
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
-	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
@@ -839,7 +839,6 @@ function clonePlaylistFile(list, z, ext) {
 	return bDone;
 }
 
-// TODO: Use m3u8 as default format if original playlist format is not writable
 function exportPlaylistFile(list, z, defPath = '') {
 	let bDone = false;
 	const pls = list.data[z];
@@ -867,7 +866,6 @@ function exportPlaylistFile(list, z, defPath = '') {
 	return bDone;
 }
 
-// TODO: Use m3u8 as default format if original playlist format is not writable
 function exportPlaylistFiles(list, zArr, defPath = '') {
 	let bDone = false;
 	if (!zArr.length) { return bDone; }
@@ -906,13 +904,13 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 function exportPlaylistFileWithRelPaths({ list, z, ext = '', defPath = '', bNoInput = false } = {}) {
 	let bDone = false;
 	const pls = list.data[z];
+	let newPath = '';
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-		return bDone;
+		return { bDone, newPath };
 	}
 	const playlistPath = pls.path;
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
-	let newPath = '';
 	if (bNoInput) {
 		newPath = defPath + playlistName;
 	} else {
@@ -1018,7 +1016,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	if (!newPath.length) { return bDone; }
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
 	// Get tracks
-	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true, remDupl, void (0), bAdvTitle) : getHandleFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true, remDupl, void (0), bAdvTitle) : getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const subsongRegex = /,\d*$/g;
 	const paths = (!bUI && !bXSP ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => { return path.replace(subsongRegex, ''); });
 	const root = utils.SplitFilePath(newPath)[0];
@@ -1167,7 +1165,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 				list.filter();
 				bRenamedSucessfully = true;
 			} else {
-				if (_isFile(pls.path)) {
+				if (_isFile(pls.path)) { // NOSONAR
 					// Backup
 					const oldPath = pls.path;
 					const backPath = pls.path + '.back';
@@ -1419,7 +1417,7 @@ function findMixedPaths() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && !pls.extension === '.ui' && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.ui' && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1459,7 +1457,7 @@ function findExternal() {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
-					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
 					if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
 						const bDead = filePaths.map((path) => { return path.replace(subsongRegex, ''); }).some((path) => {
 							// Skip streams & look for absolute and relative paths (with and without .\)
@@ -1509,7 +1507,7 @@ function findDead() {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
-					const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false))).map((path) => { return path.replace(subsongRegex, ''); });
+					const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))).map((path) => { return path.replace(subsongRegex, ''); });
 					const bDead = filePaths.some((path) => {
 						// Skip streams & look for absolute and relative paths (with and without .\)
 						let bCheck = !_isLink(path);
@@ -1549,7 +1547,7 @@ function findDuplicates() {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
-					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
 					if (new Set(filePaths).size !== filePaths.length) { found.push(playlist); }
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
 					if (progress > prevProgress) { prevProgress = progress; console.log('Checking duplicates ' + progress + '%.'); }
@@ -1769,7 +1767,7 @@ function findSubSongs() {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
-					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandleFromUIPlaylists([playlist.nameId], false));
+					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
 					const count = filePaths.reduce((total, path) => (subsongRegex.test(path) ? total + 1 : total), 0);
 					if (count) {
 						found.push(playlist);

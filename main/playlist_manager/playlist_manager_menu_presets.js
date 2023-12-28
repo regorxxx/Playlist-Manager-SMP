@@ -1,7 +1,9 @@
 ﻿'use strict';
-//07/11/23
+//27/12/23
 
+/* global require:readable, RGB:readable, colorBlind:readable, panel:readable, list:readable, convertObjectToString:readable,  overwriteProperties:readable */
 const Chroma = require('..\\..\\helpers-external\\chroma.js\\chroma.min');
+/* global colorbrewer:readable */
 const createMenuRightTopBack = createMenuRightTop;
 
 function createMenuRightTop() {
@@ -34,11 +36,11 @@ function createMenuRightTop() {
 					list.colors.uiPlaylistColor = preset.colors[2];
 					list.colors.lockedPlaylistColor = preset.colors[3];
 					list.colors.selectedPlaylistColor = preset.colors[4];
-				}				
+				}
 				list.properties.listColors[1] = convertObjectToString(list.colors);
 				panel.colorsChanged();
 				panel.setDefault({all: true});
-				if (preset.hasOwnProperty('buttonColors') && preset.buttonColors.length) {
+				if (Object.hasOwn(preset, 'buttonColors') && preset.buttonColors.length) {
 					if (preset.buttonColors[0] !== null) {panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor = preset.buttonColors[0];}
 					if (preset.buttonColors[1] !== null) {panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor = preset.buttonColors[1];}
 					panel.colorsChanged();

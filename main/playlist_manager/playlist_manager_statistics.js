@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/11/23
+//27/12/23
 
 /* exported _listStatistics */
 
@@ -469,7 +469,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						case 'size': {
 							if (pls.isFolder) { val = null; } // Just skip
 							else {
-								if (pls.size) {
+								if (pls.size) { // NOSONAR
 									val = !Number.isNaN(pls.size) && pls.size !== '?'
 										? '>' + Math.floor(pls.size / sizeThreshold) * sizeThreshold
 										: '?';

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/12/23
+//27/12/23
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -40,7 +40,7 @@ include('playlist_manager_helpers.js');
 include('playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
-/* global isYouTube:readable, youtube:readable */
+/* global isYouTube:readable, youTube:readable */
 
 // Menus
 const menuRbtn = new _menu();
@@ -506,12 +506,12 @@ function createMenuLeft(forcedIndex = -1) {
 													let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
 													if (answer === popup.no) { return false; }
 												}
-												// Find missing tracks on youtube
+												// Find missing tracks on youTube
 												if (bYouTube) {
-													// Add MBIDs to youtube track metadata
+													// Add MBIDs to youTube track metadata
 													notFound.forEach((track) => track.tags = { musicbrainz_trackid: track.identifier });
 													// Send request in parallel every x ms and process when all are done
-													return Promise.parallel(notFound, youtube.searchForYoutubeTrack, 5).then((results) => {
+													return Promise.parallel(notFound, youTube.searchForYoutubeTrack, 5).then((results) => {
 														let j = 0;
 														const itemsLen = handleArr.length;
 														let foundLinks = 0;
@@ -966,7 +966,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bIsPlsEditable = playlists.some((pls) => { return isPlsEditable(pls); });
 	const bIsPlsLockable = playlists.some((pls) => { return isPlsLockable(pls); });
 	const bIsPlsUIEvery = playlistsUI.length === playlists.length;
-	const bIsPlsUISome = playlistsUI.length ? true : false;
+	const bIsPlsUISome = playlistsUI.length !== 0;
 	const bWritableFormat = playlists.some((pls) => { return writablePlaylistFormats.has(pls.extension); });
 	const bManualSorting = list.methodState === list.manualMethodState();
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
@@ -1452,14 +1452,14 @@ function createMenuRight() {
 										}
 										const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
 										const backPath = playlistPath + '.back';
-										// Find missing tracks on youtube
+										// Find missing tracks on youTube
 										if (bYouTube) {
 											pop.enable(false, 'YouTube...', 'Importing tracks from YouTube...\nPanel will be disabled during the process.');
 											list.disableAutosaveForPls(playlistNameId);
-											// Add MBIDs to youtube track metadata
+											// Add MBIDs to youTube track metadata
 											notFound.forEach((track) => track.tags = { musicbrainz_trackid: track.identifier });
 											// Send request in parallel every x ms and process when all are done
-											return Promise.parallel(notFound, youtube.searchForYoutubeTrack, 5).then((results) => {
+											return Promise.parallel(notFound, youTube.searchForYoutubeTrack, 5).then((results) => {
 												let j = 0;
 												const itemsLen = handleArr.length;
 												let foundLinks = 0;
@@ -1676,7 +1676,7 @@ function createMenuRight() {
 			menu.newEntry({
 				entryText: 'Export playlists as json file...', func: () => {
 					let answer = WshShell.Popup('Export only AutoPlaylists (yes) or both AutoPlaylists and other playlists -.fpl & .xsp- (no)?', 0, window.Name, popup.question + popup.yes_no);
-					const path = list.exportJson({ idx: -1, bAllExt: answer === popup.yes ? false : true },); // All
+					const path = list.exportJson({ idx: -1, bAllExt: answer !== popup.yes },); // All
 					if (_isFile(path)) { _explorer(path); }
 				}
 			});
@@ -1826,13 +1826,16 @@ function createMenuRight() {
 				}
 				found.sort((a, b) => a.category.localeCompare(b.category));
 				for (let i = 0, prevCat = null; i < found.length; i++) {
-					if (prevCat !== found[i].category) { prevCat = found[i].category; found.splice(i, 0, found[i].category); }
+					if (prevCat !== found[i].category) {
+						prevCat = found[i].category;
+						found.splice(i, 0, { category: found[i].category });
+					}
 				}
 				for (let i = 0; i < found.length; i++) {
 					if (found[i].name) {
 						found[i] = '\t- ' + found[i].name;
 					} else {
-						found[i] = (found[i] || 'No category') + ':';
+						found[i] = (found[i].category || 'No category') + ':';
 					}
 				}
 				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
@@ -1977,7 +1980,7 @@ function createMenuRightTop() {
 					options.forEach((item, i) => {
 						menu.newEntry({
 							menuName: subMenuName, entryText: item, func: () => {
-								list.bRelativePath = (i === 0) ? true : false;
+								list.bRelativePath = (i === 0);
 								list.properties['bRelativePath'][1] = list.bRelativePath;
 								overwriteProperties(list.properties);
 								if (i === 0) { fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name); }
@@ -2095,7 +2098,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bSaveFilterStates = (i === 0) ? true : false;
+						list.bSaveFilterStates = (i === 0);
 						list.properties['bSaveFilterStates'][1] = list.bSaveFilterStates;
 						overwriteProperties(list.properties);
 					}
@@ -2112,7 +2115,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bAllPls = (i === 0) ? true : false;
+						list.bAllPls = (i === 0);
 						list.properties['bAllPls'][1] = list.bAllPls;
 						overwriteProperties(list.properties);
 						if (list.bAllPls) {
@@ -2134,7 +2137,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bCheckDuplWarnings = (i === 0) ? true : false;
+						list.bCheckDuplWarnings = (i === 0);
 						list.properties['bCheckDuplWarnings'][1] = list.bCheckDuplWarnings;
 						overwriteProperties(list.properties);
 					}
@@ -2151,7 +2154,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bForbidDuplicates = (i === 0) ? true : false;
+						list.bForbidDuplicates = (i === 0);
 						list.properties['bForbidDuplicates'][1] = list.bForbidDuplicates;
 						overwriteProperties(list.properties);
 					}
@@ -2168,7 +2171,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bDeadCheckAutoSave = (i === 0) ? true : false;
+						list.bDeadCheckAutoSave = (i === 0);
 						list.properties['bDeadCheckAutoSave'][1] = list.bDeadCheckAutoSave;
 						overwriteProperties(list.properties);
 					}
@@ -2260,7 +2263,7 @@ function createMenuRightTop() {
 						menuName: subMenuName, entryText: item, func: () => {
 							list.optionUUID = item;
 							list.properties['optionUUID'][1] = list.optionUUID;
-							list.bUseUUID = (i === optionsLength - 1) ? false : true;
+							list.bUseUUID = i !== (optionsLength - 1);
 							list.properties['bUseUUID'][1] = list.bUseUUID;
 							overwriteProperties(list.properties);
 							list.updateAllUUID();
@@ -2416,7 +2419,7 @@ function createMenuRightTop() {
 						try { tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, options.join(','), true); }
 						catch (e) { return; }
 						tag = tag.trim();
-						list.bAutoCustomTag = tag.length ? true : false;
+						list.bAutoCustomTag = !!tag.length;
 						list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
 						list.autoCustomTag = tag.split(',');
 						list.properties.autoCustomTag[1] = tag;
@@ -2432,7 +2435,7 @@ function createMenuRightTop() {
 				options.forEach((item, i) => {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: item, func: () => {
-							list.bApplyAutoTags = (i === 0) ? true : false;
+							list.bApplyAutoTags = (i === 0);
 							list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
 							overwriteProperties(list.properties);
 							fb.ShowPopupMessage('Note in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).\n\n\'bMultMenu\': Associates playlist to menu entries applied to multiple playlists.\n\n\'bSkipMenu\': Skips dynamic menu creation for tagged playlist.\n\nUsage of \'bPinnedFirst\' and \'bPinnedLast\', to pin playlists at top/bottom, require automatic actions to be enabled.', window.Name);
@@ -2611,7 +2614,7 @@ function createMenuRightTop() {
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set name...', func: () => {
-							const hasName = Object.hasOwn(preset, 'name') ? true : false;
+							const hasName = !!Object.hasOwn(preset, 'name');
 							let input = '';
 							try { input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, Object.hasOwn(preset, 'name') ? preset.name : '', true); }
 							catch (e) { return; }
@@ -2676,7 +2679,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bShowSize = (i === 0) ? true : false;
+						list.bShowSize = (i === 0);
 						list.properties['bShowSize'][1] = list.bShowSize;
 						overwriteProperties(list.properties);
 					}
@@ -2694,7 +2697,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bShowSep = (i === 0) ? true : false;
+						list.bShowSep = (i === 0);
 						list.properties['bShowSep'][1] = list.bShowSep;
 						overwriteProperties(list.properties);
 					}
@@ -2711,7 +2714,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bShowIcons = (i === 0) ? true : false;
+						list.bShowIcons = (i === 0);
 						list.properties['bShowIcons'][1] = list.bShowIcons;
 						overwriteProperties(list.properties);
 					}
@@ -2745,7 +2748,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bShowTips = (i === 0) ? true : false;
+						list.bShowTips = (i === 0);
 						list.properties['bShowTips'][1] = list.bShowTips;
 						overwriteProperties(list.properties);
 					}
@@ -2762,7 +2765,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bShowMenuHeader = (i === 0) ? true : false;
+						list.bShowMenuHeader = (i === 0);
 						list.properties['bShowMenuHeader'][1] = list.bShowMenuHeader;
 						overwriteProperties(list.properties);
 					}
@@ -2821,7 +2824,9 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
-			const getColorName = (val) => { return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-'); }; // From statistics
+			const getColorName = (val) => {
+				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
+			}; // From statistics
 			const subMenuName = menu.newMenu('Set custom colors...', menuName);
 			const options = ['AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
 			options.forEach((item, i) => {
@@ -3086,8 +3091,8 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						panel.properties.bToolbar[1] = panel.colors.bToolbar = i === 0 ? true : false;
-						panel.properties.bButtonsBackground[1] = panel.colors.bButtonsBackground = i === 2 ? true : false;
+						panel.properties.bToolbar[1] = panel.colors.bToolbar = i === 0;
+						panel.properties.bButtonsBackground[1] = panel.colors.bButtonsBackground = i === 2;
 						// Update property to save between reloads
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
@@ -3105,7 +3110,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						panel.imageBackground.enabled = i === 0 ? true : false;
+						panel.imageBackground.enabled = i === 0;
 						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
 						if (panel.imageBackground.enabled) { // Add shadows by default
 							const answer = WshShell.Popup('Add font shading to improve readability?\n(it may heavily affect performance on some systems)', 0, window.Name, popup.question + popup.yes_no);
@@ -3467,7 +3472,7 @@ function createMenuRightTop() {
 									'Reset filters': { enabled: true },
 									'List menu': { enabled: true },
 									'Settings menu': { enabled: true },
-									'Folder': { enabled: list.bLiteMode ? false : true },
+									'Folder': { enabled: !list.bLiteMode },
 									'Help': { enabled: true },
 								}
 							}
@@ -3946,7 +3951,7 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bDynamicMenus = i === 0 ? true : false;
+						list.bDynamicMenus = i === 0;
 						if (list.bDynamicMenus) {
 							fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)\n\nPlaylists tagged with \'bMultMenu\' will be associated to these special\nmenu entries:\n\t-Load tagged playlists\n\t-Clone tagged playlists in UI', window.Name);
 						}
@@ -3964,7 +3969,7 @@ function createMenuRightTop() {
 		if (showMenus['Online sync']) {	// ListenBrainz
 			const subMenuName = menu.newMenu('ListenBrainz...', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Set token...', func: async () => { return checkLBToken(''); } });
-			menu.newCheckMenu(subMenuName, 'Set token...', void (0), () => { return list.properties.lBrainzToken[1].length ? true : false; });
+			menu.newCheckMenu(subMenuName, 'Set token...', void (0), () => { return !!list.properties.lBrainzToken[1].length; });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Retrieve token from other panels...', func: () => {
 					callbacksListener.lBrainzTokenListener = true;
@@ -4133,7 +4138,7 @@ function createMenuRightSort() {
 	menu.clear(true); // Reset one every call
 	// Entries
 	{	// Sorting
-		const options = Object.keys(list.sortMethods(false)).slice(0, -1).sort().concat(['sep', list.manualMethodState()]);
+		const options = Object.keys(list.sortMethods(false)).slice(0, -1).sort((a, b) => a.localeCompare(b)).concat(['sep', list.manualMethodState()]);
 		const optionsLength = options.length;
 		menu.newEntry({ entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newEntry({ entryText: 'sep' });
@@ -4243,7 +4248,7 @@ function createMenuSearch() {
 			showMenus['Tags'] ? { entryText: 'By tags', key: 'bTags' } : null,
 			showMenus['Category'] ? { entryText: 'By categories', key: 'bCategory' } : null,
 			{ entryText: 'By file and folder names', key: 'bPath' }
-		].filter(Boolean).sort();
+		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
 		options.forEach((opt) => {

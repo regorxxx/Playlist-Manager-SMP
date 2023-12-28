@@ -1,12 +1,20 @@
 ﻿'use strict';
-//07/11/23
+//27/12/23
 
+/* exported _panel */
+
+/* global buttonsPanel:readable, */
 include('..\\..\\helpers\\helpers_xxx.js');
+/* global globFonts:readable, FontStyle:readable, InterpolationMode:readable, DLGC_WANTALLKEYS:readable */
+include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+/* global isInt:readable, isBoolean:readable, isJSON:readable, isInt:readable, debounce:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
+/* global overwriteProperties:readable, setProperties:readable, getPropertiesPairs:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
+/* global RGB:readable, _scale:readable, invert:readable, blendColors:readable, _gdiFont:readable */
 
 function _panel(customBackground = false, bSetup = false) {
-	
+
 	const panelProperties = {
 		fontSize 			: ['Font size', _scale(10), {func: isInt}],
 		colorsMode			: ['Background colour mode', 0, {func: isInt, range: [[0,2]]}],
@@ -20,11 +28,11 @@ function _panel(customBackground = false, bSetup = false) {
 		buttonsToolbarColor	: ['Buttons\' toolbar colour', RGB(0,0,0), {func: isInt}],
 		buttonsToolbarTransparency	: ['Buttons\' toolbar transparency', 5, {func: isInt, range: [[0,100]]}],
 		imageBackground		: ['Image background config', JSON.stringify({
-			enabled: true, 
-			mode: 1, 
-			art: {path: '', image: null}, 
-			transparency: 60, 
-			bProportions: true, 
+			enabled: true,
+			mode: 1,
+			art: {path: '', image: null},
+			transparency: 60,
+			bProportions: true,
 			bFill: true,
 			blur: 10,
 			bTint: true
@@ -34,7 +42,7 @@ function _panel(customBackground = false, bSetup = false) {
 	};
 	for (let key in panelProperties) {panelProperties[key][3] = panelProperties[key][1];}
 	setProperties(panelProperties, 'panel_');
-	
+
 	this.colorsChanged = () => {
 		if (window.InstanceType) {
 			this.colors.background = window.GetColourDUI(1);
@@ -57,7 +65,7 @@ function _panel(customBackground = false, bSetup = false) {
 		buttonsPanel.config.toolbarColor = this.colors.buttonsToolbarColor; // buttons_xxx.js
 		buttonsPanel.config.toolbarTransparency = this.colors.buttonsToolbarTransparency; // buttons_xxx.js
 	};
-	
+
 	this.fontChanged = () => {
 		let name;
 		let font = window.InstanceType ? window.GetFontDUI(0) : window.GetFontCUI(0);
@@ -77,12 +85,12 @@ function _panel(customBackground = false, bSetup = false) {
 		this.listObjects.forEach((item) => {item.update();});
 		this.textObjects.forEach((item) => {item.size();});
 	};
-	
+
 	this.size = () => {
 		this.w = window.Width;
 		this.h = window.Height;
 	};
-	
+
 	this.getColorBackground = () => {
 		let col;
 		switch (true) {
@@ -93,7 +101,6 @@ function _panel(customBackground = false, bSetup = false) {
 				col = this.colors.background;
 				break;
 			case this.colors.mode === 1:
-				// col = utils.GetSysColour(15);
 				col = window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
 				break;
 			case this.colors.mode === 2:
@@ -102,7 +109,7 @@ function _panel(customBackground = false, bSetup = false) {
 		}
 		return col;
 	};
-	
+
 	this.updateImageBg = debounce((bForce = false) => {
 		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null;}
 		let handle;
@@ -112,17 +119,17 @@ function _panel(customBackground = false, bSetup = false) {
 			handle = fb.GetNowPlaying() || fb.GetFocusItem(true);
 		}
 		if (!bForce && (handle && this.imageBackground.handle === handle.RawPath || this.imageBackground.handle === this.imageBackground.art.path)) {return;}
-		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length 
+		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length
 			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
-			: handle 
+			: handle
 				? utils.GetAlbumArtAsyncV2(void(0), handle, 0, true, false, false)
-				: Promise.reject('No handle/art');
+				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
 			if (this.imageBackground.mode === 2) {
 				this.imageBackground.art.image = result;
 				this.imageBackground.handle = this.imageBackground.art.path;
 			} else {
-				if (!result.image) {throw 'Image not available';}
+				if (!result.image) {throw new Error('Image not available');}
 				this.imageBackground.art.image = result.image;
 				this.imageBackground.art.path = result.path;
 				this.imageBackground.handle = handle.RawPath;
@@ -139,15 +146,15 @@ function _panel(customBackground = false, bSetup = false) {
 			return window.Repaint();
 		});
 	}, 250);
-	
-	this.paintImage = (gr, limits = {x, y, w, h, offsetH}, fill = null /* {transparency: 20} */) => {
+
+	this.paintImage = (gr, limits = {x: 0, y: 0, w: this.w, h: this.h, offsetH: 0}, fill = null /* {transparency: 20} */) => { // NOSONAR
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.imageBackground.art.image;
 			if (fill) {
 				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.transparency);
 			} else {
-				if (this.imageBackground.bFill) {
+				if (this.imageBackground.bFill) { // NOSONAR
 					if (this.imageBackground.bProportions) {
 						const prop = limits.w / (limits.h - limits.offsetH);
 						if (prop > 1) {
@@ -158,7 +165,7 @@ function _panel(customBackground = false, bSetup = false) {
 							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.transparency);
 						}
 					} else {
-							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+						gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
 					}
 				} else {
 					let w, h;
@@ -170,7 +177,7 @@ function _panel(customBackground = false, bSetup = false) {
 			gr.SetInterpolationMode(InterpolationMode.Default);
 		}
 	};
-	
+
 	this.paint = (gr, bImage = false) => {
 		const col = this.getColorBackground();
 		if (typeof col !== 'undefined') {
@@ -183,7 +190,7 @@ function _panel(customBackground = false, bSetup = false) {
 		let bDone = false;
 		const defaultCol = invert(this.getColorBackground());
 		if (buttonText || all || oldColor !== null && this.colors.buttonsTextColor === oldColor) {
-			this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = panel.colors.bButtonsBackground
+			this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground
 				? this.colors.default.buttonsTextColor // In case the buttons theme manager is used, the text is black by default
 				: defaultCol;
 			bDone = true;
@@ -192,7 +199,7 @@ function _panel(customBackground = false, bSetup = false) {
 		if (bDone) {this.colorsChanged();}
 		return bDone;
 	};
-	
+
 	window.DlgCode = DLGC_WANTALLKEYS;
 	this.properties = getPropertiesPairs(panelProperties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.fonts = {};
