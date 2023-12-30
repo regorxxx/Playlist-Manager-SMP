@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/12/23
+//28/12/23
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -65,6 +65,16 @@ if (!_isFile(systemCodePageFile) || lastStartup() > lastModified(systemCodePageF
 	_runCmd('CMD /C CHCP > ' + _q(systemCodePageFile), true);
 }
 const systemCodePage = _isFile(systemCodePageFile) ? _open(systemCodePageFile).split(': ').pop() : -1;
+
+const popup = {
+	ok : 0,
+	yes_no : 4,
+	yes : 6,
+	no : 7,
+	stop : 16,
+	question : 32,
+	info : 64
+};
 
 /*
 	File manipulation

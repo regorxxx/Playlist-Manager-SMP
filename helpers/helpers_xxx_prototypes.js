@@ -402,17 +402,17 @@ function matchCase(text, pattern, bFirst = true) {
 }
 
 function capitalize(s) {
-	if (!isString(s)) { return ''; }
+	if (!isString(s)) {return typeof s === 'number' ? s.toString() : '';}
 	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
 function capitalizePartial(s) {
-	if (!isString(s)) { return ''; }
+	if (!isString(s)) {return typeof s === 'number' ? s.toString() : '';}
 	return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
-	if (typeof s !== 'string') { return ''; }
+	if (!isString(s)) {return typeof s === 'number' ? s.toString() : '';}
 	if (isArray(sep)) {
 		const copy = [...s.toLowerCase()];
 		const len = s.length;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/07/23
+//28/12/23
 
 /*
 	Remove duplicates
@@ -8,23 +8,29 @@
 	If 'sortOutput = ""', then final order will be randomized. It follows 'plman.SortByFormat' conventions.
 	Any 'sort...' variable follows titleformat conventions
 		i.e. "%TITLE%|%ALBUM ARTIST%|%DATE%"
-	Any 'check...' variable can follow both tag name or titleformat conventions (functions too) 
+	Any 'check...' variable can follow both tag name or titleformat conventions (functions too)
 		i.e. 'TITLE' or '%TITLE%'
 	You can add multiple entries to the same variable but then it must follow titleformat conventions.
 		i.e. 'checkKeys = [%TITLE% - %ARTIST%]'
 	The multiple 'check...' variables are joined using ' - '
-	
-	CAVEAT: 
-		Note you can use these functions to filter lists! i.e. if you only check by artist/date, 
+
+	CAVEAT:
+		Note you can use these functions to filter lists! i.e. if you only check by artist/date,
 		then any track with same artist/date is considered duplicated.
 		That means this could be used both to find duplicates or for custom post-playlist
 		creation filtering (1 track per artist, 1 track per date, etc.)
 	Tip:
 		Add musicBraiz track ID and album as default: solves same track with different dates...
-*/	
+*/
+
+/* exported removeDuplicates, removeDuplicatesV2, removeDuplicatesV3, showDuplicates */
+
 include('..\\..\\helpers\\helpers_xxx.js');
+/* global isFoobarV2:readable, globTags:readable, globRegExp:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes_smp.js');
+/* global _p:readable */
 if (isFoobarV2) {include('..\\..\\helpers\\helpers_xxx_tags_cache.js');}
+/* global tagsCache:readable */
 
 // Note number of final duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
 // 'nAllowed = 0' removes all duplicates.
@@ -43,13 +49,13 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 		}
 	}
 	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) {bPreserveSort = false;}
-	if (bProfile) {var test = new FbProfiler('removeDuplicates');}
+	const test = bProfile ? new FbProfiler('removeDuplicates') : null;
 	let copyHandleList, copyHandleListUnsorted;
-	
+
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
 	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
-	
+
 	// Active playlist or input list
 	let bActivePlaylist = false;
 	if (handleList === null) {
@@ -60,7 +66,7 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 		copyHandleList = handleList.Clone();
 	}
 	let items = [];
-	
+
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
@@ -78,7 +84,7 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 	let tfo = fb.TitleFormat(sortInput);
 	const tfoCopy = tfo.EvalWithMetadbs(copyHandleList);
 	copyHandleList = copyHandleList.Convert();
-	
+
 	i = 0;
 	let countMap = new Map([]);
 	const count = tfoCopy.length;
@@ -114,18 +120,18 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 			i++;
 		}
 	}
-	
+
 	if (bPreserveSort) { // 600 ms on 80K tracks
 		items = FbMetadbHandleList.partialSort(items, copyHandleListUnsorted);
 	}
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
-	
+
 	if (sortOutput !== null) { // Output Sorting?
 		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
 		else {tfo = fb.TitleFormat('$rand()');}
 		items.OrderByFormat(tfo, 1);
 	}
-	
+
 	if (bActivePlaylist) {
 		let removedCount = count - items.Count;
 		if (removedCount) { // Send to active playlist if there was no input list and changes were made
@@ -157,13 +163,13 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 		}
 	}
 	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) {bPreserveSort = false;}
-	if (bProfile) {var test = new FbProfiler('removeDuplicatesV2');}
+	const test = bProfile ? new FbProfiler('removeDuplicatesV2') : null;
 	let copyHandleList, copyHandleListUnsorted;
-	
+
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
 	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
-	
+
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
@@ -174,7 +180,7 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 		copyHandleList = handleList.Clone();
 	}
 	let items = [];
-	
+
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
@@ -192,7 +198,7 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 	let tfo = fb.TitleFormat(sortInput);
 	const tfoCopy = tfo.EvalWithMetadbs(copyHandleList);
 	copyHandleList = copyHandleList.Convert();
-	
+
 	i = 0;
 	let set = new Set();
 	const count = tfoCopy.length;
@@ -218,18 +224,18 @@ function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = g
 			i++;
 		}
 	}
-	
+
 	if (bPreserveSort) { // 600 ms on 80K tracks
 		items = FbMetadbHandleList.partialSort(items, copyHandleListUnsorted);
 	}
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
-	
+
 	if (sortOutput !== null) { // Output Sorting?
 		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
 		else {tfo = fb.TitleFormat('$rand()');}
 		items.OrderByFormat(tfo, 1);
 	}
-	
+
 	if (bActivePlaylist) {
 		let removedCount = count - items.Count;
 		if (removedCount) { // Send to active playlist if there was no input list and changes were made
@@ -260,22 +266,22 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 			}
 		}
 	}
-	if (bProfile) {var test = new FbProfiler('removeDuplicatesV3');}
-	
+	const test = bProfile ? new FbProfiler('removeDuplicatesV3') : null;
+
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
 	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
-	
+
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
 		if (plman.ActivePlaylist === -1) {console.log('removeDuplicatesV3: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
-	} 
+	}
 	let items = [];
 	let copy = handleList.Clone();
-	
+
 	let sortInput; // Sorting
 	let tags = [];
 	const count = copy.Count;
@@ -320,7 +326,7 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 		}
 	}
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
-	
+
 	if (sortOutput !== null) { // Output Sorting?
 		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
 		else {tfo = fb.TitleFormat('$rand()');}
@@ -357,22 +363,22 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 			}
 		}
 	}
-	if (bProfile) {var test = new FbProfiler('showDuplicates');}
-	
+	const test = bProfile ? new FbProfiler('showDuplicates') : null;
+
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
 	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
-	
+
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
 		if (plman.ActivePlaylist === -1) {console.log('showDuplicates: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
-	} 
+	}
 	let items = [];
 	let copy = handleList.Clone();
-	
+
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
@@ -384,7 +390,7 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 	}
 	let tfo = fb.TitleFormat(sortInput);
 	const tfoCopy = tfo.EvalWithMetadbs(copy);
-	
+
 	// Count items per TF and store only those with more than 1 handle per TF
 	i = 0;
 	let map = new Map();
@@ -407,17 +413,17 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 			i++;
 		}
 	}
-	map.forEach((idxArr, key) => {
+	map.forEach((idxArr) => {
 		if (idxArr.length > 1) {idxArr.forEach((idx) => {items.push(copy[idx]);});}
 	});
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
-	
+
 	if (sortOutput !== null) { // Output Sorting?
 		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
 		else {tfo = fb.TitleFormat('$rand()');}
 		items.OrderByFormat(tfo, 1);
 	}
-	
+
 	if (bActivePlaylist) {
 		let removedCount = handleList.Count - items.Count;
 		if (removedCount) { // Send to active playlist if there was no input list and changes were made

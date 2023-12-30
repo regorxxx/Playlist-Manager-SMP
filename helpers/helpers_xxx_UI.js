@@ -1,12 +1,12 @@
 ﻿'use strict';
-//27/12/23
+//29/12/23
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
 include('helpers_xxx.js');
-/* global globFonts:readable, globSettings:readable, doOnce:readable, folders:readable, globSettings:readable,  */
+/* global globFonts:readable, globSettings:readable, doOnce:readable, folders:readable, globSettings:readable */
 include('helpers_xxx_UI_chars.js');
 include('callbacks_xxx.js');
 
@@ -19,7 +19,7 @@ addEventListener('on_script_unload', () => {
 	window.Tooltip.Deactivate();
 });
 
-const WshShellUI = new ActiveXObject('WScript.Shell');
+const WshShellUI = typeof WshShell === 'undefined' ? new ActiveXObject('WScript.Shell') : WshShell; // eslint-disable-line no-undef
 const _bmp = gdi.CreateImage(1, 1);
 const _gr = _bmp.GetGraphics();
 
@@ -55,16 +55,6 @@ const SF_CENTRE = 285212672;
 
 const LM = _scale(5);
 const TM = _scale(15);
-
-const popup = {
-	ok : 0,
-	yes_no : 4,
-	yes : 6,
-	no : 7,
-	stop : 16,
-	question : 32,
-	info : 64
-};
 
 // Combinations of invisible chars may be used on UI elements to assign IDs...
 const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
