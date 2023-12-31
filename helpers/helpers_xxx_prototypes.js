@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//31/12/23
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -133,20 +133,32 @@ function roughSizeOfObject(object) {
 	let bytes = 0;
 	while (stack.length) {
 		const value = stack.pop();
-		if (typeof value === 'boolean') {
+		const type = typeof value;
+		if (type === 'boolean') {
 			bytes += 4;
-		}
-		else if (typeof value === 'string') {
+		} else if (type === 'string') {
 			bytes += value.length * 2;
-		}
-		else if (typeof value === 'number') {
+		} else if (type === 'number') {
 			bytes += 8;
-		}
-		else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
+		} else if (type === 'object' && value instanceof FbMetadbHandleList) {
+			bytes += 8;
+			value.Convert().forEach((handle) => {
+				bytes += 24;
+				bytes += handle.Path.length * 2;
+				bytes += handle.RawPath.length * 2;
+			});
+		} else if (type === 'object' && value instanceof FbTitleFormat) {
+			bytes += 8;
+			bytes += value.Expression.length * 2;
+		}  else if (type === 'object' && value.RawPath && value.Path) {
+			bytes += 24;
+			bytes += value.Path.length * 2;
+			bytes += value.RawPath.length * 2;
+		} else if (type === 'object' && objectList.indexOf(value) === -1) {
 			objectList.push(value);
 			for (const i in value) { if (!Object.hasOwn(value, i)) { continue; } stack.push(value[i]); }
 		}
-	} // TODO: Handle lists? TF?
+	}
 	return bytes;
 }
 
@@ -218,7 +230,7 @@ Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 			) + ': ' + (typeof entry[1] === 'object'
 				? entry[1] === null ? 'null' : entry[1].toStr()
 				: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
-				);
+			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
