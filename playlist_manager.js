@@ -1080,7 +1080,7 @@ if (!list.properties.bSetup[1]) {
 		}
 		// Set effects
 		if ((mask & dropMask.ctrl) === dropMask.ctrl) { action.Effect = dropEffect.copy; } // Mask is mouse + key
-		// else if ((mask & 32) === 32) {action.Effect = dropEffect.link;} // TODO: Bug, sends callback to on_drag_leave
+		// else if ((mask & 32) === 32) {action.Effect = dropEffect.link;} // BUG: sends callback to on_drag_leave
 		else { action.Effect = dropEffect.move; }
 	});
 

@@ -8,11 +8,6 @@ include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, IDC_HAND:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_SINGLELINE:readable, DT_END_ELLIPSIS:readable, IDC_IBEAM:readable, IDC_ARROW:readable, DT_END_ELLIPSIS:readable, MF_STRING:readable, MF_GRAYED:readable, MF_DISABLED:readable, VK_DELETE:readable, VK_HOME:readable, VK_SHIFT:readable, VK_ESCAPE:readable, VK_BACK:readable, VK_RETURN:readable, VK_LEFT:readable, VK_END:readable , VK_RIGHT:readable */
 
-/*
-	TODO:
-		- Repaint method for current region
- */
-
 function _check({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4354AF }) {
 	this.tt = '';
 	this.shape = shape.toLowerCase();

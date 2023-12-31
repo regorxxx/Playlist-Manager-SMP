@@ -428,7 +428,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
 		return paths;
 	}
-	if (_isFile(playlistPath)) { // TODO: skip blank lines ?
+	if (_isFile(playlistPath)) {
 		// Read original file
 		const bFpl = extension === '.fpl';
 		let originalText = _open(playlistPath);
@@ -585,7 +585,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		const stream = getFilePathsFromPlaylist(playlistPath);
 		plman.AddLocations(playlistIndex, stream, true);
 		bDone = true;
-	} else if (extension === '.fpl') { // TODO: add query matching
+	} else if (extension === '.fpl') { // TODO: load by path
 		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {
@@ -745,7 +745,7 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 				const regExListenBrainz = typeof listenBrainz !== 'undefined'
 					? listenBrainz.regEx // eslint-disable-line no-undef
 					: /(^https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
-				const sort = globQuery.remDuplBias; // TODO: add as argument?
+				const sort = globQuery.remDuplBias;
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
 					if (!notFound.has(i)) { continue; }
