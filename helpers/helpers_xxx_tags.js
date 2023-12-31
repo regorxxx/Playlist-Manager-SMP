@@ -1,7 +1,13 @@
 ﻿'use strict';
-//24/11/23
+//30/12/23
+
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, query_combinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor */
 
 include('helpers_xxx.js');
+/* global globTags:readable, folders:readable */
+include('helpers_xxx_prototypes.js');
+/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable */
+
 
 /*
 	Global Variables
@@ -17,22 +23,22 @@ const keyTags = new Set(['KEY_BACKUP1', 'KEY_BACKUP2', 'INITIAL KEY', 'INITIALKE
 // Put here the corresponding function for the cyclic tag. Swap lower/upper values before return if required. They must be always ordered.
 // ALWAYS RETURN [valueLower, valueUpper, lowerLimit, upperLimit];
 // Object keys must match the tag names at cyclicTags...
-const cyclicTagsDescriptor ={
+const cyclicTagsDescriptor = {
 	//dyngenre_map_xxx.js
-	dynamic_genre(tagValue, valueRange, bReturnLimits) {return dynGenreRange(tagValue, valueRange, bReturnLimits);},
+	dynamic_genre(tagValue, valueRange, bReturnLimits) { return dynGenreRange(tagValue, valueRange, bReturnLimits); },
 };
 // Add here the external files required for cyclic tags
-var bLoadTags; // This tells the helper to load tags descriptors extra files. False by default
+// This tells the helper to load tags descriptors extra files. False by default
+var bLoadTags; // NOSONAR
 if (bLoadTags) {
-	let externalPath = 	[
+	let externalPath = [
 		folders.xxx + 'helpers\\dyngenre_map_xxx.js', //for dynamic_genre range function
+		/* global dynGenreRange:readable */
 	];
-
 	for (let i = 0; i < externalPath.length; i++) {
 		const path = externalPath[i];
 		if (_isFile(path)) {
-			// console.log('cyclicTagsDescriptor - File loaded: ' + path);
-			include(path, {always_evaluate: false});
+			include(path, { always_evaluate: false });
 		} else {
 			console.log('cyclicTagsDescriptor - WARNING missing: ' + path);
 		}
@@ -47,12 +53,12 @@ const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR 
 
 // Quote special chars according to https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Titleformat_Reference#Syntax
 function sanitizeTagTfo(tag) {
-	return tag.replace(/'/g,'\'\'').replace(/%/g,'\'%\'').replace(/[$]/g,'\'$$\'').replace(/[[]/g,'\'[\'').replace(/[\]]/g,'\']\'').replace(/[(]/g,'\'(\'').replace(/[)]/g,'\')\'').replace(/,/g,'\',\'');
+	return tag.replace(/'/g, '\'\'').replace(/%/g, '\'%\'').replace(/\$/g, '\'$$\'').replace(/\[/g, '\'[\'').replace(/\]/g, '\']\'').replace(/\(/g, '\'(\'').replace(/\)/g, '\')\'').replace(/,/g, '\',\'');
 }
 
 // Quote value if needed
 function sanitizeQueryVal(val) {
-	return (val.match(/\(|\)/g) ? _q(val) : val);
+	return (val.match(/[()]/g) ? _q(val) : val);
 }
 
 // Quote value if needed
@@ -60,17 +66,19 @@ function sanitizeTagIds(tag, bSpace = true) {
 	return '$ascii($lower($trim($replace(' + tag.toUpperCase() + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),' + (bSpace ? ', ,' : '') + '))))';
 }
 function sanitizeTagValIds(val, bSpace = true) {
-	return _asciify(val).trim().replace((bSpace
-		? /['`’\-/\\ :"]/g
-		: /['`’\-/\\:"]/g)
-	,'').toLowerCase();
+	return _asciify(val).trim().replace(
+		bSpace
+			? /['`’\-/\\ :"]/g
+			: /['`’\-/\\:"]/g
+		, ''
+	).toLowerCase();
 }
 
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
 function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
-	if (bDebug) {console.log('Initial query:', query);}
-	if (!query.length) {console.log('queryReplaceWithCurrent(): query is empty'); return '';}
+	if (bDebug) { console.log('Initial query:', query); }
+	if (!query.length) { console.log('queryReplaceWithCurrent(): query is empty'); return ''; }
 	// global queries without handle required
 	let bStatic = false;
 	if (/#MONTH#|#YEAR#|#DAY#/g.test(query)) {
@@ -83,11 +91,11 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 	// With handle
 	if (!handle) {
 		if ((query.match(/#/g) || []).length >= 2) {
-			if (bDebug) {console.log(tags);}
-			if (!tags) {console.log('queryReplaceWithCurrent(): handle is null'); return;}
-		} else {return query;}
+			if (bDebug) { console.log(tags); }
+			if (!tags) { console.log('queryReplaceWithCurrent(): handle is null'); return; }
+		} else { return query; }
 	}
-	if (/#NEXTKEY#|#PREVKEY#/g.test(query)) {console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return;}
+	if (/#NEXTKEY#|#PREVKEY#/g.test(query)) { console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return; }
 	if (query.indexOf('#') !== -1) {
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
@@ -95,13 +103,13 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 		while (curr !== next) {
 			curr = idx[idx.length - 1];
 			next = query.indexOf('#', curr + 1);
-			if (next !== -1 && curr !== next) {idx.push(next);}
-			else {break;}
+			if (next !== -1 && curr !== next) { idx.push(next); }
+			else { break; }
 		}
 		let count = idx.length;
-		const startQuery = query[0] === '(' ? query.slice(0, query.split('').findIndex((s) => {return s !== '(';})) : '';
+		const startQuery = query[0] === '(' ? query.slice(0, query.split('').findIndex((s) => { return s !== '('; })) : '';
 		const endQuery = query.length > idx[count - 1] ? query.slice(idx[count - 1] + 1, query.length) : '';
-		if (bDebug) {console.log(startQuery, '-', endQuery);}
+		if (bDebug) { console.log(startQuery, '-', endQuery); }
 		if (count % 2 === 0) { // Must be on pairs of 2
 			let tempQuery = '';
 			let tfo = '', tfoVal = '';
@@ -111,13 +119,13 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 				const bIsFunc = tfo.indexOf('$') !== -1;
 				const prevChar = query[idx[i] - 1];
 				const nextChar = query[idx[i + 1] + 1];
-				const bIsWithinFunc = (prevChar === '('  || prevChar === ',') && (nextChar === ')' || nextChar === ',');
+				const bIsWithinFunc = (prevChar === '(' || prevChar === ',') && (nextChar === ')' || nextChar === ',');
 				tfo = !bIsFunc ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
 				// Workaround for album artist
 				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST\)/g, '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
-				if (bDebug) {console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey);}
+				if (bDebug) { console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey); }
 				tfo = handle ? fb.TitleFormat(tfo) : null;
 				tfoVal = bIsFunc || bIsWithinFunc
 					? sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : (tags[tagKey.toLowerCase()] || []).join('#'))
@@ -127,24 +135,24 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 					tfo = fb.TitleFormat(tfo.Expression.slice(1, -1));
 					tfoVal = sanitizeTagTfo(tfo.EvalWithMetadb(handle));
 				}
-				if (bDebug) {console.log('tfoVal:', tfoVal);}
+				if (bDebug) { console.log('tfoVal:', tfoVal); }
 				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
-					const interQueryStart = interText[0] === ')' ? interText.slice(0, interText.split('').findIndex((s) => {return s !== ')';})) : '';
+					const interQueryStart = interText[0] === ')' ? interText.slice(0, interText.split('').findIndex((s) => { return s !== ')'; })) : '';
 					const breakPoint = interText.lastIndexOf(' (');
-					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => {return s !== '(';})) : '';
+					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => { return s !== '('; })) : '';
 					const interQuery = interQueryStart + interQueryEnd;
-					const multiQuery  = tfoVal.split('#').map((val) => {
+					const multiQuery = tfoVal.split('#').map((val) => {
 						return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(val) : val);
 					});
 					tempQuery += interQuery + query_join(multiQuery, 'AND');
 				} else {
-					if (bDebug) {console.log(i > 0, startQuery.length, idx[i]);}
+					if (bDebug) { console.log(i > 0, startQuery.length, idx[i]); }
 					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal).trim();
 				}
 			}
 			query = startQuery + tempQuery + endQuery;
-			if (bDebug) {console.log(startQuery, '-', tempQuery, '-', endQuery);}
+			if (bDebug) { console.log(startQuery, '-', tempQuery, '-', endQuery); }
 		}
 	}
 	return query;
@@ -238,7 +246,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 				if (j === 0) {
 					query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][0]); // only adds pharentesis when more than one subtag! Estetic fix...
 				} else {
-					query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' '+ sanitizeQueryVal(tagsArray[i][j]);
+					query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][j]);
 				}
 				j++;
 			}
@@ -251,26 +259,26 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 
 function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
-	if (!bAllowEmpty && (!query || !query.length)) {return false;}
+	if (!bAllowEmpty && (!query || !query.length)) { return false; }
 	let queryNoSort = query;
 	if (bAllowSort) {
 		queryNoSort = stripSort(query);
-		if (!queryNoSort.length || queryNoSort !== query && !checkSort(query.replace(queryNoSort, ''))) {return false;}
+		if (!queryNoSort.length || queryNoSort !== query && !checkSort(query.replace(queryNoSort, ''))) { return false; }
 	}
-	try {fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort);}  // Test query against empty handle list since it's much faster!
-	catch (e) {bPass = false;}
+	try { fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort); }  // Test query against empty handle list since it's much faster!
+	catch (e) { bPass = false; }
 	if (bPass) {
-		try {fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort));}  // Some expressions only throw inside parentheses!
-		catch (e) {bPass = false;}
+		try { fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort)); }  // Some expressions only throw inside parentheses!
+		catch (e) { bPass = false; }
 	}
-	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) {bPass = false;}
+	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) { bPass = false; }
 	return bPass;
 }
 
 function checkSort(queryOrSort) {
 	let bPass = true;
 	const sortObj = getSortObj(queryOrSort);
-	if (!sortObj || !sortObj.tf) {bPass = false;}
+	if (!sortObj || !sortObj.tf) { bPass = false; }
 	return bPass;
 }
 
@@ -278,10 +286,10 @@ function checkSort(queryOrSort) {
 function stripSort(query) {
 	let queryNoSort = query;
 	if (query.match(/ *SORT .*$/)) {
-		if (query.match(/ *SORT BY .*$/)) {queryNoSort = query.split(/( *SORT BY ).*$/)[0];}
-		else if (query.match(/ *SORT DESCENDING BY .*$/)) {queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0];}
-		else if (query.match(/ *SORT ASCENDING BY .*$/)) {queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0];}
-		else {queryNoSort = '';}
+		if (query.match(/ *SORT BY .*$/)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
+		else if (query.match(/ *SORT DESCENDING BY .*$/)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
+		else if (query.match(/ *SORT ASCENDING BY .*$/)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
+		else { queryNoSort = ''; }
 	}
 	return queryNoSort;
 }
@@ -293,18 +301,18 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	if (sort.length) {
 		sortObj = {};
 		[sortObj.direction, sortObj.tag] = sort.split(/(?: BY )(.*$)/i);
-		if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) {sortObj.direction = 1;}
-		else if (sortObj.direction.match(/SORT DESCENDING$/)) {sortObj.direction = -1;}
-		else {console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null;}
-		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"*\$.+\(.*\)"*$|%.+%$/)) {sortObj = null;}
+		if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) { sortObj.direction = 1; }
+		else if (sortObj.direction.match(/SORT DESCENDING$/)) { sortObj.direction = -1; }
+		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
+		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"*\$.+\(.*\)"*$|%.+%$/)) { sortObj = null; }
 	}
-	if (sortObj) {sortObj.tf = fb.TitleFormat(sortObj.tag);}
+	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
 	return sortObj;
 }
 
 function getTagsValues(handle, tagsArray, bMerged = false) {
-	if (!isArrayStrings (tagsArray)) {return null;}
-	if (!handle) {return null;}
+	if (!isArrayStrings(tagsArray)) { return null; }
+	if (!handle) { return null; }
 
 	const handleInfo = handle.GetFileInfo();
 	const tagArray_length = tagsArray.length;
@@ -314,11 +322,11 @@ function getTagsValues(handle, tagsArray, bMerged = false) {
 	while (i < tagArray_length) {
 		let tagValues = [];
 		const tagIdx = handleInfo.MetaFind(tagsArray[i]);
-        const tagNumber = (tagIdx !== -1) ? handleInfo.MetaValueCount(tagIdx) : 0;
+		const tagNumber = (tagIdx !== -1) ? handleInfo.MetaValueCount(tagIdx) : 0;
 		if (tagNumber !== 0) {
 			let j = 0;
 			while (j < tagNumber) {
-				tagValues[j] = handleInfo.MetaValue(tagIdx,j);
+				tagValues[j] = handleInfo.MetaValue(tagIdx, j);
 				j++;
 			}
 		}
@@ -326,13 +334,13 @@ function getTagsValues(handle, tagsArray, bMerged = false) {
 		i++;
 	}
 
-	if (bMerged) {outputArray = outputArray.flat();}
+	if (bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 
 function getTagsValuesV3(handle, tagsArray, bMerged = false) {
-	if (!isArrayStrings (tagsArray)) {return null;}
-	if (!handle) {return null;}
+	if (!isArrayStrings(tagsArray)) { return null; }
+	if (!handle) { return null; }
 
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
@@ -345,8 +353,8 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 				? '%' + tagsArray[i] + '%'
 				: tagsArray[i]
 			: tagsArray[i];
-		if (bMerged) {tagString += _b((i === 0 ? '' : ', ') + tagStr);} // We have all values separated by comma
-		else {tagString += (i === 0 ? '' : '| ') + _b(tagStr);} // We have tag values separated by comma and different tags by |
+		if (bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
+		else { tagString += (i === 0 ? '' : '| ') + _b(tagStr); } // We have tag values separated by comma and different tags by |
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
@@ -354,7 +362,7 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	if (bMerged) { // Just an array of values per track: n x 1
 		for (let i = 0; i < outputArray_length; i++) {
 			outputArray[i] = outputArray[i].split(', ');
-			}
+		}
 	} else { // Array of values tag and per track; n x tagNumber
 		for (let i = 0; i < outputArray_length; i++) {
 			outputArray[i] = outputArray[i].split('| ');
@@ -367,8 +375,8 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 }
 
 function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
-	if (!isArrayStrings (tagsArray)) {return null;}
-	if (!handle) {return null;}
+	if (!isArrayStrings(tagsArray)) { return null; }
+	if (!handle) { return null; }
 
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handle.Count;
@@ -402,13 +410,13 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 		}
 		i++;
 	}
-	if (bMerged) {outputArray = outputArray.flat();}
+	if (bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 
 function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
-	if (!isArray (tagsArray)) {return null;}
-	if (!handle) {return null;}
+	if (!isArray(tagsArray)) { return null; }
+	if (!handle) { return null; }
 
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handle.Count;
@@ -422,7 +430,7 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 			i++;
 			continue;
 		}
-		let tagString = ((tagName.indexOf('$') === -1) ? (bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]') : (bEmptyVal ? tagName: '[' + tagName + ']')); // Tagname or TF expression, with or without empty values
+		let tagString = ((tagName.indexOf('$') === -1) ? (bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]') : (bEmptyVal ? tagName : '[' + tagName + ']')); // Tagname or TF expression, with or without empty values
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
 		if (splitBy && splitBy.length) {
@@ -431,8 +439,8 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 				if (type) {
 					outputArray[i][j] = outputArray[i][j].map((val) => {
 						switch (type) {
-							case 'number': {return Number(val);}
-							case 'string': {return String(val);}
+							case 'number': { return Number(val); }
+							case 'string': { return String(val); }
 						}
 						return val;
 					});
@@ -442,8 +450,8 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 			for (let j = 0; j < outputArrayi_length; j++) {
 				if (type) {
 					switch (type) {
-						case 'number': {outputArray[i][j] = Number(outputArray[i][j]);}
-						case 'string': {outputArray[i][j] = String(outputArray[i][j]);}
+						case 'number': { outputArray[i][j] = Number(outputArray[i][j]); break; }
+						case 'string': { outputArray[i][j] = String(outputArray[i][j]); break; }
 					}
 				}
 				outputArray[i][j] = [outputArray[i][j]];
@@ -451,20 +459,6 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 		}
 		i++;
 	}
-	if (bMerged) {outputArray = outputArray.flat();}
+	if (bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
-}
-
-function compareTagsValues(handle, tagsArray, bMerged = false) {
-
-	let tags = getTagsValuesV3(handle, ['genre', 'composer'], true).flat();
-	let genre = getTagsValuesV4(handle, ['genre', 'composer'], bMerged).flat(2);
-	console.log(genre);
-	console.log(tags);
-
-	// let tagSet = new Set(tags[0][0].concat(tags[1][0]));
-	// console.log(genreSet.difference(tagSet).size);
-	// console.log(tagSet.difference(genreSet).size);
-	// console.log([...genreSet]);
-	// console.log([...tagSet]);
 }

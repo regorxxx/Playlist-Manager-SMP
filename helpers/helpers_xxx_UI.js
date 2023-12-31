@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/12/23
+//30/12/23
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -25,27 +25,27 @@ const _gr = _bmp.GetGraphics();
 
 // Color blindness presets
 const colorBlind = {
-	yellow:	[RGB(255,255,202), RGB(248,255,102), RGB(183,183,  0)],
-	blue:	[RGB(230,128,230), RGB(84, 53, 255), RGB(0,  0,  255)],
-	white:	[RGB(255,255,255), RGB(240,240,240), RGB(220,220,220)],
-	black:	[RGB(150,150,150), RGB(75 , 75, 75), RGB(0,   0,   0)]
+	yellow: [RGB(255, 255, 202), RGB(248, 255, 102), RGB(183, 183, 0)],
+	blue: [RGB(230, 128, 230), RGB(84, 53, 255), RGB(0, 0, 255)],
+	white: [RGB(255, 255, 255), RGB(240, 240, 240), RGB(220, 220, 220)],
+	black: [RGB(150, 150, 150), RGB(75, 75, 75), RGB(0, 0, 0)]
 };
 
 // colorbrewer presets
 const colorbrewer = {
-	diverging: ['Spectral','RdYlGn','RdBu','PiYG','PRGn','RdYlBu','BrBG','RdGy','PuOr'],
-	qualitative: ['Set2','Accent','Set1','Set3','Dark2','Paired','Pastel2','Pastel1'],
-	sequential: ['OrRd','PuBu','BuPu','Oranges','BuGn','YlOrBr','YlGn','Reds','RdPu','Greens','YlGnBu','Purples','GnBu','Greys','YlOrRd','PuRd','Blues','PuBuGn'],
+	diverging: ['Spectral', 'RdYlGn', 'RdBu', 'PiYG', 'PRGn', 'RdYlBu', 'BrBG', 'RdGy', 'PuOr'],
+	qualitative: ['Set2', 'Accent', 'Set1', 'Set3', 'Dark2', 'Paired', 'Pastel2', 'Pastel1'],
+	sequential: ['OrRd', 'PuBu', 'BuPu', 'Oranges', 'BuGn', 'YlOrBr', 'YlGn', 'Reds', 'RdPu', 'Greens', 'YlGnBu', 'Purples', 'GnBu', 'Greys', 'YlOrRd', 'PuRd', 'Blues', 'PuBuGn'],
 	colorBlind: {
-		diverging: ['RdBu','PiYG','PRGn','RdYlBu','BrBG','PuOr'],
-		qualitative: ['Set2','Dark2','Paired'],
-		sequential: ['OrRd','PuBu','BuPu','Oranges','BuGn','YlOrBr','YlGn','Reds','RdPu','Greens','YlGnBu','Purples','GnBu','Greys','YlOrRd','PuRd','Blues','PuBuGn']
+		diverging: ['RdBu', 'PiYG', 'PRGn', 'RdYlBu', 'BrBG', 'PuOr'],
+		qualitative: ['Set2', 'Dark2', 'Paired'],
+		sequential: ['OrRd', 'PuBu', 'BuPu', 'Oranges', 'BuGn', 'YlOrBr', 'YlGn', 'Reds', 'RdPu', 'Greens', 'YlGnBu', 'Purples', 'GnBu', 'Greys', 'YlOrRd', 'PuRd', 'Blues', 'PuBuGn']
 	}
 };
 
 // Cache
-const scaleDPI = {factor: -1, reference: 72}; // Caches _scale() values;
-const fonts = {notFound: []}; // Caches _gdifont() values;
+const scaleDPI = { factor: -1, reference: 72 }; // Caches _scale() values;
+const fonts = { notFound: [] }; // Caches _gdifont() values;
 
 // Flags
 const LEFT = DT_VCENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -57,12 +57,12 @@ const LM = _scale(5);
 const TM = _scale(15);
 
 // Combinations of invisible chars may be used on UI elements to assign IDs...
-const hiddenChars = ['\u200b','\u200c','\u200d','\u200e'];
+const hiddenChars = ['\u200b', '\u200c', '\u200d', '\u200e'];
 
 function _scale(size, bRound = true) {
 	if (scaleDPI.factor === -1) {
-		try {scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference;}
-		catch (e) {scaleDPI.factor = 1;}
+		try { scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference; }
+		catch (e) { scaleDPI.factor = 1; }
 	}
 	return (bRound ? Math.round(size * scaleDPI.factor) : size * scaleDPI.factor);
 }
@@ -98,15 +98,15 @@ function getIdRegEx(method, bCharsForced = true) {
 	}
 }
 
-const nextIdInvisible = (function() {
-	let nextIndex = [0,0,0,0,0];
+const nextIdInvisible = (function () {
+	let nextIndex = [0, 0, 0, 0, 0];
 	const chars = hiddenChars;
-	const charsForced = [' (*',')'];
+	const charsForced = [' (*', ')'];
 	const num = chars.length;
 	let prevId = '';
-	return function(bNext = true, bCharsForced = true, bReset = false) {
-		if (bReset) {nextIndex = [0,0,0,0,0]; prevId = ''; return prevId;}
-		if (!bNext) {return prevId;}
+	return function (bNext = true, bCharsForced = true, bReset = false) {
+		if (bReset) { nextIndex = [0, 0, 0, 0, 0]; prevId = ''; return prevId; }
+		if (!bNext) { return prevId; }
 		let a = nextIndex[0];
 		let b = nextIndex[1];
 		let c = nextIndex[2];
@@ -132,15 +132,15 @@ const nextIdInvisible = (function() {
 	};
 }());
 
-const nextIdLetters = (function() {
-	let nextIndex = [0,0,0,0,0];
-	const chars = ['a','b','c','d','f'];
-	const charsForced = [' (',')'];
+const nextIdLetters = (function () {
+	let nextIndex = [0, 0, 0, 0, 0];
+	const chars = ['a', 'b', 'c', 'd', 'f'];
+	const charsForced = [' (', ')'];
 	const num = chars.length;
 	let prevId = '';
-	return function(bNext = true, bCharsForced = true, bReset = false) {
-		if (bReset) {nextIndex = [0,0,0,0,0]; prevId = ''; return prevId;}
-		if (!bNext) {return prevId;}
+	return function (bNext = true, bCharsForced = true, bReset = false) {
+		if (bReset) { nextIndex = [0, 0, 0, 0, 0]; prevId = ''; return prevId; }
+		if (!bNext) { return prevId; }
 		let a = nextIndex[0];
 		let b = nextIndex[1];
 		let c = nextIndex[2];
@@ -166,15 +166,15 @@ const nextIdLetters = (function() {
 	};
 }());
 
-const nextIdIndicator = (function() { // Same structure to ease compatibility
-	return function() {
+const nextIdIndicator = (function () { // Same structure to ease compatibility
+	return function () {
 		return ' (*)';
 	};
 }());
 
 function removeIdFromStr(nameId) {
 	let name = nameId;
-	['invisible','letters','indicator'].forEach((method) => {
+	['invisible', 'letters', 'indicator'].forEach((method) => {
 		name = name.replace(getIdRegEx(method), '');
 	});
 	return name;
@@ -185,9 +185,9 @@ function removeIdFromStr(nameId) {
 */
 
 function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.tooltip.size), width = 600) {
-	this.SetValue = (value,  bForceActivate = false) => {
-		if (!globSettings.bTooltip) {return true;}
-		if (!this.tooltip && !this.init()) {return false;}
+	this.SetValue = (value, bForceActivate = false) => {
+		if (!globSettings.bTooltip) { return true; }
+		if (!this.tooltip && !this.init()) { return false; }
 		if (value === null) {
 			this.Deactivate();
 		} else {
@@ -195,60 +195,60 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 				this.text = this.tooltip.Text = value;
 				this.Activate();
 			}
-			if (bForceActivate) {this.Activate();} // Only on force to avoid flicker
+			if (bForceActivate) { this.Activate(); } // Only on force to avoid flicker
 		}
 		return true;
 	};
 
 	this.SetFont = (name, size, style = 0) => {
-		if (!globSettings.bTooltip) {return true;}
-		if (!this.tooltip && !this.init()) {return false;}
+		if (!globSettings.bTooltip) { return true; }
+		if (!this.tooltip && !this.init()) { return false; }
 		this.tooltip.SetFont(name, size, style);
-		this.font = {name, size, style};
+		this.font = { name, size, style };
 		return true;
 	};
 
 	this.SetMaxWidth = (width) => {
-		if (!globSettings.bTooltip) {return true;}
-		if (!this.tooltip && !this.init()) {return false;}
+		if (!globSettings.bTooltip) { return true; }
+		if (!this.tooltip && !this.init()) { return false; }
 		this.tooltip.SetMaxWidth(width);
 		this.width = width;
 		return true;
 	};
 
 	this.Activate = () => {
-		if (!globSettings.bTooltip) {return true;}
-		if (!this.tooltip && !this.init()) {return false;}
+		if (!globSettings.bTooltip) { return true; }
+		if (!this.tooltip && !this.init()) { return false; }
 		this.tooltip.Activate();
 		this.bActive = true;
 		return true;
 	};
 
 	this.Deactivate = () => {
-		if (!globSettings.bTooltip) {return true;}
-		if (!this.tooltip && !this.init()) {return false;}
+		if (!globSettings.bTooltip) { return true; }
+		if (!this.tooltip && !this.init()) { return false; }
 		this.tooltip.Deactivate();
 		this.bActive = false;
 		return true;
 	};
 
 	this.SetDelayTime = (type, time) => {
-		if (!this.tooltip && !this.init()) {return false;}
+		if (!this.tooltip && !this.init()) { return false; }
 		this.tooltip.SetDelayTime(type, time);
 		return true;
 	};
 
 	this.GetDelayTime = (type) => {
-		if (!globSettings.bTooltip) {return;}
-		if (!this.tooltip && !this.init()) {return;}
-		return this.tooltip.GetDelayTime(type) ;
+		if (!globSettings.bTooltip) { return; }
+		if (!this.tooltip && !this.init()) { return; }
+		return this.tooltip.GetDelayTime(type);
 	};
 
 	this.init = () => {
 		this.tooltip = window.Tooltip;
-		if (!this.tooltip) {doOnce('tooltip fail', console.log)('Tooltip failed to initialize'); return false;} // Workaround for tooltip bug
-		if (!globSettings.bTooltip) {return true;}
-		if (utils.CheckFont(this.font.name)) {this.SetFont(this.font.name, this.font.size);} // Workaround for missing fonts
+		if (!this.tooltip) { doOnce('tooltip fail', console.log)('Tooltip failed to initialize'); return false; } // Workaround for tooltip bug
+		if (!globSettings.bTooltip) { return true; }
+		if (utils.CheckFont(this.font.name)) { this.SetFont(this.font.name, this.font.size); } // Workaround for missing fonts
 		this.SetMaxWidth(this.width);
 		this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
 		this.tooltip.Text = this.text;
@@ -258,7 +258,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	this.tooltip = null;
 	this.width = width;
 	this.text = value;
-	this.font = {name: font, size: fontSize, style: 0};
+	this.font = { name: font, size: fontSize, style: 0 };
 	this.bActive = false;
 	this.oldDelay = 100;
 	this.init();
@@ -270,7 +270,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 
 function RGBA(r, g, b, a) {
 	const res = 0xff000000 | (r << 16) | (g << 8) | (b);
-	if (typeof a !== 'undefined') {return (res & 0x00ffffff) | (a << 24);}
+	if (typeof a !== 'undefined') { return (res & 0x00ffffff) | (a << 24); }
 	return res;
 }
 
@@ -342,7 +342,7 @@ function getBrightness(r, g, b) { // https://www.w3.org/TR/AERT/#color-contrast
 }
 
 function isDark(r, g, b) {
-	return (getBrightness(r,g,b) < 186);
+	return (getBrightness(r, g, b) < 186);
 }
 
 function invert(color, bBW = false) {

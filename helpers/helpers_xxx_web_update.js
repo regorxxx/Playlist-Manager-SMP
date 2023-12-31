@@ -1,11 +1,20 @@
 ﻿'use strict';
-//14/12/23
+//30/12/23
 
+/* exported checkUpdate */
+
+include('helpers_xxx.js');
+/* global folders:readable, compareVersions:readable */
+include('helpers_xxx_prototypes.js');
+/* global _q:readable, _explorer:readable, _runCmd:readable, popup:readable */
+include('helpers_xxx_file.js');
+/* global WshShell:readable */
 include('helpers_xxx_web.js');
+/* global getText:readable */
 
 function checkUpdate({
 	scriptName = window.ScriptInfo.Name,
-	repository = 'https://github.com/' + window.ScriptInfo.Author +'/' + scriptName.replace(/ /g,'-') + (scriptName.endsWith('-SMP') ? '' : '-SMP'),
+	repository = 'https://github.com/' + window.ScriptInfo.Author + '/' + scriptName.replace(/ /g, '-') + (scriptName.endsWith('-SMP') ? '' : '-SMP'),
 	version = window.ScriptInfo.Version,
 	bDownload = false,
 	bOpenWeb = true,
@@ -26,7 +35,7 @@ function checkUpdate({
 					let file, fileURL;
 					if (bGithub) {
 						file = packageName + '-' + lastVersion.replace(/^v/i, '').replace(/\./g, '-') + '-package.zip';
-						fileURL = repository.replace(/\/$/, '') + '/releases/latest/download/' +  file;
+						fileURL = repository.replace(/\/$/, '') + '/releases/latest/download/' + file;
 					}
 					const output = folders.xxx + 'packages\\' + file;
 					_runCmd('CMD /C ' + folders.xxx + '\\helpers-external\\curl\\curl.exe -L -o ' + output + ' ' + fileURL + ' & ECHO. & ECHO File downloaded to ' + _q(output) + ' & ECHO A new window will show the file' + (bOpenWeb ? ' and the browser the release page' : '') + ' & ECHO Press any key to exit & EXPLORER /SELECT,' + output + ' & PAUSE>nul', false, 1);
@@ -42,7 +51,7 @@ function checkUpdate({
 			}
 			return false;
 		}).catch((reason) => {
-			if (typeof reason === 'object') {reason = reason.responseText || reason.status;}
+			if (typeof reason === 'object') { reason = reason.responseText || reason.status; }
 			switch (reason) {
 				case 12007: reason = 'Network error'; break;
 				case '': reason = 'Uknown error'; break;
@@ -54,19 +63,19 @@ function checkUpdate({
 
 if (typeof compareVersions === 'undefined') {
 	this.compareVersions = function compareVersions(from, to, bNum = true) {
-		if (typeof from === 'string') {from = from.split('.');}
-		if (typeof to === 'string') {to = to.split('.');}
+		if (typeof from === 'string') { from = from.split('.'); }
+		if (typeof to === 'string') { to = to.split('.'); }
 		if (bNum) {
-			if (to.length > 3) {to.length = 3;}
-			if (from.length > 3) {from.length = 3;}
+			if (to.length > 3) { to.length = 3; }
+			if (from.length > 3) { from.length = 3; }
 		}
 		for (let i = 0; i < to.length; ++i) {
 			if (to[i] !== from[i]) {
-				return to[i].localeCompare(from[i], void(0), {numeric: true}) < 0;
+				return to[i].localeCompare(from[i], void (0), { numeric: true }) < 0;
 			}
 		}
 		return true;
-	}
+	};
 }
 
 if (typeof WshShell === 'undefined') {

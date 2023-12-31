@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//30/12/23
 
 /* exported extendGR */
 
@@ -42,7 +42,7 @@ FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(han
 					const iItems = new FbMetadbHandleList(items.slice((i - 1) * slice, i === total ? count : i * slice));
 					tags.push(...this.EvalWithMetadbs(iItems));
 					const progress = Math.round(i / total * 100);
-					if (progress % 25 === 0 && progress > prevProgress) {prevProgress = progress; console.log('EvalWithMetadbsAsync (' + this.Expression + ') ' + progress + '%.');}
+					if (progress % 25 === 0 && progress > prevProgress) { prevProgress = progress; console.log('EvalWithMetadbsAsync (' + this.Expression + ') ' + progress + '%.'); }
 					resolve('done');
 				}, 25);
 			});
@@ -66,7 +66,7 @@ Object.defineProperty(fb, 'tfCache', {
 		const bCache = Object.hasOwn(fb.tfCache, arguments[0]);
 		const that = bCache ? fb.tfCache[arguments[0]] : old.apply(fb, [...arguments]);
 		that.Expression = arguments[0];
-		if (!bCache) {fb.tfCache[arguments[0]] = that;}
+		if (!bCache) { fb.tfCache[arguments[0]] = that; }
 		return that;
 	};
 }
@@ -78,7 +78,7 @@ Object.defineProperty(fb, 'tfCache', {
 		const bCache = Object.hasOwn(fb.tfCache, arguments[0]);
 		const that = bCache ? fb.tfCache[arguments[0]] : old(...arguments);
 		that.Expression = arguments[0];
-		if (!bCache) {fb.tfCache[arguments[0]] = that;}
+		if (!bCache) { fb.tfCache[arguments[0]] = that; }
 		return that;
 	};
 }
@@ -87,9 +87,9 @@ Object.defineProperty(fb, 'tfCache', {
 	gr
 */
 // Augment gr.DrawRoundRect() with error handling
-function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repaint: true, ImgBox: true, }) {
-	if (!gr.Extended) {gr.Extended = options;}
-	else {Object.keys(options).forEach((opt) => {if (options[opt]) {gr.Extended[opt] = true;}});}
+function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, ImgBox: true, }) {
+	if (!gr.Extended) { gr.Extended = options; }
+	else { Object.keys(options).forEach((opt) => { if (options[opt]) { gr.Extended[opt] = true; } }); }
 	if (options.DrawRoundRect) {
 		const old = gr.DrawRoundRect.bind(gr);
 		gr.DrawRoundRect = function DrawRoundRect() { // x, y, w, h, arc_width, arc_height, line_width, colour
@@ -103,7 +103,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
 					that = old(...arguments);
-				} catch(e) {bRetry = false;}
+				} catch (e) { bRetry = false; }
 				if (typeof doOnce !== 'undefined') {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: DrawRoundRect\n' +
@@ -134,7 +134,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
 					that = old(...arguments);
-				} catch(e) {bRetry = false;}
+				} catch (e) { bRetry = false; }
 				if (typeof doOnce !== 'undefined') {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: FillRoundRect\n' +
@@ -163,7 +163,7 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 	if (options.Repaint && !window.debugPainting) {
 		window.debugPainting = true;
 		const old = window.RepaintRect.bind(window);
-		window.RepaintRect = (function() {
+		window.RepaintRect = (function () {
 			if (this.debugPainting) {
 				this.debugPaintingRects.push([...arguments].slice(0, 4));
 				this.Repaint();
@@ -180,8 +180,8 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 // Sort handleList following another handleList; orderHandleList may differ in size
 FbMetadbHandleList.partialSort = (handleList, orderHandleList) => { // 600 ms on 80K tracks
 	let bOutputList = false;
-	if (!Array.isArray(handleList)) {handleList = handleList.Convert(); bOutputList = true;}
-	if (!Array.isArray(orderHandleList)) {orderHandleList = orderHandleList.Convert();}
+	if (!Array.isArray(handleList)) { handleList = handleList.Convert(); bOutputList = true; }
+	if (!Array.isArray(orderHandleList)) { orderHandleList = orderHandleList.Convert(); }
 	const dic = new Map();
 	orderHandleList.forEach((handle, i) => {
 		const id = handle.RawPath + ',' + handle.SubSong;
@@ -193,7 +193,7 @@ FbMetadbHandleList.partialSort = (handleList, orderHandleList) => { // 600 ms on
 		const id = handle.RawPath + ',' + handle.SubSong;
 		const arrIdx = dic.get(id);
 		const idx = arrIdx.pop();
-		if (!arrIdx.length) {dic.delete(id);}
+		if (!arrIdx.length) { dic.delete(id); }
 		output[idx] = handle;
 	});
 	return bOutputList ? new FbMetadbHandleList(output.filter(Boolean)) : output.filter(Boolean);
@@ -217,7 +217,7 @@ fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query = 'ALL', bCach
 	if (bCache) {
 		outputHandleList = fb.queryCache[id];
 	} else {
-		try {outputHandleList = fb.GetQueryItems(handleList, query);} catch (e) {outputHandleList = null;}
+		try { outputHandleList = fb.GetQueryItems(handleList, query); } catch (e) { outputHandleList = null; }
 		fb.queryCache[id] = outputHandleList;
 	}
 	return outputHandleList;
@@ -228,8 +228,8 @@ fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query = 'ALL', bCach
 */
 
 plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePath, ...]*/, bSync = false) => {
-	if (items.length === 0) {return bSync ? Promise.resolve(false) : false;}
-	if (plsIdx === -1) {return  bSync ? Promise.resolve(false) : false;}
+	if (items.length === 0) { return bSync ? Promise.resolve(false) : false; }
+	if (plsIdx === -1) { return bSync ? Promise.resolve(false) : false; }
 	let lastType = typeof items[0].RawPath !== 'undefined' ? 'handle' : typeof items[0].Count !== 'undefined' ? 'handleList' : 'path';
 	let queue = lastType === 'path' ? [] : new FbMetadbHandleList();
 	const timer = bSync ? 25 : null;
@@ -250,9 +250,9 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 	};
 	const addToQueue = (item, type) => {
 		switch (type) {
-			case 'path': {queue.push(item); break;}
-			case 'handle': {queue.Insert(queue.Count, item); break;}
-			case 'handleList': {queue.InsertRange(queue.Count, item); break;}
+			case 'path': { queue.push(item); break; }
+			case 'handle': { queue.Insert(queue.Count, item); break; }
+			case 'handleList': { queue.InsertRange(queue.Count, item); break; }
 		}
 	};
 	const processItem = (item) => {
@@ -297,8 +297,8 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 	} else {
 		items.forEach(processItem);
 		// Add last items
-		if (lastType === 'path') {plman.AddLocations(plsIdx, queue);}
-		else {plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);}
+		if (lastType === 'path') { plman.AddLocations(plsIdx, queue); }
+		else { plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue); }
 		return true;
 	}
 };
@@ -325,7 +325,7 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 	configurable: false,
 	writable: false,
 	value: (function drawDebugRectAreas(gr, px = 2, color = 1694433280) { // Red 90%
-		if (!this.debugPaintingRects.length) {return;}
+		if (!this.debugPaintingRects.length) { return; }
 		try {
 			this.debugPaintingRects.forEach((coords) => gr.DrawRect(...coords, px, color));
 			this.debugPaintingRects.length = 0;

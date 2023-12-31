@@ -1,5 +1,7 @@
 ﻿'use strict';
-//27/11/23
+//30/12/23
+
+/* exported chars */
 
 // Font Awesome
 // https://www.fontawesomecheatsheet.com/
@@ -11,7 +13,6 @@ const chars = {
 	download		: '\uf0ed',
 	cloud			: '\uf0c2',
 	// Standard
-	close 			: '\uf00D',
 	ratingOn 		: '\uf005',
 	ratingOff		: '\uf006',
 	heartOn			: '\uf004',
@@ -27,6 +28,7 @@ const chars = {
 	wrench			: '\uf0ad',
 	cogs			: '\uf085',
 	calendar		: '\uf073',
+	calendarPlus	: '\uf271',
 	bolt			: '\uf0e7',
 	dotCircle		: '\uf192',
 	hourglassStart	: '\uf251',
@@ -47,8 +49,7 @@ const chars = {
 	recycle			: '\uf1b8',
 	puzzle			: '\uf12e',
 	moon			: '\uf186',
-	lighbulb		: '\uf0eb',
-	close			: '\uf00d',
+	lightbulb		: '\uf0eb',
 	columns			: '\uf0db',
 	table			: '\uf0ce',
 	chart			: '\uf201',
@@ -108,7 +109,6 @@ const chars = {
 	levelUp 		: '\uf148',
 	prevCircle 		: '\uf0e2',
 	nextCircle 		: '\uf01e',
-	exchange		: '\uf0ec',
 	downOutline		: '\uf0d7',
 	leftOutline		: '\uf0d9',
 	// Sort
@@ -128,7 +128,7 @@ const chars = {
 	sadEmoji		: '(◡︵◡)',
 	loveEmoji		: '(\u2764 ᵕ \u2764)',
 	loveEmojiV1		: '(\u2764 ᵕ \u2764)',
-	loveEmojiV2		: '\u2764\(˶˃ᆺ˂˶)',
+	loveEmojiV2		: '\u2764(˶˃ᆺ˂˶)',
 	loveEmojiV3		: '( ∩´ ᐜ `∩)\u2764',
 	loveEmojiV4		: '(ෆ˙ᵕ˙ෆ)\u2764',
 	loveEmojiCycle	: function (t = 10000) {

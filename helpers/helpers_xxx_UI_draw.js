@@ -1,7 +1,11 @@
 ﻿'use strict';
-//30/10/23
+//30/12/23
 
+/* exported _sb */
+
+/* global getClosestDivisor:readable, SF_CENTRE:readable, IDC_HAND:readable */
 include('helpers_xxx_UI.js');
+/* global _gdiFont:readable, _scale:readable */
 
 function _sb(t, x, y, w, h, v, fn) {
 	this.paint = (gr, colour, colorBg = null) => {
@@ -21,7 +25,7 @@ function _sb(t, x, y, w, h, v, fn) {
 			this.hover = true;
 			return true;
 		} else {
-			//window.SetCursor(IDC_ARROW);
+			// Set IDC_ARROW at parent;
 			this.hover = false;
 			return false;
 		}
@@ -71,8 +75,8 @@ function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
 			newY2 += dot_sep * 2;
 		}
 	} else { // Any angle: Would work alone, but checking coordinates first is faster for vertical and horizontal...
-		const numberDots = Math.floor(((x2 - x1)**2 + (y2 - y1)**2)**(1/2) / dot_sep / 2);
-		const angle = (y2 !== y1) ? Math.atan((x2 - x1)/(y2 - y1)) : 0;
+		const numberDots = Math.floor(((x2 - x1) ** 2 + (y2 - y1) ** 2) ** (1 / 2) / dot_sep / 2);
+		const angle = (y2 !== y1) ? Math.atan((x2 - x1) / (y2 - y1)) : 0;
 		const xStep = dot_sep * Math.cos(angle);
 		const yStep = dot_sep * Math.sin(angle);
 		let newX1 = x1;
@@ -91,12 +95,12 @@ function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
 
 function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
 	const dotSize = _scale(3);
-	if (x1 > x2) {[x1, x2] = [x2, x1];} 
-	if (y1 > y2) {[y1, y2] = [y2, y1];} 
+	if (x1 > x2) { [x1, x2] = [x2, x1]; }
+	if (y1 > y2) { [y1, y2] = [y2, y1]; }
 	const diffX = x2 - x1;
 	const diffY = y2 - y1;
 	let iX = x1, iY = y1;
-	switch (pattern){
+	switch (pattern) {
 		case 'verticalDotted': {
 			size = getClosestDivisor(diffX, size);
 			const rep = diffX / size;
@@ -121,8 +125,8 @@ function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
 			break;
 		}
 		case 'mossaic': {
-			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 2/3, 'verticalDotted');
-			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 1/3, 'horizontalDotted');
+			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 2 / 3, 'verticalDotted');
+			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 1 / 3, 'horizontalDotted');
 			break;
 		}
 	}

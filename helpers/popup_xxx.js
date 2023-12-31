@@ -1,19 +1,24 @@
 ﻿'use strict';
 //30/10/23
 
-if (typeof opaqueColor === 'undefined' || typeof invert === 'undefined' || typeof _scale === 'undefined' || typeof cyclicOffset === 'undefined') {include('helpers_xxx_UI.js');}
+/* exported _popup */
+
+if (typeof opaqueColor === 'undefined' || typeof invert === 'undefined' || typeof _scale === 'undefined' || typeof cyclicOffset === 'undefined') { include('helpers_xxx_UI.js'); }
+/* global _tt:readable, opaqueColor:readable, invert:readable, _scale:readable, RGB:readable, lightenColor:readable, _gdiFont:readable, CENTRE:readable */
+/* global cyclicOffset:readable */
+/* global DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, globFonts:readable, FontStyle:readable */
 
 function _popup({
-		x = 0, y = 0,
-		w = window.Width, h = window.Height,
-		offsetX = 0,
-		offsetY = 0,
-		UI = 'MATERIAL',
-		scale = 1,
-		configuration = {/* bEnabled, border: {enabled}, icon: {enabled, step}, ttText, popText, color, fontSize*/}
-	} = {}) {
+	x = 0, y = 0,
+	w = window.Width, h = window.Height,
+	offsetX = 0,
+	offsetY = 0,
+	UI = 'MATERIAL',
+	scale = 1,
+	configuration = {/* bEnabled, border: {enabled}, icon: {enabled, step}, ttText, popText, color, fontSize*/ }
+} = {}) {
 	const tooltip = new _tt('');
-	
+
 	const UIMethod = {
 		material: () => {
 			this.color.panel = 0xF0F0F00; // Light grey
@@ -30,7 +35,7 @@ function _popup({
 			this.color.icon = this.color.text;
 		},
 	};
-	
+
 	this.configuration = configuration || {};
 	this.fontSize = _scale(10);
 	this.UI = UI.toLowerCase();
@@ -41,27 +46,27 @@ function _popup({
 	this.x = x;
 	this.y = y;
 	this.bEnabled = false;
-	this.icon = {enabled: false, step: 0};
-	this.border = {enabled: true};
+	this.icon = { enabled: false, step: 0 };
+	this.border = { enabled: true };
 	this.ttText = '';
 	this.popText = '';
 	this.scale = scale;
 	if (configuration) {
 		const configKeys = new Set(['bEnabled', 'border', 'icon', 'ttText', 'popText', 'color', 'fontSize']);
 		for (let key in configuration) {
-			if (configKeys.has(key) && this.hasOwnProperty(key)) {
-				if (key === 'border' || key === 'icon' || key === 'color') {this[key] = {...this[key], ...configuration[key]};}
-				else {this[key] = configuration[key];}
+			if (configKeys.has(key) && Object.hasOwn(this, key)) {
+				if (key === 'border' || key === 'icon' || key === 'color') { this[key] = { ...this[key], ...configuration[key] }; }
+				else { this[key] = configuration[key]; }
 			}
 		}
 	}
 	this.fontSize *= scale;
 	this.gFont = _gdiFont(typeof globFonts !== 'undefined' ? globFonts.standard.name : 'Segoe UI', this.fontSize, FontStyle.Bold);
-	
+
 	// Paint
 	this.paint = (gr) => { // on_paint
-		if (!this.w || !this.h) {return;}
-		if (!this.bEnabled) {return;}
+		if (!this.w || !this.h) { return; }
+		if (!this.bEnabled) { return; }
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.color.panel);
 		const scaleX = 0.75 * scale;
 		const scaleY = 1 / 2 * scale;
@@ -80,8 +85,8 @@ function _popup({
 		let popY = this.y + this.h / 2 - sizeY / 2 + offsetY;
 		let textX = popX;
 		let textY = popY;
-		if (popX < this.x) {popX = this.y + (this.w - sizeX + offsetX) / 2;}
-		if (popY < this.y) {popY = this.y + (this.h - sizeY + offsetY) / 2;}
+		if (popX < this.x) { popX = this.y + (this.w - sizeX + offsetX) / 2; }
+		if (popY < this.y) { popY = this.y + (this.h - sizeY + offsetY) / 2; }
 		// Draw the box
 		if (this.border.enabled) {
 			gr.FillRoundRect(popX, popY, sizeX + offsetX, sizeY - offsetY, sizeX / 6 + offsetX, sizeY / 2 + offsetY, this.color.popup);
@@ -99,48 +104,50 @@ function _popup({
 			for (let i = 0; i < count; i++) {
 				const x = centerX + (Math.sin(Math.PI * 2 / count * i) * sizeIcon);
 				const y = centerY + (Math.cos(Math.PI * 2 / count * i) * sizeIcon);
-				const step = cyclicOffset(this.icon.step, i, [0,count]);
+				const step = cyclicOffset(this.icon.step, i, [0, count]);
 				gr.FillEllipse(x, y, size, size, opaqueColor(this.color.icon, Math.round(count / step * 10)));
 			}
-			this.icon.step = cyclicOffset(this.icon.step, 1, [0,count]);
-			setTimeout(() => {return window.Repaint();}, 400);
+			this.icon.step = cyclicOffset(this.icon.step, 1, [0, count]);
+			setTimeout(() => { return window.Repaint(); }, 400);
 		}
 	};
-	
+
 	this.enable = (bPaint = false, popText = '', ttText = '') => {
 		this.bEnabled = true;
-		if (popText && popText.length) {this.popText = popText;}
-		if (ttText && ttText.length) {this.ttText = ttText;}
-		if (bPaint) {window.Repaint();}
+		if (popText && popText.length) { this.popText = popText; }
+		if (ttText && ttText.length) { this.ttText = ttText; }
+		if (bPaint) { window.Repaint(); }
 	};
-	
+
 	this.disable = (bPaint = false) => {
 		this.bEnabled = false;
-		if (bPaint) {window.Repaint();}
+		if (bPaint) { window.Repaint(); }
 	};
-	
+
 	this.isEnabled = () => {
 		return this.bEnabled;
 	};
-	
+
 	this.setText = (popText = '') => {
-		return (this.popText = popText ? popText : '');
+		this.popText = popText;
+		return popText || '';
 	};
-	
+
 	this.setTooltipText = (ttText = '') => {
-		return (this.ttText = ttText ? ttText : '');
+		this.ttText = ttText;
+		return ttText || '';
 	};
-	
+
 	this.trace = (x, y) => { // On panel
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
 	};
-	
+
 	this.move = (x, y) => {
-		if (this.trace(x, y)) {tooltip.SetValue(this.ttText);}
-		else {tooltip.Deactivate();}
+		if (this.trace(x, y)) { tooltip.SetValue(this.ttText); }
+		else { tooltip.Deactivate(); }
 		return;
 	};
-	
+
 	this.leave = () => {
 		tooltip.Deactivate();
 		return;
