@@ -1046,9 +1046,11 @@ if (!list.properties.bSetup[1]) {
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
 		// Move playlist index only while not pressing alt
 		on_mouse_move(x, y, mask, true);
+		let bToFolder = false;
 		if ((mask & 32) === 32) {
 			if (list.index !== -1) {
-				list.index = -1;
+				if (!list.data[list.index].isFolder) {list.index = -1;}
+				else {bToFolder = true;}
 				window.Repaint();
 			}
 		}
@@ -1081,8 +1083,10 @@ if (!list.properties.bSetup[1]) {
 			list.dragDropText = '';
 			return;
 		} else { // List
-			if (list.index === -1 || list.index >= list.items) { list.dragDropText = 'Create new Playlist'; } // NOSONAR [structure]
-			else if (list.data[list.index].isFolder) { list.dragDropText = 'To selected Folder'; }
+			if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) { // NOSONAR [structure]
+				list.dragDropText = 'Create new Playlist'; 
+				if (bToFolder) {list.dragDropText += ' (in folder)';}
+			} else if (list.data[list.index].isFolder) { list.dragDropText = 'To selected Folder'; }
 			else { list.dragDropText = 'To selected Playlist'; }
 		}
 		// Set effects
@@ -1113,11 +1117,14 @@ if (!list.properties.bSetup[1]) {
 				}
 			} else {
 				// Create new playlist when pressing alt
-				if ((mask & 32) === 32 || list.index === -1) {  // NOSONAR [structure]
+				if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) {  // NOSONAR [structure]
 					const name = list.properties.bAutoSelTitle[1]
 						? list.plsNameFromSelection(oldIdx)
 						: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
-					const pls = list.add({ bEmpty: true, name, bInputName: true });
+					const toFolder = list.index !== -1 && list.data[list.index].isFolder 
+						? list.data[list.index]
+						: null;
+					const pls = list.add({ bEmpty: true, name, bInputName: true, toFolder });
 					if (pls) {
 						const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 						const newIdx = plman.ActivePlaylist;

@@ -59,6 +59,7 @@
 - Statistics: new 'size' data mode for statistics, which shows statistics according to playlist's size (num of tracks) grouped by 25. Ex. Empty, >0, >25, >50, ... Clicking on any data point will filter the panel, as usual, with playlists with such condition.
 - Added integrity checks to global user settings files, found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\[...].json'. In particular queries are now check to ensure they are valid and will throw a popup at init otherwise. Other settings are check to ensure they contain valid values too.
 - Folders: added menu entries to create [child] playlists from current selection or active playlists at the folder contextual menu. [Request 71](https://github.com/regorxxx/Playlist-Manager-SMP/issues/71)
+- Folders: playlists can now be created within folders using drag n' drop (pressing ALT or ALT + CONTROL as usual). [Request 71](https://github.com/regorxxx/Playlist-Manager-SMP/issues/71)
 ### Changed
 - AutoPlaylists: added checks to sorting inputs to ensure they are valid expressions.
 - AutoPlaylists: AutoPlaylists created via native foobar2000, instead of the manager, are now flagged as 'AutoPlaylist (UI)' when opening their contextual menu at the manager, as an indication of playlist being an UI-only playlist. Some menu entries also show a warning about cloning needed to fully integrate them.
