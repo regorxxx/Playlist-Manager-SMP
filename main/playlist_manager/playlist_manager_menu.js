@@ -1,9 +1,9 @@
 ﻿'use strict';
-//27/12/23
+//02/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
-/* global list:readable, popup:readable, delayAutoUpdate:readable, buttonsPanel:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, recalcWidth:readable */
+/* global list:readable, popup:readable, delayAutoUpdate:readable, buttonsPanel:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, recalcWidth:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable */
@@ -30,7 +30,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 /* global XSPF:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global checkQuery:readable, stripSort:readable, getTagsValuesV4:readable */
+/* global checkQuery:readable, stripSort:readable, getTagsValuesV4:readable, checkSort:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -101,7 +101,10 @@ function createMenuLeft(forcedIndex = -1) {
 		switch (pls.extension) { // NOSONAR [open to future edits]
 			case '.xsp': header += 'Smart Playlist'; break;
 			default:
-				if (bIsAutoPls) { header += 'AutoPlaylist'; }
+				if (bIsAutoPls) {
+					header += 'AutoPlaylist';
+					if (bIsPlsUI) { header += ' (UI)'; }
+				}
 				else if (bIsFolder) { header += 'Folder'; }
 				else { header += pls.extension + ' Playlist'; }
 		}
@@ -156,10 +159,11 @@ function createMenuLeft(forcedIndex = -1) {
 			if (bIsAutoPls) {
 				// Change AutoPlaylist sort
 				menu.newEntry({
-					entryText: 'Edit sort pattern...', func: () => {
+					entryText: 'Edit sort pattern...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let bDone = false;
-						const input = Input.string('string', pls.sort, 'Enter sort pattern (optional):\n\nStart with \'SORT BY\', \'SORT ASCENDING BY\', ...', window.Name, 'SORT BY GENRE', [(s) => !s.length || s.match(/SORT.*$/)], false);
+						const input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
 						if (input === null && !Input.isLastEqual) { return; }
+						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
 						if (input !== null) {
 							list.editData(pls, {
 								sort: input,
@@ -184,9 +188,9 @@ function createMenuLeft(forcedIndex = -1) {
 				});
 				// Change AutoPlaylist query
 				menu.newEntry({
-					entryText: 'Edit query...', func: () => {
+					entryText: 'Edit query...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let newQuery = '';
-						try { newQuery = utils.InputBox(window.ID, 'Enter autoplaylist query', window.Name, pls.query); }
+						try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, pls.query); }
 						catch (e) { return; }
 						const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
 						if (!bPlaylist && !checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
@@ -346,9 +350,10 @@ function createMenuLeft(forcedIndex = -1) {
 				});
 				menu.newEntry({
 					entryText: 'Clone as AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
-						cloneAsAutoPls(list, z);
+						cloneAsAutoPls(list, z, uiIdx);
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
+				menu.addIndicatorNameLast(() => bIsPlsUI); // Add an indicator for required cloning
 				!list.bLiteMode && menu.newEntry({
 					entryText: 'Clone as Smart Playlist and edit...', func: () => { // Here creates a Kodi XSP smart no matter the original format
 						cloneAsSmartPls(list, z);
@@ -2311,12 +2316,12 @@ function createMenuRightTop() {
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.properties['bUpdateAutoplaylist'][1] ? 0 : 1); });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Block panel while updating?', func: () => {
+				menuName: subMenuName, entryText: 'Block panel while updating', func: () => {
 					list.properties.bBlockUpdateAutoPls[1] = !list.properties.bBlockUpdateAutoPls[1];
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTagAutoPlsInit ? MF_STRING : MF_GRAYED
 			});
-			menu.newCheckMenu(subMenuName, 'Block panel while updating?', void (0), () => { return list.properties.bBlockUpdateAutoPls[1]; });
+			menu.newCheckMenuLast(() => { return list.properties.bBlockUpdateAutoPls[1]; });
 		}
 		if (!list.bLiteMode) {	// Smart Playlists
 			const subMenuName = menu.newMenu('Update Smart Playlists...', menuName);
@@ -4220,8 +4225,8 @@ function createMenuSearch() {
 	menu.newEntry({ entryText: 'Search filter:', func: null, flags: MF_GRAYED });
 	menu.newEntry({ entryText: 'sep' });
 	{
-		if (list.searhHistory.length) {
-			list.searhHistory.slice(-5).forEach((text) => {
+		if (list.searchHistory.length) {
+			list.searchHistory.slice(-5).forEach((text) => {
 				menu.newEntry({
 					entryText: text.length > 20 ? text.substring(0, 20) + '...' : text, func: () => {
 						list.searchCurrent = text;
@@ -4232,7 +4237,7 @@ function createMenuSearch() {
 			menu.newEntry({ entryText: 'sep' });
 			menu.newEntry({
 				entryText: 'Clear history', func: () => {
-					list.searhHistory.splice(0, Infinity);
+					list.searchHistory.splice(0, Infinity);
 				}
 			});
 		} else {
@@ -4244,10 +4249,12 @@ function createMenuSearch() {
 	{	// Filter
 		const subMenu = menu.newMenu('Settings...');
 		const options = [
-			{ entryText: 'By names', key: 'bName' },
-			showMenus['Tags'] ? { entryText: 'By tags', key: 'bTags' } : null,
-			showMenus['Category'] ? { entryText: 'By categories', key: 'bCategory' } : null,
-			{ entryText: 'By file and folder names', key: 'bPath' }
+			{ entryText: 'By playlist\'s name', key: 'bName' },
+			showMenus['Tags'] ? { entryText: 'By playlist\'s tags', key: 'bTags' } : null,
+			showMenus['Category'] ? { entryText: 'By playlist\'s category', key: 'bCategory' } : null,
+			{ entryText: 'By tracks\' metadata (from playlist)', key: 'bMetaPls' },
+			{ entryText: 'By tracks\' metadata (from tracks)', key: 'bMetaTracks' },
+			{ entryText: 'By tracks\' path', key: 'bPath' }
 		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
@@ -4261,17 +4268,37 @@ function createMenuSearch() {
 					if (list.searchInput.text.length || list.searchInput.prevText.length) {
 						list.search();
 					}
-					if (opt.key === 'bPath' && list.searchMethod[opt.key]) {
-						fb.ShowPopupMessage(
-							'This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.' +
-							'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.' +
-							'\n\nFor ex:' +
-							'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' +
-							'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' +
-							'\n\nDrag n\' drop integration:' +
-							'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
-							, window.Name
-						);
+					if (list.searchMethod[opt.key]) {
+						if (opt.key === 'bPath') {
+							fb.ShowPopupMessage(
+								'This option performs an extended search looking into the playlist files for matches against the tracks file paths. The file and folder names are used.' +
+								'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed.' +
+								'\n\nFor ex:' +
+								'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' +
+								'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' +
+								'\n\nDrag n\' drop integration:' +
+								'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
+								, window.Name
+							);
+						} else if (opt.key === 'bMetaPls') {
+							fb.ShowPopupMessage(
+								'This option performs an extended search retrieving track\'s metadata from the playlist file (available on .m3u8, .m3u, .xspf and .pls formats). It\'s much faster than the mode looking for the track\'s tags (specially at startup).' +
+								'\n\nTags checked:' +
+								'ARTIST (*), TITLE, DURATION' +
+								'\n\n(*) Not available on .pls format.' 
+								, window.Name
+							);
+						} else if (opt.key === 'bMetaTracks') {
+							fb.ShowPopupMessage(
+								'This option performs an extended search retrieving all tracks from playlists files and looking for matches according to tags.' +
+								'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed. When enabled, playlists are cached at startup (may take up to 10 seconds after loading the panel), to greatly speed up the process. But note the cache is build after startup, so making the search filter permanent across sessions may impose a huge impact at loading time with this search mode enable. To account for this, enable the \'Reset search on startup\' option.' +
+								'\n\nTags checked:' +
+								list.searchMethod.meta.join(', ')
+								, window.Name
+							);
+							Promise.serial(list.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(list), 100)
+								.then(() => console.log('Playlist manager: Cached playlists for searching'));
+						}
 					}
 				}
 			});
