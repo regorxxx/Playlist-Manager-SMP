@@ -3961,11 +3961,13 @@ function _list(x, y, w, h) {
 	this.processFolders = ({ plsState = [] } = {}) => {
 		if (this.data.some((item) => item.isFolder)) {
 			const expandedData = this.data.filter((item) => !this.isInFolder(item));
-			expandedData.forEach((item, i) => { // Reuse the same object
+			let item;
+			for (let i= 0; i < expandedData.length; i++) { // Reuse the same object
+				item = expandedData[i];
 				if (item.isFolder && item.isOpen && item.pls.length) {
 					this.processFolder(item, i, expandedData, plsState);
 				}
-			});
+			}
 			this.data = [...new Set(expandedData)]; // Deduplicate
 			this.items = this.data.length;
 		}
@@ -3979,11 +3981,13 @@ function _list(x, y, w, h) {
 			).filter((subItem) => subItem.inFolder === item.nameId)
 		);
 		if (pls.some((subItem) => subItem.isFolder)) {
-			pls.forEach((subItem, j) => {
+			let subItem;
+			for (let j = 0; j < pls.length; j++) { // Reuse the same object
+				subItem = pls[j];
 				if (subItem.isFolder && subItem.isOpen && subItem.pls.length) {
 					this.processFolder(subItem, j, pls, plsState);
 				}
-			});
+			}
 		}
 		expandedData.splice(i + 1, 0, ...pls);
 	};
