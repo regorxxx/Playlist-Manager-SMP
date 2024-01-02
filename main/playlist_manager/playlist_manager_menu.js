@@ -812,6 +812,40 @@ function createMenuFolder(menu, folder, z) {
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUIplaylist({ bInputName: true, toFolder: folder }); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder}); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
+		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
+			menu.newEntry({
+				menuName: subMenuName,
+				entryText: 'New AutoPlaylist from active ...', func: () => {
+					const pls = { name: plman.GetPlaylistName(plman.ActivePlaylist) };
+					plman.ShowAutoPlaylistUI(plman.ActivePlaylist); // Workaround to not being able to access AutoPlaylist data... user must copy/paste
+					list.addAutoplaylist(pls, true, folder);
+				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+			});
+		}
+		menu.newEntry({
+			menuName: subMenuName,
+			entryText: 'New playlist from selection...', func: () => {
+				const oldIdx = plman.ActivePlaylist;
+				if (oldIdx === -1) { return; }
+				const name = list.properties.bAutoSelTitle[1]
+					? list.plsNameFromSelection(oldIdx)
+					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
+				const pls = list.bLiteMode 
+					? list.addUIplaylist({ bInputName: true, toFolder: folder})
+					: list.add({ bEmpty: true, name, bInputName: true, toFolder: folder });
+				if (pls) {
+					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
+					const newIdx = plman.ActivePlaylist;
+					plman.ActivePlaylist = oldIdx;
+					list.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: false });
+					// Don't reload the list but just paint with changes to avoid jumps
+					plman.ActivePlaylist = newIdx;
+					list.showCurrPls();
+				}
+			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+		});
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		menu.newEntry({ menuName: subMenuName, entryText: 'Folder...', func: () => { list.addFolder(void (0), folder); } });
 	}
 	menu.newEntry({ entryText: 'sep' });
@@ -1394,14 +1428,16 @@ function createMenuRight() {
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 		}
-		!list.bLiteMode && menu.newEntry({
+		menu.newEntry({
 			entryText: 'New playlist from selection...', func: () => {
 				const oldIdx = plman.ActivePlaylist;
 				if (oldIdx === -1) { return; }
 				const name = list.properties.bAutoSelTitle[1]
 					? list.plsNameFromSelection(oldIdx)
 					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
-				const pls = list.add({ bEmpty: true, name, bInputName: true });
+				const pls = list.bLiteMode 
+					? list.addUIplaylist({ bInputName: true })
+					: list.add({ bEmpty: true, name, bInputName: true });
 				if (pls) {
 					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
 					const newIdx = plman.ActivePlaylist;
