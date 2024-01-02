@@ -60,6 +60,7 @@
 - Added integrity checks to global user settings files, found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\[...].json'. In particular queries are now check to ensure they are valid and will throw a popup at init otherwise. Other settings are check to ensure they contain valid values too.
 - Folders: added menu entries to create [child] playlists from current selection or active playlists at the folder contextual menu. [Request 71](https://github.com/regorxxx/Playlist-Manager-SMP/issues/71)
 - Folders: playlists can now be created within folders using drag n' drop (pressing ALT or ALT + CONTROL as usual). [Request 71](https://github.com/regorxxx/Playlist-Manager-SMP/issues/71)
+- UI: added drag n' drop actions to the quick help popup (shift click on help button).
 ### Changed
 - AutoPlaylists: added checks to sorting inputs to ensure they are valid expressions.
 - AutoPlaylists: AutoPlaylists created via native foobar2000, instead of the manager, are now flagged as 'AutoPlaylist (UI)' when opening their contextual menu at the manager, as an indication of playlist being an UI-only playlist. Some menu entries also show a warning about cloning needed to fully integrate them.
@@ -77,6 +78,7 @@
 ### Fixed
 - Folders: playlist deletion within folders did not update the UI properly in some cases. [Issue 72](https://github.com/regorxxx/Playlist-Manager-SMP/issues/72)
 - Folders: nested folders not working in some cases or producing crashes. [Issue 73](https://github.com/regorxxx/Playlist-Manager-SMP/issues/73)
+- Folders: internal drag n' drop not working properly on sorting methods different to manual one. i.e. to move items into/out of a folder.
 - Search: crash on multiple settings menu entries due to a typo on variable.
 - ListenBrainz: crash when importing an existing playlist in some cases.
 - Exporting Playlists: crash when clicking on a point -to filter- while using folders data.

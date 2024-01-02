@@ -2672,7 +2672,7 @@ function _list(x, y, w, h) {
 				i = this.data.findIndex((item) => item.nameId === this.data[i].inFolder && item.isFolder);
 				level++;
 			}
-			const bMaxLevel = level <= this.folders.maxDeep;
+			const bMaxLevel = level <= this.folders.maxDepth;
 			const bToSameFolder = currSelIdx !== -1
 				? this.internalPlsDrop.every((idx) => {
 					return bToFolder && this.data[idx].inFolder === this.data[currSelIdx].nameId || !bToFolder && this.data[idx].inFolder === this.data[currSelIdx].inFolder;
@@ -6229,7 +6229,7 @@ function _list(x, y, w, h) {
 						this.listGlobalShortcuts() +
 						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
 						'\n- DEL: delete playlist.' +
-						(this.searchInput ? '\n- CTRL + E: focus on search box.' : '') +
+						(this.searchInput ? '\n- Ctrl + E: focus on search box.' : '') +
 						'\n' +
 						(showMenus['Quick-search']
 							? '\nQuick-search:' +
@@ -6238,9 +6238,21 @@ function _list(x, y, w, h) {
 							'\n(i.e. sorting by category jumps by it instead of name).' +
 							'\n'
 							: '') +
+						'\nDrag n\' drop (tracks):' +
+						'\n-------------------' +
+						'\n- Standard: move selection to playlist / folder (recursive).' +
+						'\n- Ctrl: copy selection to playlist / folder (recursive).' +
+						'\n- Alt: move selection to new playlist' +
+						'\n- Alt + Ctrl: copy selection to new playlist' +
+						'\n' +
+						'\nDrag n\' drop (internal):' +
+						'\n-------------------' +
+						'\n- Manual sorting: move item to new position (check cursor).' +
+						'\n- General: move items out of/into selected folder (check cursor).' +
+						'\n' +
 						'\nTooltip:' +
 						'\n-------------------' +
-						'\nShift / Ctrl on buttons / playlists will show the associated action.' +
+						'\nShift / Ctrl over buttons / playlists will show the associated action.' +
 						'\n' +
 						'\nSorting & Filters:' +
 						'\n-------------------' +
