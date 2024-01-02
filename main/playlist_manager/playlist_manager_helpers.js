@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//02/01/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -649,7 +649,7 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
-function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsAutoPls(list, z, uiIdx = -1) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -659,6 +659,10 @@ function cloneAsAutoPls(list, z) { // May be used only to copy an Auto-Playlist 
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
+	if (pls.extension === '.ui' && uiIdx !== -1) {
+		WshShell.Popup('Native AutoPlaylists not created with the manager require cloning first to fully integrate them in the manager.\n\nThe AutoPlaylist properties will be shown to let you manually copy the query and sort patterns to the input popups. You can close it afterwards.', 5, window.Name, popup.info + popup.ok);
+		plman.ShowAutoPlaylistUI(uiIdx);
+	}
 	bDone = !!list.addAutoplaylist(objectPlaylist);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
