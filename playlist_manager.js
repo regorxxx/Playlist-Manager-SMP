@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/12/23
+//02/01/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -76,6 +76,8 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 				if (list.bRelativePath && list.playlistsPath.length) {
 					if (!pop.isEnabled()) { pop.enable(true, message, tt); }
 					precacheLibraryRelPaths(list.playlistsPath);
+					list.plsCache.clear();
+					fb.queryCache.clear();
 					pop.disable(true);
 					const lBrainzToken = list.properties.lBrainzToken[1];
 					const bEncrypted = list.properties.lBrainzEncrypt[1];
@@ -229,6 +231,9 @@ let properties = {
 		bResetFilters: false,
 		bResetStartup: false,
 		bSimpleFuzzy: true,
+		bMetaPls: true,
+		bMetaTracks: false,
+		meta: [globTags.artist, 'ALBUM', globTags.title, globTags.date],
 		text: '',
 	})],
 	uiElements: ['UI elements', JSON.stringify({
@@ -823,6 +828,8 @@ if (!list.properties.bSetup[1]) {
 					}
 					list.cacheLibTimer = null;
 					list.bLibraryChanged = false;
+					list.plsCache.clear();
+					fb.queryCache.clear();
 					pop.disable(true);
 				}
 				break;

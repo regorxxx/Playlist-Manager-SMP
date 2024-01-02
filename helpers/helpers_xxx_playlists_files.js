@@ -1,7 +1,7 @@
 ﻿'use strict';
-//27/12/23
+//02/01/24
 
-/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists */
+/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -440,7 +440,7 @@ function getFilePathsFromPlaylist(playlistPath) {
 				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
 				const lines = originalText.length;
 				for (let j = 0; j < lines; j++) {
-					if (!originalText[j].startsWith('#')) { // Spaces are not allowed as well as black lines
+					if (!originalText[j].startsWith('#')) { // Spaces are not allowed as well as blank lines
 						let line = originalText[j].trim();
 						if (line.length) { paths.push(line.replace(/\//g, '\\')); } // PATH
 					}
@@ -465,10 +465,11 @@ function getFilePathsFromPlaylist(playlistPath) {
 				const rows = playlist.track;
 				const rowsLength = rows.length;
 				for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
-					if (Object.hasOwn(rows[i], 'location') && rows[i].location && rows[i].location.length) { // TODO multiple locations allowed
-						let path = decodeURI(rows[i].location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
-						if (Object.hasOwn(rows[i], 'meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
-							const metaSubSong = rows[i].meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
+					const row = rows[i];
+					if (Object.hasOwn(row, 'location') && row.location && row.location.length) { // TODO multiple locations allowed
+						let path = decodeURI(row.location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+						if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
+							const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 							if (metaSubSong) { path += ',' + metaSubSong.subSong; }
 						}
 						paths.push(path);
@@ -483,10 +484,11 @@ function getFilePathsFromPlaylist(playlistPath) {
 			const rows = playlist.track;
 			const rowsLength = rows.length;
 			for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
-				if (Object.hasOwn(rows[i], 'location') && rows[i].location && rows[i].location.length) {
-					let path = decodeURI(rows[i].location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
-					if (Object.hasOwn(rows[i], 'meta') && rows[i].meta && rows[i].meta.length) { // Add subsong for DVDs
-						const metaSubSong = rows[i].meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
+				const row = rows[i];
+				if (Object.hasOwn(row, 'location') && row.location && row.location.length) {
+					let path = decodeURI(row.location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+					if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
+						const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 						if (metaSubSong) { path += ',' + metaSubSong.subSong; }
 					}
 					paths.push(path);
@@ -495,6 +497,80 @@ function getFilePathsFromPlaylist(playlistPath) {
 		}
 	}
 	return paths;
+}
+
+function getFileMetaFromPlaylist(playlistPath) {
+	let meta = [];
+	if (!playlistPath || !playlistPath.length) {
+		console.log('getFileMetaFromPlaylist(): no playlist path was provided');
+		return meta;
+	}
+	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
+	if (!new Set(['.m3u8', '.m3u', '.pls', '.xspf']).has(extension)) {
+		console.log('getFileMetaFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
+		return meta;
+	}
+	if (_isFile(playlistPath)) {
+		// Read original file
+		let originalText = _open(playlistPath);
+		if (typeof originalText !== 'undefined' && originalText.length) {
+			// Safe checks to ensure proper encoding detection
+			const codePage = checkCodePage(originalText, extension);
+			if (codePage !== -1) { originalText = _open(playlistPath, codePage, true); }
+			if (extension === '.m3u8' || extension === '.m3u') {
+				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
+				const lines = originalText.length;
+				const regExp = /#EXTINF:(\d*),([\w\s,]+?) - ([\w\s,]*$)/gi;
+				for (let j = 0; j < lines; j++) {
+					let line = originalText[j].trim();
+					if (line.length && line.startsWith('#')) { // Spaces are not allowed as well as blank lines
+						let title = null, artist = null, duration = null;
+						const match = [...line.matchAll(regExp)];
+						if (match && match[0]) {[, duration, artist, title] = match[0];}
+						meta.push({duration, artist, title}); 
+					}
+				}
+			} else if (extension === '.pls') {
+				originalText = originalText.split(/\r\n|\n\r|\n|\r/);
+				const lines = originalText.length;
+				const regExpTitle = /TITLE\d=.*/gi;
+				const regExpDuration = /LENGTH\d=.*/gi;
+				for (let j = 0; j < lines; j++) {
+					let line = originalText[j];
+					if (!line.startsWith('File')) { // Spaces are not allowed on variable no need to trim
+						let title = null, artist = null, duration = null;
+						let match = [...line.matchAll(regExpTitle)];
+						if (match && match[0]) {
+							[, title] = match[0];
+							j++; // NOSONAR [intended]
+							line = originalText[j];
+							match = [...line.matchAll(regExpDuration)];
+							if (match && match[0]) {[, duration] = match[0];}
+						}
+						meta.push({duration, artist, title});
+					}
+				}
+			} else if (extension === '.xspf') {
+				const bCache = xspfCache.has(playlistPath);
+				const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSPF.XMLfromString(originalText);
+				if (!xmlDomCache.has(playlistPath)) { xmlDomCache.set(playlistPath, xmldom); }
+				const jspf = bCache ? xspfCache.get(playlistPath) : XSPF.toJSPF(xmldom);
+				if (!bCache) { xspfCache.set(playlistPath, jspf); }
+				const playlist = jspf.playlist;
+				const rows = playlist.track;
+				const rowsLength = rows.length;
+				for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
+					const row = rows[i];
+					let title = null, artist = null, duration = null;
+					if (Object.hasOwn(row, 'title') && row.title && row.title.length) {title = row.title;}
+					if (Object.hasOwn(row, 'creator') && row.creator && row.creator.length) {artist = row.creator;}
+					if (Object.hasOwn(row, 'duration') && row.duration) {duration = row.duration / 1000;}
+					meta.push({duration, artist, title});
+				}
+			}
+		}
+	}
+	return meta;
 }
 
 // Cache paths: calc once the paths for every item on library and share it with the other panels
@@ -751,11 +827,12 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 					if (!notFound.has(i)) { continue; }
 					let query = '';
 					let lookup = {};
+					const row = rows[i];
 					lookupKeys.forEach((look) => {
 						const key = look.xspfKey;
 						const queryKey = look.queryKey;
-						if (Object.hasOwn(rows[i], key) && rows[i][key] && rows[i][key].length) {
-							lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(rows[i][key]).replace(regExListenBrainz, '') : rows[i][key]);
+						if (Object.hasOwn(row, key) && row[key] && row[key].length) {
+							lookup[queryKey] = queryKey + ' IS ' + (key === 'identifier' ? decodeURI(row[key]).replace(regExListenBrainz, '') : row[key]);
 						}
 					});
 					for (let condition of conditions) {
