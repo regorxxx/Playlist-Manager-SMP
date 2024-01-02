@@ -52,16 +52,23 @@
 
 ## [Unreleased][]
 ### Added
+- Search: new search mode against tracks' metadata. Internally loads all tracks from every playlists and looks for the search input within specific tags (by default ALBUM ARTIST, ALBUM, TITLE and DATE). It may produce some lag while searching if there are a lot of playlists, so disable it if not needed. The tracks are cached, so consecutive searches are faster (or performing it some seconds after startup); but it greatly increases startup time when using search is maintained at startup (since cache has not been built). In such cases, make sure to have the setting 'Reset search on startup' enabled.
+- Search: new search mode against playlists' metadata. Retrieves track's metadata from the playlist file (available on .m3u8, .m3u, .xspf and .pls formats) and tries to match ARTIST or TITLE. This mode is much faster than looking for the track's tags (see above).
 - XSP: Smart Playlists are now automatically refreshed whenever a playlist source changes (not in any other case, use AutoPlaylists for that). i.e. if a Smart Playlist has a query like "#PLAYLIST# IS A", and "A" playlist changes, the Smart Playlist is automatically refreshed now (tracks added/removed). If the playlist is not loaded, only metadata is updated (like duration or size). This behavior can be disabled at settings.
 - Backup: added more backup procedures when editing playlists. Original file is restored in case of errors.
 - Statistics: new 'size' data mode for statistics, which shows statistics according to playlist's size (num of tracks) grouped by 25. Ex. Empty, >0, >25, >50, ... Clicking on any data point will filter the panel, as usual, with playlists with such condition.
 - Added integrity checks to global user settings files, found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\[...].json'. In particular queries are now check to ensure they are valid and will throw a popup at init otherwise. Other settings are check to ensure they contain valid values too.
 ### Changed
-- Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
-- Helpers: updated helpers.
+- AutoPlaylists: Added checks to sorting inputs to ensure they are valid expressions.
+- AutoPlaylists: AutoPlaylists created via native foobar2000, instead of the manager, are now flagged as 'AutoPlaylist (UI)' when opening their contextual menu at the manager, as an indication of playlist being an UI-only playlist. Some menu entries also show a warning about cloning needed to fully integrate them.
+- AutoPlaylists: cloning an AutoPlaylist created via native foobar2000, instead of the manager, also opens the AutoPlaylists properties now to easily copy the query and sort patterns.
+- XSP: Added checks to sorting inputs to ensure they are valid expressions.
 - XSP: Smart Playlists are now locked when loading them, similar to AutoPlaylists behavior. If there is no sorting, then tracks can be reorder, otherwise sorting is also locked.
 - XSP: improved caching in multiple playlist actions.
 - XSPF: improved caching in multiple playlist actions.
+- UI: Added a tip at all input popups for sorting, to specify when 'SORT BY' and similar statements must be used.
+- Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
+- Helpers: updated helpers.
 - UI: optimized repainting to use less resources on statistics mode.
 - Code cleanup.
 ### Removed
@@ -216,7 +223,7 @@
 ### Changed
 ### Removed
 ### Fixed
-- UI: filters reset on innit due to bugfix introduced on [0.5.0-beta.21](#050-beta21---2023-06-27). which was only intended on first innit (after setup).
+- UI: filters reset on init due to bugfix introduced on [0.5.0-beta.21](#050-beta21---2023-06-27). which was only intended on first init (after setup).
 - UI: offset improperly set after filtering in some corner cases.
 - UI: text shadows sometimes not being cut to the same length than the main text. [Issue 69](https://github.com/regorxxx/Playlist-Manager-SMP/issues/69).
 
@@ -404,7 +411,7 @@
 - Dynamic menus: retried 5 secs after first try in case it fails or gets blocked.
 ### Removed
 ### Fixed
-- UI: category filter is no longer set on first innit in case panel is installed to track UI-only playlists and/or old playlists files with category set.
+- UI: category filter is no longer set on first init in case panel is installed to track UI-only playlists and/or old playlists files with category set.
 - UI: weird behaviors (cursor changing and buttons being focused) when pressing shift/ctrl after opening a menu and clicking outside the panel.
 - UI: settings menu opening when clicking at blank space within the buttons toolbar at header instead of just the settings and power action buttons.
 - UI: incorrect settings for panel/buttons colors using dark mode in foobar2000.
