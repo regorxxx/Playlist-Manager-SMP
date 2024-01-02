@@ -812,7 +812,7 @@ function createMenuFolder(menu, folder, z) {
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUIplaylist({ bInputName: true, toFolder: folder }); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder}); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
+		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder }); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
 			menu.newEntry({
 				menuName: subMenuName,
@@ -831,8 +831,8 @@ function createMenuFolder(menu, folder, z) {
 				const name = list.properties.bAutoSelTitle[1]
 					? list.plsNameFromSelection(oldIdx)
 					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
-				const pls = list.bLiteMode 
-					? list.addUIplaylist({ bInputName: true, toFolder: folder})
+				const pls = list.bLiteMode
+					? list.addUIplaylist({ bInputName: true, toFolder: folder })
 					: list.add({ bEmpty: true, name, bInputName: true, toFolder: folder });
 				if (pls) {
 					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
@@ -1435,7 +1435,7 @@ function createMenuRight() {
 				const name = list.properties.bAutoSelTitle[1]
 					? list.plsNameFromSelection(oldIdx)
 					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
-				const pls = list.bLiteMode 
+				const pls = list.bLiteMode
 					? list.addUIplaylist({ bInputName: true })
 					: list.add({ bEmpty: true, name, bInputName: true });
 				if (pls) {
@@ -4321,7 +4321,7 @@ function createMenuSearch() {
 								'This option performs an extended search retrieving track\'s metadata from the playlist file (available on .m3u8, .m3u, .xspf and .pls formats). It\'s much faster than the mode looking for the track\'s tags (specially at startup).' +
 								'\n\nTags checked:' +
 								'ARTIST (*), TITLE, DURATION' +
-								'\n\n(*) Not available on .pls format.' 
+								'\n\n(*) Not available on .pls format.'
 								, window.Name
 							);
 						} else if (opt.key === 'bMetaTracks') {

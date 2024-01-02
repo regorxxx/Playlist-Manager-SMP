@@ -152,7 +152,7 @@ function roughSizeOfObject(object) {
 		} else if (type === 'object' && value instanceof FbTitleFormat) {
 			bytes += 8;
 			bytes += value.Expression.length * 2;
-		}  else if (type === 'object' && value && value.RawPath && value.Path) {
+		} else if (type === 'object' && value && value.RawPath && value.Path) {
 			bytes += 24;
 			bytes += value.Path.length * 2;
 			bytes += value.RawPath.length * 2;

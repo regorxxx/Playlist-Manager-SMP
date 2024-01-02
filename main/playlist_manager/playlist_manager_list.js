@@ -32,7 +32,7 @@ include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers-external\\keycode-2.2.0\\index.js');
 /* global keyCode:readable */
-include('playlist_manager_panel.js');	
+include('playlist_manager_panel.js');
 /* global panel:readable */
 include('playlist_manager_helpers.js');
 
@@ -2381,7 +2381,7 @@ function _list(x, y, w, h) {
 				}
 				if (!rgExp) { rgExp = new RegExp(escapeRegExp(term), 'gi'); }
 				match = (val) => {
-					return Array.isArray(val) 
+					return Array.isArray(val)
 						? val.some((v) => rgExp.test(v))
 						: rgExp.test(val);
 				};
@@ -3962,7 +3962,7 @@ function _list(x, y, w, h) {
 		if (this.data.some((item) => item.isFolder)) {
 			const expandedData = this.data.filter((item) => !this.isInFolder(item));
 			let item;
-			for (let i= 0; i < expandedData.length; i++) { // Reuse the same object
+			for (let i = 0; i < expandedData.length; i++) { // Reuse the same object
 				item = expandedData[i];
 				if (item.isFolder && item.isOpen && item.pls.length) {
 					this.processFolder(item, i, expandedData, plsState);
@@ -4045,9 +4045,9 @@ function _list(x, y, w, h) {
 							const cacheDuration = item.duration;
 							promises.push(new Promise((resolve) => {
 								Promise.wait(200 * i).then(() => {
-									const test = bProfile ?  new FbProfiler('Refresh AutoPlaylist') : null;
+									const test = bProfile ? new FbProfiler('Refresh AutoPlaylist') : null;
 									const handleList = cacheAutoPlaylists(item);
-									if (bProfile) {test.Print(item.nameId);}
+									if (bProfile) { test.Print(item.nameId); }
 									const size = handleList ? handleList.Count : 0;
 									const duration = handleList ? handleList.CalcTotalDuration() : 0;
 									if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
@@ -5270,7 +5270,7 @@ function _list(x, y, w, h) {
 						this.removeFromFolder(item);
 					});
 				}
-			} 
+			}
 			// Remove from folder
 			if (this.isInFolder(pls)) {
 				this.removeFromFolder(pls);
@@ -6277,7 +6277,7 @@ function _list(x, y, w, h) {
 function cacheAutoPlaylists(pls) {
 	let handleList = null;
 	if (!checkQuery(pls.query, false, true)) {
-		if (pls.query.indexOf('#PLAYLIST# IS') === -1) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);}
+		if (pls.query.indexOf('#PLAYLIST# IS') === -1) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); }
 	} else {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true); // Cache output
 	}

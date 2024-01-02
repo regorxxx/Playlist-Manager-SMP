@@ -526,8 +526,8 @@ function getFileMetaFromPlaylist(playlistPath) {
 					if (line.length && line.startsWith('#')) { // Spaces are not allowed as well as blank lines
 						let title = null, artist = null, duration = null;
 						const match = [...line.matchAll(regExp)];
-						if (match && match[0]) {[, duration, artist, title] = match[0];}
-						meta.push({duration, artist, title}); 
+						if (match && match[0]) { [, duration, artist, title] = match[0]; }
+						meta.push({ duration, artist, title });
 					}
 				}
 			} else if (extension === '.pls') {
@@ -545,9 +545,9 @@ function getFileMetaFromPlaylist(playlistPath) {
 							j++; // NOSONAR [intended]
 							line = originalText[j];
 							match = [...line.matchAll(regExpDuration)];
-							if (match && match[0]) {[, duration] = match[0];}
+							if (match && match[0]) { [, duration] = match[0]; }
 						}
-						meta.push({duration, artist, title});
+						meta.push({ duration, artist, title });
 					}
 				}
 			} else if (extension === '.xspf') {
@@ -562,10 +562,10 @@ function getFileMetaFromPlaylist(playlistPath) {
 				for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
 					const row = rows[i];
 					let title = null, artist = null, duration = null;
-					if (Object.hasOwn(row, 'title') && row.title && row.title.length) {title = row.title;}
-					if (Object.hasOwn(row, 'creator') && row.creator && row.creator.length) {artist = row.creator;}
-					if (Object.hasOwn(row, 'duration') && row.duration) {duration = row.duration / 1000;}
-					meta.push({duration, artist, title});
+					if (Object.hasOwn(row, 'title') && row.title && row.title.length) { title = row.title; }
+					if (Object.hasOwn(row, 'creator') && row.creator && row.creator.length) { artist = row.creator; }
+					if (Object.hasOwn(row, 'duration') && row.duration) { duration = row.duration / 1000; }
+					meta.push({ duration, artist, title });
 				}
 			}
 		}
