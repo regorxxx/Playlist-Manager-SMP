@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//02/01/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, query_combinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor */
 
@@ -301,10 +301,10 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	if (sort.length) {
 		sortObj = {};
 		[sortObj.direction, sortObj.tag] = sort.split(/(?: BY )(.*$)/i);
-		if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) { sortObj.direction = 1; }
+		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"*\$.+\(.*\)"*$|%.+%$/)) { sortObj = null; }
+		else if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) { sortObj.direction = 1; }
 		else if (sortObj.direction.match(/SORT DESCENDING$/)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
-		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"*\$.+\(.*\)"*$|%.+%$/)) { sortObj = null; }
 	}
 	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
 	return sortObj;

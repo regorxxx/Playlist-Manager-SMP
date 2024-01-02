@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//02/01/24
 
 /* exported _menu, _attachedMenu */
 
@@ -177,6 +177,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	};
 
 	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFunc = null) => {
+		if (!isFunction(idxFunc)) { menuError({ function: 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc }); throw new Error('Non valid \'idxFunc\' function provided'); }
 		const mType = typeof menuName, eAType = typeof entryTextA, eBType = typeof entryTextB;
 		if (eTypeToStr.indexOf(mType) !== -1) { menuName = menuName.toString(); }
 		if (eTypeToStr.indexOf(eAType) !== -1) { entryTextA = entryTextA.toString(); }
@@ -185,18 +186,37 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		if (eAType === 'string' && entryTextA.indexOf('&') !== - 1) { entryTextA = entryTextA.replace(/&&/g, '&').replace(/&/g, '&&'); }
 		if (eBType === 'string' && entryTextB.indexOf('&') !== - 1) { entryTextB = entryTextB.replace(/&&/g, '&').replace(/&/g, '&&'); }
 		if (mType === 'string' && menuName.indexOf('&') !== - 1) { menuName = menuName.replace(/&&/g, '&').replace(/&/g, '&&'); }
-		if (mType === 'string' && !this.hasMenu(menuName)) { menuError({ 'function': 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc }); throw new Error('There is no menu with such name'); }
+		if (mType === 'string' && !this.hasMenu(menuName)) { menuError({ function: 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc }); throw new Error('There is no menu with such name'); }
 		checkMenuArr.push({ menuName, entryTextA, entryTextB, idxFunc });
 		return true;
 	};
 
 	this.newCheckMenuLast = (func, options = []) => {
-		const lastEntry = entryArr[entryArr.length - 1];
+		if (!isFunction(func)) { menuError({ function: 'newCheckMenuLast\n', func, options }); throw new Error('Non valid \'func\' function provided'); }
+		const lastEntry = this.getLastEntry();
+		if (!lastEntry) { return false; }
 		const len = options ? (Array.isArray(options) ? options.length : Number(options)) : 0;
 		return (len > 1
 			? this.newCheckMenu(lastEntry.menuName, entryArr[entryArr.length - len].entryText, lastEntry.entryText, func) /* idx check */
 			: this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void (0), func) /* boolean check */
 		);
+	};
+
+	this.addIndicatorCheckLast = () => {
+		const lastEntry = this.getLastEntry();
+		return lastEntry
+			? this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, lastEntry.entryText, () => 0)
+			: false;
+	};
+
+	this.addIndicatorNameLast = (boolFunc = () => true, indicator = '⬅') => {
+		const lastEntry = this.getLastEntry();
+		if (lastEntry) {
+			const lastName = lastEntry.entryText;
+			lastEntry.entryText = () => (isFunction(lastName) ? lastName() : lastName) + (boolFunc() ? '\t' + indicator : '');
+			return true;
+		}
+		return false;
 	};
 
 	this.newCondEntry = ({ entryText = '', condFunc }) => {
@@ -281,14 +301,14 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 				const idxB = this.getIdx(entryNameB);
 				if (typeof idxB === 'undefined' || idxB === null) { console.log('this.checkMenu: entryB not found -> ' + entryNameB); }
 				const delta = idxFunc();
-				if (typeof delta !== 'number') { console.log('this.checkMenu: idxFunc not a number -> ' + menuName + ' -> ' + delta); }
-				if ((idxA + delta) > idxB) { console.log('this.checkMenu: idxA + idxFunc over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
+				if (typeof delta !== 'number') { console.log('this.checkMenu: idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
+				if ((idxA + delta) > idxB) { console.log('this.checkMenu: idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
 				return menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta);
 			});
 		} else { // Item check
 			checkMenuMap.set(menuName + entryTextA, () => {
 				const bVal = idxFunc();
-				if (typeof bVal !== 'boolean') { console.log('this.checkMenu: idxFunc not a boolean -> ' + entryNameA + ' -> ' + bVal); }
+				if (typeof bVal !== 'boolean') { console.log('this.checkMenu: idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
 				return menuMap.get(menuName).CheckMenuItem(idxA, bVal);
 			});
 		}
