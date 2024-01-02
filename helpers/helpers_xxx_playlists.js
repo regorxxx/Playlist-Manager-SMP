@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//02/01/24
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks */
 
@@ -37,7 +37,7 @@ function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
 	plman.RemovePlaylistSelection(playlistIndex, true);
 }
 
-// Outputs indexes of all playlists with that name
+// Outputs names of all playlists
 function getPlaylistNames() {
 	let names = [];
 	for (let i = 0; i < plman.PlaylistCount; i++) { names.push({ name: plman.GetPlaylistName(i), idx: i }); }
