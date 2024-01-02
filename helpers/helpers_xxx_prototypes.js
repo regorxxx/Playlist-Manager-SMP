@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/12/23
+//02/01/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -140,6 +140,8 @@ function roughSizeOfObject(object) {
 			bytes += value.length * 2;
 		} else if (type === 'number') {
 			bytes += 8;
+		} else if (type === 'object' && value === null) {
+			bytes += 4;
 		} else if (type === 'object' && value instanceof FbMetadbHandleList) {
 			bytes += 8;
 			value.Convert().forEach((handle) => {
@@ -150,7 +152,7 @@ function roughSizeOfObject(object) {
 		} else if (type === 'object' && value instanceof FbTitleFormat) {
 			bytes += 8;
 			bytes += value.Expression.length * 2;
-		}  else if (type === 'object' && value.RawPath && value.Path) {
+		}  else if (type === 'object' && value && value.RawPath && value.Path) {
 			bytes += 24;
 			bytes += value.Path.length * 2;
 			bytes += value.RawPath.length * 2;
