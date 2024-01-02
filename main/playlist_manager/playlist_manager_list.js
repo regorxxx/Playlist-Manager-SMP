@@ -5266,10 +5266,10 @@ function _list(x, y, w, h) {
 						this.removeFromFolder(item);
 					});
 				}
-				// Remove from folder
-				if (this.isInFolder(pls)) {
-					this.removeFromFolder(pls);
-				}
+			} 
+			// Remove from folder
+			if (this.isInFolder(pls)) {
+				this.removeFromFolder(pls);
 			}
 			// Delete from data
 			const oldNameId = pls.nameId;
