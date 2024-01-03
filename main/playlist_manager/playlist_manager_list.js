@@ -337,7 +337,6 @@ function _list(x, y, w, h) {
 			const lShortcuts = this.getShortcuts('L', 'HEADER');
 			const mShortcuts = this.getShortcuts('M', 'HEADER');
 			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
-			// TODO change tooltip for multiple selection
 			if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
 				headerText += '\n----------------------------------------------';
 			}
@@ -1433,6 +1432,17 @@ function _list(x, y, w, h) {
 									// Replace
 									if (playlistRe.test(playlistDataText)) {
 										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('folder', match));
+									}
+								}
+								if (this.indexes) { // Change text for multiple selection
+									// Remove unused actions
+									const ignoreActions = ['Playlist\'s items menu'];
+									ignoreActions.forEach((t) => {
+										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+									});
+									// Replace
+									if (playlistRe.test(playlistDataText)) {
+										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('playlists', match));
 									}
 								}
 								// Adding Duplicates on selection hint
@@ -3333,7 +3343,7 @@ function _list(x, y, w, h) {
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
 		} else if (answer === popup.no) {
-			data.forEach((item) => { // TODO: .fpl importing?
+			data.forEach((item) => { // TODO .fpl importing?
 				if (!Object.hasOwn(item, 'query') || !Object.hasOwn(item, 'isAutoPlaylist') || !item.isAutoPlaylist) { return; } // May be a non AutoPlaylist item
 				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return; } // Don't allow empty but allow sort
 				if (item.extension === '.xsp' && Object.hasOwn(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
