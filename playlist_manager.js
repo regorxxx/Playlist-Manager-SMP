@@ -292,7 +292,7 @@ let properties = {
 		background: { color: null },
 		margin: { left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15) },
 		// grid = {x: {/* show, color, width */}, y: {/* ... */}},
-		// axis = {x: {/* show, color, width, ticks, labels, key *, singleLabels/}, y: {/* ... */}}
+		// axis = {x: {/* show, color, width, ticks, labels, key, bSingleLabels */}, y: {/* ... */}}
 	})],
 	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }, globSettings.bAutoUpdateCheck],
 	panelUUID: ['Panel UUID', UUID(), { func: isUUID }, UUID()],
@@ -1084,7 +1084,7 @@ if (!list.properties.bSetup[1]) {
 			return;
 		} else { // List
 			if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) { // NOSONAR [structure]
-				list.dragDropText = 'Create new Playlist'; 
+				list.dragDropText = 'Create new Playlist';
 				if (bToFolder) {list.dragDropText += ' (in folder)';}
 			} else if (list.data[list.index].isFolder) { list.dragDropText = 'To selected Folder'; }
 			else { list.dragDropText = 'To selected Playlist'; }
@@ -1121,7 +1121,7 @@ if (!list.properties.bSetup[1]) {
 					const name = list.properties.bAutoSelTitle[1]
 						? list.plsNameFromSelection(oldIdx)
 						: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
-					const toFolder = list.index !== -1 && list.data[list.index].isFolder 
+					const toFolder = list.index !== -1 && list.data[list.index].isFolder
 						? list.data[list.index]
 						: null;
 					const pls = list.add({ bEmpty: true, name, bInputName: true, toFolder });

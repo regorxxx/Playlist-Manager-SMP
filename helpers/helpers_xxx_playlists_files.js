@@ -661,7 +661,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		const stream = getFilePathsFromPlaylist(playlistPath);
 		plman.AddLocations(playlistIndex, stream, true);
 		bDone = true;
-	} else if (extension === '.fpl') { // TODO: load by path
+	} else if (extension === '.fpl') { // TODO load by path
 		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {

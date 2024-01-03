@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/23
+//03/01/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -151,6 +151,8 @@ const globTags = {
 	titleRaw: 'TITLE',
 	date: '$year(%DATE%)',
 	artistRaw: 'ALBUM ARTIST',
+	composer: 'COMPOSER',
+	locale: 'LOCALE LAST.FM',
 	genre: 'GENRE',
 	style: 'STYLE',
 	mood: 'MOOD',

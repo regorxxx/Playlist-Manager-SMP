@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//03/01/24
 
 /* exported _chart */
 
@@ -14,11 +14,29 @@ function _chart({
 	graph = {/* type, multi, borderWidth, point, pointAlpha */ },
 	dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot, group*/ },
 	background = {/* color, image*/ },
-	grid = { x: {/* show, color, width */ }, y: {/* ... */ } },
-	axis = { x: {/* show, color, width, ticks, labels, key, singleLabels, bAltLabels */ }, y: {/* ... */ }, z: {/* ... */ } }, // singleLabels & bAltLabels only for X axis
+	grid = {
+		x: {/* show, color, width */ },
+		y: {/* ... */ }
+	},
+	axis = {
+		x: {/* show, color, width, ticks, labels, key, bSingleLabels, bAltLabels */ },
+		y: {/* ... */ },  // bSingleLabels & bAltLabels only for X axis
+		z: {/* ... */ }
+	},
+	graphSpecs = { // Graph type specific configuration
+		timeline: {/* bAxisCenteredX */ },
+	},
 	margin = {/* left, right, top, bottom */ },
 	buttons = {/* xScroll , settings, display, zoom, custom */ },
-	callbacks = { point: {/* onLbtnUp, onRbtnUp, onDblLbtn */ }, focus: {/* onMouseWwheel, onRbtnUp */ }, settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */ }, display: {/* onLbtnUp, onRbtnUp, onDblLbtn */ }, zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */ }, custom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ }, config: {/* change, backgroundColor */ } },
+	callbacks = {
+		point: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
+		focus: {/* onMouseWwheel, onRbtnUp */ },
+		settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
+		display: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
+		zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
+		custom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
+		config: {/* change, backgroundColor */ }
+	},
 	configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true , maxSliceOnDataChange: 100 */ },
 	x = 0,
 	y = 0,
@@ -31,6 +49,52 @@ function _chart({
 	// Global tooltip
 	this.tooltip = new _tt(null);
 	this.profile = null;
+
+	this.setDefaults = () => {
+		this.colors = [];
+		this.chroma = { scheme: 'sequential', colorBlindSafe: true, interpolation: 'lrgb' }; // diverging, qualitative, sequential, random or [color, ...] see https://vis4.net/chromajs/#color-scales
+		this.graph = { type: 'bars', multi: false, borderWidth: _scale(1), point: null, pointAlpha: 255 };
+		this.dataManipulation = { sort: 'natural', filter: null, slice: [0, 10], distribution: null, probabilityPlot: null, group: 4 };
+		this.background = { color: RGB(255, 255, 255), image: null };
+		this.grid = { x: { show: false, color: RGB(0, 0, 0), width: _scale(1) }, y: { show: false, color: RGB(0, 0, 0), width: _scale(1) } };
+		this.axis = {
+			x: { show: true, color: RGB(0, 0, 0), width: _scale(2), ticks: 'auto', labels: true, bSingleLabels: true, key: '', showKey: true, bAltLabels: false, tf: '' },
+			y: { show: true, color: RGB(0, 0, 0), width: _scale(2), ticks: 10, labels: true, key: 'tracks', showKey: true, tf: '', bProportional: false },
+			z: { key: '', tf: '' },
+		};
+		this.graphSpecs = {
+			timeline: { bAxisCenteredX: false },
+		};
+		this.margin = { left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20) };
+		this.buttons = { xScroll: false, settings: false, display: false, zoom: false, custom: false };
+		this.callbacks = {
+			point: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
+			focus: {
+				onMouseWwheel: this.zoomX,
+				onRbtnUp: null
+			},
+			settings: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
+			display: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
+			zoom: {
+				onLbtnUp: (x, y, mask) => this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -1 : 1),
+				onDblLbtn: (x, y, mask) => { this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -Infinity : Infinity); },
+				onRbtnUp: null,
+			},
+			custom: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
+			config: { change: null, backgroundColor: null }
+		};
+		this.configuration = {
+			bLoadAsyncData: true,
+			bAltVerticalText: false,
+			bPopupBackground: false,
+			bProfile: false,
+			bSlicePerKey: true,
+			bDynColor: true, bDynColorBW: true,
+			maxSliceOnDataChange: 50,
+		};
+		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
+		this.tooltipText = '';
+	};
 
 	/*
 		Paint
@@ -504,7 +568,7 @@ function _chart({
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									gr.GdiDrawText(labelText, this.gFont, yAxisColor, xTickText, yTickText, tickW, tickH, flags);
 								}
-								if (this.axis.x.labels && i === 0 || !this.axis.x.singleLabels) { // keys
+								if (this.axis.x.labels && i === 0 || !this.axis.x.bSingleLabels) { // keys
 									const labelText = xAxisValues[j];
 									const tickH = gr.CalcTextHeight(labelText, this.gFont);
 									const tickW = gr.CalcTextWidth(labelText, this.gFont);
@@ -610,8 +674,21 @@ function _chart({
 									gr.FillSolidRect(xLabel + tickW / 2 + offsetTickText - _scale(3) - xTickW / 2, yPos + tickH / 6, xTickW + _scale(4), tickH, borderColor);
 									gr.GdiDrawText(valueX, this.gFont, xAxisColorInverted, xLabel + offsetTickText, yPos + this.axis.y.width, tickW, this.h, flags);
 								}
-								const xLine = xLabel; // TODO centered or at left of first value?
-								gr.DrawLine(xLine, yPos + this.axis.x.width * 2, xLine, yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0), this.axis.x.width / 2, xAxisColor);
+								const yLine = yPos + this.axis.x.width * 2;
+								let xLine = xLabel;
+								let hLine = yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0);
+								// Center line and ajust height if data is evenly grouped
+								if (this.graphSpecs.timeline.bAxisCenteredX) {
+									xLine += tickW / 2;
+									if (this.dataManipulation.group % 2 !== 0) {
+										const [serie, idx] = this.tracePoint(xLine, yPos - this.axis.x.width - (y - h) / 2);
+										if (serie !== -1 && idx !== -1) {
+											const coords = this.sizePoint(this.dataCoords[serie][idx], false);
+											hLine += coords.h;
+										}
+									}
+								}
+								gr.DrawLine(xLine, yLine, xLine, hLine, this.axis.x.width / 2, xAxisColor);
 							});
 						}
 					}
@@ -1741,7 +1818,7 @@ function _chart({
 		Config related
 	*/
 
-	this.changeConfig = ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, margin, x, y, w, h, title, configuration, gFont, bPaint = true, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) => {
+	this.changeConfig = ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, graphSpecs, margin, x, y, w, h, title, configuration, gFont, bPaint = true, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) => {
 		let bCheckColors = false;
 		if (gFont) { this.gFont = gFont; }
 		if (this.data && this.data.length) {
@@ -1778,6 +1855,9 @@ function _chart({
 			if (axis.x) { this.axis.x = { ...this.axis.x, ...axis.x }; }
 			if (axis.y) { this.axis.y = { ...this.axis.y, ...axis.y }; }
 			if (axis.z) { this.axis.z = { ...this.axis.z, ...axis.z }; }
+		}
+		if (graphSpecs) {
+			if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
 		}
 		if (grid) {
 			if (grid.x) { this.grid.x = { ...this.grid.x, ...grid.x }; }
@@ -2109,49 +2189,6 @@ function _chart({
 		if (this.configuration.bLoadAsyncData && this.dataAsync) { this.initDataAsync(); } // May be managed by the chart or externally
 	};
 
-	this.setDefaults = () => {
-		this.colors = [];
-		this.chroma = { scheme: 'sequential', colorBlindSafe: true, interpolation: 'lrgb' }; // diverging, qualitative, sequential, random or [color, ...] see https://vis4.net/chromajs/#color-scales
-		this.graph = { type: 'bars', multi: false, borderWidth: _scale(1), point: null, pointAlpha: 255 };
-		this.dataManipulation = { sort: 'natural', filter: null, slice: [0, 10], distribution: null, probabilityPlot: null, group: 4 };
-		this.background = { color: RGB(255, 255, 255), image: null };
-		this.grid = { x: { show: false, color: RGB(0, 0, 0), width: _scale(1) }, y: { show: false, color: RGB(0, 0, 0), width: _scale(1) } };
-		this.axis = {
-			x: { show: true, color: RGB(0, 0, 0), width: _scale(2), ticks: 'auto', labels: true, singleLabels: true, key: '', showKey: true, bAltLabels: false, tf: '' },
-			y: { show: true, color: RGB(0, 0, 0), width: _scale(2), ticks: 10, labels: true, key: 'tracks', showKey: true, tf: '', bProportional: false },
-			z: { key: '', tf: '' },
-		};
-		this.margin = { left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20) };
-		this.buttons = { xScroll: false, settings: false, display: false, zoom: false, custom: false };
-		this.callbacks = {
-			point: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
-			focus: {
-				onMouseWwheel: this.zoomX,
-				onRbtnUp: null
-			},
-			settings: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
-			display: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
-			zoom: {
-				onLbtnUp: (x, y, mask) => this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -1 : 1),
-				onDblLbtn: (x, y, mask) => { this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -Infinity : Infinity); },
-				onRbtnUp: null,
-			},
-			custom: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
-			config: { change: null, backgroundColor: null }
-		};
-		this.configuration = {
-			bLoadAsyncData: true,
-			bAltVerticalText: false,
-			bPopupBackground: false,
-			bProfile: false,
-			bSlicePerKey: true,
-			bDynColor: true, bDynColorBW: true,
-			maxSliceOnDataChange: 50,
-		};
-		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
-		this.tooltipText = '';
-	};
-
 	this.setDefaults();
 	this.gFont = gFont;
 	this.data = data;
@@ -2175,6 +2212,9 @@ function _chart({
 		if (grid.y) { this.grid.y = { ...this.grid.y, ...grid.y }; }
 	}
 	this.margin = { ...this.margin, ...(margin || {}) };
+	if (graphSpecs) {
+		if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
+	}
 	this.buttons = { ...this.buttons, ...(buttons || {}) };
 	if (callbacks) {
 		if (callbacks.point) { this.callbacks.point = { ...this.callbacks.point, ...callbacks.point }; }
