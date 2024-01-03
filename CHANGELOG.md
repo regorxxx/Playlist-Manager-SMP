@@ -78,7 +78,7 @@
 ### Fixed
 - Folders: playlist deletion within folders did not update the UI properly in some cases. [Issue 72](https://github.com/regorxxx/Playlist-Manager-SMP/issues/72)
 - Folders: nested folders not working in some cases or producing crashes. [Issue 73](https://github.com/regorxxx/Playlist-Manager-SMP/issues/73)
-- Folders: internal drag n' drop not working properly on sorting methods different to manual one. i.e. to move items into/out of a folder.
+- Folders: internal drag n' drop not working properly on sorting methods different than manual one. i.e. to move items into/out of a folder.
 - Search: crash on multiple settings menu entries due to a typo on variable.
 - ListenBrainz: crash when importing an existing playlist in some cases.
 - Exporting Playlists: crash when clicking on a point -to filter- while using folders data.
