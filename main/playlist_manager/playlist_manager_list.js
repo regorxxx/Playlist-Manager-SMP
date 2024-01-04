@@ -4322,6 +4322,14 @@ function _list(x, y, w, h) {
 		// Playlists on UI
 		if (this.bAllPls) {
 			// Remove any previous UI pls on update
+			const cache = bReuseData
+				? {
+					indexes: this.indexes,
+					pls: this.indexes.length
+						? this.indexes.map((idx) => this.data[idx])
+						: []
+				}
+				: null;
 			this.indexes = [];
 			this.dataAll = this.dataAll.filter((pls) => { return pls.extension !== '.ui'; });
 			this.data = this.data.filter((pls) => { return pls.extension !== '.ui'; });
@@ -4358,6 +4366,16 @@ function _list(x, y, w, h) {
 				this.dataUI = [...this.dataFoobar];
 				this.dataAll = this.dataAll.concat(this.dataFoobar);
 				this.data = this.data.concat(this.dataFoobar);
+			}
+			if (bReuseData) { // Restore selection if possible
+				if (cache.indexes.length) {
+					this.indexes = cache.pls
+						.map((oldPls) => this.data.findIndex((newPls) => {
+							return compareObjects(newPls, oldPls) || newPls.nameId === oldPls.nameId && newPls.extension === '.ui' && oldPls.extension === '.ui';
+						}))
+						.filter((idx) => idx !== -1);
+				}
+				cache.pls = null; cache.indexes = null;
 			}
 			this.itemsFoobar = this.dataFoobar.length;
 		} else { this.itemsFoobar = 0; }
