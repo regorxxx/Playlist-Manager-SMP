@@ -52,6 +52,9 @@
 
 ## [Unreleased][]
 ### Added
+- Importing JSON: allows to import any available playlist metadata from UI-only playlists, .fpl, .xsp, .pls and .srtm files (which is only saved in the JSON file). In such case, the playlist file (with same filename and name) must already reside in the tracked folder to be matched at the importing step and overwritten with the metadata found.
+- Importing JSON: allows to import the folder structure saved in the JSON file.
+- Importing JSON: allows to selectively choose which formats will be imported. i.e. files, AutoPlaylists and Smart Playlists, UI-only playlists, folders, ...
 - Search: new search mode against tracks' metadata. Internally loads all tracks from every playlists and looks for the search input within specific tags (by default ALBUM ARTIST, ALBUM, TITLE and DATE). It may produce some lag while searching if there are a lot of playlists, so disable it if not needed. The tracks are cached, so consecutive searches are faster (or performing it some seconds after startup); but it greatly increases startup time when using search is maintained at startup (since cache has not been built). In such cases, make sure to have the setting 'Reset search on startup' enabled.
 - Search: new search mode against playlists' metadata. Retrieves track's metadata from the playlist file (available on .m3u8, .m3u, .xspf and .pls formats) and tries to match ARTIST or TITLE. This mode is much faster than looking for the track's tags (see above).
 - XSP: Smart Playlists are now automatically refreshed whenever a playlist source changes (not in any other case, use AutoPlaylists for that). i.e. if a Smart Playlist has a query like "#PLAYLIST# IS A", and "A" playlist changes, the Smart Playlist is automatically refreshed now (tracks added/removed). If the playlist is not loaded, only metadata is updated (like duration or size). This behavior can be disabled at settings.
@@ -62,6 +65,8 @@
 - Folders: playlists can now be created within folders using drag n' drop (pressing ALT or ALT + CONTROL as usual). [Request 71](https://github.com/regorxxx/Playlist-Manager-SMP/issues/71)
 - UI: added drag n' drop actions to the quick help popup (shift click on help button).
 ### Changed
+- Importing JSON: importing logic has been rewritten to be more robust. If an existing playlist has the same name than one imported, a popup will ask to overwrite or omit it. In case extensions differ, will show an error (since they are probably not the same playlist). Overwriting a playlist involves replacing the old metadata with the new one, which in the case of AutoPlaylists means the query is replaced (plus other data), but for other playlists formats, things like tags, categories, etc. are also transferred. Items will also be compared before overwriting, so in case there is no changes (filtering on-init properties like folders being opened or not), they will skipped.
+- Importing JSON: suggested path is now automatically retrieved from clipboard (instead of being empty).
 - AutoPlaylists: added checks to sorting inputs to ensure they are valid expressions.
 - AutoPlaylists: AutoPlaylists created via native foobar2000, instead of the manager, are now flagged as 'AutoPlaylist (UI)' when opening their contextual menu at the manager, as an indication of playlist being an UI-only playlist. Some menu entries also show a warning about cloning needed to fully integrate them.
 - AutoPlaylists: cloning an AutoPlaylist created via native foobar2000, instead of the manager, also opens the AutoPlaylists properties now to easily copy the query and sort patterns.

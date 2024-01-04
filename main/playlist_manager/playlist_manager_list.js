@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable , compareObjects:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -35,6 +35,7 @@ include('..\\..\\helpers-external\\keycode-2.2.0\\index.js');
 include('playlist_manager_panel.js');
 /* global panel:readable */
 include('playlist_manager_helpers.js');
+/* global _getClipboardData:readable */
 
 function _list(x, y, w, h) {
 	const bProfile = false;
@@ -3316,7 +3317,7 @@ function _list(x, y, w, h) {
 		const test = bProfile ? new FbProfiler(window.Name + ': ' + 'Load json file') : null;
 		let externalPath = path;
 		if (!path || !path.length) {
-			try { externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', window.Name, '', true); }
+			try { externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', window.Name, _getClipboardData() || '', true); }
 			catch (e) { return false; }
 		}
 		if (!externalPath.length) { return false; }
@@ -3331,13 +3332,13 @@ function _list(x, y, w, h) {
 		let answer = bOldVersion === void (0) ? WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n(no = json file by this playlist manager)', 0, window.Name, popup.question + popup.yes_no) : (bOldVersion ? popup.yes : popup.no);
 		let dataExternalPlaylists = [];
 		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? utf8 : 0);
-		if (!data) { return false; }
+		if (!data) { fb.ShowPopupMessage('No data found: ' + externalPath, window.Name); return false; }
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
 			// {name,query,sort,forced} maps to {...,name,query,sort,bSortForced,...}
 			// Need to fill all the other values
 			data.forEach((item) => {
-				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return; }
+				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage(item.name + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
@@ -3354,29 +3355,138 @@ function _list(x, y, w, h) {
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
 		} else if (answer === popup.no) {
-			data.forEach((item) => { // TODO .fpl importing?
-				if (!Object.hasOwn(item, 'query') || !Object.hasOwn(item, 'isAutoPlaylist') || !item.isAutoPlaylist) { return; } // May be a non AutoPlaylist item
-				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + item.query, window.Name); return; } // Don't allow empty but allow sort
-				if (item.extension === '.xsp' && Object.hasOwn(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
-					fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-					return;
+			const importFormats = new Set(['.fpl', '.srtm', '.pls']);
+			const answerAuto = data.some((pls) => pls.query)
+				?  WshShell.Popup('Import AutoPlaylists and Smart Playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				: popup.no;
+			const answerFiles = data.some((pls) => importFormats.has(pls.extension))
+				?  WshShell.Popup('Import ' + [...importFormats].join (', ') + ' metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				: popup.no;
+			const answerUI = data.some((pls) => pls.extension === '.ui')
+				? WshShell.Popup('Import UI-only playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				: popup.no;
+			const answerFolders = data.some((pls) => pls.isFolder)
+				? WshShell.Popup('Import folders?\n\nIn case a match it\'s found, a popup will ask to overwrite current folder contents.', 0, window.Name, popup.question + popup.yes_no)
+				: popup.no;
+			data.forEach((item) => {
+				if (answerFiles === popup.yes && importFormats.has(item.extension)) {
+					item.path = item.path.replace(/(.*)\\(.*$)/, this.playlistsPath + '$2');
+					if (!_isFile(item.path)) { return; }
+					dataExternalPlaylists.push(item);
+				} else if (answerUI === popup.yes && item.extension === '.ui') {
+					dataExternalPlaylists.push(item);
+				} else if (answerFolders === popup.yes && item.isFolder) {
+					dataExternalPlaylists.push(item);
+				} else if (answerAuto === popup.yes && Object.hasOwn(item, 'query') && item.query.length) {  // + .xsp
+					if (item.extension === '.xsp') {
+						item.path = item.path.replace(/(.*)\\(.*$)/, this.playlistsPath + '$2');
+						if (!_isFile(item.path)) { return; }
+						if (Object.hasOwn(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
+							fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+							return;
+						}
+						if (!checkQuery(item.query, false, false, true)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
+					} else {
+						if (!checkQuery(item.query, false, true, false)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
+					}
+					const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+					item.size = handleList.Count;
+					item.duration = handleList.CalcTotalDuration();
+					const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
+					if (diffKeys.size) { diffKeys.forEach((key) => { item[key] = defPls[key]; }); }
+					// width is done along all playlist internally later...
+					dataExternalPlaylists.push(item);
 				}
-				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
-				item.size = handleList.Count;
-				item.duration = handleList.CalcTotalDuration();
-				const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
-				if (diffKeys.size) { diffKeys.forEach((key) => { item[key] = defPls[key]; }); }
-				// width is done along all playlist internally later...
-				dataExternalPlaylists.push(item);
 			});
 		}
-		// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
-		dataExternalPlaylists.forEach((PlaylistObj) => {
-			if (this.bAutoLoadTag && PlaylistObj.tags.indexOf('bAutoLoad') === -1) { PlaylistObj.tags.push('bAutoLoad'); }
-			if (this.bMultMenuTag && PlaylistObj.tags.indexOf('bMultMenu') === -1) { PlaylistObj.tags.push('bMultMenu'); }
-			if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (tag !== 'bAutoLock' && !new Set(PlaylistObj.tags).has(tag)) { PlaylistObj.tags.push(tag); } }); }
-		});
-		if (dataExternalPlaylists.length) { this.addToData(dataExternalPlaylists); } // Add to database
+		if (dataExternalPlaylists.length) {
+			// Auto-Tags (skip bAutoLock since AutoPlaylists are already locked)
+			dataExternalPlaylists.forEach((pls) => {
+				if (this.bAutoLoadTag && pls.tags.indexOf('bAutoLoad') === -1) { pls.tags.push('bAutoLoad'); }
+				if (this.bMultMenuTag && pls.tags.indexOf('bMultMenu') === -1) { pls.tags.push('bMultMenu'); }
+				if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (tag !== 'bAutoLock' && !new Set(pls.tags).has(tag)) { pls.tags.push(tag); } }); }
+			});
+			// Clean on-init added properties
+			dataExternalPlaylists.forEach((pls) => {
+				delete pls.inFolder;
+				delete pls.isOpen;
+			});
+			// Find duplicates
+			const names = new Set(dataExternalPlaylists.map((pls) => pls.nameId));
+			const duplicates = new Map();
+			this.dataAll.forEach((pls) => {
+				if (names.has(pls.nameId)) { duplicates.set(pls.nameId, pls); }
+			});
+			// Add to database
+			dataExternalPlaylists.forEach((newPls) => {
+				const name = newPls.nameId;
+				if (duplicates.has(name)) {
+					const oldPls = duplicates.get(name);
+					const oldPlsClean = clone(oldPls);
+					// Clean on-init added properties
+					delete oldPlsClean.inFolder;
+					delete oldPlsClean.isOpen;
+					if (oldPlsClean.isFolder) {
+						oldPlsClean.pls = oldPlsClean.pls.map((subPls) => {
+							return  subPls.isFolder 
+								? {nameId: subPls.nameId, isFolder: subPls.isFolder}
+								: { nameId: subPls.nameId, extension: subPls.extension};
+						});
+						oldPlsClean.pls.sort((a, b) => a.nameId.localeCompare(b.nameId));
+						if (newPls.isFolder) {newPls.pls.sort((a, b) => a.nameId.localeCompare(b.nameId));} 
+						// If it's not a folder it will shown an error later
+					}
+					if (!compareObjects(oldPlsClean, newPls)) {
+						const type = newPls.extension
+							? newPls.query
+								? 'Smart playlist (.xsp)'
+								: newPls.extension === '.ui'
+									? 'UI-only playlist (.ui)'
+									: newPls.isFolder
+										? 'Folder'
+										: newPls.extension
+							: newPls.query
+								? 'AutoPlaylist'
+								: '?';
+						const answer = WshShell.Popup(
+							newPls.isFolder
+								? 'Folder is duplicated: ' + name + '\n\nOverwrite?\n(It will only affect the contents)'
+								: 'Playlist is duplicated: ' + name + '\nType: ' + type + '\n\nOverwrite?'
+							, 0, window.Name, popup.question + popup.yes_no
+						);
+						if (answer === popup.yes) {
+							if (oldPls.extension !== newPls.extension) {
+								fb.ShowPopupMessage('Duplicated playlist has a different extension in the JSON file and the current database.\n\nIt will not be overwritten, manually review it.\n\nJSON:\n' + JSON.stringify(newPls) + '\n\nDatabase:\n+ ' + JSON.stringify(oldPls), window.Name);
+							} else {
+								if (newPls.isFolder) {
+									const oldNames = new Map(oldPls.pls.map((subPls) => [subPls.nameId, subPls]));
+									const newNames = new Map(newPls.pls.map((subPls) => [subPls.nameId, subPls]));
+									const toRemove = [
+										...new Set(oldNames.keys())
+											.difference(new Set(newNames.keys()))
+									].map((name) => oldNames.get(name));
+									const toAdd = [
+										...new Set(newNames.keys())
+											.difference(new Set(oldNames.keys()))
+									].map((name) => newNames.get(name));
+									toRemove.forEach((subPls) => {
+										this.removeFromFolder(subPls);
+									});
+									toAdd.forEach((subPls) => {
+										if (subPls.inFolder) {this.removeFromFolder(subPls);}
+										this.addToFolder(subPls, oldPls);
+									});
+								} else {
+									this.editData(oldPls, newPls);
+								}
+							}
+						}
+					}
+				} else {
+					this.addToData(newPls);
+				}
+			});
+		}
 		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
 		this.resetFilter();
 		if (bProfile) { test.Print(); }
@@ -4583,15 +4693,27 @@ function _list(x, y, w, h) {
 		this.editData = (objectPlaylist, properties, bSave = false) => {
 			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 			if (isArray(objectPlaylist)) {
-				for (const objectPlaylist_i of objectPlaylist) { this.editData(objectPlaylist_i); }
-				return;
+				const bSucess = [];
+				for (const objectPlaylist_i of objectPlaylist) { bSucess.push(this.editData(objectPlaylist_i)); }
+				return bSucess.every(Boolean);
 			}
 			const index = this.dataAll.indexOf(objectPlaylist);
 			if (index !== -1) { // Changes data on the other arrays too since they link to same object
-				Object.keys(properties).forEach((property) => { this.dataAll[index][property] = properties[property]; });
-			} else { console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+				Object.keys(properties).forEach((property) => {
+					if (property === 'pls') { // Don't remove folder.pls[] prototype
+						this.dataAll[index].pls.length = 0;
+						this.dataAll[index].pls.push(...properties[property]);
+					} else {
+						this.dataAll[index][property] = properties[property];
+					}
+				});
+			} else {
+				console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));
+				return false;
+			}
 			if (bSave) { this.save(); }
 			clearInterval(delay);
+			return true;
 		};
 
 		this.removeFromData = (objectPlaylist) => {
