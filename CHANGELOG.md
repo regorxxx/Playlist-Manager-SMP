@@ -69,8 +69,10 @@
 - XSP: Smart Playlists are now locked when loading them, similar to AutoPlaylists behavior. If there is no sorting, then tracks can be reorder, otherwise sorting is also locked.
 - XSP: improved caching in multiple playlist actions.
 - XSPF: improved caching in multiple playlist actions.
-- UI: Added a tip at all input popups for sorting, to specify when 'SORT BY' and similar statements must be used.
+- Folders: drag n' drop now allows to move items to any specific position within a folder, not just to the end, on manual sorting.
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
+- UI: 'Move to folder...' submenu now shows an indicator when there no other folders to move to.
+- UI: Added a tip at all input popups for sorting, to specify when 'SORT BY' and similar statements must be used.
 - UI: optimized repainting to use less resources on statistics mode.
 - UI: changed tooltip for multiple selection to only show the available which work on the entire selection.
 - Helpers: updated helpers.
