@@ -3357,10 +3357,10 @@ function _list(x, y, w, h) {
 		} else if (answer === popup.no) {
 			const importFormats = new Set(['.fpl', '.srtm', '.pls']);
 			const answerAuto = data.some((pls) => pls.query)
-				?  WshShell.Popup('Import AutoPlaylists and Smart Playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Import AutoPlaylists and Smart Playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
 				: popup.no;
 			const answerFiles = data.some((pls) => importFormats.has(pls.extension))
-				?  WshShell.Popup('Import ' + [...importFormats].join (', ') + ' metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Import ' + [...importFormats].join(', ') + ' metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
 				: popup.no;
 			const answerUI = data.some((pls) => pls.extension === '.ui')
 				? WshShell.Popup('Import UI-only playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
@@ -3428,12 +3428,12 @@ function _list(x, y, w, h) {
 					delete oldPlsClean.isOpen;
 					if (oldPlsClean.isFolder) {
 						oldPlsClean.pls = oldPlsClean.pls.map((subPls) => {
-							return  subPls.isFolder 
-								? {nameId: subPls.nameId, isFolder: subPls.isFolder}
-								: { nameId: subPls.nameId, extension: subPls.extension};
+							return subPls.isFolder
+								? { nameId: subPls.nameId, isFolder: subPls.isFolder }
+								: { nameId: subPls.nameId, extension: subPls.extension };
 						});
 						oldPlsClean.pls.sort((a, b) => a.nameId.localeCompare(b.nameId));
-						if (newPls.isFolder) {newPls.pls.sort((a, b) => a.nameId.localeCompare(b.nameId));} 
+						if (newPls.isFolder) { newPls.pls.sort((a, b) => a.nameId.localeCompare(b.nameId)); }
 						// If it's not a folder it will shown an error later
 					}
 					if (!compareObjects(oldPlsClean, newPls)) {
@@ -3473,7 +3473,7 @@ function _list(x, y, w, h) {
 										this.removeFromFolder(subPls);
 									});
 									toAdd.forEach((subPls) => {
-										if (subPls.inFolder) {this.removeFromFolder(subPls);}
+										if (subPls.inFolder) { this.removeFromFolder(subPls); }
 										this.addToFolder(subPls, oldPls);
 									});
 								} else {
@@ -5851,7 +5851,7 @@ function _list(x, y, w, h) {
 							}
 						}
 						console.log('this.createMainMenuDynamic: unknown error');
-						console.log(e.message);
+						console.log(e.message); // DEBUG
 						return false;
 					});
 			} catch (e) {
@@ -5863,7 +5863,7 @@ function _list(x, y, w, h) {
 					}
 				}
 				console.log('this.createMainMenuDynamic: unknown error');
-				console.log(e.message);
+				console.log(e.message); // DEBUG
 			}
 			return Promise.resolve(false);
 		};
