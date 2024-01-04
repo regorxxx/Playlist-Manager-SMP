@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//04/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -752,6 +752,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
+					if (!options.length) {menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED });}
 					options.forEach((opt, i) => {
 						if (i && i % 5 === 0) {
 							menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
@@ -941,6 +942,7 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 			.map((f) => Object.fromEntries([['name', f.nameId], ['folder', f]]));
+		if (!options.length) {menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED });}
 		options.forEach((opt, i) => {
 			if (i && i % 5 === 0) {
 				menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
