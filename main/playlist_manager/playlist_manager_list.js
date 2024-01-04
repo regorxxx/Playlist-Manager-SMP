@@ -4202,8 +4202,9 @@ function _list(x, y, w, h) {
 					Promise.all(promises).then(() => {
 						test.Print();
 						this.save();
+						if (bInit && this.bDynamicMenus) { console.log('Playlist Manager: Created dynamic menus'); }
 						if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) {
-							Promise.wait(thirdTimer).then(() => {
+							Promise.wait(500).then(() => {
 								const id = setInterval(() => {
 									if (pop.isEnabled()) {return;}
 									clearInterval(id);
@@ -4649,7 +4650,8 @@ function _list(x, y, w, h) {
 			if (!bInit) {
 				if (this.bDynamicMenus) {
 					this.createMainMenuDynamic().then(() => {
-						this.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync();
+						this.exportPlaylistsInfo(); 
+						callbacksListener.checkPanelNamesAsync();
 					});
 				}
 				else if (this.mainMenuDynamic.length) { this.deleteMainMenuDynamic(); }
@@ -6076,7 +6078,7 @@ function _list(x, y, w, h) {
 							}, 250);
 						});
 					}).then((result) => {
-						if (result) { console.log('Playlist Manager: created dynamic menus'); }
+						if (result) { console.log('Playlist Manager: Created dynamic menus'); }
 						this.exportPlaylistsInfo();
 						callbacksListener.checkPanelNamesAsync();
 					});
