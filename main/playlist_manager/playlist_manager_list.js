@@ -1717,38 +1717,7 @@ function _list(x, y, w, h) {
 							}
 							this.internalPlsDrop = [];
 						} else if (Object.hasOwn(shortcuts, mask)) {
-							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
-								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
-								const cache = [this.offset, this.index];
-								let bSucess = false;
-								if (this.indexes.length) {
-									this.indexes.forEach((zz) => {
-										const item = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
-										if (item && item.isFolder) {
-											if (!!item.pls.lengthFiltered && this.sendSelectionToPlaylist({ pls: item, bCheckDup: true, bPaint: false, bDelSource })) {
-												bSucess = true;
-											}
-										} else if (this.sendSelectionToPlaylist({ playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource })) {
-											bSucess = true;
-										}
-									});
-								} else {
-									const currItem = this.data[z];
-									if (currItem.isFolder) {
-										if (!!currItem.pls.lengthFiltered && this.sendSelectionToPlaylist({ pls: currItem, bCheckDup: true, bPaint: false, bDelSource })) {
-											bSucess = true;
-										}
-									} else {
-										bSucess = this.sendSelectionToPlaylist({ playlistIndex: z, bPaint: false, bDelSource });
-									}
-								}
-								if (bSucess) {
-									[this.offset, this.index] = cache;
-									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
-								}
-							} else {
-								this.executeAction(z, x, y, shortcuts[mask]);
-							}
+							this.executeAction(z, x, y, shortcuts[mask]);
 						} else { // Only mouse
 							const currItem = this.data[z];
 							if (!this.bDoubleclick) { // It's not a second lbtn click
@@ -1823,28 +1792,7 @@ function _list(x, y, w, h) {
 				default: {
 					const z = this.index;
 					if (x > this.x && x < this.x + (this.bShowSep ? this.x + this.w - 20 : this.x + this.w)) {
-						if (Object.hasOwn(shortcuts, mask)) {
-							if (shortcuts[mask].key === 'Copy selection to playlist' || shortcuts[mask].key === 'Move selection to playlist') {
-								const bDelSource = shortcuts[mask].key === 'Move selection to playlist';
-								const cache = [this.offset, this.index];
-								let bSucess = false;
-								if (this.indexes.length) {
-									this.indexes.forEach((z) => {
-										if (this.sendSelectionToPlaylist({ playlistIndex: z, bCheckDup: true, bPaint: false, bDelSource })) {
-											bSucess = true;
-										}
-									});
-								} else { bSucess = this.sendSelectionToPlaylist({ playlistIndex: z, bPaint: false, bDelSource }); }
-								if (bSucess) {
-									[this.offset, this.index] = cache;
-									window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
-								}
-							} else {
-								this.executeAction(z, x, y, shortcuts[mask]);
-							}
-						} else { // Only mouse
-							this.executeAction(z, x, y, shortcuts['SG_CLICK']);
-						}
+						this.executeAction(z, x, y, sgShortcut);
 					}
 					break;
 				}
@@ -2502,7 +2450,9 @@ function _list(x, y, w, h) {
 
 	this.executeAction = (z, x, y, shortcut, bMultiple = !!this.indexes.length) => {
 		const pls = typeof z !== 'undefined' && z !== -1 ? this.data[z] : null;
-		if (pls && pls.isFolder) { // Folder
+		if (shortcut.bStandAlone) {
+			shortcut.func();
+		} else if (pls && pls.isFolder) { // Folder
 			const singleActions = new Set(['Manage playlist']);
 			const ignoreActions = new Set(['Playlist\'s items menu']);
 			const openActions = new Set(['Multiple selection']);
@@ -2612,8 +2562,14 @@ function _list(x, y, w, h) {
 						{ key: 'Manage playlist', func: this.playlistMenu },
 						{ key: 'Playlist\'s items menu', func: this.contextMenu },
 						{ key: 'Load / show playlist', func: this.loadPlaylistOrShow },
-						{ key: 'Copy selection to playlist', func: null }, // Processed at lbtn_up
-						{ key: 'Move selection to playlist', func: null }, // Processed at lbtn_up
+						{
+							key: 'Copy selection to playlist',
+							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: false }), bStandAlone: true
+						},
+						{
+							key: 'Move selection to playlist',
+							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: true }), bStandAlone: true
+						},
 						{ key: 'Clone playlist in UI', func: clonePlaylistInUI.bind(this, this) },
 						{ key: 'Recycle playlist', func: this.removePlaylist },
 						{ key: 'Lock/unlock playlist file', func: switchLock.bind(this, this) },
@@ -2804,6 +2760,27 @@ function _list(x, y, w, h) {
 			return bMultAlbums ? artistName : artistName + ' - ' + albumName;
 		}
 		return 'Empty playlist';
+	};
+
+	this.sendSelectionToPlaylists = ({ playlistIndexArr = this.indexes.length ? this.indexes : [this.index], bCheckDup = true, bDelSource = false } = {}) => {
+		const cache = [this.offset, this.index];
+		let bSucess = false;
+		if (playlistIndexArr.length) {
+			playlistIndexArr.forEach((zz) => {
+				const item = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
+				if (item && item.isFolder) {
+					if (!!item.pls.lengthFiltered && this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: false, bDelSource })) {
+						bSucess = true;
+					}
+				} else if (this.sendSelectionToPlaylist({ playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource })) {
+					bSucess = true;
+				}
+			});
+		}
+		if (bSucess) {
+			[this.offset, this.index] = cache;
+			window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+		}
 	};
 
 	this.sendSelectionToPlaylist = ({ playlistIndex, pls = null, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false } = {}) => {

@@ -84,6 +84,7 @@
 - Code cleanup.
 ### Removed
 ### Fixed
+- UI: single click actions not working in some cases. [Issue 74](https://github.com/regorxxx/Playlist-Manager-SMP/issues/74)
 - UI: multiple selection was lost in some cases after executing actions if UI-only playlists were tracked.
 - Folders: playlist deletion within folders did not update the UI properly in some cases. [Issue 72](https://github.com/regorxxx/Playlist-Manager-SMP/issues/72)
 - Folders: nested folders not working in some cases or producing crashes. [Issue 73](https://github.com/regorxxx/Playlist-Manager-SMP/issues/73)
