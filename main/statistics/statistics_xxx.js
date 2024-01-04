@@ -745,7 +745,7 @@ function _chart({
 									gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
 									gr.DrawString(valueZ, this.gFont, xAxisColor, zLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
 									gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
-								} else { // TODO setting for overflow
+								} else {
 									const keyH = gr.CalcTextHeight(valueZ, this.gFont);
 									const img = gdi.CreateImage(xTickW, keyH);
 									const _gr = img.GetGraphics();
