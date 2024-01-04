@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/12/23
+//04/01/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta */
 
@@ -369,11 +369,11 @@ function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name, c
 	if (_isFile(file)) {
 		data = _jsonParseFile(file, codePage);
 		if (!data && utils.GetFileSize(file)) {
-			console.log(fileName + ' file is corrupt:', file);
+			console.log(fileName + ' file is corrupt:', file); // DEBUG
 			fb.ShowPopupMessage(fileName + ' file is corrupt:\n' + file, popupName);
 		}
 	} else {
-		console.log(fileName + ' file not found:\n', file);
+		console.log(fileName + ' file not found:\n', file); // DEBUG
 		fb.ShowPopupMessage(fileName + ' file not found:\n' + file, popupName);
 	}
 	return data;

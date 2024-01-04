@@ -25,7 +25,6 @@ const options = new _window({width: window.Width, height: window.Height, tabWidt
 // Set save and load methods to call them easily later (they would be used too if setting autosave to true)
 options.save = () => {
 	console.log('saving');
-	console.log(options.properties['bSaveFilterStates']);
 	overwriteProperties(options.properties);
 	const jsonData = options.getTabData('Config');
 	if (jsonData && jsonData.length) {utils.WriteTextFile(folders.data + 'options_data.json', JSON.stringify(options.getTabData('Config'), null, '\t'), true);}

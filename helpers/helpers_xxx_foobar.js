@@ -40,7 +40,6 @@ function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
 
 function memoryUsed(bConsole = false) { // In Mbs
 	let memUsage = -1;
-	console.log(window.JsMemoryStats);
 	memUsage = round(window.JsMemoryStats.MemoryUsage / 1000000, 2);
 	if (bConsole) {console.log(window.Name + ' mem usage: ' + memUsage + ' Mb');}
 	return memUsage;

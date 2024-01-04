@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//04/01/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -103,7 +103,10 @@ listenBrainz.lookupArtistMBIDsByName = async function lookupArtistMBIDsByName(na
 		const nError = total - passed;
 		console.log('lookupArtistMBIDsByName: ' + total + ' artists' + (nError ? ' (' + nError + ' failed)' : ''));
 		return results;
-	}, (error) => { console.log(error.message); return null; });
+	}, (error) => { 
+		console.log(error.message); // DEBUG
+		return null;
+	});
 };
 
 listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, bLookupMBIDs = true, bAlbumArtist = true, bRetry = true) {
@@ -496,11 +499,14 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 					results.forEach((result, i) => {
 						if (!result) { report.push(handleList[i].RawPath); }
 					});
-					console.log(report.join('\n\t'));
+					console.log(report.join('\n\t')); // DEBUG
 				}
 				return results;
 			}
-		}, (error) => { console.log(error.message); return false; });
+		}, (error) => { 
+			console.log(error.message); // DEBUG
+			return false; 
+		});
 };
 
 listenBrainz.getFeedback = async function getFeedback(handleList, user, token, bLookupMBIDs = true, method = 'GET') {

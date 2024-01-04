@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/23
+//04/01/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -418,12 +418,12 @@ XSP.getRules = function (querySort) {
 			}
 		});
 		if (bDebug) {
-			console.log(match);
-			console.log('Split query in groups:\n', querySplitCopy);
-			console.log('Retrieved rules:\n', rules);
-			console.log('Tags:\n', rulesV2);
-			console.log('Values:\n', rulesV3);
-			console.log('Final rules after discarding and grouping:\n', rulesV4);
+			console.log(match); // DEBUG
+			console.log('Split query in groups:\n', querySplitCopy); // DEBUG
+			console.log('Retrieved rules:\n', rules); // DEBUG
+			console.log('Tags:\n', rulesV2); // DEBUG
+			console.log('Values:\n', rulesV3); // DEBUG
+			console.log('Final rules after discarding and grouping:\n', rulesV4); // DEBUG
 		}
 		rules = (rulesV4 || []).filter((rule) => { return (typeof rule === 'object' && rule.field.length && rule.operator.length && rule.value.length); });
 	}

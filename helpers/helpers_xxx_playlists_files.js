@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//04/01/24
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist */
 
@@ -854,17 +854,17 @@ function getHandlesFromPlaylist(playlistPath, relPath = '', bOmitNotFound = fals
 		pathsNotFound = [...notFound].map((idx) => { return filePaths[idx]; });
 		if (playlistLength) {
 			if (count === playlistLength) {
-				console.log(playlistPath.split('\\').pop() + ': found all tracks on library.');
+				console.log(playlistPath.split('\\').pop() + ': found all tracks on library.'); // DEBUG
 				handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 			} else if (bOmitNotFound && handlePlaylist !== null) {
-				console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n'));
+				console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n')); // DEBUG
 				handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
 			} else {
-				console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n'));
+				console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n')); // DEBUG
 				handlePlaylist = null;
 			}
 		} else {
-			console.log(playlistPath.split('\\').pop() + ': empty playlist.');
+			console.log(playlistPath.split('\\').pop() + ': empty playlist.'); // DEBUG
 			handlePlaylist = null;
 		}
 		if (handlePlaylist !== null) {

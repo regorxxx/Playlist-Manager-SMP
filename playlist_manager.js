@@ -351,7 +351,7 @@ setProperties(properties, 'plm_');
 			const newFile = folders.data + 'playlistManager_' + prop.panelUUID[1];
 			const suffix = ['.json', '_sorting.json', '_config.json', '.json.old', '_sorting.json.old', '_config.json.old'];
 			if (suffix.every((s) => { return !_isFile(file + s) || _copyFile(file + s, newFile + s); })) {
-				console.log(window.Name + ': creating UUID file from existing JSON ' + _p(file + '.json'));
+				console.log(window.Name + ': creating UUID file from existing JSON ' + _p(file + '.json')); // DEBUG
 				suffix.forEach((s) => _recycleFile(file + s));
 			} else {
 				suffix.forEach((s) => _recycleFile(newFile + s));

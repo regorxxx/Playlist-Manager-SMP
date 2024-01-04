@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//04/01/24
 
 /* exported _menu, _attachedMenu */
 
@@ -586,7 +586,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		} else {
 			Object.entries(...arguments)
 				.map((arg) => { return (typeof arg[1] === 'object' ? [arg[0], JSON.stringify(arg[1])] : arg).join(': '); })
-				.forEach((arg) => { console.log(arg); });
+				.forEach((arg) => { console.log(arg); }); // DEBUG
 		}
 	}
 }

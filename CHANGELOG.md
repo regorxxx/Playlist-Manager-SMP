@@ -66,7 +66,7 @@
 - UI: added drag n' drop actions to the quick help popup (shift click on help button).
 ### Changed
 - Importing JSON: importing logic has been rewritten to be more robust. If an existing playlist has the same name than one imported, a popup will ask to overwrite or omit it. In case extensions differ, will show an error (since they are probably not the same playlist). Overwriting a playlist involves replacing the old metadata with the new one, which in the case of AutoPlaylists means the query is replaced (plus other data), but for other playlists formats, things like tags, categories, etc. are also transferred. Items will also be compared before overwriting, so in case there is no changes (filtering on-init properties like folders being opened or not), they will skipped.
-- Importing JSON: suggested path is now automatically retrieved from clipboard (instead of being empty).
+- Importing JSON: suggested JSON file path is now automatically retrieved from clipboard (instead of being empty).
 - AutoPlaylists: added checks to sorting inputs to ensure they are valid expressions.
 - AutoPlaylists: AutoPlaylists created via native foobar2000, instead of the manager, are now flagged as 'AutoPlaylist (UI)' when opening their contextual menu at the manager, as an indication of playlist being an UI-only playlist. Some menu entries also show a warning about cloning needed to fully integrate them.
 - AutoPlaylists: cloning an AutoPlaylist created via native foobar2000, instead of the manager, also opens the AutoPlaylists properties now to easily copy the query and sort patterns.
@@ -76,14 +76,15 @@
 - XSPF: improved caching in multiple playlist actions.
 - Folders: drag n' drop now allows to move items to any specific position within a folder, not just to the end, on manual sorting.
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
-- UI: 'Move to folder...' submenu now shows an indicator when there no other folders to move to.
+- UI: 'Move to folder...' submenu now shows an indicator when there are no other folders to move to.
 - UI: Added a tip at all input popups for sorting, to specify when 'SORT BY' and similar statements must be used.
 - UI: optimized repainting to use less resources on statistics mode.
-- UI: changed tooltip for multiple selection to only show the available which work on the entire selection.
+- UI: changed tooltip for multiple selection to only show the available actions which work on the entire selection.
 - Helpers: updated helpers.
 - Code cleanup.
 ### Removed
 ### Fixed
+- UI: multiple selection was lost in some cases after executing actions if UI-only playlists were tracked.
 - Folders: playlist deletion within folders did not update the UI properly in some cases. [Issue 72](https://github.com/regorxxx/Playlist-Manager-SMP/issues/72)
 - Folders: nested folders not working in some cases or producing crashes. [Issue 73](https://github.com/regorxxx/Playlist-Manager-SMP/issues/73)
 - Folders: internal drag n' drop not working properly on sorting methods different than manual one. i.e. to move items into/out of a folder.
