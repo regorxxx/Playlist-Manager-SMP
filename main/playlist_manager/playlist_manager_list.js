@@ -4203,10 +4203,14 @@ function _list(x, y, w, h) {
 						test.Print();
 						this.save();
 						if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) {
-							setTimeout(() => {
-								Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
-									.then(() => console.log('Playlist manager: Cached playlists for searching'));
-							}, thirdTimer);
+							Promise.wait(thirdTimer).then(() => {
+								const id = setInterval(() => {
+									if (pop.isEnabled()) {return;}
+									clearInterval(id);
+									Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
+										.then(() => console.log('Playlist manager: Cached playlists for searching'));
+								}, 250);
+							});
 						}
 						if (this.properties.bBlockUpdateAutoPls[1] && pop.isEnabled()) { pop.disable(true); }
 					});
@@ -6015,10 +6019,14 @@ function _list(x, y, w, h) {
 			this.filter();
 			this.lastPlsLoaded = [];
 			if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) {
-				setTimeout(() => {
-					Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
-						.then(() => console.log('Playlist manager: Cached playlists for searching'));
-				}, thirdTimer);
+				Promise.wait(thirdTimer).then(() => {
+					const id = setInterval(() => {
+						if (pop.isEnabled()) {return;}
+						clearInterval(id);
+						Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
+							.then(() => console.log('Playlist manager: Cached playlists for searching'));
+					}, 250);
+				});
 			}
 			if (typeof xspCache !== 'undefined') { xspCache.clear(); } // Discard old cache to load new changes
 			if (typeof xspfCache !== 'undefined') { xspfCache.clear(); }
@@ -6060,7 +6068,13 @@ function _list(x, y, w, h) {
 			if (this.bDynamicMenus) {
 				if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
 					Promise.wait(secondTimer).then(() => {
-						return this.createMainMenuDynamic();
+						return new Promise((resolve) => {
+							const id = setInterval(() => {
+								if (pop.isEnabled()) {return;}
+								clearInterval(id);
+								resolve(this.createMainMenuDynamic());
+							}, 250);
+						});
 					}).then((result) => {
 						if (result) { console.log('Playlist Manager: created dynamic menus'); }
 						this.exportPlaylistsInfo();
@@ -6068,11 +6082,15 @@ function _list(x, y, w, h) {
 					});
 				}
 			} else { this.deleteExportInfo(); }
-			if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks && (!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
-				setTimeout(() => {
-					Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
-						.then(() => console.log('Playlist manager: Cached playlists for searching'));
-				}, thirdTimer);
+			if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
+				Promise.wait(thirdTimer).then(() => {
+					const id = setInterval(() => {
+						if (pop.isEnabled()) {return;}
+						clearInterval(id);
+						Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
+							.then(() => console.log('Playlist manager: Cached playlists for searching'));
+					}, 250);
+				});
 			}
 		}
 		if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }

@@ -87,6 +87,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 						});
 					}
 				}
+				clearTimeout(list.cacheLibTimer);
 				list.cacheLibTimer = null;
 				list.bLibraryChanged = false;
 			}
@@ -513,7 +514,7 @@ let autoUpdateRepeat;
 		overwriteProperties(prop); // Updates panel
 	}
 	// Disable panel on init until it's done
-	if (!pop.isEnabled() && !prop.bLiteMode[1]) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.'); }
+	if (!pop.isEnabled() && !prop.bLiteMode[1] && plmInit.interval) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.'); }
 }
 
 // List and other UI elements
@@ -826,6 +827,7 @@ if (!list.properties.bSetup[1]) {
 						}
 						precacheLibraryRelPaths(list.playlistsPath);
 					}
+					clearTimeout(list.cacheLibTimer);
 					list.cacheLibTimer = null;
 					list.bLibraryChanged = false;
 					list.plsCache.clear();
