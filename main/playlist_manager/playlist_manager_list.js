@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//04/01/24
 
 /* exported _list */
 
@@ -1434,7 +1434,7 @@ function _list(x, y, w, h) {
 										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('folder', match));
 									}
 								}
-								if (this.indexes) { // Change text for multiple selection
+								if (this.indexes.length) { // Change text for multiple selection
 									// Remove unused actions
 									const ignoreActions = ['Playlist\'s items menu'];
 									ignoreActions.forEach((t) => {
@@ -1673,11 +1673,22 @@ function _list(x, y, w, h) {
 										if (toIdx !== -1) {
 											this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
 											if (bInverted) { this.sortingFile.reverse(); } // And revert back
-											// TODO sort within folder
-											if (this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !currItem.isFolder && !this.isInFolder(currItem)) {
+											// Move items to/out of folders
+											if (this.isInFolder(currItem)) {
 												this.internalPlsDrop.forEach((idx) => {
-													this.removeFromFolder(this.data[idx]);
+													if (this.isInFolder(this.data[idx]) && this.data[idx].inFolder !== currItem.inFolder) {
+														this.removeFromFolder(this.data[idx]);
+														this.addToFolder(this.data[idx], this.getParentFolder(currItem));
+													}
 												});
+											} else {
+												if (!currItem.isFolder) {
+													this.internalPlsDrop.forEach((idx) => {
+														if (this.isInFolder(this.data[idx])) {
+															this.removeFromFolder(this.data[idx]);
+														}
+													});
+												}
 											}
 											this.save();
 											this.saveManualSorting();
@@ -4743,6 +4754,12 @@ function _list(x, y, w, h) {
 
 		this.isInFolder = (pls) => {
 			return (Object.hasOwn(pls, 'inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
+		};
+
+		this.getParentFolder = (pls) => {
+			return this.isInFolder(pls)
+				? this.dataFolder.find((item) => item.isFolder && item.nameId === pls.inFolder)
+				: null;
 		};
 
 		this.addUIplaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
