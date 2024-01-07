@@ -204,12 +204,14 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					const trackNum = Number(tags[3][i][0]);
 					const duration = Math.round(Number(tags[4][i][0] * 1000)); // In ms
 					totalDuration += Math.round(Number(tags[4][i][0])); // In s
+					const bLink = _isLink(tags[5][i][0]);
+					const trackPath = tags[5][i][0].replace(/^file:\/+/, '');
 					const location = [
-						relPath.length && !_isLink(tags[5][i][0])
-							? getRelPath(tags[5][i][0], relPathSplit)
-							: tags[5][i][0]
+						relPath.length && !bLink
+							? getRelPath(trackPath, relPathSplit)
+							: trackPath
 					].map((path) => {
-						return encodeURI(path.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26'));
+						return encodeURI('file:///' + path.replace(/\\/g, '/').replace(/&/g, '%26'));
 					});
 					const subSong = Number(tags[6][i][0]);
 					const meta = location[0].endsWith('.iso') ? [{ subSong }] : [];
@@ -678,14 +680,14 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		const stream = getFilePathsFromPlaylist(playlistPath);
 		plman.AddLocations(playlistIndex, stream, true);
 		bDone = true;
-	} else if (extension === '.fpl') { // TODO load by path
+	} else if (extension === '.fpl') { // Don't load by path since this also loads tags...
 		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {
 		const { handlePlaylist, pathsNotFound } = getHandlesFromPlaylist({ playlistPath, relPath, remDupl, bReturnNotFound: true, bAdvTitle });
 		if (handlePlaylist) {
 			if (pathsNotFound && pathsNotFound.length) {
-				if (extension === '.xspf') {
+				if (extension === '.xspf') { // TODO links loading?
 					// plman.AddLocations(playlistIndex, pathsNotFound);
 				} else {
 					// Do nothing
@@ -726,10 +728,10 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			const queryPlaylists = XSP.getQueryPlaylists(jsp);
 			// From playlist manager or loaded playlists
 			const toIncludeHandle = typeof list !== 'undefined'
-				? list.getHandleFromPlaylists(queryPlaylists.is) // eslint-disable-line no-undef
+				? list.getHandleFromPlaylists(queryPlaylists.is, void(0), bLog) // eslint-disable-line no-undef
 				: getHandlesFromUIPlaylists(queryPlaylists.is);
 			const toExcludeHandle = typeof list !== 'undefined'
-				? list.getHandleFromPlaylists(queryPlaylists.isnot) // eslint-disable-line no-undef
+				? list.getHandleFromPlaylists(queryPlaylists.isnot, void(0), bLog) // eslint-disable-line no-undef
 				: getHandlesFromUIPlaylists(queryPlaylists.isnot);
 			// Difference
 			toIncludeHandle.Sort();

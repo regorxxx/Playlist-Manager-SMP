@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/01/24
+//07/01/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -9,7 +9,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, clone:readable, globQuery:readable, iDelayPlaylists:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, getFiles:readable, checkCodePage:readable, getFileMeta:readable, editTextFile:readable, _renameFile:readable, _deleteFile:readable, _save:readable, _restoreFile:readable, _isLink:readable, sanitizePath:readable, findRelPathInAbsPath:readable */
+/* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, getFiles:readable, checkCodePage:readable, getFileMeta:readable, editTextFile:readable, _renameFile:readable, _deleteFile:readable, _save:readable, _restoreFile:readable, _isLink:readable, sanitizePath:readable, findRelPathInAbsPath:readable, testPath:readable */
 include('..\\..\\helpers\\helpers_xxx_file_zip.js');
 /* global _zip:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -827,9 +827,11 @@ function clonePlaylistFile(list, z, ext) {
 	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
-	paths.forEach((trackPath) => { if (!_isLink(trackPath) && !_isFile(trackPath)) { report.push(trackPath); } });
+	paths.forEach((trackPath) => {
+		if (!testPath(trackPath, list.playlistsPath) && !_isLink(trackPath)) { report.push(trackPath); }
+	});
 	if (handleList) {
-		if (report.length) { fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name); }
+		if (report.length) { fb.ShowPopupMessage('Failed when cloning playlist to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name); }
 		if (handleList.Count) {
 			// Retrieve new paths
 			bDone = savePlaylist({ handleList, playlistPath, ext, playlistName, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
@@ -1460,25 +1462,18 @@ function findExternal() {
 		const promises = [];
 		let prevProgress = -1;
 		const subsongRegex = /,\d*$/g;
-		const absPathRegex = /[A-Z]*:\\/;
 		playlists.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
 					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
 					if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
-						const bDead = filePaths.map((path) => { return path.replace(subsongRegex, ''); }).some((path) => {
-							// Skip streams & look for absolute and relative paths (with and without .\)
-							let bCheck = !_isLink(path);
-							if (absPathRegex.test(path)) { bCheck = bCheck && !_isFile(path); }
-							else {
-								let pathAbs = path;
-								if (pathAbs.startsWith('.\\')) { pathAbs = pathAbs.replace('.\\', list.playlistsPath); }
-								else { pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath); }
-								bCheck = bCheck && !_isFile(pathAbs);
-							}
-							return bCheck;
-						});
+						// Skip streams & look for absolute and relative paths (with and without .\)
+						const bDead = filePaths
+							.map((path) => { return path.replace(subsongRegex, ''); })
+							.some((path) => {
+								return !testPath(path, list.playlistsPath) && !_isLink(path);
+							});
 						if (bDead) {
 							report.push((bUI ? playlist.nameId : playlist.path) + ' (contains dead items)');
 						} else {
@@ -1509,24 +1504,15 @@ function findDead() {
 		let prevProgress = -1;
 		let iDelay = 0;
 		const subsongRegex = /,\d*$/g;
-		const absPathRegex = /[A-Z]*:\\/;
 		playlists.forEach((playlist, i) => {
 			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
 					const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))).map((path) => { return path.replace(subsongRegex, ''); });
+					// Skip streams & look for absolute and relative paths (with and without .\)
 					const bDead = filePaths.some((path) => {
-						// Skip streams & look for absolute and relative paths (with and without .\)
-						let bCheck = !_isLink(path);
-						if (absPathRegex.test(path)) { bCheck = bCheck && !_isFile(path); }
-						else {
-							let pathAbs = path;
-							if (pathAbs.startsWith('.\\')) { pathAbs = pathAbs.replace('.\\', list.playlistsPath); }
-							else { pathAbs = findRelPathInAbsPath(pathAbs, list.playlistsPath); }
-							bCheck = bCheck && !_isFile(pathAbs);
-						}
-						return bCheck;
+						return !testPath(path, list.playlistsPath) && !_isLink(path);
 					});
 					if (bDead) { found.push(playlist); }
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;

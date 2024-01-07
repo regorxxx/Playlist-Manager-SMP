@@ -81,10 +81,12 @@
 - UI: Added a tip at all input popups for sorting, to specify when 'SORT BY' and similar statements must be used.
 - UI: optimized repainting to use less resources on statistics mode.
 - UI: changed tooltip for multiple selection to only show the available actions which work on the entire selection.
-- Helpers: updated helpers.
+- Clone: wrong warning about not found tracks when using relative paths in some cases.
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
+- Helpers: updated helpers.
 - Code cleanup.
 ### Removed
+- UI: some internal logging when checking .xspplaylists.
 ### Fixed
 - UI: single click actions not working in some cases. [Issue 74](https://github.com/regorxxx/Playlist-Manager-SMP/issues/74)
 - UI: multiple selection was lost in some cases after executing actions if UI-only playlists were tracked.
@@ -100,6 +102,7 @@
 - XSP: UI-only playlists were not working as playlist sources.
 - XSPF: identifier tag was not working properly at the content resolution step (usually used for MUSICBRAINZ_TRACKID).
 - XSPF: .xspf playlists not loading properly when content resolution was used in some cases.
+- XSPF: malformed track paths using relative paths in some cases.
 - Remove duplicates: advanced RegEx title matching option not being applied in some cases.
 - Minor fixes.
 

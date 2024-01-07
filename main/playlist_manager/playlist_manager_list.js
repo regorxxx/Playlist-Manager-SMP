@@ -5337,7 +5337,7 @@ function _list(x, y, w, h) {
 			return plsArr;
 		};
 
-		this.getHandleFromPlaylists = (names = [], bSort = true) => {
+		this.getHandleFromPlaylists = (names = [], bSort = true, bLog = true) => {
 			let playlistsManager = new Set();
 			let playlistsUI = new Set();
 			const namesSet = new Set(names);
@@ -5350,13 +5350,13 @@ function _list(x, y, w, h) {
 			namesSet.forEach((name) => { playlistsUI = playlistsUI.union(new Set(getPlaylistIndexArray(name))); });
 			// Join
 			let output = new FbMetadbHandleList();
-			playlistsManager.forEach((idx) => { output.AddRange(this.getHandleFrom(idx)); });
+			playlistsManager.forEach((idx) => { output.AddRange(this.getHandleFrom(idx, bLog)); });
 			playlistsUI.forEach((idx) => { output.AddRange(plman.GetPlaylistItems(idx)); });
 			if (bSort) { output.Sort(); }
 			return output;
 		};
 
-		this.getHandleFrom = (idx) => {
+		this.getHandleFrom = (idx, bLog = true) => {
 			const pls = this.dataAll[idx];
 			let handleList = new FbMetadbHandleList();
 			if (pls.isAutoPlaylist) { // AutoPlaylist
@@ -5373,7 +5373,7 @@ function _list(x, y, w, h) {
 				// But it will fail as soon as any track is not found on library
 				// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 				const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-				handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle});
+				handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog});
 				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
 			} else {
 				console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
