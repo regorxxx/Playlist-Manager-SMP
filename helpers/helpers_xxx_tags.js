@@ -1,7 +1,7 @@
 ﻿'use strict';
-//02/01/24
+//07/01/24
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, query_combinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -145,7 +145,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 					const multiQuery = tfoVal.split('#').map((val) => {
 						return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(val) : val);
 					});
-					tempQuery += interQuery + query_join(multiQuery, 'AND');
+					tempQuery += interQuery + queryJoin(multiQuery, 'AND');
 				} else {
 					if (bDebug) { console.log(i > 0, startQuery.length, idx[i]); }
 					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal).trim();
@@ -159,16 +159,16 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 }
 
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
-function query_join(queryArray, setLogic) {
+function queryJoin(queryArray, setLogic) {
 	if (logicDic.indexOf(setLogic) === -1) {
-		console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
+		console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 		return;
 	}
 	let arrayLength = queryArray.length;
 	// Wrong array
 	let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
 	if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-		console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
+		console.log('queryJoin(): queryArray [' + queryArray + '] was null, empty or not an array.');
 		return; //Array was null or not an array
 	}
 	const allRegex = /ALL/;
@@ -193,14 +193,14 @@ function query_join(queryArray, setLogic) {
 // '(MOOD IS mood1 AND MOOD IS mood2) OR (MOOD IS mood1 AND MOOD IS mood3) OR ...'
 // Currently configurable only AND (NOT) / OR (NOT) logics.
 // For 1D arrays, only 'tagsArrayLogic' is used. i.e. 'STYLE IS style1 OR STYLE IS style2 ...'
-function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subtagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
+function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subtagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
 	// Wrong tagsArray
 	if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
-		console.log('query_combinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
+		console.log('queryCombinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
 		return; //Array was null or not an array
 	}
 	if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
-		console.log('query_combinations(): queryKey not set. tagsArray = ' + tagsArray);
+		console.log('queryCombinations(): queryKey not set. tagsArray = ' + tagsArray);
 		return;
 	}
 	if (isArrayStrings(queryKey)) {
@@ -208,7 +208,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 		let i = 0;
 		let queryArray = [];
 		while (i < queryKeyLength) {
-			queryArray.push(query_combinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match));
+			queryArray.push(queryCombinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match));
 			i++;
 		}
 		return queryArray;
@@ -218,7 +218,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 	let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
 	if (!isArray) { //no subtagsArrays
 		if (logicDic.indexOf(tagsArrayLogic) === -1) {
-			console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
+			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
 			return;
 		}
 		let i = 0;
@@ -232,7 +232,7 @@ function query_combinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*
 		}
 	} else {
 		if (logicDic.indexOf(tagsArrayLogic) === -1 || !logicDic.indexOf(subtagsArrayLogic) === -1) {
-			console.log('query_combinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
+			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
 			return;
 		}
 		let k = tagsArray[0].length; //SubtagsArrays length

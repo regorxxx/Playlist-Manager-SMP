@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/24
+//07/01/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -112,7 +112,7 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 		}
 		if (queryRule.length) { query.push(queryRule); }
 	}
-	query = query_join(query, match) || '';
+	query = queryJoin(query, match) || '';
 	return query;
 };
 
@@ -508,19 +508,19 @@ XSP.getRule = function (query) {
 	return rule;
 };
 
-if (typeof query_join === 'undefined') {
+if (typeof queryJoin === 'undefined') {
 	const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR NOT'];
 	// Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
-	var query_join = function (queryArray, setLogic) { // NOSONAR
+	var queryJoin = function (queryArray, setLogic) { // NOSONAR
 		if (logicDic.indexOf(setLogic) === -1) {
-			console.log('query_join(): setLogic (' + setLogic + ') is wrong.');
+			console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 			return '';
 		}
 		let arrayLength = queryArray.length;
 		// Wrong array
 		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
 		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-			console.log('query_join(): queryArray [' + queryArray + '] was null, empty or not an array.');
+			console.log('queryJoin(): queryArray [' + queryArray + '] was null, empty or not an array.');
 			return ''; //Array was null or not an array
 		}
 
