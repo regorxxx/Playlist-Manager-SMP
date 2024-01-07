@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/24
+//05/01/24
 
 /* exported _list */
 
@@ -2319,7 +2319,6 @@ function _list(x, y, w, h) {
 		this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
 		overwriteProperties({ searchMethod: this.properties['searchMethod'] });
 		if (str.length) {
-			console.disable();
 			const bFuzzy = str.startsWith('~') || str.endsWith('~');
 			const term = bFuzzy ? str.replace(/(^~)|(~$)/g, '') : str;
 			const threshold = 0.75;
@@ -2386,7 +2385,7 @@ function _list(x, y, w, h) {
 					} else if (pls.path.length) {
 						handleList = this.plsCache.get(pls.path);
 						if (typeof handleList === 'undefined') {
-							handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, true, []);
+							handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false});
 							this.plsCache.set(pls.path, handleList);
 						}
 					}
@@ -2397,7 +2396,6 @@ function _list(x, y, w, h) {
 				}
 				return false;
 			});
-			console.enable();
 			if (bFilter) { // Show found playlists or blank panel
 				this.filter({ plsState: found.length ? found : [{}], bSkipSearch: true });
 			}
@@ -3088,7 +3086,7 @@ function _list(x, y, w, h) {
 				const remDupl = this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 				this.dataXsp.forEach((plsXsp) => {
 					if (plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId)) {
-						const { handlePlaylist } = getHandlesFromPlaylist(plsXsp.path, this.playlistsPath, void (0), remDupl, this.bAdvTitle);
+						const { handlePlaylist } = getHandlesFromPlaylist({playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle});
 						if (!handlePlaylist) { return; }
 						const duplicated = getPlaylistIndexArray(plsXsp.nameId);
 						if (duplicated.length === 1) {
@@ -3228,13 +3226,13 @@ function _list(x, y, w, h) {
 				}
 				this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
 				if (plsData.extension !== '.ui' && !pop.isEnabled()) { // Display animation except for UI playlists
-					pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.');
+					pop.enable(true, 'Saving...', 'Saving playlist...\nPanel will be disabled during the process.', 'saving');
 					this.repaint();
 				}
 				if (plsData.path && this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) { this.plsCache.set(plsData.path, handleList); }
 				this.update(true, true, currentItemIndex); // We have already updated data before only for the variables changed
 				this.filter();
-				if (plsData.extension !== '.ui') { setTimeout(() => { if (pop.isEnabled()) { pop.disable(true); } }, 500); }
+				if (plsData.extension !== '.ui') { setTimeout(() => { if (pop.isEnabled('saving')) { pop.disable(true); } }, 500); }
 				return true;
 			}
 		}
@@ -4152,38 +4150,42 @@ function _list(x, y, w, h) {
 							const cacheSize = item.size;
 							const cacheDuration = item.duration;
 							promises.push(new Promise((resolve) => {
-								Promise.wait(200 * i).then(() => {
-									const test = bProfile ? new FbProfiler('Refresh AutoPlaylist') : null;
-									const handleList = cacheAutoPlaylists(item);
-									if (bProfile) { test.Print(item.nameId); }
-									const size = handleList ? handleList.Count : 0;
-									const duration = handleList ? handleList.CalcTotalDuration() : 0;
-									if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
-										pop.enable(true, 'Updating AutoPls...', 'Updating AutoPlaylists...\nPanel will be disabled during the process.');
-									}
-									if (handleList && (size && bUpdateTags || cacheSize !== size || cacheDuration !== duration)) {
-										const pls = item.extension === '.xsp' && Object.hasOwn(item, 'type') && item.type === 'songs'
-											? this.dataXsp.find((pls) => { return pls.nameId === item.nameId; })
-											: this.dataAutoPlaylists.find((pls) => { return pls.nameId === item.nameId; });
-										if ((cacheSize !== size || cacheDuration !== duration)) {
-											console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
-											if (pls) {
-												this.editData(pls, {
-													size,
-													duration
-												});
-											}
-											this.repaint();
+								const id = setInterval((i) => {
+									if (pop.isEnabled('cacheLib')) { return; }
+									clearInterval(id);
+									Promise.wait(200 * i).then(() => {
+										const test = bProfile ? new FbProfiler('Refresh AutoPlaylist') : null;
+										const handleList = cacheAutoPlaylists(item);
+										if (bProfile) { test.Print(item.nameId); }
+										const size = handleList ? handleList.Count : 0;
+										const duration = handleList ? handleList.CalcTotalDuration() : 0;
+										if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
+											pop.enable(true, 'Updating AutoPls...', 'Updating AutoPlaylists...\nPanel will be disabled during the process.', 'AutoPlaylist size');
 										}
-										if (size && bUpdateTags) {
-											if (Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
-												const bUpdated = this.updateTags(handleList, item);
-												if (bUpdated) { console.log('Playlist Manager: Auto-tagging playlist ' + item.name); }
+										if (handleList && (size && bUpdateTags || cacheSize !== size || cacheDuration !== duration)) {
+											const pls = item.extension === '.xsp' && Object.hasOwn(item, 'type') && item.type === 'songs'
+												? this.dataXsp.find((pls) => { return pls.nameId === item.nameId; })
+												: this.dataAutoPlaylists.find((pls) => { return pls.nameId === item.nameId; });
+											if ((cacheSize !== size || cacheDuration !== duration)) {
+												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
+												if (pls) {
+													this.editData(pls, {
+														size,
+														duration
+													});
+												}
+												this.repaint();
+											}
+											if (size && bUpdateTags) {
+												if (Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) { // Merge tag update if already loading query...
+													const bUpdated = this.updateTags(handleList, item);
+													if (bUpdated) { console.log('Playlist Manager: Auto-tagging playlist ' + item.name); }
+												}
 											}
 										}
-									}
-									resolve('done');
-								});
+										resolve('done');
+									});
+								}, 250, i);
 							}));
 						} else if (!bUpdateSize && bUpdateTags) {
 							promises.push(Promise.resolve('done')); // To ensure logging, saving and dynamic menu update
@@ -4203,17 +4205,10 @@ function _list(x, y, w, h) {
 						test.Print();
 						this.save();
 						if (bInit && this.bDynamicMenus) { console.log('Playlist Manager: Created dynamic menus'); }
+						if (this.properties.bBlockUpdateAutoPls[1] && pop.isEnabled('AutoPlaylist size')) { pop.disable(true); }
 						if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) {
-							Promise.wait(500).then(() => {
-								const id = setInterval(() => {
-									if (pop.isEnabled()) {return;}
-									clearInterval(id);
-									Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
-										.then(() => console.log('Playlist manager: Cached playlists for searching'));
-								}, 250);
-							});
+							Promise.wait(500).then(this.cachePlaylistSearch);
 						}
-						if (this.properties.bBlockUpdateAutoPls[1] && pop.isEnabled()) { pop.disable(true); }
 					});
 				}
 			}
@@ -4520,6 +4515,10 @@ function _list(x, y, w, h) {
 		if (this.bTracking) {
 			this.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 			this.clearSelPlaylistCache();
+			fb.queryCache.clear();
+			if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) {
+				this.cachePlaylistSearch();
+			}
 		} else if (this.cacheLibTimer !== null) {
 			clearTimeout(this.cacheLibTimer);
 			this.cacheLibTimer = null;
@@ -4528,6 +4527,24 @@ function _list(x, y, w, h) {
 		if (bNotify) { window.NotifyOthers('Playlist manager: switch tracking', this.bTracking); }
 		this.repaint();
 		return this.bTracking;
+	};
+
+	this.cachePlaylistSearch = () => {
+		const id = setInterval(() => {
+			if (pop.isEnabled('cacheLib') || pop.isEnabled('cacheLib waiting')) { return; }
+			this.plsCache.clear();
+			clearInterval(id);
+			const bColumns = this.isColumnsEnabled('size');
+			const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && (this.bShowSize || bColumns);
+			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
+			const bIncludeAutoPls = !bUpdateSize && !bAutoTrackTag;
+			Promise.serial(
+				bIncludeAutoPls
+					? this.dataAll.filter((pls) => !pls.isFolder)
+					: this.dataAll.filter((pls) => !pls.isAutoPlaylist && !pls.isFolder)
+				, cachePlaylist.bind(this), 200)
+				.then(() => console.log('Playlist manager: Cached playlists for searching'));
+		}, 250);
 	};
 
 	this.backupRestore = () => {
@@ -4650,7 +4667,7 @@ function _list(x, y, w, h) {
 			if (!bInit) {
 				if (this.bDynamicMenus) {
 					this.createMainMenuDynamic().then(() => {
-						this.exportPlaylistsInfo(); 
+						this.exportPlaylistsInfo();
 						callbacksListener.checkPanelNamesAsync();
 					});
 				}
@@ -5356,7 +5373,7 @@ function _list(x, y, w, h) {
 				// But it will fail as soon as any track is not found on library
 				// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 				const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-				handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, void (0), remDupl);
+				handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle});
 				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
 			} else {
 				console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
@@ -6012,6 +6029,7 @@ function _list(x, y, w, h) {
 		this.manualRefresh = () => {
 			const test = bProfile ? new FbProfiler(window.Name + ': ' + 'Manual refresh') : null;
 			this.plsCache.clear();
+			fb.queryCache.clear();
 			this.trackedFolderChanged = false;
 			this.loadConfigFile();
 			const z = this.offset + Math.round(this.rows / 2 - 1);
@@ -6021,14 +6039,7 @@ function _list(x, y, w, h) {
 			this.filter();
 			this.lastPlsLoaded = [];
 			if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks) {
-				Promise.wait(thirdTimer).then(() => {
-					const id = setInterval(() => {
-						if (pop.isEnabled()) {return;}
-						clearInterval(id);
-						Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
-							.then(() => console.log('Playlist manager: Cached playlists for searching'));
-					}, 250);
-				});
+				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
 			}
 			if (typeof xspCache !== 'undefined') { xspCache.clear(); } // Discard old cache to load new changes
 			if (typeof xspfCache !== 'undefined') { xspfCache.clear(); }
@@ -6072,7 +6083,7 @@ function _list(x, y, w, h) {
 					Promise.wait(secondTimer).then(() => {
 						return new Promise((resolve) => {
 							const id = setInterval(() => {
-								if (pop.isEnabled()) {return;}
+								if (pop.isEnabled('cacheLib')) { return; }
 								clearInterval(id);
 								resolve(this.createMainMenuDynamic());
 							}, 250);
@@ -6085,14 +6096,7 @@ function _list(x, y, w, h) {
 				}
 			} else { this.deleteExportInfo(); }
 			if (this.uiElements['Search filter'].enabled && this.searchMethod.bMetaTracks && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-				Promise.wait(thirdTimer).then(() => {
-					const id = setInterval(() => {
-						if (pop.isEnabled()) {return;}
-						clearInterval(id);
-						Promise.serial(this.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(this), 100)
-							.then(() => console.log('Playlist manager: Cached playlists for searching'));
-					}, 250);
-				});
+				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
 			}
 		}
 		if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
@@ -6465,10 +6469,8 @@ function cachePlaylist(pls) {
 	if (pls.isAutoPlaylist) {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true);
 	} else if (pls.path.length) {
-		console.disable();
-		handleList = getHandlesFromPlaylist(pls.path, this.playlistsPath, true, []);
+		handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false});
 		this.plsCache.set(pls.path, handleList);
-		console.enable();
 	}
 	return handleList;
 }

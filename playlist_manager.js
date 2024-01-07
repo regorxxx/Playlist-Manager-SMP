@@ -62,7 +62,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 	if (plmInstances[0] === window.ID || bForce) { // Only execute once per Foobar2000 instance
 		if (plmInit.interval) { clearInterval(plmInit.interval); plmInit.interval = null; }
 		else if (bInit) { return; } // Ensure it only runs once on startup
-		if (!pop.isEnabled()) { pop.enable(true, message, tt); }
+		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib'); }
 		libItemsAbsPaths = []; // NOSONAR
 		libItemsRelPaths = {}; // NOSONAR
 		precacheLibraryPathsAsync().then(() => {
@@ -74,7 +74,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 		}).finally(() => {
 			if (typeof list !== 'undefined' && list) {
 				if (list.bRelativePath && list.playlistsPath.length) {
-					if (!pop.isEnabled()) { pop.enable(true, message, tt); }
+					if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib'); }
 					precacheLibraryRelPaths(list.playlistsPath);
 					list.plsCache.clear();
 					fb.queryCache.clear();
@@ -93,7 +93,8 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 			}
 		});
 	} else {
-		if (!pop.isEnabled()) { pop.enable(true, message, tt); } // Disabled on notify
+		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib waiting'); } // Disabled on notify
+		else { pop.setReason('cacheLib waiting'); }
 		if (bInit) { window.NotifyOthers('precacheLibraryPaths ask', null); }
 	}
 };
@@ -514,7 +515,7 @@ let autoUpdateRepeat;
 		overwriteProperties(prop); // Updates panel
 	}
 	// Disable panel on init until it's done
-	if (!pop.isEnabled() && !prop.bLiteMode[1] && plmInit.interval) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.'); }
+	if (!pop.isEnabled() && !prop.bLiteMode[1] && plmInit.interval) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.', 'cacheLib'); }
 }
 
 // List and other UI elements
@@ -1051,8 +1052,8 @@ if (!list.properties.bSetup[1]) {
 		let bToFolder = false;
 		if ((mask & 32) === 32) {
 			if (list.index !== -1) {
-				if (!list.data[list.index].isFolder) {list.index = -1;}
-				else {bToFolder = true;}
+				if (!list.data[list.index].isFolder) { list.index = -1; }
+				else { bToFolder = true; }
 				window.Repaint();
 			}
 		}
@@ -1087,7 +1088,7 @@ if (!list.properties.bSetup[1]) {
 		} else { // List
 			if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) { // NOSONAR [structure]
 				list.dragDropText = 'Create new Playlist';
-				if (bToFolder) {list.dragDropText += ' (in folder)';}
+				if (bToFolder) { list.dragDropText += ' (in folder)'; }
 			} else if (list.data[list.index].isFolder) { list.dragDropText = 'To selected Folder'; }
 			else { list.dragDropText = 'To selected Playlist'; }
 		}

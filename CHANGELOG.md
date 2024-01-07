@@ -74,6 +74,7 @@
 - XSP: Smart Playlists are now locked when loading them, similar to AutoPlaylists behavior. If there is no sorting, then tracks can be reorder, otherwise sorting is also locked.
 - XSP: improved caching in multiple playlist actions.
 - XSPF: improved caching in multiple playlist actions.
+- XSPF: .xspf playlists now follow the complete specification, allowing multiple locations per track. In case one is not found, the next one is used. Previously only one location per track was allowed. Content resolution via tags has not changed since that was already implemented.
 - Folders: drag n' drop now allows to move items to any specific position within a folder, not just to the end, on manual sorting.
 - Folders: improved filtering in some cases with nested folders or showing only specific playlists within a folder.
 - UI: 'Move to folder...' submenu now shows an indicator when there are no other folders to move to.
@@ -81,6 +82,7 @@
 - UI: optimized repainting to use less resources on statistics mode.
 - UI: changed tooltip for multiple selection to only show the available actions which work on the entire selection.
 - Helpers: updated helpers.
+- Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
 - Code cleanup.
 ### Removed
 ### Fixed
@@ -96,6 +98,8 @@
 - Exporting Playlists: crash while reporting malformed .xsp playlist.
 - XSP: wrong cache handling for .xsp playlist when rewriting the queries.
 - XSP: UI-only playlists were not working as playlist sources.
+- XSPF: identifier tag was not working properly at the content resolution step (usually used for MUSICBRAINZ_TRACKID).
+- XSPF: .xspf playlists not loading properly when content resolution was used in some cases.
 - Remove duplicates: advanced RegEx title matching option not being applied in some cases.
 - Minor fixes.
 
