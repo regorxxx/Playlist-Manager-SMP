@@ -86,7 +86,7 @@
 - Helpers: updated helpers.
 - Code cleanup.
 ### Removed
-- UI: some internal logging when checking .xspplaylists.
+- UI: internal logging when checking .xsp playlists.
 ### Fixed
 - UI: single click actions not working in some cases. [Issue 74](https://github.com/regorxxx/Playlist-Manager-SMP/issues/74)
 - UI: multiple selection was lost in some cases after executing actions if UI-only playlists were tracked.

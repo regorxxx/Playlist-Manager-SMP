@@ -3086,7 +3086,7 @@ function _list(x, y, w, h) {
 				const remDupl = this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 				this.dataXsp.forEach((plsXsp) => {
 					if (plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId)) {
-						const { handlePlaylist } = getHandlesFromPlaylist({playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle});
+						const { handlePlaylist } = getHandlesFromPlaylist({playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog: false});
 						if (!handlePlaylist) { return; }
 						const duplicated = getPlaylistIndexArray(plsXsp.nameId);
 						if (duplicated.length === 1) {

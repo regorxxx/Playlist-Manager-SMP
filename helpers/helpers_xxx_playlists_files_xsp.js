@@ -21,7 +21,7 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 		console.log('Malformed XSP playlist: ' + jsp.playlist.name);
 		console.log('There are empty or non recognized rules.');
 	}
-	let query = [];
+	const query = [];
 	const textTags = new Set(['GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '%PLAY_COUNT%', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%', '#PLAYLIST#']);
 	const numTags = new Set(['TRACKNUMBER', '%RATING%', 'DATE', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '%PLAY_COUNT%']);
 	const dateTags = new Set(['DATE', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%']);
@@ -112,8 +112,7 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 		}
 		if (queryRule.length) { query.push(queryRule); }
 	}
-	query = queryJoin(query, match) || '';
-	return query;
+	return (query.length ? queryJoin(query, match) || '' : '');
 };
 
 XSP.hasQueryPlaylists = function (jsp) {
@@ -127,7 +126,7 @@ XSP.hasQueryPlaylists = function (jsp) {
 XSP.getQueryPlaylists = function (jsp) {
 	const playlist = jsp.playlist;
 	const rules = playlist.rules;
-	let query = { is: [], isnot: [] };
+	const query = { is: [], isnot: [] };
 	for (let rule of rules) {
 		const tag = rule.field;
 		const op = rule.operator;
