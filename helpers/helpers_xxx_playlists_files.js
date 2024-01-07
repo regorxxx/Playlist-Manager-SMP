@@ -477,7 +477,12 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 					if (Object.hasOwn(row, 'location') && row.location && row.location.length) {
 						const rowPaths = [];
 						for (const loc of row.location) {
-							let path = decodeURI(loc).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+							let path;
+							try {
+								path = decodeURI(loc).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+							} catch (e) {
+								path = loc;
+							}
 							if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
 							if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
 								const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
@@ -511,7 +516,12 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 			for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
 				const row = rows[i];
 				if (Object.hasOwn(row, 'location') && row.location && row.location.length) {
-					let path = decodeURI(row.location).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+					let path;
+					try {
+						path = decodeURI(row.location).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+					} catch (e) {
+						path = row.location;
+					}
 					if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
 					if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
 						const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });

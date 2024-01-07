@@ -82,6 +82,7 @@
 - UI: optimized repainting to use less resources on statistics mode.
 - UI: changed tooltip for multiple selection to only show the available actions which work on the entire selection.
 - Clone: wrong warning about not found tracks when using relative paths in some cases.
+- Playlist formats: added some checks when parsing corrupted playlists to avoid crashes (and instead omit the line).
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
 - Helpers: updated helpers.
 - Code cleanup.
