@@ -3115,7 +3115,7 @@ function _list(x, y, w, h) {
 				if (idx !== -1) {
 					const pls = this.lastPlsLoaded.splice(idx, 1)[0]; // Remove from list
 					// Always skip updates for AutoPlaylists, ui-only playlists and skip update if no change was made (omits reordering before autosave fires!)
-					if (pls.isAutoPlaylist || pls.query || pls.extension === '.ui' || pls.size === plman.PlaylistItemCount(playlistIndex)) { return false; }
+					if (pls.isAutoPlaylist || pls.query || pls.extension === '.ui' || pls.size === plman.PlaylistItemCount(playlistIndex) || pls.extension === '.xspf') { return false; }
 				}
 			}
 			if (arePlaylistNamesDuplicated()) { // Force no duplicate names on foobar2000 playlists when auto-saving...

@@ -101,6 +101,7 @@
 - Exporting Playlists: crash while reporting malformed .xsp playlist.
 - XSP: wrong cache handling for .xsp playlist when rewriting the queries.
 - XSP: UI-only playlists were not working as playlist sources.
+- XSPF: playlist was rewritten when some tracks were not found (by link, content resolver and path) after loading it.
 - XSPF: identifier tag was not working properly at the content resolution step (usually used for MUSICBRAINZ_TRACKID).
 - XSPF: .xspf playlists not loading properly when content resolution was used in some cases.
 - XSPF: malformed track paths using relative paths in some cases.
