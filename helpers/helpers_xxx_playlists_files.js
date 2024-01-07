@@ -9,7 +9,7 @@ include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 /* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable */
 include('helpers_xxx_file.js');
-/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable */
+/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
 include('helpers_xxx_tags.js');
 /* global checkQuery:readable, getSortObj:readable, getTagsValuesV4:readable, queryCombinations:readable */
 include('helpers_xxx_playlists.js');
@@ -445,7 +445,11 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 				for (let j = 0; j < lines; j++) {
 					if (!originalText[j].startsWith('#')) { // Spaces are not allowed as well as blank lines
 						let line = originalText[j].trim();
-						if (line.length) { paths.push(line.replace(/\//g, '\\')); } // PATH
+						if (line.length) {
+							let path = line; // PATH
+							if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
+							paths.push(path);
+						}
 					}
 				}
 			} else if (extension === '.pls') {
@@ -454,7 +458,8 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 				for (let j = 0; j < lines; j++) {
 					if (originalText[j].startsWith('File')) { // Spaces are not allowed on variable no need to trim
 						// Path may contain '=' so get anything past first '='
-						let path = originalText[j].split('=').slice(1).join('=').replace(/\//g, '\\'); // fileX=PATH
+						let path = originalText[j].split('=').slice(1).join('='); // fileX=PATH
+						if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
 						paths.push(path);
 					}
 				}
@@ -472,7 +477,8 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 					if (Object.hasOwn(row, 'location') && row.location && row.location.length) {
 						const rowPaths = [];
 						for (const loc of row.location) {
-							let path = decodeURI(loc).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+							let path = decodeURI(loc).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+							if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
 							if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
 								const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 								if (metaSubSong) { path += ',' + metaSubSong.subSong; }
@@ -482,7 +488,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 						if (options.bResolveXSPF) {
 							let bFound = false;
 							for (const path of rowPaths) {
-								if (_isFile(path)) {
+								if (!_isLink(path) && _isFile(path)) {
 									paths.push(path);
 									bFound = true;
 									break;
@@ -505,7 +511,8 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 			for (let i = 0; i < rowsLength; i++) { // Spaces are not allowed in location no need to trim
 				const row = rows[i];
 				if (Object.hasOwn(row, 'location') && row.location && row.location.length) {
-					let path = decodeURI(row.location).replace('file:///', '').replace(/\//g, '\\').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+					let path = decodeURI(row.location).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+					if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
 					if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
 						const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 						if (metaSubSong) { path += ',' + metaSubSong.subSong; }
@@ -684,11 +691,16 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 		plman.AddLocations(playlistIndex, [playlistPath], true);
 		bDone = true;
 	} else {
-		const { handlePlaylist, pathsNotFound } = getHandlesFromPlaylist({ playlistPath, relPath, remDupl, bReturnNotFound: true, bAdvTitle });
+		const { handlePlaylist, pathsNotFound, locationsByOrder } = getHandlesFromPlaylist({ playlistPath, relPath, remDupl, bReturnNotFound: true, bAdvTitle });
 		if (handlePlaylist) {
 			if (pathsNotFound && pathsNotFound.length) {
-				if (extension === '.xspf') { // TODO links loading?
-					// plman.AddLocations(playlistIndex, pathsNotFound);
+				if (extension === '.xspf') {
+					if (pathsNotFound.some((path) => _isLink(path))) {
+						plman.AddPlaylistItemsOrLocations(playlistIndex, locationsByOrder, true);
+					} else {
+						plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
+					}
+					bDone = true;
 				} else {
 					// Do nothing
 				}
@@ -706,7 +718,7 @@ function loadTracksFromPlaylist(playlistPath, playlistIndex, relPath = '', remDu
 function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bLog = true } = {}) {
 	const test = bLog ? new FbProfiler('getHandlesFromPlaylist') : null;
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
-	let handlePlaylist = null, pathsNotFound = null;
+	let handlePlaylist = null, pathsNotFound = null, locationsByOrder = [];
 	if (extension === '.xsp') {
 		const bCache = xspCache.has(playlistPath);
 		let playlistText;
@@ -754,7 +766,8 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			if (bLog) { console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort); }
 		}
 	} else {
-		const filePaths = getFilePathsFromPlaylist(playlistPath).map((path) => { return path.toLowerCase(); });
+		const filePathsNoFormat = getFilePathsFromPlaylist(playlistPath);
+		const filePaths = filePathsNoFormat.map((path) => { return path.toLowerCase(); });
 		if (!filePaths.some((path) => { return !/[A-Z]*:\\/.test(path); })) { relPath = ''; } // No need to check rel paths if they are all absolute
 		const playlistLength = filePaths.length;
 		handlePlaylist = [...Array(playlistLength)];
@@ -843,7 +856,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				const sort = globQuery.remDuplBias;
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
-					if (!notFound.has(i)) { continue; }
+					if (!notFound.has(i)) { locationsByOrder.push(handlePlaylist[i]); continue; }
 					let query = '';
 					let lookup = {};
 					const row = rows[i];
@@ -881,11 +894,20 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 							if (matches && matches.Count) {
 								if (sortTF) { matches.OrderByFormat(sortTF, -1); }
 								handlePlaylist[i] = matches[0];
+								locationsByOrder.push(matches[0]);
 								notFound.delete(i);
 								count++;
 								break;
 							}
 						}
+					}
+					if (notFound.has(i)) {
+						const filePath = filePaths[i];
+						locationsByOrder.push(
+							youTubeRegExp.test(filePath)
+								? 'fy+' + filePathsNoFormat[i]
+								: filePath
+						);
 					}
 				}
 			}
@@ -896,7 +918,15 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				if (bLog) { console.log(playlistPath.split('\\').pop() + ': found all tracks on library.'); } // DEBUG
 				handlePlaylist = new FbMetadbHandleList(handlePlaylist);
 			} else if (bOmitNotFound && handlePlaylist !== null) {
-				if (bLog) { console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n')); } // DEBUG
+				if (bLog) {
+					let countNotFound = playlistLength - count;
+					if (bXSPF) {
+						countNotFound = pathsNotFound.reduce((total, curr) => total + (_isLink(curr) ? 0 : 1), 0);
+					}
+					if (countNotFound) {
+						console.log(playlistPath.split('\\').pop() + ': omitting not found items on library (' + countNotFound + ').' + '\n' + pathsNotFound.join('\n')); // DEBUG
+					}
+				}
 				handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
 			} else {
 				if (bLog) { console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (playlistLength - count) + ').' + '\n' + pathsNotFound.join('\n')); } // DEBUG
@@ -912,7 +942,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 		}
 	}
 	if (bLog) { test.Print(); }
-	return (!bReturnNotFound ? handlePlaylist : { handlePlaylist, pathsNotFound });
+	return (!bReturnNotFound ? handlePlaylist : { handlePlaylist, pathsNotFound, locationsByOrder });
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files

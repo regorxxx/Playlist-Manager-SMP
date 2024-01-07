@@ -1,7 +1,7 @@
 ﻿'use strict';
 //07/01/24
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -22,7 +22,8 @@ const spaces = { desktop: 0, bin: 10, userdesktop: 16, fonts: 19 };
 const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, Syestem: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048 };
 const utf8 = convertCharsetToCodepage('UTF-8');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
-const absPathRegex = /[A-z]*:\\/;
+const absPathRegExp = /[A-z]*:\\/;
+const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/;
 
 // Create global folders
 _createFolder(folders.data);
@@ -559,7 +560,7 @@ function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 function testPath(path, relativeTo = '') {
 	let bDead = false;
 	if (!_isLink(path)) {
-		if (absPathRegex.test(path)) { bDead = !_isFile(path); }
+		if (absPathRegExp.test(path)) { bDead = !_isFile(path); }
 		else {
 			let pathAbs = path;
 			if (pathAbs.startsWith('.\\')) { pathAbs = pathAbs.replace('.\\', relativeTo); }

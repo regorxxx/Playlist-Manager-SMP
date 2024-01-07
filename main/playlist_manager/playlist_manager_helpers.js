@@ -9,7 +9,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, clone:readable, globQuery:readable, iDelayPlaylists:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, getFiles:readable, checkCodePage:readable, getFileMeta:readable, editTextFile:readable, _renameFile:readable, _deleteFile:readable, _save:readable, _restoreFile:readable, _isLink:readable, sanitizePath:readable, findRelPathInAbsPath:readable, testPath:readable */
+/* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, getFiles:readable, checkCodePage:readable, getFileMeta:readable, editTextFile:readable, _renameFile:readable, _deleteFile:readable, _save:readable, _restoreFile:readable, _isLink:readable, sanitizePath:readable, findRelPathInAbsPath:readable, testPath:readable, absPathRegExp:readable */
 include('..\\..\\helpers\\helpers_xxx_file_zip.js');
 /* global _zip:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -1431,12 +1431,11 @@ function findMixedPaths() {
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
-		const absPathRegex = /[A-Z]*:\\/;
 		playlists.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const filePaths = getFilePathsFromPlaylist(playlist.path);
-					if (filePaths.some((path) => { return !(absPathRegex.test(path)); }) && filePaths.some((path) => { return (absPathRegex.test(path)); })) {
+					if (filePaths.some((path) => { return !(absPathRegExp.test(path)); }) && filePaths.some((path) => { return (absPathRegExp.test(path)); })) {
 						found.push(playlist);
 					}
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;

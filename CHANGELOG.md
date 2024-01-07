@@ -103,6 +103,7 @@
 - XSPF: identifier tag was not working properly at the content resolution step (usually used for MUSICBRAINZ_TRACKID).
 - XSPF: .xspf playlists not loading properly when content resolution was used in some cases.
 - XSPF: malformed track paths using relative paths in some cases.
+- Links: multiple fixes to YouTube web links handling.
 - Remove duplicates: advanced RegEx title matching option not being applied in some cases.
 - Minor fixes.
 
