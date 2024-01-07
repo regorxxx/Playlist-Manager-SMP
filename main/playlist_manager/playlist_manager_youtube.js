@@ -154,6 +154,14 @@ youTube.cleanTitle = function cleanTitle(title) {
 	return title.replace(/&amp(;|)/g, '&').replace(/&quot(;|)/g, '"').replace(/&#39(;|)/g, '\'').replace(/&gt(;|)/g, '>').replace(/&nbsp(;|)/g, '').replace(/(\.mv4|1080p|1080i|1080|\d(\d|)(\.|\s-)|explicit( version|)|full HD|HD full|full HQ|full song|(high |HD - |HD-|HD )quality|( |with |& |w( |)\/( |)|\+ )lyric(s(!|) on Screen|s|)|(official |)music video( |)|official (music|version|video)( |)|(song |official (fan |)|)audio( version| only| clean|)|( |\+ |)official( solo| |)|uncensored|vevo presents|video( |))|\.wmv/gi, '').replace(/(HD|HQ)(\s-\s|)/g, '').replace(/\((\s*)\)/g, '').replace(/\[(\s*)\]/g, '').replace(/\(\)/g, '').replace(/\[\]/g, '').replace(/\s+/g, ' ').replace(/[\s-/\\+]+$/g, '').trim(); // NOSONAR [nothing to simplify]
 };
 
+youTube.searchSubstitution = function searchSubstitution({ title, creator = '' } = {}) {
+	return {
+		title: capitalize(title),
+		artist: capitalizeAll(creator),
+		url: 'fy+search://youtube.api.video?query=' + encodeURIComponent(capitalizeAll(creator)) + '+-+' + encodeURIComponent(capitalize(title)) + '&skip_next=1&ssc=mAEB'
+	};
+};
+
 youTube.cache = new Map(
 	/*
 		[creator + ' ' + title, {title, artist, length, url}]
