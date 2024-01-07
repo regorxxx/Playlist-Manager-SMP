@@ -50,6 +50,7 @@ function _popup({
 	this.border = { enabled: true };
 	this.ttText = '';
 	this.popText = '';
+	this.reason = '';
 	this.scale = scale;
 	if (configuration) {
 		const configKeys = new Set(['bEnabled', 'border', 'icon', 'ttText', 'popText', 'color', 'fontSize']);
@@ -112,20 +113,24 @@ function _popup({
 		}
 	};
 
-	this.enable = (bPaint = false, popText = '', ttText = '') => {
+	this.enable = (bPaint = false, popText = '', ttText = '', reason = '') => {
 		this.bEnabled = true;
 		if (popText && popText.length) { this.popText = popText; }
 		if (ttText && ttText.length) { this.ttText = ttText; }
+		if (reason && reason.length) { this.reason = reason; }
 		if (bPaint) { window.Repaint(); }
 	};
 
 	this.disable = (bPaint = false) => {
 		this.bEnabled = false;
+		this.reason = '';
 		if (bPaint) { window.Repaint(); }
 	};
 
-	this.isEnabled = () => {
-		return this.bEnabled;
+	this.isEnabled = (reason = '') => {
+		return reason
+			? this.reason === reason && this.bEnabled
+			: this.bEnabled;
 	};
 
 	this.setText = (popText = '') => {
@@ -136,6 +141,10 @@ function _popup({
 	this.setTooltipText = (ttText = '') => {
 		this.ttText = ttText;
 		return ttText || '';
+	};
+	this.setReason= (reason = '') => {
+		this.reason = (reason || '').toString();
+		return this.reason;
 	};
 
 	this.trace = (x, y) => { // On panel
