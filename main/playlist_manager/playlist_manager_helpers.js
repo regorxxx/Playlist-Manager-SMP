@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//05/01/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -737,7 +737,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 	const handleList = !bUI
 		? pls.isAutoPlaylist
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
-			: getHandlesFromPlaylist(pls.path, list.playlistsPath, true)
+			: getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true})
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList && handleList.Count) {
 		if (pls.isAutoPlaylist && pls.sort.length) {
@@ -784,7 +784,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 		const handleListZ = !bUI
 			? pls.isAutoPlaylist
 				? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
-				: getHandlesFromPlaylist(pls.path, list.playlistsPath, true)
+				: getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true})
 			: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 		if (bDone && handleListZ) {
 			bDone = true;
@@ -821,7 +821,9 @@ function clonePlaylistFile(list, z, ext) {
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
-	const handleList = !bUI ? getHandlesFromPlaylist(pls.path, list.playlistsPath, true) : getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = !bUI
+		? getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true})
+		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
@@ -1020,7 +1022,9 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	if (!newPath.length) { return bDone; }
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
 	// Get tracks
-	const handleList = !bUI ? getHandlesFromPlaylist(playlistPath, list.playlistsPath, true, remDupl, void (0), bAdvTitle) : getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = !bUI
+		? getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle})
+		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const subsongRegex = /,\d*$/g;
 	const paths = (!bUI && !bXSP ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => { return path.replace(subsongRegex, ''); });
 	const root = utils.SplitFilePath(newPath)[0];
@@ -1659,7 +1663,7 @@ function findDurationMismatch() {
 		playlists.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
-					const handleList = getHandlesFromPlaylist(playlist.path, list.playlistsPath);
+					const handleList = getHandlesFromPlaylist({playlistPath: playlist.path, relPath: list.playlistsPath});
 					if (handleList) {
 						const bFpl = playlist.extension === '.fpl';
 						const calcDuration = handleList.CalcTotalDuration();
