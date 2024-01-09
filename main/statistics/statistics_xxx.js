@@ -952,20 +952,35 @@ function _chart({
 
 	this.sizePoint = (point /* pointCoords */, bWithOffset = false) => {
 		const size = { x: void (0), y: void (0), w: void (0), h: void (0) };
-		let bEntireChart = false;
 		switch (this.graph.type) {
 			case 'doughnut':
 			case 'pie': {
 				const r = point.r2;
-				const bToLeft = point.alpha1 > Math.PI / 2 && point.alpha1 < Math.PI * 3 / 2 || point.alpha2 > Math.PI / 2 && point.alpha2 < Math.PI * 3 / 2;
-				const bTop = point.alpha1 > Math.PI || point.alpha2 > Math.PI;
-				bEntireChart = point.alpha2 - point.alpha1 > Math.PI;
-				const x = point.c.x + (bToLeft ? -1 : 0) * point.r2;
-				const y = point.c.y + (bTop ? -1 : 0) * point.r2;
-				size.x = x;
-				size.y = y;
-				size.w = bEntireChart ? 2 * r : r;
-				size.h = bEntireChart ? 2 * r : r;
+				const pointX = [
+					point.c.x + Math.cos(point.alpha2) * r,
+					point.c.x + Math.cos(point.alpha1) * r,
+					point.c.x + Math.cos(point.alpha2) * point.r1,
+					point.c.x + Math.cos(point.alpha1) * point.r1
+				];
+				const pointY = [
+					point.c.y + Math.sin(point.alpha2) * r,
+					point.c.y + Math.sin(point.alpha1) * r,
+					point.c.y + Math.sin(point.alpha2) * point.r1,
+					point.c.y + Math.sin(point.alpha1) * point.r1
+				];
+				const regions = [0, Math.PI / 2, Math.PI, Math.PI * 3 / 2, Math.PI * 2];
+				const getRegion = (angle) => regions.find((region) => region < angle && region + Math.PI/2 > angle);
+				const pointRegions = [point.alpha1, point.alpha2].map(getRegion);
+				const bSameRegion = (new Set(pointRegions)).size === 1;
+				if (!bSameRegion) {
+					pointX.push(point.c.x + Math.cos(pointRegions[1]) * r);
+					pointY.push(point.c.y + Math.sin(pointRegions[1]) * r);
+				}
+				size.x = Math.min.apply(Math, pointX);
+				size.y = Math.min.apply(Math, pointY);
+				size.w = Math.max.apply(Math, pointX) - size.x;
+				size.h = Math.max.apply(Math, pointY) - size.y;
+				bWithOffset = false;
 				break;
 			}
 			default: {
@@ -975,7 +990,7 @@ function _chart({
 				size.h = point.h;
 			}
 		}
-		if (bWithOffset && !bEntireChart) {
+		if (bWithOffset) {
 			size.x -= size.w * 0.25;
 			size.w *= 1.5;
 		}
