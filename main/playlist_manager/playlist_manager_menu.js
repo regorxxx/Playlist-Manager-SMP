@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/24
+//09/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -4105,7 +4105,7 @@ function createMenuRightTop() {
 				list.updateMenus({ menus, bSave: false, bOverrideDefaults: true });
 				// Other tools
 				if (list.searchInput) {
-					list.searchMethod.bPath = list.searchMethod.bRegExp = false;
+					list.searchMethod.bPath = list.searchMethod.bRegExp = list.searchMethod.bMetaPls = false;
 					list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				}
 				// Auto-save
@@ -4267,8 +4267,9 @@ function createMenuSearch() {
 			list.searchHistory.slice(-5).forEach((text) => {
 				menu.newEntry({
 					entryText: text.length > 20 ? text.substring(0, 20) + '...' : text, func: () => {
-						list.searchCurrent = text;
+						list.searchCurrent = list.searchInput.text = text;
 						window.Repaint();
+						this.search();
 					}
 				});
 			});
@@ -4292,7 +4293,8 @@ function createMenuSearch() {
 			showMenus['Category'] ? { entryText: 'By playlist\'s category', key: 'bCategory' } : null,
 			{ entryText: 'By tracks\' metadata (from playlist)', key: 'bMetaPls' },
 			{ entryText: 'By tracks\' metadata (from tracks)', key: 'bMetaTracks' },
-			{ entryText: 'By tracks\' path', key: 'bPath' }
+			{ entryText: 'By tracks\' path', key: 'bPath' },
+			{ entryText: 'By query', key: 'bQuery' }
 		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
@@ -4326,14 +4328,22 @@ function createMenuSearch() {
 								'\n\n(*) Not available on .pls format.'
 								, window.Name
 							);
-						} else if (opt.key === 'bMetaTracks') {
-							fb.ShowPopupMessage(
-								'This option performs an extended search retrieving all tracks from playlists files and looking for matches according to tags.' +
-								'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed. When enabled, playlists are cached at startup (may take up to 10 seconds after loading the panel), to greatly speed up the process. But note the cache is build after startup, so making the search filter permanent across sessions may impose a huge impact at loading time with this search mode enable. To account for this, enable the \'Reset search on startup\' option.' +
-								'\n\nTags checked:' +
-								list.searchMethod.meta.join(', ')
-								, window.Name
-							);
+						} else if (opt.key === 'bMetaTracks' || opt.key === 'bQuery') {
+							if (opt.key === 'bMetaTracks') {
+								fb.ShowPopupMessage(
+									'This option performs an extended search retrieving all tracks from playlists files and looking for matches according to tags.' +
+									'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed. When enabled, playlists are cached at startup (may take up to 10 seconds after loading the panel), to greatly speed up the process. But note the cache is build after startup, so making the search filter permanent across sessions may impose a huge impact at loading time with this search mode enable. To account for this, enable the \'Reset search on startup\' option.' +
+									'\n\nTags checked:' +
+									list.searchMethod.meta.join(', ')
+									, window.Name
+								);
+							} else {
+								fb.ShowPopupMessage(
+									'This option performs an extended search retrieving all tracks from playlists files and looking for matches by query. If the query returns at least a track, it\'s considered a match.' +
+									'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed. When enabled, playlists are cached at startup (may take up to 10 seconds after loading the panel), to greatly speed up the process. But note the cache is build after startup, so making the search filter permanent across sessions may impose a huge impact at loading time with this search mode enable. To account for this, enable the \'Reset search on startup\' option.'
+									, window.Name
+								);
+							}
 							Promise.serial(list.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(list), 100)
 								.then(() => console.log('Playlist manager: Cached playlists for searching'));
 						}
