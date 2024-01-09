@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/24
+//09/01/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -65,6 +65,9 @@ function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '
 function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 	const test = bProfile ? new FbProfiler(window.Name + ': ' + 'loadPlaylistsFromFolder') : true;
 	if (!folderPath.length && typeof list !== 'undefined') { folderPath = list.playlistsPath; }
+	if (typeof xspCache !== 'undefined') { xspCache.clear(); }
+	if (typeof xspfCache !== 'undefined') { xspfCache.clear(); }
+	if (typeof xmlDomCache !== 'undefined') { xmlDomCache.clear(); }
 	const playlistPathArray = getFiles(folderPath, loadablePlaylistFormats); // Workaround for Win7 bug on extension matching with utils.Glob()
 	const playlistPathArrayLength = playlistPathArray.length;
 	let playlistArray = [];
@@ -1316,8 +1319,6 @@ function rewriteXSPQuery(pls, newQuery) {
 			jsp.playlist.match = match;
 			const xspText = XSP.toXSP(jsp);
 			if (xspText && xspText.length) {
-				xspCache.set(playlistPath, jsp);
-				xmlDomCache.delete(playlistPath);
 				// Backup
 				const backPath = playlistPath + '.back';
 				_copyFile(playlistPath, backPath);
@@ -1326,6 +1327,10 @@ function rewriteXSPQuery(pls, newQuery) {
 					_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 					console.log('Playlist manager: Restoring backup...');
 				} else if (_isFile(backPath)) { _deleteFile(backPath); }
+				if (bDone) {
+					xspCache.set(playlistPath, jsp);
+					xmlDomCache.delete(playlistPath);
+				}
 			}
 		}
 	}
@@ -1365,6 +1370,10 @@ function rewriteXSPSort(pls, newSort) {
 				_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 				console.log('Playlist manager: Restoring backup...');
 			} else if (_isFile(backPath)) { _deleteFile(backPath); }
+			if (bDone) {
+				xspCache.set(playlistPath, jsp);
+				xmlDomCache.delete(playlistPath);
+			}
 		}
 	}
 	return bDone;
@@ -1402,6 +1411,10 @@ function rewriteXSPLimit(pls, newLimit) {
 				_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 				console.log('Playlist manager: Restoring backup...');
 			} else if (_isFile(backPath)) { _deleteFile(backPath); }
+			if (bDone) {
+				xspCache.set(playlistPath, jsp);
+				xmlDomCache.delete(playlistPath);
+			}
 		}
 	}
 	return bDone;

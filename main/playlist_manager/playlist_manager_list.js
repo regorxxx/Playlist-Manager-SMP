@@ -21,7 +21,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, xspfCache:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, xspCache:readable, getFileMetaFromPlaylist:readable */
+/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getTagsValuesV4:readable, getTagsValues:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -6054,8 +6054,6 @@ function _list(x, y, w, h) {
 			if (this.requiresCachePlaylistSearch()) {
 				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
 			}
-			if (typeof xspCache !== 'undefined') { xspCache.clear(); } // Discard old cache to load new changes
-			if (typeof xspfCache !== 'undefined') { xspfCache.clear(); }
 			if (bProfile) { test.Print(); }
 		};
 
