@@ -1,7 +1,7 @@
 ﻿'use strict';
-//07/01/24
+//09/01/24
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor, isQuery */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -35,8 +35,7 @@ if (bLoadTags) {
 		folders.xxx + 'helpers\\dyngenre_map_xxx.js', //for dynamic_genre range function
 		/* global dynGenreRange:readable */
 	];
-	for (let i = 0; i < externalPath.length; i++) {
-		const path = externalPath[i];
+	for (const path of externalPath) {
 		if (_isFile(path)) {
 			include(path, { always_evaluate: false });
 		} else {
@@ -45,7 +44,7 @@ if (bLoadTags) {
 	}
 }
 
-const logicDic = ['and', 'or', 'and not', 'or not', 'AND', 'OR', 'AND NOT', 'OR NOT'];
+const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
 
 /*
 	Query and tag manipulation
@@ -160,6 +159,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, bDebug = false) {
 
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 function queryJoin(queryArray, setLogic) {
+	setLogic = (setLogic || '').toUpperCase();
 	if (logicDic.indexOf(setLogic) === -1) {
 		console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 		return;
@@ -203,6 +203,9 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 		console.log('queryCombinations(): queryKey not set. tagsArray = ' + tagsArray);
 		return;
 	}
+	tagsArrayLogic = (tagsArrayLogic || '').toUpperCase();
+	subtagsArrayLogic = (subtagsArrayLogic || '').toUpperCase();
+	match = (match || '').toUpperCase();
 	if (isArrayStrings(queryKey)) {
 		let queryKeyLength = queryKey.length;
 		let i = 0;
@@ -231,7 +234,7 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 			i++;
 		}
 	} else {
-		if (logicDic.indexOf(tagsArrayLogic) === -1 || !logicDic.indexOf(subtagsArrayLogic) === -1) {
+		if (logicDic.indexOf(tagsArrayLogic) === -1 || logicDic.indexOf(subtagsArrayLogic) === -1) {
 			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
 			return;
 		}
@@ -308,6 +311,15 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	}
 	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
 	return sortObj;
+}
+
+function isQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
+	let bPass = true;
+	if (query && query.length) {
+		bPass = ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER'].some((key) => query.includes(key))
+			&& checkQuery(query, false, bAllowSort, bAllowPlaylist);
+	} else if (!bAllowEmpty) {bPass = false;}
+	return bPass;
 }
 
 function getTagsValues(handle, tagsArray, bMerged = false) {

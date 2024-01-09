@@ -87,7 +87,7 @@ Object.defineProperty(fb, 'tfCache', {
 	gr
 */
 // Augment gr.DrawRoundRect() with error handling
-function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, ImgBox: true, }) {
+function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, ImgBox: true }) {
 	if (!gr.Extended) { gr.Extended = options; }
 	else { Object.keys(options).forEach((opt) => { if (options[opt]) { gr.Extended[opt] = true; } }); }
 	if (options.DrawRoundRect) {
@@ -156,7 +156,7 @@ function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repa
 		const old = gr.DrawImage.bind(gr);
 		gr.DrawImage = function DrawImage() { // img, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, angleopt, alphaop
 			const that = old(...arguments);
-			gr.DrawRect(arguments[1], arguments[2], arguments[3], arguments[4], 2, 1694433280);
+			gr.DrawRect(arguments[1], arguments[2], arguments[3], arguments[4], 2, 1694433280); // Red 90%
 			return that;
 		};
 	}
