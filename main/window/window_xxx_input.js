@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/12/23
+//08/01/24
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -242,18 +242,75 @@ function _colorPicker({ x, y, size = 10, color = 0xFF4354AF, hoverColor = 0xFF43
 	};
 }
 
-function _dropdownList({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4354AF }) {
-	this.shape = shape.toLowerCase();
-	this.tt = '';
+function _dropdownList(
+	x, y, w, h,
+	text,
+	func,
+	gFont = _gdiFont('Segoe UI', 12),
+	description = '',
+	gFontIcon = _gdiFont('FontAwesome', 12),
+	icon = function () {
+		return this.opened
+			? '\u25BC\u2009'
+			: '\u25B6';
+	}
+) {
+	this.state = buttonStates.normal;
 	this.x = x;
 	this.y = y;
-	this.w = size;
-	this.size = size;
-	this.value = value;
-	this.fillColor = color; // Blue
-	this.gFont = this.shape === 'square' ? _gdiFont('Segoe UI', _scale(size * 5 / 6)) : null;
+	this.w = w;
+	this.h = h;
+	this.originalWindowWidth = window.Width;
+	this.gTheme = window.CreateThemeManager('BUTTON');
+	this.gFont = gFont;
+	this.gFontIcon = gFontIcon;
+	this.description = description;
+	this.tt = '';
+	this.text = text;
+	this.textWidth = isFunction(this.text) ? () => { return _gr.CalcTextWidth(this.text(), gFont); } : _gr.CalcTextWidth(this.text, gFont);
+	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+	this.iconWidth = isFunction(this.icon) ? () => { return _gr.CalcTextWidth(this.icon(), gFontIcon); } : _gr.CalcTextWidth(this.icon, gFontIcon);
+	this.opened = false;
+	this.list = { values: [], current: null, hover: null, count: 0 };
+
+	this.close = () => {
+		if (this.opened) {
+			this.menuFunc(isFunction(this.x) ? this.x() : this.x, isFunction(this.y) ? this.y() : this.y);
+		}
+	};
+	this.menuFunc = (x, y, values, current) => {
+		if (this.containHeader(x, y)) {
+			this.opened = !this.opened;
+			if (this.opened) {
+				this.list.values.push(...values);
+				this.list.current = current;
+				this.list.count = this.list.values.length;
+			} else {
+				this.list.values.length = 0;
+				this.list.current = this.list.hover = null;
+			}
+		} else {
+			this.text = this.list.hover;
+			this.close();
+			this.repaint();
+		}
+		return true;
+	};
+	this.func = func;
 
 	this.containXY = function (x, y) {
+		const xCalc = isFunction(this.x) ? this.x() : this.x;
+		const yCalc = isFunction(this.y) ? this.y() : this.y;
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		if (this.opened) {
+			return (xCalc <= x) && (x <= xCalc + wCalc) && (yCalc <= y) && (y <= yCalc + hCalc * (this.list.count + 1));
+		} else {
+			return (xCalc <= x) && (x <= xCalc + wCalc) && (yCalc <= y) && (y <= yCalc + hCalc);
+		}
+	};
+
+	this.containHeader = function (x, y) {
 		const xCalc = isFunction(this.x) ? this.x() : this.x;
 		const yCalc = isFunction(this.y) ? this.y() : this.y;
 		const wCalc = isFunction(this.w) ? this.w() : this.w;
@@ -261,60 +318,120 @@ function _dropdownList({ x, y, size = 4, value = false, shape = 'square', color 
 		return (xCalc <= x) && (x <= xCalc + wCalc) && (yCalc <= y) && (y <= yCalc + hCalc);
 	};
 
-	this.changeState = function () {
-
-	};
-
-	this.paint = (gr) => { // on_paint
-		if (this.w <= 0) { return; }
-		if (this.shape === 'square') {
-			if (this.value) {
-				gr.FillSolidRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, this.fillColor);
-				gr.GdiDrawText('\u2714', this.gFont, 0xFFFFFFFF, this.x, this.y - this.size * 2 / 7, this.w < this.size ? this.w + 2 : this.size + 2, _scale(this.size), DT_VCENTER | DT_CENTER | DT_NOPREFIX);
+	this.move = function (x, y, tt) {
+		if (this.containXY(x, y)) {
+			if (this.containHeader(x, y)) {
+				this.changeState(buttonStates.hover, tt);
+				return true;
 			} else {
-				gr.FillSolidRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 0xFFFFFFFF);
-			}
-			gr.DrawRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 2, 0xFF000000);
-		} else if (this.shape === 'circle') {
-			gr.SetSmoothingMode(SmoothingMode.HighQuality);
-			if (this.value) {
-				gr.FillEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 0xFFFFFFFF);
-				gr.DrawEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 1, this.fillColor);
-				const innerSizeMinus = 6;
-				if (this.w >= innerSizeMinus) {
-					gr.FillEllipse(this.x + innerSizeMinus / 2, this.y + innerSizeMinus / 2, this.w < this.size ? this.w - innerSizeMinus : this.size - innerSizeMinus, this.size - innerSizeMinus, this.fillColor);
-				}
-			} else {
-				gr.FillEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 0xFFFFFFFF);
-				gr.DrawEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 1, 0xFF000000);
-			}
-			gr.SetSmoothingMode(SmoothingMode.Default);
-		}
-	};
-
-	this.repaint = () => {
-		const padding = this.hoveredExtPad;
-		window.RepaintRect(this.x - padding, this.y - padding, this.h + this.checkboxSpacing + this.labelDrawnWidth + padding * 2, this.h + padding * 2);
-	};
-
-	this.trackCheck = (x, y) => {
-		return y >= this.y && y <= this.y + this.size && x >= this.x && x <= this.x + this.size;
-	};
-	this.btn_up = (x, y) => {
-		if (this.trackCheck(x, y)) {
-			if (this.shape === 'circle') {
-				if (!this.value) {
-					this.value = true;
-					this.repaint();
+				this.changeState(buttonStates.normal, tt);
+				if (this.opened) {
+					const xCalc = isFunction(this.x) ? this.x() : this.x;
+					const yCalc = isFunction(this.y) ? this.y() : this.y;
+					const wCalc = isFunction(this.w) ? this.w() : this.w;
+					const hCalc = isFunction(this.h) ? this.h() : this.h;
+					const old = this.list.hover;
+					this.list.hover = this.list.values.find((val, i) => {
+						return (xCalc <= x) && (x <= xCalc + wCalc) && (yCalc <= y) && (y <= yCalc + hCalc * (i + 2));
+					});
+					if (old !== this.list.hover) { this.repaint(); }
 					return true;
 				}
-			} else if (this.shape === 'square') {
-				this.value = !this.value;
-				this.repaint();
-				return true;
 			}
+		} else {
+			if (this.opened) {
+				this.close();
+				this.repaint();
+			}
+			this.changeState(buttonStates.normal, tt);
 		}
 		return false;
+	};
+
+	this.changeState = function (state, ttArg) {
+		let old = this.state;
+		this.state = state;
+		if (state === buttonStates.hover) {
+			this.tt = isFunction(this.description) ? this.description(ttArg).toString() : this.description;
+			window.SetCursor(IDC_HAND);
+		} else { this.tt = ''; }
+		if (state !== old) { this.repaint(); }
+		return old;
+	};
+
+	this.paint = function (gr, x = this.x, y = this.y, bOnTop = true) {
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		if (wCalc <= 0 || hCalc <= 0) { return; }
+		if (this.state === buttonStates.hide) {
+			return;
+		}
+
+		switch (this.state) {
+			case buttonStates.normal:
+				this.gTheme.SetPartAndStateID(1, 1);
+				break;
+
+			case buttonStates.hover:
+				this.gTheme.SetPartAndStateID(1, 2);
+				break;
+
+			case buttonStates.down:
+				this.gTheme.SetPartAndStateID(1, 3);
+				break;
+
+			case buttonStates.hide:
+				return;
+		}
+
+		const xCalc = isFunction(x) ? x() : x;
+		const yCalc = isFunction(y) ? y() : y;
+
+		this.gTheme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
+		const offset = 10;
+		if (this.icon !== null) {
+			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
+			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(iconCalculated, this.gFontIcon, RGB(0, 0, 0), xCalc + offset, yCalc, wCalc - iconWidthCalculated - offset, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Icon
+			if (wCalc > iconWidthCalculated * 4 + offset * 4) {
+				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + iconWidthCalculated, yCalc, wCalc - offset, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			} else {
+				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + offset * 2 + iconWidthCalculated, yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			}
+		} else {
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+		}
+		const paintList = (gr) => {
+			this.list.values.forEach((val, i) => {
+				const border = 1;
+				let bgColor = RGB(240, 240, 240);
+				const lineColor = RGB(4, 80, 200);
+				if (val === this.list.hover) {
+					bgColor = RGB(220, 220, 255);
+				}
+				gr.FillSolidRect(xCalc, yCalc + hCalc + i * hCalc, wCalc - 2 * border, hCalc, bgColor);
+				gr.DrawRect(xCalc, yCalc + hCalc + i * hCalc, wCalc - 2 * border, hCalc, border, lineColor);
+				gr.GdiDrawText(val, this.gFont, RGB(0, 0, 0), xCalc, yCalc + (i + 1) * hCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX);
+			});
+		};
+		if (bOnTop) {
+			if (!Object.hasOwn(gr, 'stack')) { gr.stack = []; }
+			gr.stack.push(paintList);
+		} else { paintList(gr); }
+	};
+
+	this.repaint = (bForce = false) => {
+		const xCalc = isFunction(this.x) ? this.x() : this.x;
+		const yCalc = isFunction(this.y) ? this.y() : this.y;
+		const wCalc = isFunction(this.w) ? this.w() : this.w;
+		const hCalc = isFunction(this.h) ? this.h() : this.h;
+		window.RepaintRect(xCalc, yCalc, wCalc, (this.list.count + 1) * hCalc + _scale(1), bForce);
+	};
+
+	this.onClick = function (x, y, values, current) {
+		return this.menuFunc(x, y, values, current) && (this.func && this.func(values, current) || !this.func);
 	};
 }
 
@@ -324,12 +441,12 @@ function _buttonList(
 	func,
 	gFont = _gdiFont('Segoe UI', 12),
 	description = '',
+	gFontIcon = _gdiFont('FontAwesome', 12),
 	icon = function () {
 		return this.opened
 			? '\u25BC '
 			: '\u25B6';
-	},
-	gFontIcon = _gdiFont('FontAwesome', 12)
+	}
 ) {
 	this.state = buttonStates.normal;
 	this.x = x;
@@ -352,7 +469,7 @@ function _buttonList(
 		const menu = new _menu({ onBtnUp: () => { this.opened = false; } });
 		values.forEach((item) => {
 			const padWidth = _gr.CalcTextWidth(' ', _gdiFont('Arial', _scale(11)));
-			const count = this.w  / padWidth;
+			const count = this.w / padWidth;
 			let padText = ' '.repeat(count / 2);
 			let entryText = padText + item + padText;
 			let diff = _gr.CalcTextWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
@@ -447,7 +564,7 @@ function _buttonList(
 		window.RepaintRect(this.x, this.y, this.w, this.h);
 	};
 
-	this.onClick = function (values, current) {
+	this.onClick = function (x, y, values, current) {
 		return this.menuFunc(values, current) && (this.func && this.func(values, current) || !this.func);
 	};
 }

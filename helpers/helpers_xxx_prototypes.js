@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//08/01/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -128,7 +128,7 @@ function isJSON(str) {
 }
 
 function roughSizeOfObject(object) {
-	const objectList = [];
+	const objectList = new Set([]);
 	const stack = [object];
 	let bytes = 0;
 	while (stack.length) {
@@ -156,9 +156,29 @@ function roughSizeOfObject(object) {
 			bytes += 24;
 			bytes += value.Path.length * 2;
 			bytes += value.RawPath.length * 2;
-		} else if (type === 'object' && objectList.indexOf(value) === -1) {
-			objectList.push(value);
-			for (const i in value) { if (!Object.hasOwn(value, i)) { continue; } stack.push(value[i]); }
+		} else if (type === 'object' && (value instanceof Set || Array.isArray(value))) {
+			if (!objectList.has(value)) {
+				objectList.add(value);
+				for (const subVal of value) {
+					stack.push(subVal);
+				}
+			}
+		} else if (type === 'object' && value instanceof Map) {
+			if (!objectList.has(value)) {
+				objectList.add(value);
+				for (const [key, subVal] of value) {
+					stack.push(key, subVal);
+				}
+			}
+		} else if (type === 'object') {
+			if (!objectList.has(value)) {
+				objectList.add(value);
+				for (const prop in value) {
+					if (Object.hasOwn(value, prop)) {
+						stack.push(value[prop]);
+					}
+				}
+			}
 		}
 	}
 	return bytes;
