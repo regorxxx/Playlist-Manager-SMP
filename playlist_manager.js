@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//09/01/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -236,6 +236,7 @@ let properties = {
 		bMetaPls: true,
 		bMetaTracks: false,
 		meta: [globTags.artist, 'ALBUM', globTags.title, globTags.date],
+		bQuery: true,
 		text: '',
 	})],
 	uiElements: ['UI elements', JSON.stringify({
@@ -417,7 +418,7 @@ let autoUpdateRepeat;
 				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
 				// Other tools
 				const searchMethod = JSON.parse(prop.searchMethod[1]);
-				searchMethod.bPath = searchMethod.bRegExp = false;
+				searchMethod.bPath = searchMethod.bRegExp = searchMethod.bMetaPls = false;
 				prop.searchMethod[1] = JSON.stringify(searchMethod);
 			}
 		}
