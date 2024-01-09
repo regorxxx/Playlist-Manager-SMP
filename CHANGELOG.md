@@ -57,6 +57,7 @@
 - Importing JSON: allows to selectively choose which formats will be imported. i.e. files, AutoPlaylists and Smart Playlists, UI-only playlists, folders, ...
 - Search: new search mode against tracks' metadata. Internally loads all tracks from every playlists and looks for the search input within specific tags (by default ALBUM ARTIST, ALBUM, TITLE and DATE). It may produce some lag while searching if there are a lot of playlists, so disable it if not needed. The tracks are cached, so consecutive searches are faster (or performing it some seconds after startup); but it greatly increases startup time when using search is maintained at startup (since cache has not been built). In such cases, make sure to have the setting 'Reset search on startup' enabled.
 - Search: new search mode against playlists' metadata. Retrieves track's metadata from the playlist file (available on .m3u8, .m3u, .xspf and .pls formats) and tries to match ARTIST or TITLE. This mode is much faster than looking for the track's tags (see above).
+- Search: new search mode using queries. If the query outputs at least a track from a playlist, is considered a match. Caching is used (see above).
 - XSP: Smart Playlists are now automatically refreshed whenever a playlist source changes (not in any other case, use AutoPlaylists for that). i.e. if a Smart Playlist has a query like "#PLAYLIST# IS A", and "A" playlist changes, the Smart Playlist is automatically refreshed now (tracks added/removed). If the playlist is not loaded, only metadata is updated (like duration or size). This behavior can be disabled at settings.
 - Backup: added more backup procedures when editing playlists. Original file is restored in case of errors.
 - Statistics: new 'size' data mode for statistics, which shows statistics according to playlist's size (num of tracks) grouped by 25. Ex. Empty, >0, >25, >50, ... Clicking on any data point will filter the panel, as usual, with playlists with such condition.
@@ -91,6 +92,7 @@
 ### Fixed
 - UI: single click actions not working in some cases. [Issue 74](https://github.com/regorxxx/Playlist-Manager-SMP/issues/74)
 - UI: multiple selection was lost in some cases after executing actions if UI-only playlists were tracked.
+- Search: search history not applying the term when clicking.
 - Folders: playlist deletion within folders did not update the UI properly in some cases. [Issue 72](https://github.com/regorxxx/Playlist-Manager-SMP/issues/72)
 - Folders: nested folders not working in some cases or producing crashes. [Issue 73](https://github.com/regorxxx/Playlist-Manager-SMP/issues/73)
 - Folders: internal drag n' drop not working properly on sorting methods different than manual one. i.e. to move items into/out of a folder.
