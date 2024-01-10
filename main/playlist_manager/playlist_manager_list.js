@@ -5639,7 +5639,7 @@ function _list(x, y, w, h) {
 				this.colors.folderColor = panel.colors.text;
 				bDone = true;
 			}
-			if (this.colors && Object.keys(this.colors).length !== 5) { // Fills missing colors
+			if (this.colors && Object.keys(this.colors).length !== 6) { // Fills missing colors
 				if (!this.colors.lockedPlaylistColor) { this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); } // Red
 				if (!this.colors.autoPlaylistColor) { this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
 				if (!this.colors.smartPlaylistColor) { this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
