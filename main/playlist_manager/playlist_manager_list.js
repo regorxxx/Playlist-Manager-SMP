@@ -2545,9 +2545,6 @@ function _list(x, y, w, h) {
 					{ key: 'Ctrl', mask: MK_CONTROL },
 					{ key: 'Shift', mask: MK_SHIFT },
 					{ key: 'Ctrl + Shift', mask: MK_SHIFT + MK_CONTROL },
-					element.toUpperCase() === 'HEADER'
-						? { key: 'Single Click', mask: 'SG_CLICK' }
-						: void (0),
 					{ key: 'Single Click', mask: 'SG_CLICK' },
 					{ key: 'Double Click', mask: 'DB_CLICK' }
 				].filter(Boolean);

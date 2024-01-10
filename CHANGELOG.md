@@ -110,6 +110,7 @@
 - Links: multiple fixes to YouTube web links handling.
 - Remove duplicates: advanced RegEx title matching option not being applied in some cases.
 - Colors: crash if a color was missing from an older version, after updating, if the settings menu was opened. [Issue 70](https://github.com/regorxxx/Playlist-Manager-SMP/issues/70)
+- Shortcuts: 'Single click' header submenu, to set the single click actions on header, was duplicated.
 - Minor fixes.
 
 ## [0.12.1] - 2023-12-09
