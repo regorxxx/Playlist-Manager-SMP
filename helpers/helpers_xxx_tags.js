@@ -1,17 +1,22 @@
 ﻿'use strict';
-//09/01/24
+//10/01/24
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getTagsValues, getTagsValuesV3 ,getTagsValuesV4, getTagsValuesV5, cyclicTagsDescriptor, isQuery */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
 include('helpers_xxx_prototypes.js');
 /* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable */
-
+include('helpers_xxx_cache_volatile.js');
+/* global VolatileCache:readable */
+include('callbacks_xxx.js');
 
 /*
 	Global Variables
 */
+const tagsVolatileCache = new VolatileCache(1000); // Deleted every 1000 ms
+addEventListener('on_metadb_changed', () => tagsVolatileCache.clear());
+
 // Tags descriptors:
 // Always use .toLowerCase first before checking if the set has the string. For ex
 // numericTags.has(tagName.toLowerCase())
@@ -318,42 +323,58 @@ function isQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false)
 	if (query && query.length) {
 		bPass = ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER'].some((key) => query.includes(key))
 			&& checkQuery(query, false, bAllowSort, bAllowPlaylist);
-	} else if (!bAllowEmpty) {bPass = false;}
+	} else if (!bAllowEmpty) { bPass = false; }
 	return bPass;
 }
 
-function getTagsValues(handle, tagsArray, bMerged = false) {
+// [n Tags]
+function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: false }) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handle) { return null; }
-
-	const handleInfo = handle.GetFileInfo();
-	const tagArray_length = tagsArray.length;
-	let outputArray = [];
-	let i = 0;
-
-	while (i < tagArray_length) {
-		let tagValues = [];
-		const tagIdx = handleInfo.MetaFind(tagsArray[i]);
-		const tagNumber = (tagIdx !== -1) ? handleInfo.MetaValueCount(tagIdx) : 0;
-		if (tagNumber !== 0) {
-			let j = 0;
-			while (j < tagNumber) {
-				tagValues[j] = handleInfo.MetaValue(tagIdx, j);
-				j++;
-			}
-		}
-		outputArray.push(tagValues);
-		i++;
+	options = { bMerged: false, bCached: false, ...(options || {}) };
+	const tagArrayLen = tagsArray.length;
+	const toCache = new Set(tagsArray);
+	let outputArray = new Array(tagArrayLen);
+	if (options.bCached) {
+		const values = tagsVolatileCache.get(handle, tagsArray) || {};
+		for (const key in values) { outputArray[tagsArray.indexOf(key)] = values[key]; toCache.delete(key); }
 	}
-
-	if (bMerged) { outputArray = outputArray.flat(); }
+	if (outputArray.filter(Boolean).length !== tagArrayLen) {
+		const handleInfo = handle.GetFileInfo();
+		let i = 0;
+		while (i < tagArrayLen) {
+			let tagValues = [];
+			const tagIdx = handleInfo.MetaFind(tagsArray[i]);
+			const tagNumber = (tagIdx !== -1) ? handleInfo.MetaValueCount(tagIdx) : 0;
+			if (tagNumber !== 0) {
+				let j = 0;
+				while (j < tagNumber) {
+					tagValues[j] = handleInfo.MetaValue(tagIdx, j);
+					j++;
+				}
+			}
+			outputArray[i] = tagValues;
+			i++;
+		}
+		if (toCache.size) {
+			tagsVolatileCache.set(
+				handle,
+				Object.fromEntries(outputArray.map((tag, i) => {
+					const key = tagsArray[i];
+					return toCache.has(key) ? [tagsArray[i], tag] : null;
+				}).filter(Boolean))
+			);
+		}
+	}
+	if (options.bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 
-function getTagsValuesV3(handle, tagsArray, bMerged = false) {
+// [handle count x [n Tags]]
+function getHandleListTags(handle, tagsArray, options = { bMerged: false, bCached: false }) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handle) { return null; }
-
+	options = { bMerged: false, bCached: false, ...(options || {}) };
 	const tagArray_length = tagsArray.length;
 	let outputArray = [];
 	let i = 0;
@@ -365,13 +386,13 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 				? '%' + tagsArray[i] + '%'
 				: tagsArray[i]
 			: tagsArray[i];
-		if (bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
+		if (options.bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
 		else { tagString += (i === 0 ? '' : '| ') + _b(tagStr); } // We have tag values separated by comma and different tags by |
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
 	outputArray = tfo.EvalWithMetadbs(handle);
-	if (bMerged) { // Just an array of values per track: n x 1
+	if (options.bMerged) { // Just an array of values per track: n x 1
 		for (let i = 0; i < outputArray_length; i++) {
 			outputArray[i] = outputArray[i].split(', ');
 		}
@@ -386,10 +407,12 @@ function getTagsValuesV3(handle, tagsArray, bMerged = false) {
 	return outputArray;
 }
 
-function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
+// [n Tags x [handle count]]
+function getHandleListTagsV2(handle, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handle) { return null; }
-
+	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
+	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handle.Count;
 	let outputArray = [];
@@ -406,14 +429,14 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 				? '%' + tagsArray[i] + '%'
 				: tagsArray[i]
 			: tagsArray[i];
-		tagString = bEmptyVal
+		tagString = options.bEmptyVal
 			? tagString
 			: '[' + tagString + ']';
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
-		if (splitBy && splitBy.length) {
+		if (options.splitBy && options.splitBy.length) {
 			for (let j = 0; j < outputArrayi_length; j++) {
-				outputArray[i][j] = outputArray[i][j].split(splitBy, iLimit);
+				outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
 			}
 		} else {
 			for (let j = 0; j < outputArrayi_length; j++) {
@@ -422,14 +445,16 @@ function getTagsValuesV4(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 		}
 		i++;
 	}
-	if (bMerged) { outputArray = outputArray.flat(); }
+	if (options.bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 
-function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, splitBy = ', ', iLimit = -1) {
+// [n Tags x [handle count]]
+function getHandleListTagsTyped(handle, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
 	if (!isArray(tagsArray)) { return null; }
 	if (!handle) { return null; }
-
+	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
+	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handle.Count;
 	let outputArray = [];
@@ -442,12 +467,14 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 			i++;
 			continue;
 		}
-		let tagString = ((tagName.indexOf('$') === -1) ? (bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]') : (bEmptyVal ? tagName : '[' + tagName + ']')); // Tagname or TF expression, with or without empty values
+		let tagString = (tagName.indexOf('$') === -1) // Tagname or TF expression, with or without empty values
+			? (options.bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]')
+			: (options.bEmptyVal ? tagName : '[' + tagName + ']');
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handle);
-		if (splitBy && splitBy.length) {
+		if (options.splitBy && options.splitBy.length) {
 			for (let j = 0; j < outputArrayi_length; j++) {
-				outputArray[i][j] = outputArray[i][j].split(splitBy, iLimit);
+				outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
 				if (type) {
 					outputArray[i][j] = outputArray[i][j].map((val) => {
 						switch (type) {
@@ -471,6 +498,6 @@ function getTagsValuesV5(handle, tagsArray, bMerged = false, bEmptyVal = false, 
 		}
 		i++;
 	}
-	if (bMerged) { outputArray = outputArray.flat(); }
+	if (options.bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
