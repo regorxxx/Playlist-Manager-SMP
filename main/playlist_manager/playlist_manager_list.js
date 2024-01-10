@@ -5655,34 +5655,33 @@ function _list(x, y, w, h) {
 				this.searchInput.backSelectionColor = this.colors.selectedPlaylistColor;
 			}
 			// Check Shortcuts
-			const shortcutsL = this.getDefaultShortcuts('L');
-			const shortcutsLKeys = shortcutsL.options.map((_) => { return _.key; });
-			if (!this.lShortcuts || this.lShortcuts && !isArrayEqual(shortcutsLKeys, Object.keys(this.lShortcuts))) {
-				if (!this.lShortcuts) { this.lShortcuts = {}; }
-				const shortcutsLActions = shortcutsL.actions.map((_) => { return _.key; });
-				shortcutsLKeys.forEach((key) => {
-					if (!Object.hasOwn(this.lShortcuts, key)) { this.lShortcuts[key] = shortcutsLActions[0]; }
-				});
-				Object.keys(this.lShortcuts).forEach((key) => {
-					if (shortcutsLKeys.indexOf(key) === -1) { delete this.lShortcuts[key]; }
-				});
-				this.properties['lShortcuts'][1] = JSON.stringify(this.lShortcuts);
-				bDone = true;
-			}
-			const shortcutsM = this.getDefaultShortcuts('M');
-			const shortcutsMKeys = shortcutsM.options.map((_) => { return _.key; });
-			if (!this.mShortcuts || this.mShortcuts && !isArrayEqual(shortcutsMKeys, Object.keys(this.mShortcuts))) {
-				if (!this.mShortcuts) { this.mShortcuts = {}; }
-				const shortcutsMActions = shortcutsL.actions.map((_) => { return _.key; });
-				shortcutsMKeys.forEach((key) => {
-					if (!Object.hasOwn(this.mShortcuts, key)) { this.mShortcuts[key] = shortcutsMActions[0]; }
-				});
-				Object.keys(this.mShortcuts).forEach((key) => {
-					if (shortcutsMKeys.indexOf(key) === -1) { delete this.mShortcuts[key]; }
-				});
-				this.properties['mShortcuts'][1] = JSON.stringify(this.mShortcuts);
-				bDone = true;
-			}
+			[
+				{pKey: 'lShortcuts', key: 'L', element: 'list'},
+				{pKey: 'rShortcuts', key: 'R', element: 'list'},
+				{pKey: 'mShortcuts', key: 'M', element: 'list'},
+				{pKey: 'lShortcutsHeader', key: 'L', element: 'header'},
+				{pKey: 'mShortcutsHeader', key: 'M', element: 'header'},
+			].forEach((o) => {
+				const shortcuts = this.getDefaultShortcuts(o.key, o.element);
+				const shortcutsKeys = shortcuts.options.map((_) => { return _.key; });
+				if (!this[o.pKey] || !isArrayEqual(shortcutsKeys, Object.keys(this[o.pKey]))) {
+					if (!this[o.pKey]) { this[o.pKey] = {}; }
+					const shortcutsActions = shortcuts.actions.map((_) => { return _.key; });
+					shortcutsKeys.forEach((key) => {
+						if (!Object.hasOwn(this[o.pKey], key)) { this[o.pKey][key] = shortcutsActions[0]; }
+					});
+					Object.keys(this[o.pKey]).forEach((key) => {
+						if (shortcutsKeys.indexOf(key) === -1) { delete this[o.pKey][key]; }
+					});
+					// Sort by default order, just for cosmetic purposes
+					this[o.pKey] = shortcutsKeys.reduce((acc, curr) => {
+						acc[curr] = this[o.pKey][curr];
+						return acc;
+					}, {});
+					this.properties[o.pKey][1] = JSON.stringify(this[o.pKey]);
+					bDone = true;
+				}
+			});
 			// Check UI elements
 			const uiELementsDef = JSON.parse(this.properties['uiElements'][3]);
 			if (!isArrayEqual(Object.keys(this.uiElements), Object.keys(uiELementsDef))) {
