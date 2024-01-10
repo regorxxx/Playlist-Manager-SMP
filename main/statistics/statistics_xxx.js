@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/01/24
+//10/01/24
 
 /* exported _chart */
 
@@ -969,7 +969,7 @@ function _chart({
 					point.c.y + Math.sin(point.alpha1) * point.r1
 				];
 				const regions = [0, Math.PI / 2, Math.PI, Math.PI * 3 / 2, Math.PI * 2];
-				const getRegion = (angle) => regions.find((region) => region < angle && region + Math.PI/2 > angle);
+				const getRegion = (angle) => regions.find((region) => region < angle && region + Math.PI / 2 > angle);
 				const pointRegions = [point.alpha1, point.alpha2].map(getRegion);
 				const bSameRegion = (new Set(pointRegions)).size === 1;
 				if (!bSameRegion) {
@@ -1699,7 +1699,7 @@ function _chart({
 	};
 
 	this.computeStatistics = (serie, options = { bClampRange: true }) => {
-		options = { bClampRange: true, ...options };
+		options = { bClampRange: true, ...(options || {}) };
 		const statistics = {
 			max: -Infinity,
 			min: +Infinity,

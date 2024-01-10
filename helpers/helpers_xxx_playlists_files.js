@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/24
+//10/01/24
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist */
 
@@ -11,7 +11,7 @@ include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
 include('helpers_xxx_tags.js');
-/* global checkQuery:readable, getSortObj:readable, getTagsValuesV4:readable, queryCombinations:readable */
+/* global checkQuery:readable, getSortObj:readable, getHandleListTagsV2:readable, queryCombinations:readable */
 include('helpers_xxx_playlists.js');
 /* global getHandlesFromUIPlaylists:readable */
 include('helpers_xxx_playlists_files_xspf.js');
@@ -196,7 +196,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 			];
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
-				const tags = getTagsValuesV4(handleList, ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+				const tags = getHandleListTagsV2(handleList, ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
 				for (let i = 0; i < itemsCount; i++) {
 					const title = tags[0][i][0];
 					const creator = tags[1][i].join(', ');
@@ -420,7 +420,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 }
 
 function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }) {
-	options = { bResolveXSPF: true, ...options };
+	options = { bResolveXSPF: true, ...(options || {}) };
 	let paths = [];
 	if (!playlistPath || !playlistPath.length) {
 		console.log('getFilePathsFromPlaylist(): no playlist path was provided');

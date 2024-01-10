@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/24
+//10/01/24
 
 /* exported _list */
 
@@ -23,7 +23,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getTagsValuesV4:readable, getTagsValues:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable */
+/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable , getFiles:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
@@ -2334,7 +2334,7 @@ function _list(x, y, w, h) {
 				} else if (pls.path.length) {
 					handleList = this.plsCache.get(pls.path);
 					if (!handleList) {
-						handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false});
+						handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
 						this.plsCache.set(pls.path, handleList);
 					}
 				}
@@ -2379,7 +2379,7 @@ function _list(x, y, w, h) {
 				};
 			}
 			const found = [...this.dataAll].filter((pls) => {
-				if (this.searchMethod.bQuery && bIsQuery) {	return match(pls); } // Breaks here
+				if (this.searchMethod.bQuery && bIsQuery) { return match(pls); } // Breaks here
 				if (this.searchMethod.bName && match(pls.name)) { return true; }
 				else if (this.searchMethod.bTags && match(pls.tags)) { return true; } // NOSONAR [explicit branches]
 				else if (this.searchMethod.bCategory && match(pls.category)) { return true; } // NOSONAR [explicit branches]
@@ -2402,7 +2402,7 @@ function _list(x, y, w, h) {
 				if (this.searchMethod.bMetaTracks && this.searchMethod.meta.length) {
 					const handleList = getHandleList(pls);
 					const tags = handleList
-						? getTagsValuesV4(handleList, this.searchMethod.meta).flat(Infinity).filter(Boolean)
+						? getHandleListTagsV2(handleList, this.searchMethod.meta).flat(Infinity).filter(Boolean)
 						: null;
 					if (tags && match(tags)) { return true; }
 				}
@@ -2749,7 +2749,7 @@ function _list(x, y, w, h) {
 	this.plsNameFromSelection = (idx) => {
 		const selItems = plman.GetPlaylistSelectedItems(idx);
 		if (selItems && selItems.Count > 0) {
-			const tags = getTagsValuesV4(selItems, ['ALBUM ARTIST', 'ALBUM']);
+			const tags = getHandleListTagsV2(selItems, ['ALBUM ARTIST', 'ALBUM']);
 			const [artists, albums] = tags;
 			let [bMultAlbums] = [false];
 			let artistName = artists[0][0];
@@ -2970,7 +2970,7 @@ function _list(x, y, w, h) {
 						value = value.map((_) => { return _.trim(); });
 					} else { value = [expression]; } // Strings, etc.
 					if (value) { // Append to current tags
-						const currVal = getTagsValues(newHandles[i], [name], true);
+						const currVal = getHandleTags(newHandles[i], [name], { bMerged: true });
 						if (currVal && currVal.length) {
 							let newVal = currVal;
 							if (bFunc) {
@@ -3098,7 +3098,7 @@ function _list(x, y, w, h) {
 				const remDupl = this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 				this.dataXsp.forEach((plsXsp) => {
 					if (plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId)) {
-						const { handlePlaylist } = getHandlesFromPlaylist({playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog: false});
+						const { handlePlaylist } = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog: false });
 						if (!handlePlaylist) { return; }
 						const duplicated = getPlaylistIndexArray(plsXsp.nameId);
 						if (duplicated.length === 1) {
@@ -5386,7 +5386,7 @@ function _list(x, y, w, h) {
 				// But it will fail as soon as any track is not found on library
 				// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 				const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-				handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog});
+				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
 				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
 			} else {
 				console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
@@ -6480,7 +6480,7 @@ function cachePlaylist(pls) {
 	if (pls.isAutoPlaylist) {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true);
 	} else if (pls.path.length) {
-		handleList = getHandlesFromPlaylist({playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false});
+		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
 		this.plsCache.set(pls.path, handleList);
 	}
 	return handleList;

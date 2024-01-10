@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/24
+//10/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -30,7 +30,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 /* global XSPF:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global checkQuery:readable, stripSort:readable, getTagsValuesV4:readable, checkSort:readable */
+/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -591,7 +591,7 @@ function createMenuLeft(forcedIndex = -1) {
 												handleArr.forEach((handle, i) => {
 													if (!handle) { return; }
 													const relPath = '';
-													const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+													const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
 													const title = tags[0][0][0];
 													const creator = tags[1][0].join(', ');
 													const album = tags[2][0][0];
@@ -1582,7 +1582,7 @@ function createMenuRight() {
 										handleArr.forEach((handle, i) => {
 											if (!handle) { return; }
 											const relPath = '';
-											const tags = getTagsValuesV4(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+											const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
 											const title = tags[0][0][0];
 											const creator = tags[1][0].join(', ');
 											const album = tags[2][0][0];

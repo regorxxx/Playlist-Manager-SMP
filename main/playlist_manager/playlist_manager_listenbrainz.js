@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/01/24
+//10/01/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -14,7 +14,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable, savePlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getTagsValuesV3:readable, getTagsValuesV4:readable, sanitizeTagIds:readable, sanitizeQueryVal:readable, checkQuery:readable, sanitizeQueryVal:readable, sanitizeTagValIds:readable */
+/* global getHandleListTags:readable, getHandleListTagsV2:readable, sanitizeTagIds:readable, sanitizeQueryVal:readable, checkQuery:readable, sanitizeQueryVal:readable, sanitizeTagValIds:readable */
 include('..\\..\\helpers\\helpers_xxx_web.js');
 /* global send:readable, paginatedFetch:readable */
 include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
@@ -52,7 +52,7 @@ const listenBrainz = {
 	Helpers
 */
 listenBrainz.getMBIDs = async function getMBIDs(handleList, token, bLookupMBIDs = true) {
-	const tags = getTagsValuesV3(handleList, ['MUSICBRAINZ_TRACKID'], true).flat();
+	const tags = getHandleListTags(handleList, ['MUSICBRAINZ_TRACKID'], { bMerged: true }).flat();
 	// Try to retrieve missing MBIDs
 	const missingIds = tags.multiIndexOf('');
 	const missingCount = missingIds.length;
@@ -110,7 +110,7 @@ listenBrainz.lookupArtistMBIDsByName = async function lookupArtistMBIDsByName(na
 };
 
 listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, bLookupMBIDs = true, bAlbumArtist = true, bRetry = true) {
-	const tags = getTagsValuesV3(handleList, [bAlbumArtist ? 'MUSICBRAINZ_ALBUMARTISTID' : 'MUSICBRAINZ_ARTISTID'], true).flat();
+	const tags = getHandleListTags(handleList, [bAlbumArtist ? 'MUSICBRAINZ_ALBUMARTISTID' : 'MUSICBRAINZ_ARTISTID'], { bMerged: true }).flat();
 	// Try to retrieve missing MBIDs
 	const missingIds = tags.multiIndexOf('');
 	const missingCount = missingIds.length;
@@ -208,7 +208,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
 	const handleList = !bUI
-		? getHandlesFromPlaylist({playlistPath: pls.path, relPath: root, bOmitNotFound: true})
+		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
 	const missingCount = handleList.Count - mbid.length;
@@ -261,7 +261,7 @@ listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, pla
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
 	const handleList = !bUI
-		? getHandlesFromPlaylist({playlistPath: pls.path, relPath: root, bOmitNotFound: true})
+		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	return send({
 		method: 'POST',
@@ -610,7 +610,7 @@ listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*
 listenBrainz.lookupTracks = function lookupTracks(handleList, token) {
 	const count = handleList.Count;
 	if (!handleList.Count) { console.log('lookupTracks: no tracks provided'); return Promise.resolve([]); }
-	const [artist, title] = getTagsValuesV4(handleList, ['ARTIST', 'TITLE']);
+	const [artist, title] = getHandleListTagsV2(handleList, ['ARTIST', 'TITLE']);
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
