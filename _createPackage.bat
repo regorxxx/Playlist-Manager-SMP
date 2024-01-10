@@ -344,7 +344,6 @@ CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
 CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
-CALL :copy_file helpers\helpers_xxx_cache_volatile.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
