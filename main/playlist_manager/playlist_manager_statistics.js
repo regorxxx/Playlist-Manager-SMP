@@ -1,14 +1,15 @@
 ﻿'use strict';
-//27/12/23
+//11/01/24
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, isArray:readable,  */
+/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, isArray:readable, _b:readable, MF_STRING: readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
-
+include('..\\..\\helpers\\helpers_xxx_input.js');
+/* global Input:readable */
 
 function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	const parent = this;
@@ -85,7 +86,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						}
 						else { this.changeConfig({ [key]: option.newValue }); }
 						if (postFunc) { postFunc(option); }
-					}
+					},
+					flags: Object.hasOwn(option, 'flags') ? option.flags : MF_STRING
 				});
 				if (bCheck) {
 					menu.newCheckMenu(menuName, option.entryText, void (0), () => {
@@ -95,7 +97,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 								: this[key][subKey]
 							: this[key];
 						if (key === 'dataManipulation' && subKey === 'sort' && option.newValue === this.convertSortLabel(this.sortKey)) { return true; }
-						if ((key === 'data' || key === 'dataAsync') && option.args.data.source === parent.source && option.args.data.arg === parent.arg) { return true; }
+						if ((key === 'data' || key === 'dataAsync') && Object.keys(option.args[key]).every((val) => parent[val] === option.args[key][val])) { return true; }
 						if (option.newValue && typeof option.newValue === 'function') { return !!(val && val.name === option.newValue.name); }
 						if (option.newValue && typeof option.newValue === 'object') {
 							if (Array.isArray(val)) {
@@ -128,7 +130,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						if (!keys.has(key)) { delete config[key]; }
 					});
 					config.dataManipulation.sort = this.exportSortLabel();
-					config.data = { source: parent.source.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
+					config.data = { source: parent.source.toLowerCase(), sourceArg: parent.sourceArg, option: parent.option.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
 					list.properties['statsConfig'][1] = JSON.stringify(config);
 					overwriteProperties(list.properties);
 				}
@@ -148,35 +150,38 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			[
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'Extension', args: { axis: 'Ext', data: { source: 'property', arg: 'extension' } }
+					entryText: 'Extension', args: { axis: 'Ext', data: { option: 'property', arg: 'extension' } },
+					flags: parent.source === 'autoplaylists' || parent.source === 'ui' ? MF_GRAYED : MF_STRING
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'Type', args: { axis: 'Type', data: { source: 'property', arg: 'query' } }
+					entryText: 'Type', args: { axis: 'Type', data: { option: 'property', arg: 'query' } },
+					flags: parent.source !== 'all' && parent.source !== 'playlists' ? MF_GRAYED : MF_STRING
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'Categories', args: { axis: 'Category', data: { source: 'property', arg: 'category' } }
+					entryText: 'Categories', args: { axis: 'Category', data: { option: 'property', arg: 'category' } }
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'Tags', args: { axis: 'Tag', data: { source: 'property', arg: 'tags' } }
+					entryText: 'Tags', args: { axis: 'Tag', data: { option: 'property', arg: 'tags' } }
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'Folders', args: { axis: 'Type', data: { source: 'property', arg: 'isFolder' } }
+					entryText: 'Folders', args: { axis: 'Type', data: { option: 'property', arg: 'isFolder' } },
+					flags: parent.source !== 'all' && parent.source !== 'playlists' ? MF_GRAYED : MF_STRING
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'MBID', args: { axis: 'MBID', data: { source: 'property', arg: 'playlist_mbid' } }
+					entryText: 'MBID', args: { axis: 'MBID', data: { option: 'property', arg: 'playlist_mbid' } }
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
-					entryText: 'Size', args: { axis: 'Size', data: { source: 'property', arg: 'size' } }
+					entryText: 'Size', args: { axis: 'Size', data: { option: 'property', arg: 'size' } }
 				},
 			].forEach(createMenuOption('data', null, subMenu, true, (option) => {
-				option.newValue = Array(1).fill(...parent.getData(option.args.data.source, option.args.data.arg));
-				[parent.source, parent.arg] = [option.args.data.source, option.args.data.arg];
+				option.newValue = Array(1).fill(...parent.getData({ source: parent.source, sourceArg: parent.sourceArg, option: option.args.data.option, arg: option.args.data.arg }));
+				[parent.option, parent.arg] = [option.args.data.option, option.args.data.arg];
 				this.changeConfig(
 					{
 						axis: {
@@ -185,6 +190,51 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						title: window.Name + ' - ' + this.axis.y.key + ' per ' + option.entryText
 					}
 				);
+			}));
+		}
+		menu.newEntry({ entryText: 'sep' });
+		{
+			const subMenu = menu.newMenu('Data source...');
+			menu.newEntry({ menuName: subMenu, entryText: 'Select source for playlists:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+			[
+				{
+					isEq: null, key: this.data, value: null, newValue: null,
+					entryText: 'All', args: { data: { source: 'all' } }
+				},
+				{
+					isEq: null, key: this.data, value: null, newValue: null,
+					entryText: 'Playlist files', args: { data: { source: 'files' } },
+					flags: list.bLiteMode ? MF_GRAYED : MF_STRING
+				},
+				{
+					isEq: null, key: this.data, value: null, newValue: null,
+					entryText: 'AutoPlaylists', args: { data: { source: 'autoplaylists' } },
+					flags: list.itemsAutoplaylist === 0 ? MF_GRAYED : MF_STRING
+				},
+				{
+					isEq: null, key: this.data, value: null, newValue: null,
+					entryText: 'UI-Only playlists', args: { data: { source: 'ui' } },
+					flags: list.dataUI.length === 0 ? MF_GRAYED : MF_STRING
+				},
+				{
+					isEq: null, key: this.data, value: null, newValue: null,
+					entryText: 'Selected playlist(s)...' +
+						(parent.source === 'playlists' ? '\t' + _b((parent.sourceArg || []).length) : ''),
+					args: { data: { source: 'playlists', sourceArg: parent.source === 'playlists' ? parent.sourceArg : null } }
+				}
+			].forEach(createMenuOption('data', null, subMenu, true, (option) => {
+				if (Object.hasOwn(option.args.data, 'sourceArg')) {
+					if (option.args.data.sourceArg === null) {
+						const input = Input.string('string', parent.sourceArg || '', 'Enter playlist name(s):\n(separated by ;)', window.Name, 'My Playlist;Other Playlist', void (0), true) || Input.lastInput;
+						if (input === null) { return; }
+						parent.sourceArg = input.split(';');
+					} else {
+						parent.sourceArg = option.args.data.sourceArg;
+					}
+				}
+				option.newValue = Array(1).fill(...parent.getData({ source: option.args.data.source, sourceArg: parent.sourceArg, option: parent.option, arg: parent.arg }));
+				parent.source = option.args.data.source;
 			}));
 		}
 		menu.newEntry({ entryText: 'sep' });
@@ -204,7 +254,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						if (!keys.has(key)) { delete config[key]; }
 					});
 					config.dataManipulation.sort = this.exportSortLabel();
-					config.data = { source: parent.source.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
+					config.data = { option: parent.option.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
 					list.properties['statsConfig'][1] = JSON.stringify(config);
 					overwriteProperties(list.properties);
 				}
@@ -445,12 +495,34 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		list.filter(filters.reduce((acc, curr) => { return { ...acc, ...curr }; }, {}));
 	};
 
-	this.getData = (source = 'property', arg = 'extension') => {
+	this.getData = ({ source = 'all', sourceArg = null, option = 'property', arg = 'extension' } = {}) => {
 		let data = [];
-		switch (source) { // NOSONAR
+		let dataSource;
+		switch (source.toLowerCase()) {
+			case 'files':
+				dataSource = list.dataAll.filter((pls) => pls.extension !== '.ui' && !pls.isAutoPlaylist);
+				break;
+			case 'autoplaylists':
+				dataSource = list.dataAutoPlaylists;
+				break;
+			case 'ui':
+				dataSource = list.dataUI;
+				break;
+			case 'playlists': // NOSONAR [fallthrough]
+				if (sourceArg) {
+					sourceArg = new Set(sourceArg.map((name) => name.toString().toLowerCase()));
+					dataSource = list.dataAll.filter((pls) => sourceArg.has(pls.name.toLowerCase()));
+					break;
+				} else { console.popup('Playlists names have not been set while using \'Selected playlists\' as source.', 'Playlist Manager: source error'); }
+			case 'all': // eslint-disable-line no-fallthrough
+			default:
+				dataSource = list.dataAll;
+				break;
+		}
+		switch (option.toLowerCase()) { // NOSONAR
 			case 'property': {
 				const count = new Map();
-				list.dataAll.forEach((pls) => {
+				dataSource.forEach((pls) => {
 					let val = '';
 					switch (arg) {
 						case 'isFolder': val = pls[arg] ? 'Folder' : 'Playlist'; break;
@@ -519,8 +591,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			tooltipText: function (point, serie, mask) { return '\n\n(L. click to filter list by ' + this.axis.x.key + ')'; }, // eslint-disable-line no-unused-vars
 			callbacks: {
 				point: { onLbtnUp: parent.onLbtnUpPoint },
-				settings: { onLbtnUp: function (x, y, mask) { parent.onLbtnUpSettings.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars
-				display: { onLbtnUp: function (x, y, mask) { parent.onLbtnUpDisplay.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars
+				settings: { onLbtnUp: function (x, y, mask) { return parent.onLbtnUpSettings.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars
+				display: { onLbtnUp: function (x, y, mask) { return parent.onLbtnUpDisplay.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars
 				custom: { onLbtnUp: parent.exit, tooltip: 'Exit statistics mode...' },
 				config: {
 					backgroundColor: () => [panel.getColorBackground()]
@@ -538,7 +610,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			[ // Row
 				{
 					...config,
-					data: Array(1).fill(...this.getData(this.source, this.arg))
+					data: Array(1).fill(...this.getData({ source: this.source, sourceArg: this.sourceArg, option: this.option, arg: this.arg }))
 				},
 			]
 		];
@@ -567,7 +639,9 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	};
 
 	this.bEnabled = bEnabled;
-	this.source = config && config.data ? config.data.source.toLowerCase() : 'property';
-	this.arg = config && config.data ? config.data.arg : 'extension';
+	this.source = config && config.data ? (config.data.source || 'all').toLowerCase() : 'all';
+	this.sourceArg = config && config.data ? config.data.sourceArg || null : null;
+	this.option = config && config.data ? (config.data.option || 'property').toLowerCase() : 'property';
+	this.arg = (config && config.data ? config.data.arg : '') || 'extension';
 	if (this.bEnabled) { this.init(); }
 }
