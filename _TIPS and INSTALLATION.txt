@@ -13,6 +13,9 @@ https://theqwertiest.github.io/foo_spider_monkey_panel/docs/wine/
 
 INSTALLATION: 
 -------------
+If the script is provided as package file, use the SMP package manager to install it. Look
+at the wiki for a guide. Otherwise, to install as file follow these steps:
+
 Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts
 If there is no such path, create all the required folders and subfolders on it.
 Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg) (*)
@@ -79,6 +82,8 @@ recommended to add 'js_data' and 'playlist_manager' folders at
 'js_data' contains config json data for most of these scripts, while 'playlist_manager' folder is the 
 default folder to save playlists files for the playlist manager (*).
 
+Note the same tip applies if using the SMP script replacement Autobackup-SMP: https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/autobackup-smp/
+
 (*) When the default path is changed or when using multiple playlist manager panels (and thus different
 paths), don't forget to add them to Autosave config too. There is a limit though, paths outside the 
 profile folder can not be autosaved by the component. That happens when tracking a playlist folder at 
@@ -110,11 +115,11 @@ Camelot Wheel notation with colors).
 
 INFO: 
 -----
-This is general info for all the scripts. Within all files you will find 4 [+] big scripts (Playlist
-Manager, Search By Distance, World Map and Playlist Tools). And a collection of small utilities and/or
-buttons (quicksearch, top tracks, remove duplicates, device priority, etc.). 
-All files have extensive comments and descriptions at the header and all along the code, so you can 
-check specific info about what everything does in its own file.
+This is general info for all the scripts. Within all files you will find 6 [+] big scripts: Playlist
+Manager, Timeline, World Map, Not a Waveform Seekbar, Search by Distance (button) and Playlist Tools
+(button). And a collection of other small utilities and/or buttons (quicksearch, top tracks, 
+duplicates, device priority, etc.). All files have extensive comments and descriptions at the header
+and all along the code, so you can check specific info about what everything does in its own file.
 
 Every script has a github page with images, descriptions, etc. and updates must be get from there.
 
@@ -127,15 +132,25 @@ The root folder (with this readme) contains these scripts which can be loaded in
 	+ world_map.js [+]
 		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/world-map-smp/
 		- May be used along Biography 1.1.X or 1.2.X+
+		- Requires some fonts.
+			- _resources\fontawesome-webfont.ttf
 		- A pre-built artist-country database is provided: 
-			_resources\worldMap.json
+			presets\World Map\worldMap.json\worldMap.json
+	+ timeline.js [+]
+		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/timeline-smp/
+		- Requires some fonts.
+			- _resources\fontawesome-webfont.ttf
+	+ seekbar.js [+]
+		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/not-a-waveform-seekbar-smp/
 	+ buttons_toolbar.js [+]
 		- Compatible with:
 			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-tools-smp/ [+]
 			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/search-by-distance-smp/ [+]
 			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/device-priority-smp/
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/autobackup-smp/
 			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/listenbrainz-smp/
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/auto-dj-smp/
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/lastfm-smp/
+			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/fingerprint-tools-smp/
 		- Toolbar with fully configurable buttons using menus.
 		- May use any of the buttons \ tools listed below. Missing buttons are skipped.
 		- Every button and tool has a readme which will be shown when you add them.
@@ -154,11 +169,13 @@ The buttons folder (the one named 'buttons') contains buttons to be loaded by th
 			- .\buttons\buttons_playlist_tools_macro_custom.js
 			- .\buttons\buttons_playlist_tools_macros.js
 			- .\buttons\buttons_playlist_tools_pool.js
+			- .\buttons\buttons_playlist_tools_submenu_custom.js.js
 	+ Search by Distance:
 		- .\buttons\buttons_search_by_distance_customizable.js (configurable with menus)
 		- .\buttons\buttons_search_by_distance.js
+		- .\buttons\buttons_search_by_distance_info.js
 	+ Playlist manipulation:
-		- .\buttons\buttons_remove_duplicates.js
+		- .\buttons\buttons_playlist_remove_duplicates.js
 		- .\buttons\buttons_playlist_filter.js
 		- .\buttons\buttons_playlist_show_duplicates.js
 		- .\buttons\buttons_playlist_history.js
@@ -171,16 +188,22 @@ The buttons folder (the one named 'buttons') contains buttons to be loaded by th
 		- .\buttons\buttons_search_by_tags_combinations.js
 		- .\buttons\buttons_search_by_tags_queries.js
 		- .\buttons\buttons_search_quicksearch.js
+		- .\buttons\buttons_search_quickmatch.js
 	+ Fingerprinting:
 		- .\buttons\buttons_fingerprint_tools.js
-	+ Auto-DJ:
-		- .\buttons\buttons_others_auto_dj.js
 	+ ListenBrainz:
 		- .\buttons\buttons_listenbrainz_tools.js
+	+ Last.fm:
+		- .\buttons\buttons_lastfm_tools.js
 	+ Tagging:
 		- .\buttons\buttons_tags_automation.js
+		- .\buttons\buttons_tags_save_tags.js
+	+ Autobackup:
+		- .\buttons\buttons_others_autobackup.js
+	+ Macros:
+		- .\buttons\buttons_others_main_menu.js
 
-These buttons may be loaded as standalone scripts, and they should work, but such configuration
+These buttons may be loaded as standalone scripts without problems but such configuration
 is not supported. Only loading them via the toolbar script. The buttons folder contains multiple
 example files in case anyone wants to create their own buttons using the existing framework.
 
