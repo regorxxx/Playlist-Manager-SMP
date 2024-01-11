@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/24
+//11/01/24
 
 /* exported _chart */
 
@@ -976,10 +976,10 @@ function _chart({
 					pointX.push(point.c.x + Math.cos(pointRegions[1]) * r);
 					pointY.push(point.c.y + Math.sin(pointRegions[1]) * r);
 				}
-				size.x = Math.min.apply(Math, pointX);
-				size.y = Math.min.apply(Math, pointY);
-				size.w = Math.max.apply(Math, pointX) - size.x;
-				size.h = Math.max.apply(Math, pointY) - size.y;
+				size.x = Math.min(...pointX);
+				size.y = Math.min(...pointY);
+				size.w = Math.max(...pointX) - size.x;
+				size.h = Math.max(...pointY) - size.y;
 				bWithOffset = false;
 				break;
 			}
