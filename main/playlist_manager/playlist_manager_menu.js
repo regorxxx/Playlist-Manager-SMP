@@ -129,8 +129,8 @@ function createMenuLeft(forcedIndex = -1) {
 						list.loadPlaylist(z);
 					}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING
 				});
-				// Show binded playlist
-				menu.newEntry({ entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show binded playlist' : (bIsPlsLoaded ? 'Show binded playlist (active playlist)' : 'Show binded playlist (not loaded)'), func: () => { list.showBindedPlaylist(z); }, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED });
+				// Show bound playlist
+				menu.newEntry({ entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show bound playlist' : (bIsPlsLoaded ? 'Show bound playlist (active playlist)' : 'Show bound playlist (not loaded)'), func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED });
 				// Contextual menu
 				if (bIsPlsLoaded && showMenus['Playlist\'s items menu']) {
 					menu.newMenu('Items...', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
@@ -225,7 +225,7 @@ function createMenuLeft(forcedIndex = -1) {
 					});
 				}
 			} else if (!list.bLiteMode) {
-				// Updates playlist file with any new changes on the playlist binded within foobar2000
+				// Updates playlist file with any new changes on the playlist bound within foobar2000
 				menu.newEntry({
 					entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
 						if (_isFile(pls.path)) {
@@ -244,16 +244,16 @@ function createMenuLeft(forcedIndex = -1) {
 						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
 					}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED
 				});
-				// Updates active playlist name to the name set on the playlist file so they get binded and saves playlist content to the file.
+				// Updates active playlist name to the name set on the playlist file so they get bound and saves playlist content to the file.
 				menu.newEntry({
-					entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already binded to active playlist', func: () => {
+					entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already bound to active playlist', func: () => {
 						if (_isFile(pls.path)) {
 							const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 							const newNameId = pls.nameId;
 							const newName = pls.name;
 							const duplicated = plman.FindPlaylist(newNameId);
 							if (duplicated !== -1) {
-								fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 binded to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already binded playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+								fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
 							} else {
 								list.updatePlman(newNameId, oldNameId);
 								const bDone = list.updatePlaylist({ playlistIndex: z });
@@ -778,6 +778,9 @@ function createMenuLeft(forcedIndex = -1) {
 						else { _explorer(_isFile(pls.path) ? pls.path : list.playlistsPath); } // Open playlist path
 					}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED
 				});
+			} else if (bIsPlsUI || list.bLiteMode) {
+				menu.newEntry({ entryText: 'sep' });
+				menu.newEntry({ entryText: 'Delete', func: () => { list.removePlaylist(z); } });
 			}
 		}
 	}

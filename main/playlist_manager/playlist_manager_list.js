@@ -5342,7 +5342,7 @@ function _list(x, y, w, h) {
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
 			const duplicated = getPlaylistIndexArray(pls.nameId);
 			if (duplicated.length === 0) { this.loadPlaylist(idx, bAlsoHidden); }
-			else if (duplicated.length === 1) { this.showBindedPlaylist(idx, bAlsoHidden); }
+			else if (duplicated.length === 1) { this.showBoundPlaylist(idx, bAlsoHidden); }
 			else if (duplicated.length > 1 && pls.extension === '.ui') { // Cycle through all playlist with same name
 				let i = 0;
 				const ap = plman.ActivePlaylist;
@@ -5490,9 +5490,9 @@ function _list(x, y, w, h) {
 			return handleList || new FbMetadbHandleList();
 		};
 
-		this.showBindedPlaylist = (idx, bAlsoHidden = false) => {
+		this.showBoundPlaylist = (idx, bAlsoHidden = false) => {
 			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error showing playlist. Index ' + _p(idx) + ' out of bounds. (showBindedPlaylist)');
+				console.log('Playlist Manager: Error showing playlist. Index ' + _p(idx) + ' out of bounds. (showBoundPlaylist)');
 				return false;
 			}
 			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
