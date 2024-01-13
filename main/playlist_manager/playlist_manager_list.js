@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/24
+//13/01/24
 
 /* exported _list */
 
@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable , compareObjects:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -610,9 +610,12 @@ function _list(x, y, w, h) {
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
 						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
-						if (this.searchMethod.text.length && !this.searchMethod.bResetStartup) {
-							this.searchInput.text = this.searchMethod.text;
-							this.search();
+						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
+							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
+							if (this.searchMethod.text.length) {
+								this.searchInput.text = this.searchMethod.text;
+								this.search();
+							}
 						}
 						this.searchInput.autoValidation = this.searchMethod.bAutoSearch;
 					}
@@ -2312,7 +2315,15 @@ function _list(x, y, w, h) {
 			});
 	};
 
+	this.validateSearch = (str = this.searchInput ? this.searchInput.text : '') => {
+		if (!isStringWeak(str)) {
+			console.popup('Search term is not a string:\n' + JSON.stringify(str), 'Playlist Manager: search');
+			try {str = str.toString();} catch (e) {str = '';}
+		}
+		return str;
+	};
 	this.search = (bFilter = true, str = this.searchInput ? this.searchInput.text : '') => {
+		str = this.validateSearch(str);
 		if (this.searchInput.text.length && this.searchHistory.indexOf(this.searchInput.text) === -1) { this.searchHistory.push(this.searchInput.text); }
 		if (this.searchHistory.length > 10) { this.searchHistory.splice(10, Infinity); }
 		this.searchMethod.text = this.searchMethod.bResetStartup ? '' : str;
@@ -5650,6 +5661,11 @@ function _list(x, y, w, h) {
 				this.searchInput.backColor = panel.getColorBackground();
 				this.searchInput.borderColor = panel.getColorBackground();
 				this.searchInput.backSelectionColor = this.colors.selectedPlaylistColor;
+			}
+			if (typeof this.searchMethod.text === 'undefined' || this.searchMethod.text === null) {
+				this.searchMethod.text = '';
+				this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
+				bDone = true;
 			}
 			// Check Shortcuts
 			[

@@ -69,6 +69,7 @@
 ### Changed
 - Importing JSON: importing logic has been rewritten to be more robust. If an existing playlist has the same name than one imported, a popup will ask to overwrite or omit it. In case extensions differ, will show an error (since they are probably not the same playlist). Overwriting a playlist involves replacing the old metadata with the new one, which in the case of AutoPlaylists means the query is replaced (plus other data), but for other playlists formats, things like tags, categories, etc. are also transferred. Items will also be compared before overwriting, so in case there is no changes (filtering on-init properties like folders being opened or not), they will skipped.
 - Importing JSON: suggested JSON file path is now automatically retrieved from clipboard (instead of being empty).
+- Search: added validity checks to input to avoid crashes or errors.
 - AutoPlaylists: added checks to sorting inputs to ensure they are valid expressions.
 - AutoPlaylists: AutoPlaylists created via native foobar2000, instead of the manager, are now flagged as 'AutoPlaylist (UI)' when opening their contextual menu at the manager, as an indication of playlist being an UI-only playlist. Some menu entries also show a warning about cloning needed to fully integrate them.
 - AutoPlaylists: cloning an AutoPlaylist created via native foobar2000, instead of the manager, also opens the AutoPlaylists properties now to easily copy the query and sort patterns.
