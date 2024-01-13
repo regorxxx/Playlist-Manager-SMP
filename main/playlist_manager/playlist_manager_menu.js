@@ -1695,7 +1695,7 @@ function createMenuRight() {
 					});
 				});
 			}
-			if (bItems) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+			if (bItems && !menu.isLastEntry('sep')) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
 			if (plman.PlaylistRecycler.Count > 0) {
 				const deletedItems = [];
 				for (let i = 0; i < plman.PlaylistRecycler.Count; i++) { deletedItems.push(plman.PlaylistRecycler.GetName(i)); }
