@@ -118,7 +118,7 @@ function createMenuLeft(forcedIndex = -1) {
 		{	// Load
 			{	// Load
 				// Load playlist within foobar2000. Only 1 instance allowed
-				!list.bLiteMode && menu.newEntry({
+				(!list.bLiteMode || pls.isAutoPlaylist) && menu.newEntry({
 					entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {
 						if (pls.isAutoPlaylist) {
 							const idx = getPlaylistIndexArray(pls.nameId);
