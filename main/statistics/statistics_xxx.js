@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/01/24
+//12/01/24
 
 /* exported _chart */
 
@@ -256,9 +256,9 @@ function _chart({
 			circleArr.push(c.x + iX, c.y + iY);
 		}
 		if (this.background.color !== null || this.configuration.bDynColor && this.callbacks.config.backgroundColor) {
-			const bgColor = this.configuration.bDynColor && this.callbacks.config.backgroundColor
+			const bgColor = this.configuration.bDynColor && !!this.callbacks.config.backgroundColor
 				? this.configuration.bDynColorBW
-					? invert(this.callbacks.config.backgroundColor()[0], true)
+					? Chroma(invert(this.callbacks.config.backgroundColor()[0], true)).alpha(0.3).android()
 					: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
 				: this.background.color;
 			gr.FillPolygon(bgColor, 0, circleArr);
@@ -969,12 +969,15 @@ function _chart({
 					point.c.y + Math.sin(point.alpha1) * point.r1
 				];
 				const regions = [0, Math.PI / 2, Math.PI, Math.PI * 3 / 2, Math.PI * 2];
-				const getRegion = (angle) => regions.find((region) => region < angle && region + Math.PI / 2 > angle);
-				const pointRegions = [point.alpha1, point.alpha2].map(getRegion);
-				const bSameRegion = (new Set(pointRegions)).size === 1;
-				if (!bSameRegion) {
-					pointX.push(point.c.x + Math.cos(pointRegions[1]) * r);
-					pointY.push(point.c.y + Math.sin(pointRegions[1]) * r);
+				const pointRegions = [point.alpha1, point.alpha2]
+					.map((angle) => regions.find((region) => region < angle && region + Math.PI / 2 > angle));
+				if ((new Set(pointRegions)).size !== 1) { // Not in same region
+					regions.forEach((angle) => {
+						if (angle >= pointRegions[0] && angle <= pointRegions[1]) {
+							pointX.push(point.c.x + Math.cos(angle) * r);
+							pointY.push(point.c.y + Math.sin(angle) * r);
+						}
+					});
 				}
 				size.x = Math.min(...pointX);
 				size.y = Math.min(...pointY);
