@@ -5570,7 +5570,11 @@ function _list(x, y, w, h) {
 			clearInterval(delay);
 			if (duplicated !== -1) {
 				if (!currentLocks.includes('RemovePlaylist')) {
-					const answer = bUI ? popup.yes : WshShell.Popup('Delete also the playlist loaded within foobar2000?', 0, window.Name, popup.question + popup.yes_no);
+					const answer = bUI || this.properties['deleteBehavior'][1] === 1
+						? popup.yes
+						: this.properties['deleteBehavior'][1] === 2
+							? popup.no
+							: WshShell.Popup('Delete also the playlist loaded within foobar2000?', 0, window.Name, popup.question + popup.yes_no);
 					if (answer === popup.yes) {
 						plman.RemovePlaylistSwitch(duplicated);
 					}

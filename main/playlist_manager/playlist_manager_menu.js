@@ -2712,6 +2712,26 @@ function createMenuRightTop() {
 				});
 			}
 		}
+		{	// FIle deletion
+			menu.newEntry({ menuName, entryText: 'sep' });
+			{
+				const subMenuName = menu.newMenu('Playlist deletion..', menuName);
+				menu.newEntry({ menuName: subMenuName, entryText: 'Bound UI-only playlist:', flags: MF_GRAYED });
+				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				const options = [
+					'Always ask with popups',
+					'Delete both (file and bound playlist)',
+					'Only delete the playlist file'
+				];
+				options.forEach((entryText, i) => {
+					menu.newEntry({ menuName: subMenuName, entryText, func: () => {
+						list.properties['deleteBehavior'][1] = i;
+						overwriteProperties(list.properties);
+					}});
+				});
+				menu.newCheckMenuLast(() => list.properties['deleteBehavior'][1], options.length);
+			}
+		}
 	}
 	menu.newEntry({ entryText: 'sep' });
 	{	// UI

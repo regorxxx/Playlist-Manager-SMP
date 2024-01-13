@@ -300,7 +300,8 @@ let properties = {
 	})],
 	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }, globSettings.bAutoUpdateCheck],
 	panelUUID: ['Panel UUID', UUID(), { func: isUUID }, UUID()],
-	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }, true]
+	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }, true],
+	deleteBehavior: ['Playlist file delete behavior', 0, { func: (n) => n >= 0 && n <= 2 }, 0],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
