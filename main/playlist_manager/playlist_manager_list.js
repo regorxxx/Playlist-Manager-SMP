@@ -5,7 +5,7 @@
 
 /* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, cloneAsStandardPls:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, cloneAsStandardPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, debouncedCacheLib:readable, buttonsPanel:readable, properties:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, _qCond:readable, capitalize:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -23,7 +23,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable */
+/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable , getFiles:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
@@ -2318,7 +2318,7 @@ function _list(x, y, w, h) {
 	this.validateSearch = (str = this.searchInput ? this.searchInput.text : '') => {
 		if (!isStringWeak(str)) {
 			console.popup('Search term is not a string:\n' + JSON.stringify(str), 'Playlist Manager: search');
-			try {str = str.toString();} catch (e) {str = '';}
+			try { str = str.toString(); } catch (e) { str = ''; }
 		}
 		return str;
 	};
@@ -2645,6 +2645,94 @@ function _list(x, y, w, h) {
 	};
 
 	// Drag n drop
+	this.on_drag_drop_external = (action, x, y, mask, idx) => {
+		if (idx !== -1) {
+			if (this.searchInput && (this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks) && this.searchInput.trackCheck(x, y)) {
+				const selItems = plman.GetPlaylistSelectedItems(idx);
+				if (selItems && selItems.Count) {
+					let search = '';
+					const trackSearch = (method) => {
+						if (method === 'bPath' && this.searchMethod.bPath) {
+							if (selItems.Count > 1 && this.searchMethod.bRegExp) {
+								const paths = selItems.GetLibraryRelativePaths()
+									.map((path) => path.split('\\').slice(-1)[0])
+									.filter(Boolean)
+									.map(escapeRegExpV2);
+								search = '/' + paths.join('|') + '/i';
+
+							} else {
+								search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
+							}
+							return true;
+						} else if (method === 'bQuery' && this.searchMethod.bQuery) {
+							const tags = getHandleListTags(selItems, [globTags.title, globTags.artistRaw]);
+							const trackQueries = tags.map((trackTags) => {
+								return queryJoin([
+									_qCond(globTags.title) + ' IS ' + sanitizeQueryVal(trackTags[0][0]),
+									globTags.artistRaw !== 'ARTIST'
+										? queryJoin([
+											queryCombinations(trackTags[1].map(s => s.toLowerCase()), globTags.artist, 'AND'),
+											queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
+										], 'OR')
+										: queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
+								], 'AND');
+							});
+							search = queryJoin(trackQueries, 'OR');
+							return true;
+						} else if (method === 'bMetaTracks' && this.searchMethod.bMetaTracks) {
+							if (selItems.Count > 1 && this.searchMethod.bRegExp) {
+								const tags = getHandleListTags(selItems, [globTags.titleRaw])
+									.flat(Infinity).filter(Boolean)
+									.map(escapeRegExpV2);
+								search = '/' + tags.join('|') + '/i';
+
+							} else {
+								search = getHandleTags(selItems[0], [globTags.titleRaw]).flat(Infinity).filter(Boolean)[0] || '';
+							}
+							return true;
+						}
+						return false;
+					};
+					this.searchMethod.dragDropPriority.some(trackSearch);
+					this.searchInput.text = search;
+					if (this.searchMethod.bAutoSearch) { this.search(); }
+				}
+			} else {
+				// Create new playlist when pressing alt
+				if ((mask & 32) === 32 || this.index === -1 || this.index >= this.items) {  // NOSONAR [structure]
+					const name = this.properties.bAutoSelTitle[1]
+						? this.plsNameFromSelection(idx)
+						: 'Selection from ' + plman.GetPlaylistName(idx).cut(10);
+					const toFolder = this.index !== -1 && this.data[this.index].isFolder
+						? this.data[this.index]
+						: null;
+					const pls = this.add({ bEmpty: true, name, bInputName: true, toFolder });
+					if (pls) {
+						const playlistIndex = this.getPlaylistsIdxByObj([pls])[0];
+						const newIdx = plman.ActivePlaylist;
+						plman.ActivePlaylist = idx;
+						// Remove track on move
+						const bSucess = this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: (mask - 32) !== MK_CONTROL });
+						if (bSucess) {
+							// Don't reload the list but just paint with changes to avoid jumps
+							plman.ActivePlaylist = newIdx;
+							this.showCurrPls();
+						}
+					}
+				} else { // Send to existing playlist
+					const cache = [this.offset, this.index];
+					// Remove track on move
+					const bSucess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: mask !== MK_CONTROL });
+					if (bSucess) {
+						// Don't reload the list but just paint with changes to avoid jumps
+						window.RepaintRect(0, this.y, window.Width, this.h);
+						[this.offset, this.index] = cache;
+					}
+				}
+			}
+		}
+	};
+
 	this.isFolderInView = () => {
 		return this.data.some((pls) => pls.isFolder);
 	};
@@ -3948,7 +4036,7 @@ function _list(x, y, w, h) {
 		const previousMethodState = this.methodState;
 		this.methodState = newMethod;
 		this.sortState = this.defaultSortState(this.methodState);
-		// Update properties to save between reloads, but property descriptions change according to list.methodState
+		// Update properties to save between reloads, but property descriptions change according to this.methodState
 		this.properties['methodState'][1] = this.methodState;
 		const removeProperties = { SortState: [this.properties['sortState'][0], null] }; // need to remove manually since we change the ID (description)!
 		this.properties['sortState'][0] = this.properties['sortState'][0].replace(Object.keys(this.sortMethods(false)[previousMethodState]).join(','), ''); // remove old keys
@@ -4380,11 +4468,11 @@ function _list(x, y, w, h) {
 		if (this.itemsFolder) {
 			if (!bReuseData) {
 				this.dataFolder.forEach((folder) => {
-					const list = new Set(folder.pls.map((subPls) => subPls.nameId + subPls.extension));
+					const itemList = new Set(folder.pls.map((subPls) => subPls.nameId + subPls.extension));
 					folder.pls = folder.pls.map((subPls) => { // Find matches by name and extension, filter duplicates or non found items
 						const id = subPls.nameId + subPls.extension;
-						if (list.has(id)) {
-							list.delete(id);
+						if (itemList.has(id)) {
+							itemList.delete(id);
 							const subItem = subPls.isFolder
 								? this.dataFolder.find((folder) => (folder.nameId === subPls.nameId))
 								: this.data.find((pls) => (pls.nameId === subPls.nameId && pls.extension === subPls.extension));
@@ -4652,11 +4740,11 @@ function _list(x, y, w, h) {
 				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI, ...this.dataFolder]);
 				const formatFolder = (pls) => {
 					if (Object.hasOwn(pls, 'pls')) {
-						const list = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
+						const itemList = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
 						pls.pls = pls.pls.map((subPls) => {
 							const id = subPls.nameId + subPls.extension;
-							if (list.has(id)) {
-								list.delete(id);
+							if (itemList.has(id)) {
+								itemList.delete(id);
 								if (subPls.isFolder) {
 									return {
 										nameId: subPls.nameId,
@@ -5667,13 +5755,23 @@ function _list(x, y, w, h) {
 				this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
 				bDone = true;
 			}
+			const dragDropPriority = ['bPath', 'bQuery', 'bMetaTracks'];
+			if (this.searchMethod.dragDropPriority) {
+				if (!Array.isArray(this.searchMethod.dragDropPriority) || !new Set(dragDropPriority).isEqual(new Set(this.searchMethod.dragDropPriority))) {
+					this.searchMethod.dragDropPriority = dragDropPriority;
+					bDone = true;
+				}
+			} else {
+				this.searchMethod.dragDropPriority = dragDropPriority;
+				bDone = true;
+			}
 			// Check Shortcuts
 			[
-				{pKey: 'lShortcuts', key: 'L', element: 'list'},
-				{pKey: 'rShortcuts', key: 'R', element: 'list'},
-				{pKey: 'mShortcuts', key: 'M', element: 'list'},
-				{pKey: 'lShortcutsHeader', key: 'L', element: 'header'},
-				{pKey: 'mShortcutsHeader', key: 'M', element: 'header'},
+				{ pKey: 'lShortcuts', key: 'L', element: 'list' },
+				{ pKey: 'rShortcuts', key: 'R', element: 'list' },
+				{ pKey: 'mShortcuts', key: 'M', element: 'list' },
+				{ pKey: 'lShortcutsHeader', key: 'L', element: 'header' },
+				{ pKey: 'mShortcutsHeader', key: 'M', element: 'header' },
 			].forEach((o) => {
 				const shortcuts = this.getDefaultShortcuts(o.key, o.element);
 				const shortcutsKeys = shortcuts.options.map((_) => { return _.key; });
@@ -6435,6 +6533,7 @@ function _list(x, y, w, h) {
 						'\n- Ctrl: copy selection to playlist / folder (recursive).' +
 						'\n- Alt: move selection to new playlist' +
 						'\n- Alt + Ctrl: copy selection to new playlist' +
+						(this.searchInput ? '\n- On Search Filter: search tracks within playlists (path/query/tags).' : '') +
 						'\n' +
 						'\nDrag n\' drop (internal):' +
 						'\n-------------------' +
@@ -6449,6 +6548,17 @@ function _list(x, y, w, h) {
 						'\n-------------------' +
 						'\nRight click on buttons allow to switch current filters and sorting.' +
 						'\n' +
+						(this.searchInput
+							? '\nSearch Filter:' +
+							'\n-------------------' +
+							'\nRight Left click on buttons allow to configure the search.' +
+							'\nTracks drag n\' drop will search playlists by (priority configurable):' +
+							this.searchMethod.dragDropPriority
+								.map((method, i) => '\n\t' + (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')))
+								.join('') +
+							'\n'
+							: ''
+						) +
 						'\nList view shortcuts:' +
 						'\n-------------------' +
 						'\n- Up / Down: scroll down / up.' +

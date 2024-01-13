@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/24
+//13/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -752,7 +752,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-					if (!options.length) {menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED });}
+					if (!options.length) { menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED }); }
 					options.forEach((opt, i) => {
 						if (i && i % 5 === 0) {
 							menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
@@ -942,7 +942,7 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 			.map((f) => Object.fromEntries([['name', f.nameId], ['folder', f]]));
-		if (!options.length) {menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED });}
+		if (!options.length) { menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED }); }
 		options.forEach((opt, i) => {
 			if (i && i % 5 === 0) {
 				menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
@@ -4269,7 +4269,7 @@ function createMenuSearch() {
 					entryText: text.length > 20 ? text.substring(0, 20) + '...' : text, func: () => {
 						list.searchCurrent = list.searchInput.text = text;
 						window.Repaint();
-						this.search();
+						list.search();
 					}
 				});
 			});
@@ -4352,6 +4352,27 @@ function createMenuSearch() {
 			});
 			menu.newCheckMenu(subMenu, opt.entryText, void (0), () => list.searchMethod[opt.key]);
 		});
+		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		{
+			const subMenuTwo = menu.newMenu('Drag n\' drop...', subMenu);
+			const max = list.searchMethod.dragDropPriority.length;
+			menu.newEntry({ menuName: subMenuTwo, entryText: 'Method used by priority:', func: null, flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			list.searchMethod.dragDropPriority.forEach((method, i) => {
+				menu.newEntry({
+					menuName: subMenuTwo, entryText: (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')) + (!list.searchMethod[method] ? '\t(disabled)': ''), func: () => {
+						let input = Input.number('int positive', (i + 1), 'Enter position: (between 1 and ' + max + ')', window.Name, 1, [(n) => n >= 1 && n <= max]);
+						if (input === null) { return; }
+						else { input -= 1; }
+						const el = list.searchMethod.dragDropPriority.splice(i, 1);
+						list.searchMethod.dragDropPriority.splice(input, 0, el[0]);
+						list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+						overwriteProperties(list.properties);
+					},
+					flags: list.searchMethod[method] ? MF_STRING : MF_GRAYED
+				});
+			});
+		}
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Path level matching...' + '\t' + _b(list.searchMethod.pathLevel), func: () => {

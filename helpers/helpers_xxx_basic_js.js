@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//13/01/24
 
 /* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require */
 
@@ -112,7 +112,7 @@ const reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
 const reHasRegExpChar = RegExp(reRegExpChar.source);
 function escapeRegExpV2(s) { // https://github.com/lodash/lodash/blob/4.1.2-npm-packages/lodash.escaperegexp/index.js
 	s = toString(s);
-	return (s && reHasRegExpChar.test(s) ? s.replace(s, '\\$&') : s);
+	return (s && reHasRegExpChar.test(s) ? s.replace(reRegExpChar, '\\$&') : s);
 }
 
 function randomString(len, charSet) {

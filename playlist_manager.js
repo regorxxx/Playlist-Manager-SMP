@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/24
+//13/01/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -237,6 +237,7 @@ let properties = {
 		bMetaTracks: false,
 		meta: [globTags.artist, 'ALBUM', globTags.title, globTags.date],
 		bQuery: true,
+		dragDropPriority: ['bPath', 'bQuery', 'bMetaTracks'],
 		text: '',
 	})],
 	uiElements: ['UI elements', JSON.stringify({
@@ -1065,8 +1066,15 @@ if (!list.properties.bSetup[1]) {
 		const headerbuttons = Object.keys(list.headerButtons);
 		if (list.traceHeader(x, y)) {
 			if (list.searchInput && list.searchInput.trackCheck(x, y)) { // Search input
-				if (list.searchMethod.bPath) { action.Effect = dropEffect.copy; list.dragDropText = 'Add paths to search box'; }
-				else { action.Effect = dropEffect.none; list.dragDropText = 'Path searching must be enabled'; }
+				const trackText = (method) => {
+					if (method === 'bPath' && list.searchMethod.bPath) { action.Effect = dropEffect.copy; list.dragDropText = 'Add paths to search box'; return true; }
+					else if (method === 'bQuery' && list.searchMethod.bQuery) { action.Effect = dropEffect.copy; list.dragDropText = 'Add query to search box'; return true; }
+					else if (method === 'bMetaTracks' && list.searchMethod.bMetaTracks) { action.Effect = dropEffect.copy; list.dragDropText = 'Add tags to search box'; return true; }
+					return false;
+				};
+				if (!list.searchMethod.dragDropPriority.some(trackText)) {
+					action.Effect = dropEffect.none; list.dragDropText = 'Path searching must be enabled';
+				}
 				return;
 			} else if (headerbuttons.some((key) => list.headerButtons[key].inFocus)) { // New playlist button
 				if (list.headerButtons.newPls.inFocus) {
@@ -1103,56 +1111,7 @@ if (!list.properties.bSetup[1]) {
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
-		const oldIdx = plman.ActivePlaylist;
-		if (oldIdx !== -1) {
-			if (list.searchInput && list.searchMethod.bPath && list.searchInput.trackCheck(x, y)) {
-				const selItems = plman.GetPlaylistSelectedItems(oldIdx);
-				if (selItems && selItems.Count) {
-					let search = '';
-					if (selItems.Count > 1 && list.searchMethod.bRegExp) {
-						const paths = selItems.GetLibraryRelativePaths().map((path) => path.split('\\').slice(-1)[0]).filter(Boolean);
-						search = '/' + paths.join('|') + '/i';
-
-					} else {
-						search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
-					}
-					list.searchInput.text = search;
-					if (list.searchMethod.bAutoSearch) { list.search(); }
-				}
-			} else {
-				// Create new playlist when pressing alt
-				if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) {  // NOSONAR [structure]
-					const name = list.properties.bAutoSelTitle[1]
-						? list.plsNameFromSelection(oldIdx)
-						: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
-					const toFolder = list.index !== -1 && list.data[list.index].isFolder
-						? list.data[list.index]
-						: null;
-					const pls = list.add({ bEmpty: true, name, bInputName: true, toFolder });
-					if (pls) {
-						const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
-						const newIdx = plman.ActivePlaylist;
-						plman.ActivePlaylist = oldIdx;
-						// Remove track on move
-						const bSucess = list.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: (mask - 32) !== MK_CONTROL });
-						if (bSucess) {
-							// Don't reload the list but just paint with changes to avoid jumps
-							plman.ActivePlaylist = newIdx;
-							list.showCurrPls();
-						}
-					}
-				} else { // Send to existing playlist
-					const cache = [list.offset, list.index];
-					// Remove track on move
-					const bSucess = list.sendSelectionToPlaylist({ playlistIndex: list.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: mask !== MK_CONTROL });
-					if (bSucess) {
-						// Don't reload the list but just paint with changes to avoid jumps
-						window.RepaintRect(0, list.y, window.Width, list.h);
-						[list.offset, list.index] = cache;
-					}
-				}
-			}
-		}
+		list.on_drag_drop_external(action, x, y, mask, plman.ActivePlaylist);
 		action.Effect = dropEffect.none; // Forces not sending things to a playlist
 	});
 
