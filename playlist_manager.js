@@ -107,7 +107,7 @@ let properties = {
 	extension: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8', { func: (val) => { return writablePlaylistFormats.has(val); } }, '.m3u8'],
 	autoUpdate: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.', 5000, { func: isInt, range: [[0, 0], [200, Infinity]] }, 5000], // Safety limit 0 or > 200
 	bShowSize: ['Show playlist size', false, { func: isBoolean }, false],
-	bUpdateAutoplaylist: ['Update Autoplaylist size by query output', true, { func: isBoolean }, true],
+	bUpdateAutoPlaylist: ['Update AutoPlaylist size by query output', true, { func: isBoolean }, true],
 	bUseUUID: ['Use UUIDs along playlist names (not available for .pls playlists).', false, { func: isBoolean }, false],
 	optionUUID: ['UUID current method', '', { func: isStringWeak }, ''],
 	methodState: ['Current sorting method. Allowed: ', '', { func: isStringWeak }, ''], // Description and value filled on list.init() with defaults. Just a placeholder
@@ -502,13 +502,22 @@ let autoUpdateRepeat;
 			}
 		});
 		setTimeout(() => removeEventListener('on_notify_data', null, id), 20000);
-		// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first innit...
+		// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first init...
 		new Promise((resolve) => {
 			const timer = setInterval(() => {
 				if (list) { clearInterval(timer); resolve(); }
 			}, 1000);
 		}).then(() => {
 			list.resetFilter();
+			// Import AutoPlaylists
+			if (list.isAutoPlaylistMissing()) {
+				const answer = WshShell.Popup('Import native AutoPlaylists into the manager?\n\nClicking no will treat them as UI-only playlists and cloning would be required to edit them.', 0, window.Name, popup.question + popup.yes_no);
+				if (answer === popup.yes) {
+					try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
+					list.importAutoPlaylistsFromDat();
+					list.indexes.length = 0;
+				}
+			}
 		});
 	}
 	// Stats mode available?

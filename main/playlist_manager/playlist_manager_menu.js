@@ -812,7 +812,7 @@ function createMenuFolder(menu, folder, z) {
 	{ // New Playlists
 		const subMenuName = menu.newMenu('New child item...');
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Playlist File...', func: () => { list.add({ bEmpty: true, toFolder: folder }); } });
-		menu.newEntry({ menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => { list.addAutoplaylist(void (0), void (0), folder); } });
+		menu.newEntry({ menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => { list.addAutoPlaylist(void (0), void (0), folder); } });
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUIplaylist({ bInputName: true, toFolder: folder }); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
@@ -823,7 +823,7 @@ function createMenuFolder(menu, folder, z) {
 				entryText: 'New AutoPlaylist from active ...', func: () => {
 					const pls = { name: plman.GetPlaylistName(plman.ActivePlaylist) };
 					plman.ShowAutoPlaylistUI(plman.ActivePlaylist); // Workaround to not being able to access AutoPlaylist data... user must copy/paste
-					list.addAutoplaylist(pls, true, folder);
+					list.addAutoPlaylist(pls, true, folder);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 		}
@@ -1415,7 +1415,7 @@ function createMenuRight() {
 	// Entries
 	{ // New Playlists
 		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...', func: () => { list.add({ bEmpty: true }); } });
-		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => { list.addAutoplaylist(); } });
+		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => { list.addAutoPlaylist(); } });
 		!list.bLiteMode && menu.newEntry({ entryText: 'New Smart Playlist...', func: () => { list.addSmartplaylist(); } });
 		menu.newEntry({ entryText: 'New UI-only Playlist...', func: () => { list.addUIplaylist({ bInputName: true }); } });
 		if (showMenus['Folders']) {
@@ -1429,7 +1429,7 @@ function createMenuRight() {
 				entryText: 'New AutoPlaylist from active ...', func: () => {
 					const pls = { name: plman.GetPlaylistName(plman.ActivePlaylist) };
 					plman.ShowAutoPlaylistUI(plman.ActivePlaylist); // Workaround to not being able to access AutoPlaylist data... user must copy/paste
-					list.addAutoplaylist(pls, true);
+					list.addAutoPlaylist(pls, true);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 		}
@@ -1715,8 +1715,8 @@ function createMenuRight() {
 		{	// Import json
 			menu.newEntry({
 				entryText: 'Add playlists from json file...', func: () => {
-					list.bUpdateAutoplaylist = true; // Forces AutoPlaylist size update according to query and tags
-					list.loadExternalJson();
+					list.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update according to query and tags
+					list.importJson();
 				}
 			});
 			menu.newEntry({
@@ -1728,6 +1728,14 @@ function createMenuRight() {
 			});
 		}
 	}
+	menu.newEntry({ entryText: 'sep' });
+	menu.newEntry({
+		entryText: 'Import AutoPlaylists from UI..', func: () => {
+			try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
+			list.importAutoPlaylistsFromDat();
+		},
+		flags: list.isAutoPlaylistMissing() ? MF_STRING : MF_GRAYED
+	});
 	menu.newEntry({ entryText: 'sep' });
 	{	// Maintenance tools
 		const subMenuName = menu.newMenu('Playlists maintenance tools');
@@ -1939,7 +1947,7 @@ function createMenuRightTop() {
 				bDone = list.checkConfig();
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.headerTextUpdate();
-				list.bUpdateAutoplaylist = true;
+				list.bUpdateAutoPlaylist = true;
 				list.update(void (0), true, z); // Forces AutoPlaylist size update according to query and tags
 				list.checkConfigPostUpdate(bDone);
 				list.filter();
@@ -2345,16 +2353,16 @@ function createMenuRightTop() {
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.properties['bUpdateAutoplaylist'][1] = i === 0; // True will force a refresh on script loading
+						list.properties['bUpdateAutoPlaylist'][1] = i === 0; // True will force a refresh on script loading
 						overwriteProperties(list.properties);
-						if (list.properties['bUpdateAutoplaylist'][1]) {
+						if (list.properties['bUpdateAutoPlaylist'][1]) {
 							fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
 						}
 					}
 				});
 			});
-			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.properties['bUpdateAutoplaylist'][1] ? 0 : 1); });
+			//list.bUpdateAutoPlaylist changes to false after firing, but the property is constant unless the user changes it...
+			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.properties['bUpdateAutoPlaylist'][1] ? 0 : 1); });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Block panel while updating', func: () => {
@@ -2751,7 +2759,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			//list.bUpdateAutoplaylist changes to false after firing, but the property is constant unless the user changes it...
+			//list.bUpdateAutoPlaylist changes to false after firing, but the property is constant unless the user changes it...
 			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bShowSize ? 0 : 1); });
 		}
 		{	// Name/category sep
