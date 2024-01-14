@@ -514,8 +514,7 @@ let autoUpdateRepeat;
 				const answer = WshShell.Popup('Import native AutoPlaylists into the manager?\n\nClicking no will treat them as UI-only playlists and cloning would be required to edit them.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
-					list.importAutoPlaylistsFromDat();
-					list.indexes.length = 0;
+					list.importAutoPlaylistsFromFoobar({ bSelect: false });
 				}
 			}
 		});

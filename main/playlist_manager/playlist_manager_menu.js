@@ -1732,7 +1732,7 @@ function createMenuRight() {
 	menu.newEntry({
 		entryText: 'Import AutoPlaylists from UI..', func: () => {
 			try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
-			list.importAutoPlaylistsFromDat();
+			list.importAutoPlaylistsFromFoobar({ bSelect: true });
 		},
 		flags: list.isAutoPlaylistMissing() ? MF_STRING : MF_GRAYED
 	});
@@ -2732,10 +2732,12 @@ function createMenuRightTop() {
 					'Only delete the playlist file'
 				];
 				options.forEach((entryText, i) => {
-					menu.newEntry({ menuName: subMenuName, entryText, func: () => {
-						list.properties['deleteBehavior'][1] = i;
-						overwriteProperties(list.properties);
-					}});
+					menu.newEntry({
+						menuName: subMenuName, entryText, func: () => {
+							list.properties['deleteBehavior'][1] = i;
+							overwriteProperties(list.properties);
+						}
+					});
 				});
 				menu.newCheckMenuLast(() => list.properties['deleteBehavior'][1], options.length);
 			}
@@ -4163,7 +4165,7 @@ function createMenuRightTop() {
 				autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null; // NOSONAR [shared on files]
 				debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 				addInstance('Playlist Manager');
-				list.switchTracking(true, void(0), false);
+				list.switchTracking(true, void (0), false);
 			}
 			list.checkConfigPostUpdate(list.checkConfig({ bSilentSorting: true })); // Ensure related config is set properly
 			list.updateUIElements(); // Buttons, etc.
@@ -4391,7 +4393,7 @@ function createMenuSearch() {
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
 			list.searchMethod.dragDropPriority.forEach((method, i) => {
 				menu.newEntry({
-					menuName: subMenuTwo, entryText: (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')) + (!list.searchMethod[method] ? '\t(disabled)': ''), func: () => {
+					menuName: subMenuTwo, entryText: (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')) + (!list.searchMethod[method] ? '\t(disabled)' : ''), func: () => {
 						let input = Input.number('int positive', (i + 1), 'Enter position: (between 1 and ' + max + ')', window.Name, 1, [(n) => n >= 1 && n <= max]);
 						if (input === null) { return; }
 						else { input -= 1; }

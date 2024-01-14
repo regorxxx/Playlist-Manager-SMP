@@ -3,7 +3,7 @@
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, cloneAsStandardPls:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, cloneAsStandardPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable */
+/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, cloneAsStandardPls:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, cloneAsStandardPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable */
 include('..\\window\\window_xxx_input.js');
@@ -3586,8 +3586,17 @@ function _list(x, y, w, h) {
 		return false;
 	};
 
-	this.importAutoPlaylistsFromDat = ({ path = fb.ProfilePath + 'playlists-v1.4\\index.dat' } = {}) => {
+	this.importAutoPlaylistsFromFoobar = (options) => {
+		if (isFoobarV2) {
+			// TODO import from sqlite
+		} else if (_isFile(fb.ProfilePath + 'playlists-v1.4\\index.dat')) {
+			this.importAutoPlaylistsFromDat(options);
+		}
+	};
+	this.importAutoPlaylistsFromDat = ({ path = fb.ProfilePath + 'playlists-v1.4\\index.dat', bSelect = true } = {}) => {
+		if (!_isFile(path)) {return false;}
 		const data = FPL.parseDatFile(path);
+		if (!data) {return false;}
 		const autoPlsNames = new Set(this.dataAutoPlaylists.map((pls) => pls.nameId));
 		const allNames = new Set(this.dataAll.map((pls) => pls.nameId));
 		const plsObJ = [];
@@ -3618,13 +3627,17 @@ function _list(x, y, w, h) {
 			}
 		});
 		if (plsObJ.length) {
-			this.indexes.length = 0;
-			plsObJ.forEach((pls) => {
-				const idx = this.data.indexOf(pls);
-				if (idx !== -1) { this.indexes.push(idx); }
-			});
+			if (bSelect) {
+				this.indexes.length = 0;
+				plsObJ.forEach((pls) => {
+					const idx = this.data.indexOf(pls);
+					if (idx !== -1) { this.indexes.push(idx); }
+				});
+			}
 			// Adding an autoplaylist already sets the index at the latest one added
+			return true;
 		}
+		return false;
 	};
 
 	// Categories and tags
