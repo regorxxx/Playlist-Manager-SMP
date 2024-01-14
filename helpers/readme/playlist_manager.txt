@@ -1,11 +1,11 @@
-﻿Manager for playlists files, Autoplaylists and UI-only playlists. 
+﻿Manager for playlists files, AutoPlaylists and UI-only playlists. 
 Shows a virtual list of all playlists [and] files within a configured
 tracked folder. After loading it on a panel, set the tracked folder
 using the menu at header: 'Set playlists folder...'.
 
 For example: (that's a folder within my foobar profile)
 	C:\Users\XXX\AppData\Roaming\foobar2000\playlist_manager\...
-Autoplaylist json files are stored in your foobar profile folder:
+AutoPlaylist json files are stored in your foobar profile folder:
 	.\js_data\...
 
 Multiple panels are allowed but usually 2 panels should not point to
@@ -19,7 +19,7 @@ folders should be in the same path than the tracked folder. i.e.:
 	Tracked Folder: Z:\My music\
 	Music Folders: Z:\My music\CDs, Z:\My music\DVDs\, ...
 
-Finally, you can import another Autoplaylist data file by this script or 
+Finally, you can import another AutoPlaylist data file by this script or 
 Auto-playlist Manager by marc2003 using the contextual menu.
 
 For a full list of features, take a look at the PDF manual.

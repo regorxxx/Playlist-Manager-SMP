@@ -210,7 +210,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
 					entryText: 'AutoPlaylists', args: { data: { source: 'autoplaylists' } },
-					flags: list.itemsAutoplaylist === 0 ? MF_GRAYED : MF_STRING
+					flags: list.itemsAutoPlaylist === 0 ? MF_GRAYED : MF_STRING
 				},
 				{
 					isEq: null, key: this.data, value: null, newValue: null,

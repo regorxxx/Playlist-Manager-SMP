@@ -666,7 +666,7 @@ function cloneAsAutoPls(list, z, uiIdx = -1) { // May be used only to copy an Au
 		WshShell.Popup('Native AutoPlaylists not created with the manager require cloning first to fully integrate them in the manager.\n\nThe AutoPlaylist properties will be shown to let you manually copy the query and sort patterns to the input popups. You can close it afterwards.', 5, window.Name, popup.info + popup.ok);
 		plman.ShowAutoPlaylistUI(uiIdx);
 	}
-	bDone = !!list.addAutoplaylist(objectPlaylist);
+	bDone = !!list.addAutoPlaylist(objectPlaylist);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//14/01/24
 
 /* global list:readable, folders:readable */
 include('..\\window\\window_xxx.js');
@@ -78,7 +78,7 @@ options.addTab({title: 'Playlist behaviour', columns: 4, data: [
 				{name: 'AutoPlaylists filtering', pId: 'bRemoveDuplicatesAutoPls', pIdx: 1, constructor: Boolean, tt: 'Remove duplicates on AutoPlaylist cloning.\nLoading follows native behavior in any case, i.e. playlist is bound to a query.'},
 				{name: 'Smart Playlists filtering', pId: 'bRemoveDuplicatesSmartPls', pIdx: 1, constructor: Boolean, tt: 'Remove duplicates on Smart Playlist loading & cloning.'},
 				{name: 'Remove duplicates by:', pId: 'removeDuplicatesAutoPls', pIdx: 1, constructor: String, tt: 'Enter tag(s) or TF expression(s):\n(sep by comma)'},
-				{name: 'Update Autoplaylist size by query output', pId: 'bUpdateAutoplaylist', pIdx: 1, constructor: Boolean, tt: 'Update AutoPlaylists size atomatically on every startup, instead of doing it only when loading them.\n\nEnabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.'}
+				{name: 'Update AutoPlaylist size by query output', pId: 'bUpdateAutoPlaylist', pIdx: 1, constructor: Boolean, tt: 'Update AutoPlaylists size automatically on every startup, instead of doing it only when loading them.\n\nEnabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.'}
 			]},
 	],
 	[
