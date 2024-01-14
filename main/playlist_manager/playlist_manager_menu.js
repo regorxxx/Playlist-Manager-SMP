@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/01/24
+//14/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -4155,7 +4155,7 @@ function createMenuRightTop() {
 				autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null; // NOSONAR [shared on files]
 				debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 				addInstance('Playlist Manager');
-				list.switchTracking(true);
+				list.switchTracking(true, void(0), false);
 			}
 			list.checkConfigPostUpdate(list.checkConfig({ bSilentSorting: true })); // Ensure related config is set properly
 			list.updateUIElements(); // Buttons, etc.

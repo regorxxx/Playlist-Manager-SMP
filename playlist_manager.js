@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/01/24
+//14/01/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -95,7 +95,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 	} else {
 		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib waiting'); } // Disabled on notify
 		else { pop.setReason('cacheLib waiting'); }
-		if (bInit) { window.NotifyOthers('precacheLibraryPaths ask', null); }
+		window.NotifyOthers('precacheLibraryPaths ask', null);
 	}
 };
 const debouncedCacheLib = debounce(cacheLib, 5000);
@@ -841,7 +841,7 @@ if (!list.properties.bSetup[1]) {
 				break;
 			}
 			case 'precacheLibraryPaths ask': {
-				if (list.bLiteMode) { return; }
+				if (list.bLiteMode || pop.isEnabled('cacheLib') || pop.isEnabled('cacheLib waiting')) { return; }
 				if (list.bLibraryChanged) {
 					window.NotifyOthers('precacheLibraryPaths', null);
 				} else if (libItemsAbsPaths && libItemsAbsPaths.length) {

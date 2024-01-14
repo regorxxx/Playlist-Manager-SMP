@@ -1,9 +1,9 @@
 ﻿'use strict';
-//13/01/24
+//14/01/24
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, cloneAsStandardPls:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, cloneAsStandardPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, debouncedCacheLib:readable, buttonsPanel:readable, properties:readable */
+/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, cloneAsStandardPls:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, cloneAsStandardPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable */
 include('..\\window\\window_xxx_input.js');
@@ -4618,13 +4618,13 @@ function _list(x, y, w, h) {
 		return (bAll ? this.itemsAll : this.itemsAll - this.itemsAutoplaylist - this.itemsFoobar - this.itemsFolder);
 	};
 
-	this.switchTracking = (forced = null, bNotify = false) => {
+	this.switchTracking = (forced = null, bNotify = false, bCachePls = true) => {
 		this.bTracking = forced !== null ? forced : !this.bTracking;
 		if (this.bTracking) {
-			this.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 			this.clearSelPlaylistCache();
 			fb.queryCache.clear();
-			if (this.requiresCachePlaylistSearch()) {
+			this.cacheLibTimer = cacheLib(false, 'Updating...');
+			if (bCachePls && this.requiresCachePlaylistSearch()) {
 				this.cachePlaylistSearch();
 			}
 		} else if (this.cacheLibTimer !== null) {
@@ -4638,21 +4638,17 @@ function _list(x, y, w, h) {
 	};
 
 	this.requiresCachePlaylistSearch = () => this.uiElements['Search filter'].enabled && (this.searchMethod.bMetaTracks || this.searchMethod.bQuery);
-	this.cachePlaylistSearch = () => {
+	this.cachePlaylistSearch = (bIncludeAutoPls = true) => {
 		const id = setInterval(() => {
 			if (pop.isEnabled('cacheLib') || pop.isEnabled('cacheLib waiting')) { return; }
 			this.plsCache.clear();
 			clearInterval(id);
-			const bColumns = this.isColumnsEnabled('size');
-			const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && (this.bShowSize || bColumns);
-			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
-			const bIncludeAutoPls = !bUpdateSize && !bAutoTrackTag;
 			Promise.serial(
 				bIncludeAutoPls
 					? this.dataAll.filter((pls) => !pls.isFolder)
 					: this.dataAll.filter((pls) => !pls.isAutoPlaylist && !pls.isFolder)
 				, cachePlaylist.bind(this), 200)
-				.then(() => console.log('Playlist manager: Cached playlists for searching'));
+				.then(() => console.log('Playlist manager: Cached playlists for searching ' + _p(bIncludeAutoPls ? 'all' : 'files')));
 		}, 250);
 	};
 
@@ -6165,8 +6161,29 @@ function _list(x, y, w, h) {
 			this.update(void (0), true, z);
 			this.filter();
 			this.lastPlsLoaded = [];
-			if (this.requiresCachePlaylistSearch()) {
-				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
+			if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after Autoplaylists processing
+				const queryItems = this.itemsAutoplaylist + this.itemsXsp;
+				const bColumns = this.isColumnsEnabled('size');
+				const bUpdateSize = this.properties['bUpdateAutoplaylist'][1] && (this.bShowSize || bColumns);
+				const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
+				if (this.bDynamicMenus) {
+					Promise.wait(secondTimer).then(() => {
+						return new Promise((resolve) => {
+							const id = setInterval(() => {
+								if (pop.isEnabled('cacheLib')) { return; }
+								clearInterval(id);
+								resolve(this.createMainMenuDynamic());
+							}, 250);
+						});
+					}).then((result) => {
+						if (result) { console.log('Playlist Manager: Created dynamic menus'); }
+						this.exportPlaylistsInfo();
+						callbacksListener.checkPanelNamesAsync();
+					});
+				} else { this.deleteExportInfo(); }
+				if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
+					Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
+				}
 			}
 			if (bProfile) { test.Print(); }
 		};
