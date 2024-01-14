@@ -3600,7 +3600,7 @@ function _list(x, y, w, h) {
 			if (autoPlsNames.has(newPls.name)) {
 				const pls = this.dataAutoPlaylists.find((pls) => pls.nameId === newPls.name);
 				if (pls.query !== newPls.query) {
-					const answer = WshShell.Popup('There is an AutoPlaylist on the manager with same name and different query. Overwrite?\n\nCurrent: ' + pls.query + '\n\nNew: ' + newPls.query, 0, window.Name, popup.question + popup.yes_no);
+					const answer = WshShell.Popup('There is an AutoPlaylist on the manager with same name (' + newPls.name + ') and different query. Overwrite?\n\nCurrent: ' + pls.query + '\n\nNew: ' + newPls.query, 0, window.Name, popup.question + popup.yes_no);
 					if (answer === popup.yes) {
 						this.editData(pls, { query: newPls.query });
 						plsObJ.push(pls);
@@ -5121,28 +5121,28 @@ function _list(x, y, w, h) {
 				catch (e) { return null; }
 			}
 			if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
-			const newSort = !hasSort || bEdit 
-				? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '') 
+			const newSort = !hasSort || bEdit
+				? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '')
 				: (hasSort ? pls.sort : '');
-			if (newSort.length && !checkSort(newSort)) { 
-				fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); 
-				return null; 
+			if (newSort.length && !checkSort(newSort)) {
+				fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name);
+				return null;
 			}
 			const newForced = (bPls && Object.hasOwn(pls, 'bSortForced')
 				? !!pls.bSortForced
-				: newSort.length 
-					? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no) 
+				: newSort.length
+					? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no)
 					: popup.no
 			) === popup.yes;
 			const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
-			const handleList = hasSize && hasQuery && pls.query === newQuery 
-				? null 
+			const handleList = hasSize && hasQuery && pls.query === newQuery
+				? null
 				: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
-			const queryCount = hasSize && hasQuery && pls.query === newQuery 
-				? pls.size 
+			const queryCount = hasSize && hasQuery && pls.query === newQuery
+				? pls.size
 				: handleList.Count;
-			const duration = hasSize && hasQuery && pls.query === newQuery 
-				? pls.duration 
+			const duration = hasSize && hasQuery && pls.query === newQuery
+				? pls.duration
 				: handleList.CalcTotalDuration();
 			const objectPlaylist = new PlaylistObj({
 				id: UUID,
