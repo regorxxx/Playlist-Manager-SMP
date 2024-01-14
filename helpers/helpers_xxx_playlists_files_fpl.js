@@ -104,11 +104,12 @@ const FPL = {
 				if (plsObj.query.endsWith('\x07')) {
 					plsObj.sort = pls[7].split('\xE3\x14\x3B')[0] || '';
 				}
+				const alphabet = /([^\W]|[[\]()_Á-ü])/;
 				for (const key in plsObj) {
 					if (typeof plsObj[key] === 'string') {
-						plsObj[key] = plsObj[key]
-							.replaceAll('\x00', '')
-							.replaceAll('\x07', '');
+						if (!alphabet.test(plsObj[key])) {
+							plsObj[key] = plsObj[key].slice(0, -1);
+						}
 					}
 				}
 				info.autoPls.push(plsObj);
