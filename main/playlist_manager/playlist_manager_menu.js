@@ -790,7 +790,7 @@ function createMenuLeft(forcedIndex = -1) {
 function createMenuFolder(menu, folder, z) {
 	const bOpen = folder.isOpen;
 	const playlists = folder.pls.filtered;
-	const indexes = playlists.map((p) => list.dataAll.indexOf(p)); // When delaying menu, the mouse may move to other index...
+	const indexes = playlists.map((p) => list.getIndex(p, true)); // When delaying menu, the mouse may move to other index...
 	// Helpers
 	const isPlsLoaded = (pls) => { return plman.FindPlaylist(pls.nameId) !== -1; };
 	const isPlsUI = (pls) => { return pls.extension === '.ui'; };
@@ -864,7 +864,7 @@ function createMenuFolder(menu, folder, z) {
 	menu.newEntry({
 		entryText: 'Multi-select child items...' + '\t' + _b(indexes.length), func: () => {
 			if (!folder.isOpen) { list.switchFolder(z); }
-			folder.pls.map((p) => list.multSelect(list.data.indexOf(p)));
+			folder.pls.map((p) => list.multSelect(list.getIndex(p)));
 		}, flags: indexes.length ? MF_STRING : MF_GRAYED
 	});
 	menu.newEntry({ entryText: 'sep' });
@@ -882,7 +882,7 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({
 			entryText: 'Merge-load entire folder', func: () => {
 				if (!bOpen) { list.switchFolder(z); }
-				const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
+				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
 					clonePlaylistMergeInUI(list, zArr, []);
 				}
@@ -892,7 +892,7 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({
 			entryText: 'Merge-load (no duplicates)', func: () => {
 				if (!bOpen) { list.switchFolder(z); }
-				const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
+				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
 					clonePlaylistMergeInUI(list, zArr, list.removeDuplicatesAutoPls, list.bAdvTitlem, true);
 				}
@@ -903,7 +903,7 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({
 			entryText: 'Clone entire folder in UI', func: () => {
 				if (!bOpen) { list.switchFolder(z); }
-				const zArr = playlists.map((p) => list.data.indexOf(p)).filter((idx, i) => !isFolder(playlists[i]));
+				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				zArr.forEach((z) => {
 					const pls = list.data[z];
 					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
@@ -1393,7 +1393,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				entryText: 'Delete', func: () => {
 					playlists.forEach((pls) => {
 						// Index change on every removal so it has to be recalculated
-						const z = list.data.indexOf(pls);
+						const z = list.getIndex(pls);
 						if (z !== -1) { list.removePlaylist(z); }
 					});
 					list.indexes.length = 0; // Reset selection since there is no playlists now

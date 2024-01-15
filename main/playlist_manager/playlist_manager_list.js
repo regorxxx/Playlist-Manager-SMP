@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/24
+//15/01/24
 
 /* exported _list */
 
@@ -1192,7 +1192,7 @@ function _list(x, y, w, h) {
 			folderTree.reverse();
 			if (this.data.includes(folderTree[0])) {
 				folderTree.forEach((folder) => {
-					idx = this.data.indexOf(folder);
+					idx = this.getIndex(folder);
 					if (!folder.isOpen) { this.switchFolder(idx); }
 				});
 				idx = this.data.findIndex((pls) => { return pls.nameId === name; });
@@ -1221,7 +1221,7 @@ function _list(x, y, w, h) {
 
 	this.showPlsByObj = (obj, ms = 10) => {
 		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-		const idx = this.data.findIndex((pls) => { return pls === obj; });
+		const idx = this.getIndex(obj);
 		if (idx !== -1) {
 			if (ms) {
 				setTimeout(() => { // Required since input popup invokes move callback after this func!
@@ -1233,6 +1233,17 @@ function _list(x, y, w, h) {
 				this.showPlsByIdx(idx);
 			}
 		}
+	};
+
+	this.getIndex = (pls, bAlsoHidden = false) => {
+		const data = (bAlsoHidden ? this.dataAll : this.data);
+		let idx = data.indexOf(pls);
+		if (idx === -1) { idx = data.findIndex((dataPls) => compareObjects(dataPls, pls)); }
+		if (idx === -1) {
+			const keys = ['nameId', 'id', 'path', 'extension', 'isAutoPlaylist', 'playlist_mbid', 'isFolder'];
+			idx = data.findIndex((dataPls) => keys.every((key) => pls[key] === dataPls[key]));
+		}
+		return idx;
 	};
 
 	this.onMouseLeaveList = () => {  // Removes selection indicator
@@ -1698,7 +1709,7 @@ function _list(x, y, w, h) {
 											this.saveManualSorting();
 											this.sort();
 											if (plsSel.length) { // Restore multiple selection
-												this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
+												this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 											}
 										} else { this.sortingFile = cache; }
 									} else if (currItem.isFolder) {
@@ -1963,10 +1974,10 @@ function _list(x, y, w, h) {
 								const indexes = [];
 								if (pls.isFolder) {
 									pls.pls.filtered.forEach((subPls) => playlists.push(subPls));
-									playlists.forEach((subPls) => indexes.push(this.dataAll.indexOf(subPls)));
+									playlists.forEach((subPls) => indexes.push(this.getIndex(subPls, true)));
 								} else {
 									playlists.push(pls);
-									indexes.push(this.dataAll.indexOf(pls));
+									indexes.push(this.getIndex(pls, true));
 								}
 								indexes.forEach((idx, i) => {
 									if (playlists[i].extension === '.ui') {
@@ -2002,7 +2013,7 @@ function _list(x, y, w, h) {
 									const playlists = pls.pls.filtered;
 									const bOpen = pls.isOpen;
 									if (!bOpen) { this.switchFolder(z); }
-									const indexes = playlists.map((p) => this.data.indexOf(p));
+									const indexes = playlists.map((p) => this.getIndex(p));
 									indexes.forEach((z, i) => {
 										const subPls = playlists[i];
 										if (subPls.extension === '.xsp' && Object.hasOwn(subPls, 'type') && subPls.type !== 'songs') { return; }
@@ -2029,7 +2040,7 @@ function _list(x, y, w, h) {
 							if (z !== -1) {
 								if (pls.isFolder) {
 									const playlists = pls.pls.filtered;
-									const indexes = playlists.map((p) => this.dataAll.indexOf(p));
+									const indexes = playlists.map((p) => this.getIndex(p, true));
 									indexes.forEach((z, i) => {
 										const subPls = playlists[i];
 										if (subPls.extension !== '.ui' && !subPls.isFolder) { this.loadPlaylist(z, true); }
@@ -2242,7 +2253,7 @@ function _list(x, y, w, h) {
 					const bOpen = pls.isOpen;
 					if (!bOpen) { this.switchFolder(z, false); }
 					pls.pls.filter((item) => this.data.includes(item)).forEach((item) => {
-						const zz = this.data.indexOf(item);
+						const zz = this.getIndex(item);
 						if (zz !== -1 && !this.indexes.includes(zz)) {
 							if (this.data[zz].isFolder) { folderRecurse(this.data[zz]); }
 							else { this.multSelect(zz); }
@@ -2492,11 +2503,11 @@ function _list(x, y, w, h) {
 						if (pls.isFolder && !bOpen) { this.switchFolder(idx, false); }
 						if (!bEverySelected) {
 							bEverySelected = pls.pls.filtered.every((item) => {
-								return this.indexes.includes(this.data.indexOf(item));
+								return this.indexes.includes(this.getIndex(item));
 							});
 						}
 						pls.pls.filtered.forEach((item) => {
-							const zz = this.data.indexOf(item);
+							const zz = this.getIndex(item);
 							if ((item.isAutoPlaylist || item.query) && shortcut.key === 'Clone playlist in UI') {
 								const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
 								shortcut.func(zz, remDupl, this.bAdvTitle);
@@ -3625,7 +3636,7 @@ function _list(x, y, w, h) {
 			if (bSelect) {
 				this.indexes.length = 0;
 				plsObJ.forEach((pls) => {
-					const idx = this.data.indexOf(pls);
+					const idx = this.getIndex(pls);
 					if (idx !== -1) { this.indexes.push(idx); }
 				});
 			}
@@ -4174,7 +4185,7 @@ function _list(x, y, w, h) {
 		}
 		this.processFolders();
 		if (plsSel.length) {
-			this.indexes = plsSel.map((pls) => this.data.indexOf(pls)).filter((idx) => idx !== -1);
+			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		}
 		if (bMaintainFocus) { this.jumpLastPosition(); }
 		if (bPaint) { this.repaint(); }
@@ -4491,7 +4502,7 @@ function _list(x, y, w, h) {
 				? {
 					indexes: this.indexes,
 					pls: this.indexes.length
-						? this.indexes.map((idx) => this.data[idx])
+						? this.indexes.map((idx) => this.data[idx]).filter(Boolean)
 						: []
 				}
 				: null;
@@ -4900,7 +4911,7 @@ function _list(x, y, w, h) {
 				for (const objectPlaylist_i of objectPlaylist) { bSucess.push(this.editData(objectPlaylist_i)); }
 				return bSucess.every(Boolean);
 			}
-			const index = this.dataAll.indexOf(objectPlaylist);
+			const index = this.getIndex(objectPlaylist, true);
 			if (index !== -1) { // Changes data on the other arrays too since they link to same object
 				Object.keys(properties).forEach((property) => {
 					if (property === 'pls') { // Don't remove folder.pls[] prototype
@@ -4996,7 +5007,7 @@ function _list(x, y, w, h) {
 				this.save();
 				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.data.indexOf(toFolder)) && this.save(); }
+				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
 			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(folder);
@@ -5114,7 +5125,7 @@ function _list(x, y, w, h) {
 							this.save();
 							if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 							this.sort();
-							if (!toFolder.isOpen) { this.switchFolder(this.data.indexOf(toFolder)) && this.save(); }
+							if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
 						}
 						this.cacheLastPosition();
 						this.showCurrPls();
@@ -5202,7 +5213,7 @@ function _list(x, y, w, h) {
 				this.save();
 				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.data.indexOf(toFolder)) && this.save(); }
+				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
 			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(objectPlaylist);
@@ -5299,7 +5310,7 @@ function _list(x, y, w, h) {
 				this.save();
 				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.data.indexOf(toFolder)) && this.save(); }
+				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
 			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(objectPlaylist);
@@ -5419,7 +5430,7 @@ function _list(x, y, w, h) {
 				this.save();
 				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.data.indexOf(toFolder)) && this.save(); }
+				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
 			}
 			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 			this.showPlsByObj(objectPlaylist);
@@ -5652,6 +5663,10 @@ function _list(x, y, w, h) {
 			this.deletedItems.unshift(pls);
 			this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
 			if (!bAlsoHidden) { this.cacheLastPosition(Math.min(idx, this.items - 1)); }
+			// Remove item from current selection (otherwise it would crash)
+			if (!bAlsoHidden && this.indexes.length && this.indexes.indexOf(idx) !== -1) {
+				this.multSelect(idx);
+			}
 			if (!bUI) {
 				this.update(true, true, currentItemIndex); // Call this immediately after removal! If paint fires before updating things get weird
 				// Delete category from current view if needed
@@ -5666,7 +5681,7 @@ function _list(x, y, w, h) {
 						? popup.yes
 						: this.properties['deleteBehavior'][1] === 2
 							? popup.no
-							: WshShell.Popup('Delete also the playlist loaded within foobar2000?', 0, window.Name, popup.question + popup.yes_no);
+							: WshShell.Popup('Delete also the playlist loaded within foobar2000?\nPlaylist: ' + oldNameId, 0, window.Name, popup.question + popup.yes_no);
 					if (answer === popup.yes) {
 						plman.RemovePlaylistSwitch(duplicated);
 					}
@@ -5681,10 +5696,6 @@ function _list(x, y, w, h) {
 					this.cacheLastPosition(Math.min(idx, this.items - 1));
 					this.jumpLastPosition();
 				}, 10);
-			}
-			// Remove item from current selection (otherwise it would crash)
-			if (!bAlsoHidden && this.indexes.length && this.indexes.indexOf(idx) !== -1) {
-				this.multSelect(idx);
 			}
 		};
 
