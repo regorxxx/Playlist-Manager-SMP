@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/24
+//15/01/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -511,7 +511,7 @@ let autoUpdateRepeat;
 			list.resetFilter();
 			// Import AutoPlaylists
 			if (list.isAutoPlaylistMissing()) {
-				const answer = WshShell.Popup('Import native AutoPlaylists into the manager?\n\nClicking no will treat them as UI-only playlists and cloning would be required to edit them.', 0, window.Name, popup.question + popup.yes_no);
+				const answer = WshShell.Popup('Import native AutoPlaylists into the manager?\n\nClicking no will treat them as UI-only playlists and cloning or later importing (which can be done at any point) would be required to edit them.', 0, window.Name, popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
 					list.importAutoPlaylistsFromFoobar({ bSelect: false });

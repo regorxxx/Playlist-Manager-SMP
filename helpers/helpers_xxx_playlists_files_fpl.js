@@ -12,6 +12,7 @@ include('..\\helpers-external\\xspf-to-jspf-parser\\xspf_parser.js');
 /* global XSPF:readable*/
 
 const FPL = {
+	bDebug: true,
 	MAGIC: ['\xE1', '\xA0', '\x9C', '\x91', '\xF8', '\x3C', '\x77', '\x42', '\x85', '\x2C', '\x3B', '\xCC', '\x14', '\x01', '\xD3', '\xF2'].join(''),
 	MAGICAUTOPLS: ['\x55', '\x65', '\xF1', '\x82', '\xCB', '\x7A', '\x8C', '\x43', '\x9C', '\x4B', '\x55', '\xE1', '\xD8', '\x4D', '\x15', '\x64'].join(''),
 	readFile: function (path) {
@@ -93,29 +94,40 @@ const FPL = {
 			} else if (count) {
 				count--;
 				if (!count) {
-					autoPlsData.push(stack.slice(-8));
+					autoPlsData.push(stack.slice(-8)
+						.filter(Boolean)
+						.filter((d) => d !== '\x00' && d !== '\x01' && d !== '\x00\x01'));
 					stack.length = 0;
 				}
 			}
 		});
 		const autoPlsCount = (hexArr.join('').match(new RegExp(this.MAGICAUTOPLS, 'gi')) || []).length;
 		if (autoPlsCount === autoPlsData.length) {
+			const ctrlChar = /[\0-\cZ]/i;
+			const alphabet = /([^\W]|[[\]()_Á-ü])$/;
 			autoPlsData.forEach((pls) => {
+				if (this.bDebug) { pls.forEach((l, i) => console.log(i, JSON.stringify(l))); }
 				const plsObj = { name: '', query: '', sort: '', bSortForced: false };
-				plsObj.name = pls[0].split('\xFF')[0];
-				plsObj.query = pls[6];
-				if (plsObj.query.endsWith('\x07')) {
-					plsObj.sort = pls[7].split('\xE3\x14\x3B')[0] || '';
-				}
-				const alphabet = /([^\W]|[[\]()_Á-ü])/;
-				for (const key in plsObj) {
-					if (typeof plsObj[key] === 'string') {
-						if (!alphabet.test(plsObj[key])) {
-							plsObj[key] = plsObj[key].slice(0, -1);
+				try {
+					plsObj.name = pls[0].split('\xFF')[0] || '';
+					if (ctrlChar.test(plsObj.name)) { plsObj.name = pls[1].split('\xFF')[0] || ''; }
+					plsObj.query = pls[3];
+					let i = 4;
+					while (ctrlChar.test(plsObj.query) && !plsObj.query.endsWith('\x07')) {
+						plsObj.query = pls[i++] || '';
+					}
+					if (plsObj.query.endsWith('\x07')) {
+						plsObj.sort = pls[i].split('\xE3\x14\x3B')[0] || '';
+					}
+					for (const key in plsObj) {
+						if (typeof plsObj[key] === 'string') {
+							if (!alphabet.test(plsObj[key])) {
+								plsObj[key] = plsObj[key].slice(0, -1);
+							}
 						}
 					}
-				}
-				info.autoPls.push(plsObj);
+					info.autoPls.push(plsObj);
+				} catch (e) { console.log(e.message); }
 			});
 		}
 		return info;
@@ -123,8 +135,8 @@ const FPL = {
 	toFoobarV2Pls: function (hexArr, path) {
 		const id = path.split('\\').slice(-1)[0].replace(/(^playlist-)|(-props.sqlite$)/gi, '');
 		const data = hexArr.join('').split('\x00\x00\x00').filter(Boolean);
-		const autoRegExp = new RegExp('\xF4\x53\xB6\x51\xD7\xA2\x10\x48\x99\xBD\x06\x72\x47\x12\x17\x5A', 'i'); // eslint-disable-line no-control-regex
-		// const autoRegExp = new RegExp('(\x37\x02|\x00\x50\x01)\x03\x55', 'i'); // eslint-disable-line no-control-regex
+		// eslint-disable-next-line no-control-regex
+		const autoRegExp = new RegExp('\xF4\x53\xB6\x51\xD7\xA2\x10\x48\x99\xBD\x06\x72\x47\x12\x17\x5A', 'i'); // NOSONAR
 		const stack = [];
 		const autoPlsData = [];
 		let count = 0;
@@ -142,19 +154,22 @@ const FPL = {
 			}
 		});
 		if (autoPlsData.length) {
-			const plsObj = { name: '', query: '', sort: '', bSortForced: false, id };
-			plsObj.query = (autoPlsData[1] || '');
-			plsObj.sort = (autoPlsData[2] ||'').replace(/\x37.*/gi, '');
-			const alphabet = /([^\W]|[[\]()_Á-ü])/;
-			for (const key in plsObj) {
-				if (typeof plsObj[key] === 'string') {
-					plsObj[key] = plsObj[key].replace(/[\0-\cZ]/gi, '');
-					if (!alphabet.test(plsObj[key])) {
-						plsObj[key] = plsObj[key].slice(0, -1);
+			if (this.bDebug) { autoPlsData.forEach((l, i) => console.log(i, JSON.stringify(l))); }
+			try {
+				const plsObj = { name: '', query: '', sort: '', bSortForced: false, id };
+				plsObj.query = (autoPlsData[1] || '');
+				plsObj.sort = (autoPlsData[2] || '').replace(/\x37.*/gi, '');
+				const alphabet = /([^\W]|[[\]()_Á-ü])$/;
+				for (const key in plsObj) {
+					if (typeof plsObj[key] === 'string') {
+						plsObj[key] = plsObj[key].replace(/[\0-\cZ]/gi, '');
+						if (!alphabet.test(plsObj[key])) {
+							plsObj[key] = plsObj[key].slice(0, -1);
+						}
 					}
 				}
-			}
-			return plsObj;
+				return plsObj;
+			} catch (e) { console.log(e.message); }
 		}
 		return null;
 	}
