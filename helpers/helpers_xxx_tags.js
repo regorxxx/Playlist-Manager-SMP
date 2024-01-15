@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/24
+//15/01/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -321,7 +321,7 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 function isQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
 	if (query && query.length) {
-		bPass = ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER'].some((key) => query.includes(key))
+		bPass = ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER', 'EQUAL', 'MISSING', 'BEFORE', 'AFTER', 'SINCE', 'DURING'].some((key) => query.includes(key))
 			&& checkQuery(query, false, bAllowSort, bAllowPlaylist);
 	} else if (!bAllowEmpty) { bPass = false; }
 	return bPass;
