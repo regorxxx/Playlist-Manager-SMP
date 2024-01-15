@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/24
+//15/01/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp */
 
@@ -23,7 +23,7 @@ const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, Syestem: 4, Volume: 8, Dir
 const utf8 = convertCharsetToCodepage('UTF-8');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
 const absPathRegExp = /[A-z]*:\\/;
-const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/;
+const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR
 
 // Create global folders
 _createFolder(folders.data);
