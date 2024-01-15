@@ -25,7 +25,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable , getFiles:readable */
+/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursivefile:readable, _open:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
 /* global funcDict:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
@@ -3586,25 +3586,20 @@ function _list(x, y, w, h) {
 		return false;
 	};
 
-	this.importAutoPlaylistsFromFoobar = (options) => {
-		if (isFoobarV2) {
-			// TODO import from sqlite
-		} else if (_isFile(fb.ProfilePath + 'playlists-v1.4\\index.dat')) {
-			this.importAutoPlaylistsFromDat(options);
-		}
-	};
-	this.importAutoPlaylistsFromDat = ({ path = fb.ProfilePath + 'playlists-v1.4\\index.dat', bSelect = true } = {}) => {
-		if (!_isFile(path)) {return false;}
-		const data = FPL.parseDatFile(path);
-		if (!data) {return false;}
+	this.importAutoPlaylistsFromFoobar = ({ bSelect = true } = {}) => {
+		const data = isFoobarV2
+			? this.importAutoPlaylistsFromSqlite('h:\\_git\\_foobar2000_test_2_1\\profile\\playlists-v2.0\\')
+			: this.importAutoPlaylistsFromDat();
+		if (!data || !data.autoPls.length) { return false; }
 		const autoPlsNames = new Set(this.dataAutoPlaylists.map((pls) => pls.nameId));
 		const allNames = new Set(this.dataAll.map((pls) => pls.nameId));
 		const plsObJ = [];
 		data.autoPls.forEach((newPls) => {
-			if (!checkQuery(newPls.query, false, true, false)) { return; }
+			if (!checkQuery(newPls.query, false, true, false)) { console.popup('Error parsing query for playlist:\n' + JSON.stringify(newPls), 'Playlist Manager'); return; }
 			if (newPls.sort && !checkSort(newPls.sort)) {
 				const newSort = newPls.sort.indexOf('$') !== -1 ? 'SORT BY ' + _q(newPls.sort) : 'SORT BY ' + newPls.sort;
 				if (checkSort(newSort)) { newPls.sort = newSort; }
+				else { console.popup('Error parsing sort for playlist:\n' + JSON.stringify(newPls), 'Playlist Manager'); }
 			}
 			if (autoPlsNames.has(newPls.name)) {
 				const pls = this.dataAutoPlaylists.find((pls) => pls.nameId === newPls.name);
@@ -3634,10 +3629,30 @@ function _list(x, y, w, h) {
 					if (idx !== -1) { this.indexes.push(idx); }
 				});
 			}
-			// Adding an autoplaylist already sets the index at the latest one added
+			// Adding an AutoPlaylist already sets the index at the latest one added
 			return true;
 		}
-		return false;
+	};
+	this.importAutoPlaylistsFromSqlite = (path = fb.ProfilePath + 'playlists-v2.0\\') => {
+		if (!_isFolder(path)) { return null; }
+		const files = findRecursivefile('*.sqlite', [path]);
+		const data = files.map((file) => FPL.parseSqliteFile(file)).filter(Boolean);
+		// Playlist names must be retrieved from another index file
+		if (data && data.length) {
+			const index = _open(path + 'index.txt', utf8);
+			if (index) {
+				data.forEach((pls) => {
+					pls.name = (index.match(new RegExp(pls.id + ':(.*)$', 'im')) || ['', ''])[1];
+				});
+				return { autoPls: data };
+			} else { console.popup('Error reading index file:\n' + path + 'index.txt', 'Playlist Manager'); }
+		} else { console.popup('Error reading playlist files or no AutoPlaylist was found:\n' + path + '*.sqlite', 'Playlist Manager'); }
+		return null;
+	};
+	this.importAutoPlaylistsFromDat = (path = fb.ProfilePath + 'playlists-v1.4\\index.dat') => {
+		if (!_isFile(path)) { return null; }
+		const data = FPL.parseDatFile(path) || null;
+		return data;
 	};
 
 	// Categories and tags

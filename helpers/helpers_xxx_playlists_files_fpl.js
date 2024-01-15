@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//15/01/24
 
 /* exported FPL */
 
@@ -37,7 +37,10 @@ const FPL = {
 		return jspf;
 	},
 	parseDatFile: function (path) {
-		return this.toInfoPls(this.readFile(path));
+		return this.toFoobarV1Pls(this.readFile(path));
+	},
+	parseSqliteFile: function (path) {
+		return this.toFoobarV2Pls(this.readFile(path), path);
 	},
 	toJSPF: function (hexArr) {
 		const jspf = XSPF.emptyJSPF();
@@ -75,7 +78,7 @@ const FPL = {
 		}
 		return jspf;
 	},
-	toInfoPls: function (hexArr) {
+	toFoobarV1Pls: function (hexArr) {
 		const data = hexArr.join('').split('\x00\x00\x00');
 		const autoRegExp = new RegExp(this.MAGICAUTOPLS, 'i');
 		const info = { autoPls: [], pls: [] };
@@ -116,5 +119,43 @@ const FPL = {
 			});
 		}
 		return info;
+	},
+	toFoobarV2Pls: function (hexArr, path) {
+		const id = path.split('\\').slice(-1)[0].replace(/(^playlist-)|(-props.sqlite$)/gi, '');
+		const data = hexArr.join('').split('\x00\x00\x00').filter(Boolean);
+		const autoRegExp = new RegExp('\xF4\x53\xB6\x51\xD7\xA2\x10\x48\x99\xBD\x06\x72\x47\x12\x17\x5A', 'i'); // eslint-disable-line no-control-regex
+		// const autoRegExp = new RegExp('(\x37\x02|\x00\x50\x01)\x03\x55', 'i'); // eslint-disable-line no-control-regex
+		const stack = [];
+		const autoPlsData = [];
+		let count = 0;
+		data.some((line) => {
+			stack.push(line);
+			if (autoRegExp.test(line)) {
+				count += 3;
+			} else if (count) {
+				count--;
+				if (!count) {
+					autoPlsData.push(...stack.slice(-4));
+					stack.length = 0;
+					return true;
+				}
+			}
+		});
+		if (autoPlsData.length) {
+			const plsObj = { name: '', query: '', sort: '', bSortForced: false, id };
+			plsObj.query = (autoPlsData[1] || '');
+			plsObj.sort = (autoPlsData[2] ||'').replace(/\x37.*/gi, '');
+			const alphabet = /([^\W]|[[\]()_Á-ü])/;
+			for (const key in plsObj) {
+				if (typeof plsObj[key] === 'string') {
+					plsObj[key] = plsObj[key].replace(/[\0-\cZ]/gi, '');
+					if (!alphabet.test(plsObj[key])) {
+						plsObj[key] = plsObj[key].slice(0, -1);
+					}
+				}
+			}
+			return plsObj;
+		}
+		return null;
 	}
 };
