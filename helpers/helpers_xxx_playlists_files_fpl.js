@@ -12,7 +12,7 @@ include('..\\helpers-external\\xspf-to-jspf-parser\\xspf_parser.js');
 /* global XSPF:readable*/
 
 const FPL = {
-	bDebug: true,
+	bDebug: false,
 	MAGIC: ['\xE1', '\xA0', '\x9C', '\x91', '\xF8', '\x3C', '\x77', '\x42', '\x85', '\x2C', '\x3B', '\xCC', '\x14', '\x01', '\xD3', '\xF2'].join(''),
 	MAGICAUTOPLS: ['\x55', '\x65', '\xF1', '\x82', '\xCB', '\x7A', '\x8C', '\x43', '\x9C', '\x4B', '\x55', '\xE1', '\xD8', '\x4D', '\x15', '\x64'].join(''),
 	readFile: function (path) {
@@ -105,22 +105,23 @@ const FPL = {
 		if (autoPlsCount === autoPlsData.length) {
 			const ctrlChar = /[\0-\cZ]/i;
 			const alphabet = /([^\W]|[[\]()_Á-ü])$/;
+			const queryKeys = ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER', 'EQUAL', 'MISSING', 'BEFORE', 'AFTER', 'SINCE', 'DURING'];
 			autoPlsData.forEach((pls) => {
 				if (this.bDebug) { pls.forEach((l, i) => console.log(i, JSON.stringify(l))); }
 				const plsObj = { name: '', query: '', sort: '', bSortForced: false };
 				try {
 					plsObj.name = pls[0].split('\xFF')[0] || '';
 					if (ctrlChar.test(plsObj.name)) { plsObj.name = pls[1].split('\xFF')[0] || ''; }
-					plsObj.query = pls[3];
-					let i = 4;
-					while (ctrlChar.test(plsObj.query) && !plsObj.query.endsWith('\x07')) {
+					let i = 3;
+					while (!queryKeys.some((key) => plsObj.query.includes(key)) && i < pls.length) {
 						plsObj.query = pls[i++] || '';
 					}
-					if (plsObj.query.endsWith('\x07')) {
+					if (ctrlChar.test(plsObj.query)) {
 						plsObj.sort = pls[i].split('\xE3\x14\x3B')[0] || '';
 					}
 					for (const key in plsObj) {
 						if (typeof plsObj[key] === 'string') {
+							plsObj[key] = plsObj[key].replace(/[\0-\cZ]/gi, '');
 							if (!alphabet.test(plsObj[key])) {
 								plsObj[key] = plsObj[key].slice(0, -1);
 							}
