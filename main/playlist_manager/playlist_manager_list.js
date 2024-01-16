@@ -2085,39 +2085,12 @@ function _list(x, y, w, h) {
 						case 'f9': { // Filter playlists with selected tracks / Search
 							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 							if (selItems && selItems.Count) {
-								if (this.searchInput && this.searchMethod.bPath) {
-									let search = '';
-									if (selItems.Count > 1 && this.searchMethod.bRegExp) {
-										const paths = selItems.GetLibraryRelativePaths().map((path) => path.split('\\').slice(-1)[0]).filter(Boolean);
-										search = '/' + paths.join('|') + '/i';
-
-									} else {
-										search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
-									}
-									this.searchCurrent = this.searchInput.text = search;
-									this.search();
+								const bShift = getKeyboardMask() === kMask.shift;
+								const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
+								if (!bShift && this.searchInput && bValidSearchMethods) {
+									this.on_drag_drop_external('search');
 								} else {
-									const found = [];
-									for (let i = 0; i < this.itemsAll; i++) {
-										if (this.checkSelectionDuplicatesPlaylist({ playlistIndex: i, bAlsoHidden: true })) {
-											found.push({ name: this.dataAll[i].name, category: this.dataAll[i].category });
-										}
-									}
-									found.sort((a, b) => a.category.localeCompare(b.category));
-									for (let i = 0, prevCat = null; i < found.length; i++) {
-										if (prevCat !== found[i].category) {
-											prevCat = found[i].category;
-											found.splice(i, 0, { category: found[i].category });
-										}
-									}
-									for (let i = 0; i < found.length; i++) {
-										if (Object.hasOwn(found[i], 'name')) {
-											found[i] = '\t- ' + found[i].name;
-										} else {
-											found[i] = (found[i].category || 'No category') + ':';
-										}
-									}
-									fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+									createMenuRight().btn_up(this.mx, this.my, void (0), 'Find current selection...');
 								}
 								return true;
 							}
@@ -2656,9 +2629,9 @@ function _list(x, y, w, h) {
 	};
 
 	// Drag n drop
-	this.on_drag_drop_external = (action, x, y, mask, idx) => {
+	this.on_drag_drop_external = (action, x, y, mask, idx = plman.ActivePlaylist) => {
 		if (idx !== -1) {
-			if (this.searchInput && (this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks) && this.searchInput.trackCheck(x, y)) {
+			if (this.searchInput && (this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks) && (action === 'search' || this.searchInput.trackCheck(x, y))) {
 				const selItems = plman.GetPlaylistSelectedItems(idx);
 				if (selItems && selItems.Count) {
 					let search = '';

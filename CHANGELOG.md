@@ -89,6 +89,8 @@
 - UI: Added a tip at all input popups for sorting, to specify when 'SORT BY' and similar statements must be used.
 - UI: optimized repainting to use less resources on statistics mode.
 - UI: changed tooltip for multiple selection to only show the available actions which work on the entire selection.
+- Shortcuts: global shortcut to search (F9) uses now the new search methods added for tracks.
+- Shortcuts: Shift + F9 now displays the report with selected tracks (previously it was only used when pressing F9 if no compatible search methods was enabled to look for tracks).
 - Clone: wrong warning about not found tracks when using relative paths in some cases.
 - Playlist formats: added some checks when parsing corrupted playlists to avoid crashes (and instead omit the line).
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
