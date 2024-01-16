@@ -1975,6 +1975,9 @@ function _list(x, y, w, h) {
 								if (pls.isFolder) {
 									pls.pls.filtered.forEach((subPls) => playlists.push(subPls));
 									playlists.forEach((subPls) => indexes.push(this.getIndex(subPls, true)));
+								} else if (this.indexes.length) {
+									playlists.push(...this.indexes.map((idx) => this.data[idx]));
+									indexes.push(...this.indexes);
 								} else {
 									playlists.push(pls);
 									indexes.push(this.getIndex(pls, true));
@@ -2001,81 +2004,91 @@ function _list(x, y, w, h) {
 						case 'f2': // Rename
 							if (z !== -1) {
 								const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void (0), true);
-								if (input === null) { return; }
-								if (pls.isFolder) { renameFolder(this, z, input); }
-								else { renamePlaylist(this, z, input); }
-								return true;
+								if (input === null) { return false; }
+								return pls.isFolder
+									? renameFolder(this, z, input)
+									: renamePlaylist(this, z, input);
 							}
 							return false;
 						case 'f3': // Clone in UI (view)
 							if (z !== -1) {
-								if (pls.isFolder) {
-									const playlists = pls.pls.filtered;
-									const bOpen = pls.isOpen;
-									if (!bOpen) { this.switchFolder(z); }
-									const indexes = playlists.map((p) => this.getIndex(p));
-									indexes.forEach((z, i) => {
-										const subPls = playlists[i];
-										if (subPls.extension === '.xsp' && Object.hasOwn(subPls, 'type') && subPls.type !== 'songs') { return; }
-										if (subPls.extension !== '.ui' && !subPls.isFolder) {
-											if (subPls.isAutoPlaylist) {
-												const remDupl = (subPls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (subPls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-												cloneAsStandardPls(this, z, remDupl, this.bAdvTitle, false);
-											} else {
-												clonePlaylistFile(this, z, '.ui');
-											}
-										}
-									});
-									if (!bOpen) { this.switchFolder(z); }
-								} else if (pls.isAutoPlaylist || pls.query) {
-									const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-									clonePlaylistInUI(this, z, remDupl, this.bAdvTitle);
+								const clone = (idx) => {
+									const pls = this.data[idx];
+									if (pls.isFolder) {
+										const playlists = pls.pls.filtered;
+										const bOpen = pls.isOpen;
+										if (!bOpen) { this.switchFolder(idx); }
+										const indexes = playlists.map((p) => this.getIndex(p));
+										const bDone = indexes.map((z) => clone(z));
+										if (!bOpen) { this.switchFolder(idx); }
+										return bDone.every(Boolean);
+									} else if (pls.isAutoPlaylist || pls.query) {
+										if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return false; }
+										const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
+										return clonePlaylistInUI(this, idx, remDupl, this.bAdvTitle);
+									} else {
+										return clonePlaylistInUI(this, idx);
+									}
+								};
+								if (this.indexes.length) {
+									const playlists = this.indexes.map((idx) => this.data[idx]);
+									const bDone = playlists.map((pls) => clone(this.getIndex(pls)));
+									return bDone.every(Boolean);
 								} else {
-									clonePlaylistFile(this, z, '.ui');
+									return clone(z);
 								}
-								return true;
 							}
 							return false;
 						case 'f4': // Load (edit)
 							if (z !== -1) {
-								if (pls.isFolder) {
-									const playlists = pls.pls.filtered;
-									const indexes = playlists.map((p) => this.getIndex(p, true));
-									indexes.forEach((z, i) => {
-										const subPls = playlists[i];
-										if (subPls.extension !== '.ui' && !subPls.isFolder) { this.loadPlaylist(z, true); }
-									});
+								const load = (idx, bHidden) => {
+									const pls = (bHidden ? this.dataAll : this.data)[idx];
+									if (pls.isFolder) {
+										const playlists = pls.pls.filtered;
+										const bDone = playlists.map((p) => load(this.getIndex(p, true), true));
+										return bDone.every(Boolean);
+									} else {
+										return this.loadPlaylistOrShow(idx, bHidden);
+									}
+								};
+								if (this.indexes.length) {
+									const playlists = this.indexes.map((idx) => this.data[idx]);
+									const bDone = playlists.map((pls) => load(this.getIndex(pls)));
+									return bDone.every(Boolean);
 								} else {
-									this.loadPlaylistOrShow(z);
+									return load(z);
 								}
-								return true;
 							}
 							return false;
 						case 'f5': // Clone (copy)
 							if (z !== -1) {
 								if (pls.isFolder) {
 									const name = pls.name + ' (copy ' + this.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
-									this.addFolder(name);
-								} else if (pls.isAutoPlaylist) { cloneAsAutoPls(this, z); }
-								else if (pls.extension === '.xsp') { cloneAsSmartPls(this, z); }
-								else { clonePlaylistFile(this, z, pls.extension); }
-								return true;
+									const inFolder = this.isInFolder(pls) ? this.getParentFolder(pls) : null;
+									return !!this.addFolder(name, inFolder);
+								} else if (pls.isAutoPlaylist) { return cloneAsAutoPls(this, z); }
+								else if (pls.extension === '.xsp') { return cloneAsSmartPls(this, z); }
+								else { return clonePlaylistFile(this, z, pls.extension); }
 							}
 							return false;
 						case 'f6': // Export to ListenBrainz (move)
 							if (z !== -1 && showMenus['Online sync']) {
-								return this.exportToListenbrainz(pls);
+								if (this.indexes.length) {
+									const playlists = this.indexes.map((idx) => this.data[idx]);
+									const bDone = playlists.map(this.exportToListenbrainz);
+									return bDone.every(Boolean);
+								} else {
+									return this.exportToListenbrainz(pls);
+								}
 							}
 							return false;
 						case 'f7': { // Add playlist (new)
-							if (this.bLiteMode) {
+							if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) { // NOSONAR
+								this.addFolder();
+							} else if (this.bLiteMode) {
 								this.addUIplaylist({ bInputName: true });
 							} else {
-								if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) { // NOSONAR
-									this.addFolder();
-								} else {
-									this.add({ bEmpty: true });
-								}
+								this.add({ bEmpty: true });
 							}
 							return true;
 						}
