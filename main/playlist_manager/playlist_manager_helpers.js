@@ -740,7 +740,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 	const handleList = !bUI
 		? pls.isAutoPlaylist
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
-			: getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true})
+			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList && handleList.Count) {
 		if (pls.isAutoPlaylist && pls.sort.length) {
@@ -787,7 +787,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 		const handleListZ = !bUI
 			? pls.isAutoPlaylist
 				? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
-				: getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true})
+				: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 			: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 		if (bDone && handleListZ) {
 			bDone = true;
@@ -825,7 +825,7 @@ function clonePlaylistFile(list, z, ext) {
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
 	const handleList = !bUI
-		? getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true})
+		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
@@ -1028,7 +1028,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
 	// Get tracks
 	const handleList = !bUI
-		? getHandlesFromPlaylist({playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle})
+		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const subsongRegex = /,\d*$/g;
 	const paths = (!bUI && !bXSP ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => { return path.replace(subsongRegex, ''); });
@@ -1173,6 +1173,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 					id: list.bUseUUID ? newId : '', // May have enabled/disabled UUIDs just before renaming
 					nameId: list.bUseUUID && pls.extension !== '.ui' ? newName + newId : newName,
 				});
+				list.editSortingFile(oldNameId, newNameId);
 				if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
 				list.update(true, true);
 				list.filter();
@@ -1190,6 +1191,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 						list.editData(pls, {
 							path: newPath,
 						});
+						list.editSortingFile(oldNameId, newNameId);
 						if (!pls.isLocked) {
 							let bDone = false;
 							let reason = -1;
@@ -1661,7 +1663,7 @@ function findDurationMismatch() {
 		playlists.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
-					const handleList = getHandlesFromPlaylist({playlistPath: playlist.path, relPath: list.playlistsPath});
+					const handleList = getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath });
 					if (handleList) {
 						const bFpl = playlist.extension === '.fpl';
 						const calcDuration = handleList.CalcTotalDuration();

@@ -103,6 +103,7 @@
 - UI: AutoPlaylists contextual menu missing 'Load playlist' entry on lite mode.
 - UI: playlists missing 'Delete' entry on lite mode.
 - UI: fixed misspelling of 'bound' in multiple places.
+- UI: renaming a playlist/folder changed the position when using manual sorting, sending the item to the end of the list (instead of keeping the original position).
 - Search: search history not applying the term when clicking.
 - Folders: playlist deletion within folders did not update the UI properly in some cases. [Issue 72](https://github.com/regorxxx/Playlist-Manager-SMP/issues/72)
 - Folders: nested folders not working in some cases or producing crashes. [Issue 73](https://github.com/regorxxx/Playlist-Manager-SMP/issues/73)

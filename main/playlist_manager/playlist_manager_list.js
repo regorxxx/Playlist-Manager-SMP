@@ -6000,6 +6000,22 @@ function _list(x, y, w, h) {
 			else { this.sortingFile = []; }
 		};
 
+		this.editSortingFile = (entries, newNames) => {
+			if (!Array.isArray(entries)) { entries = [entries]; }
+			if (!Array.isArray(newNames)) { newNames = [newNames]; }
+			if (entries.length !== newNames.length) { return false; }
+			const bDone = entries.every((entry, i) => {
+				const idx = this.sortingFile.findIndex((n) => n === entry);
+				if (idx !== -1) {
+					this.sortingFile[idx] = newNames[i];
+					return true;
+				}
+				return false;
+			});
+			if (bDone) { this.saveManualSorting(); }
+			return bDone;
+		};
+
 		this.createMainMenuDynamic = ({ file = folders.ajquerySMP + 'playlistmanagerentries.json', bRetry = true } = {}) => {
 			this.deleteMainMenuDynamic();
 			let currId = this.mainMenuDynamic.length;
