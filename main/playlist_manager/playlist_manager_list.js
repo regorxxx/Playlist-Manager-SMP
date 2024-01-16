@@ -1,9 +1,9 @@
 ﻿'use strict';
-//15/01/24
+//16/01/24
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, cloneAsStandardPls:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, cloneAsStandardPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
+/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable */
 include('..\\window\\window_xxx_input.js');
@@ -4139,8 +4139,8 @@ function _list(x, y, w, h) {
 		this.sort(void (0), true); // uses current sort state and repaint
 	};
 
-	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false) => {
-		const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]) : [];
+	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false) => {
+		const plsSel = !bSkipSel && this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		this.collapseFolders();
 		const bManual = this.methodState === this.manualMethodState();
 		if (bManual) {
@@ -4310,6 +4310,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
+		const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const oldCategories = this.categories();
 		const oldTags = this.tags();
@@ -4607,7 +4608,10 @@ function _list(x, y, w, h) {
 			totalFileSize += this.dataAll[i].fileSize; // For auto-updating check...
 		}
 		this.totalFileSize = totalFileSize; // Better to set it on one step to not call autoupdate in the middle of this update!
-		this.sort(); // Sorts data according to current sort state
+		this.sort(void (0), void (0), true); // Sorts data according to current sort state
+		if (plsSel.length) {
+			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
+		}
 		if (!bMaintainFocus) { this.offset = 0; } // Don't move the list focus...
 		else { this.jumpLastPosition(); }
 		this.save(bInit); // Updates this.dataAutoPlaylists
