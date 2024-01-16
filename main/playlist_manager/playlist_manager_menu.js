@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/24
+//16/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -119,7 +119,7 @@ function createMenuLeft(forcedIndex = -1) {
 			{	// Load
 				// Load playlist within foobar2000. Only 1 instance allowed
 				(!list.bLiteMode || pls.isAutoPlaylist) && menu.newEntry({
-					entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist', func: () => {
+					entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist' + list.getGlobalShortcut('load'), func: () => {
 						if (pls.isAutoPlaylist) {
 							const idx = getPlaylistIndexArray(pls.nameId);
 							if (idx.length) {
@@ -148,7 +148,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}
 			// Renames both playlist file and playlist within foobar2000. Only 1 instance allowed
 			menu.newEntry({
-				entryText: (!bIsLockPls && !bIsLockPlsRename ? 'Rename...' : (bIsAutoPls || bIsPlsUI ? 'Rename...' : 'Rename... (only filename)')), func: () => {
+				entryText: (!bIsLockPls && !bIsLockPlsRename ? 'Rename...' : (bIsAutoPls || bIsPlsUI ? 'Rename...' : 'Rename... (only filename)')) + list.getGlobalShortcut('rename'), func: () => {
 					const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void (0), true);
 					if (input === null) { return; }
 					renamePlaylist(list, z, input);
@@ -337,7 +337,7 @@ function createMenuLeft(forcedIndex = -1) {
 			//	AutoPlaylists clone
 			if (bIsAutoPls) { // For XSP playlists works the same as being an AutoPlaylist!
 				menu.newEntry({
-					entryText: 'Clone in UI', func: () => {
+					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 						clonePlaylistInUI(list, z, remDupl, list.bAdvTitle);
 					}
@@ -349,13 +349,13 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.newEntry({
-					entryText: 'Clone as AutoPlaylist and edit...', func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
+					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
 						cloneAsAutoPls(list, z, uiIdx);
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.addIndicatorNameLast(() => bIsPlsUI); // Add an indicator for required cloning
 				!list.bLiteMode && menu.newEntry({
-					entryText: 'Clone as Smart Playlist and edit...', func: () => { // Here creates a Kodi XSP smart no matter the original format
+					entryText: 'Clone as Smart Playlist and edit...' + (pls.extension === '.xsp' ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a Kodi XSP smart no matter the original format
 						cloneAsSmartPls(list, z);
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
@@ -391,7 +391,9 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({ menuName: subMenuName, entryText: 'Select a format:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					presets.forEach((ext) => {
-						const entryText = ext === '.ui' ? 'Clone in UI' : ext;
+						const entryText = ext === '.ui'
+							? 'Clone in UI' + list.getGlobalShortcut('clone ui')
+							: ext + (ext === pls.extension ? list.getGlobalShortcut('clone') : '');
 						if (ext === 'sep') { menu.newEntry({ menuName: subMenuName, entryText, flags: MF_GRAYED }); return; }
 						menu.newEntry({
 							menuName: subMenuName, entryText, func: () => {
@@ -416,7 +418,7 @@ function createMenuLeft(forcedIndex = -1) {
 				}
 			} else { // Lite mode
 				menu.newEntry({
-					entryText: 'Clone in UI', func: () => {
+					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
 						clonePlaylistFile(list, z, '.ui');
 					}
 				});
@@ -675,7 +677,7 @@ function createMenuLeft(forcedIndex = -1) {
 			if (showMenus['File locks']) {
 				if (!bIsPlsUI) {
 					menu.newEntry({
-						entryText: !bIsLockPls ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
+						entryText: (!bIsLockPls ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)') + list.getGlobalShortcut('lock file'), func: () => {
 							switchLock(list, z);
 						}, flags: bIsPlsLockable ? MF_STRING : MF_GRAYED
 					});
@@ -716,12 +718,12 @@ function createMenuLeft(forcedIndex = -1) {
 					});
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					menu.newEntry({
-						menuName: subMenuName, entryText: 'All locks', func: () => {
+						menuName: subMenuName, entryText: 'All locks' + (bIsPlsUI && !currentLocks.size ? list.getGlobalShortcut('lock ui') : ''), func: () => {
 							plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
 						}, flags
 					});
 					menu.newEntry({
-						menuName: subMenuName, entryText: 'None', func: () => {
+						menuName: subMenuName, entryText: 'None' + (bIsPlsUI && currentLocks.size ? list.getGlobalShortcut('lock ui') : ''), func: () => {
 							plman.SetPlaylistLockedActions(index, []);
 						}, flags
 					});
@@ -771,7 +773,7 @@ function createMenuLeft(forcedIndex = -1) {
 			if (showMenus['File management']) {
 				menu.newEntry({ entryText: 'sep' });
 				// Deletes playlist file and playlist loaded
-				menu.newEntry({ entryText: 'Delete', func: () => { list.removePlaylist(z); } });
+				menu.newEntry({ entryText: 'Delete' + list.getGlobalShortcut('delete'), func: () => { list.removePlaylist(z); } });
 				!list.bLiteMode && menu.newEntry({
 					entryText: 'Open file on explorer', func: () => {
 						if (pls.isAutoPlaylist) { _explorer(list.filename); } // Open AutoPlaylist json file
@@ -854,8 +856,8 @@ function createMenuFolder(menu, folder, z) {
 	}
 	menu.newEntry({ entryText: 'sep' });
 	menu.newEntry({
-		entryText: 'Rename...', func: () => {
-			const input = Input.string('string', folder.nameId, 'Enter playlist name:', window.Name, 'My playlist', void (0), true);
+		entryText: 'Rename...' + list.getGlobalShortcut('rename'), func: () => {
+			const input = Input.string('string', folder.nameId, 'Enter folder name:', window.Name, 'My folder', void (0), true);
 			if (input === null) { return; }
 			renameFolder(list, z, input);
 		}
@@ -871,7 +873,7 @@ function createMenuFolder(menu, folder, z) {
 	{	// Load
 		// Load playlist within foobar2000. Only 1 instance allowed
 		menu.newEntry({
-			entryText: 'Load entire folder', func: () => {
+			entryText: 'Load entire folder' + list.getGlobalShortcut('load'), func: () => {
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
 					if (!isPlsUI(pls) && !isFolder(pls)) { list.loadPlaylist(z, true); }
@@ -901,7 +903,7 @@ function createMenuFolder(menu, folder, z) {
 		});
 		// Clone in UI
 		menu.newEntry({
-			entryText: 'Clone entire folder in UI', func: () => {
+			entryText: 'Clone entire folder in UI' + list.getGlobalShortcut('clone ui'), func: () => {
 				if (!bOpen) { list.switchFolder(z); }
 				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				zArr.forEach((z) => {
@@ -961,7 +963,7 @@ function createMenuFolder(menu, folder, z) {
 		});
 	}
 	menu.newEntry({ entryText: 'sep' });
-	menu.newEntry({ entryText: 'Delete (only folder)', func: () => { list.removePlaylist(z); } });
+	menu.newEntry({ entryText: 'Delete (only folder)' + list.getGlobalShortcut('delete'), func: () => { list.removePlaylist(z); } });
 	return menu;
 }
 
@@ -1026,7 +1028,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	{	// Load
 		// Load playlist within foobar2000. Only 1 instance allowed
 		menu.newEntry({
-			entryText: 'Load playlists', func: () => {
+			entryText: 'Load playlists' + list.getGlobalShortcut('load'), func: () => {
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
 					if (!isPlsUI(pls) && !isFolder(pls)) { list.loadPlaylist(z); }
@@ -1052,7 +1054,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		});
 		// Clone in UI
 		menu.newEntry({
-			entryText: 'Clone playlists in UI', func: () => {
+			entryText: 'Clone playlists in UI' + list.getGlobalShortcut('clone ui'), func: () => {
 				indexes.forEach((z, i) => {
 					const pls = playlists[i];
 					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
@@ -1242,7 +1244,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		// Locks playlist file
 		if (showMenus['File locks']) {
 			menu.newEntry({
-				entryText: !bIsLockPlsEvery ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)', func: () => {
+				entryText: !bIsLockPlsEvery ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)' + list.getGlobalShortcut('lock file'), func: () => {
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
 						if (!isPlsUI(pls) && !isFolder(pls) && isLockPls(pls) === bIsLockPlsEvery) { switchLock(list, z); }
@@ -1309,7 +1311,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
-					menuName: subMenuName, entryText: 'All locks', func: () => {
+					menuName: subMenuName, entryText: 'All locks' + (bIsPlsUISome ? list.getGlobalShortcut('lock ui') : ''), func: () => {
 						const report = [];
 						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
@@ -1327,7 +1329,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					}, flags
 				});
 				menu.newEntry({
-					menuName: subMenuName, entryText: 'None', func: () => {
+					menuName: subMenuName, entryText: 'None' + (bIsPlsUISome ? list.getGlobalShortcut('lock ui') : ''), func: () => {
 						const report = [];
 						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
@@ -1414,13 +1416,13 @@ function createMenuRight() {
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{ // New Playlists
-		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...', func: () => { list.add({ bEmpty: true }); } });
+		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => { list.add({ bEmpty: true }); } });
 		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => { list.addAutoPlaylist(); } });
 		!list.bLiteMode && menu.newEntry({ entryText: 'New Smart Playlist...', func: () => { list.addSmartplaylist(); } });
-		menu.newEntry({ entryText: 'New UI-only Playlist...', func: () => { list.addUIplaylist({ bInputName: true }); } });
+		menu.newEntry({ entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => { list.addUIplaylist({ bInputName: true }); } });
 		if (showMenus['Folders']) {
 			menu.newEntry({ entryText: 'sep' });
-			menu.newEntry({ entryText: 'New Folder...', func: () => { list.addFolder(); } });
+			menu.newEntry({ entryText: 'New Folder...' + list.getGlobalShortcut('new folder'), func: () => { list.addFolder(); } });
 		}
 		menu.newEntry({ entryText: 'sep' });
 		!list.bLiteMode && menu.newEntry({ entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false }); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
@@ -1871,7 +1873,7 @@ function createMenuRight() {
 	menu.newEntry({ entryText: 'sep' });
 	{	// Find selection
 		menu.newEntry({
-			entryText: 'Find current selection...', func: () => {
+			entryText: 'Find current selection...' + list.getGlobalShortcut('find'), func: () => {
 				const found = [];
 				for (let i = 0; i < list.itemsAll; i++) {
 					if (list.checkSelectionDuplicatesPlaylist({ playlistIndex: i, bAlsoHidden: true })) {

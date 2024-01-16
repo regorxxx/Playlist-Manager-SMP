@@ -92,6 +92,7 @@
 - Shortcuts: global shortcut to search (F9) uses now the new search methods added for tracks.
 - Shortcuts: Shift + F9 now displays the report with selected tracks (previously it was only used when pressing F9 if no compatible search methods was enabled to look for tracks).
 - Shortcuts: all global shortcuts related to playlists (F1 - F6) now work recursively on multiple selection and folders (without level limits). Exceptions: F2-Rename (since renaming on batch is not allowed), and DEL-Remove playlist (deleting in batch can only be done via menus and multiple selection to avoid accidental deletions of multiple items).
+- Shortcuts: global shortcut are now shown on the related menu entries and/or buttons. For ex. the menu entry to create a new playlist now displays the shortcut F7 if global shortcuts are enabled.
 - Clone: wrong warning about not found tracks when using relative paths in some cases.
 - Clone: when cloning playlists within a folder (via menus or shortcuts), the new items will be created now at the same folder level (not at the root of the list).
 - Playlist formats: added some checks when parsing corrupted playlists to avoid crashes (and instead omit the line).

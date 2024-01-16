@@ -2211,22 +2211,65 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.listGlobalShortcuts = (bForce = false) => {
+	this.listGlobalShortcuts = (bForce = false, bTips = true) => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		return (this.properties.bGlobalShortcuts[1] || bForce
-			? '\n- F1: lock / unlock playlist.' +
+			? '\n- F1: lock / unlock playlist(s). (*)' +
 			'\n- F2: rename playlist.' +
-			'\n- F3: clone in UI playlist.' +
-			'\n- F4: load / jump to playlist.' +
-			'\n- F5: copy playlist (with same format).' +
-			(showMenus['Online sync'] ? '\n- F6: export playlist to ListenBrainz (+ Spotify).' : '\n- F6: -none-\t(disabled Online sync)') +
+			'\n- F3: clone in UI playlist(s). (*)' +
+			'\n- F4: load / jump to playlist(s). (*)' +
+			'\n- F5: copy playlist(s) (with same format). (*)' +
+			(showMenus['Online sync'] ? '\n- F6: export playlist(s) to ListenBrainz (+ Spotify). (*)' : '\n- F6: -none-\t(disabled Online sync)') +
 			'\n- F7: new playlist' + (showMenus['Folders'] ? ' or folder (+ Shift)' : '') + '.' +
 			(showMenus['Category'] ? '\n- F8: cycle categories.' : '\n- F8: -none-\t(disabled Categories)') +
 			'\n- F9: search playlists with selected tracks.' +
 			'\n- F10: settings menu or list menu (+ Shift).' +
 			'\n- F11: documentation (pdf).' +
-			(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: -none-\t(disabled File tracking -lite mode-)')
+			(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: -none-\t(disabled File tracking -lite mode-)') +
+			(bTips ? '\n(*) Also apply to multiple selection and recursively to folders.' : '')
 			: '');
+	};
+
+	this.getGlobalShortcut = (action = '', options = {bTab: true, bParen: false }) => {
+		options = {bTab: true, bParen: false, ... options};
+		const bEnabled = this.properties.bGlobalShortcuts[1];
+		let shortcut = '';
+		switch (action.toLowerCase()) {
+			case 'lock file': shortcut = bEnabled ? 'F1' : ''; break;
+			case 'lock ui': shortcut = bEnabled ? 'F1' : ''; break;
+			case 'rename': shortcut = bEnabled ? 'F2' : ''; break;
+			case 'clone ui': shortcut = bEnabled ? 'F3' : ''; break;
+			case 'load': shortcut = bEnabled ? 'F4' : ''; break;
+			case 'clone': shortcut = bEnabled ? 'F5' : ''; break;
+			case 'new ui': shortcut = bEnabled && this.bLiteMode ? 'F7' : ''; break;
+			case 'new file': shortcut = bEnabled && !this.bLiteMode ? 'F7' : ''; break;
+			case 'new folder': shortcut = bEnabled ? 'Shift + F7' : ''; break;
+			case 'search tracks': {
+				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
+				shortcut = bEnabled && bValidSearchMethods ? 'F9' : '';
+				break;
+			}
+			case 'find': {
+				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
+				shortcut = bEnabled 
+					? bValidSearchMethods ? 'Shift + F9' : 'F9'
+					: ''; 
+				break;
+			}
+			case 'settings menu': shortcut = bEnabled ? 'F10' : ''; break;
+			case 'list menu': shortcut = bEnabled ? 'Shift + F10' : ''; break;
+			case 'documentation': shortcut = bEnabled ? 'F11' : ''; break;
+			case 'tracked folder': shortcut = bEnabled && !this.bLiteMode ? 'F12' : ''; break;
+			case 'columns': shortcut = 'º or /'; break;
+			case 'delete': shortcut = 'Del'; break;
+			case 'search': shortcut = 'Ctrl + E'; break;
+		}
+		if (shortcut.length) {
+			if (options.bParen) {shortcut = _p(shortcut);}
+			if (options.bTab) {shortcut = '\t' + shortcut;}
+			else if (options.bParen) {shortcut = ' ' + shortcut;}
+		}
+		return shortcut;
 	};
 
 	this.playlistMenu = (z, x, y) => {
@@ -6523,20 +6566,31 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				return (this.searchInput.text.length || this.isFilterActive('Playlist')
 					? 'Clear search\n----------------------------------------------\n' +
-					(this.searchMethod.bRegExp
-						? 'RegExp allowed | '
-						: ''
+					(
+						this.searchMethod.bRegExp
+							? 'RegExp allowed | '
+							: ''
 					) +
-					'Fuzzy search with ~\n' +
-					'(Escape to clear search text)\n(Ctrl + E to set focus on search box)\n(Shift + L. Click to open search settings)'
+					(
+						'Fuzzy search with ~\n' +
+						'(Escape to clear search text)\n(' + this.getGlobalShortcut('search', {bTab: false}) + ' to set focus on search box)\n(Shift + L. Click to open search settings)'
+					)
 					: 'Search settings...\n----------------------------------------------\n' +
-					(this.searchMethod.bRegExp ? 'RegExp is allowed (for ex. /tag*/gi)\n' : '') +
-					'Fuzzy search with ~ at beginning/end\n' +
-					'(Escape to clear search text)\n(Ctrl + E sets focus on search box)') +
-					(this.searchMethod.bPath
+					(
+						(this.searchMethod.bRegExp ? 'RegExp is allowed (for ex. /tag*/gi)\n' : '') +
+						'Fuzzy search with ~ at beginning/end\n' +
+						'(Escape to clear search text)\n(' + this.getGlobalShortcut('search', {bTab: false}) + ' to set focus on search box)'
+					)
+				) +	(
+					this.searchMethod.bPath
 						? '\n(Drag n\' drop track(s) to copy filename(s))'
 						: ''
-					);
+				) + 
+				(
+					this.getGlobalShortcut('search tracks') 
+						? '\n(' + this.getGlobalShortcut('search tracks', {bTab: false}) + ' to search selected tracks)'
+						: ''
+				);
 			}, func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
 					this.searchInput.on_key_down(VK_ESCAPE);
@@ -6577,7 +6631,7 @@ function _list(x, y, w, h) {
 		columns: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				const showMenus = JSON.parse(this.properties.showMenus[1]);
-				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...' + (
+				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...' + this.getGlobalShortcut('columns', {bTab: false, bParen: true}) + (
 					showMenus['Statistics mode'] ?
 						'\n----------------------------------------------\n' + '(Shift + L. Click to switch to Statistics mode)'
 						: ''
@@ -6600,13 +6654,13 @@ function _list(x, y, w, h) {
 				}
 			}
 		},
-		newPls: { x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...', func: (x, y, mask, parent) => createMenuRight().btn_up(x, y) }, // eslint-disable-line no-unused-vars
+		newPls: { x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...' + this.getGlobalShortcut('list menu', {bTab: false, bParen: true}), func: (x, y, mask, parent) => createMenuRight().btn_up(x, y) }, // eslint-disable-line no-unused-vars
 		settings: {
 			x: 0, y: 0, w: 0, h: 0,
 			inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bHighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Playlist Manager settings...' +
+				return 'Playlist Manager settings...' + this.getGlobalShortcut('settings menu', {bTab: false, bParen: true}) +
 					(
 						bHighlighting || !this.bLiteMode
 							? '\n----------------------------------------------\n'
@@ -6639,7 +6693,7 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bHighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Open playlists folder' +
+				return 'Open playlists folder'  + this.getGlobalShortcut('tracked folder', {bTab: false, bParen: true}) +
 					(
 						bHighlighting || !this.bLiteMode
 							? '\n----------------------------------------------\n'
@@ -6668,7 +6722,7 @@ function _list(x, y, w, h) {
 		},
 		help: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
-			text: 'Open documentation...\n----------------------------------------------\n(Shift + L. Click to show quick help)',
+			text: 'Open documentation...' + this.getGlobalShortcut('documentation', {bTab: false, bParen: true}) + '\n----------------------------------------------\n(Shift + L. Click to show quick help)',
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_SHIFT) {
 					// Enabled menus
@@ -6676,10 +6730,11 @@ function _list(x, y, w, h) {
 					fb.ShowPopupMessage(
 						'Global shortcuts:' +
 						'\n-------------------' +
-						this.listGlobalShortcuts() +
+						this.listGlobalShortcuts(void(0), false) +
 						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
 						'\n- DEL: delete playlist.' +
 						(this.searchInput ? '\n- Ctrl + E: focus on search box.' : '') +
+						'\n(*) Also apply to multiple selection and recursively to folders.' +
 						'\n' +
 						(showMenus['Quick-search']
 							? '\nQuick-search:' +
