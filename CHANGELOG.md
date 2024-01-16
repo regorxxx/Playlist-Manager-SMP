@@ -92,6 +92,7 @@
 - Shortcuts: global shortcut to search (F9) uses now the new search methods added for tracks.
 - Shortcuts: Shift + F9 now displays the report with selected tracks (previously it was only used when pressing F9 if no compatible search methods was enabled to look for tracks).
 - Clone: wrong warning about not found tracks when using relative paths in some cases.
+- Clone: when cloning playlists within a folder (via menus or shortcuts), the new items will be created now at the same folder level (not at the root of the list).
 - Playlist formats: added some checks when parsing corrupted playlists to avoid crashes (and instead omit the line).
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
 - Helpers: updated helpers.

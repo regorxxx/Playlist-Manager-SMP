@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/24
+//16/01/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -652,12 +652,15 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
-function cloneAsAutoPls(list, z, uiIdx = -1) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsAutoPls(list, z, uiIdx = -1, toFolder) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
+	}
+	if (typeof toFolder === 'undefined') {
+		toFolder = list.isInFolder(pls) ? list.getParentFolder(pls) : null;
 	}
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
@@ -666,22 +669,25 @@ function cloneAsAutoPls(list, z, uiIdx = -1) { // May be used only to copy an Au
 		WshShell.Popup('Native AutoPlaylists not created with the manager require cloning first to fully integrate them in the manager.\n\nThe AutoPlaylist properties will be shown to let you manually copy the query and sort patterns to the input popups. You can close it afterwards.', 5, window.Name, popup.info + popup.ok);
 		plman.ShowAutoPlaylistUI(uiIdx);
 	}
-	bDone = !!list.addAutoPlaylist(objectPlaylist);
+	bDone = !!list.addAutoPlaylist(objectPlaylist, void(0), toFolder);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
 
-function cloneAsSmartPls(list, z) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
 	}
+	if (typeof toFolder === 'undefined') {
+		toFolder = list.isInFolder(pls) ? list.getParentFolder(pls) : null;
+	}
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
-	bDone = !!list.addSmartplaylist(objectPlaylist);
+	bDone = !!list.addSmartplaylist(objectPlaylist, void(0), toFolder);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
@@ -724,7 +730,7 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden = false) {
+function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden = false, toFolder) {
 	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
@@ -735,6 +741,9 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
+	}
+	if (typeof toFolder === 'undefined') {
+		toFolder = list.isInFolder(pls) ? list.getParentFolder(pls) : null;
 	}
 	// Create new playlist and check paths
 	const handleList = !bUI
@@ -756,6 +765,9 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
 			if (remDupl && remDupl.length && removeDuplicatesV2) { removeDuplicatesV2({ checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle }); }
 			bDone = true;
+		}
+		if (toFolder) {
+			list.moveToFolderStack({nameId: playlistName, extension: '.ui'}, toFolder);
 		}
 		if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); }
 	}
@@ -816,11 +828,14 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 	return bDone;
 }
 
-function clonePlaylistFile(list, z, ext) {
-	if (ext === '.ui') { return clonePlaylistInUI(list, z); }
+function clonePlaylistFile(list, z, ext, toFolder) {
+	if (ext === '.ui') { return clonePlaylistInUI(list, z, void(0), void(0), void(0), toFolder); }
 	let bDone = false;
 	const pls = list.data[z];
 	const bUI = pls.extension === '.ui';
+	if (typeof toFolder === 'undefined') {
+		toFolder = list.isInFolder(pls) ? list.getParentFolder(pls) : null;
+	}
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
@@ -846,6 +861,9 @@ function clonePlaylistFile(list, z, ext) {
 		console.log('Playlist Manager: cloning ' + playlistName + ' done.');
 		list.update();
 		list.filter();
+		if (toFolder) {
+			list.moveToFolderStack({nameId: playlistName, extension: '.ui'}, toFolder);
+		}
 	}
 	return bDone;
 }

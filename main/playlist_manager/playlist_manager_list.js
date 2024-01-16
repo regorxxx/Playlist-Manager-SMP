@@ -4598,6 +4598,25 @@ function _list(x, y, w, h) {
 			this.tagState = this.tagState.concat([...new Set(this.tags()).difference(new Set(oldTags))]); // Add new ones
 			this.tagState = [...new Set(this.tagState).intersection(new Set(this.tags()))]; // Remove missing ones
 		}
+		if (this.folderStack.length) {
+			const newPls = this.folderStack.map((toMove) => {
+				const pls = toMove[0];
+				let data;
+				switch (true) {
+					case pls.extension === '.ui': data = this.dataFoobar; break;
+					case pls.extension === '.fpl': data = this.dataFpl; break;
+					case pls.extension === '.xsp': data = this.dataXsp; break;
+					case pls.isFolder: data = this.dataFolder; break;
+					default: data = this.dataAll;
+				}
+				return [data.find((dataPls) => Object.keys(pls).every((key) => pls[key] === dataPls[key])), toMove[1]];
+			}).filter((toMove) => toMove[0]);
+			newPls.forEach((toMove) => { this.addToFolder(toMove[0], toMove[1]); });
+			this.save();
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+			this.sort();
+			this.folderStack.length = 0;
+		}
 		this.headerTextUpdate();
 		if (!bNotPaint) { this.repaint(); }
 		if (this.bCheckDuplWarnings) { this.checkDuplicates(); }
@@ -5037,6 +5056,11 @@ function _list(x, y, w, h) {
 					return this.reduce(count, 0);
 				}
 			});
+		};
+
+		this.moveToFolderStack = (item, toFolder) => {
+			const itemsArr = isArray(item) ? item : [item];
+			itemsArr.forEach((subItem) => { this.folderStack.push([subItem, toFolder]); });
 		};
 
 		this.moveToFolder = (item, toFolder) => {
@@ -6205,6 +6229,7 @@ function _list(x, y, w, h) {
 			this.deletedItems = [];
 			this.lastPlsLoaded = [];
 			this.disableAutosave = [];
+			this.folderStack = [];
 			this.clearSelPlaylistCache();
 			this.deleteMainMenuDynamic();
 			this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
@@ -6261,6 +6286,7 @@ function _list(x, y, w, h) {
 			this.update(void (0), true, z);
 			this.filter();
 			this.lastPlsLoaded = [];
+			this.folderStack = [];
 			if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 				const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 				const bColumns = this.isColumnsEnabled('size');
@@ -6396,6 +6422,7 @@ function _list(x, y, w, h) {
 	this.lastPlsLoaded = [];
 	this.mainMenuDynamic = [];
 	this.disableAutosave = [];
+	this.folderStack = [];
 	// Properties
 	this.defaultProperties = clone(properties); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.properties = getPropertiesPairs(properties, 'plm_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
