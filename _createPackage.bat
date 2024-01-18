@@ -405,6 +405,8 @@ CALL :copy_file main\window\window_xxx_button.js
 CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_helpers.js
+CALL :check_folder main\search
+CALL :copy_file main\search\top_tracks_from_date.js
 CALL :delete_file main\statistics\statistics_xxx_helper_fallback.js
 REM helpers
 CALL :check_folder helpers
