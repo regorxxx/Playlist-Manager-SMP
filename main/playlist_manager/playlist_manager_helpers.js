@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/24
+//17/01/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -652,7 +652,7 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
-function cloneAsAutoPls(list, z, uiIdx = -1, toFolder) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsAutoPls(list, z, uiIdx = -1, toFolder = void(0)) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -669,7 +669,7 @@ function cloneAsAutoPls(list, z, uiIdx = -1, toFolder) { // May be used only to 
 		WshShell.Popup('Native AutoPlaylists not created with the manager require cloning first to fully integrate them in the manager.\n\nThe AutoPlaylist properties will be shown to let you manually copy the query and sort patterns to the input popups. You can close it afterwards.', 5, window.Name, popup.info + popup.ok);
 		plman.ShowAutoPlaylistUI(uiIdx);
 	}
-	bDone = !!list.addAutoPlaylist(objectPlaylist, void(0), toFolder);
+	bDone = !!list.addAutoPlaylist(objectPlaylist, void (0), toFolder);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
@@ -687,7 +687,7 @@ function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Aut
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
-	bDone = !!list.addSmartplaylist(objectPlaylist, void(0), toFolder);
+	bDone = !!list.addSmartplaylist(objectPlaylist, void (0), toFolder);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
@@ -730,7 +730,7 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden = false, toFolder) {
+function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden = false, toFolder = void(0)) {
 	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
@@ -767,7 +767,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 			bDone = true;
 		}
 		if (toFolder) {
-			list.moveToFolderStack({nameId: playlistName, extension: '.ui'}, toFolder);
+			list.moveToFolderStack({ nameId: playlistName, extension: '.ui' }, toFolder);
 		}
 		if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); }
 	}
@@ -829,7 +829,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 }
 
 function clonePlaylistFile(list, z, ext, toFolder) {
-	if (ext === '.ui') { return clonePlaylistInUI(list, z, void(0), void(0), void(0), toFolder); }
+	if (ext === '.ui') { return clonePlaylistInUI(list, z, void (0), void (0), void (0), toFolder); }
 	let bDone = false;
 	const pls = list.data[z];
 	const bUI = pls.extension === '.ui';
@@ -862,7 +862,7 @@ function clonePlaylistFile(list, z, ext, toFolder) {
 		list.update();
 		list.filter();
 		if (toFolder) {
-			list.moveToFolderStack({nameId: playlistName, extension: '.ui'}, toFolder);
+			list.moveToFolderStack({ nameId: playlistName, extension: '.ui' }, toFolder);
 		}
 	}
 	return bDone;

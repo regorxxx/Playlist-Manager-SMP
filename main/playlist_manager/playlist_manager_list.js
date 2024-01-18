@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/24
+//17/01/24
 
 /* exported _list */
 
@@ -1696,14 +1696,12 @@ function _list(x, y, w, h) {
 														this.addToFolder(this.data[idx], this.getParentFolder(currItem));
 													}
 												});
-											} else {
-												if (!currItem.isFolder) {
-													this.internalPlsDrop.forEach((idx) => {
-														if (this.isInFolder(this.data[idx])) {
-															this.removeFromFolder(this.data[idx]);
-														}
-													});
-												}
+											} else if (!currItem.isFolder) {
+												this.internalPlsDrop.forEach((idx) => {
+													if (this.isInFolder(this.data[idx])) {
+														this.removeFromFolder(this.data[idx]);
+													}
+												});
 											}
 											this.save();
 											this.saveManualSorting();
@@ -2230,8 +2228,8 @@ function _list(x, y, w, h) {
 			: '');
 	};
 
-	this.getGlobalShortcut = (action = '', options = {bTab: true, bParen: false }) => {
-		options = {bTab: true, bParen: false, ... options};
+	this.getGlobalShortcut = (action = '', options = { bTab: true, bParen: false }) => {
+		options = { bTab: true, bParen: false, ...options };
 		const bEnabled = this.properties.bGlobalShortcuts[1];
 		let shortcut = '';
 		switch (action.toLowerCase()) {
@@ -2251,9 +2249,9 @@ function _list(x, y, w, h) {
 			}
 			case 'find': {
 				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
-				shortcut = bEnabled 
+				shortcut = bEnabled
 					? bValidSearchMethods ? 'Shift + F9' : 'F9'
-					: ''; 
+					: '';
 				break;
 			}
 			case 'settings menu': shortcut = bEnabled ? 'F10' : ''; break;
@@ -2265,9 +2263,9 @@ function _list(x, y, w, h) {
 			case 'search': shortcut = 'Ctrl + E'; break;
 		}
 		if (shortcut.length) {
-			if (options.bParen) {shortcut = _p(shortcut);}
-			if (options.bTab) {shortcut = '\t' + shortcut;}
-			else if (options.bParen) {shortcut = ' ' + shortcut;}
+			if (options.bParen) { shortcut = _p(shortcut); }
+			if (options.bTab) { shortcut = '\t' + shortcut; }
+			else if (options.bParen) { shortcut = ' ' + shortcut; }
 		}
 		return shortcut;
 	};
@@ -3509,8 +3507,9 @@ function _list(x, y, w, h) {
 							return;
 						}
 						if (!checkQuery(item.query, false, false, true)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
-					} else {
-						if (!checkQuery(item.query, false, true, false)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
+					} else if (!checkQuery(item.query, false, true, false)) {
+						fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name);
+						return;
 					}
 					const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 					item.size = handleList.Count;
@@ -3580,28 +3579,26 @@ function _list(x, y, w, h) {
 						if (answer === popup.yes) {
 							if (oldPls.extension !== newPls.extension) {
 								fb.ShowPopupMessage('Duplicated playlist has a different extension in the JSON file and the current database.\n\nIt will not be overwritten, manually review it.\n\nJSON:\n' + JSON.stringify(newPls) + '\n\nDatabase:\n+ ' + JSON.stringify(oldPls), window.Name);
+							} else if (newPls.isFolder) {
+								const oldNames = new Map(oldPls.pls.map((subPls) => [subPls.nameId, subPls]));
+								const newNames = new Map(newPls.pls.map((subPls) => [subPls.nameId, subPls]));
+								const toRemove = [
+									...new Set(oldNames.keys())
+										.difference(new Set(newNames.keys()))
+								].map((name) => oldNames.get(name));
+								const toAdd = [
+									...new Set(newNames.keys())
+										.difference(new Set(oldNames.keys()))
+								].map((name) => newNames.get(name));
+								toRemove.forEach((subPls) => {
+									this.removeFromFolder(subPls);
+								});
+								toAdd.forEach((subPls) => {
+									if (subPls.inFolder) { this.removeFromFolder(subPls); }
+									this.addToFolder(subPls, oldPls);
+								});
 							} else {
-								if (newPls.isFolder) {
-									const oldNames = new Map(oldPls.pls.map((subPls) => [subPls.nameId, subPls]));
-									const newNames = new Map(newPls.pls.map((subPls) => [subPls.nameId, subPls]));
-									const toRemove = [
-										...new Set(oldNames.keys())
-											.difference(new Set(newNames.keys()))
-									].map((name) => oldNames.get(name));
-									const toAdd = [
-										...new Set(newNames.keys())
-											.difference(new Set(oldNames.keys()))
-									].map((name) => newNames.get(name));
-									toRemove.forEach((subPls) => {
-										this.removeFromFolder(subPls);
-									});
-									toAdd.forEach((subPls) => {
-										if (subPls.inFolder) { this.removeFromFolder(subPls); }
-										this.addToFolder(subPls, oldPls);
-									});
-								} else {
-									this.editData(oldPls, newPls);
-								}
+								this.editData(oldPls, newPls);
 							}
 						}
 					}
@@ -6573,24 +6570,25 @@ function _list(x, y, w, h) {
 					) +
 					(
 						'Fuzzy search with ~\n' +
-						'(Escape to clear search text)\n(' + this.getGlobalShortcut('search', {bTab: false}) + ' to set focus on search box)\n(Shift + L. Click to open search settings)'
+						'(Escape to clear search text)\n(' + this.getGlobalShortcut('search', { bTab: false }) + ' to set focus on search box)\n(Shift + L. Click to open search settings)'
 					)
 					: 'Search settings...\n----------------------------------------------\n' +
 					(
 						(this.searchMethod.bRegExp ? 'RegExp is allowed (for ex. /tag*/gi)\n' : '') +
 						'Fuzzy search with ~ at beginning/end\n' +
-						'(Escape to clear search text)\n(' + this.getGlobalShortcut('search', {bTab: false}) + ' to set focus on search box)'
+						'(Escape to clear search text)\n(' + this.getGlobalShortcut('search', { bTab: false }) + ' to set focus on search box)'
 					)
-				) +	(
-					this.searchMethod.bPath
-						? '\n(Drag n\' drop track(s) to copy filename(s))'
-						: ''
-				) + 
-				(
-					this.getGlobalShortcut('search tracks') 
-						? '\n(' + this.getGlobalShortcut('search tracks', {bTab: false}) + ' to search selected tracks)'
-						: ''
-				);
+				) +
+					(
+						this.searchMethod.bPath
+							? '\n(Drag n\' drop track(s) to copy filename(s))'
+							: ''
+					) +
+					(
+						this.getGlobalShortcut('search tracks')
+							? '\n(' + this.getGlobalShortcut('search tracks', { bTab: false }) + ' to search selected tracks)'
+							: ''
+					);
 			}, func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (this.searchInput.text.length && getKeyboardMask() !== kMask.shift) {
 					this.searchInput.on_key_down(VK_ESCAPE);
@@ -6631,7 +6629,7 @@ function _list(x, y, w, h) {
 		columns: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				const showMenus = JSON.parse(this.properties.showMenus[1]);
-				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...' + this.getGlobalShortcut('columns', {bTab: false, bParen: true}) + (
+				return (this.uiElements['Columns'].enabled ? 'Hide' : 'Show') + ' columns...' + this.getGlobalShortcut('columns', { bTab: false, bParen: true }) + (
 					showMenus['Statistics mode'] ?
 						'\n----------------------------------------------\n' + '(Shift + L. Click to switch to Statistics mode)'
 						: ''
@@ -6654,13 +6652,13 @@ function _list(x, y, w, h) {
 				}
 			}
 		},
-		newPls: { x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...' + this.getGlobalShortcut('list menu', {bTab: false, bParen: true}), func: (x, y, mask, parent) => createMenuRight().btn_up(x, y) }, // eslint-disable-line no-unused-vars
+		newPls: { x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...' + this.getGlobalShortcut('list menu', { bTab: false, bParen: true }), func: (x, y, mask, parent) => createMenuRight().btn_up(x, y) }, // eslint-disable-line no-unused-vars
 		settings: {
 			x: 0, y: 0, w: 0, h: 0,
 			inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bHighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Playlist Manager settings...' + this.getGlobalShortcut('settings menu', {bTab: false, bParen: true}) +
+				return 'Playlist Manager settings...' + this.getGlobalShortcut('settings menu', { bTab: false, bParen: true }) +
 					(
 						bHighlighting || !this.bLiteMode
 							? '\n----------------------------------------------\n'
@@ -6693,7 +6691,7 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => {
 				const bHighlighting = parent.highlighting(x, y, mask, parent);
-				return 'Open playlists folder'  + this.getGlobalShortcut('tracked folder', {bTab: false, bParen: true}) +
+				return 'Open playlists folder' + this.getGlobalShortcut('tracked folder', { bTab: false, bParen: true }) +
 					(
 						bHighlighting || !this.bLiteMode
 							? '\n----------------------------------------------\n'
@@ -6722,7 +6720,7 @@ function _list(x, y, w, h) {
 		},
 		help: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
-			text: 'Open documentation...' + this.getGlobalShortcut('documentation', {bTab: false, bParen: true}) + '\n----------------------------------------------\n(Shift + L. Click to show quick help)',
+			text: 'Open documentation...' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + '\n----------------------------------------------\n(Shift + L. Click to show quick help)',
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_SHIFT) {
 					// Enabled menus
@@ -6730,7 +6728,7 @@ function _list(x, y, w, h) {
 					fb.ShowPopupMessage(
 						'Global shortcuts:' +
 						'\n-------------------' +
-						this.listGlobalShortcuts(void(0), false) +
+						this.listGlobalShortcuts(void (0), false) +
 						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
 						'\n- DEL: delete playlist.' +
 						(this.searchInput ? '\n- Ctrl + E: focus on search box.' : '') +
