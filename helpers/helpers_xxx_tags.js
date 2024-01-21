@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/24
+//21/01/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -81,7 +81,7 @@ function sanitizeTagValIds(val, bSpace = true) {
 // Replace #str# with current values, where 'str' is a TF expression which will be evaluated on handle
 // Use try/catch to test validity of the query output
 function queryReplaceWithCurrent(query, handle, tags = {}, options = {bToLowerCase: false, bDebug: false}) {
-	options = {bToLowerCase: false, bDebug: true, ...options};
+	options = {bToLowerCase: false, bDebug: false, ...options};
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithCurrent(): query is empty'); return ''; }
 	// global queries without handle required
