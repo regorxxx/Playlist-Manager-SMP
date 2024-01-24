@@ -1,5 +1,5 @@
 'use strict';
-//10/01/24
+//23/01/24
 
 /* exported VolatileCache */
 
@@ -17,8 +17,8 @@ function VolatileCache(lifeSpan = 1000) {
 		});
 	};
 	this.set = (ref, newValues = {}) => {
-		const curr = cache.get(ref) || { accesed: null, values: {} };
-		curr.accesed = Date.now();
+		const curr = cache.get(ref) || { accessed: null, values: {} };
+		curr.accessed = Date.now();
 		for (const key in newValues) { curr.values[key] = newValues[key]; }
 		cache.set(ref, curr);
 		return this;
@@ -27,8 +27,8 @@ function VolatileCache(lifeSpan = 1000) {
 		const now = Date.now();
 		let values;
 		const curr = cache.get(ref);
-		if (curr && ((now - curr.accesed) < lifeSpan)) {
-			curr.accesed = now;
+		if (curr && ((now - curr.accessed) < lifeSpan)) {
+			curr.accessed = now;
 			if (!keysArr || !keysArr.length) {
 				values = {};
 				for (const key in curr.values) { values[key] = curr.values[key].slice(); }
@@ -43,7 +43,7 @@ function VolatileCache(lifeSpan = 1000) {
 	const clear = () => {
 		const now = Date.now();
 		cache.forEach((entry) => {
-			if ((now - entry.accesed) > lifeSpan) { entry.values = {};}
+			if ((now - entry.accessed) > lifeSpan) { entry.values = {};}
 		});
 	};
 	let id = setInterval(clear, lifeSpan);

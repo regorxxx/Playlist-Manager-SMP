@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/24
+//23/01/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -285,7 +285,7 @@ function createMenuLeft(forcedIndex = -1) {
 								if (pls.category !== category) { setCategory(i ? category : '', list, z); }
 							}
 						});
-						menu.newCheckMenu(menuName, category, void (0), () => { return (pls.category === (i ? category : '')); });
+						menu.newCheckMenuLast(() => (pls.category === (i ? category : '')));
 					});
 				}
 			}
@@ -303,7 +303,7 @@ function createMenuLeft(forcedIndex = -1) {
 					let bAddInvisibleIds = false;
 					list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
 						if (tag === 'sep') { menu.newEntry({ menuName, entryText: 'sep' }); bAddInvisibleIds = true; return; } // Add invisible id for entries after separator to duplicate check marks
-						const entry = menu.newEntry({
+						menu.newEntry({
 							menuName, entryText: tag, func: () => {
 								let tags;
 								if (i === 0) { tags = []; }
@@ -312,7 +312,7 @@ function createMenuLeft(forcedIndex = -1) {
 								setTag(tags, list, z);
 							}, bAddInvisibleIds
 						});
-						menu.newCheckMenu(menuName, entry.entryText, void (0), () => { return (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0); });
+						menu.newCheckMenuLast(() => (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0));
 					});
 				}
 				// Adds track tag(s)
@@ -714,7 +714,7 @@ function createMenuLeft(forcedIndex = -1) {
 								plman.SetPlaylistLockedActions(index, [...currentLocks]);
 							}, flags
 						});
-						menu.newCheckMenu(subMenuName, lock.entryText, void (0), () => { return currentLocks.has(lock.type); });
+						menu.newCheckMenuLast(() => currentLocks.has(lock.type));
 					});
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					menu.newEntry({
@@ -1101,7 +1101,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						});
 					}
 				});
-				menu.newCheckMenu(menuName, entryText, void (0), () => { return (playlists.length === count); });
+				menu.newCheckMenuLast(() => (playlists.length === count));
 			});
 		}
 		if (showMenus['Tags']) {	// Set tag(s)
@@ -1125,7 +1125,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
 				const count = playlists.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(tag)) ? total + 1 : total); }, 0);
 				if (tag === 'sep') { menu.newEntry({ menuName, entryText: 'sep' }); bAddInvisibleIds = true; return; } // Add invisible id for entries after separator to duplicate check marks
-				const entry = menu.newEntry({
+				menu.newEntry({
 					menuName, entryText: tag + '\t' + _b(count), func: () => {
 						let tags;
 						indexes.forEach((z, j) => {
@@ -1139,7 +1139,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						});
 					}, bAddInvisibleIds
 				});
-				menu.newCheckMenu(menuName, entry.entryText, void (0), () => { return (playlists.length === count); });
+				menu.newCheckMenuLast(() => (playlists.length === count));
 			});
 		}
 		if (showMenus['Tags']) {	// Adds track tag(s)
@@ -1301,7 +1301,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 							}
 						}, flags
 					});
-					menu.newCheckMenu(subMenuName, lock.entryText, void (0), () => {
+					menu.newCheckMenuLast(() => {
 						return playlistsLoaded.every((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
@@ -1988,7 +1988,7 @@ function createMenuRightTop() {
 					list.filter({ categoryState });
 				}
 			});
-			menu.newCheckMenu(subMenuName, item, void (0), () => { return list.categoryState.indexOf(item) !== -1; });
+			menu.newCheckMenuLast(() => list.categoryState.indexOf(item) !== -1);
 		});
 	}
 	if (showMenus['Tags']) {	// Tag Filter
@@ -2019,7 +2019,7 @@ function createMenuRightTop() {
 					list.filter({ tagState });
 				}
 			});
-			menu.newCheckMenu(subMenuName, item, void (0), () => { return list.tagState.indexOf(item) !== -1; });
+			menu.newCheckMenuLast(() => list.tagState.indexOf(item) !== -1);
 		});
 	}
 	if (showMenus['Category'] || showMenus['Tags']) { menu.newEntry({ entryText: 'sep' }); }
@@ -2044,7 +2044,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bRelativePath ? 0 : 1); });
+					menu.newCheckMenuLast(() => (list.bRelativePath ? 0 : 1), optionsLength);
 				}
 			}
 			if (!list.bLiteMode) {	// Playlist extension
@@ -2068,7 +2068,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return options.indexOf(list.playlistsExtension); });
+					menu.newCheckMenuLast(() => options.indexOf(list.playlistsExtension), optionsLength);
 				}
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
@@ -2081,7 +2081,7 @@ function createMenuRightTop() {
 						}
 					}
 				});
-				menu.newCheckMenu(subMenuName, 'Force on (auto)saving', null, () => { return list.bSavingDefExtension; });
+				menu.newCheckMenuLast(() => list.bSavingDefExtension);
 			}
 			if (!list.bLiteMode) {	// BOM
 				const subMenuName = menu.newMenu('Save files with BOM...', menuName);
@@ -2099,8 +2099,8 @@ function createMenuRightTop() {
 							}
 						});
 					});
+					menu.newCheckMenuLast(() => (list.bBOM ? 0 : 1), optionsLength);
 				}
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return list.bBOM ? 0 : 1; });
 			}
 			if (!list.bLiteMode) {	// Saving warnings
 				const subMenuName = menu.newMenu('Warnings about format change...', menuName);
@@ -2119,7 +2119,7 @@ function createMenuRightTop() {
 						});
 					});
 				}
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return list.bSavingWarnings ? 0 : 1; });
+				menu.newCheckMenuLast(() => (list.bSavingWarnings ? 0 : 1), optionsLength);
 			}
 			if (!list.bLiteMode) {	// Smart Playlist saving
 				const subMenuName = menu.newMenu('Skip Smart Playlists on Auto-saving...', menuName);
@@ -2139,7 +2139,7 @@ function createMenuRightTop() {
 						});
 					});
 				}
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return list.bSavingXsp ? 1 : 0; });
+				menu.newCheckMenuLast(() => (list.bSavingXsp ? 1 : 0), optionsLength);
 			}
 		}
 	}
@@ -2160,7 +2160,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bSaveFilterStates ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bSaveFilterStates ? 0 : 1), optionsLength);
 		}
 		if (!list.bLiteMode) {	// UI-only playlists
 			const subMenuName = menu.newMenu('Track UI-only playlists...', menuName);
@@ -2181,7 +2181,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bAllPls ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bAllPls ? 0 : 1), optionsLength);
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Duplicated pls handling
@@ -2199,7 +2199,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bCheckDuplWarnings ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bCheckDuplWarnings ? 0 : 1), optionsLength);
 		}
 		{	// Duplicated tracks handling
 			const subMenuName = menu.newMenu('Duplicated tracks handling...', menuName);
@@ -2216,7 +2216,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bForbidDuplicates ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bForbidDuplicates ? 0 : 1), optionsLength);
 		}
 		{	// Dead items handling
 			const subMenuName = menu.newMenu('Dead items handling...', menuName);
@@ -2233,7 +2233,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bDeadCheckAutoSave ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bDeadCheckAutoSave ? 0 : 1), optionsLength);
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Auto-Saving
@@ -2249,7 +2249,7 @@ function createMenuRightTop() {
 					window.Reload();
 				}
 			});
-			menu.newCheckMenu(menuName, 'Auto-saving interval...', void (0), () => { return Number(list.properties['autoSave'][1]) !== 0; });
+			menu.newCheckMenuLast(() => (Number(list.properties['autoSave'][1]) !== 0));
 		}
 		if (!list.bLiteMode) {	// Auto-Loading
 			menu.newEntry({
@@ -2264,7 +2264,7 @@ function createMenuRightTop() {
 					window.Reload();
 				}
 			});
-			menu.newCheckMenu(menuName, 'Auto-loading interval...', void (0), () => { return Number(list.properties['autoUpdate'][1]) !== 0; });
+			menu.newCheckMenuLast(() => (Number(list.properties['autoUpdate'][1]) !== 0));
 		}
 		if (!list.bLiteMode) {	// Auto-Backup
 			menu.newEntry({
@@ -2279,7 +2279,7 @@ function createMenuRightTop() {
 					window.Reload();
 				}
 			});
-			menu.newCheckMenu(menuName, 'Auto-backup interval...', void (0), () => { return Number(list.properties['autoBack'][1]) !== 0; });
+			menu.newCheckMenuLast(() => (Number(list.properties['autoBack'][1]) !== 0));
 		}
 		{
 			menu.newEntry({ menuName, entryText: 'sep' });
@@ -2293,7 +2293,7 @@ function createMenuRightTop() {
 					}
 				}
 			});
-			menu.newCheckMenu(menuName, 'Automatically check for updates', void (0), () => list.properties.bAutoUpdateCheck[1]);
+			menu.newCheckMenuLast(() => list.properties.bAutoUpdateCheck[1]);
 		}
 		if (!list.bLiteMode) {	// Stop tracking library paths
 			menu.newEntry({ menuName, entryText: 'sep' });
@@ -2302,7 +2302,7 @@ function createMenuRightTop() {
 					list.switchTracking(void (0), true);
 				}
 			});
-			menu.newCheckMenu(menuName, 'Don\'t track library (until next startup)', void (0), () => { return !list.bTracking; });
+			menu.newCheckMenuLast(() => !list.bTracking);
 		}
 	}
 	{	// Playlists behavior
@@ -2326,7 +2326,7 @@ function createMenuRightTop() {
 						}, flags: (i !== optionsLength - 1 && list.properties['extension'][1] === '.pls') ? MF_GRAYED : MF_STRING
 					}); // Disable UUID for .pls playlists
 				});
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return options.indexOf(list.optionUUID); });
+				menu.newCheckMenuLast(() => options.indexOf(list.optionUUID), optionsLength);
 			}
 			{	// Automatic playlist names
 				const subMenuName = menu.newMenu('Automatic playlist names...', menuName);
@@ -2342,7 +2342,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return list.properties.bAutoSelTitle[1] ? 0 : 1; });
+				menu.newCheckMenuLast(() => (list.properties.bAutoSelTitle[1] ? 0 : 1), optionsLength);
 			}
 			menu.newEntry({ menuName, entryText: 'sep' });
 		}
@@ -2364,7 +2364,7 @@ function createMenuRightTop() {
 				});
 			});
 			//list.bUpdateAutoPlaylist changes to false after firing, but the property is constant unless the user changes it...
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.properties['bUpdateAutoPlaylist'][1] ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.properties['bUpdateAutoPlaylist'][1] ? 0 : 1), optionsLength);
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Block panel while updating', func: () => {
@@ -2372,7 +2372,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: list.bAutoTrackTagAutoPlsInit ? MF_STRING : MF_GRAYED
 			});
-			menu.newCheckMenuLast(() => { return list.properties.bBlockUpdateAutoPls[1]; });
+			menu.newCheckMenuLast(() => list.properties.bBlockUpdateAutoPls[1]);
 		}
 		if (!list.bLiteMode) {	// Smart Playlists
 			const subMenuName = menu.newMenu('Update Smart Playlists...', menuName);
@@ -2401,7 +2401,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}
 			});
-			menu.newCheckMenu(subMenuName, 'On AutoPlaylist cloning', void (0), () => { return list.bRemoveDuplicatesAutoPls; });
+			menu.newCheckMenuLast(() => list.bRemoveDuplicatesAutoPls);
 			if (!list.bLiteMode) {
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'On Smart Playlist loading & cloning', func: () => {
@@ -2410,7 +2410,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}
 				});
-				menu.newCheckMenu(subMenuName, 'On Smart Playlist loading & cloning', void (0), () => { return list.bRemoveDuplicatesSmartPls; });
+				menu.newCheckMenuLast(() => list.bRemoveDuplicatesSmartPls);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
@@ -2421,7 +2421,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}
 			});
-			menu.newCheckMenu(subMenuName, 'Use RegExp for title matching?', void (0), () => { return list.bAdvTitle; });
+			menu.newCheckMenuLast(() => list.bAdvTitle);
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
@@ -2466,7 +2466,7 @@ function createMenuRightTop() {
 							overwriteProperties(list.properties);
 						}
 					});
-					menu.newCheckMenu(subMenuNameTwo, item, void (0), () => { return list[itemKey]; });
+					menu.newCheckMenuLast(() => list[itemKey]);
 				});
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 				menu.newEntry({
@@ -2482,7 +2482,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'Custom tag...', void (0), () => { return list.bAutoCustomTag; });
+				menu.newCheckMenuLast(() => list.bAutoCustomTag);
 			}
 			{
 				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
@@ -2499,7 +2499,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1], () => { return (list.bApplyAutoTags ? 0 : 1); });
+				menu.newCheckMenuLast(() => (list.bApplyAutoTags ? 0 : 1), optionsLength);
 			}
 		}
 		if (showMenus['Tags']) {	// Tracks AutoTags
@@ -2518,6 +2518,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}, flags: list.bAutoTrackTag ? MF_STRING : MF_GRAYED
 				});
+				menu.newCheckMenuLast(() => list.bAutoTrackTagPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
 						if (!list.bAutoTrackTagLockPls) { fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar2000) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name); }
@@ -2526,6 +2527,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}, flags: list.bAutoTrackTag ? MF_STRING : MF_GRAYED
 				});
+				menu.newCheckMenuLast(() => list.bAutoTrackTagLockPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
 						if (!list.bAutoTrackTagAutoPls) { fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar2000, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar2000 are omitted.\n\nAlternatively, using the manual refresh menu entry will force AutoPlaylists tagging (and size updating) on all of them.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name); }
@@ -2534,6 +2536,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}, flags: list.bAutoTrackTag ? MF_STRING : MF_GRAYED
 				});
+				menu.newCheckMenuLast(() => list.bAutoTrackTagAutoPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
 						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name); }
@@ -2542,10 +2545,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}, flags: list.bAutoTrackTag && list.bAutoTrackTagAutoPls ? MF_STRING : MF_GRAYED
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'Standard playlists', void (0), () => { return list.bAutoTrackTagPls; });
-				menu.newCheckMenu(subMenuNameTwo, 'Locked playlists', void (0), () => { return list.bAutoTrackTagLockPls; });
-				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists', void (0), () => { return list.bAutoTrackTagAutoPls; });
-				menu.newCheckMenu(subMenuNameTwo, 'AutoPlaylists (at startup)', void (0), () => { return list.bAutoTrackTagAutoPlsInit; });
+				menu.newCheckMenuLast(() => list.bAutoTrackTagAutoPlsInit);
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Block panel while updating (at startup)?', func: () => {
@@ -2553,7 +2553,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}, flags: list.bAutoTrackTagAutoPlsInit ? MF_STRING : MF_GRAYED
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'Block panel while updating (at startup)?', void (0), () => { return list.properties.bBlockUpdateAutoPls[1]; });
+				menu.newCheckMenuLast(() => list.properties.bBlockUpdateAutoPls[1]);
 			}
 			{
 				const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
@@ -2565,6 +2565,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}
 				});
+				menu.newCheckMenuLast(() => list.bAutoTrackTag);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
 						if (!list.bAutoTrackTagAlways) { fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar2000 and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name); }
@@ -2573,8 +2574,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}, flags: list.bAutoTrackTag ? MF_STRING : MF_GRAYED
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'When saving and loading pls', void (0), () => { return list.bAutoTrackTag; });
-				menu.newCheckMenu(subMenuNameTwo, 'Also adding tracks without autosave', void (0), () => { return list.bAutoTrackTagAlways; });
+				menu.newCheckMenuLast(() => list.bAutoTrackTagAlways);
 			}
 		}
 		if (!list.bLiteMode) {	// Export and Converter settings
@@ -2589,7 +2589,7 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 					}
 				});
-				menu.newCheckMenu(subMenuName, 'Copy files asynchronously (on background)', void (0), () => { return list.properties['bCopyAsync'][1]; });
+				menu.newCheckMenuLast(() => list.properties['bCopyAsync'][1]);
 			}
 			{	//Export and convert
 				const subMenuName = menu.newMenu('Export and convert...', menuName);
@@ -2637,7 +2637,7 @@ function createMenuRightTop() {
 								}
 							});
 						});
-						menu.newCheckMenu(subMenuNameThree, '(original)', options[options.length - 1], () => { return options.indexOf(preset.extension || ''); });
+						menu.newCheckMenuLast(() => options.indexOf(preset.extension || ''), options.length);
 					}
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
@@ -2764,7 +2764,7 @@ function createMenuRightTop() {
 				});
 			});
 			//list.bUpdateAutoPlaylist changes to false after firing, but the property is constant unless the user changes it...
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bShowSize ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bShowSize ? 0 : 1), optionsLength);
 		}
 		{	// Name/category sep
 			const subMenuName = menu.newMenu('Show name/category separators...', menuName);
@@ -2781,7 +2781,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bShowSep ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bShowSep ? 0 : 1), optionsLength);
 		}
 		{	// Playlist icons
 			const subMenuName = menu.newMenu('Set playlist icons...', menuName);
@@ -2798,7 +2798,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bShowIcons ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bShowIcons ? 0 : 1), optionsLength);
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Personalize playlist icons...', func: () => {
@@ -2832,7 +2832,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bShowTips ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bShowTips ? 0 : 1), optionsLength);
 		}
 		{	// Playlist header menu
 			const subMenuName = menu.newMenu('Show playlist header on menus...', menuName);
@@ -2849,7 +2849,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bShowMenuHeader ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bShowMenuHeader ? 0 : 1), optionsLength);
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Font size
@@ -2885,10 +2885,10 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => {
+				menu.newCheckMenuLast(() => {
 					let idx = options.indexOf(panel.fonts.size);
 					return idx !== -1 ? idx : optionsLength - 1;
-				});
+				}, optionsLength);
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Use bold version', func: () => {
@@ -2898,7 +2898,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuName, 'Use bold version', void (0), () => { return panel.colors.bBold; });
+				menu.newCheckMenuLast(() => panel.colors.bBold);
 			}
 		}
 		{	// List colors
@@ -2950,7 +2950,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => { return panel.colors.bCustomText ? 1 : 0; });
+				menu.newCheckMenuLast(() => (panel.colors.bCustomText ? 1 : 0), optionsLength);
 				menu.newEntry({ menuName: subMenuSecondName, entryText: 'sep' });
 				menu.newEntry({
 					menuName: subMenuSecondName, entryText: 'Add font shading', func: () => {
@@ -2963,7 +2963,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuSecondName, 'Add font shading', void (0), () => { return panel.colors.bFontOutline; });
+				menu.newCheckMenuLast(() => panel.colors.bFontOutline);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Buttons' toolbar
@@ -2984,7 +2984,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => { return (panel.colors.buttonsToolbarColor === defaultCol ? 0 : 1); });
+				menu.newCheckMenuLast(() => (panel.colors.buttonsToolbarColor === defaultCol ? 0 : 1), optionsLength);
 				menu.newEntry({ menuName: subMenuSecondName, entryText: 'sep' });
 				menu.newEntry({
 					menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
@@ -3017,7 +3017,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => { return (panel.colors.buttonsTextColor === defaultCol ? 0 : 1); });
+				menu.newCheckMenuLast(() => (panel.colors.buttonsTextColor === defaultCol ? 0 : 1), optionsLength);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Background color
@@ -3044,7 +3044,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					menu.newCheckMenu(subMenuSecondName, options[0], options[optionsLength - 1], () => { return panel.colors.mode; });
+					menu.newCheckMenuLast(() => panel.colors.mode, optionsLength);
 				}
 				menu.newEntry({ menuName: subMenuSecondName, entryText: 'sep' });
 				menu.newEntry({
@@ -3057,7 +3057,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuSecondName, 'Alternate rows background color', void (0), () => { return panel.colors.bAltRowsColor; });
+				menu.newCheckMenuLast(() => panel.colors.bAltRowsColor);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Presets
@@ -3111,7 +3111,7 @@ function createMenuRightTop() {
 							window.Repaint();
 						}
 					});
-					menu.newCheckMenu(subMenuSecondName, preset.name, void (0), () => {
+					menu.newCheckMenuLast(() => {
 						return preset.name.toLowerCase() === 'default'
 							? panel.colors.mode === 0
 								&& panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground())
@@ -3179,7 +3179,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (panel.colors.bToolbar ? 0 : (panel.colors.bButtonsBackground ? 2 : 1)); });
+			menu.newCheckMenuLast(() => (panel.colors.bToolbar ? 0 : (panel.colors.bButtonsBackground ? 2 : 1)), optionsLength);
 		}
 		{	// Panel background
 			const subMenuName = menu.newMenu('Panel background...', menuName);
@@ -3205,7 +3205,7 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (panel.imageBackground.enabled ? 0 : 1); });
+			menu.newCheckMenuLast(() => (panel.imageBackground.enabled ? 0 : 1), optionsLength);
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
 				const subMenuNameTwo = menu.newMenu('Selection mode...', subMenuName);
@@ -3227,7 +3227,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuNameTwo, options[0], options[optionsLength - 1], () => { return panel.imageBackground.mode; });
+				menu.newCheckMenuLast(() => panel.imageBackground.mode, optionsLength);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
@@ -3241,7 +3241,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'Maintain proportions', void (0), () => { return panel.imageBackground.bProportions; });
+				menu.newCheckMenuLast(() => panel.imageBackground.bProportions);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Fill panel', func: () => {
 						panel.imageBackground.bFill = !panel.imageBackground.bFill;
@@ -3251,7 +3251,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'Fill panel', void (0), () => { return panel.imageBackground.bFill; });
+				menu.newCheckMenuLast(() => panel.imageBackground.bFill);
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Tint all UI elements', func: () => {
@@ -3261,7 +3261,7 @@ function createMenuRightTop() {
 						window.Repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuNameTwo, 'Tint all UI elements', void (0), () => { return panel.imageBackground.bTint; });
+				menu.newCheckMenuLast(() => panel.imageBackground.bTint);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
@@ -3310,7 +3310,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					if (options.indexOf(key) !== -1) { menu.newCheckMenu(subMenuNameTwo, toEntry(options[0]), toEntry(options[options.length - 1]), () => options.indexOf(key)); }
+					if (options.indexOf(key) !== -1) { menu.newCheckMenuLast(() => options.indexOf(key), options.length); }
 				}
 				{	// Size
 					const options = ['normal', 'small', 'title'];
@@ -3327,7 +3327,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length - 1]), () => { const idx = options.indexOf(list.columns.font[i]); return (idx !== -1 ? idx : 0); });
+					menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.font[i]); return (idx !== -1 ? idx : 0); }, options.length);
 				}
 				{	// Align
 					const options = ['right', 'left', 'center'];
@@ -3344,7 +3344,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length - 1]), () => { const idx = options.indexOf(list.columns.align[i]); return (idx !== -1 ? idx : 0); });
+					menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.align[i]); return (idx !== -1 ? idx : 0); }, options.length);
 				}
 				{	// Color
 					const options = ['playlistColor', 'textColor', 'custom'];
@@ -3361,7 +3361,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length - 1]), () => { const idx = options.indexOf(list.columns.color[i]); return (idx !== -1 ? idx : (options.length - 1)); });
+					menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.color[i]); return (idx !== -1 ? idx : (options.length - 1)); }, options.length);
 				}
 				// Width
 				menu.newEntry({
@@ -3383,7 +3383,7 @@ function createMenuRightTop() {
 						list.repaint();
 					}
 				});
-				menu.newCheckMenu(subMenuColumn, 'Show', void (0), () => list.columns.bShown[i]);
+				menu.newCheckMenuLast(() => list.columns.bShown[i]);
 			});
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
@@ -3428,7 +3428,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length - 1]), () => { const idx = options.indexOf(list.columns.line); return idx !== -1 ? idx : 0; });
+				menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.line); return idx !== -1 ? idx : 0; }, options.length);
 			}
 			{	// Auto-Width
 				const subMenuNameTwo = menu.newMenu('Auto-Width...', subMenuName);
@@ -3445,7 +3445,7 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuNameTwo, capitalize(options[0]), capitalize(options[options.length - 1]), () => { const idx = options.indexOf(list.columns.autoWidth); return idx !== -1 ? idx : 0; });
+				menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.autoWidth); return idx !== -1 ? idx : 0; }, options.length);
 			}
 			{	// Size unis
 				const subMenuNameTwo = menu.newMenu('Size units...', subMenuName);
@@ -3466,7 +3466,7 @@ function createMenuRightTop() {
 							list.repaint();
 						}
 					});
-					menu.newCheckMenu(subMenuNameTwo, capitalize(opt), void (0), () => list.columns.sizeUnits[opt].toString().length !== 0);
+					menu.newCheckMenuLast(() => (list.columns.sizeUnits[opt].toString().length !== 0));
 				});
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
@@ -3508,7 +3508,7 @@ function createMenuRightTop() {
 								list.updateUIElements();
 							}, flags
 						});
-						menu.newCheckMenu(subMenuNameTwo, subKey, void (0), () => subElement.elements[subKey].enabled);
+						menu.newCheckMenuLast(() => subElement.elements[subKey].enabled);
 					});
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					const bEnable = keys.some((subKey) => !subElement.elements[subKey].enabled);
@@ -3533,7 +3533,7 @@ function createMenuRightTop() {
 							list.updateUIElements(bReload);
 						}
 					});
-					menu.newCheckMenu(subMenuName, key, void (0), () => subElement.enabled);
+					menu.newCheckMenuLast(() => subElement.enabled);
 				}
 			});
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
@@ -3651,7 +3651,7 @@ function createMenuRightTop() {
 						fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name);
 					}
 				});
-				menu.newCheckMenu(subMenuName, 'Jump to next item on multiple presses', void (0), () => list.properties.bQuicSearchNext[1]);
+				menu.newCheckMenuLast(() => list.properties.bQuicSearchNext[1]);
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Cycle on last result?', func: () => {
 						list.properties.bQuicSearchCycle[1] = !list.properties.bQuicSearchCycle[1];
@@ -3661,7 +3661,7 @@ function createMenuRightTop() {
 						}
 					}, flags: list.properties.bQuicSearchNext[1] ? MF_STRING : MF_GRAYED
 				});
-				menu.newCheckMenu(subMenuName, 'Cycle on last result?', void (0), () => list.properties.bQuicSearchCycle[1]);
+				menu.newCheckMenuLast(() => list.properties.bQuicSearchCycle[1]);
 			}
 		}
 	}
@@ -3701,10 +3701,10 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0].name, options[optionsLength - 1].name, () => {
+			menu.newCheckMenuLast(() => {
 				const idx = options.findIndex((option) => Object.keys(option.settings).every((key) => list.folders[key] === option.settings[key]));
 				return idx !== -1 ? idx : 2;
-			});
+			}, optionsLength);
 		}
 		{	// Icons
 			const subMenuName = menu.newMenu('Icons...', menuName);
@@ -3736,10 +3736,10 @@ function createMenuRightTop() {
 					}
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0].name, options[optionsLength - 1].name, () => {
+			menu.newCheckMenuLast(() => {
 				const idx = options.findIndex((option) => isArrayEqual(Object.values(option.icons), Object.values(list.folders.icons)));
 				return idx !== -1 ? idx : 3;
-			});
+			}, optionsLength);
 		}
 		{	// Colors
 			menu.newEntry({ menuName, entryText: 'Color...', func: () => createMenuRightTop().btn_up(void (0), void (0), void (0), 'Set custom colors...\\Folders...') });
@@ -3775,10 +3775,10 @@ function createMenuRightTop() {
 						}, flags
 					});
 				});
-				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(list.lShortcuts[modifier]);
 					return (idx !== -1 ? idx : 0);
-				});
+				}, actions.length);
 			});
 			menu.newEntry({ menuName: subMenuNameL, entryText: 'sep' });
 			menu.newEntry({
@@ -3811,10 +3811,10 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(list.rShortcuts[modifier]);
 					return (idx !== -1 ? idx : 0);
-				});
+				}, actions.length);
 			});
 			menu.newEntry({ menuName: subMenuNameR, entryText: 'sep' });
 			menu.newEntry({
@@ -3846,10 +3846,10 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(list.mShortcuts[modifier]);
 					return (idx !== -1 ? idx : 0);
-				});
+				}, actions.length);
 			});
 			menu.newEntry({ menuName: subMenuNameM, entryText: 'sep' });
 			menu.newEntry({
@@ -3884,10 +3884,10 @@ function createMenuRightTop() {
 						}, flags
 					});
 				});
-				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(list.lShortcutsHeader[modifier]);
 					return (idx !== -1 ? idx : 0);
-				});
+				}, actions.length);
 			});
 			menu.newEntry({ menuName: subMenuNameL, entryText: 'sep' });
 			menu.newEntry({
@@ -3920,10 +3920,10 @@ function createMenuRightTop() {
 						}
 					});
 				});
-				menu.newCheckMenu(subMenuOption, actions[0], actions[actions.length - 1], () => {
+				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(list.mShortcutsHeader[modifier]);
 					return (idx !== -1 ? idx : 0);
-				});
+				}, actions.length);
 			});
 			menu.newEntry({ menuName: subMenuNameM, entryText: 'sep' });
 			menu.newEntry({
@@ -3943,7 +3943,7 @@ function createMenuRightTop() {
 					if (list.properties.bGlobalShortcuts[1]) { fb.ShowPopupMessage(list.listGlobalShortcuts(), window.Name); }
 				}
 			});
-			menu.newCheckMenu(subMenuName, 'Enable F1-F12 keyboard actions', void (0), () => list.properties.bGlobalShortcuts[1]);
+			menu.newCheckMenuLast(() => list.properties.bGlobalShortcuts[1]);
 		}
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		menu.newEntry({
@@ -3982,7 +3982,7 @@ function createMenuRightTop() {
 					list.updateMenus({ menus: { [key]: !showMenus[key] } });
 				}
 			});
-			menu.newCheckMenu(subMenuName, key, void (0), () => showMenus[key]);
+			menu.newCheckMenuLast(() => showMenus[key]);
 		});
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		{ // Presets
@@ -4042,12 +4042,12 @@ function createMenuRightTop() {
 					}, flags
 				});
 			});
-			menu.newCheckMenu(subMenuName, options[0], options[optionsLength - 1], () => { return (list.bDynamicMenus ? 0 : 1); });
+			menu.newCheckMenuLast(() => (list.bDynamicMenus ? 0 : 1), optionsLength);
 		}
 		if (showMenus['Online sync']) {	// ListenBrainz
 			const subMenuName = menu.newMenu('ListenBrainz...', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Set token...', func: async () => { return checkLBToken(''); } });
-			menu.newCheckMenu(subMenuName, 'Set token...', void (0), () => { return !!list.properties.lBrainzToken[1].length; });
+			menu.newCheckMenuLast(() => !!list.properties.lBrainzToken[1].length);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Retrieve token from other panels...', func: () => {
 					callbacksListener.lBrainzTokenListener = true;
@@ -4070,7 +4070,7 @@ function createMenuRightTop() {
 			});
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Lookup for missing track MBIDs?', func: () => {
+				menuName: subMenuName, entryText: 'Lookup for missing track MBIDs', func: () => {
 					list.properties.bLookupMBIDs[1] = !list.properties.bLookupMBIDs[1];
 					if (list.properties.bLookupMBIDs[1]) {
 						fb.ShowPopupMessage('Exporting a playlist requires tracks to have \'MUSICBRAINZ_TRACKID\' tags on files.\n\nWhenever such tag is missing, the file can not be sent to ListenBrainz\'s online playlist. As workaround, the script may try to lookup missing MBIDs before exporting.\n\nNote results depend on the success of MusicBrainz api, so it\'s not guaranteed to find the proper match in all cases. Tag properly your files with Picard or foo_musicbrainz in such case.\n\nApi used:\nhttps://labs.api.listenbrainz.org/mbid-mapping', window.Name);
@@ -4078,9 +4078,9 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED
 			});
-			menu.newCheckMenu(subMenuName, 'Lookup for missing track MBIDs?', void (0), () => { return list.properties.bLookupMBIDs[1]; });
+			menu.newCheckMenuLast(() => list.properties.bLookupMBIDs[1]);
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Export playlists to Spotify?', func: () => {
+				menuName: subMenuName, entryText: 'Export playlists to Spotify', func: () => {
 					list.properties.bSpotify[1] = !list.properties.bSpotify[1];
 					if (list.properties.bSpotify[1]) {
 						fb.ShowPopupMessage('Exporting a playlist to Spotify requires the service to be connected to your user profile, and \'Play music on ListenBrainz\' enabled.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
@@ -4096,7 +4096,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED
 			});
-			menu.newCheckMenu(subMenuName, 'Export playlists to Spotify?', void (0), () => { return list.properties.bSpotify[1]; });
+			menu.newCheckMenuLast(() => list.properties.bSpotify[1]);
 		}
 		{	// Startup active playlist
 			const nameUI = plman.GetPlaylistName(plman.ActivePlaylist);
@@ -4114,7 +4114,7 @@ function createMenuRightTop() {
 					window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
-			menu.newCheckMenu(subMenuName, 'Current playlist', void (0), () => { return list.activePlsStartup === name; });
+			menu.newCheckMenuLast(() => (list.activePlsStartup === name));
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Input name...', func: () => {
 					const input = Input.string('string', list.activePlsStartup, 'Input playlist name: (empty to disable)\n\nIn case the playlist is present on the manager, it\'s required to set \'bAutoLoad\' tag on playlist file to load it on startup too (otherwise playlist will not be loaded on startup).', 'Playlist Manager', 'My playlist');
@@ -4125,7 +4125,7 @@ function createMenuRightTop() {
 					window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
-			menu.newCheckMenu(subMenuName, 'Input name...', void (0), () => { return (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name); });
+			menu.newCheckMenuLast(() => (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name));
 		}
 	}
 	menu.newEntry({ entryText: 'sep' });
@@ -4174,7 +4174,7 @@ function createMenuRightTop() {
 			list.manualRefresh();
 		}
 	});
-	menu.newCheckMenu(void (0), 'Lite mode', void (0), () => list.bLiteMode);
+	menu.newCheckMenuLast(() => list.bLiteMode);
 	if (showMenus['Statistics mode']) {
 		menu.newEntry({
 			entryText: 'Statistics mode', func: () => {
@@ -4185,7 +4185,7 @@ function createMenuRightTop() {
 				list.updateUIElements(); // Buttons, etc.
 			}
 		});
-		menu.newCheckMenu(void (0), 'Statistics mode', void (0), () => stats.bEnabled);
+		menu.newCheckMenuLast(() => stats.bEnabled);
 	}
 	menu.newEntry({ entryText: 'sep' });
 	menu.newEntry({
@@ -4229,8 +4229,8 @@ function createMenuRightSort() {
 					}
 				});
 			});
+			menu.newCheckMenuLast(() => options.filter((s) => s !== 'sep').indexOf(list.methodState), optionsLength);
 		}
-		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1], () => { return options.filter((s) => s !== 'sep').indexOf(list.methodState); });
 	}
 	return menu;
 }
@@ -4263,8 +4263,8 @@ function createMenuRightFilter(buttonKey) {
 					}
 				});
 			});
+			menu.newCheckMenuLast(() => options.indexOf(buttonsPanel.buttons[buttonKey].method), optionsLength);
 		}
-		menu.newCheckMenu(menu.getMainMenuName(), options[0], options[optionsLength - 1], () => { return options.indexOf(buttonsPanel.buttons[buttonKey].method); });
 	}
 	menu.newEntry({ entryText: 'sep' });
 	{
@@ -4275,7 +4275,7 @@ function createMenuRightFilter(buttonKey) {
 				overwriteProperties(list.properties);
 			}, flags: list.searchInput ? MF_STRING : MF_GRAYED
 		});
-		menu.newCheckMenu(menu.getMainMenuName(), 'Also reset search filter', void (0), () => list.searchMethod.bResetFilters);
+		menu.newCheckMenuLast(() => list.searchMethod.bResetFilters);
 	}
 	menu.newEntry({ entryText: 'sep' });
 	{	// Reset
@@ -4385,7 +4385,7 @@ function createMenuSearch() {
 					}
 				}
 			});
-			menu.newCheckMenu(subMenu, opt.entryText, void (0), () => list.searchMethod[opt.key]);
+			menu.newCheckMenuLast(() => list.searchMethod[opt.key]);
 		});
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
 		{
@@ -4430,7 +4430,7 @@ function createMenuSearch() {
 				}
 			}
 		});
-		menu.newCheckMenu(subMenu, 'Auto-search', void (0), () => list.searchMethod.bAutoSearch);
+		menu.newCheckMenuLast(() => list.searchMethod.bAutoSearch);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Parse RegExp expressions', func: () => {
 				list.searchMethod.bRegExp = !list.searchMethod.bRegExp;
@@ -4452,7 +4452,7 @@ function createMenuSearch() {
 				}
 			}
 		});
-		menu.newCheckMenu(subMenu, 'Parse RegExp expressions', void (0), () => list.searchMethod.bRegExp);
+		menu.newCheckMenuLast(() => list.searchMethod.bRegExp);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Advanced fuzzy search (~)', func: () => {
 				fb.ShowPopupMessage(
@@ -4468,7 +4468,7 @@ function createMenuSearch() {
 				overwriteProperties(list.properties);
 			}
 		});
-		menu.newCheckMenu(subMenu, 'Advanced fuzzy search (~)', void (0), () => !list.searchMethod.bSimpleFuzzy);
+		menu.newCheckMenuLast(() => !list.searchMethod.bSimpleFuzzy);
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Reset along button filters', func: () => {
@@ -4478,7 +4478,7 @@ function createMenuSearch() {
 				overwriteProperties(list.properties);
 			}
 		});
-		menu.newCheckMenu(subMenu, 'Reset along button filters', void (0), () => list.searchMethod.bResetFilters);
+		menu.newCheckMenuLast(() => list.searchMethod.bResetFilters);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Reset search on startup' + (!list.bSaveFilterStates && list.searchMethod.bResetFilters ? '\t[forced]' : ''), func: () => {
 				list.searchMethod.bResetStartup = !list.searchMethod.bResetStartup;
@@ -4486,7 +4486,7 @@ function createMenuSearch() {
 				overwriteProperties(list.properties);
 			}, flags: !list.bSaveFilterStates && list.searchMethod.bResetFilters ? MF_GRAYED : MF_STRING
 		});
-		menu.newCheckMenu(subMenu, 'Reset search on startup', void (0), () => list.searchMethod.bResetStartup);
+		menu.newCheckMenuLast(() => list.searchMethod.bResetStartup);
 		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
 		{	// Restore
 			menu.newEntry({
