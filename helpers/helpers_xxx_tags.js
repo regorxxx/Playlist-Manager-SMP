@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/24
+//26/01/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -127,8 +127,8 @@ function sanitizeTagValIds(val, bSpace = true) {
  * @param {{ bToLowerCase: boolean bDebug: boolean }} options - bToLowerCase: value from #strTF# will use lowercase
  * @returns {?string}
  */
-function queryReplaceWithCurrent(query, handle, tags = {}, options = {bToLowerCase: false, bDebug: false}) {
-	options = {bToLowerCase: false, bDebug: false, ...options};
+function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerCase: false, bDebug: false }) {
+	options = { bToLowerCase: false, bDebug: false, ...options };
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithCurrent(): query is empty'); return ''; }
 	// global queries without handle required
@@ -362,8 +362,11 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	try { fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort); }  // Test query against empty handle list since it's much faster!
 	catch (e) { bPass = false; }
 	if (bPass) {
-		try { fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort)); }  // Some expressions only throw inside parentheses!
-		catch (e) { bPass = false; }
+		// Allow simple search like 'rock' but don't allow single TF expressions
+		if (isQuery(queryNoSort)) {
+			try { fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort)); }  // Some expressions only throw inside parentheses!
+			catch (e) { bPass = false; }
+		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
 	}
 	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) { bPass = false; }
 	return bPass;
