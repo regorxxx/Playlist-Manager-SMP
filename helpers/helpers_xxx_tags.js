@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/01/24
+//28/01/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -363,7 +363,7 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	catch (e) { bPass = false; }
 	if (bPass) {
 		// Allow simple search like 'rock' but don't allow single TF expressions
-		if (isQuery(queryNoSort)) {
+		if (hasQueryExpression(queryNoSort)) {
 			try { fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort)); }  // Some expressions only throw inside parentheses!
 			catch (e) { bPass = false; }
 		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
@@ -407,11 +407,14 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	return sortObj;
 }
 
+function hasQueryExpression(query) {
+	return query && query.length && ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER', 'EQUAL', 'MISSING', 'BEFORE', 'AFTER', 'SINCE', 'DURING'].some((key) => query.includes(key));
+}
+
 function isQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
 	if (query && query.length) {
-		bPass = ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER', 'EQUAL', 'MISSING', 'BEFORE', 'AFTER', 'SINCE', 'DURING'].some((key) => query.includes(key))
-			&& checkQuery(query, false, bAllowSort, bAllowPlaylist);
+		bPass = hasQueryExpression(query) && checkQuery(query, false, bAllowSort, bAllowPlaylist);
 	} else if (!bAllowEmpty) { bPass = false; }
 	return bPass;
 }
