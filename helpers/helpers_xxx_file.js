@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/01/24
+//30/01/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp */
 
@@ -504,7 +504,7 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 			codepage = systemCodePage;
 		}
 	}
-	return codepage ? codepage : -1;
+	return codepage || -1;
 }
 
 function findRecursivePaths(path = fb.ProfilePath) {

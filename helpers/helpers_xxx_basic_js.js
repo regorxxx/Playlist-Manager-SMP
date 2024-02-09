@@ -1,7 +1,7 @@
 ﻿'use strict';
-//13/01/24
+//30/01/24
 
-/* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require */
+/* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
 // https://github.com/angus-c/just
 /*
@@ -9,7 +9,7 @@
 */
 function clone(obj) {
 	const raw = new Set(['function', 'number', 'boolean', 'string']);
-	if (raw.has(typeof obj)) {return obj;}
+	if (raw.has(typeof obj)) { return obj; }
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();
@@ -70,9 +70,37 @@ function getNested(obj, ...args) {
 function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
-		if (obj && len === idx && Object.hasOwn(obj, level)) {obj[level] = value;}
+		if (obj && len === idx && Object.hasOwn(obj, level)) { obj[level] = value; }
 		return obj && obj[level];
 	}, obj);
+}
+
+/**
+ * The `forEachNested` function is a utility function that iterates over all nested properties of an object and executes a callback function on each property.
+ *
+ * @function
+ * @name forEachNested
+ * @kind function
+ * @param {object} obj - Object to iterate
+ * @param {Function} func - Callback function with args (value, key, obj)
+ * @param {{ bIterateAll: boolean }} options - Wether to  also iterate Arrays|Maps|... or apply func on them
+ * @returns {object}
+ */
+function forEachNested(obj, func, options = { bIterateAll: false }) {
+	const stack = [obj];
+	let value;
+	while (stack.length > 0) {
+		const currentObj = stack.pop();
+		Object.keys(currentObj).forEach((key) => {
+			value = currentObj[key];
+			if (typeof value === 'object' && value !== null) {
+				const bIterate = options.bIterateAll ? true : {}.toString.call(value).slice(8, -1) === 'Object';
+				if (bIterate) { stack.push(value); return; }
+			}
+			func(value, key, currentObj);
+		});
+	}
+	return obj;
 }
 
 function getRegExpFlags(regExp) {
@@ -104,7 +132,7 @@ function toString(value) { // eslint-disable-line no-redeclare
 const escapeRegExpCache = {};
 function escapeRegExp(s) {
 	s = toString(s);
-	if (s && !Object.hasOwn(escapeRegExpCache, s)) {escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1');}
+	if (s && !Object.hasOwn(escapeRegExpCache, s)) { escapeRegExpCache[s] = s.replace(/([^a-zA-Z0-9])/g, '\\$1'); }
 	return s ? escapeRegExpCache[s] : s; // Can not be safer than this
 }
 
@@ -129,14 +157,14 @@ function randomString(len, charSet) {
 // const repeatedFunction = repeatFn(function, ms);
 // repeatedFunction(arguments);
 const repeatFn = (fn, ms, parent = this) => {
-	return (ms > 0 && Number.isFinite(ms) ? (...args) => {return setInterval(fn.bind(parent, ...args), ms);} : () => {return null;});
+	return (ms > 0 && Number.isFinite(ms) ? (...args) => { return setInterval(fn.bind(parent, ...args), ms); } : () => { return null; });
 };
 
 // Delay execution according to interval (ms). Ex:
 // const delayedFunction = delayFn(function, ms);
 // delayedFunction(arguments);
 const delayFn = (fn, ms, parent = this) => {
-	return (ms >= 0 && Number.isFinite(ms) ? (...args) => {return setTimeout(fn.bind(parent, ...args), ms);} : () => {return null;});
+	return (ms >= 0 && Number.isFinite(ms) ? (...args) => { return setTimeout(fn.bind(parent, ...args), ms); } : () => { return null; });
 };
 
 // Halt execution if trigger rate is greater than delay (ms), so it fires only once after successive calls. Ex:
@@ -147,8 +175,8 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 	return (...args) => {
 		const boundFunc = fn.bind(parent, ...args);
 		clearTimeout(timerId);
-		if (immediate && !timerId) {boundFunc();}
-		const calleeFunc = immediate ? () => {timerId = null;} : boundFunc;
+		if (immediate && !timerId) { boundFunc(); }
+		const calleeFunc = immediate ? () => { timerId = null; } : boundFunc;
 		timerId = setTimeout(calleeFunc, delay);
 		return timerId;
 	};
@@ -161,10 +189,10 @@ const throttle = (fn, delay, immediate = false, parent = this) => {
 	let timerId;
 	return (...args) => {
 		const boundFunc = fn.bind(parent, ...args);
-		if (timerId) {return;}
-		if (immediate && !timerId) {boundFunc();}
+		if (timerId) { return; }
+		if (immediate && !timerId) { boundFunc(); }
 		timerId = setTimeout(() => {
-			if(!immediate) {
+			if (!immediate) {
 				boundFunc();
 			}
 			timerId = null;
@@ -176,7 +204,7 @@ const throttle = (fn, delay, immediate = false, parent = this) => {
 const doOnceCache = [];
 const doOnce = (task, fn) => {
 	return (...args) => {
-		if(doOnceCache.indexOf(task) === -1) {
+		if (doOnceCache.indexOf(task) === -1) {
 			doOnceCache.push(task);
 			return fn(...args);
 		}
@@ -186,7 +214,7 @@ const doOnce = (task, fn) => {
 function tryFunc(fn) {
 	return (...args) => {
 		let cache;
-		try {cache = fn(...args);} catch(e) {/* continue regardless of error */}
+		try { cache = fn(...args); } catch (e) {/* continue regardless of error */ }
 		return cache;
 	};
 }
@@ -194,7 +222,7 @@ function tryFunc(fn) {
 function tryMethod(fn, parent) {
 	return (...args) => {
 		let cache;
-		try {cache = parent[fn](...args);} catch(e) {/* continue regardless of error */}
+		try { cache = parent[fn](...args); } catch (e) {/* continue regardless of error */ }
 		return cache;
 	};
 }
@@ -219,7 +247,7 @@ function memoize(fn) {
 // or key,value,value;key,value,...
 // Outputs {key: value, key: value, ...}
 // or  {key: [value, ...], key: [value, ...]}
-function convertStringToObject(string, valueType, separator = ',', secondSeparator = void(0)) {
+function convertStringToObject(string, valueType, separator = ',', secondSeparator = void (0)) {
 	if (string === null || string === '') {
 		return null;
 	} else {
@@ -264,7 +292,7 @@ function convertObjectToString(object, separator = ',') {
 	} else {
 		const keys = Object.keys(object);
 		let output = '';
-		for(const key of keys) {
+		for (const key of keys) {
 			output += (output.length) ? separator + key + separator + object[key] : key + separator + object[key];
 		}
 		return output;
@@ -276,7 +304,7 @@ function SetReplacer(key, value) {
 }
 
 function MapReplacer(key, value) {
-	return (typeof value === 'object' && value instanceof Map ?  [...value.entries()] : value);
+	return (typeof value === 'object' && value instanceof Map ? [...value.entries()] : value);
 }
 
 /*
@@ -288,8 +316,8 @@ module.imports = {};
 
 function require(script) { // Must be path relative to this file, not the parent one
 	let newScript = script;
-	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => {newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\');});
-	['helpers'].forEach((folder) => {newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '');});
+	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => { newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\'); });
+	['helpers'].forEach((folder) => { newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), ''); });
 	if (!module.imports[newScript]) {
 		include(newScript + '.js');
 		module.imports[newScript] = module.exports;

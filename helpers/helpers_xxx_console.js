@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/01/24
+//01/02/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -34,95 +34,101 @@ function consoleLog() {
 	}
 	// Add dd/mm/yyyy
 	if (lastMod !== today) {
-		log += (log && log.length ? '\n' : '') + '--------->' + today + '<---------';
+		log += (log && log.length ? '\r\n' : '') + '--------->' + today + '<---------';
 	}
 	// Add HH:MM:SS
 	const stamp = bCache ? '' : '[' + new Date().toLocaleTimeString() + ']';
-	log += (log && log.length ? '\n' : '') + (bCache ? '' : stamp);
+	log += (log && log.length ? '\r\n' : '') + (bCache ? '' : stamp);
 	// Unpack args
 	const args = bCache ? console.Cache : [[...arguments]];
 	if (bCache) { console.Cache = []; }
 	args.forEach((call, j) => {
-		if (bCache && j !== 0) { log += '\n'; }
+		if (bCache && j !== 0) { log += '\r\n'; }
 		call.forEach((arg, i) => {
-			const type = typeof arg;
-			let val = null;
-			switch (type) {
-				case 'undefined': {
-					val = void (0);
-					break;
-				}
-				case 'function':
-				case 'number':
-				case 'boolean':
-				case 'string': {
-					val = arg.toString();
-					break;
-				}
-				case 'object':
-				default: {
-					if (arg !== null) {
-						let instance = null;
-						switch (true) {	// Get object types
-							case arg instanceof Set: { instance = { name: 'Set', type: 'array' }; break; }
-							case arg instanceof Map: { instance = { name: 'Map', type: 'array' }; break; }
-							case arg instanceof WeakMap: { instance = { name: 'WeakMap', type: 'array' }; break; }
-							case arg instanceof WeakSet: { instance = { name: 'WeakSet', type: 'array' }; break; }
-							case arg instanceof Error: { instance = { name: 'Error', type: 'error' }; break; }
-						}
-						if (instance) {  // Convert to array objects if possible and stringify
-							switch (instance.type) {
-								case 'array': { val = [...arg]; break; }
-								case 'error': { val = arg.toString(); break; }
-							}
-						}
-						try {
-							val = (instance ? instance.name + ' ' : 'Object ') + JSON.stringify(val ? val : arg, (k, v) => {
-								if (typeof v !== 'undefined' && v !== null) {
-									if (v.RawPath && v.Path) {
-										return 'FbMetadbHandle ' + JSON.stringify({ FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
-									}
-									else if (v instanceof FbMetadbHandleList) {
-										return 'FbMetadbHandleList ' + JSON.stringify({ Count: v.Count }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '');
-									}
-									else if (v instanceof Set) {
-										return 'Set ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-									}
-									else if (v instanceof Map) {
-										return 'Map ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-									}
-									else if (v instanceof WeakMap) {
-										return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-									}
-									else if (v instanceof WeakSet) {
-										return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-									}
-									else if (v instanceof Error) {
-										return 'Error ' + arg.toString().replace(/["\n]/g, '');
-									}
-								}
-								return v;
-							});
-						} catch (e) {
-							if (e.message === 'can\'t access dead object') {
-								console.logUI('Console.log: ' + e.message + ': ', type);
-							} else {
-								// eslint-disable-next-line no-sparse-arrays
-								try { val = arg.constructor.name || (arg.constructor.toString().match(/function (\w*)/) || [,])[1]; } catch (e) { /* empty */ } //NOSONAR
-								if (!val) { val = '--unknown type--'; }
-								console.logUI('Console.log: argument type not recognized: ', type, val);
-							}
-						}
-					}
-					break;
-				}
-			}
+			const val = console.formatArg(arg);
 			log += (bCache && i === 0 ? '' : ' ') + val;
 		});
 	});
 	// Write
 	try { utils.WriteTextFile(console.File, log, false); } catch (e) {/* continue regardless of error */ }
 }
+
+console.formatArg = (arg) => {
+	const type = typeof arg;
+	let val = null;
+	switch (type) {
+		case 'undefined': {
+			val = void (0);
+			break;
+		}
+		case 'function':
+		case 'number':
+		case 'boolean':
+		case 'string': {
+			val = arg.toString();
+			break;
+		}
+		case 'object':
+		default: {
+			if (arg !== null) {
+				let instance = null;
+				switch (true) {	// Get object types
+					case Array.isArray(arg): { instance = { name: 'Array', type: 'array' }; break; }
+					case arg instanceof Set: { instance = { name: 'Set', type: 'array' }; break; }
+					case arg instanceof Map: { instance = { name: 'Map', type: 'array' }; break; }
+					case arg instanceof WeakMap: { instance = { name: 'WeakMap', type: 'array' }; break; }
+					case arg instanceof WeakSet: { instance = { name: 'WeakSet', type: 'array' }; break; }
+					case arg instanceof Error: { instance = { name: 'Error', type: 'error' }; break; }
+				}
+				if (instance) {  // Convert to array objects if possible and stringify
+					switch (instance.type) {
+						case 'array': { val = [...arg]; break; }
+						case 'error': { val = arg.toString(); break; }
+					}
+				}
+				try {
+					val = (instance ? instance.name + ' ' : 'Object ') + JSON.stringify(val ? val : arg, (k, v) => {
+						if (typeof v !== 'undefined' && v !== null) {
+							if (v.RawPath && v.Path) {
+								return 'FbMetadbHandle ' + JSON.stringify({ FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
+							}
+							else if (v instanceof FbMetadbHandleList) {
+								return 'FbMetadbHandleList ' + JSON.stringify({ Count: v.Count }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '');
+							}
+							else if (v instanceof Set) {
+								return 'Set ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+							}
+							else if (v instanceof Map) {
+								return 'Map ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+							}
+							else if (v instanceof WeakMap) {
+								return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+							}
+							else if (v instanceof WeakSet) {
+								return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+							}
+							else if (v instanceof Error) {
+								return 'Error ' + arg.toString().replace(/["\n]/g, '');
+							}
+						}
+						return v;
+					});
+				} catch (e) {
+					if (e.message === 'can\'t access dead object') {
+						console.logUI('Console.log: ' + e.message + ': ', type);
+					} else {
+						// eslint-disable-next-line no-sparse-arrays
+						try { val = arg.constructor.name || (arg.constructor.toString().match(/function (\w*)/) || [,])[1]; } catch (e) { /* empty */ } //NOSONAR
+						if (!val) { val = '--unknown type--'; }
+						console.logUI('Console.log: argument type not recognized: ', type, val);
+					}
+				}
+			}
+			break;
+		}
+	}
+	return val;
+};
 
 // Check file size doesn't exceed threshold or reset it
 console.checkSize = () => {
@@ -152,7 +158,11 @@ console.popup = (arg, popupName, bPopup = true, bSplit = true) => {
 };
 
 if (console.File && console.File.length && console.MaxSize && console.log) {
-	console.logUI = console.log;
+	const oldLog = console.log;
+	console.logUI = function () {
+		const args = [...arguments].map((arg) => console.formatArg(arg));
+		oldLog(...args);
+	};
 	console.log = function () {
 		if (!console.Enabled) {return;}
 		console.logUI(...arguments);
