@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/24
+//09/02/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -766,29 +766,42 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 */
 
 // To use along listenBrainz.retrieveSimilarArtists (unstable API)
-listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, bReleaseGroup = false) {
-	const data = tagsArr.map((tag) => { return { '[tag]': tag, operator: 'and', threshold: '4' }; }); // [{"[tag]": "rock", "operator": "and", "threshold": "4"}, ...]
+listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type = 'artist', count = 50) {
+	const queryParams = tagsArr.map((tag) => 'tag=' + encodeURIComponent(tag.toLowerCase())).join('&')
+		+ (tagsArr.length > 1 ? '&condition=and' : '');
 	return send({
-		method: 'POST',
-		URL: (bReleaseGroup ? 'https://datasets.listenbrainz.org/recording-from-rg-tag/json' : 'https://datasets.listenbrainz.org/recording-from-tag/json'),
+		method: 'GET',
+		URL: 'https://api.listenbrainz.org/1/lb-radio/tags?' + queryParams + '&begin_percent=0&end_percent=50&count=' + count,
 		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
-		body: JSON.stringify(data)
 	}).then(
 		(resolve) => {
 			if (resolve) {
 				const response = JSON.parse(resolve);
 				if (response) {
-					console.log('getRecordingsByTag: ' + response.length + ' found items');
-					return response; // [{recording_mbid}, ...]
+					if (type) {
+						if (Object.hasOwn(response, type)) {
+							console.log('getEntitiesByTag: ' + response[type].length + ' found items');
+							return response[type]; // [{recording_mbid}, ...]
+						}
+						console.log('getEntitiesByTag: type not found - ' + type);
+					} else {
+						console.log('getEntitiesByTag: [all types] found items');
+						return response; // [{recording_mbid}, ...]
+					}
 				}
 			}
 			return [];
 		},
 		(reject) => {
-			console.log('getRecordingsByTag: ' + reject.status + ' ' + reject.responseText);
+			console.log('getEntitiesByTag: ' + reject.status + ' ' + reject.responseText);
 			return [];
 		}
 	);
+};
+
+// To use along listenBrainz.retrieveSimilarArtists
+listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, count = 50) {
+	return this.getEntitiesByTag(tagsArr, token, 'recording', count);
 };
 
 /*
@@ -872,31 +885,33 @@ listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 	);
 };
 
-// To use along listenBrainz.retrieveSimilarArtists (unstable API)
-listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtist(artist_mbids, token) {
+// To use along listenBrainz.retrieveSimilarArtists
+
+listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtist(artist_mbids, token, count = 50) {
 	if (!artist_mbids || !artist_mbids.filter(Boolean).length) { console.log('getPopularRecordingsByArtist: no artist_mbids provided'); return Promise.resolve([]); }
-	const data = artist_mbids.map((mbid) => { return { '[artist_mbid]': mbid }; }); // [{"[artist_mbid]": "69ec6867-bda0-404b-bac4-338df8d73723"}, ...]
-	return send({
-		method: 'POST',
-		URL: 'https://datasets.listenbrainz.org/popular-recordings/json',
-		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
-		body: JSON.stringify(data)
-	}).then(
-		(resolve) => {
-			if (resolve) {
-				const response = JSON.parse(resolve);
-				if (response) {
-					console.log('getPopularRecordingsByArtist: ' + response.length + ' found items');
-					return response; // [{artist_mbid, count, recording_mbid}, ...]
-				}
+	return Promise.parallel(
+		artist_mbids,
+		(mbid) => send({
+			method: 'GET',
+			URL: 'https://api.listenbrainz.org/1/popularity/top-recordings-for-artist?artist_mbid=' + mbid,
+			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]]
+		})
+		, 5
+	).then((results) => {
+		return results.map((response) => {
+			if (response.status === 'rejected') {
+				console.log('getPopularRecordingsByArtist: rejected ' + JSON.stringify(response.reason));
+				return null;
 			}
-			return [];
-		},
-		(reject) => {
-			console.log('getPopularRecordingsByArtist: ' + reject.status + ' ' + reject.responseText);
-			return [];
-		}
-	);
+			return JSON.parse(response.value).slice(0, count);
+		}).filter(Boolean).flat(Infinity);
+	}).then((response) => {
+		console.log('getPopularRecordingsByArtist: ' + response.length + ' found items');
+		return response; // [{artist_mbids, count, recording_mbid}, ...]
+	}).catch((reason) => {
+		console.log('getPopularRecordingsByArtist: error ' + reason);
+		return [];
+	});
 };
 
 /*
@@ -953,6 +968,8 @@ listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
 				if (response && Object.hasOwn(response, 'data')) {
 					console.log('retrieveSimilarRecordings: ' + response.data.length + ' found items');
 					return response.data; // [{recording_mbid, recording_name, artist_credit_name, [artist_credit_mbids], caa_id, caa_release_mbid, canonical_recording_mbid, score, reference_mbid}, ...]
+				} else {
+					console.log('retrieveSimilarRecordings: No similar recordings found');
 				}
 			}
 			return [];
