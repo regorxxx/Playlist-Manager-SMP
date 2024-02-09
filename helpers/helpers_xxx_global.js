@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/01/24
+//09/02/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -117,7 +117,7 @@ function addGlobTags() { // Add calculated properties
 	globTags.artist = !globTags.artistRaw.includes('%') && !globTags.artistRaw.includes('$')
 		? '%' + globTags.artistRaw + '%'
 		: globTags.artistRaw;
-	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,\'#\'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
+	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 	globTags.isLoved =  !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
 		? '$ifequal(%' + globTags.feedback + '%,1,1$not(0),0)'
@@ -138,7 +138,11 @@ function addGlobTags() { // Add calculated properties
 	globQuery.noLiveNone = 'NOT (' + globQuery.live + ')';
 	globQuery.noLive = globQuery.noLiveNone + ' OR (' + globQuery.liveHifi + ')';
 	globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
-	globQuery.remDuplBias = globTags.rating + '|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)';
+	globQuery.remDuplBias = globTags.rating +
+		'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)' +
+		'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
+		'|$add(1,' + globTags.feedback + ')' +
+		'|' + globTags.playCount;
 }
 /* eslint-enable no-useless-escape */
 

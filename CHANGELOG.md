@@ -97,6 +97,7 @@
 - Clone: when cloning playlists within a folder (via menus or shortcuts), the new items will be created now at the same folder level (not at the root of the list).
 - Playlist formats: added some checks when parsing corrupted playlists to avoid crashes (and instead omit the line).
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
+- Configuration: changed the remove duplicates bias to prefer tracks with higher play-counts and positive feedback tag (love/hate).
 - Helpers: updated helpers.
 - Code cleanup.
 ### Removed
