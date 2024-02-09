@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/24
+//31/01/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -767,7 +767,9 @@ function cyclicOffset(reference, offset, limits) {
 	return reference;
 }
 
-const range = (start, stop, step) => new Array(Math.round((stop - start) / step + 1)).fill(void (0)).map((_, i) => start + (i * step));
+function range(start, stop, step) {
+	return new Array(Math.round((stop - start) / step + 1)).fill(void (0)).map((_, i) => start + (i * step));
+}
 
 function round(floatnum, decimals, eps = 10 ** -14) {
 	return (decimals > 0
