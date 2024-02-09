@@ -99,6 +99,7 @@
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
 - Configuration: changed the remove duplicates bias to prefer tracks with higher play-counts and positive feedback tag (love/hate).
 - Helpers: updated helpers.
+- Console: improved log file formatting on windows text editors which parse new lines only with CR+LF instead of LF.
 - Code cleanup.
 ### Removed
 - UI: internal logging when checking .xsp playlists.
