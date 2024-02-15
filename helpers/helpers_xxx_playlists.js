@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//12/02/24
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks */
 
@@ -107,6 +107,16 @@ function findPlaylistNamesDuplicated() {
 	return namesArray;
 }
 
+/**
+ * The `sendToPlaylist` function is used to send a list of handles (tracks) to a specified playlist.
+ *
+ * @function
+ * @name sendToPlaylist
+ * @kind function
+ * @param {FbMetadbHandleList|(FbMetadbHandle|string)[]} handleList
+ * @param {string} playlistName
+ * @returns {FbMetadbHandleList\|(FbMetadbHandle|string)[]}
+ */
 function sendToPlaylist(handleList, playlistName) {
 	// Clear playlist if needed. Preferred to removing it, since then we could undo later...
 	// Look if target playlist already exists
@@ -131,8 +141,14 @@ function sendToPlaylist(handleList, playlistName) {
 		console.log('Playlist used: ' + playlistName);
 	}
 	// Create playlist
-	console.log('Final selection: ' + handleList.Count + ' tracks');
-	plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+	if (Array.isArray(handleList)) {
+		handleList = handleList.filter(Boolean);
+		console.log('Final selection: ' + handleList.length + ' tracks');
+		plman.AddPlaylistItemsOrLocations(plman.ActivePlaylist, handleList, true);
+	} else {
+		console.log('Final selection: ' + handleList.Count + ' tracks');
+		plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+	}
 	return handleList;
 }
 
