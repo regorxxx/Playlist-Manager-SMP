@@ -71,6 +71,7 @@
 - Folders: playlists can now be created within folders using drag n' drop (pressing ALT or ALT + CONTROL as usual). [Request 71](https://github.com/regorxxx/Playlist-Manager-SMP/issues/71)
 - UI: added drag n' drop actions to the quick help popup (shift click on help button).
 - UI: added settings for UI-only bound playlists deletion behavior when deleting a playlist file: always ask, delete both (file and UI-only playlist) or delete only playlist file. [Request 76](https://github.com/regorxxx/Playlist-Manager-SMP/issues/76)
+- Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to output to console profiling logs at script init. They work globally. Disabled by default.
 ### Changed
 - Importing JSON: importing logic has been rewritten to be more robust. If an existing playlist has the same name than one imported, a popup will ask to overwrite or omit it. In case extensions differ, will show an error (since they are probably not the same playlist). Overwriting a playlist involves replacing the old metadata with the new one, which in the case of AutoPlaylists means the query is replaced (plus other data), but for other playlists formats, things like tags, categories, etc. are also transferred. Items will also be compared before overwriting, so in case there is no changes (filtering on-init properties like folders being opened or not), they will skipped.
 - Importing JSON: suggested JSON file path is now automatically retrieved from clipboard (instead of being empty).

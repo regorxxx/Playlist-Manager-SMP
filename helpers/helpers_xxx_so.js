@@ -1,10 +1,10 @@
 ﻿'use strict';
-//30/12/23
+//15/02/24
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
 include('helpers_xxx.js');
-/* global soFeatFile:readable, folders:readable, */
+/* global soFeatFile:readable, folders:readable, globProfiler:readable */
 
 /*
 	Global tags, queries, RegExp
@@ -28,12 +28,14 @@ function getSoFeatures() {
 		if (clText !== 'test') { soFeat.clipboard = false; }
 	} else { soFeat.clipboard = false; }
 	if (!soFeat.gecko || !soFeat.clipboard) { soFeat.popup = false; }
+	globProfiler.Print('getSoFeatures.internals');
 	// File system
 	if (typeof app !== 'undefined') {
 		try { app.NameSpace(10).MoveHere(null); } catch (e) {
 			try { app.NameSpace(0).ParseName(null).InvokeVerb('delete'); } catch (e) { soFeat.recycle = false; }
 		}
 	} else { soFeat.recycle = false; }
+	globProfiler.Print('getSoFeatures.fileSystem');
 	// Scripting
 	if (utils.IsFile && utils.IsFile(fb.ProfilePath + 'yttm\\foo_lastfm_img.vbs')) {
 		try {
@@ -42,6 +44,7 @@ function getSoFeatures() {
 			new ActiveXObject('ADODB.Stream');
 		} catch (e) { soFeat.bio = false; }
 	}
+	globProfiler.Print('getSoFeatures.scripting');
 	// UI
 	if (typeof WshShell !== 'undefined') {
 		try { WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); } catch (e) { soFeat.dpi = false; }
@@ -52,13 +55,16 @@ function getSoFeatures() {
 	if (!utils.CheckFont('Segoe UI')) {
 		soFeat.segoe = false;
 	}
+	globProfiler.Print('getSoFeatures.ui');
+	// OS
 	const soArchFile = folders.temp + 'soArch.txt';
 	if (!utils.IsFile(soArchFile)) {
 		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
 		const run = function () { try { WshShell.Run([...arguments].map((arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } };
 		run(soBat, soArchFile);
 	}
-	if (utils.IsFile(soArchFile) && (utils.ReadTextFile(soArchFile) || '').slice(0, 3) !== 'x64') { soFeat.x64 = false; }
+	if (utils.IsFile(soArchFile) && !(utils.ReadTextFile(soArchFile) || '').startsWith('x64')) { soFeat.x64 = false; }
+	globProfiler.Print('getSoFeatures.os');
 	return soFeat;
 }
 
@@ -122,4 +128,5 @@ function initCheckFeatures(soFeat, bPopup = true) {
 		checkSoFeatures(soFeat, bPopup);
 		utils.WriteTextFile(soFeatFile, JSON.stringify(soFeat), false);
 	}
+	globProfiler.Print('initCheckFeatures');
 }

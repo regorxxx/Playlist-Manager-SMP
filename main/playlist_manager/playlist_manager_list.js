@@ -1,11 +1,11 @@
 ﻿'use strict';
-//17/01/24
+//15/02/24
 
 /* exported _list */
 
 /* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -6367,6 +6367,8 @@ function _list(x, y, w, h) {
 			if (bProfile) { test.Print(); }
 		};
 
+		globProfiler.Print('list.init.prototype');
+
 		this.methodState = this.getMethodState(); // On first call first method will be default
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
 
@@ -6386,6 +6388,7 @@ function _list(x, y, w, h) {
 		this.reset();
 		let bDone = this.checkConfig();
 		if (bProfile) { test.Print('Load config files'); }
+		globProfiler.Print('list.init.settings');
 		if (!this.properties.bSetup[1]) { this.update(false, true, void (0), true); } // bInit is true to avoid reloading all categories
 		this.checkConfigPostUpdate(bDone);
 		this.updatePlaylistIcons();
@@ -6394,6 +6397,7 @@ function _list(x, y, w, h) {
 			this.filter();
 		}
 		if (bProfile) { test.Print('Load playlists'); }
+		globProfiler.Print('list.init.playlists');
 		if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 			const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 			const bColumns = this.isColumnsEnabled('size');
@@ -6423,6 +6427,7 @@ function _list(x, y, w, h) {
 		if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
 		if (this.activePlsStartup.length) { this.startupPlaylist(); }
 		if (bProfile) { test.Print('Post startup'); test = null; }
+		globProfiler.Print('list.init.post');
 		setInterval(() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); }, Number(this.properties.autoUpdate[1]) || secondTimer);
 	};
 
@@ -6790,6 +6795,7 @@ function _list(x, y, w, h) {
 	this.searchInput = null;
 	callbacksListener.listenNames = this.bDynamicMenus;
 	this.plsCache = new Map();
+	globProfiler.Print('list.prototype');
 	this.init();
 	if (this.bApplyAutoTags && this.itemsAll) {
 		setTimeout(() => {

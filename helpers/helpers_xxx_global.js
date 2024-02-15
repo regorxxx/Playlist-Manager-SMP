@@ -1,12 +1,12 @@
 ﻿'use strict';
-//09/02/24
+//15/02/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
 include('helpers_xxx.js');
-/* global folders, soFeat */
+/* global folders:readable */
 include('helpers_xxx_file.js');
-/* global _isFile, _jsonParseFileCheck, utf8, _save */
+/* global _isFile:readable, _jsonParseFileCheck:readable, utf8:readable, _save:readable */
 
 /*
 	Global tags, queries, RegExp
@@ -229,7 +229,6 @@ const globFonts = {
 	_description: 'Fonts used by scripts at multiple places on UI. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values). The fallback font can not be changed, is forced by SMP/foobar2000.',
 	_usage: 'Most users will probably not need to touch these. Adding a not-installed font should fallback into the default one (Segoe UI). Special characters like single quotes (\') or backslash (\\) must be properly escaped.',
 	_fallback: {name: 'Segoe UI', size: 10},
-	tooltip: {name: !soFeat.popup ? 'Arial Unicode MS' : 'Tahoma', size: 10},
 	button: {name: 'Segoe UI', size: 12},
 	buttonIcon: {name: 'FontAwesome', size: 12},
 	standard: {name: 'Segoe UI', size: 10},
@@ -249,5 +248,6 @@ const globSettings = {
 	bAutoUpdateOpenWeb: true,
 	// bAutoUpdateApply: false,
 	bPopupOnCheckSOFeatures: true,
+	bProfileInit: false,
 	bTooltip: true,
 };

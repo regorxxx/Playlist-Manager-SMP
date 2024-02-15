@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/23
+//15/02/24
 
 // Folders
 const folders = {};
@@ -51,11 +51,6 @@ console.File = fb.ProfilePath + 'console.log'; // Edit here to change logging fi
 console.MaxSize = 1000000; // File size, in bytes. Setting to zero or null disables logging too
 
 /*
-	SO features
-*/
-const soFeat = getSoFeatures();
-
-/*
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
@@ -64,9 +59,23 @@ include('helpers_xxx_global.js');
 loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
 loadUserDefFile(globRegExp);
-loadUserDefFile(globFonts);
 loadUserDefFile(globSettings);
 addGlobTags();
+
+const globProfiler = globSettings.bProfileInit
+	? new FbProfiler(window.Name + ' - Global profiler')
+	: {Print: () => void(0), Time: void(0), Reset: () => void(0) };
+
+/*
+	SO features
+*/
+const soFeat = getSoFeatures();
+
+/*
+	Global Post-settings Fonts
+*/
+include('helpers_xxx_global_post.js');
+loadUserDefFile(globFonts);
 
 // Check user-set fonts
 Object.keys(globFonts).forEach((key) => {
@@ -86,3 +95,5 @@ Object.keys(globFonts).forEach((key) => {
 if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if something fails
 	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then(() => {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);});
 } else {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);}
+
+globProfiler.Print('helpers_xxx');

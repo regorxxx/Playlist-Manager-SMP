@@ -9,8 +9,9 @@
 /* exported delayAutoUpdate */
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.12.1', features: { drag_n_drop: true, grab_focus: true } }); }
+
 include('helpers\\helpers_xxx.js');
-/* global globSettings:readable, folders:readable, globFonts:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable */
+/* global globSettings:readable, folders:readable, globFonts:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable */
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
@@ -52,6 +53,7 @@ include('main\\playlist_manager\\playlist_manager_statistics.js');
 include('main\\window\\window_xxx_scrollbar.js');
 /* global _scrollBar:readable */
 
+globProfiler.Print('helpers');
 checkCompatible('1.6.1', 'smp');
 
 // Cache
@@ -528,6 +530,7 @@ let autoUpdateRepeat;
 	// Disable panel on init until it's done
 	if (!pop.isEnabled() && !prop.bLiteMode[1] && plmInit.interval) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.', 'cacheLib'); }
 }
+globProfiler.Print('init');
 
 // List and other UI elements
 const list = new _list(LM, TM, 0, 0);
@@ -1235,6 +1238,7 @@ if (!list.properties.bSetup[1]) {
 		button.y = window.Height / 2 - button.h / 2;
 	});
 }
+globProfiler.Print('callbacks');
 
 // Delete unused variables
 properties = void (0);

@@ -110,6 +110,7 @@ CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_playlists.js
 CALL :copy_file helpers\helpers_xxx_properties.js
@@ -240,6 +241,7 @@ CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_instances.js
 CALL :copy_file helpers\helpers_xxx_levenshtein.js
@@ -349,6 +351,7 @@ CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_properties.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
@@ -433,6 +436,7 @@ CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_input.js
 CALL :copy_file helpers\helpers_xxx_playlists.js
 CALL :copy_file helpers\helpers_xxx_properties.js
