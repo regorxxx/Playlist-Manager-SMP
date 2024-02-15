@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/10/23
+//15/02/24
 
 /* exported _popup */
 
@@ -21,7 +21,7 @@ function _popup({
 
 	const UIMethod = {
 		material: () => {
-			this.color.panel = 0xF0F0F00; // Light grey
+			this.color.panel = 0xF0F0F0F0; // Light grey
 			this.color.text = 0xFF4354AF; // Blue
 			this.color.popup = opaqueColor(RGB(241, 241, 240), 80); // Light grey
 			this.color.border = opaqueColor(invert(this.color.popup), 100);
@@ -152,14 +152,12 @@ function _popup({
 	};
 
 	this.move = (x, y) => {
-		if (this.trace(x, y)) { tooltip.SetValue(this.ttText); }
-		else { tooltip.Deactivate(); }
-		return;
+		if (this.trace(x, y)) { tooltip.SetValue(this.ttText); return true; }
+		else { tooltip.Deactivate(); return false; }
 	};
 
 	this.leave = () => {
 		tooltip.Deactivate();
-		return;
 	};
 
 	this.resize = (w = window.Width, h = window.Height) => {
