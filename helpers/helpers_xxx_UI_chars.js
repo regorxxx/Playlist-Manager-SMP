@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//14/02/24
 
 /* exported chars */
 
@@ -8,6 +8,7 @@
 const chars = {
 	// Web
 	lastFm			: '\uf202',
+	spotify			: '\uf1bc',
 	link			: '\uf0c1',
 	upload			: '\uf0ee',
 	download		: '\uf0ed',

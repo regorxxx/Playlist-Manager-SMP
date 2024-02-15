@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/24
+//13/02/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -330,14 +330,13 @@ if (!Promise.allSettled) {
 		enumerable: false,
 		configurable: false,
 		writable: false,
-		value: ((promises) => Promise.all(promises.map(p => p
-			.then(value => ({
+		value: ((promises) => Promise.all(promises.map(p => {
+			return (isPromise(p) ? p : Promise.resolve(p)).then(value => ({
 				status: 'fulfilled', value
-			}))
-			.catch(reason => ({
+			})).catch(reason => ({
 				status: 'rejected', reason
-			}))
-		)))
+			}));
+		})))
 	});
 }
 
