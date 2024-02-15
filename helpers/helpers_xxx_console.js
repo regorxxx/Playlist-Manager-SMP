@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/02/24
+//13/02/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -79,6 +79,7 @@ console.formatArg = (arg) => {
 					case arg instanceof WeakMap: { instance = { name: 'WeakMap', type: 'array' }; break; }
 					case arg instanceof WeakSet: { instance = { name: 'WeakSet', type: 'array' }; break; }
 					case arg instanceof Error: { instance = { name: 'Error', type: 'error' }; break; }
+					case Object.prototype.toString.call(arg) === '[object Promise]': { instance = { name: 'Promise', type: 'promise' }; break; }
 				}
 				if (instance) {  // Convert to array objects if possible and stringify
 					switch (instance.type) {
