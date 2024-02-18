@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/02/24
+//16/02/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -397,8 +397,12 @@ function isStringWeak(str) {
 }
 
 String.prototype.replaceLast = function replaceLast(word, newWord) { // NOSONAR
-	const n = this.lastIndexOf(word);
-	return this.slice(0, n) + this.slice(n).replace(word, newWord);
+	const n = word === null || typeof word === 'undefined' || isStringWeak(word) && !word.length
+		? -1
+		: this.lastIndexOf(word);
+	return n === -1
+		? this
+		: this.slice(0, n) + this.slice(n).replace(word, newWord);
 };
 
 String.prototype.replaceAll = function replaceAll(word, newWord) { // NOSONAR
@@ -580,6 +584,10 @@ Array.prototype.chunk = function (chunkSize) { // NOSONAR
 		R.push(this.slice(i, i + chunkSize));
 	}
 	return R;
+};
+
+Array.prototype.joinLast = function joinLast(separator, lastSeparator) { // NOSONAR
+	return this.join(separator || '').replaceLast(separator, lastSeparator);
 };
 
 function zeroOrVal(e) {
