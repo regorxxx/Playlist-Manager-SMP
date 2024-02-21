@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/02/24
+//19/02/24
 
 /* exported _list */
 
@@ -1733,13 +1733,15 @@ function _list(x, y, w, h) {
 						} else { // Only mouse
 							const currItem = this.data[z];
 							if (!this.bDoubleclick) { // It's not a second lbtn click
-								if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
-									this.playlistMenu(z, x, y);
-								} else if (currItem.isFolder) {
-									this.switchFolder(z);
-									this.save();
-								} else {
-									this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
+								if (currItem) {
+									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+										this.playlistMenu(z, x, y);
+									} else if (currItem.isFolder) {
+										this.switchFolder(z);
+										this.save();
+									} else {
+										this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
+									}
 								}
 							} else { this.bDoubleclick = false; }
 						}
