@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/24
+//20/02/24
 
 /* global SimpleCrypto:readable */
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
@@ -16,6 +16,7 @@ const youTube = {
 
 // Tags object should only contain one value per tag.Multi-valued tags are encoded with '; ' as separator.
 youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => { return void (0); } } = {}) {
+	const creatorKey = ['ARTIST', 'artist'].find((key) => Object.hasOwn(tags, key));
 	const id = creator.toLowerCase() + ' ' + title.toLowerCase();
 	const regex = /MUSICBRAINZ_TRACKID/gi;
 	const mbidKey = tags ? Object.keys(tags).find((key) => regex.test(key)) : null;
@@ -24,9 +25,11 @@ youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 	// Add tags from input
 	if (tags && ytItem) {
 		ytItem.url += Object.entries(tags).map((entry) => {
-			if (typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') { return null; }
-			const tagVal = Array.isArray(entry[1]) ? entry[1].join('; ') : entry[1].toString();
-			return tagVal.length ? '&fb2k_' + entry[0] + '=' + encodeURIComponent(tagVal) : null;
+			if (entry[0] === creatorKey || typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') { return null; }
+			const tagVal = Array.isArray(entry[1])
+				? entry[1].map(encodeURIComponent).join('&')
+				: encodeURIComponent(entry[1].toString());
+			return tagVal.length ? '&fb2k_' + entry[0] + '=' + tagVal : null;
 		}).filter(Boolean).join('');
 		for (let key in tags) {
 			if (typeof tags[key] === 'undefined' || tags[key] === null || tags[key] === '' || (Array.isArray(tags[key]) && !tags[key].length)) { continue; }
@@ -119,9 +122,11 @@ youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 					// Add tags from input
 					if (tags) {
 						ytItem.url += Object.entries(tags).map((entry) => {
-							if (typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') { return null; }
-							const tagVal = Array.isArray(entry[1]) ? entry[1].join('; ') : entry[1].toString();
-							return tagVal.length ? '&fb2k_' + entry[0] + '=' + encodeURIComponent(tagVal) : null;
+							if (entry[0] === creatorKey || typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') { return null; }
+							const tagVal = Array.isArray(entry[1])
+								? entry[1].map(encodeURIComponent).join(';')
+								: encodeURIComponent(entry[1].toString());
+							return tagVal.length ? '&fb2k_' + entry[0] + '=' + tagVal : null;
 						}).filter(Boolean).join('');
 						for (let key in tags) {
 							if (typeof tags[key] === 'undefined' || tags[key] === null || tags[key] === '' || (Array.isArray(tags[key]) && !tags[key].length)) { continue; }

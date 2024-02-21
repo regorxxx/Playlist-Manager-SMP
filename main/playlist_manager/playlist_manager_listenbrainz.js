@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/02/24
+//20/02/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -766,9 +766,9 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 */
 
 // To use along listenBrainz.retrieveSimilarArtists
-listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type = 'artist', count = 50, condition = 'and') {
+listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type = 'artist', count = 50, condition = 'or') {
 	const queryParams = tagsArr.map((tag) => 'tag=' + encodeURIComponent(tag.toLowerCase())).join('&')
-		+ (tagsArr.length > 1 ? '&condition=' + (condition || 'and') : '');
+		+ '&condition=' + (condition || 'or');
 	return send({
 		method: 'GET',
 		URL: 'https://api.listenbrainz.org/1/lb-radio/tags?' + queryParams + '&begin_percent=0&end_percent=50&count=' + count,
@@ -800,7 +800,7 @@ listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type =
 };
 
 // To use along listenBrainz.retrieveSimilarArtists
-listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, count = 50, condition = 'and') {
+listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, count = 50, condition = 'or') {
 	return this.getEntitiesByTag(tagsArr, token, 'recording', count, condition);
 };
 
