@@ -159,7 +159,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 			else { break; }
 		}
 		let count = idx.length;
-		const startQuery = query[0] === '(' ? query.slice(0, query.split('').findIndex((s) => { return s !== '('; })) : '';
+		const startQuery = query.startsWith('(') ? query.slice(0, query.split('').findIndex((s) => { return s !== '('; })) : '';
 		const endQuery = query.length > idx[count - 1] ? query.slice(idx[count - 1] + 1, query.length) : '';
 		if (options.bDebug) { console.log(startQuery, '-', endQuery); }
 		if (count % 2 === 0) { // Must be on pairs of 2
@@ -197,7 +197,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 				if (options.bDebug) { console.log('tfoVal:', tfoVal); }
 				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
-					const interQueryStart = interText[0] === ')' ? interText.slice(0, interText.split('').findIndex((s) => { return s !== ')'; })) : '';
+					const interQueryStart = interText.startsWith(')') ? interText.slice(0, interText.split('').findIndex((s) => { return s !== ')'; })) : '';
 					const breakPoint = interText.lastIndexOf(' (');
 					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => { return s !== '('; })) : '';
 					const interQuery = interQueryStart + interQueryEnd;

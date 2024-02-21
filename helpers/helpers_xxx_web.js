@@ -1,12 +1,12 @@
 ﻿'use strict';
-//30/12/23
+//21/02/24
 
 /* exported getText, paginatedFetch */
 
 function getText(URL) {
 	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1
 		? send({ method: 'GET', URL, bypassCache: true })
-		: Promise.reject('Input is not a link.');
+		: Promise.reject(new Error('Input is not a link.'));
 }
 
 function onStateChange(timer, resolve, reject, func = null) {

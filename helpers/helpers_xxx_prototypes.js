@@ -299,11 +299,11 @@ Function.prototype.applyInChunks = function applyInChunks() { // NOSONAR
 		const subLen = arg.length;
 		const subResult = [];
 		for (let j = 0; j < subLen; j++) {
-			subResult.push(this.apply(null, arg.slice(j, Math.min(j + max, subLen))));
+			subResult.push(this.apply(null, arg.slice(j, Math.min(j + max, subLen)))); // NOSONAR
 		}
-		result[i] = this.apply(null, subResult);
+		result[i] = this.apply(null, subResult); // NOSONAR
 	}
-	return this.apply(null, result);
+	return this.apply(null, result); // NOSONAR
 };
 
 // JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
