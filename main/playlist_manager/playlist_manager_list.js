@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/02/24
+//26/02/24
 
 /* exported _list */
 
@@ -3006,7 +3006,7 @@ function _list(x, y, w, h) {
 							.find((pls) => { return pls.nameId === plman.GetPlaylistName(plman.ActivePlaylist); });
 						if (pls !== sourcePls) {
 							this.editData(sourcePls, {
-								size: sourcePls.size + selItems.Count,
+								size: sourcePls.size - selItems.Count,
 								duration: (sourcePls.duration !== - 1 ? sourcePls.duration - selItems.CalcTotalDuration() : selItems.CalcTotalDuration()),
 								modified: Date.now(),
 							});
