@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/02/24
+//21/02/24
 
 // Folders
 const folders = {};
@@ -33,11 +33,13 @@ include('helpers_xxx_so.js');
 /*
 	Global Variables
 */
-/* exported isFoobarV2, isEnhPlayCount, isPlayCount, isYouTube */
+/* exported isFoobarV2, isEnhPlayCount, isPlayCount, isYouTube, isSkipCount, isPlayCount2003 */
 const isFoobarV2 = isCompatible('2.0', 'fb');
 const isEnhPlayCount = utils.CheckComponent('foo_enhanced_playcount');
 const isPlayCount = utils.CheckComponent('foo_playcount');
 const isYouTube = utils.CheckComponent('foo_youtube');
+const isSkipCount = utils.CheckComponent('foo_skipcount');
+const isPlayCount2003 = utils.CheckComponent('foo_playcount_2003');
 
 // Async processing
 /* exported iStepsLibrary, iDelayLibrary, iDelayLibraryPLM, iDelayPlaylists */

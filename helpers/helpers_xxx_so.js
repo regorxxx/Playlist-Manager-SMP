@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/02/24
+//22/02/24
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -15,6 +15,7 @@ function getSoFeatures() {
 	const WshShell = new ActiveXObject('WScript.Shell');
 	const app = new ActiveXObject('Shell.Application');
 	let doc;
+	globProfiler.Print('getSoFeatures.vars');
 	// Internals
 	try { doc = new ActiveXObject('htmlfile'); } catch (e) { soFeat.gecko = false; }
 	if (typeof doc !== 'undefined' && doc && soFeat.gecko) {
