@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/02/24
+//26/02/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
 
@@ -252,7 +252,7 @@ Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 			) + ': ' + (typeof entry[1] === 'object'
 				? entry[1] === null ? 'null' : entry[1].toStr()
 				: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
-			);
+				);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
@@ -422,7 +422,7 @@ String.prototype.count = function count(c) { // NOSONAR
 const cutRegex = {};
 String.prototype.cut = function cut(c) { // NOSONAR
 	if (!cutRegex.hasOwnProperty(c)) { cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g'); } // eslint-disable-line no-prototype-builtins
-	return this.replace(cutRegex[c], '$1…');
+	return this.replace(cutRegex[c], '$1\u2026'); // ...
 };
 
 function matchCase(text, pattern, bFirst = true) {
