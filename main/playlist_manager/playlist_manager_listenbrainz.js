@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/02/24
+//28/02/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -40,6 +40,7 @@ const listenBrainz = {
 			v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
 		},
 	},
+	jspfExt: 'https://musicbrainz.org/doc/jspf#playlist',
 	// API constants
 	// https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants
 	// https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/webserver/views/api_tools.py
@@ -252,7 +253,7 @@ listenBrainz.exportPlaylist = async function exportPlaylist(pls /*{name, nameId,
 
 // Delete all tracks on online playlist and then add all tracks again using the playlist file as reference
 // Easier than single edits, etc.
-listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, playlist_mbid}*/, root = '', token = '', bLookupMBIDs = true) {// NOSONAR
+listenBrainz.syncPlaylist = function syncPlaylist(pls /*{name, nameId, path, extension, playlist_mbid}*/, root = '', token = '', bLookupMBIDs = true) {// NOSONAR
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) { console.log('syncPlaylist: no playlist_mbid provided'); return Promise.resolve(''); }
 	const data = {
 		index: 0,
@@ -563,6 +564,19 @@ listenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 	);
 };
 
+/**
+ * Retrieves user feedback (hate/love)
+ *
+ * @name getUserFeedback
+ * @async
+ * @kind method
+ * @memberof listenBrainz
+ * @param {string} user
+ * @param {{score:string, count:number, offset:number, metadata:Boolean }} params - For score, see {@link https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/db/model/recommendation_feedback.py}
+ * @param {string} token
+ * @param {Boolean} [bPaginated=true] - Retrieves all values using automatic pagination
+ * @returns {Promise.<{created:number, recording_mbid:string, rating:string }>}
+ */
 listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*score, count, offset, metadata*/ }, token = '', bPaginated = true) {
 	if (bPaginated) {
 		return paginatedFetch({
@@ -859,30 +873,59 @@ listenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, 
 	);
 };
 
-listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecommendedPlaylistsNames(user, params = {/*count, offset*/ }, token = '') {
+/**
+ * Retrieves user recommendation playlists
+ *
+ * @name retrieveUserRecommendedPlaylistsNames
+ * @async
+ * @kind method
+ * @memberof listenBrainz
+ * @param {string} user
+ * @param {{count:number, offset:number }} params
+ * @param {string} token
+ * @param {Boolean} [bPaginated=true] - Retrieves all values using automatic pagination
+ * @returns {Promise.<{ playlist:{ creator:string, date:string, identifier:string, title:string, extension:{ 'https://musicbrainz.org/doc/jspf#playlist':{ annotation:string, creator:string, last_modified_at:string, public:Boolean, additional_metadata?:{any} } } } }[]>}
+ */
+listenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecommendedPlaylistsNames(user, params = {/*count, offset*/ }, token = '', bPaginated = true) {
 	if (!user) { console.log('retrieveUserRecommendedPlaylistsNames: no user provided'); return Promise.resolve([]); }
-	const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&') : '';
-	return send({
-		method: 'GET',
-		URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists/createdfor' + queryParams,
-		requestHeader: [['Authorization', 'Token ' + token]],
-		bypassCache: true
-	}).then(
-		(resolve) => {
-			if (resolve) {
-				const response = JSON.parse(resolve);
-				if (Object.hasOwn(response, 'playlists')) {
-					return response.playlists;
-				}
+	if (bPaginated) {
+		return paginatedFetch({
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists/createdfor',
+			queryParams: params,
+			keys: ['playlists'],
+			requestHeader: [['Authorization', 'Token ' + token]],
+			increment: params.count,
+		}).then(
+			(response) => response,
+			(reject) => {
+				console.log('retrieveUserRecommendedPlaylistsNames: ' + reject);
 				return [];
 			}
-			return [];
-		},
-		(reject) => {
-			console.log('retrieveUserRecommendedPlaylistsNames: ' + reject.status + ' ' + reject.responseText);
-			return [];
-		}
-	);
+		);
+	} else {
+		const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&') : '';
+		return send({
+			method: 'GET',
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists/createdfor' + queryParams,
+			requestHeader: [['Authorization', 'Token ' + token]],
+			bypassCache: true
+		}).then(
+			(resolve) => {
+				if (resolve) {
+					const response = JSON.parse(resolve);
+					if (Object.hasOwn(response, 'playlists')) {
+						return response.playlists;
+					}
+					return [];
+				}
+				return [];
+			},
+			(reject) => {
+				console.log('retrieveUserRecommendedPlaylistsNames: ' + reject.status + ' ' + reject.responseText);
+				return [];
+			}
+		);
+	}
 };
 
 // To use along listenBrainz.retrieveSimilarArtists
@@ -1069,7 +1112,10 @@ listenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 				}
 			}
 		}
-		if (!handleArr[i]) { notFound.push({ creator: rows[i].creator, title: rows[i].title, identifier /* str */, artistIndentifier /* [str, ...]*/ }); }
+		if (!handleArr[i]) {
+			notFound.push({ creator: rows[i].creator, title: rows[i].title, identifier /* str */, artistIndentifier /* [str, ...]*/ });
+			handleArr[i] = void (0);
+		}
 	}
 	if (notFound.length) { console.log('Some tracks have not been found on library:\n\t' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t')); }
 	if (this.bProfile) { profiler.Print(''); }
@@ -1083,24 +1129,63 @@ listenBrainz.sanitizeQueryValue = function sanitizeQueryValue(value) {
 /*
 	User data
 */
-listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(user, token) {
+/**
+ * Retrieves user feedback (hate/love)
+ *
+ * @name retrieveUserPlaylistsNames
+ * @async
+ * @kind method
+ * @memberof listenBrainz
+ * @param {string} user
+ * @param {{count:number, offset:number }} params
+ * @param {string} token
+ * @param {Boolean} [bPaginated=true] - Retrieves all values using automatic pagination
+ * @returns {Promise.<{ playlist:{ creator:string, date:string, identifier:string, title:string, extension:{ 'https://musicbrainz.org/doc/jspf#playlist':{ annotation:string, creator:string, last_modified_at:string, public:Boolean, additional_metadata?:{any} } } } }[]>}
+ */
+listenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(user, params = {/*score, count, offset*/ }, token = '', bPaginated = true) {
 	if (!user || !user.length || !token || !token.length) { console.log('retrieveUserPlaylistsNames: no user/token provided'); return Promise.resolve(null); }
-	return send({
-		method: 'GET',
-		URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists',
-		requestHeader: [['Authorization', 'Token ' + token]],
-		bypassCache: true
-	}).then(
-		(resolve) => {
-			const response = JSON.parse(resolve);
-			console.log('retrieveUserPlaylistsNames: ' + user + ' -> ' + response.playlist_count + ' playlists');
-			return response;
-		},
-		(reject) => {
-			console.log('retrieveUserPlaylistsNames: ' + reject);
-			return null;
-		}
-	);
+	if (bPaginated) {
+		return paginatedFetch({
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists',
+			queryParams: params,
+			keys: ['playlists'],
+			requestHeader: [['Authorization', 'Token ' + token]],
+			increment: params.count,
+		}).then(
+			(response) => response,
+			(reject) => {
+				console.log('retrieveUserPlaylistsNames: ' + reject);
+				return [];
+			}
+		);
+	} else {
+		const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&') : '';
+		return send({
+			method: 'GET',
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists' + queryParams,
+			requestHeader: [['Authorization', 'Token ' + token]],
+			bypassCache: true
+		}).then(
+			(resolve) => {
+				const response = JSON.parse(resolve);
+				if (Object.hasOwn(response, 'playlists')) {
+					return response.playlists.map((pls) => {
+						pls.date = new Date(pls.date);
+						if (!Object.hasOwn(pls, 'extension')) { pls.extension = { [this.jspfExt]: {} }; }
+						else if (!Object.hasOwn(pls.extension, this.jspfExt)) { pls.extension[this.jspfExt] = {}; }
+						const ext = pls.extension[this.jspfExt];
+						if (!ext.last_modified_at) { ext.last_modified_at = new Date(pls.date); }
+						else { ext.last_modified_at = new Date(ext.last_modified_at); }
+					});
+				}
+				return [];
+			},
+			(reject) => {
+				console.log('retrieveUserPlaylistsNames: ' + reject.status + ' ' + reject.responseText);
+				return [];
+			}
+		);
+	}
 };
 
 listenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = true) {
@@ -1135,8 +1220,7 @@ listenBrainz.retrieveUser = async function retrieveUser(token, bLog = true) {
 listenBrainz.retrieveUserPlaylists = function retrieveUserPlaylists(user, token) {
 	if (!user || !user.length || !token || !token.length) { console.log('retrieveUserPlaylists: no user/token provided'); return Promise.resolve([]); }
 	return this.retrieveUserPlaylistsNames(user, token).then(
-		(resolve) => {
-			const playlists = resolve.playlists;
+		(playlists) => {
 			const jsfpArr = playlists.map((pls) => { return this.importPlaylist(pls.identifier.replace(this.regEx, '')); });
 			return Promise.all(jsfpArr);
 		},

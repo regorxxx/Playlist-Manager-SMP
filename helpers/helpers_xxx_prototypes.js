@@ -252,7 +252,7 @@ Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 			) + ': ' + (typeof entry[1] === 'object'
 				? entry[1] === null ? 'null' : entry[1].toStr()
 				: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
-				);
+			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
