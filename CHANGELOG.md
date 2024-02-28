@@ -97,6 +97,7 @@
 - Clone: wrong warning about not found tracks when using relative paths in some cases.
 - Clone: when cloning playlists within a folder (via menus or shortcuts), the new items will be created now at the same folder level (not at the root of the list).
 - Playlist formats: added some checks when parsing corrupted playlists to avoid crashes (and instead omit the line).
+- ListenBrainz: input when using playlist importing by MBID is now checked to ensure it's a valid UUID (before attempting the web retrieval).
 - Startup processing has been changed to not run any secondary process while caching the library (for ex. AutoPlaylist size updating, etc.); these steps will be run sequentially after library caching has been done. Using multiple panels, one of them will cache the library and the rest run the other steps if possible.
 - Configuration: changed the remove duplicates bias to prefer tracks with higher play-counts and positive feedback tag (love/hate).
 - Helpers: updated helpers.
@@ -128,6 +129,7 @@
 - XSPF: identifier tag was not working properly at the content resolution step (usually used for MUSICBRAINZ_TRACKID).
 - XSPF: .xspf playlists not loading properly when content resolution was used in some cases.
 - XSPF: malformed track paths using relative paths in some cases.
+- AutoPlaylists: crash when changing AutoPlaylists sort TF expression if the value was not changed.
 - Links: multiple fixes to YouTube web links handling.
 - Remove duplicates: advanced RegEx title matching option not being applied in some cases.
 - Colors: crash if a color was missing from an older version, after updating, if the settings menu was opened. [Issue 70](https://github.com/regorxxx/Playlist-Manager-SMP/issues/70)

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/01/24
+//28/02/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
@@ -161,10 +161,13 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: 'Edit sort pattern...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let bDone = false;
-						const input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
-						if (input === null && !Input.isLastEqual) { return; }
+						let input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
+						if (input === null) {
+							if (!Input.isLastEqual) { return; }
+							else { input = Input.lastInput; }
+						}
 						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
-						if (input !== null) {
+						if (!Input.isLastEqual) {
 							list.editData(pls, {
 								sort: input,
 							});
@@ -475,7 +478,7 @@ function createMenuLeft(forcedIndex = -1) {
 								playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 								if (playlist_mbid && typeof playlist_mbid === 'string' && playlist_mbid.length) { bUpdateMBID = true; }
 							}
-							if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) { lb.consoleError('Playlist was not exported.'); }
+							if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) { lb.consoleError('Playlist was not exported.'); return; }
 							if (list.properties.bSpotify[1]) {
 								lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
 									if (services.indexOf('spotify') !== -1) {
@@ -1461,11 +1464,10 @@ function createMenuRight() {
 				entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 					if (!await checkLBToken()) { return Promise.resolve(false); }
 					let bDone = false;
-					let playlist_mbid = '';
-					try { playlist_mbid = utils.InputBox(window.ID, 'Enter Playlist MBID:', window.Name, menu.cache.playlist_mbid || '', true); }
-					catch (e) { bDone = true; }
-					playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
+					let playlist_mbid = Input.string('string', menu.cache.playlist_mbid || '', 'Enter Playlist MBID:', window.Name, '866b5a46-c474-4fae-8782-0f46240a9507', [(mbid) => isUUID(mbid.replace(lb.regEx, ''))]);
+					if (playlist_mbid === null) { playlist_mbid = Input.isLastEqual ? Input.lastInput : ''; }
 					if (playlist_mbid.length) {
+						playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
 						menu.cache.playlist_mbid = playlist_mbid;
 						const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
 						if (!token) { return Promise.resolve(false); }
