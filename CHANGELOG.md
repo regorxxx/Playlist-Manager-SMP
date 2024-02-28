@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.13.0](#0130---2024-02-28)
 - [0.12.1](#0121---2023-12-09)
 - [0.12.0](#0120---2023-12-08)
 - [0.11.0](#0110---2023-11-28)
@@ -51,6 +52,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.13.0] - 2023-12-09
 ### Added
 - Importing JSON: allows to import any available playlist metadata from UI-only playlists, .fpl, .xsp, .pls and .srtm files (which is only saved in the JSON file). In such case, the playlist file (with same filename and name) must already reside in the tracked folder to be matched at the importing step and overwritten with the metadata found.
 - Importing JSON: allows to import the folder structure saved in the JSON file.
@@ -1128,7 +1135,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.10.0...v0.11.0
