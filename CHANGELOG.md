@@ -57,7 +57,7 @@
 ### Removed
 ### Fixed
 
-## [0.13.0] - 2023-12-09
+## [0.13.0] - 2023-02-28
 ### Added
 - Importing JSON: allows to import any available playlist metadata from UI-only playlists, .fpl, .xsp, .pls and .srtm files (which is only saved in the JSON file). In such case, the playlist file (with same filename and name) must already reside in the tracked folder to be matched at the importing step and overwritten with the metadata found.
 - Importing JSON: allows to import the folder structure saved in the JSON file.
