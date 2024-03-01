@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/02/24
+//01/03/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -16,6 +16,8 @@ include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable */
+include('helpers\\helpers_xxx_prototypes_smp.js');
+/* global extendGR:readable */
 include('helpers\\helpers_xxx_playlists.js');
 /* global getPlaylistIndexArray:readable */
 include('helpers\\helpers_xxx_playlists_files.js');
@@ -719,7 +721,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_paint', (gr) => {
-		// extendGR(gr, {Repaint: true}); // helpers_xxx_prototypes_smp.js
+		if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
 		panel.paint(gr);
 		if (stats.bEnabled) {
 			if (window.debugPainting) { window.drawDebugRectAreas(gr); }
