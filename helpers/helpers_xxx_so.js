@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/02/24
+//04/03/24
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -121,8 +121,14 @@ function initCheckFeatures(soFeat, bPopup = true) {
 	if (!bPrevFile || !data) {
 		bCheck = true;
 	} else {
-		for (const key in soFeat) {
-			if (!data.hasOwnProperty(key) || data[key] !== soFeat[key]) { bCheck = true; break; } // eslint-disable-line no-prototype-builtins
+		if (!Object.keys(soFeat).length) {
+			for (const key in data) {
+				soFeat[key] = data[key];
+			}
+		} else {
+			for (const key in soFeat) {
+				if (!data.hasOwnProperty(key) || data[key] !== soFeat[key]) { bCheck = true; break; } // eslint-disable-line no-prototype-builtins
+			}
 		}
 	}
 	if (bCheck) {

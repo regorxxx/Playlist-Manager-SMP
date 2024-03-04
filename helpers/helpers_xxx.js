@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/02/24
+//04/03/24
 
 // Folders
 const folders = {};
@@ -71,7 +71,9 @@ const globProfiler = globSettings.bProfileInit
 /*
 	SO features
 */
-const soFeat = getSoFeatures();
+const soFeat = utils.IsFile(soFeatFile)
+	? globSettings.bCheckSoFeatures ? getSoFeatures() : {}
+	: getSoFeatures();
 
 /*
 	Global Post-settings Fonts

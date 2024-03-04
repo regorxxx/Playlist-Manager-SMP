@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/24
+//04/03/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -249,6 +249,7 @@ const globSettings = {
 	bAutoUpdateOpenWeb: true,
 	// bAutoUpdateApply: false,
 	bPopupOnCheckSOFeatures: true,
+	bCheckSoFeatures: true,
 	bProfileInit: false,
 	bDebugPaint: false,
 	bTooltip: true,
