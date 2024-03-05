@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/02/24
+//05/03/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -2283,7 +2283,28 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenuLast(() => (Number(list.properties['autoBack'][1]) !== 0));
 		}
-		{
+		{	// Updates
+			menu.newEntry({ menuName, entryText: 'sep' });
+			const subMenuName = menu.newMenu('Loading delays...', menuName);
+			for (const key in list.delays) {
+				let entry = key;
+				switch (key) {
+					case 'playlistLoading': entry = 'Playlist loading'; break;
+				}
+				menu.newEntry({
+					menuName: subMenuName, entryText: entry + '\t' + _b(list.delays[key] + ' ms'), func: () => {
+						let input = 0;
+						try { input = Number(utils.InputBox(window.ID, '\nEnter integer number >= ' + 0 + ' (ms):\n(0 to disable it)', window.Name, list.delays[key], true)); }
+						catch (e) { return; }
+						if (isNaN(input) || input < 0 || !isFinite(input)) { return; }
+						list.delays[key] = input;
+						list.properties['delays'][1] = list.delays;
+						overwriteProperties(list.properties);
+					}
+				});
+			}
+		}
+		{	// Updates
 			menu.newEntry({ menuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName, entryText: 'Automatically check for updates', func: () => {

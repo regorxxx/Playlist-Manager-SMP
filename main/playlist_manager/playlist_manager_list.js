@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/02/24
+//05/03/24
 
 /* exported _list */
 
@@ -4853,1524 +4853,1523 @@ function _list(x, y, w, h) {
 		return bDone;
 	};
 
-	this.init = () => {
-
-		this.save = (bInit = false) => {
-			this.dataAutoPlaylists = [];
-			this.dataFpl = [];
-			this.dataXsp = [];
-			this.dataUI = [];
-			this.dataFolder = [];
-			if (this.dataAll && this.dataAll.length) {
-				this.dataAll.forEach((item) => {
-					if (item.isAutoPlaylist) { // Saves autoplaylists to json
-						this.dataAutoPlaylists.push(item);
-					} else if (item.extension === '.fpl') { // Save fpl size and name ID cache too
-						this.dataFpl.push(item);
-					} else if (item.extension === '.xsp') { // Save xsp as autoplaylists
-						this.dataXsp.push(item);
-					} else if (item.extension === '.ui') { // Save UI creation and last modified
-						this.dataUI.push(item);
-					} else if (item.isFolder) { // Save folders
-						this.dataFolder.push(item);
-					}
-				});
-				const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI, ...this.dataFolder]);
-				const formatFolder = (pls) => {
-					if (Object.hasOwn(pls, 'pls')) {
-						const itemList = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
-						pls.pls = pls.pls.map((subPls) => {
-							const id = subPls.nameId + subPls.extension;
-							if (itemList.has(id)) {
-								itemList.delete(id);
-								if (subPls.isFolder) {
-									return {
-										nameId: subPls.nameId,
-										isFolder: true
-									};
-								} else {
-									return {
-										nameId: subPls.nameId,
-										extension: subPls.extension
-									};
-								}
+	this.save = (bInit = false) => {
+		this.dataAutoPlaylists = [];
+		this.dataFpl = [];
+		this.dataXsp = [];
+		this.dataUI = [];
+		this.dataFolder = [];
+		if (this.dataAll && this.dataAll.length) {
+			this.dataAll.forEach((item) => {
+				if (item.isAutoPlaylist) { // Saves autoplaylists to json
+					this.dataAutoPlaylists.push(item);
+				} else if (item.extension === '.fpl') { // Save fpl size and name ID cache too
+					this.dataFpl.push(item);
+				} else if (item.extension === '.xsp') { // Save xsp as autoplaylists
+					this.dataXsp.push(item);
+				} else if (item.extension === '.ui') { // Save UI creation and last modified
+					this.dataUI.push(item);
+				} else if (item.isFolder) { // Save folders
+					this.dataFolder.push(item);
+				}
+			});
+			const data = clone([...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp, ...this.dataUI, ...this.dataFolder]);
+			const formatFolder = (pls) => {
+				if (Object.hasOwn(pls, 'pls')) {
+					const itemList = new Set(pls.pls.map((subPls) => subPls.nameId + subPls.extension));
+					pls.pls = pls.pls.map((subPls) => {
+						const id = subPls.nameId + subPls.extension;
+						if (itemList.has(id)) {
+							itemList.delete(id);
+							if (subPls.isFolder) {
+								return {
+									nameId: subPls.nameId,
+									isFolder: true
+								};
 							} else {
-								return null;
+								return {
+									nameId: subPls.nameId,
+									extension: subPls.extension
+								};
 							}
-						}).filter(Boolean);
-					}
-					return pls;
-				};
-				const stripMeta = ['sortIdx', 'inFolder'];
-				data.forEach((pls) => {
-					stripMeta.forEach((key) => delete pls[key]);
-					// Strip unnecessary folder data and filter duplicates
-					if (Object.hasOwn(pls, 'pls')) {
-						formatFolder(pls);
-					}
+						} else {
+							return null;
+						}
+					}).filter(Boolean);
+				}
+				return pls;
+			};
+			const stripMeta = ['sortIdx', 'inFolder'];
+			data.forEach((pls) => {
+				stripMeta.forEach((key) => delete pls[key]);
+				// Strip unnecessary folder data and filter duplicates
+				if (Object.hasOwn(pls, 'pls')) {
+					formatFolder(pls);
+				}
+			});
+			_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
+		}
+		if (!bInit) {
+			if (this.bDynamicMenus) {
+				this.createMainMenuDynamic().then(() => {
+					this.exportPlaylistsInfo();
+					callbacksListener.checkPanelNamesAsync();
 				});
-				_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
 			}
-			if (!bInit) {
-				if (this.bDynamicMenus) {
-					this.createMainMenuDynamic().then(() => {
-						this.exportPlaylistsInfo();
-						callbacksListener.checkPanelNamesAsync();
-					});
-				}
-				else if (this.mainMenuDynamic.length) { this.deleteMainMenuDynamic(); }
-			}
-		};
+			else if (this.mainMenuDynamic.length) { this.deleteMainMenuDynamic(); }
+		}
+	};
 
-		this.addToData = (objectPlaylist) => {
-			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-			if (isArray(objectPlaylist)) {
-				const dataIdx = [];
-				const dataAllIdx = [];
-				for (const objectPlaylist_i of objectPlaylist) {
-					const newIdx = this.addToData(objectPlaylist_i);
-					dataIdx.push(newIdx.dataIdx);
-					dataAllIdx.push(newIdx.dataAllIdx);
-				}
-				return { dataIdx, dataAllIdx };
+	this.addToData = (objectPlaylist) => {
+		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
+		if (isArray(objectPlaylist)) {
+			const dataIdx = [];
+			const dataAllIdx = [];
+			for (const objectPlaylist_i of objectPlaylist) {
+				const newIdx = this.addToData(objectPlaylist_i);
+				dataIdx.push(newIdx.dataIdx);
+				dataAllIdx.push(newIdx.dataAllIdx);
 			}
-			if (objectPlaylist.isAutoPlaylist) {
-				this.dataAutoPlaylists.push(objectPlaylist);
-				this.itemsAutoPlaylist++;
-			} else if (objectPlaylist.extension === '.fpl') {
-				this.dataFpl.push(objectPlaylist);
-				this.itemsFpl++;
-			} else if (objectPlaylist.extension === '.xsp') {
-				this.dataXsp.push(objectPlaylist);
-				this.itemsXsp++;
-			} else if (objectPlaylist.isFolder) {
-				this.dataFolder.push(objectPlaylist);
-				this.itemsFolder++;
-			}
-			const dataIdx = this.data.push(objectPlaylist) - 1;
-			this.items++;
-			const dataAllIdx = this.dataAll.push(objectPlaylist) - 1;
-			this.itemsAll++;
-			clearInterval(delay);
 			return { dataIdx, dataAllIdx };
-		};
+		}
+		if (objectPlaylist.isAutoPlaylist) {
+			this.dataAutoPlaylists.push(objectPlaylist);
+			this.itemsAutoPlaylist++;
+		} else if (objectPlaylist.extension === '.fpl') {
+			this.dataFpl.push(objectPlaylist);
+			this.itemsFpl++;
+		} else if (objectPlaylist.extension === '.xsp') {
+			this.dataXsp.push(objectPlaylist);
+			this.itemsXsp++;
+		} else if (objectPlaylist.isFolder) {
+			this.dataFolder.push(objectPlaylist);
+			this.itemsFolder++;
+		}
+		const dataIdx = this.data.push(objectPlaylist) - 1;
+		this.items++;
+		const dataAllIdx = this.dataAll.push(objectPlaylist) - 1;
+		this.itemsAll++;
+		clearInterval(delay);
+		return { dataIdx, dataAllIdx };
+	};
 
-		this.editData = (objectPlaylist, properties, bSave = false) => {
-			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-			if (isArray(objectPlaylist)) {
-				const bSucess = [];
-				for (const objectPlaylist_i of objectPlaylist) { bSucess.push(this.editData(objectPlaylist_i)); }
-				return bSucess.every(Boolean);
-			}
-			const index = this.getIndex(objectPlaylist, true);
-			if (index !== -1) { // Changes data on the other arrays too since they link to same object
-				Object.keys(properties).forEach((property) => {
-					if (property === 'pls') { // Don't remove folder.pls[] prototype
-						this.dataAll[index].pls.length = 0;
-						this.dataAll[index].pls.push(...properties[property]);
-					} else {
-						this.dataAll[index][property] = properties[property];
-					}
-				});
-			} else {
-				console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));
-				return false;
-			}
-			if (bSave) { this.save(); }
-			clearInterval(delay);
-			return true;
-		};
+	this.editData = (objectPlaylist, properties, bSave = false) => {
+		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
+		if (isArray(objectPlaylist)) {
+			const bSucess = [];
+			for (const objectPlaylist_i of objectPlaylist) { bSucess.push(this.editData(objectPlaylist_i)); }
+			return bSucess.every(Boolean);
+		}
+		const index = this.getIndex(objectPlaylist, true);
+		if (index !== -1) { // Changes data on the other arrays too since they link to same object
+			Object.keys(properties).forEach((property) => {
+				if (property === 'pls') { // Don't remove folder.pls[] prototype
+					this.dataAll[index].pls.length = 0;
+					this.dataAll[index].pls.push(...properties[property]);
+				} else {
+					this.dataAll[index][property] = properties[property];
+				}
+			});
+		} else {
+			console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));
+			return false;
+		}
+		if (bSave) { this.save(); }
+		clearInterval(delay);
+		return true;
+	};
 
-		this.removeFromData = (objectPlaylist) => {
-			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-			if (isArray(objectPlaylist)) {
-				for (const objectPlaylist_i of objectPlaylist) { this.removeFromData(objectPlaylist_i); }
-				return;
-			}
-			let index;
-			if (objectPlaylist.isAutoPlaylist) {
-				index = this.dataAutoPlaylists.indexOf(objectPlaylist);
-				if (index !== -1) {
-					this.dataAutoPlaylists.splice(index, 1);
-					this.itemsAutoPlaylist--;
-				} else { console.log('Playlist Manager: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
-			} else if (objectPlaylist.extension === '.fpl') {
-				index = this.dataFpl.indexOf(objectPlaylist);
-				if (index !== -1) {
-					this.dataFpl.splice(index, 1);
-					this.itemsFpl--;
-				} else { console.log('Playlist Manager: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
-			} else if (objectPlaylist.extension === '.xsp') {
-				index = this.dataXsp.indexOf(objectPlaylist);
-				if (index !== -1) {
-					this.dataXsp.splice(index, 1);
-					this.itemsXsp--;
-				} else { console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
-			} else if (objectPlaylist.isFolder) {
-				index = this.dataFolder.indexOf(objectPlaylist);
-				if (index !== -1) {
-					this.dataFolder.splice(index, 1);
-					this.itemsFolder--;
-				} else { console.log('Playlist Manager: error removing playlist object from \'this.dataFolder\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
-			}
-			index = this.data.indexOf(objectPlaylist);
+	this.removeFromData = (objectPlaylist) => {
+		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
+		if (isArray(objectPlaylist)) {
+			for (const objectPlaylist_i of objectPlaylist) { this.removeFromData(objectPlaylist_i); }
+			return;
+		}
+		let index;
+		if (objectPlaylist.isAutoPlaylist) {
+			index = this.dataAutoPlaylists.indexOf(objectPlaylist);
 			if (index !== -1) {
-				this.data.splice(index, 1);
-				this.items--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
-			index = this.dataAll.indexOf(objectPlaylist);
+				this.dataAutoPlaylists.splice(index, 1);
+				this.itemsAutoPlaylist--;
+			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		} else if (objectPlaylist.extension === '.fpl') {
+			index = this.dataFpl.indexOf(objectPlaylist);
 			if (index !== -1) {
-				this.dataAll.splice(index, 1);
-				this.itemsAll--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
-			clearInterval(delay);
-		};
+				this.dataFpl.splice(index, 1);
+				this.itemsFpl--;
+			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		} else if (objectPlaylist.extension === '.xsp') {
+			index = this.dataXsp.indexOf(objectPlaylist);
+			if (index !== -1) {
+				this.dataXsp.splice(index, 1);
+				this.itemsXsp--;
+			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		} else if (objectPlaylist.isFolder) {
+			index = this.dataFolder.indexOf(objectPlaylist);
+			if (index !== -1) {
+				this.dataFolder.splice(index, 1);
+				this.itemsFolder--;
+			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataFolder\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		}
+		index = this.data.indexOf(objectPlaylist);
+		if (index !== -1) {
+			this.data.splice(index, 1);
+			this.items--;
+		} else { console.log('Playlist Manager: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		index = this.dataAll.indexOf(objectPlaylist);
+		if (index !== -1) {
+			this.dataAll.splice(index, 1);
+			this.itemsAll--;
+		} else { console.log('Playlist Manager: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		clearInterval(delay);
+	};
 
-		this.replacer = (key, value) => {
-			return key === 'width' ? void (0) : value;
-		};
+	this.replacer = (key, value) => {
+		return key === 'width' ? void (0) : value;
+	};
 
-		this.addFolder = (name = '', toFolder = null) => {
-			if (!name.length) {
-				try { name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true); }
-				catch (e) { return null; }
-				if (!name.length) { return null; }
-				if (this.dataAll.some((pls) => pls.nameId === name)) {
-					fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
-					return null;
-				}
+	this.addFolder = (name = '', toFolder = null) => {
+		if (!name.length) {
+			try { name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true); }
+			catch (e) { return null; }
+			if (!name.length) { return null; }
+			if (this.dataAll.some((pls) => pls.nameId === name)) {
+				fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
+				return null;
 			}
-			const now = Date.now();
-			const defaults = new PlaylistObj({ name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now });
-			const folder = { ...defaults, isFolder: true, isOpen: false, pls: [] };
-			this.addFolderProperties(folder);
-			// Add tags of current view
-			if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(folder.tags).has(tag)) { folder.tags.push(tag); } }); }
-			// Categories
-			// Add Category of current view if none was forced
-			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !folder.category.length) { folder.category = this.categoryState[0]; }
-			// Save
-			this.addToData(folder);
-			this.update(true, true); // We have already updated data before only for the variables changed
-			this.filter();
-			if (toFolder !== null) {
-				this.addToFolder(folder, toFolder);
-				this.save();
-				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
-				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
-			}
-			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			this.showPlsByObj(folder);
-			return folder;
-		};
-
-		this.addFolderProperties = (folder) => {
-			const filterData = this.filterData;
-			Object.defineProperty(folder.pls, 'filtered', {
-				configurable: true, enumerable: true,
-				get: function () {
-					return (this.length ? filterData({ data: this, bReusePlsFilter: true, bSkipSearch: true }) : []);
-				}
-			});
-			Object.defineProperty(folder.pls, 'lengthFilteredAll', {
-				configurable: true, enumerable: true,
-				get: function () {
-					return this.filtered.length;
-				}
-			});
-			Object.defineProperty(folder.pls, 'lengthFiltered', {
-				configurable: true, enumerable: true,
-				get: function () {
-					return this.filtered.filter((item) => !item.isFolder).length;
-				}
-			});
-			Object.defineProperty(folder.pls, 'lengthFilteredDeep', {
-				configurable: true, enumerable: true,
-				get: function () {
-					const count = (acc, item) => {
-						if (item.isFolder) {
-							return acc + filterData({ data: item.pls, bReusePlsFilter: true, bSkipSearch: true }).reduce(count, 0);
-						} else {
-							return acc + 1;
-						}
-					};
-					return this.filtered.reduce(count, 0);
-				}
-			});
-			Object.defineProperty(folder.pls, 'lengthDeep', {
-				configurable: true, enumerable: true,
-				get: function () {
-					const count = (acc, item) => {
-						if (item.isFolder) {
-							return acc + item.pls.reduce(count, 0);
-						} else {
-							return acc + 1;
-						}
-					};
-					return this.reduce(count, 0);
-				}
-			});
-		};
-
-		this.moveToFolderStack = (item, toFolder) => {
-			const itemsArr = isArray(item) ? item : [item];
-			itemsArr.forEach((subItem) => { this.folderStack.push([subItem, toFolder]); });
-		};
-
-		this.moveToFolder = (item, toFolder) => {
-			const itemsArr = isArray(item) ? item : [item];
-			itemsArr.forEach((subItem) => { this.addToFolder(subItem, toFolder); });
+		}
+		const now = Date.now();
+		const defaults = new PlaylistObj({ name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now });
+		const folder = { ...defaults, isFolder: true, isOpen: false, pls: [] };
+		this.addFolderProperties(folder);
+		// Add tags of current view
+		if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(folder.tags).has(tag)) { folder.tags.push(tag); } }); }
+		// Categories
+		// Add Category of current view if none was forced
+		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !folder.category.length) { folder.category = this.categoryState[0]; }
+		// Save
+		this.addToData(folder);
+		this.update(true, true); // We have already updated data before only for the variables changed
+		this.filter();
+		if (toFolder !== null) {
+			this.addToFolder(folder, toFolder);
 			this.save();
 			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 			this.sort();
-		};
+			if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
+		}
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		this.showPlsByObj(folder);
+		return folder;
+	};
 
-		this.addToFolder = (pls, folderObj) => {
-			if (this.isInFolder(pls)) { this.removeFromFolder(pls); }
-			pls.inFolder = folderObj.nameId;
-			folderObj.pls.push(pls);
-		};
-
-		this.removeFromFolder = (pls) => {
-			const folder = this.data.find((item) => pls.inFolder === item.nameId && item.isFolder);
-			if (!folder) { return false; }
-			const idx = folder.pls.indexOf(pls);
-			if (idx !== -1) {
-				folder.pls.splice(idx, 1);
-				pls.inFolder = '';
-				return true;
+	this.addFolderProperties = (folder) => {
+		const filterData = this.filterData;
+		Object.defineProperty(folder.pls, 'filtered', {
+			configurable: true, enumerable: true,
+			get: function () {
+				return (this.length ? filterData({ data: this, bReusePlsFilter: true, bSkipSearch: true }) : []);
 			}
-			return false;
-		};
-
-		this.isInFolder = (pls) => {
-			return (Object.hasOwn(pls, 'inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
-		};
-
-		this.getParentFolder = (pls) => {
-			return this.isInFolder(pls)
-				? this.dataFolder.find((item) => item.isFolder && item.nameId === pls.inFolder)
-				: null;
-		};
-
-		this.addUIplaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
-			let input = name;
-			if (bInputName) {
-				input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
-				if (input === null && !Input.isLastEqual) { return -1; }
+		});
+		Object.defineProperty(folder.pls, 'lengthFilteredAll', {
+			configurable: true, enumerable: true,
+			get: function () {
+				return this.filtered.length;
 			}
-			let i = 0;
-			let newName;
-			while (!newName || plman.FindPlaylist(newName) !== -1) {
-				newName = (input || 'New playlist') + (i ? ' ' + _p(i) : '');
-				i++;
+		});
+		Object.defineProperty(folder.pls, 'lengthFiltered', {
+			configurable: true, enumerable: true,
+			get: function () {
+				return this.filtered.filter((item) => !item.isFolder).length;
 			}
-			if (this.dataAll.some((pls) => pls.nameId === newName)) {
-				fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', window.Name);
-				return -1;
-			}
-			plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
-			// Set focus on new playlist if possible
-			if (plman.ActivePlaylist !== -1) {
-				setTimeout(() => { // Required since input popup invokes move callback after this func
-					if (newName === plman.GetPlaylistName(plman.ActivePlaylist)) {
-						const objectPlaylist = this.data.find((pls) => { return pls.nameId === newName; });
-						if (toFolder !== null && objectPlaylist !== null) {
-							this.addToFolder(objectPlaylist, toFolder);
-							this.save();
-							if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
-							this.sort();
-							if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
-						}
-						this.cacheLastPosition();
-						this.showCurrPls();
+		});
+		Object.defineProperty(folder.pls, 'lengthFilteredDeep', {
+			configurable: true, enumerable: true,
+			get: function () {
+				const count = (acc, item) => {
+					if (item.isFolder) {
+						return acc + filterData({ data: item.pls, bReusePlsFilter: true, bSkipSearch: true }).reduce(count, 0);
+					} else {
+						return acc + 1;
 					}
-				}, 10);
+				};
+				return this.filtered.reduce(count, 0);
 			}
-			return plman.ActivePlaylist;
-		};
+		});
+		Object.defineProperty(folder.pls, 'lengthDeep', {
+			configurable: true, enumerable: true,
+			get: function () {
+				const count = (acc, item) => {
+					if (item.isFolder) {
+						return acc + item.pls.reduce(count, 0);
+					} else {
+						return acc + 1;
+					}
+				};
+				return this.reduce(count, 0);
+			}
+		});
+	};
 
-		this.addAutoPlaylist = (pls = null, bEdit = true, toFolder = null) => {
-			// Check if there are initial values
-			const bPls = !!pls;
-			const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
-			const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
-			const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
-			// Create PlaylistObj
-			let newName = hasName ? pls.name : '';
-			if (!newName.length || bEdit) {
-				try { newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', window.Name, newName, true); }
-				catch (e) { return null; }
-				if (!newName.length) { return null; }
-			}
-			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
-			const nameId = newName + UUID;
-			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
-				return null;
-			}
-			let newQuery = hasQuery ? pls.query : '';
-			if (!newQuery.length || bEdit) {
-				try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, newQuery, true); }
-				catch (e) { return null; }
-			}
-			if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
-			const newSort = !hasSort || bEdit
-				? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '')
-				: (hasSort ? pls.sort : '');
-			if (newSort.length && !checkSort(newSort)) {
-				fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name);
-				return null;
-			}
-			const newForced = (bPls && Object.hasOwn(pls, 'bSortForced')
-				? !!pls.bSortForced
-				: newSort.length
-					? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no)
-					: popup.no
-			) === popup.yes;
-			const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
-			const handleList = hasSize && hasQuery && pls.query === newQuery
-				? null
-				: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
-			const queryCount = hasSize && hasQuery && pls.query === newQuery
-				? pls.size
-				: handleList.Count;
-			const duration = hasSize && hasQuery && pls.query === newQuery
-				? pls.duration
-				: handleList.CalcTotalDuration();
-			const objectPlaylist = new PlaylistObj({
-				id: UUID,
-				name: newName,
-				size: queryCount,
-				bAutoPlaylist: true,
-				queryObj: newQueryObj,
-				category: hasCategory ? pls.category : '',
-				tags: hasTags ? pls.tags : [],
-				trackTags: hasTrackTags ? pls.trackTags : [],
-				duration
-			});
-			// Auto-Tags
-			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }
-			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) { objectPlaylist.tags.push('bAutoLoad'); }
-			if (this.bMultMenuTag && objectPlaylist.tags.indexOf('bMultMenu') === -1) { objectPlaylist.tags.push('bMultMenu'); }
-			if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
-			// Add tags of current view
-			if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
-			// Categories
-			// Add Category of current view if none was forced
-			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
-			// Save
-			this.addToData(objectPlaylist);
-			this.update(true, true); // We have already updated data before only for the variables changed
-			this.filter();
-			if (toFolder !== null) {
-				this.addToFolder(objectPlaylist, toFolder);
-				this.save();
-				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
-				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
-			}
-			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			this.showPlsByObj(objectPlaylist);
-			return objectPlaylist;
-		};
+	this.moveToFolderStack = (item, toFolder) => {
+		const itemsArr = isArray(item) ? item : [item];
+		itemsArr.forEach((subItem) => { this.folderStack.push([subItem, toFolder]); });
+	};
 
-		this.addSmartplaylist = (pls = null, bEdit = true, toFolder = null) => {
-			this.xspPopup();
-			// Check if there are initial values
-			const bPls = !!pls;
-			const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
-			const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
-			const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
-			const hasLimit = bPls && Object.hasOwn(pls, 'limit') && pls.limit;
-			// Create PlaylistObj
-			let newName = hasName ? pls.name : '';
-			if (!newName.length || bEdit) {
-				try { newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', window.Name, newName, true); }
-				catch (e) { return null; }
-				if (!newName.length) { return null; }
-			}
-			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
-			const nameId = newName + UUID;
-			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
-				return null;
-			}
-			let newQuery = hasQuery ? pls.query : '';
-			if (!newQuery.length || bEdit) {
-				try { newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', window.Name, newQuery, true); }
-				catch (e) { return null; }
-			}
-			const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
-			if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
-			const { rules, match } = XSP.getRules(newQuery);
-			if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return null; }
-			const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
-			if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
-			const newForced = false;
-			const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
-			const handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);
-			const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (!bPlaylist ? handleList.Count : '?');
-			const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (!bPlaylist ? handleList.CalcTotalDuration() : -1);
-			let newLimit = 0;
-			if (hasLimit) {
-				if (isFinite(pls.limit)) { newLimit = pls.limit; }
-			} else if (bEdit) {
-				try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true)); }
-				catch (e) { return null; }
-				if (Number.isNaN(newLimit)) { return null; }
-				if (!Number.isFinite(newLimit)) { newLimit = 0; }
-			}
-			const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
-			const objectPlaylist = new PlaylistObj({
-				id: UUID,
-				path: playlistPath,
-				name: newName,
-				extension: '.xsp',
-				size: queryCount,
-				queryObj: newQueryObj,
-				category: hasCategory ? pls.category : '',
-				tags: hasTags ? pls.tags : [],
-				trackTags: hasTrackTags ? pls.trackTags : [],
-				limit: newLimit,
-				duration,
-				type: 'songs'
-			});
-			// Auto-Tags
-			if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }
-			if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) { objectPlaylist.tags.push('bAutoLoad'); }
-			if (this.bMultMenuTag && objectPlaylist.tags.indexOf('bMultMenu') === -1) { objectPlaylist.tags.push('bMultMenu'); }
-			if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
-			// Add tags of current view
-			if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
-			// Categories
-			// Add Category of current view if none was forced
-			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
-			if (rules.length) {
-				const jspPls = XSP.emptyJSP('songs');
-				jspPls.playlist.name = newName;
-				jspPls.playlist.rules = rules;
-				jspPls.playlist.match = match;
-				jspPls.playlist.limit = newLimit;
-				jspPls.playlist.sort = XSP.getOrder(newSort);
-				const xspText = XSP.toXSP(jspPls);
-				if (xspText && xspText.length) { bDone = _save(playlistPath, xspText.join('\r\n')); }
-			} else { return null; }
-			// Save
-			this.addToData(objectPlaylist);
-			this.update(true, true); // We have already updated data before only for the variables changed
-			this.filter();
-			if (toFolder !== null) {
-				this.addToFolder(objectPlaylist, toFolder);
-				this.save();
-				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
-				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
-			}
-			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			this.showPlsByObj(objectPlaylist);
-			return objectPlaylist;
-		};
+	this.moveToFolder = (item, toFolder) => {
+		const itemsArr = isArray(item) ? item : [item];
+		itemsArr.forEach((subItem) => { this.addToFolder(subItem, toFolder); });
+		this.save();
+		if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+		this.sort();
+	};
 
-		this.add = ({ bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length, toFolder = null } = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
-			if (!bEmpty && plman.ActivePlaylist === -1) { return null; }
-			const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
-			const oldName = removeIdFromStr(oldNameId);
-			let input = name || '';
-			if (bInputName) {
-				let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
-				try { input = utils.InputBox(window.ID, boxText, window.Name, (bEmpty ? '' : oldName) || input, true); }
-				catch (e) { return null; }
-				if (!input.length) { return null; }
-			}
-			const newName = input;
-			const oPlaylistPath = this.playlistsPath + sanitize(newName) + this.playlistsExtension;
-			// Auto-Tags
-			const oPlaylistTags = [];
-			let objectPlaylist = null;
-			if (this.bAutoLoadTag) { oPlaylistTags.push('bAutoLoad'); }
-			if (this.bAutoLockTag) { oPlaylistTags.push('bAutoLock'); }
-			if (this.bMultMenuTag) { oPlaylistTags.push('bMultMenu'); }
-			if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(oPlaylistTags).has(tag)) { oPlaylistTags.push(tag); } }); }
-			// Add tags of current view
-			if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(oPlaylistTags).has(tag)) { oPlaylistTags.push(tag); } }); }
-			// Categories
-			// Add Category of current view
-			let oPlaylistCategory = void (0);
-			if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) { oPlaylistCategory = this.categoryState[0]; }
-			// Save file
-			// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
-			if (!_isFile(oPlaylistPath)) { // Just for safety
-				const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
-				const nameId = newName + UUID;
-				if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-					fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
-					return null;
+	this.addToFolder = (pls, folderObj) => {
+		if (this.isInFolder(pls)) { this.removeFromFolder(pls); }
+		pls.inFolder = folderObj.nameId;
+		folderObj.pls.push(pls);
+	};
+
+	this.removeFromFolder = (pls) => {
+		const folder = this.data.find((item) => pls.inFolder === item.nameId && item.isFolder);
+		if (!folder) { return false; }
+		const idx = folder.pls.indexOf(pls);
+		if (idx !== -1) {
+			folder.pls.splice(idx, 1);
+			pls.inFolder = '';
+			return true;
+		}
+		return false;
+	};
+
+	this.isInFolder = (pls) => {
+		return (Object.hasOwn(pls, 'inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
+	};
+
+	this.getParentFolder = (pls) => {
+		return this.isInFolder(pls)
+			? this.dataFolder.find((item) => item.isFolder && item.nameId === pls.inFolder)
+			: null;
+	};
+
+	this.addUIplaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
+		let input = name;
+		if (bInputName) {
+			input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
+			if (input === null && !Input.isLastEqual) { return -1; }
+		}
+		let i = 0;
+		let newName;
+		while (!newName || plman.FindPlaylist(newName) !== -1) {
+			newName = (input || 'New playlist') + (i ? ' ' + _p(i) : '');
+			i++;
+		}
+		if (this.dataAll.some((pls) => pls.nameId === newName)) {
+			fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', window.Name);
+			return -1;
+		}
+		plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
+		// Set focus on new playlist if possible
+		if (plman.ActivePlaylist !== -1) {
+			setTimeout(() => { // Required since input popup invokes move callback after this func
+				if (newName === plman.GetPlaylistName(plman.ActivePlaylist)) {
+					const objectPlaylist = this.data.find((pls) => { return pls.nameId === newName; });
+					if (toFolder !== null && objectPlaylist !== null) {
+						this.addToFolder(objectPlaylist, toFolder);
+						this.save();
+						if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+						this.sort();
+						if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
+					}
+					this.cacheLastPosition();
+					this.showCurrPls();
 				}
-				// Creates the file on the folder
-				if (!_isFolder(this.playlistsPath)) { _createFolder(this.playlistsPath); } // For first playlist creation
-				let done = savePlaylist({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
-				if (done) {
-					const now = Date.now();
-					objectPlaylist = new PlaylistObj({
-						id: UUID,
-						path: oPlaylistPath,
-						name: newName,
-						extension: this.playlistsExtension,
-						size: bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist),
-						fileSize: utils.GetFileSize(done),
-						category: oPlaylistCategory,
-						tags: oPlaylistTags,
-						duration: bEmpty ? -1 : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration(),
-						created: now,
-						modified: now
+			}, 10);
+		}
+		return plman.ActivePlaylist;
+	};
+
+	this.addAutoPlaylist = (pls = null, bEdit = true, toFolder = null) => {
+		// Check if there are initial values
+		const bPls = !!pls;
+		const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
+		const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
+		const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
+		// Create PlaylistObj
+		let newName = hasName ? pls.name : '';
+		if (!newName.length || bEdit) {
+			try { newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', window.Name, newName, true); }
+			catch (e) { return null; }
+			if (!newName.length) { return null; }
+		}
+		const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
+		const nameId = newName + UUID;
+		if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+			fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+			return null;
+		}
+		let newQuery = hasQuery ? pls.query : '';
+		if (!newQuery.length || bEdit) {
+			try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, newQuery, true); }
+			catch (e) { return null; }
+		}
+		if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
+		const newSort = !hasSort || bEdit
+			? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '')
+			: (hasSort ? pls.sort : '');
+		if (newSort.length && !checkSort(newSort)) {
+			fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name);
+			return null;
+		}
+		const newForced = (bPls && Object.hasOwn(pls, 'bSortForced')
+			? !!pls.bSortForced
+			: newSort.length
+				? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no)
+				: popup.no
+		) === popup.yes;
+		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
+		const handleList = hasSize && hasQuery && pls.query === newQuery
+			? null
+			: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
+		const queryCount = hasSize && hasQuery && pls.query === newQuery
+			? pls.size
+			: handleList.Count;
+		const duration = hasSize && hasQuery && pls.query === newQuery
+			? pls.duration
+			: handleList.CalcTotalDuration();
+		const objectPlaylist = new PlaylistObj({
+			id: UUID,
+			name: newName,
+			size: queryCount,
+			bAutoPlaylist: true,
+			queryObj: newQueryObj,
+			category: hasCategory ? pls.category : '',
+			tags: hasTags ? pls.tags : [],
+			trackTags: hasTrackTags ? pls.trackTags : [],
+			duration
+		});
+		// Auto-Tags
+		if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }
+		if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) { objectPlaylist.tags.push('bAutoLoad'); }
+		if (this.bMultMenuTag && objectPlaylist.tags.indexOf('bMultMenu') === -1) { objectPlaylist.tags.push('bMultMenu'); }
+		if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
+		// Add tags of current view
+		if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
+		// Categories
+		// Add Category of current view if none was forced
+		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
+		// Save
+		this.addToData(objectPlaylist);
+		this.update(true, true); // We have already updated data before only for the variables changed
+		this.filter();
+		if (toFolder !== null) {
+			this.addToFolder(objectPlaylist, toFolder);
+			this.save();
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+			this.sort();
+			if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
+		}
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		this.showPlsByObj(objectPlaylist);
+		return objectPlaylist;
+	};
+
+	this.addSmartplaylist = (pls = null, bEdit = true, toFolder = null) => {
+		this.xspPopup();
+		// Check if there are initial values
+		const bPls = !!pls;
+		const hasName = bPls && Object.hasOwn(pls, 'name'), hasQuery = bPls && Object.hasOwn(pls, 'query'), hasSort = bPls && Object.hasOwn(pls, 'sort');
+		const hasSize = bPls && Object.hasOwn(pls, 'size') && pls.size !== '?', hasCategory = bPls && Object.hasOwn(pls, 'category');
+		const hasTags = bPls && Object.hasOwn(pls, 'tags') && pls.tags.length, hasTrackTags = bPls && Object.hasOwn(pls, 'trackTags') && pls.trackTags.length;
+		const hasLimit = bPls && Object.hasOwn(pls, 'limit') && pls.limit;
+		// Create PlaylistObj
+		let newName = hasName ? pls.name : '';
+		if (!newName.length || bEdit) {
+			try { newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', window.Name, newName, true); }
+			catch (e) { return null; }
+			if (!newName.length) { return null; }
+		}
+		const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
+		const nameId = newName + UUID;
+		if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+			fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+			return null;
+		}
+		let newQuery = hasQuery ? pls.query : '';
+		if (!newQuery.length || bEdit) {
+			try { newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', window.Name, newQuery, true); }
+			catch (e) { return null; }
+		}
+		const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
+		if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
+		const { rules, match } = XSP.getRules(newQuery);
+		if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return null; }
+		const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
+		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
+		const newForced = false;
+		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
+		const handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);
+		const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (!bPlaylist ? handleList.Count : '?');
+		const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (!bPlaylist ? handleList.CalcTotalDuration() : -1);
+		let newLimit = 0;
+		if (hasLimit) {
+			if (isFinite(pls.limit)) { newLimit = pls.limit; }
+		} else if (bEdit) {
+			try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true)); }
+			catch (e) { return null; }
+			if (Number.isNaN(newLimit)) { return null; }
+			if (!Number.isFinite(newLimit)) { newLimit = 0; }
+		}
+		const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
+		const objectPlaylist = new PlaylistObj({
+			id: UUID,
+			path: playlistPath,
+			name: newName,
+			extension: '.xsp',
+			size: queryCount,
+			queryObj: newQueryObj,
+			category: hasCategory ? pls.category : '',
+			tags: hasTags ? pls.tags : [],
+			trackTags: hasTrackTags ? pls.trackTags : [],
+			limit: newLimit,
+			duration,
+			type: 'songs'
+		});
+		// Auto-Tags
+		if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }
+		if (this.bAutoLoadTag && objectPlaylist.tags.indexOf('bAutoLoad') === -1) { objectPlaylist.tags.push('bAutoLoad'); }
+		if (this.bMultMenuTag && objectPlaylist.tags.indexOf('bMultMenu') === -1) { objectPlaylist.tags.push('bMultMenu'); }
+		if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
+		// Add tags of current view
+		if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
+		// Categories
+		// Add Category of current view if none was forced
+		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
+		let bDone = false;
+		if (rules.length) {
+			const jspPls = XSP.emptyJSP('songs');
+			jspPls.playlist.name = newName;
+			jspPls.playlist.rules = rules;
+			jspPls.playlist.match = match;
+			jspPls.playlist.limit = newLimit;
+			jspPls.playlist.sort = XSP.getOrder(newSort);
+			const xspText = XSP.toXSP(jspPls);
+			if (xspText && xspText.length) { bDone = _save(playlistPath, xspText.join('\r\n')); }
+		}
+		if (!bDone) { return null; }
+		// Save
+		this.addToData(objectPlaylist);
+		this.update(true, true); // We have already updated data before only for the variables changed
+		this.filter();
+		if (toFolder !== null) {
+			this.addToFolder(objectPlaylist, toFolder);
+			this.save();
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+			this.sort();
+			if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
+		}
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		this.showPlsByObj(objectPlaylist);
+		return objectPlaylist;
+	};
+
+	this.add = ({ bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length, toFolder = null } = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
+		if (!bEmpty && plman.ActivePlaylist === -1) { return null; }
+		const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
+		const oldName = removeIdFromStr(oldNameId);
+		let input = name || '';
+		if (bInputName) {
+			let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
+			try { input = utils.InputBox(window.ID, boxText, window.Name, (bEmpty ? '' : oldName) || input, true); }
+			catch (e) { return null; }
+			if (!input.length) { return null; }
+		}
+		const newName = input;
+		const oPlaylistPath = this.playlistsPath + sanitize(newName) + this.playlistsExtension;
+		// Auto-Tags
+		const oPlaylistTags = [];
+		let objectPlaylist = null;
+		if (this.bAutoLoadTag) { oPlaylistTags.push('bAutoLoad'); }
+		if (this.bAutoLockTag) { oPlaylistTags.push('bAutoLock'); }
+		if (this.bMultMenuTag) { oPlaylistTags.push('bMultMenu'); }
+		if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(oPlaylistTags).has(tag)) { oPlaylistTags.push(tag); } }); }
+		// Add tags of current view
+		if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(oPlaylistTags).has(tag)) { oPlaylistTags.push(tag); } }); }
+		// Categories
+		// Add Category of current view
+		let oPlaylistCategory = void (0);
+		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) { oPlaylistCategory = this.categoryState[0]; }
+		// Save file
+		// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
+		if (!_isFile(oPlaylistPath)) { // Just for safety
+			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
+			const nameId = newName + UUID;
+			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+				return null;
+			}
+			// Creates the file on the folder
+			if (!_isFolder(this.playlistsPath)) { _createFolder(this.playlistsPath); } // For first playlist creation
+			let done = savePlaylist({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
+			if (done) {
+				const now = Date.now();
+				objectPlaylist = new PlaylistObj({
+					id: UUID,
+					path: oPlaylistPath,
+					name: newName,
+					extension: this.playlistsExtension,
+					size: bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist),
+					fileSize: utils.GetFileSize(done),
+					category: oPlaylistCategory,
+					tags: oPlaylistTags,
+					duration: bEmpty ? -1 : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration(),
+					created: now,
+					modified: now
+				});
+				// Adds to list of objects and update variables
+				this.addToData(objectPlaylist);
+				if (bEmpty) { // Empty playlist
+					let indexFound = plman.FindPlaylist(newName);
+					if (indexFound === -1) {
+						let new_playlist = plman.CreatePlaylist(plman.PlaylistCount, newName + UUID);
+						plman.ActivePlaylist = new_playlist;
+					} else { // If there is a playlist with the same name, ask to bind
+						let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + newName + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, window.Name, popup.question + popup.yes_no) : popup.no;
+						if (answer === popup.yes) {
+							plman.ActivePlaylist = indexFound;
+							if (UUID.length) {
+								const currentLocks = plman.GetPlaylistLockedActions(indexFound) || [];
+								if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(indexFound, newName + UUID); }
+								else { console.popup('add: can not rename playlist due to lock. ' + newName); }
+							}
+							this.updatePlaylist({ playlistIndex: plman.ActivePlaylist, bCallback: true }); // This updates size too. Must replicate callback call since the playlist may not be visible on the current filter view!
+						}
+					}
+				} else { // If we changed the name of the playlist but created it using the active playlist, then clone with new name
+					if (newName !== oldName) { // NOSONAR
+						let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, newName + UUID);
+						plman.ActivePlaylist = new_playlist;
+					} else if (UUID.length) {
+						const currentLocks = plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [];
+						if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID); }
+						else { console.popup('add: can not rename playlist due to lock. ' + oldName); }
+					}
+				}
+				// Warn about dead items
+				const selItems = plman.GetPlaylistItems(plman.ActivePlaylist).Convert();
+				if (selItems && selItems.length) {
+					selItems.some((handle, i) => {
+						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name, bShowPopups);
+							return true;
+						}
+						return false;
 					});
-					// Adds to list of objects and update variables
-					this.addToData(objectPlaylist);
-					if (bEmpty) { // Empty playlist
-						let indexFound = plman.FindPlaylist(newName);
-						if (indexFound === -1) {
-							let new_playlist = plman.CreatePlaylist(plman.PlaylistCount, newName + UUID);
-							plman.ActivePlaylist = new_playlist;
-						} else { // If there is a playlist with the same name, ask to bind
-							let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + newName + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, window.Name, popup.question + popup.yes_no) : popup.no;
-							if (answer === popup.yes) {
-								plman.ActivePlaylist = indexFound;
-								if (UUID.length) {
-									const currentLocks = plman.GetPlaylistLockedActions(indexFound) || [];
-									if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(indexFound, newName + UUID); }
-									else { console.popup('add: can not rename playlist due to lock. ' + newName); }
-								}
-								this.updatePlaylist({ playlistIndex: plman.ActivePlaylist, bCallback: true }); // This updates size too. Must replicate callback call since the playlist may not be visible on the current filter view!
-							}
-						}
-					} else { // If we changed the name of the playlist but created it using the active playlist, then clone with new name
-						if (newName !== oldName) { // NOSONAR
-							let new_playlist = plman.DuplicatePlaylist(plman.ActivePlaylist, newName + UUID);
-							plman.ActivePlaylist = new_playlist;
-						} else if (UUID.length) {
-							const currentLocks = plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [];
-							if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID); }
-							else { console.popup('add: can not rename playlist due to lock. ' + oldName); }
-						}
-					}
-					// Warn about dead items
-					const selItems = plman.GetPlaylistItems(plman.ActivePlaylist).Convert();
-					if (selItems && selItems.length) {
-						selItems.some((handle, i) => {
-							if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-								console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name, bShowPopups);
-								return true;
-							}
-							return false;
-						});
-					}
-				} else {
-					console.popup(
-						'Playlist generation failed while writing file:\n' + oPlaylistPath +
-						'\n\nTrace:' +
-						'\nadd' + _p({ bEmpty, name, bShowPopups, bInputName }.toStr()) +
-						'\n\nsavePlaylist' + _p({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? 'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
-						, window.Name, bShowPopups);
-					return null;
 				}
 			} else {
-				console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
+				console.popup(
+					'Playlist generation failed while writing file:\n' + oPlaylistPath +
+					'\n\nTrace:' +
+					'\nadd' + _p({ bEmpty, name, bShowPopups, bInputName }.toStr()) +
+					'\n\nsavePlaylist' + _p({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? 'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
+					, window.Name, bShowPopups);
 				return null;
 			}
-			this.update(true, true); // We have already updated data
-			this.filter();
-			if (toFolder !== null) {
-				this.addToFolder(objectPlaylist, toFolder);
-				this.save();
-				if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
-				this.sort();
-				if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
-			}
-			// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
-			this.showPlsByObj(objectPlaylist);
-			return objectPlaylist;
-		};
+		} else {
+			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
+			return null;
+		}
+		this.update(true, true); // We have already updated data
+		this.filter();
+		if (toFolder !== null) {
+			this.addToFolder(objectPlaylist, toFolder);
+			this.save();
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+			this.sort();
+			if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
+		}
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		this.showPlsByObj(objectPlaylist);
+		return objectPlaylist;
+	};
 
-		this.loadPlaylistOrShow = (idx, bAlsoHidden = false) => {
-			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error loading/showing playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylistOrShow)');
-				return false;
-			}
-			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
-			const duplicated = getPlaylistIndexArray(pls.nameId);
-			if (duplicated.length === 0) { this.loadPlaylist(idx, bAlsoHidden); }
-			else if (duplicated.length === 1) { this.showBoundPlaylist(idx, bAlsoHidden); }
-			else if (duplicated.length > 1 && pls.extension === '.ui') { // Cycle through all playlist with same name
-				let i = 0;
-				const ap = plman.ActivePlaylist;
-				if (duplicated[duplicated.length - 1] !== ap) { while (duplicated[i] <= ap) { i++; } }
-				plman.ActivePlaylist = duplicated[i];
-			}
-		};
+	this.loadPlaylistOrShow = (idx, bAlsoHidden = false) => {
+		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
+			console.log('Playlist Manager: Error loading/showing playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylistOrShow)');
+			return false;
+		}
+		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
+		const duplicated = getPlaylistIndexArray(pls.nameId);
+		if (duplicated.length === 0) { this.loadPlaylist(idx, bAlsoHidden); }
+		else if (duplicated.length === 1) { this.showBoundPlaylist(idx, bAlsoHidden); }
+		else if (duplicated.length > 1 && pls.extension === '.ui') { // Cycle through all playlist with same name
+			let i = 0;
+			const ap = plman.ActivePlaylist;
+			if (duplicated[duplicated.length - 1] !== ap) { while (duplicated[i] <= ap) { i++; } }
+			plman.ActivePlaylist = duplicated[i];
+		}
+	};
 
-		this.loadPlaylist = (idx, bAlsoHidden = false) => {
-			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error loading playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylist)');
-				return false;
+	this.loadPlaylist = (idx, bAlsoHidden = false) => {
+		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
+			console.log('Playlist Manager: Error loading playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylist)');
+			return false;
+		}
+		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
+		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+			return;
+		}
+		const oldNameId = pls.nameId;
+		const oldName = pls.name;
+		const duplicated = getPlaylistIndexArray(oldNameId);
+		if (duplicated && duplicated.length > 1) {
+			fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+			return false;
+		} else {
+			if (autoBackTimer && debouncedUpdate && !this.bLiteMode) { backup(this.properties.autoBackN[1], true); } // Async backup before future changes
+			let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
+			if (pls.isAutoPlaylist) { // AutoPlaylist
+				if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
+				if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return; }
+				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
+
+				plman.ActivePlaylist = fbPlaylistIndex;
+				const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
+				this.editData(pls, {
+					size: handleList.Count,
+					duration: handleList.CalcTotalDuration()
+				}, true); // Update size on load
+				if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
+					this.updateTags(handleList, pls);
+				}
+			} else { // Or file
+				if (_isFile(pls.path)) { // NOSONAR
+					if (!fbPlaylistIndex) { fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, oldNameId); } //If it was not loaded on foobar2000, then create a new one
+					plman.ActivePlaylist = fbPlaylistIndex;
+					// Try to load handles from library first, greatly speeds up non fpl large playlists
+					// But it will fail as soon as any track is not found on library
+					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
+					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+					let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl, this.bAdvTitle);
+					if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
+					else if (pls.query) { // Update size on load for smart playlists
+						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
+						this.editData(pls, {
+							size: handleList.Count,
+							duration: handleList.CalcTotalDuration()
+						}, true);
+						if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
+							this.updateTags(handleList, pls);
+						}
+						if (pls.extension === '.xsp') {
+							setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
+						}
+					}
+					if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
+						setTimeout(() => { this.updatePlaylistFpl(fbPlaylistIndex); }, 2000);
+					}
+				} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false; }
 			}
-			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
-			if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
-				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+		}
+		this.lastPlsLoaded.push(pls);
+		return true;
+	};
+
+	this.hasPlaylists = (names = []) => {
+		const namesSet = new Set(names);
+		this.dataAll.forEach((pls) => {
+			if (!namesSet.size) { return; }
+			if (namesSet.has(pls.name)) { namesSet.delete(pls.name); }
+		});
+		return !namesSet.size;
+	};
+
+	this.getPlaylistsIdxByName = (names = []) => {
+		let plsArr = [];
+		const namesSet = new Set(names);
+		this.dataAll.forEach((pls, idx) => {
+			if (!namesSet.size) { return; }
+			if (namesSet.has(pls.name)) { plsArr.push(idx); namesSet.delete(pls.name); }
+		});
+		return plsArr;
+	};
+
+	this.getPlaylistsIdxByObj = (objPls = []) => {
+		let plsArr = [];
+		const plsSet = new Set(objPls);
+		this.dataAll.forEach((pls, idx) => {
+			if (!plsSet.size) { return; }
+			if (plsSet.has(pls)) { plsArr.push(idx); plsSet.delete(pls); }
+		});
+		return plsArr;
+	};
+
+	this.getHandleFromPlaylists = (names = [], bSort = true, bLog = true) => {
+		let playlistsManager = new Set();
+		let playlistsUI = new Set();
+		const namesSet = new Set(names);
+		// Try to match first playlists by manager
+		this.dataAll.forEach((pls, idx) => {
+			if (!namesSet.size) { return; }
+			if (namesSet.has(pls.name)) { playlistsManager.add(idx); namesSet.delete(pls.name); }
+		});
+		// Otherwise playlists loaded
+		namesSet.forEach((name) => { playlistsUI = playlistsUI.union(new Set(getPlaylistIndexArray(name))); });
+		// Join
+		let output = new FbMetadbHandleList();
+		playlistsManager.forEach((idx) => { output.AddRange(this.getHandleFrom(idx, bLog)); });
+		playlistsUI.forEach((idx) => { output.AddRange(plman.GetPlaylistItems(idx)); });
+		if (bSort) { output.Sort(); }
+		return output;
+	};
+
+	this.getHandleFrom = (idx, bLog = true) => {
+		const pls = this.dataAll[idx];
+		let handleList = new FbMetadbHandleList();
+		if (pls.isAutoPlaylist) { // AutoPlaylist
+			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name); }
+			else {
+				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
+				this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); // Update size on load
+			}
+		} else if (pls.extension === '.ui') {
+			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
+			if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }
+		} else if (_isFile(pls.path)) { // Or file
+			// Try to load handles from library first, greatly speeds up non fpl large playlists
+			// But it will fail as soon as any track is not found on library
+			// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
+			const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+			handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
+			if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
+		} else {
+			console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
+		}
+		return handleList || new FbMetadbHandleList();
+	};
+
+	this.showBoundPlaylist = (idx, bAlsoHidden = false) => {
+		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
+			console.log('Playlist Manager: Error showing playlist. Index ' + _p(idx) + ' out of bounds. (showBoundPlaylist)');
+			return false;
+		}
+		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
+		const newNameId = pls.nameId;
+		const index = plman.FindPlaylist(newNameId);
+		plman.ActivePlaylist = index;
+	};
+
+	this.removePlaylist = (idx, bAlsoHidden = false) => {
+		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
+			console.log('Playlist Manager: Error removing playlist. Index ' + _p(idx) + ' out of bounds. (removePlaylist)');
+			return false;
+		}
+		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
+		// Adds timestamp to filename
+		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
+		const bUI = pls.extension === '.ui';
+		if (!pls.isAutoPlaylist && !bUI && !pls.isFolder) { // Only for not AutoPlaylists
+			if (_isFile(pls.path)) {
+				let newPath = pls.path.split('.').slice(0, -1).join('.').split('\\');
+				const newName = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
+				newPath = newPath.concat([newName]).join('\\') + pls.extension;
+				_renameFile(pls.path, newPath);
+				// And delete it
+				// Beware of calling this while pressing shift. File will be removed without sending to recycle bin!
+				if (utils.IsKeyPressed(VK_SHIFT)) {
+					const debouncedRecycle = debounce(() => {
+						if (utils.IsKeyPressed(VK_SHIFT)) {
+							delayAutoUpdate();
+							debouncedRecycle(newPath);
+						} else {
+							_recycleFile(newPath, true);
+							console.log('Delete done');
+						}
+					}, this.autoUpdateDelayTimer);
+					debouncedRecycle();
+				} else { _recycleFile(newPath, true); console.log('Delete done'); }
+				this.editData(pls, {
+					path: newPath,
+				});
+			} else {
+				fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
 				return;
 			}
-			const oldNameId = pls.nameId;
-			const oldName = pls.name;
-			const duplicated = getPlaylistIndexArray(oldNameId);
-			if (duplicated && duplicated.length > 1) {
-				fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
-				return false;
-			} else {
-				if (autoBackTimer && debouncedUpdate && !this.bLiteMode) { backup(this.properties.autoBackN[1], true); } // Async backup before future changes
-				let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
-				if (pls.isAutoPlaylist) { // AutoPlaylist
-					if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
-					if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return; }
-					plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
-
-					plman.ActivePlaylist = fbPlaylistIndex;
-					const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
-					this.editData(pls, {
-						size: handleList.Count,
-						duration: handleList.CalcTotalDuration()
-					}, true); // Update size on load
-					if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
-						this.updateTags(handleList, pls);
-					}
-				} else { // Or file
-					if (_isFile(pls.path)) { // NOSONAR
-						if (!fbPlaylistIndex) { fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, oldNameId); } //If it was not loaded on foobar2000, then create a new one
-						plman.ActivePlaylist = fbPlaylistIndex;
-						// Try to load handles from library first, greatly speeds up non fpl large playlists
-						// But it will fail as soon as any track is not found on library
-						// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-						const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-						let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl, this.bAdvTitle);
-						if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
-						else if (pls.query) { // Update size on load for smart playlists
-							const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
-							this.editData(pls, {
-								size: handleList.Count,
-								duration: handleList.CalcTotalDuration()
-							}, true);
-							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
-								this.updateTags(handleList, pls);
-							}
-							if (pls.extension === '.xsp') {
-								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
-							}
-						}
-						if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
-							setTimeout(() => { this.updatePlaylistFpl(fbPlaylistIndex); }, 2000);
-						}
-					} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false; }
+		}
+		if (pls.isFolder) { // Folders must be closed first!
+			if (pls.isOpen) { this.switchFolder(idx); }
+			// Remove child items
+			if (pls.pls.length) {
+				pls.pls.forEach((item) => {
+					this.removeFromFolder(item);
+				});
+			}
+		}
+		// Remove from folder
+		if (this.isInFolder(pls)) {
+			this.removeFromFolder(pls);
+		}
+		// Delete from data
+		const oldNameId = pls.nameId;
+		const duplicated = plman.FindPlaylist(oldNameId);
+		const currentLocks = duplicated !== -1 ? plman.GetPlaylistLockedActions(duplicated) || [] : [];
+		if (currentLocks.includes('RemovePlaylist') && bUI) { fb.ShowPopupMessage('UI-Playlist is locked: ' + pls.name, window.Name); return; }
+		if (pls.size) { this.totalFileSize -= pls.size; }
+		this.deletedItems.unshift(pls);
+		this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
+		if (!bAlsoHidden) { this.cacheLastPosition(Math.min(idx, this.items - 1)); }
+		// Remove item from current selection (otherwise it would crash)
+		if (!bAlsoHidden && this.indexes.length && this.indexes.indexOf(idx) !== -1) {
+			this.multSelect(idx);
+		}
+		if (!bUI) {
+			this.update(true, true, currentItemIndex); // Call this immediately after removal! If paint fires before updating things get weird
+			// Delete category from current view if needed
+			// Easy way: intersect current view + with refreshed list
+			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
+			this.filter({ categoryState });
+		}
+		clearInterval(delay);
+		if (duplicated !== -1) {
+			if (!currentLocks.includes('RemovePlaylist')) {
+				const answer = bUI || this.properties['deleteBehavior'][1] === 1
+					? popup.yes
+					: this.properties['deleteBehavior'][1] === 2
+						? popup.no
+						: WshShell.Popup('Delete also the playlist loaded within foobar2000?\nPlaylist: ' + oldNameId, 0, window.Name, popup.question + popup.yes_no);
+				if (answer === popup.yes) {
+					plman.RemovePlaylistSwitch(duplicated);
 				}
 			}
-			this.lastPlsLoaded.push(pls);
-			return true;
-		};
+		}
+		// Needed after removing the playlist on UI
+		if (bUI) {
+			this.update(true, true, currentItemIndex);
+			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
+			this.filter({ categoryState });
+			setTimeout(() => { // Required since input popup invokes move callback after this func!
+				this.cacheLastPosition(Math.min(idx, this.items - 1));
+				this.jumpLastPosition();
+			}, 10);
+		}
+	};
 
-		this.hasPlaylists = (names = []) => {
-			const namesSet = new Set(names);
-			this.dataAll.forEach((pls) => {
-				if (!namesSet.size) { return; }
-				if (namesSet.has(pls.name)) { namesSet.delete(pls.name); }
-			});
-			return !namesSet.size;
-		};
-
-		this.getPlaylistsIdxByName = (names = []) => {
-			let plsArr = [];
-			const namesSet = new Set(names);
-			this.dataAll.forEach((pls, idx) => {
-				if (!namesSet.size) { return; }
-				if (namesSet.has(pls.name)) { plsArr.push(idx); namesSet.delete(pls.name); }
-			});
-			return plsArr;
-		};
-
-		this.getPlaylistsIdxByObj = (objPls = []) => {
-			let plsArr = [];
-			const plsSet = new Set(objPls);
-			this.dataAll.forEach((pls, idx) => {
-				if (!plsSet.size) { return; }
-				if (plsSet.has(pls)) { plsArr.push(idx); plsSet.delete(pls); }
-			});
-			return plsArr;
-		};
-
-		this.getHandleFromPlaylists = (names = [], bSort = true, bLog = true) => {
-			let playlistsManager = new Set();
-			let playlistsUI = new Set();
-			const namesSet = new Set(names);
-			// Try to match first playlists by manager
-			this.dataAll.forEach((pls, idx) => {
-				if (!namesSet.size) { return; }
-				if (namesSet.has(pls.name)) { playlistsManager.add(idx); namesSet.delete(pls.name); }
-			});
-			// Otherwise playlists loaded
-			namesSet.forEach((name) => { playlistsUI = playlistsUI.union(new Set(getPlaylistIndexArray(name))); });
-			// Join
-			let output = new FbMetadbHandleList();
-			playlistsManager.forEach((idx) => { output.AddRange(this.getHandleFrom(idx, bLog)); });
-			playlistsUI.forEach((idx) => { output.AddRange(plman.GetPlaylistItems(idx)); });
-			if (bSort) { output.Sort(); }
-			return output;
-		};
-
-		this.getHandleFrom = (idx, bLog = true) => {
-			const pls = this.dataAll[idx];
-			let handleList = new FbMetadbHandleList();
-			if (pls.isAutoPlaylist) { // AutoPlaylist
-				if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name); }
-				else {
-					handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
-					this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); // Update size on load
-				}
-			} else if (pls.extension === '.ui') {
-				handleList = getHandlesFromUIPlaylists([pls.nameId], false);
-				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }
-			} else if (_isFile(pls.path)) { // Or file
-				// Try to load handles from library first, greatly speeds up non fpl large playlists
-				// But it will fail as soon as any track is not found on library
-				// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
-				const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
-				if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
+	this.updatePlman = (name, oldName) => {
+		let i = 0;
+		while (i < plman.PlaylistCount) {
+			if (plman.GetPlaylistName(i) === oldName) {
+				const currentLocks = plman.GetPlaylistLockedActions(i) || [];
+				if (currentLocks.includes('RenamePlaylist')) { i++; console.log('UI-Playlist is locked and can not be renamed: ' + oldName, window.Name); continue; }
+				else { plman.RenamePlaylist(i, name); }
 			} else {
-				console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
+				i++;
 			}
-			return handleList || new FbMetadbHandleList();
-		};
+		}
+	};
 
-		this.showBoundPlaylist = (idx, bAlsoHidden = false) => {
-			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error showing playlist. Index ' + _p(idx) + ' out of bounds. (showBoundPlaylist)');
-				return false;
-			}
-			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
-			const newNameId = pls.nameId;
-			const index = plman.FindPlaylist(newNameId);
-			plman.ActivePlaylist = index;
-		};
+	this.xspPopup = (bForce = false) => {
+		if (!this.properties['bFirstPopupXsp'][1] || bForce) {
+			this.properties['bFirstPopupXsp'][1] = true;
+			overwriteProperties(this.properties); // Updates panel
+			fb.ShowPopupMessage('Playlist manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager');
+		}
+	};
+	this.xspfPopup = (bForce = false) => {
+		if (!this.properties['bFirstPopupXspf'][1] || bForce) {
+			this.properties['bFirstPopupXspf'][1] = true;
+			overwriteProperties(this.properties); // Updates panel
+			fb.ShowPopupMessage('Playlist manager has loaded a .xspf playlist for the first time. This is an informative popup.\n\n-.pls playlists format allow all extra data like UUID, category, lock status or tags, ... on file (like M3U format).\n-Items on these playlists are matched against the library by path like any other format.\n-In case files are not found by path, then it will try to match by tags using queries. Therefore .xspf playlists are shareable between different users/libraries, since they will work no matter the media structure.\n-Note query matching involves much more processing time, so it\'s much faster to use them as an \'standard\' playlist.\n-If you are using default another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
+		}
+	};
+	this.plsPopup = (bForce = false) => {
+		if (!this.properties['bFirstPopupPls'][1] || bForce) {
+			this.properties['bFirstPopupPls'][1] = true;
+			overwriteProperties(this.properties); // Updates panel
+			fb.ShowPopupMessage('Playlist manager has loaded a .pls playlist for the first time. This is an informative popup.\n\n-.pls playlists format doesn\'t allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.\n-The related menu entries to set that data (or lock status) are disabled (greyed).\n-If you are using another default format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format  (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
+		}
+	};
+	this.fplPopup = (bForce = false) => {
+		if (!this.properties['bFirstPopupFpl'][1] || bForce) {
+			this.properties['bFirstPopupFpl'][1] = true;
+			overwriteProperties(this.properties); // Updates panel
+			fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
+		}
+	};
 
-		this.removePlaylist = (idx, bAlsoHidden = false) => {
-			if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
-				console.log('Playlist Manager: Error removing playlist. Index ' + _p(idx) + ' out of bounds. (removePlaylist)');
-				return false;
-			}
-			const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
-			// Adds timestamp to filename
-			const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-			const bUI = pls.extension === '.ui';
-			if (!pls.isAutoPlaylist && !bUI && !pls.isFolder) { // Only for not AutoPlaylists
-				if (_isFile(pls.path)) {
-					let newPath = pls.path.split('.').slice(0, -1).join('.').split('\\');
-					const newName = newPath.pop() + '_ts_' + (new Date().toDateString() + Date.now()).split(' ').join('_');
-					newPath = newPath.concat([newName]).join('\\') + pls.extension;
-					_renameFile(pls.path, newPath);
-					// And delete it
-					// Beware of calling this while pressing shift. File will be removed without sending to recycle bin!
-					if (utils.IsKeyPressed(VK_SHIFT)) {
-						const debouncedRecycle = debounce(() => {
-							if (utils.IsKeyPressed(VK_SHIFT)) {
-								delayAutoUpdate();
-								debouncedRecycle(newPath);
-							} else {
-								_recycleFile(newPath, true);
-								console.log('Delete done');
-							}
-						}, this.autoUpdateDelayTimer);
-						debouncedRecycle();
-					} else { _recycleFile(newPath, true); console.log('Delete done'); }
-					this.editData(pls, {
-						path: newPath,
+	this.reset = () => {
+		this.inRange = false;
+		this.items = 0;
+		this.itemsAll = 0;
+		this.itemsAutoPlaylist = 0;
+		this.itemsFpl = 0;
+		this.itemsXsp = 0;
+		this.itemsFoobar = 0;
+		this.itemsFolder = 0;
+		this.bUpdateAutoPlaylist = this.properties['bUpdateAutoPlaylist'][1];
+		this.totalFileSize = 0;
+		this.index = -1;
+		this.indexes = [];
+		this.lastIndex = -1;
+		this.lastOffset = 0;
+		this.internalPlsDrop = [];
+		this.data = []; // Data to paint
+		this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
+		this.dataAutoPlaylists = []; // Only autoplaylists to save to json
+		this.dataFpl = []; // Only fpl playlists to save to json
+		this.dataXsp = []; // Only xsp playlists to save to json
+		this.dataUI = []; // Only foobar2000 playlists on UI
+		this.dataFoobar = []; // Only foobar2000 playlists on UI
+		this.dataFolder = []; // Only folders for sorting
+		this.deletedItems = [];
+		this.lastPlsLoaded = [];
+		this.disableAutosave = [];
+		this.folderStack = [];
+		this.clearSelPlaylistCache();
+		this.deleteMainMenuDynamic();
+		this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
+		this.lockStates = this.constLockStates();
+		this.autoPlaylistStates = this.constAutoPlaylistStates();
+		this.categoryState = JSON.parse(this.properties['categoryState'][1]);
+		this.methodState = this.properties['methodState'][1];
+		this.sortState = this.properties['sortState'][1];
+		this.optionUUID = this.properties['optionUUID'][1];
+		this.bShowSep = this.properties['bShowSep'][1];
+		this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
+		this.bRelativePath = this.properties['bRelativePath'][1];
+		this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
+		this.bAutoLockTag = this.properties['bAutoLockTag'][1];
+		this.bMultMenuTag = this.properties['bMultMenuTag'][1];
+		this.bSkipMenuTag = this.properties['bSkipMenuTag'][1];
+		this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
+		this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
+		this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
+		this.bAutoTrackTag = this.properties['bAutoTrackTag'][1];
+		this.bAutoTrackTagAlways = this.properties['bAutoTrackTagAlways'][1];
+		this.bAutoTrackTagPls = this.properties['bAutoTrackTagPls'][1];
+		this.bAutoTrackTagLockPls = this.properties['bAutoTrackTagLockPls'][1];
+		this.bAutoTrackTagAutoPls = this.properties['bAutoTrackTagAutoPls'][1];
+		this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
+		this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
+		this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
+		this.bBOM = this.properties['bBOM'][1];
+		this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
+		this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
+		this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
+		this.bAdvTitle = this.properties['bAdvTitle'][1];
+		this.bSavingWarnings = this.properties['bSavingWarnings'][1];
+		this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
+		this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
+		this.bAllPls = this.properties['bAllPls'][1];
+		this.activePlsStartup = this.properties['activePlsStartup'][1];
+		this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
+		this.uuid = this.properties['panelUUID'][1];
+		this.bTracking = true;
+		this.trackedFolderChanged = false;
+		this.plsCache = new Map();
+	};
+
+	this.manualRefresh = () => {
+		const test = bProfile ? new FbProfiler(window.Name + ': ' + 'Manual refresh') : null;
+		this.plsCache.clear();
+		fb.queryCache.clear();
+		this.trackedFolderChanged = false;
+		this.loadConfigFile();
+		const z = this.offset + Math.round(this.rows / 2 - 1);
+		this.cacheLastPosition(z);
+		this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
+		this.update(void (0), true, z);
+		this.filter();
+		this.lastPlsLoaded = [];
+		this.folderStack = [];
+		if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
+			const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
+			const bColumns = this.isColumnsEnabled('size');
+			const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
+			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
+			if (this.bDynamicMenus) {
+				Promise.wait(secondTimer).then(() => {
+					return new Promise((resolve) => {
+						const id = setInterval(() => {
+							if (pop.isEnabled('cacheLib')) { return; }
+							clearInterval(id);
+							resolve(this.createMainMenuDynamic());
+						}, 250);
 					});
-				} else {
-					fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
-					return;
-				}
+				}).then((result) => {
+					if (result) { console.log('Playlist Manager: Created dynamic menus'); }
+					this.exportPlaylistsInfo();
+					callbacksListener.checkPanelNamesAsync();
+				});
+			} else { this.deleteExportInfo(); }
+			if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
+				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
 			}
-			if (pls.isFolder) { // Folders must be closed first!
-				if (pls.isOpen) { this.switchFolder(idx); }
-				// Remove child items
-				if (pls.pls.length) {
-					pls.pls.forEach((item) => {
-						this.removeFromFolder(item);
-					});
-				}
-			}
-			// Remove from folder
-			if (this.isInFolder(pls)) {
-				this.removeFromFolder(pls);
-			}
-			// Delete from data
-			const oldNameId = pls.nameId;
-			const duplicated = plman.FindPlaylist(oldNameId);
-			const currentLocks = duplicated !== -1 ? plman.GetPlaylistLockedActions(duplicated) || [] : [];
-			if (currentLocks.includes('RemovePlaylist') && bUI) { fb.ShowPopupMessage('UI-Playlist is locked: ' + pls.name, window.Name); return; }
-			if (pls.size) { this.totalFileSize -= pls.size; }
-			this.deletedItems.unshift(pls);
-			this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
-			if (!bAlsoHidden) { this.cacheLastPosition(Math.min(idx, this.items - 1)); }
-			// Remove item from current selection (otherwise it would crash)
-			if (!bAlsoHidden && this.indexes.length && this.indexes.indexOf(idx) !== -1) {
-				this.multSelect(idx);
-			}
-			if (!bUI) {
-				this.update(true, true, currentItemIndex); // Call this immediately after removal! If paint fires before updating things get weird
-				// Delete category from current view if needed
-				// Easy way: intersect current view + with refreshed list
-				const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
-				this.filter({ categoryState });
-			}
-			clearInterval(delay);
-			if (duplicated !== -1) {
-				if (!currentLocks.includes('RemovePlaylist')) {
-					const answer = bUI || this.properties['deleteBehavior'][1] === 1
-						? popup.yes
-						: this.properties['deleteBehavior'][1] === 2
-							? popup.no
-							: WshShell.Popup('Delete also the playlist loaded within foobar2000?\nPlaylist: ' + oldNameId, 0, window.Name, popup.question + popup.yes_no);
-					if (answer === popup.yes) {
-						plman.RemovePlaylistSwitch(duplicated);
-					}
-				}
-			}
-			// Needed after removing the playlist on UI
-			if (bUI) {
-				this.update(true, true, currentItemIndex);
-				const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
-				this.filter({ categoryState });
-				setTimeout(() => { // Required since input popup invokes move callback after this func!
-					this.cacheLastPosition(Math.min(idx, this.items - 1));
-					this.jumpLastPosition();
-				}, 10);
-			}
-		};
+		}
+		if (bProfile) { test.Print(); }
+	};
 
-		this.updatePlman = (name, oldName) => {
-			let i = 0;
-			while (i < plman.PlaylistCount) {
-				if (plman.GetPlaylistName(i) === oldName) {
-					const currentLocks = plman.GetPlaylistLockedActions(i) || [];
-					if (currentLocks.includes('RenamePlaylist')) { i++; console.log('UI-Playlist is locked and can not be renamed: ' + oldName, window.Name); continue; }
-					else { plman.RenamePlaylist(i, name); }
-				} else {
-					i++;
-				}
-			}
-		};
+	this.initProperties = () => { // Some properties require code fired after setting them...
+		let bDone = false;
+		let removeProperties = {};
+		let newProperties = {};
+		if (!this.properties['methodState'][1]) {
+			removeProperties['methodState'] = [this.properties['methodState'][0], null]; // need to remove manually since we change the ID (description)!
+			// Fill description and first method will be default
+			this.properties['methodState'][0] += Object.keys(this.sortMethods(false)); // We change the description, but we don't want to overwrite the value
+			newProperties['methodState'] = [this.properties['methodState'][0], this.getMethodState()];
+			bDone = true;
+		}
+		if (!this.properties['sortState'][1]) { // This one changes according to the previous one! So we need to load the proper 'methodState'
+			removeProperties['sortState'] = [this.properties['sortState'][0], null]; // need to remove manually since we change the ID (description)!
+			// Fill description and first state of the method will be default
+			let savedMethodState = window.GetProperty(this.properties['methodState'][0], this.getMethodState()) || this.getMethodState(); // Note this will get always a value
+			this.properties['sortState'][0] += Object.keys(this.sortMethods(false)[savedMethodState]); // We change the description, but we don't want to overwrite the value
+			newProperties['sortState'] = [this.properties['sortState'][0], this.getSortState()];
+			bDone = true;
+		}
+		if (!this.properties['optionUUID'][1]) {
+			removeProperties['optionUUID'] = [this.properties['optionUUID'][0], null]; // need to remove manually since lass step does not overwrite!
+			newProperties['optionUUID'] = [this.properties['optionUUID'][0], this.optionsUUID().pop()]; // Last option is default
+			bDone = true;
+		}
+		if (Object.keys(removeProperties).length) { deleteProperties(removeProperties); } // Deletes old properties used as placeholders
+		if (bDone) {  // Set new properties with description changed, but does not overwrites old values
+			setProperties(newProperties, '', 0, false, false);
+			this.properties = getPropertiesPairs(this.properties, '', 0, false); // And update
+		}
+	};
 
-		this.xspPopup = (bForce = false) => {
-			if (!this.properties['bFirstPopupXsp'][1] || bForce) {
-				this.properties['bFirstPopupXsp'][1] = true;
-				overwriteProperties(this.properties); // Updates panel
-				fb.ShowPopupMessage('Playlist manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager');
-			}
-		};
-		this.xspfPopup = (bForce = false) => {
-			if (!this.properties['bFirstPopupXspf'][1] || bForce) {
-				this.properties['bFirstPopupXspf'][1] = true;
-				overwriteProperties(this.properties); // Updates panel
-				fb.ShowPopupMessage('Playlist manager has loaded a .xspf playlist for the first time. This is an informative popup.\n\n-.pls playlists format allow all extra data like UUID, category, lock status or tags, ... on file (like M3U format).\n-Items on these playlists are matched against the library by path like any other format.\n-In case files are not found by path, then it will try to match by tags using queries. Therefore .xspf playlists are shareable between different users/libraries, since they will work no matter the media structure.\n-Note query matching involves much more processing time, so it\'s much faster to use them as an \'standard\' playlist.\n-If you are using default another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
-			}
-		};
-		this.plsPopup = (bForce = false) => {
-			if (!this.properties['bFirstPopupPls'][1] || bForce) {
-				this.properties['bFirstPopupPls'][1] = true;
-				overwriteProperties(this.properties); // Updates panel
-				fb.ShowPopupMessage('Playlist manager has loaded a .pls playlist for the first time. This is an informative popup.\n\n-.pls playlists format doesn\'t allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.\n-The related menu entries to set that data (or lock status) are disabled (greyed).\n-If you are using another default format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format  (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
-			}
-		};
-		this.fplPopup = (bForce = false) => {
-			if (!this.properties['bFirstPopupFpl'][1] || bForce) {
-				this.properties['bFirstPopupFpl'][1] = true;
-				overwriteProperties(this.properties); // Updates panel
-				fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
-			}
-		};
-
-		this.initProperties = () => { // Some properties require code fired after setting them...
-			let bDone = false;
-			let removeProperties = {};
-			let newProperties = {};
-			if (!this.properties['methodState'][1]) {
-				removeProperties['methodState'] = [this.properties['methodState'][0], null]; // need to remove manually since we change the ID (description)!
-				// Fill description and first method will be default
-				this.properties['methodState'][0] += Object.keys(this.sortMethods(false)); // We change the description, but we don't want to overwrite the value
-				newProperties['methodState'] = [this.properties['methodState'][0], this.getMethodState()];
-				bDone = true;
-			}
-			if (!this.properties['sortState'][1]) { // This one changes according to the previous one! So we need to load the proper 'methodState'
-				removeProperties['sortState'] = [this.properties['sortState'][0], null]; // need to remove manually since we change the ID (description)!
-				// Fill description and first state of the method will be default
-				let savedMethodState = window.GetProperty(this.properties['methodState'][0], this.getMethodState()) || this.getMethodState(); // Note this will get always a value
-				this.properties['sortState'][0] += Object.keys(this.sortMethods(false)[savedMethodState]); // We change the description, but we don't want to overwrite the value
-				newProperties['sortState'] = [this.properties['sortState'][0], this.getSortState()];
-				bDone = true;
-			}
-			if (!this.properties['optionUUID'][1]) {
-				removeProperties['optionUUID'] = [this.properties['optionUUID'][0], null]; // need to remove manually since lass step does not overwrite!
-				newProperties['optionUUID'] = [this.properties['optionUUID'][0], this.optionsUUID().pop()]; // Last option is default
-				bDone = true;
-			}
-			if (Object.keys(removeProperties).length) { deleteProperties(removeProperties); } // Deletes old properties used as placeholders
-			if (bDone) {  // Set new properties with description changed, but does not overwrites old values
-				setProperties(newProperties, '', 0, false, false);
-				this.properties = getPropertiesPairs(this.properties, '', 0, false); // And update
-			}
-		};
-
-		this.checkConfig = ({ bSilenSorting = false } = {}) => { // Forces right settings
-			let bDone = false;
-			// Check playlists path
-			if (!this.playlistsPath.endsWith('\\')) {
-				this.playlistsPath += '\\';
-				this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
-				this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
-				this.properties['playlistPath'][1] += '\\';
-				bDone = true;
-			}
-			if (!_isFolder(this.playlistsPathDisk + ':\\')) { fb.ShowPopupMessage('Disk associated to tracked folder doesn\'t exist:\nTracked folder:\t' + this.playlistsPath + '\nDrive letter:\t' + this.playlistsPathDisk + ':\\\n\nReconfigure it at the header menu if needed.', window.Name); }
-			// Check playlist extension
-			if (!writablePlaylistFormats.has(this.playlistsExtension)) {
-				if (writablePlaylistFormats.has(this.playlistsExtension.toLowerCase())) {
-					this.playlistsExtension = this.playlistsExtension.toLowerCase();
-				} else {
-					fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + [...writablePlaylistFormats].join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
-					this.playlistsExtension = '.m3u8';
-				}
-				this.properties['extension'][1] = this.playlistsExtension;
-				bDone = true;
-			}
-			// Check UUID option
-			if (this.optionsUUID().indexOf(this.optionUUID) !== -1) {
-				if (this.optionUUID !== this.optionsUUID().pop()) { // Last option is no UUID
-					this.bUseUUID = true;
-				} else { this.bUseUUID = false; }
+	this.checkConfig = ({ bSilenSorting = false } = {}) => { // Forces right settings
+		let bDone = false;
+		// Check playlists path
+		if (!this.playlistsPath.endsWith('\\')) {
+			this.playlistsPath += '\\';
+			this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
+			this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
+			this.properties['playlistPath'][1] += '\\';
+			bDone = true;
+		}
+		if (!_isFolder(this.playlistsPathDisk + ':\\')) { fb.ShowPopupMessage('Disk associated to tracked folder doesn\'t exist:\nTracked folder:\t' + this.playlistsPath + '\nDrive letter:\t' + this.playlistsPathDisk + ':\\\n\nReconfigure it at the header menu if needed.', window.Name); }
+		// Check playlist extension
+		if (!writablePlaylistFormats.has(this.playlistsExtension)) {
+			if (writablePlaylistFormats.has(this.playlistsExtension.toLowerCase())) {
+				this.playlistsExtension = this.playlistsExtension.toLowerCase();
 			} else {
-				fb.ShowPopupMessage('Wrong UUID method set at properties panel: \'' + this.optionUUID + '\'\n' + 'Only allowed: \n\n' + this.optionsUUID().join('\n') + '\n\nUsing default method as fallback', window.Name);
-				this.bUseUUID = false;
+				fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + [...writablePlaylistFormats].join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
+				this.playlistsExtension = '.m3u8';
 			}
-			// No UUID for .pls playlists since we can not save it into the format (and .fpl are never saved with native format)
-			if (this.playlistsExtension === '.pls' && this.bUseUUID) {
-				this.bUseUUID = false;
+			this.properties['extension'][1] = this.playlistsExtension;
+			bDone = true;
+		}
+		// Check UUID option
+		if (this.optionsUUID().indexOf(this.optionUUID) !== -1) {
+			if (this.optionUUID !== this.optionsUUID().pop()) { // Last option is no UUID
+				this.bUseUUID = true;
+			} else { this.bUseUUID = false; }
+		} else {
+			fb.ShowPopupMessage('Wrong UUID method set at properties panel: \'' + this.optionUUID + '\'\n' + 'Only allowed: \n\n' + this.optionsUUID().join('\n') + '\n\nUsing default method as fallback', window.Name);
+			this.bUseUUID = false;
+		}
+		// No UUID for .pls playlists since we can not save it into the format (and .fpl are never saved with native format)
+		if (this.playlistsExtension === '.pls' && this.bUseUUID) {
+			this.bUseUUID = false;
+		}
+		// Check sorting is valid
+		if (!Object.hasOwn(this.sortMethods(false), this.methodState)) {
+			if (!bSilenSorting) {
+				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
 			}
-			// Check sorting is valid
-			if (!Object.hasOwn(this.sortMethods(false), this.methodState)) {
-				if (!bSilenSorting) {
-					fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
-				}
-				this.methodState = this.getMethodState(); // On first call first state of that method will be default
-				this.properties['methodState'][1] = this.methodState;
-				bDone = true;
+			this.methodState = this.getMethodState(); // On first call first state of that method will be default
+			this.properties['methodState'][1] = this.methodState;
+			bDone = true;
+		}
+		if (!Object.hasOwn(this.sortMethods(false)[this.methodState], this.sortState)) {
+			if (!bSilenSorting) {
+				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
 			}
-			if (!Object.hasOwn(this.sortMethods(false)[this.methodState], this.sortState)) {
-				if (!bSilenSorting) {
-					fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
-				}
-				this.sortState = this.getSortState(); // On first call first state of that method will be default
-				this.properties['sortState'][1] = this.sortState;
-				bDone = true;
-			}
-			if (this.bSaveFilterStates) { // Rotate current filters until it matches the saved ones
-				const rotations = this.properties['filterStates'][1].split(',');
-				this.autoPlaylistStates = this.constAutoPlaylistStates().rotate(rotations[0]);
-				this.lockStates = this.constLockStates().rotate(rotations[1]);
-				this.extStates = this.constExtStates().rotate(rotations[2]);
-				this.mbidStates = this.constMbidStates().rotate(rotations[3]);
-			}
-			// Check colors
-			if (!this.colors || !Object.keys(this.colors).length) { // Sets default colors
-				this.colors = {};
-				this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); // Red
-				this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);
-				this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
-				this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); // Blue
-				this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
-				this.colors.folderColor = panel.colors.text;
-				bDone = true;
-			}
-			if (this.colors && Object.keys(this.colors).length !== 6) { // Fills missing colors
-				if (!this.colors.lockedPlaylistColor) { this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); } // Red
-				if (!this.colors.autoPlaylistColor) { this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
-				if (!this.colors.smartPlaylistColor) { this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
-				if (!this.colors.selectedPlaylistColor) { this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); } // Blue
-				if (!this.colors.uiPlaylistColor) { this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); } // Blue
-				if (!this.colors.folderColor) { this.colors.folderColor = panel.colors.text; }
-				bDone = true;
-			}
-			if (this.searchInput) {
-				this.searchInput.textColor = panel.colors.highlight;
-				this.searchInput.backColor = panel.getColorBackground();
-				this.searchInput.borderColor = panel.getColorBackground();
-				this.searchInput.backSelectionColor = this.colors.selectedPlaylistColor;
-			}
-			if (typeof this.searchMethod.text === 'undefined' || this.searchMethod.text === null) {
-				this.searchMethod.text = '';
-				this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
-				bDone = true;
-			}
-			const dragDropPriority = ['bPath', 'bQuery', 'bMetaTracks'];
-			if (this.searchMethod.dragDropPriority) {
-				if (!Array.isArray(this.searchMethod.dragDropPriority) || !new Set(dragDropPriority).isEqual(new Set(this.searchMethod.dragDropPriority))) {
-					this.searchMethod.dragDropPriority = dragDropPriority;
-					bDone = true;
-				}
-			} else {
+			this.sortState = this.getSortState(); // On first call first state of that method will be default
+			this.properties['sortState'][1] = this.sortState;
+			bDone = true;
+		}
+		if (this.bSaveFilterStates) { // Rotate current filters until it matches the saved ones
+			const rotations = this.properties['filterStates'][1].split(',');
+			this.autoPlaylistStates = this.constAutoPlaylistStates().rotate(rotations[0]);
+			this.lockStates = this.constLockStates().rotate(rotations[1]);
+			this.extStates = this.constExtStates().rotate(rotations[2]);
+			this.mbidStates = this.constMbidStates().rotate(rotations[3]);
+		}
+		// Check colors
+		if (!this.colors || !Object.keys(this.colors).length) { // Sets default colors
+			this.colors = {};
+			this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); // Red
+			this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);
+			this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
+			this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); // Blue
+			this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
+			this.colors.folderColor = panel.colors.text;
+			bDone = true;
+		}
+		if (this.colors && Object.keys(this.colors).length !== 6) { // Fills missing colors
+			if (!this.colors.lockedPlaylistColor) { this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); } // Red
+			if (!this.colors.autoPlaylistColor) { this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
+			if (!this.colors.smartPlaylistColor) { this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
+			if (!this.colors.selectedPlaylistColor) { this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); } // Blue
+			if (!this.colors.uiPlaylistColor) { this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); } // Blue
+			if (!this.colors.folderColor) { this.colors.folderColor = panel.colors.text; }
+			bDone = true;
+		}
+		if (this.searchInput) {
+			this.searchInput.textColor = panel.colors.highlight;
+			this.searchInput.backColor = panel.getColorBackground();
+			this.searchInput.borderColor = panel.getColorBackground();
+			this.searchInput.backSelectionColor = this.colors.selectedPlaylistColor;
+		}
+		if (typeof this.searchMethod.text === 'undefined' || this.searchMethod.text === null) {
+			this.searchMethod.text = '';
+			this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
+			bDone = true;
+		}
+		const dragDropPriority = ['bPath', 'bQuery', 'bMetaTracks'];
+		if (this.searchMethod.dragDropPriority) {
+			if (!Array.isArray(this.searchMethod.dragDropPriority) || !new Set(dragDropPriority).isEqual(new Set(this.searchMethod.dragDropPriority))) {
 				this.searchMethod.dragDropPriority = dragDropPriority;
 				bDone = true;
 			}
-			// Check Shortcuts
-			[
-				{ pKey: 'lShortcuts', key: 'L', element: 'list' },
-				{ pKey: 'rShortcuts', key: 'R', element: 'list' },
-				{ pKey: 'mShortcuts', key: 'M', element: 'list' },
-				{ pKey: 'lShortcutsHeader', key: 'L', element: 'header' },
-				{ pKey: 'mShortcutsHeader', key: 'M', element: 'header' },
-			].forEach((o) => {
-				const shortcuts = this.getDefaultShortcuts(o.key, o.element);
-				const shortcutsKeys = shortcuts.options.map((_) => { return _.key; });
-				if (!this[o.pKey] || !isArrayEqual(shortcutsKeys, Object.keys(this[o.pKey]))) {
-					if (!this[o.pKey]) { this[o.pKey] = {}; }
-					const shortcutsActions = shortcuts.actions.map((_) => { return _.key; });
-					shortcutsKeys.forEach((key) => {
-						if (!Object.hasOwn(this[o.pKey], key)) { this[o.pKey][key] = shortcutsActions[0]; }
-					});
-					Object.keys(this[o.pKey]).forEach((key) => {
-						if (shortcutsKeys.indexOf(key) === -1) { delete this[o.pKey][key]; }
-					});
-					// Sort by default order, just for cosmetic purposes
-					this[o.pKey] = shortcutsKeys.reduce((acc, curr) => {
-						acc[curr] = this[o.pKey][curr];
-						return acc;
-					}, {});
-					this.properties[o.pKey][1] = JSON.stringify(this[o.pKey]);
-					bDone = true;
+		} else {
+			this.searchMethod.dragDropPriority = dragDropPriority;
+			bDone = true;
+		}
+		// Check Shortcuts
+		[
+			{ pKey: 'lShortcuts', key: 'L', element: 'list' },
+			{ pKey: 'rShortcuts', key: 'R', element: 'list' },
+			{ pKey: 'mShortcuts', key: 'M', element: 'list' },
+			{ pKey: 'lShortcutsHeader', key: 'L', element: 'header' },
+			{ pKey: 'mShortcutsHeader', key: 'M', element: 'header' },
+		].forEach((o) => {
+			const shortcuts = this.getDefaultShortcuts(o.key, o.element);
+			const shortcutsKeys = shortcuts.options.map((_) => { return _.key; });
+			if (!this[o.pKey] || !isArrayEqual(shortcutsKeys, Object.keys(this[o.pKey]))) {
+				if (!this[o.pKey]) { this[o.pKey] = {}; }
+				const shortcutsActions = shortcuts.actions.map((_) => { return _.key; });
+				shortcutsKeys.forEach((key) => {
+					if (!Object.hasOwn(this[o.pKey], key)) { this[o.pKey][key] = shortcutsActions[0]; }
+				});
+				Object.keys(this[o.pKey]).forEach((key) => {
+					if (shortcutsKeys.indexOf(key) === -1) { delete this[o.pKey][key]; }
+				});
+				// Sort by default order, just for cosmetic purposes
+				this[o.pKey] = shortcutsKeys.reduce((acc, curr) => {
+					acc[curr] = this[o.pKey][curr];
+					return acc;
+				}, {});
+				this.properties[o.pKey][1] = JSON.stringify(this[o.pKey]);
+				bDone = true;
+			}
+		});
+		// Check UI elements
+		const uiELementsDef = JSON.parse(this.properties['uiElements'][3]);
+		if (!isArrayEqual(Object.keys(this.uiElements), Object.keys(uiELementsDef))) {
+			for (let key in uiELementsDef) {
+				this.uiElements[key] = uiELementsDef[key];
+			}
+			this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
+			bDone = true;
+		}
+		const headerButtons = this.uiElements['Header buttons'].elements;
+		const headerButtonsDef = uiELementsDef['Header buttons'].elements;
+		if (!isArrayEqual(Object.keys(headerButtons), Object.keys(headerButtonsDef))) {
+			for (let key in headerButtonsDef) {
+				headerButtons[key] = headerButtonsDef[key];
+			}
+			this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
+			bDone = true;
+		}
+		// Check by features enabled
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		const bSearch = this.uiElements['Search filter'].enabled; // this.searchInput is null at this point before painting
+		if (!showMenus['Tags']) {
+			if (bSearch && this.searchMethod.bTags) { // Check search
+				this.searchMethod.bTags = false;
+				bDone = true;
+			}
+		}
+		if (!showMenus['Category']) {
+			if (bSearch && this.searchMethod.bCategory) { // Check search
+				this.searchMethod.bCategory = false;
+				bDone = true;
+			}
+		}
+		// Check filters
+		const filters = this.properties['filterMethod'][1].split(',');
+		const availableFilters = this.availableFilters();
+		if (filters.some((filter) => !availableFilters.includes(filter))) {
+			filters.forEach((filter, i) => {
+				if (!availableFilters.includes(filter)) {
+					filters[i] = availableFilters[0];
 				}
 			});
-			// Check UI elements
-			const uiELementsDef = JSON.parse(this.properties['uiElements'][3]);
-			if (!isArrayEqual(Object.keys(this.uiElements), Object.keys(uiELementsDef))) {
-				for (let key in uiELementsDef) {
-					this.uiElements[key] = uiELementsDef[key];
-				}
-				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
-				bDone = true;
-			}
-			const headerButtons = this.uiElements['Header buttons'].elements;
-			const headerButtonsDef = uiELementsDef['Header buttons'].elements;
-			if (!isArrayEqual(Object.keys(headerButtons), Object.keys(headerButtonsDef))) {
-				for (let key in headerButtonsDef) {
-					headerButtons[key] = headerButtonsDef[key];
-				}
-				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
-				bDone = true;
-			}
-			// Check by features enabled
-			const showMenus = JSON.parse(this.properties.showMenus[1]);
-			const bSearch = this.uiElements['Search filter'].enabled; // this.searchInput is null at this point before painting
-			if (!showMenus['Tags']) {
-				if (bSearch && this.searchMethod.bTags) { // Check search
-					this.searchMethod.bTags = false;
-					bDone = true;
-				}
-			}
-			if (!showMenus['Category']) {
-				if (bSearch && this.searchMethod.bCategory) { // Check search
-					this.searchMethod.bCategory = false;
-					bDone = true;
-				}
-			}
-			// Check filters
-			const filters = this.properties['filterMethod'][1].split(',');
-			const availableFilters = this.availableFilters();
-			if (filters.some((filter) => !availableFilters.includes(filter))) {
-				filters.forEach((filter, i) => {
-					if (!availableFilters.includes(filter)) {
-						filters[i] = availableFilters[0];
-					}
-				});
-				this.properties['filterMethod'][1] = filters.join(',');
-				// Update buttons
-				buttonsPanel.buttons.filterOneButton.method = filters[0];
-				buttonsPanel.buttons.filterTwoButton.method = filters[1];
-				bDone = true;
-			}
-			// Check folders config
-			if (this.folders.maxDepth === null) { this.folders.maxDepth = Infinity; }
-			// Lite mode
-			if (this.bLiteMode) {
-				// Disable features
-				const disabledFeatures = ['Tags', 'Online sync', 'Relative paths handling', 'Export and copy', 'File locks'];
-				const showMenusDef = JSON.parse(this.properties.showMenus[3]);
-				disabledFeatures.forEach((key) => { showMenusDef[key] = false; });
-				this.properties.showMenus[3] = JSON.stringify(showMenusDef);
-				// Disable tracking
-				this.switchTracking(false);
-				bDone = true;
-			}
-			return bDone;
-		};
+			this.properties['filterMethod'][1] = filters.join(',');
+			// Update buttons
+			buttonsPanel.buttons.filterOneButton.method = filters[0];
+			buttonsPanel.buttons.filterTwoButton.method = filters[1];
+			bDone = true;
+		}
+		// Check folders config
+		if (this.folders.maxDepth === null) { this.folders.maxDepth = Infinity; }
+		// Lite mode
+		if (this.bLiteMode) {
+			// Disable features
+			const disabledFeatures = ['Tags', 'Online sync', 'Relative paths handling', 'Export and copy', 'File locks'];
+			const showMenusDef = JSON.parse(this.properties.showMenus[3]);
+			disabledFeatures.forEach((key) => { showMenusDef[key] = false; });
+			this.properties.showMenus[3] = JSON.stringify(showMenusDef);
+			// Disable tracking
+			this.switchTracking(false);
+			bDone = true;
+		}
+		return bDone;
+	};
 
-		this.checkConfigPostUpdate = (bDone) => { // Forces right settings
-			// Restore categories shown between sessions if bSaveFilterStates is false, or at first init
-			if (!this.categoryState || !this.categoryState.length || (!this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories()))) {
-				this.categoryState = this.categories(); // No need to save properties since it will be done at filter stage
+	this.checkConfigPostUpdate = (bDone) => { // Forces right settings
+		// Restore categories shown between sessions if bSaveFilterStates is false, or at first init
+		if (!this.categoryState || !this.categoryState.length || (!this.bSaveFilterStates && !isArrayEqual(this.categoryState, this.categories()))) {
+			this.categoryState = this.categories(); // No need to save properties since it will be done at filter stage
+		}
+		if (!this.tagState || !this.tagState.length || (!this.bSaveFilterStates && !isArrayEqual(this.tagState, this.tags()))) {
+			this.tagState = this.tags(); // No need to save properties since it will be done at filter stage
+		}
+		// Force search reset when bound to filters
+		if (!this.bSaveFilterStates && this.searchMethod.bResetFilters && !this.searchMethod.bResetStartup) {
+			this.searchMethod.bResetStartup = true;
+		}
+		// Include extra helpers
+		if (this.searchMethod.bSimpleFuzzy) {
+			include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
+			/* global similarity:readable */
+		} else {
+			Fuse = require('..\\helpers-external\\fuse\\fuse');
+		}
+		// Set tooltip timer values
+		this.tooltip.SetDelayTime(0, this.properties['iTooltipTimer'][1]); // TTDT_AUTOMATIC
+		if (bDone) { overwriteProperties(this.properties); }
+	};
+
+	this.loadConfigFile = (file = this.filename.replace('.json', '_config.json')) => {
+		if (!file.length) { this.configFile = null; return; }
+		if (_isFile(file)) { this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, utf8); }
+		else { this.configFile = null; }
+	};
+
+	this.loadSortingFile = (file = this.filename.replace('.json', '_sorting.json')) => {
+		if (!file.length) { this.sortingFile = []; return; }
+		if (_isFile(file)) { this.sortingFile = _jsonParseFileCheck(file, 'Sorting json', window.Name, utf8); }
+		else { this.sortingFile = []; }
+	};
+
+	this.editSortingFile = (entries, newNames) => {
+		if (!Array.isArray(entries)) { entries = [entries]; }
+		if (!Array.isArray(newNames)) { newNames = [newNames]; }
+		if (entries.length !== newNames.length) { return false; }
+		const bDone = entries.every((entry, i) => {
+			const idx = this.sortingFile.findIndex((n) => n === entry);
+			if (idx !== -1) {
+				this.sortingFile[idx] = newNames[i];
+				return true;
 			}
-			if (!this.tagState || !this.tagState.length || (!this.bSaveFilterStates && !isArrayEqual(this.tagState, this.tags()))) {
-				this.tagState = this.tags(); // No need to save properties since it will be done at filter stage
-			}
-			// Force search reset when bound to filters
-			if (!this.bSaveFilterStates && this.searchMethod.bResetFilters && !this.searchMethod.bResetStartup) {
-				this.searchMethod.bResetStartup = true;
-			}
-			// Include extra helpers
-			if (this.searchMethod.bSimpleFuzzy) {
-				include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
-				/* global similarity:readable */
-			} else {
-				Fuse = require('..\\helpers-external\\fuse\\fuse');
-			}
-			// Set tooltip timer values
-			this.tooltip.SetDelayTime(0, this.properties['iTooltipTimer'][1]); // TTDT_AUTOMATIC
-			if (bDone) { overwriteProperties(this.properties); }
-		};
-
-		this.loadConfigFile = (file = this.filename.replace('.json', '_config.json')) => {
-			if (!file.length) { this.configFile = null; return; }
-			if (_isFile(file)) { this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, utf8); }
-			else { this.configFile = null; }
-		};
-
-		this.loadSortingFile = (file = this.filename.replace('.json', '_sorting.json')) => {
-			if (!file.length) { this.sortingFile = []; return; }
-			if (_isFile(file)) { this.sortingFile = _jsonParseFileCheck(file, 'Sorting json', window.Name, utf8); }
-			else { this.sortingFile = []; }
-		};
-
-		this.editSortingFile = (entries, newNames) => {
-			if (!Array.isArray(entries)) { entries = [entries]; }
-			if (!Array.isArray(newNames)) { newNames = [newNames]; }
-			if (entries.length !== newNames.length) { return false; }
-			const bDone = entries.every((entry, i) => {
-				const idx = this.sortingFile.findIndex((n) => n === entry);
-				if (idx !== -1) {
-					this.sortingFile[idx] = newNames[i];
-					return true;
-				}
-				return false;
-			});
-			if (bDone) { this.saveManualSorting(); }
-			return bDone;
-		};
-
-		this.createMainMenuDynamic = ({ file = folders.ajquerySMP + 'playlistmanagerentries.json', bRetry = true } = {}) => {
-			this.deleteMainMenuDynamic();
-			let currId = this.mainMenuDynamic.length;
-			const bToFile = file && file.length;
-			try {
-				const listExport = {};
-				const data = bToFile ? _jsonParseFile(file, utf8) || {} : {};
-				const wName = window.Name;
-				data[wName] = {};
-				// Per playlist
-				const menusPls = [
-					{ type: 'load playlist', name: 'Load playlist/', description: 'Load playlist into UI.', skipExt: ['.ui'], skipProp: [] },
-					{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked'] },
-					{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked'] },
-					{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: [] },
-					{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['', '.ui'], skipProp: ['!size'] },
-					{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked'] },
-					{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked'] },
-				];
-				menusPls.forEach((menu) => { listExport[menu.type] = []; });
-				this.dataAll.forEach((pls, i) => {
-					if (!this.bAllPls && pls.extension === '.ui') { return; }
-					if (pls.tags.includes('bSkipMenu')) { return; }
-					menusPls.forEach((menu) => {
-						if (menu.skipExt.indexOf(pls.extension) !== -1) { return; }
-						if (menu.skipProp.some((key) => {
-							const notKey = key.startsWith('!') ? key.slice(1) : null;
-							return (notKey
-								? Object.hasOwn(pls, notKey) && !pls[notKey] && !isString(pls[notKey]) && !isArrayStrings(pls[notKey])
-								: Object.hasOwn(pls, key) && (isBoolean(pls[key]) && pls[key] || isString(pls[key]) || isArrayStrings(pls[notKey]))
-							);
-						})) { return; }
-						const type = menu.type;
-						const name = menu.name + pls.name;
-						const description = menu.description;
-						this.mainMenuDynamic.push({ type, arg: [i], name, description });
-						fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
-						if (!name.endsWith('\t (input)')) { // Don't export when requiring input
-							listExport[type].push({ name: wName + '/' + name }); // File/Spider Monkey Panel/Script commands
-						}
-						currId++;
-					});
-				});
-				// Per panel
-				const menusGlobal = [
-					{ type: 'manual refresh', name: 'Manual refresh', description: 'Refresh the manager.' },
-					{ type: 'new playlist (empty)', name: 'New empty playlist', description: 'Create a new empty playlist file.' },
-					{ type: 'new playlist (ap)', name: 'New playlist (active)', description: 'Create new playlist file from active playlist.' },
-					{ type: 'load playlist (mult)', name: 'Load tagged playlists', description: 'Load all playlists tagged with \'bMultMenu\'.' },
-					{ type: 'clone in ui (mult)', name: 'Clone tagged playlists in UI', description: 'Load a copy of all playlists tagged with \'bMultMenu\'.' }
-				];
-				(() => {
-					const defaultMenu = { type: 'export convert (mult)', name: 'Export and Convert', description: 'Export all playlists tagged with \'bMultMenu\'.' };
-					const presets = JSON.parse(this.properties.converterPreset[1]);
-					presets.forEach((preset) => {
-						const path = preset.path;
-						const dsp = preset.dsp;
-						const tf = preset.tf;
-						let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
-						const menu = clone(defaultMenu);
-						menu.arg = [preset];
-						menu.name += ' ' + _b(tfName);
-						if (!path.length || !dsp.length || !tf.length || !extension.length) { menu.name += '\t (input)'; } // Warn about requiring popups
-						menusGlobal.push(menu);
-					});
-				})();
-				menusGlobal.forEach((menu) => { listExport[menu.type] = []; });
-				return new Promise((resolve) => {
-					const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
-					menusGlobal.forEach((menu, i) => {
-						const type = menu.type;
-						const name = menu.name;
-						const description = menu.description;
-						const arg = menu.arg || [i];
-						this.mainMenuDynamic.push({ type, arg, name, description });
-						fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
-						if (!name.endsWith('\t (input)')) { // Don't export when requiring input
-							listExport[type].push({ name: wName + '/' + name }); // File/Spider Monkey Panel/Script commands
-						}
-						currId++;
-						if (test.Time > 250) { throw new Error('Script aborted by user'); }
-					});
-					resolve(true);
-				})
-					.then(() => {
-						data[wName] = listExport;
-						// Don try to export for ajquery-xxx integration when it isn't installed
-						if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return true; }
-						return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
-					})
-					.catch((e) => {
-						if (bRetry) {
-							if (e.message === 'Script aborted by user') {
-								console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing');
-								return Promise.wait(secondTimer).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
-							}
-						}
-						console.log('this.createMainMenuDynamic: unknown error');
-						console.log(e.message); // DEBUG
-						return false;
-					});
-			} catch (e) {
-				// Retry once
-				if (bRetry) {
-					if (e.message === 'Script aborted by user') {
-						console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing');
-						return Promise.wait(secondTimer).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
-					}
-				}
-				console.log('this.createMainMenuDynamic: unknown error');
-				console.log(e.message); // DEBUG
-			}
-			return Promise.resolve(false);
-		};
-
-		this.deleteMainMenuDynamic = () => {
-			this.mainMenuDynamic.forEach((pls, i) => {
-				try { fb.UnregisterMainMenuCommand(i); } catch (e) { /* empty */ }
-			});
-			this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
-		};
-
-		this.exportPlaylistsInfo = ({ file = folders.ajquerySMP + 'playlistmanagerpls.json' } = {}) => {
-			const bToFile = file && file.length;
-			// Don try to export for ajquery-xxx integration when it isn't installed
-			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return false; }
-			try {
-				const data = _jsonParseFile(file, utf8) || {};
-				const wName = window.Name;
-				let listExport = [];
-				this.dataAll.forEach((pls) => {
-					if (pls.extension === '.ui') { return; }
-					listExport.push(pls);
-				});
-				data[wName] = listExport;
-				return _save(file, JSON.stringify(data, null, '\t'));
-			} catch (e) { console.log('this.exportPlaylistsInfo: unknown error'); console.log(e.message); }
 			return false;
-		};
+		});
+		if (bDone) { this.saveManualSorting(); }
+		return bDone;
+	};
 
-		this.deleteExportInfo = (files = [
-			folders.ajquerySMP + 'playlistmanagerpls.json',
-			folders.ajquerySMP + 'playlistmanagerentries.json'
-		]) => {
+	this.createMainMenuDynamic = ({ file = folders.ajquerySMP + 'playlistmanagerentries.json', bRetry = true } = {}) => {
+		this.deleteMainMenuDynamic();
+		let currId = this.mainMenuDynamic.length;
+		const bToFile = file && file.length;
+		try {
+			const listExport = {};
+			const data = bToFile ? _jsonParseFile(file, utf8) || {} : {};
 			const wName = window.Name;
-			files.forEach((file) => {
-				const bToFile = file && file.length;
-				if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return; }
-				const data = _jsonParseFile(file, utf8) || {};
-				data[wName] = null;
-				delete data[wName];
-				_save(file, JSON.stringify(data, null, '\t'));
+			data[wName] = {};
+			// Per playlist
+			const menusPls = [
+				{ type: 'load playlist', name: 'Load playlist/', description: 'Load playlist into UI.', skipExt: ['.ui'], skipProp: [] },
+				{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked'] },
+				{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked'] },
+				{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: [] },
+				{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['', '.ui'], skipProp: ['!size'] },
+				{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked'] },
+				{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked'] },
+			];
+			menusPls.forEach((menu) => { listExport[menu.type] = []; });
+			this.dataAll.forEach((pls, i) => {
+				if (!this.bAllPls && pls.extension === '.ui') { return; }
+				if (pls.tags.includes('bSkipMenu')) { return; }
+				menusPls.forEach((menu) => {
+					if (menu.skipExt.indexOf(pls.extension) !== -1) { return; }
+					if (menu.skipProp.some((key) => {
+						const notKey = key.startsWith('!') ? key.slice(1) : null;
+						return (notKey
+							? Object.hasOwn(pls, notKey) && !pls[notKey] && !isString(pls[notKey]) && !isArrayStrings(pls[notKey])
+							: Object.hasOwn(pls, key) && (isBoolean(pls[key]) && pls[key] || isString(pls[key]) || isArrayStrings(pls[notKey]))
+						);
+					})) { return; }
+					const type = menu.type;
+					const name = menu.name + pls.name;
+					const description = menu.description;
+					this.mainMenuDynamic.push({ type, arg: [i], name, description });
+					fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
+					if (!name.endsWith('\t (input)')) { // Don't export when requiring input
+						listExport[type].push({ name: wName + '/' + name }); // File/Spider Monkey Panel/Script commands
+					}
+					currId++;
+				});
 			});
-		};
-
-		this.startupPlaylist = (name = this.activePlsStartup) => {
-			let re, flag, idx = -1, bRegExp = false;
-			try {
-				[, re, flag] = name.match(/\/(.*)\/([a-z]+)?/);
-				if (re) {
-					name = new RegExp(re, flag);
-					bRegExp = true;
-				}
-			} catch (e) { /* empty */ }
-			if (bRegExp) {
-				const playlists = getPlaylistNames();
-				const pls = (playlists.find((pls) => { return name.test(pls.name); }) || { idx: -1 }).idx;
-				idx = pls.idx;
-			} else {
-				idx = plman.FindPlaylist(name);
-			}
-			if (idx === -1) { // Give priority to playlist on UI, then to manager playlists
-				const plsIdx = this.getPlaylistsIdxByName([name]);
-				if (plsIdx.length) {
-					idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
-				}
-			}
-			if (idx !== -1 && plman.ActivePlaylist !== idx) { plman.ActivePlaylist = idx; }
-			else { console.log('Playlist Manager: active playlist at startup not found - ' + name); }
-			return idx;
-
-
-		};
-
-		this.reset = () => {
-			this.inRange = false;
-			this.items = 0;
-			this.itemsAll = 0;
-			this.itemsAutoPlaylist = 0;
-			this.itemsFpl = 0;
-			this.itemsXsp = 0;
-			this.itemsFoobar = 0;
-			this.itemsFolder = 0;
-			this.bUpdateAutoPlaylist = this.properties['bUpdateAutoPlaylist'][1];
-			this.totalFileSize = 0;
-			this.index = -1;
-			this.indexes = [];
-			this.lastIndex = -1;
-			this.lastOffset = 0;
-			this.internalPlsDrop = [];
-			this.data = []; // Data to paint
-			this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
-			this.dataAutoPlaylists = []; // Only autoplaylists to save to json
-			this.dataFpl = []; // Only fpl playlists to save to json
-			this.dataXsp = []; // Only xsp playlists to save to json
-			this.dataUI = []; // Only foobar2000 playlists on UI
-			this.dataFoobar = []; // Only foobar2000 playlists on UI
-			this.dataFolder = []; // Only folders for sorting
-			this.deletedItems = [];
-			this.lastPlsLoaded = [];
-			this.disableAutosave = [];
-			this.folderStack = [];
-			this.clearSelPlaylistCache();
-			this.deleteMainMenuDynamic();
-			this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
-			this.lockStates = this.constLockStates();
-			this.autoPlaylistStates = this.constAutoPlaylistStates();
-			this.categoryState = JSON.parse(this.properties['categoryState'][1]);
-			this.methodState = this.properties['methodState'][1];
-			this.sortState = this.properties['sortState'][1];
-			this.optionUUID = this.properties['optionUUID'][1];
-			this.bShowSep = this.properties['bShowSep'][1];
-			this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
-			this.bRelativePath = this.properties['bRelativePath'][1];
-			this.bAutoLoadTag = this.properties['bAutoLoadTag'][1];
-			this.bAutoLockTag = this.properties['bAutoLockTag'][1];
-			this.bMultMenuTag = this.properties['bMultMenuTag'][1];
-			this.bSkipMenuTag = this.properties['bSkipMenuTag'][1];
-			this.bAutoCustomTag = this.properties['bAutoCustomTag'][1];
-			this.autoCustomTag = this.properties['autoCustomTag'][1].split(',');
-			this.bApplyAutoTags = this.properties['bApplyAutoTags'][1];
-			this.bAutoTrackTag = this.properties['bAutoTrackTag'][1];
-			this.bAutoTrackTagAlways = this.properties['bAutoTrackTagAlways'][1];
-			this.bAutoTrackTagPls = this.properties['bAutoTrackTagPls'][1];
-			this.bAutoTrackTagLockPls = this.properties['bAutoTrackTagLockPls'][1];
-			this.bAutoTrackTagAutoPls = this.properties['bAutoTrackTagAutoPls'][1];
-			this.bAutoTrackTagAutoPlsInit = this.properties['bAutoTrackTagAutoPlsInit'][1];
-			this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
-			this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
-			this.bBOM = this.properties['bBOM'][1];
-			this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
-			this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
-			this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
-			this.bAdvTitle = this.properties['bAdvTitle'][1];
-			this.bSavingWarnings = this.properties['bSavingWarnings'][1];
-			this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
-			this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
-			this.bAllPls = this.properties['bAllPls'][1];
-			this.activePlsStartup = this.properties['activePlsStartup'][1];
-			this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
-			this.uuid = this.properties['panelUUID'][1];
-			this.bTracking = true;
-			this.trackedFolderChanged = false;
-			this.plsCache = new Map();
-		};
-
-		this.manualRefresh = () => {
-			const test = bProfile ? new FbProfiler(window.Name + ': ' + 'Manual refresh') : null;
-			this.plsCache.clear();
-			fb.queryCache.clear();
-			this.trackedFolderChanged = false;
-			this.loadConfigFile();
-			const z = this.offset + Math.round(this.rows / 2 - 1);
-			this.cacheLastPosition(z);
-			this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
-			this.update(void (0), true, z);
-			this.filter();
-			this.lastPlsLoaded = [];
-			this.folderStack = [];
-			if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
-				const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
-				const bColumns = this.isColumnsEnabled('size');
-				const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
-				const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
-				if (this.bDynamicMenus) {
-					Promise.wait(secondTimer).then(() => {
-						return new Promise((resolve) => {
-							const id = setInterval(() => {
-								if (pop.isEnabled('cacheLib')) { return; }
-								clearInterval(id);
-								resolve(this.createMainMenuDynamic());
-							}, 250);
-						});
-					}).then((result) => {
-						if (result) { console.log('Playlist Manager: Created dynamic menus'); }
-						this.exportPlaylistsInfo();
-						callbacksListener.checkPanelNamesAsync();
-					});
-				} else { this.deleteExportInfo(); }
-				if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-					Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
+			// Per panel
+			const menusGlobal = [
+				{ type: 'manual refresh', name: 'Manual refresh', description: 'Refresh the manager.' },
+				{ type: 'new playlist (empty)', name: 'New empty playlist', description: 'Create a new empty playlist file.' },
+				{ type: 'new playlist (ap)', name: 'New playlist (active)', description: 'Create new playlist file from active playlist.' },
+				{ type: 'load playlist (mult)', name: 'Load tagged playlists', description: 'Load all playlists tagged with \'bMultMenu\'.' },
+				{ type: 'clone in ui (mult)', name: 'Clone tagged playlists in UI', description: 'Load a copy of all playlists tagged with \'bMultMenu\'.' }
+			];
+			(() => {
+				const defaultMenu = { type: 'export convert (mult)', name: 'Export and Convert', description: 'Export all playlists tagged with \'bMultMenu\'.' };
+				const presets = JSON.parse(this.properties.converterPreset[1]);
+				presets.forEach((preset) => {
+					const path = preset.path;
+					const dsp = preset.dsp;
+					const tf = preset.tf;
+					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+					const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
+					const menu = clone(defaultMenu);
+					menu.arg = [preset];
+					menu.name += ' ' + _b(tfName);
+					if (!path.length || !dsp.length || !tf.length || !extension.length) { menu.name += '\t (input)'; } // Warn about requiring popups
+					menusGlobal.push(menu);
+				});
+			})();
+			menusGlobal.forEach((menu) => { listExport[menu.type] = []; });
+			return new Promise((resolve) => {
+				const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
+				menusGlobal.forEach((menu, i) => {
+					const type = menu.type;
+					const name = menu.name;
+					const description = menu.description;
+					const arg = menu.arg || [i];
+					this.mainMenuDynamic.push({ type, arg, name, description });
+					fb.RegisterMainMenuCommand(currId, this.mainMenuDynamic[currId].name, this.mainMenuDynamic[currId].description);
+					if (!name.endsWith('\t (input)')) { // Don't export when requiring input
+						listExport[type].push({ name: wName + '/' + name }); // File/Spider Monkey Panel/Script commands
+					}
+					currId++;
+					if (test.Time > 250) { throw new Error('Script aborted by user'); }
+				});
+				resolve(true);
+			})
+				.then(() => {
+					data[wName] = listExport;
+					// Don try to export for ajquery-xxx integration when it isn't installed
+					if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return true; }
+					return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
+				})
+				.catch((e) => {
+					if (bRetry) {
+						if (e.message === 'Script aborted by user') {
+							console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing');
+							return Promise.wait(secondTimer).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
+						}
+					}
+					console.log('this.createMainMenuDynamic: unknown error');
+					console.log(e.message); // DEBUG
+					return false;
+				});
+		} catch (e) {
+			// Retry once
+			if (bRetry) {
+				if (e.message === 'Script aborted by user') {
+					console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing');
+					return Promise.wait(secondTimer).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
 				}
 			}
-			if (bProfile) { test.Print(); }
-		};
+			console.log('this.createMainMenuDynamic: unknown error');
+			console.log(e.message); // DEBUG
+		}
+		return Promise.resolve(false);
+	};
 
-		globProfiler.Print('list.init.prototype');
+	this.deleteMainMenuDynamic = () => {
+		this.mainMenuDynamic.forEach((pls, i) => {
+			try { fb.UnregisterMainMenuCommand(i); } catch (e) { /* empty */ }
+		});
+		this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
+	};
 
+	this.exportPlaylistsInfo = ({ file = folders.ajquerySMP + 'playlistmanagerpls.json' } = {}) => {
+		const bToFile = file && file.length;
+		// Don try to export for ajquery-xxx integration when it isn't installed
+		if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return false; }
+		try {
+			const data = _jsonParseFile(file, utf8) || {};
+			const wName = window.Name;
+			let listExport = [];
+			this.dataAll.forEach((pls) => {
+				if (pls.extension === '.ui') { return; }
+				listExport.push(pls);
+			});
+			data[wName] = listExport;
+			return _save(file, JSON.stringify(data, null, '\t'));
+		} catch (e) { console.log('this.exportPlaylistsInfo: unknown error'); console.log(e.message); }
+		return false;
+	};
+
+	this.deleteExportInfo = (files = [
+		folders.ajquerySMP + 'playlistmanagerpls.json',
+		folders.ajquerySMP + 'playlistmanagerentries.json'
+	]) => {
+		const wName = window.Name;
+		files.forEach((file) => {
+			const bToFile = file && file.length;
+			if (!bToFile || file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return; }
+			const data = _jsonParseFile(file, utf8) || {};
+			data[wName] = null;
+			delete data[wName];
+			_save(file, JSON.stringify(data, null, '\t'));
+		});
+	};
+
+	this.startupPlaylist = (name = this.activePlsStartup) => {
+		let re, flag, idx = -1, bRegExp = false;
+		try {
+			[, re, flag] = name.match(/\/(.*)\/([a-z]+)?/);
+			if (re) {
+				name = new RegExp(re, flag);
+				bRegExp = true;
+			}
+		} catch (e) { /* empty */ }
+		if (bRegExp) {
+			const playlists = getPlaylistNames();
+			const pls = (playlists.find((pls) => { return name.test(pls.name); }) || { idx: -1 }).idx;
+			idx = pls.idx;
+		} else {
+			idx = plman.FindPlaylist(name);
+		}
+		if (idx === -1) { // Give priority to playlist on UI, then to manager playlists
+			const plsIdx = this.getPlaylistsIdxByName([name]);
+			if (plsIdx.length) {
+				idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
+			}
+		}
+		if (idx !== -1 && plman.ActivePlaylist !== idx) { plman.ActivePlaylist = idx; }
+		else { console.log('Playlist Manager: active playlist at startup not found - ' + name); }
+		return idx;
+
+
+	};
+
+	this.init = () => {
 		this.methodState = this.getMethodState(); // On first call first method will be default
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
 
@@ -6391,46 +6390,66 @@ function _list(x, y, w, h) {
 		let bDone = this.checkConfig();
 		if (bProfile) { test.Print('Load config files'); }
 		globProfiler.Print('list.init.settings');
-		if (!this.properties.bSetup[1]) { this.update(false, true, void (0), true); } // bInit is true to avoid reloading all categories
-		this.checkConfigPostUpdate(bDone);
-		this.updatePlaylistIcons();
-		// Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-		if (!this.uiElements['Search filter'].enabled || !this.searchMethod.text.length || this.searchMethod.bResetStartup) {
-			this.filter();
-		}
-		if (bProfile) { test.Print('Load playlists'); }
-		globProfiler.Print('list.init.playlists');
-		if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
-			const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
-			const bColumns = this.isColumnsEnabled('size');
-			const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
-			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
-			if (this.bDynamicMenus) {
-				if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
-					Promise.wait(secondTimer).then(() => {
-						return new Promise((resolve) => {
-							const id = setInterval(() => {
-								if (pop.isEnabled('cacheLib')) { return; }
-								clearInterval(id);
-								resolve(this.createMainMenuDynamic());
-							}, 250);
-						});
-					}).then((result) => {
-						if (result) { console.log('Playlist Manager: Created dynamic menus'); }
-						this.exportPlaylistsInfo();
-						callbacksListener.checkPanelNamesAsync();
-					});
+		let intId = -1;
+		if (this.delays.playlistLoading) {
+			intId = setInterval(() => {
+				if (!pop.isEnabled()) {
+					pop.enable(true, 'Loading...', 'Loading playlists...\nPanel will be disabled during the process.\n\nInitialization has been delayed ' + this.delays.playlistLoading + ' ms.', 'loading');
+					clearInterval(intId);
 				}
-			} else { this.deleteExportInfo(); }
-			if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
-			}
+			}, 25);
 		}
-		if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
-		if (this.activePlsStartup.length) { this.startupPlaylist(); }
-		if (bProfile) { test.Print('Post startup'); test = null; }
-		globProfiler.Print('list.init.post');
-		setInterval(() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); }, Number(this.properties.autoUpdate[1]) || secondTimer);
+		const promise = this.properties.bSetup[1]
+			? Promise.resolve()
+			: new Promise((resolve) => {
+				setTimeout(() => {
+					this.update(false, true, void (0), true); // bInit is true to avoid reloading all categories
+					resolve();
+				}, this.delays.playlistLoading);
+			});
+		return promise.then(() => {
+			if (pop.isEnabled('loading')) { pop.disable(true); }
+			if (intId !== -1) { clearInterval(intId); }
+			this.checkConfigPostUpdate(bDone);
+			this.updatePlaylistIcons();
+			// Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
+			if (!this.uiElements['Search filter'].enabled || !this.searchMethod.text.length || this.searchMethod.bResetStartup) {
+				this.filter();
+			}
+			if (bProfile) { test.Print('Load playlists'); }
+			globProfiler.Print('list.init.playlists');
+			if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
+				const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
+				const bColumns = this.isColumnsEnabled('size');
+				const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
+				const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
+				if (this.bDynamicMenus) {
+					if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
+						Promise.wait(secondTimer).then(() => {
+							return new Promise((resolve) => {
+								const id = setInterval(() => {
+									if (pop.isEnabled('cacheLib')) { return; }
+									clearInterval(id);
+									resolve(this.createMainMenuDynamic());
+								}, 250);
+							});
+						}).then((result) => {
+							if (result) { console.log('Playlist Manager: Created dynamic menus'); }
+							this.exportPlaylistsInfo();
+							callbacksListener.checkPanelNamesAsync();
+						});
+					}
+				} else { this.deleteExportInfo(); }
+				if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
+					Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
+				}
+			}
+			if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
+			if (this.activePlsStartup.length) { this.startupPlaylist(); }
+			if (bProfile) { test.Print('Post startup'); test = null; }
+			globProfiler.Print('list.init.post');
+			setInterval(() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); }, Number(this.properties.autoUpdate[1]) || secondTimer);
+		});
 	};
 
 	this.optionsUUIDTranslate = (optionUUID = this.optionUUID) => { // See nextId() on helpers_xxx.js
@@ -6551,6 +6570,8 @@ function _list(x, y, w, h) {
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
 	this.bLiteMode = this.properties['bLiteMode'][1];
+	/** @type {{playlistLoading:number}} */
+	this.delays = JSON.parse(this.properties.delays[1]);
 	// Other
 	this.uuid = this.properties['panelUUID'][1];
 	this.dropUp = this.dropDown = this.dropIn = false;
@@ -6798,14 +6819,15 @@ function _list(x, y, w, h) {
 	callbacksListener.listenNames = this.bDynamicMenus;
 	this.plsCache = new Map();
 	globProfiler.Print('list.prototype');
-	this.init();
-	if (this.bApplyAutoTags && this.itemsAll) {
-		setTimeout(() => {
-			this.dataAll.forEach((item, z) => {
-				if (item.tags.indexOf('bAutoLoad') !== -1) { this.loadPlaylist(z, true); }
-			});
-		}, firstTimer);
-	}
+	this.init().then(() => {
+		if (this.bApplyAutoTags && this.itemsAll) {
+			setTimeout(() => {
+				this.dataAll.forEach((item, z) => {
+					if (item.tags.indexOf('bAutoLoad') !== -1) { this.loadPlaylist(z, true); }
+				});
+			}, firstTimer);
+		}
+	});
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process

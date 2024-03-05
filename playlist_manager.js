@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/24
+//05/03/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -306,6 +306,9 @@ let properties = {
 	panelUUID: ['Panel UUID', UUID(), { func: isUUID }, UUID()],
 	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }, true],
 	deleteBehavior: ['Playlist file delete behavior', 0, { func: (n) => n >= 0 && n <= 2 }, 0],
+	delays: ['Panel loading delays', JSON.stringify({
+		playlistLoading: 0
+	})],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -321,6 +324,7 @@ properties['uiElements'].push({ func: isJSON }, properties['uiElements'][1]);
 properties['columns'].push({ func: isJSON }, properties['columns'][1]);
 properties['folders'].push({ func: isJSON }, properties['folders'][1]);
 properties['statsConfig'].push({ func: isJSON }, properties['statsConfig'][1]);
+properties['delays'].push({ func: isJSON }, properties['delays'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
