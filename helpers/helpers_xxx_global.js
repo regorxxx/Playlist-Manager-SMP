@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/03/24
+//05/03/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -107,7 +107,7 @@ function loadUserDefFile(def) {
 	} else {bSave = true;}
 	if (bSave) {
 		const {_type, _file, ...rest} = def; // eslint-disable-line no-unused-vars
-		_save(_file, JSON.stringify(rest, (key, value) => {return (value instanceof RegExp ? value.toSource() : value);}, '\t'));
+		_save(_file, JSON.stringify(rest, (key, value) => {return (value instanceof RegExp ? value.toSource() : value);}, '\t').replace(/\n/g,'\r\n'));
 	}
 }
 
