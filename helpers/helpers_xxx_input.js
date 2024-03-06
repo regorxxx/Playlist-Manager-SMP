@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/23
+//06/03/24
 
 /* exported Input */
 
@@ -10,6 +10,15 @@
 const Input = Object.seal(Object.freeze({
 	// Data validation
 	data: Object.seal({last: null, lastInput: null}),
+	/**
+	 * Checks if last input is equal to the last default value
+	 *
+	 * @method
+	 * @name (get) isLastEqual
+	 * @kind property
+	 * @memberof Input
+	 * @returns {boolean}
+	*/
 	get isLastEqual() {
 		if (typeof this.data.last === 'object') {
 			return (JSON.stringify(this.data.last) === JSON.stringify(this.data.lastInput));
@@ -17,13 +26,47 @@ const Input = Object.seal(Object.freeze({
 			return (this.data.last === this.data.lastInput);
 		}
 	},
+	/**
+	 * Retrieves last default value as a raw value
+	 *
+	 * @method
+	 * @name (get) lastInput
+	 * @kind property
+	 * @memberof Input
+	 * @returns {any}
+	*/
 	get lastInput() {
 		return this.data.lastInput;
 	},
+	/**
+	 * Retrieves last user input as a raw value
+	 *
+	 * @method
+	 * @name (get) lastInput
+	 * @kind property
+	 * @memberof Input
+	 * @returns {any}
+	*/
 	get previousInput() {
 		return this.data.last;
 	},
 	// Input methods
+	/**
+	 * Handles input validation for json values.
+	 *
+	 * @property
+	 * @name json
+	 * @kind method
+	 * @memberof Input
+	 * @param {'array'|'array numbers'|'array strings'|'array booleans'|'object'} type
+	 * @param {Object} oldVal
+	 * @param {String} message
+	 * @param {String} title
+	 * @param {String} example
+	 * @param {Function[]} checks?
+	 * @param {Boolean} bFilterFalse?
+	 * @returns {null|Object}
+	 */
 	json: function (type, oldVal, message, title, example, checks = [], bFilterFalse = false) {
 		const types = new Set(['array', 'array numbers', 'array strings', 'array booleans', 'object']);
 		this.data.last = oldVal; this.data.lastInput = null;
@@ -95,6 +138,21 @@ const Input = Object.seal(Object.freeze({
 		if (oldValStr === JSON.stringify(newVal)) {return null;}
 		return newVal;
 	},
+	/**
+	 * Handles input validation for number values.
+	 *
+	 * @property
+	 * @name number
+	 * @kind method
+	 * @memberof Input
+	 * @param {'int'|'int positive'|'int negative'|'float'|'float positive'|'float negative'|'real'|'real positive'|'real negative'} type
+	 * @param {Number} oldVal
+	 * @param {String} message
+	 * @param {String} title
+	 * @param {Number} example
+	 * @param {Function[]} checks?
+	 * @returns {null|Number}
+	 */
 	number: function (type, oldVal, message, title, example, checks = []) {
 		const types = new Set(['int', 'int positive', 'int negative', 'float', 'float positive', 'float negative', 'real', 'real positive', 'real negative']);
 		this.data.last = oldVal; this.data.lastInput = null;
@@ -144,8 +202,24 @@ const Input = Object.seal(Object.freeze({
 		if (oldVal === newVal) {return null;}
 		return newVal;
 	},
+	/**
+	 * Handles input validation for string values.
+	 *
+	 * @property
+	 * @name string
+	 * @kind method
+	 * @memberof Input
+	 * @param {'string'|'trimmed string'|'unicode'|'path'} type
+	 * @param {String} oldVal
+	 * @param {String} message
+	 * @param {String} title
+	 * @param {String} example
+	 * @param {Function[]} checks?
+	 * @param {boolean} bFilterEmpty?
+	 * @returns {null|String}
+	 */
 	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false) {
-		const types = new Set(['string', 'unicode']);
+		const types = new Set(['string', 'trimmed string', 'unicode', 'path']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (!types.has(type)) {throw new Error('Invalid type: ' + type);}
 		let input, newVal;
@@ -160,9 +234,21 @@ const Input = Object.seal(Object.freeze({
 					if (bFilterEmpty && !newVal.length) {throw new Error('Empty');}
 					break;
 				}
+				case 'trimmed string': {
+					newVal = newVal.trim();
+					if (bFilterEmpty && !newVal.length) {throw new Error('Empty');}
+					break;
+				}
 				case 'unicode': { // https://www.rapidtables.com/code/text/unicode-characters.html
 					if (bFilterEmpty && !newVal.length) {throw new Error('Empty');}
 					newVal = newVal.split(' ').map((s) => s !== '' ? String.fromCharCode(parseInt(s, 16)) : '').join(' ');
+					break;
+				}
+				case 'path': {
+					if (!newVal.length) {
+						if (bFilterEmpty) {throw new Error('Empty');}
+					} else if (!newVal.endsWith('\\')) { newVal += '\\';}
+					newVal = this.sanitizePath(newVal);
 					break;
 				}
 			}
@@ -227,5 +313,10 @@ const Input = Object.seal(Object.freeze({
 	// Internal helpers
 	cleanCheck: function (func) {
 		return func.toString().replace(/^[^{]*{\s*/, '').replace(/\s*}[^}]*$/,'').replace(/^.*=> /, '');
+	},
+	sanitizePath: function (value) { // Sanitize illegal chars but skip drive
+		if (!value || !value.length) { return ''; }
+		const disk = (value.match(/^\w:\\/g) || [''])[0];
+		return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
 	}
 }));

@@ -1916,12 +1916,8 @@ function createMenuRightTop() {
 	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({
 			entryText: 'Set playlists folder...', func: () => {
-				let input = '';
-				try { input = sanitizePath(utils.InputBox(window.ID, 'Enter path of tracked folder:\nRelative paths must begin with \'.\'.', window.Name, list.properties['playlistPath'][1], true)); }
-				catch (e) { return; }
-				if (!input.length) { return; }
-				if (input === list.playlistsPath) { return; }
-				if (!input.endsWith('\\')) { input += '\\'; }
+				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name, list.properties['playlistPath'][3], void(0), true);
+				if (input === null) { return; }
 				let bDone = _isFolder(input);
 				if (!bDone) { bDone = _createFolder(input); }
 				if (!bDone) {
@@ -2508,10 +2504,8 @@ function createMenuRightTop() {
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
-						let tag = '';
-						try { tag = utils.InputBox(window.ID, 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, options.join(','), true); }
-						catch (e) { return; }
-						tag = tag.trim();
+						const tag = Input.string('trimmed string', options.join(','), 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'summer,top');
+						if (tag === null) { return; }
 						list.bAutoCustomTag = !!tag.length;
 						list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
 						list.autoCustomTag = tag.split(',');
@@ -2647,16 +2641,12 @@ function createMenuRightTop() {
 					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
-							let input = '';
-							try { input = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, preset.path, true)); }
-							catch (e) { return; }
-							if (input.length && !input.endsWith('\\')) { input += '\\'; }
-							if (input !== preset.path) {
-								preset.path = input;
-								list.properties['converterPreset'][1] = JSON.stringify(presets);
-								overwriteProperties(list.properties);
-								if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
-							}
+							const input = Input.string('path', preset.path, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, '');
+							if (input === null) { return; }
+							preset.path = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					{
@@ -2678,9 +2668,8 @@ function createMenuRightTop() {
 					}
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
-							let input = '';
-							try { input = utils.InputBox(window.ID, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, preset.dsp, true); }
-							catch (e) { return; }
+							let input = Input.string('string', preset.dsp, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, 'my preset');
+							if (input === null) { return; }
 							if (!input.length) { input = '...'; }
 							if (input !== preset.dsp) {
 								preset.dsp = input;
@@ -2692,32 +2681,23 @@ function createMenuRightTop() {
 					});
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
-							let input = '';
-							try { input = utils.InputBox(window.ID, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, preset.tf, true); }
-							catch (e) { return; }
-							if (!input.length) { return; }
-							if (input !== preset.tf) {
-								preset.tf = input;
-								list.properties['converterPreset'][1] = JSON.stringify(presets);
-								overwriteProperties(list.properties);
-								if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
-							}
+							const input = Input.string('string', preset.tf, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, '.\\%FILENAME%.mp3', void(0), true);
+							if (input === null) { return; }
+							preset.tf = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set name...', func: () => {
-							const hasName = !!Object.hasOwn(preset, 'name');
-							let input = '';
-							try { input = utils.InputBox(window.ID, 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, Object.hasOwn(preset, 'name') ? preset.name : '', true); }
-							catch (e) { return; }
-							if (!input.length) { return; }
-							if (!hasName || hasName && input !== preset.name) {
-								preset.name = input;
-								list.properties['converterPreset'][1] = JSON.stringify(presets);
-								overwriteProperties(list.properties);
-								if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
-							}
+							const input = Input.string('string', Object.hasOwn(preset, 'name') ? preset.name : '', 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, '-- Kodi --');
+							if (input === null) { return; }
+							preset.name = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 				});
