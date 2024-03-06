@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/03/24
+//06/03/24
 
 /* exported _list */
 
@@ -87,12 +87,6 @@ function _list(x, y, w, h) {
 	// Global tooltip
 	// Timers follow the double click timer
 	this.tooltip = new _tt(null, void (0), void (0), 600);
-
-	// Async steps
-	const firstTimer = 2000; // Auto load playlists
-	const secondTimer = 5000; // Dynamic menus, tracked folder check
-	const thirdTimer = 6000; // plsCache
-
 	this.updateUIElements = (bReload = false) => {
 		if (bReload) { window.Reload(); }
 		if (!this.uiElements['Search filter'].enabled) { this.searchInput = null; }
@@ -5888,7 +5882,7 @@ function _list(x, y, w, h) {
 			const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
 			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
 			if (this.bDynamicMenus) {
-				Promise.wait(secondTimer).then(() => {
+				Promise.wait(this.delays.dynamicMenus).then(() => {
 					return new Promise((resolve) => {
 						const id = setInterval(() => {
 							if (pop.isEnabled('cacheLib')) { return; }
@@ -5903,7 +5897,7 @@ function _list(x, y, w, h) {
 				});
 			} else { this.deleteExportInfo(); }
 			if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-				Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
+				Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch);
 			}
 		}
 		if (bProfile) { test.Print(); }
@@ -6279,7 +6273,7 @@ function _list(x, y, w, h) {
 					if (bRetry) {
 						if (e.message === 'Script aborted by user') {
 							console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing');
-							return Promise.wait(secondTimer).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
+							return Promise.wait(this.delays.dynamicMenus).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
 						}
 					}
 					console.log('this.createMainMenuDynamic: unknown error');
@@ -6291,7 +6285,7 @@ function _list(x, y, w, h) {
 			if (bRetry) {
 				if (e.message === 'Script aborted by user') {
 					console.log('this.createMainMenuDynamic: retrying menu creation due to slow processing');
-					return Promise.wait(secondTimer).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
+					return Promise.wait(this.delays.dynamicMenus).then(() => this.createMainMenuDynamic({ file, bRetry: false }));
 				}
 			}
 			console.log('this.createMainMenuDynamic: unknown error');
@@ -6340,7 +6334,7 @@ function _list(x, y, w, h) {
 		});
 	};
 
-	this.startupPlaylist = (name = this.activePlsStartup) => {
+	this.startupPlaylist = (name = this.activePlsStartup, bOnlyUI = false) => {
 		let re, flag, idx = -1, bRegExp = false;
 		try {
 			[, re, flag] = name.match(/\/(.*)\/([a-z]+)?/);
@@ -6356,20 +6350,22 @@ function _list(x, y, w, h) {
 		} else {
 			idx = plman.FindPlaylist(name);
 		}
-		if (idx === -1) { // Give priority to playlist on UI, then to manager playlists
+		if (idx === -1 && !bOnlyUI) { // Give priority to playlist on UI, then to manager playlists
 			const plsIdx = this.getPlaylistsIdxByName([name]);
 			if (plsIdx.length) {
 				idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
 			}
 		}
 		if (idx !== -1 && plman.ActivePlaylist !== idx) { plman.ActivePlaylist = idx; }
-		else { console.log('Playlist Manager: active playlist at startup not found - ' + name); }
+		else if (!bOnlyUI) { console.log('Playlist Manager: active playlist at startup not found - ' + name); }
 		return idx;
 
 
 	};
 
 	this.init = () => {
+		let startPls = -1;
+		if (this.activePlsStartup.length) { startPls = this.startupPlaylist(void (0), true); }
 		this.methodState = this.getMethodState(); // On first call first method will be default
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
 
@@ -6397,12 +6393,13 @@ function _list(x, y, w, h) {
 					pop.enable(true, 'Loading...', 'Loading playlists...\nPanel will be disabled during the process.\n\nInitialization has been delayed ' + this.delays.playlistLoading + ' ms.', 'loading');
 					clearInterval(intId);
 				}
-			}, 25);
+			}, 60);
 		}
 		const promise = this.properties.bSetup[1]
 			? Promise.resolve()
 			: new Promise((resolve) => {
 				setTimeout(() => {
+					if (this.delays.playlistLoading) { globProfiler.Reset(); }
 					this.update(false, true, void (0), true); // bInit is true to avoid reloading all categories
 					resolve();
 				}, this.delays.playlistLoading);
@@ -6418,6 +6415,28 @@ function _list(x, y, w, h) {
 			}
 			if (bProfile) { test.Print('Load playlists'); }
 			globProfiler.Print('list.init.playlists');
+		}).then(() => {
+			return new Promise((resolve) => {
+				const bAutoLoad = this.bApplyAutoTags && this.itemsAll && this.dataAll.some((pls) => pls.tags.includes('bAutoLoad'));
+				const bStartPls = startPls === -1 && this.activePlsStartup.length;
+				if (bAutoLoad || bStartPls) {
+					setTimeout(() => {
+						if (this.delays.startupPlaylist) { globProfiler.Reset(); }
+						if (bAutoLoad) {
+							this.dataAll.forEach((pls, z) => {
+								if (pls.tags.includes('bAutoLoad')) { this.loadPlaylist(z, true); }
+							});
+							startPls = -1; // Loading a playlist changes the active playlist, so apply it again
+						}
+						if (startPls === -1 && this.activePlsStartup.length) { this.startupPlaylist(); }
+						resolve();
+					}, this.delays.startupPlaylist);
+				} else { resolve(); }
+			}).then(() => {
+				if (bProfile) { test.Print('Load startup playlists'); }
+				globProfiler.Print('list.init.playlistsAutoLoad');
+			});
+		}).then(() => {
 			if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 				const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 				const bColumns = this.isColumnsEnabled('size');
@@ -6425,7 +6444,7 @@ function _list(x, y, w, h) {
 				const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
 				if (this.bDynamicMenus) {
 					if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
-						Promise.wait(secondTimer).then(() => {
+						Promise.wait(this.delays.dynamicMenus).then(() => {
 							return new Promise((resolve) => {
 								const id = setInterval(() => {
 									if (pop.isEnabled('cacheLib')) { return; }
@@ -6441,14 +6460,13 @@ function _list(x, y, w, h) {
 					}
 				} else { this.deleteExportInfo(); }
 				if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-					Promise.wait(thirdTimer).then(this.cachePlaylistSearch);
+					Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch);
 				}
 			}
 			if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
-			if (this.activePlsStartup.length) { this.startupPlaylist(); }
 			if (bProfile) { test.Print('Post startup'); test = null; }
 			globProfiler.Print('list.init.post');
-			setInterval(() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); }, Number(this.properties.autoUpdate[1]) || secondTimer);
+			setInterval(() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); }, Number(this.properties.autoUpdate[1]));
 		});
 	};
 
@@ -6570,7 +6588,7 @@ function _list(x, y, w, h) {
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
 	this.bLiteMode = this.properties['bLiteMode'][1];
-	/** @type {{playlistLoading:number}} */
+	/** @type {{playlistLoading:number, dynamicMenus:number, playlistCache:number, startupPlaylist:number}} */
 	this.delays = JSON.parse(this.properties.delays[1]);
 	// Other
 	this.uuid = this.properties['panelUUID'][1];
@@ -6819,15 +6837,7 @@ function _list(x, y, w, h) {
 	callbacksListener.listenNames = this.bDynamicMenus;
 	this.plsCache = new Map();
 	globProfiler.Print('list.prototype');
-	this.init().then(() => {
-		if (this.bApplyAutoTags && this.itemsAll) {
-			setTimeout(() => {
-				this.dataAll.forEach((item, z) => {
-					if (item.tags.indexOf('bAutoLoad') !== -1) { this.loadPlaylist(z, true); }
-				});
-			}, firstTimer);
-		}
-	});
+	this.init();
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process

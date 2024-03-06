@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/03/24
+//06/03/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -307,7 +307,10 @@ let properties = {
 	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }, true],
 	deleteBehavior: ['Playlist file delete behavior', 0, { func: (n) => n >= 0 && n <= 2 }, 0],
 	delays: ['Panel loading delays', JSON.stringify({
-		playlistLoading: 0
+		playlistLoading: 5000,
+		startupPlaylist: 2000,
+		dynamicMenus: 2500,
+		playlistCache: 6000,
 	})],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);

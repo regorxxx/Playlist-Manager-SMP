@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/03/24
+//06/03/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -2239,70 +2239,84 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Auto-Saving
-			menu.newEntry({
-				menuName, entryText: 'Auto-saving interval...\t(' + list.properties['autoSave'][1] + ' ms)', func: () => {
-					let input = 0;
-					try { input = Number(utils.InputBox(window.ID, 'Save changes within foobar2000 playlists into tracked files periodically.\nEnter integer number > ' + list.properties['autoSave'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoSave'][1]), true)); }
-					catch (e) { return; }
-					if (isNaN(input)) { return; }
-					if (!checkProperty(list.properties['autoSave'], input)) { return; }
-					list.properties['autoSave'][1] = input;
-					overwriteProperties(list.properties);
-					window.Reload();
+			['autoSave', 'autoUpdate', 'autoBack'].forEach((key) => {
+				const prop = list.properties[key];
+				const lower = prop[2].range[1][0];
+				let text = '';
+				let entryText = '';
+				switch (key) {
+					case 'autoSave':
+						entryText = 'Auto-saving interval...\t(' + prop[1] + ' ms)';
+						text = 'Save changes within foobar2000 playlists into tracked files periodically.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)';
+						break;
+					case 'autoUpdate':
+						entryText = 'Auto-loading interval...\t(' + prop[1] + ' ms)';
+						text = 'Check periodically the tracked folder for changes and update the list.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)';
+						if (list.bLiteMode) { return; }
+						break;
+					case 'autoBack':
+						entryText = 'Auto-backup interval...\t(' + (isInt(prop[1]) ? prop[1] : '\u221E') + ' ms)';
+						text = 'Backup to zip periodically the tracked folder.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)';
+						if (list.bLiteMode) { return; }
+						break;
 				}
+				menu.newEntry({
+					menuName, entryText, func: () => {
+						const input = Input.number('int positive', Number(prop[1]), text, window.Name, lower, [(n) => checkProperty(prop, n)]);
+						if (input === null) { return; }
+						prop[1] = input;
+						overwriteProperties(list.properties);
+						window.Reload();
+					}
+				});
+				menu.newCheckMenuLast(() => (Number(prop[1]) !== 0));
 			});
-			menu.newCheckMenuLast(() => (Number(list.properties['autoSave'][1]) !== 0));
-		}
-		if (!list.bLiteMode) {	// Auto-Loading
-			menu.newEntry({
-				menuName, entryText: 'Auto-loading interval...\t(' + list.properties['autoUpdate'][1] + ' ms)', func: () => {
-					let input = 0;
-					try { input = Number(utils.InputBox(window.ID, 'Check periodically the tracked folder for changes and update the list.\nEnter integer number > ' + list.properties['autoUpdate'][2].range[1][0] + ' (ms):\n(0 to disable it)', window.Name, Number(list.properties['autoUpdate'][1]), true)); }
-					catch (e) { return; }
-					if (isNaN(input)) { return; }
-					if (!checkProperty(list.properties['autoUpdate'], input)) { return; }
-					list.properties['autoUpdate'][1] = input;
-					overwriteProperties(list.properties);
-					window.Reload();
-				}
-			});
-			menu.newCheckMenuLast(() => (Number(list.properties['autoUpdate'][1]) !== 0));
-		}
-		if (!list.bLiteMode) {	// Auto-Backup
-			menu.newEntry({
-				menuName, entryText: 'Auto-backup interval...\t(' + (isInt(list.properties['autoBack'][1]) ? list.properties['autoBack'][1] : '\u221E') + ' ms)', func: () => {
-					let input = 0;
-					try { input = Number(utils.InputBox(window.ID, 'Backup to zip periodically the tracked folder.\nEnter integer number > ' + list.properties['autoBack'][2].range[1][0] + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)', window.Name, Number(list.properties['autoBack'][1]), true)); }
-					catch (e) { return; }
-					if (isNaN(input)) { return; }
-					if (!checkProperty(list.properties['autoBack'], input)) { return; }
-					list.properties['autoBack'][1] = input;
-					overwriteProperties(list.properties);
-					window.Reload();
-				}
-			});
-			menu.newCheckMenuLast(() => (Number(list.properties['autoBack'][1]) !== 0));
 		}
 		{	// Updates
 			menu.newEntry({ menuName, entryText: 'sep' });
 			const subMenuName = menu.newMenu('Loading delays...', menuName);
 			for (const key in list.delays) {
 				let entry = key;
+				let info = '';
+				let bEnabled = true;
 				switch (key) {
-					case 'playlistLoading': entry = 'Playlist loading'; break;
+					case 'playlistLoading':
+						entry = 'Playlist loading';
+						break;
+					case 'startupPlaylist':
+						entry = '-> Startup playlists';
+						info = 'Processed after \'Playlist loading\' step.';
+						bEnabled = list.activePlsStartup.length || list.bApplyAutoTags;
+						break;
+					case 'dynamicMenus':
+						entry = '      -> Dynamic menus';
+						info = 'Processed after \'Startup playlists\' step.';
+						bEnabled = list.bDynamicMenus;
+						break;
+					case 'playlistCache':
+						entry = '      -> Search cache';
+						info = 'Processed after \'Startup playlists\' step.';
+						bEnabled = list.requiresCachePlaylistSearch();
+						break;
 				}
 				menu.newEntry({
-					menuName: subMenuName, entryText: entry + '\t' + _b(list.delays[key] + ' ms'), func: () => {
-						let input = 0;
-						try { input = Number(utils.InputBox(window.ID, '\nEnter integer number >= ' + 0 + ' (ms):\n(0 to disable it)', window.Name, list.delays[key], true)); }
-						catch (e) { return; }
-						if (isNaN(input) || input < 0 || !isFinite(input)) { return; }
+					menuName: subMenuName, entryText: entry + '\t' + _b((bEnabled ? list.delays[key] : 0) + ' ms'), func: () => {
+						const input = Input.number('int positive', list.delays[key], 'Enter value (ms):\n(>= 0)' + (info.length ? '\n\n' + info : ''), window.Name, 50, [(n) => Number.isFinite(n)]);
+						if (input === null) { return; }
 						list.delays[key] = input;
 						list.properties['delays'][1] = list.delays;
 						overwriteProperties(list.properties);
-					}
+					}, flags: bEnabled ? MF_STRING : MF_GRAYED
 				});
 			}
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Restore defaults', func: () => {
+					list.properties['delays'][1] = list.properties['delays'][3];
+					overwriteProperties(list.properties);
+					list.delays = JSON.parse(list.properties['delays'][1]);
+				}
+			});
 		}
 		{	// Updates
 			menu.newEntry({ menuName, entryText: 'sep' });
