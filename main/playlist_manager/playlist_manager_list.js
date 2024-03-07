@@ -1,11 +1,11 @@
 ﻿'use strict';
-//06/03/24
+//07/03/24
 
 /* exported _list */
 
 /* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -2080,7 +2080,7 @@ function _list(x, y, w, h) {
 							if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) { // NOSONAR
 								this.addFolder();
 							} else if (this.bLiteMode) {
-								this.addUIplaylist({ bInputName: true });
+								this.addUiPlaylist({ bInputName: true });
 							} else {
 								this.add({ bEmpty: true });
 							}
@@ -5146,7 +5146,114 @@ function _list(x, y, w, h) {
 			: null;
 	};
 
-	this.addUIplaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
+	this.converUiPlaylist = ({ idx = -1, name = '', bShowPopups = true, toFolder = null } = {}) => {
+		if (idx === -1) {
+			if (plman.ActivePlaylist === -1) { return null; }
+			else { idx = plman.ActivePlaylist; }
+		}
+		const oldNameId = plman.GetPlaylistName(idx);
+		const oldName = removeIdFromStr(oldNameId);
+		let input = name || '';
+		if (!name.length) {
+			let boxText = 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the UI-only playlist will be created with the new name and it will become the active playlist.';
+			try { input = utils.InputBox(window.ID, boxText, window.Name, oldName || input, true); }
+			catch (e) { return null; }
+			if (!input.length) { return null; }
+		}
+		const newName = input;
+		const oPlaylistPath = this.playlistsPath + sanitize(newName) + this.playlistsExtension;
+		// Auto-Tags
+		const oPlaylistTags = [];
+		let objectPlaylist = null;
+		if (this.bAutoLoadTag) { oPlaylistTags.push('bAutoLoad'); }
+		if (this.bAutoLockTag) { oPlaylistTags.push('bAutoLock'); }
+		if (this.bMultMenuTag) { oPlaylistTags.push('bMultMenu'); }
+		if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(oPlaylistTags).has(tag)) { oPlaylistTags.push(tag); } }); }
+		// Add tags of current view
+		if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(oPlaylistTags).has(tag)) { oPlaylistTags.push(tag); } }); }
+		// Categories
+		// Add Category of current view
+		let oPlaylistCategory = void (0);
+		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) { oPlaylistCategory = this.categoryState[0]; }
+		// Save file
+		// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
+		if (!_isFile(oPlaylistPath)) { // Just for safety
+			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
+			const nameId = newName + UUID;
+			if (oldNameId === nameId) {
+				console.log('Playlist manager: Converting UI-only playlist into a playlist file...');
+			} else if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+				return null;
+			}
+			// Creates the file on the folder
+			if (!_isFolder(this.playlistsPath)) { _createFolder(this.playlistsPath); } // For first playlist creation
+			let done = savePlaylist({ playlistIndex: idx, handleList: null, playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
+			if (done) {
+				const now = Date.now();
+				objectPlaylist = new PlaylistObj({
+					id: UUID,
+					path: oPlaylistPath,
+					name: newName,
+					extension: this.playlistsExtension,
+					size: plman.PlaylistItemCount(idx),
+					fileSize: utils.GetFileSize(done),
+					category: oPlaylistCategory,
+					tags: oPlaylistTags,
+					duration: plman.GetPlaylistItems(idx).CalcTotalDuration(),
+					created: now,
+					modified: now
+				});
+				// Adds to list of objects and update variables
+				this.addToData(objectPlaylist);
+				// If we changed the name of the playlist but created it using the active playlist, then clone with new name
+				if (newName !== oldName) { // NOSONAR
+					let new_playlist = plman.DuplicatePlaylist(idx, newName + UUID);
+					plman.ActivePlaylist = new_playlist;
+				} else if (UUID.length) {
+					const currentLocks = plman.GetPlaylistLockedActions(idx) || [];
+					if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(idx, newName + UUID); }
+					else { console.popup('add: can not rename playlist due to lock. ' + oldName); }
+				}
+				// Warn about dead items
+				const selItems = plman.GetPlaylistItems(idx).Convert();
+				if (selItems && selItems.length) {
+					selItems.some((handle, i) => {
+						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name, bShowPopups);
+							return true;
+						}
+						return false;
+					});
+				}
+			} else {
+				console.popup(
+					'Playlist generation failed while writing file:\n' + oPlaylistPath +
+					'\n\nTrace:' +
+					'\nadd' + _p({ idx, name, bShowPopups, toFolder }.toStr()) +
+					'\n\nsavePlaylist' + _p({ playlistIndex: idx, handleList: null, playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
+					, window.Name, bShowPopups);
+				return null;
+			}
+		} else {
+			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
+			return null;
+		}
+		this.update(true, true); // We have already updated data
+		this.filter();
+		if (toFolder !== null) {
+			this.addToFolder(objectPlaylist, toFolder);
+			this.save();
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+			this.sort();
+			if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
+		}
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		this.showPlsByObj(objectPlaylist);
+		return objectPlaylist;
+	};
+
+	this.addUiPlaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
 		let input = name;
 		if (bInputName) {
 			input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
@@ -5398,7 +5505,9 @@ function _list(x, y, w, h) {
 		if (!_isFile(oPlaylistPath)) { // Just for safety
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
 			const nameId = newName + UUID;
-			if (this.dataAll.some((pls) => pls.nameId === nameId)) {
+			if (!bEmpty && oldNameId === nameId) {
+				console.log('Playlist manager: Converting UI-only playlist into a playlist file...');
+			} else if (this.dataAll.some((pls) => pls.nameId === nameId)) {
 				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
 				return null;
 			}

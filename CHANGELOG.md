@@ -53,12 +53,15 @@
 
 ## [Unreleased][]
 ### Added
+- Playlist formats: new menu entries on playlist contextual menu to convert UI-playlists to physical files. Works in single and multiple selection. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
 - Configuration: added new settings at 'Panel behavior\Loading delays' submenu to control how the panel delays loading\applying some actions. It may come useful in cases where foobar2000 startup takes a lot of time, for ex. delaying playlist loading 30 secs after startup.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for panel repaint debugging purpose. Disabled by default.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to check OS features on every panel startup. Enabled by default. This has been the default behavior since OS' features check was implemented, but it can now be disabled to improve init performance a bit, specially at foobar2000 startup (since it seems to hang in some cases when running it on slow HDDs or systems).
 ### Changed
 ### Removed
 ### Fixed
+- Playlist formats: creating a playlist file from active playlist when the playlist was an UI-only playlist did not properly convert it in some cases, complaining duplicated names. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
+
 
 ## [0.13.0] - 2023-02-28
 ### Added

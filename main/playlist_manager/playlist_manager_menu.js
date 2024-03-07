@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/24
+//07/03/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -228,43 +228,53 @@ function createMenuLeft(forcedIndex = -1) {
 					});
 				}
 			} else if (!list.bLiteMode) {
-				// Updates playlist file with any new changes on the playlist bound within foobar2000
-				menu.newEntry({
-					entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
-						if (_isFile(pls.path)) {
-							const oldNameId = pls.nameId;
-							const oldName = pls.name;
-							const duplicated = getPlaylistIndexArray(oldNameId);
-							if (duplicated.length > 1) { // There is more than 1 playlist with same name
-								fb.ShowPopupMessage('You have more than one playlist with the same name: ' + oldName + '\n' + 'Please delete any duplicates and leave only the one you want.' + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
-							} else {
-								let answer = popup.yes;
-								if (pls.isLocked) { // Safety check for locked files (but can be overridden)
-									answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+				if (pls.extension === '.ui') {
+					// Convert UI playlist
+					menu.newEntry({
+						entryText: 'Convert to playlist file', func: () => {
+							const idx = plman.FindPlaylist(pls.nameId);
+							list.converUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
+						}, flags: bIsPlsUI ? MF_STRING : MF_GRAYED
+					});
+				} else {
+					// Updates playlist file with any new changes on the playlist bound within foobar2000
+					menu.newEntry({
+						entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
+							if (_isFile(pls.path)) {
+								const oldNameId = pls.nameId;
+								const oldName = pls.name;
+								const duplicated = getPlaylistIndexArray(oldNameId);
+								if (duplicated.length > 1) { // There is more than 1 playlist with same name
+									fb.ShowPopupMessage('You have more than one playlist with the same name: ' + oldName + '\n' + 'Please delete any duplicates and leave only the one you want.' + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
+								} else {
+									let answer = popup.yes;
+									if (pls.isLocked) { // Safety check for locked files (but can be overridden)
+										answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+									}
+									if (answer === popup.yes) { list.updatePlaylist({ playlistIndex: z, bForceLocked: true }); }
 								}
-								if (answer === popup.yes) { list.updatePlaylist({ playlistIndex: z, bForceLocked: true }); }
-							}
-						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
-					}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED
-				});
-				// Updates active playlist name to the name set on the playlist file so they get bound and saves playlist content to the file.
-				menu.newEntry({
-					entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already bound to active playlist', func: () => {
-						if (_isFile(pls.path)) {
-							const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
-							const newNameId = pls.nameId;
-							const newName = pls.name;
-							const duplicated = plman.FindPlaylist(newNameId);
-							if (duplicated !== -1) {
-								fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
-							} else {
-								list.updatePlman(newNameId, oldNameId);
-								const bDone = list.updatePlaylist({ playlistIndex: z });
-								if (!bDone) { list.updatePlman(oldNameId, newNameId); } // Reset change
-							}
-						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
-					}, flags: bIsPlsActive && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED
-				});
+							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
+						}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED
+					});
+					// Updates active playlist name to the name set on the playlist file so they get bound and saves playlist content to the file.
+					menu.newEntry({
+						entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already bound to active playlist', func: () => {
+							if (_isFile(pls.path)) {
+								const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
+								const newNameId = pls.nameId;
+								const newName = pls.name;
+								const duplicated = plman.FindPlaylist(newNameId);
+								if (duplicated !== -1) {
+									fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+								} else {
+									list.updatePlman(newNameId, oldNameId);
+									const bDone = list.updatePlaylist({ playlistIndex: z });
+									if (!bDone) { list.updatePlman(oldNameId, newNameId); } // Reset change
+								}
+							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
+						}, flags: bIsPlsActive && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED
+					});
+				}
 			}
 			if (showMenus['Category'] || showMenus['Tags']) {
 				menu.newEntry({ entryText: 'sep' });
@@ -819,7 +829,7 @@ function createMenuFolder(menu, folder, z) {
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Playlist File...', func: () => { list.add({ bEmpty: true, toFolder: folder }); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => { list.addAutoPlaylist(void (0), void (0), folder); } });
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
-		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUIplaylist({ bInputName: true, toFolder: folder }); } });
+		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUiPlaylist({ bInputName: true, toFolder: folder }); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder }); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
@@ -841,7 +851,7 @@ function createMenuFolder(menu, folder, z) {
 					? list.plsNameFromSelection(oldIdx)
 					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
 				const pls = list.bLiteMode
-					? list.addUIplaylist({ bInputName: true, toFolder: folder })
+					? list.addUiPlaylist({ bInputName: true, toFolder: folder })
 					: list.add({ bEmpty: true, name, bInputName: true, toFolder: folder });
 				if (pls) {
 					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
@@ -1071,6 +1081,18 @@ function createMenuLeftMult(forcedIndexes = []) {
 					}
 				});
 			}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+		});
+		// Convert UI playlists
+		menu.newEntry({
+			entryText: 'Convert to playlist files', func: () => {
+				indexes.forEach((z, i) => {
+					const pls = playlists[i];
+					if (isPlsUI(pls)) {
+						const idx = plman.FindPlaylist(pls.nameId);
+						list.converUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
+					}
+				});
+			}, flags: bIsPlsUISome ? MF_STRING : MF_GRAYED
 		});
 	}
 	if (showMenus['Category'] || showMenus['Tags']) { menu.newEntry({ entryText: 'sep' }); }
@@ -1422,7 +1444,7 @@ function createMenuRight() {
 		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => { list.add({ bEmpty: true }); } });
 		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => { list.addAutoPlaylist(); } });
 		!list.bLiteMode && menu.newEntry({ entryText: 'New Smart Playlist...', func: () => { list.addSmartplaylist(); } });
-		menu.newEntry({ entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => { list.addUIplaylist({ bInputName: true }); } });
+		menu.newEntry({ entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => { list.addUiPlaylist({ bInputName: true }); } });
 		if (showMenus['Folders']) {
 			menu.newEntry({ entryText: 'sep' });
 			menu.newEntry({ entryText: 'New Folder...' + list.getGlobalShortcut('new folder'), func: () => { list.addFolder(); } });
@@ -1446,7 +1468,7 @@ function createMenuRight() {
 					? list.plsNameFromSelection(oldIdx)
 					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
 				const pls = list.bLiteMode
-					? list.addUIplaylist({ bInputName: true })
+					? list.addUiPlaylist({ bInputName: true })
 					: list.add({ bEmpty: true, name, bInputName: true });
 				if (pls) {
 					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
@@ -1916,7 +1938,7 @@ function createMenuRightTop() {
 	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({
 			entryText: 'Set playlists folder...', func: () => {
-				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name, list.properties['playlistPath'][3], void(0), true);
+				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name, list.properties['playlistPath'][3], void (0), true);
 				if (input === null) { return; }
 				let bDone = _isFolder(input);
 				if (!bDone) { bDone = _createFolder(input); }
@@ -2681,7 +2703,7 @@ function createMenuRightTop() {
 					});
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
-							const input = Input.string('string', preset.tf, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, '.\\%FILENAME%.mp3', void(0), true);
+							const input = Input.string('string', preset.tf, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, '.\\%FILENAME%.mp3', void (0), true);
 							if (input === null) { return; }
 							preset.tf = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
