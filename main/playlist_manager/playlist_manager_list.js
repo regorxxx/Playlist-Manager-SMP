@@ -67,7 +67,7 @@ function _list(x, y, w, h) {
 	let currentItemIsUI = bMaintainFocus ? this.data[currentItemIndex].extension === '.ui' : null;
 	let currentItemIsFolder = bMaintainFocus ? this.data[currentItemIndex].isFolder : null;
 	let idxHighlight = -1;
-	let animation = { bHighlight: false, fRepaint: null };
+	let animation = { bHighlight: false, fRepaint: null, bForce: false };
 	let animationButtons = new Map(
 		/* buttonKey: {bHighlight: false, fRepaint: null} */
 	);
@@ -707,7 +707,7 @@ function _list(x, y, w, h) {
 				}
 				animation.bHighlight = false;
 				animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
-			} else if (!this.lastCharsPressed.bDraw) {
+			} else if (!this.lastCharsPressed.bDraw && !animation.bForce) {
 				idxHighlight = -1;
 			}
 		} else { animation.bHighlight = false; }
@@ -1213,6 +1213,25 @@ function _list(x, y, w, h) {
 		}
 	};
 
+	this.showPlsByIdxThrottled = throttle((idx) => {
+		if (idx === -1) {
+			idxHighlight = -1;
+			animation.bForce = true;
+			animation.bHighlight = false;
+			window.RepaintRect(0, this.y, window.Width, this.h);
+			return false;
+		} else if (idxHighlight === idx) {
+			animation.bForce = false;
+			return true;
+		} else {
+			animation.bForce = true;
+			animation.bHighlight = true;
+			idxHighlight = currentItemIndex = this.jumpToIndex(idx);
+			window.RepaintRect(0, this.y, window.Width, this.h);
+			return true;
+		}
+	}, 500, this);
+
 	this.showPlsByObj = (obj, ms = 10) => {
 		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 		const idx = this.getIndex(obj);
@@ -1238,6 +1257,28 @@ function _list(x, y, w, h) {
 			idx = data.findIndex((dataPls) => keys.every((key) => pls[key] === dataPls[key]));
 		}
 		return idx;
+	};
+
+	this.getIndexSortedBy = ({key = 'modified', bInverse = false, bSkipLibrayViewer = true} = {}) => {
+		let filterFunc;
+		switch (key) {
+			case 'created':
+			case 'modified': filterFunc = (pls) => !pls.isFolder && !pls.isAutoPlaylist && pls.extension !== 'xsp'; break;
+			case 'duration': filterFunc = (pls) => !pls.isFolder; break;
+			case 'size': filterFunc = (pls) => !pls.isFolder; break;
+		}
+		if (bSkipLibrayViewer) {
+			const regExp = /Library Viewer|Filter Results/i;
+			const oldFunc = filterFunc;
+			filterFunc = (pls) => oldFunc(pls) && !regExp.test(pls.nameId);
+		}
+		const sortFunc = bInverse
+			? (a, b) => b.pls[key] - a.pls[key]
+			: (a, b) => a.pls[key] - b.pls[key];
+		return this.data.filter(filterFunc)
+			.map((pls, i) => { return { pls, i }; })
+			.sort(sortFunc)[0].i;
+
 	};
 
 	this.onMouseLeaveList = () => {  // Removes selection indicator
@@ -1275,6 +1316,7 @@ function _list(x, y, w, h) {
 					button.inFocus = true;
 					bButtonTrace = true;
 				} else {
+					if (button.inFocus && button.leave) { button.leave(mask, button); }
 					button.inFocus = false;
 				}
 			}
@@ -1302,7 +1344,9 @@ function _list(x, y, w, h) {
 			return true;
 		} else {
 			for (let key in this.headerButtons) {
-				this.headerButtons[key].inFocus = false;
+				const button = this.headerButtons[key];
+				if (button.inFocus && button.leave) { button.leave(mask, button); }
+				button.inFocus = false;
 			}
 		}
 		if (this.trace(x, y)) {
@@ -6807,7 +6851,37 @@ function _list(x, y, w, h) {
 				}
 			}
 		},
-		newPls: { x: 0, y: 0, w: 0, h: 0, inFocus: false, text: 'List menu...' + this.getGlobalShortcut('list menu', { bTab: false, bParen: true }), func: (x, y, mask, parent) => createMenuRight().btn_up(x, y) }, // eslint-disable-line no-unused-vars
+		newPls: {
+			x: 0, y: 0, w: 0, h: 0, inFocus: false,
+			text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
+				if (mask === MK_CONTROL && this.items && plman.ActivePlaylist !== -1) {
+					const idx = this.getIndexSortedBy({key: 'modified', bInverse: true, bSkipLibrayViewer: true});
+					this.showPlsByIdxThrottled(idx);
+				} else if (idxHighlight !== -1 && animation.bForce) { idxHighlight = -1; animation.bForce = false; }
+				return 'List menu...' + this.getGlobalShortcut('list menu', { bTab: false, bParen: true }) +
+					'\n----------------------------------------------\n' +
+					'(Shift + L. Click to copy selection to new playlist)\n' +
+					'(Ctrl + L. Click to copy selection to last playlist)';
+			},
+			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
+				if (mask === MK_SHIFT) {
+					createMenuRight().btn_up(-1, -1, void (0), 'New playlist from selection...');
+				} else if (mask === MK_CONTROL) {
+					if (this.items && plman.ActivePlaylist !== -1) {
+						const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+						if (selItems && selItems.Count) {
+							const playlistIndex = this.getIndexSortedBy({key: 'modified', bInverse: true, bSkipLibrayViewer: true});
+							this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true });
+						}
+					}
+				} else {
+					createMenuRight().btn_up(x, y);
+				}
+			},
+			leave: (mask, parent) => {  // eslint-disable-line no-unused-vars
+				if (idxHighlight !== -1 && animation.bForce) { idxHighlight = -1; animation.bForce = false; }
+			}
+		},
 		settings: {
 			x: 0, y: 0, w: 0, h: 0,
 			inFocus: false,

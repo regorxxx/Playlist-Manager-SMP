@@ -54,6 +54,8 @@
 ## [Unreleased][]
 ### Added
 - Playlist formats: new menu entries on playlist contextual menu to convert UI-playlists to physical files. Works in single and multiple selection. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
+- UI: new action on list button (+), using Shift + L. Click to send selection to a new playlist.
+- UI: new action on list button (+), using Ctrl+ L. Click to send selection to last modified playlist. Meant to be used with the previous action to first create a new playlist and then keep sending tracks to it. When pressing Ctrl over the button, the list will jump to target playlist and highlight it. Last modified playlist detection skips any playlist including 'library viewer' or 'filter results' in their name, which are modified frequently and would not be the desired target in any case.
 - Configuration: added new settings at 'Panel behavior\Loading delays' submenu to control how the panel delays loading\applying some actions. It may come useful in cases where foobar2000 startup takes a lot of time, for ex. delaying playlist loading 30 secs after startup.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for panel repaint debugging purpose. Disabled by default.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to check OS features on every panel startup. Enabled by default. This has been the default behavior since OS' features check was implemented, but it can now be disabled to improve init performance a bit, specially at foobar2000 startup (since it seems to hang in some cases when running it on slow HDDs or systems).
