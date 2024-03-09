@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/03/24
+//08/03/24
 
 /* exported _list */
 
@@ -1263,22 +1263,22 @@ function _list(x, y, w, h) {
 		let filterFunc;
 		switch (key) {
 			case 'created':
-			case 'modified': filterFunc = (pls) => !pls.isFolder && !pls.isAutoPlaylist && pls.extension !== 'xsp'; break;
-			case 'duration': filterFunc = (pls) => !pls.isFolder; break;
-			case 'size': filterFunc = (pls) => !pls.isFolder; break;
+			case 'modified': filterFunc = ({pls}) => !pls.isFolder && !pls.isAutoPlaylist && !['.xsp', '.fpl'].includes(pls.extension); break;
+			case 'duration': filterFunc = ({pls}) => !pls.isFolder; break;
+			case 'size': filterFunc = ({pls}) => !pls.isFolder; break;
 		}
 		if (bSkipLibrayViewer) {
 			const regExp = /Library Viewer|Filter Results/i;
 			const oldFunc = filterFunc;
-			filterFunc = (pls) => oldFunc(pls) && !regExp.test(pls.nameId);
+			filterFunc = ({pls}) => oldFunc({pls}) && !regExp.test(pls.nameId);
 		}
 		const sortFunc = bInverse
 			? (a, b) => b.pls[key] - a.pls[key]
 			: (a, b) => a.pls[key] - b.pls[key];
-		return this.data.filter(filterFunc)
+		return this.data
 			.map((pls, i) => { return { pls, i }; })
+			.filter(filterFunc)
 			.sort(sortFunc)[0].i;
-
 	};
 
 	this.onMouseLeaveList = () => {  // Removes selection indicator
@@ -6861,7 +6861,7 @@ function _list(x, y, w, h) {
 				return 'List menu...' + this.getGlobalShortcut('list menu', { bTab: false, bParen: true }) +
 					'\n----------------------------------------------\n' +
 					'(Shift + L. Click to copy selection to new playlist)\n' +
-					'(Ctrl + L. Click to copy selection to last playlist)';
+					'(Ctrl + L. Click to copy selection to lastest playlist)';
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_SHIFT) {
