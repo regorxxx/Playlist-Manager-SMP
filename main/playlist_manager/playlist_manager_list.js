@@ -282,7 +282,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.size = () => {
-		this.cacheLastPosition(Math.min(this.index, this.items - 1));
+		this.cacheLastPosition();
 		const oldH = this.h;
 		this.w = panel.w - (this.x * 2);
 		this.h = panel.h - this.y;
