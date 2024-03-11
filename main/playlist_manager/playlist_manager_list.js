@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/24
+//11/03/24
 
 /* exported _list */
 
@@ -282,6 +282,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.size = () => {
+		this.cacheLastPosition(Math.min(this.index, this.items - 1));
 		const oldH = this.h;
 		this.w = panel.w - (this.x * 2);
 		this.h = panel.h - this.y;
@@ -295,6 +296,7 @@ function _list(x, y, w, h) {
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
+		this.jumpLastPosition();
 	};
 
 	this.getHeaderSize = () => { return { h: Math.max(headerH, this.y), w: headerW }; };

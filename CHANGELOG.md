@@ -60,6 +60,7 @@
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for panel repaint debugging purpose. Disabled by default.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to check OS features on every panel startup. Enabled by default. This has been the default behavior since OS' features check was implemented, but it can now be disabled to improve init performance a bit, specially at foobar2000 startup (since it seems to hang in some cases when running it on slow HDDs or systems).
 ### Changed
+- UI: current position on list is now maintained while resizing the panel (instead of jumping to the top).
 ### Removed
 ### Fixed
 - Playlist formats: creating a playlist file from active playlist when the playlist was an UI-only playlist did not properly convert it in some cases, complaining duplicated names. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
