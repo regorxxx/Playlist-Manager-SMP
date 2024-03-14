@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.14.0](#0140---2024-03-15)
 - [0.13.0](#0130---2024-02-28)
 - [0.12.1](#0121---2023-12-09)
 - [0.12.0](#0120---2023-12-08)
@@ -53,6 +54,12 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.14.0] - 2023-03-15
+### Added
 - Playlist formats: new menu entries on playlist contextual menu to convert UI-playlists to physical files. Works in single and multiple selection. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
 - UI: new action on list button (+), using Shift + L. Click to send selection to a new playlist.
 - UI: new action on list button (+), using Ctrl+ L. Click to send selection to last modified playlist. Meant to be used with the previous action to first create a new playlist and then keep sending tracks to it. When pressing Ctrl over the button, the list will jump to target playlist and highlight it. Last modified playlist detection skips any playlist including 'library viewer' or 'filter results' in their name, which are modified frequently and would not be the desired target in any case.
@@ -64,7 +71,6 @@
 ### Removed
 ### Fixed
 - Playlist formats: creating a playlist file from active playlist when the playlist was an UI-only playlist did not properly convert it in some cases, complaining duplicated names. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
-
 
 ## [0.13.0] - 2023-02-28
 ### Added
@@ -1144,7 +1150,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.11.0...v0.12.0
