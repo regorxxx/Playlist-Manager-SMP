@@ -767,7 +767,6 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-					if (!options.length) { menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED }); }
 					options.forEach((opt, i) => {
 						if (i && i % 5 === 0) {
 							menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
@@ -777,9 +776,23 @@ function createMenuLeft(forcedIndex = -1) {
 						menu.newEntry({
 							menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
 								list.moveToFolder(pls, opt.folder);
+								list.save();
+								if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
+								list.sort();
 								if (opt.folder.isOpen) { list.showPlsByObj(pls); }
+								else { list.showPlsByObj(opt.folder); }
 							}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 						});
+					});
+					if (options.length) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+					menu.newEntry({
+						menuName: subMenuName, entryText: '- no folder -', func: () => {
+							list.removeFromFolder(pls);
+							list.save();
+							if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
+							list.sort();
+							list.showPlsByObj(pls);
+						}, flags: !options.length || !pls.inFolder ? MF_GRAYED : MF_STRING
 					});
 				}
 			}
@@ -960,7 +973,6 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 			.map((f) => Object.fromEntries([['name', f.nameId], ['folder', f]]));
-		if (!options.length) { menu.newEntry({ menuName: subMenuName, entryText: '- no folder -', flags: MF_GRAYED }); }
 		options.forEach((opt, i) => {
 			if (i && i % 5 === 0) {
 				menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
@@ -970,9 +982,22 @@ function createMenuFolder(menu, folder, z) {
 			menu.newEntry({
 				menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
 					list.moveToFolder(folder, opt.folder);
+					if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
+					list.sort();
 					if (opt.folder.isOpen) { list.showPlsByObj(folder); }
+					else { list.showPlsByObj(opt.folder); }
 				}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 			});
+		});
+		if (options.length) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+		menu.newEntry({
+			menuName: subMenuName, entryText: '- no folder -', func: () => {
+				list.removeFromFolder(folder);
+				list.save();
+				if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
+				list.sort();
+				list.showPlsByObj(folder);
+			}, flags: !options.length || !folder.inFolder ? MF_GRAYED : MF_STRING
 		});
 	}
 	menu.newEntry({ entryText: 'sep' });
@@ -1407,9 +1432,22 @@ function createMenuLeftMult(forcedIndexes = []) {
 					menu.newEntry({
 						menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
 							list.moveToFolder(playlists, opt.folder);
+							if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
+							list.sort();
 							if (opt.folder.isOpen) { list.showPlsByObj(playlists[0]); }
+							else { list.showPlsByObj(opt.folder); }
 						}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 					});
+				});
+				if (options.length) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+				menu.newEntry({
+					menuName: subMenuName, entryText: '- no folder -', func: () => {
+						playlists.forEach((pls) => list.removeFromFolder(pls));
+						list.save();
+						if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
+						list.sort();
+						list.showPlsByObj(playlists[0]);
+					}, flags: !options.length || !playlists.some((pls) => pls.inFolder) ? MF_GRAYED : MF_STRING
 				});
 			}
 		}
@@ -4215,13 +4253,13 @@ function createMenuRightTop() {
 			const newFile = folders.data + 'playlistManager_' +
 				(list.bLiteMode ? list.uuid : list.playlistsPathDirName.replace(':', '')) + '.json';
 			toDelete.push(newFile, newFile + '.old');
-			toCopy.push({from: list.filename, to: newFile});
-			toMerge.push({from: newFile, to: list.filename, type: 'pls'});
+			toCopy.push({ from: list.filename, to: newFile });
+			toMerge.push({ from: newFile, to: list.filename, type: 'pls' });
 			const sortingFile = list.filename.replace('.json', '_sorting.json');
 			const newSortingFile = newFile.replace('.json', '_sorting.json');
 			toDelete.push(newSortingFile, newSortingFile + '.old');
 			if (_isFile(sortingFile)) {
-				toCopy.push({from: sortingFile, to: newSortingFile});
+				toCopy.push({ from: sortingFile, to: newSortingFile });
 			}
 			toMerge.forEach((d) => {
 				d.file = d.from;

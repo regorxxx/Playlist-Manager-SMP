@@ -56,8 +56,11 @@
 ### Added
 ### Changed
 - Lite mode: some improvements when switching from/to lite mode to maintain playlist metadata and folder structure. Now it tries to merge old and new data, without overwriting. In any case, it is not recommended to switch modes frequently, since some info may be lost for playlist files (like sorting, which can not be merged).
+- UI: move to folder submenus now have a 'No folder' entry to move them to the root.
+- UI: move to folder menu entry now highlights the folder destination if the folder is closed. This is in addition to current behavior, playlist highlighting when it's opened.
 ### Removed
 ### Fixed
+- UI: sorting errors in some cases when moving items to folders using menus.
 
 ## [0.14.0] - 2023-03-15
 ### Added
