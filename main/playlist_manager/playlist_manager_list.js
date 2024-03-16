@@ -6523,7 +6523,6 @@ function _list(x, y, w, h) {
 		if (this.activePlsStartup.length) { startPls = this.startupPlaylist(void (0), true); }
 		this.methodState = this.getMethodState(); // On first call first method will be default
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
-
 		if (!_isFolder(folders.data)) { _createFolder(folders.data); }
 		this.filename = folders.data + 'playlistManager_' + (this.bLiteMode ? this.uuid : this.playlistsPathDirName.replace(':', '')) + '.json'; // Replace for relative paths folder names!
 		let test = bProfile ? new FbProfiler(window.Name + ': ' + 'Init') : null;
