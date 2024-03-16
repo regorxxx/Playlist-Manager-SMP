@@ -496,8 +496,8 @@ let autoUpdateRepeat;
 			setTimeout(() => { callbacksListener.lBrainzTokenListener = false; }, 6000);
 		}
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
-		const callback = () => !pop.isEnabled() && list && list.bInit 
-			? window.NotifyOthers('Playlist manager: playlistPath', null) 
+		const callback = () => !pop.isEnabled() && list && list.bInit
+			? window.NotifyOthers('Playlist manager: playlistPath', null)
 			: setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
 		const id = addEventListener('on_notify_data', (name, info) => {
@@ -637,19 +637,19 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_char', (code) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		list.on_char(code);
 	});
 
 	addEventListener('on_key_down', (k) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		list.key_down(k);
 	});
 
 	addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.btn_up(x, y)) { return; }
@@ -659,7 +659,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			list.mbtn_up(x, y, mask);
@@ -667,7 +667,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.btn_down(x, y)) { return; }
@@ -677,7 +677,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.lbtn_dblclk(x, y)) { return; }
@@ -700,7 +700,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_leave', () => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
@@ -708,7 +708,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
-		if (!list.bInit) {return true;}
+		if (!list.bInit) { return true; }
 		if (pop.isEnabled() || stats.bEnabled) { return true; }
 		if (list.modeUI === 'traditional' && buttonsPanel.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
@@ -733,7 +733,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_wheel', (s) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		list.wheel({ s });
 	});
@@ -904,7 +904,7 @@ if (!list.properties.bSetup[1]) {
 
 	// Main menu commands
 	addEventListener('on_main_menu_dynamic', (id) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (list.bDynamicMenus && list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
 			const menu = list.mainMenuDynamic[id];
 			let bDone = false;
@@ -1002,7 +1002,7 @@ if (!list.properties.bSetup[1]) {
 	// if Autosave === 0, then it does nothing...
 	debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
 	addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (!list.isAutosave(name)) { return; }
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
@@ -1013,7 +1013,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
@@ -1027,7 +1027,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
@@ -1047,7 +1047,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playlists_changed', () => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (list.bAllPls) { // For UI only playlists
 			list.update(true, true);
 			const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
@@ -1073,7 +1073,7 @@ if (!list.properties.bSetup[1]) {
 
 	// Drag n drop to copy/move tracks to playlists (only files from foobar2000)
 	addEventListener('on_drag_enter', (action, x, y, mask) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) { action.Effect = dropEffect.none; }
@@ -1084,7 +1084,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_drag_over', (action, x, y, mask) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) { action.Effect = dropEffect.none; return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
@@ -1147,7 +1147,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_drag_drop', (action, x, y, mask) => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
@@ -1199,7 +1199,7 @@ if (!list.properties.bSetup[1]) {
 	keyListener.bShift = false;
 	keyListener.bCtrol = false;
 	keyListener.fn = repeatFn(() => {
-		if (!list.bInit) {return;}
+		if (!list.bInit) { return; }
 		if (list.tooltip.bActive) {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
 			const bCtrol = utils.IsKeyPressed(VK_CONTROL);
