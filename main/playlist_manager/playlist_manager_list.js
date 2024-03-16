@@ -1271,25 +1271,25 @@ function _list(x, y, w, h) {
 		return idx;
 	};
 
-	this.getPls= (oldPls, bAlsoHidden = false) => {
+	this.getPls = (oldPls, bAlsoHidden = false) => {
 		const idx = this.getIndex(oldPls, bAlsoHidden);
 		return idx !== -1
 			? (bAlsoHidden ? this.dataAll : this.data)[idx]
 			: null;
 	};
 
-	this.getIndexSortedBy = ({key = 'modified', bInverse = false, bSkipLibrayViewer = true} = {}) => {
+	this.getIndexSortedBy = ({ key = 'modified', bInverse = false, bSkipLibrayViewer = true } = {}) => {
 		let filterFunc;
 		switch (key) {
 			case 'created':
-			case 'modified': filterFunc = ({pls}) => !pls.isFolder && !pls.isAutoPlaylist && !['.xsp', '.fpl'].includes(pls.extension); break;
-			case 'duration': filterFunc = ({pls}) => !pls.isFolder; break;
-			case 'size': filterFunc = ({pls}) => !pls.isFolder; break;
+			case 'modified': filterFunc = ({ pls }) => !pls.isFolder && !pls.isAutoPlaylist && !['.xsp', '.fpl'].includes(pls.extension); break;
+			case 'duration': filterFunc = ({ pls }) => !pls.isFolder; break;
+			case 'size': filterFunc = ({ pls }) => !pls.isFolder; break;
 		}
 		if (bSkipLibrayViewer) {
 			const regExp = /Library Viewer|Filter Results/i;
 			const oldFunc = filterFunc;
-			filterFunc = ({pls}) => oldFunc({pls}) && !regExp.test(pls.nameId);
+			filterFunc = ({ pls }) => oldFunc({ pls }) && !regExp.test(pls.nameId);
 		}
 		const sortFunc = bInverse
 			? (a, b) => b.pls[key] - a.pls[key]
@@ -6873,7 +6873,7 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_CONTROL && this.items && plman.ActivePlaylist !== -1) {
-					const idx = this.getIndexSortedBy({key: 'modified', bInverse: true, bSkipLibrayViewer: true});
+					const idx = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibrayViewer: true });
 					this.showPlsByIdxThrottled(idx);
 				} else if (idxHighlight !== -1 && animation.bForce) { idxHighlight = -1; animation.bForce = false; }
 				return 'List menu...' + this.getGlobalShortcut('list menu', { bTab: false, bParen: true }) +
@@ -6888,7 +6888,7 @@ function _list(x, y, w, h) {
 					if (this.items && plman.ActivePlaylist !== -1) {
 						const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
 						if (selItems && selItems.Count) {
-							const playlistIndex = this.getIndexSortedBy({key: 'modified', bInverse: true, bSkipLibrayViewer: true});
+							const playlistIndex = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibrayViewer: true });
 							this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true });
 						}
 					}
