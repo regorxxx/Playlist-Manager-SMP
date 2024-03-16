@@ -2360,7 +2360,7 @@ function createMenuRightTop() {
 						const input = Input.number('int positive', list.delays[key], 'Enter value (ms):\n(>= 0)' + (info.length ? '\n\n' + info : ''), window.Name, 50, [(n) => Number.isFinite(n)]);
 						if (input === null) { return; }
 						list.delays[key] = input;
-						list.properties['delays'][1] = list.delays;
+						list.properties['delays'][1] = JSON.stringify(list.delays);
 						overwriteProperties(list.properties);
 					}, flags: bEnabled ? MF_STRING : MF_GRAYED
 				});

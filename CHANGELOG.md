@@ -61,6 +61,7 @@
 ### Removed
 ### Fixed
 - UI: sorting errors in some cases when moving items to folders using menus.
+- Configuration: editing 'Panel behavior\Loading delays' not working.
 
 ## [0.14.0] - 2023-03-15
 ### Added
