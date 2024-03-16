@@ -661,10 +661,16 @@ function _list(x, y, w, h) {
 		this.textWidth = this.w;
 		if (this.items === 0) {
 			let emptyText = '';
-			if (this.itemsAll !== 0) {
-				emptyText = 'No matches for the current filters.';
-			} else {
-				emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them.' + '\n\nSet the tracked folder at header: \'Set playlists folder...\'.' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
+			if (this.bInit) {
+				if (this.itemsAll !== 0) {
+					emptyText = 'No matches for the current filters.';
+				} else if (this.bLiteMode) {
+					emptyText = plman.PlaylistCount
+						? ''
+						: 'No playlists in foobar2000.';
+				} else {
+					emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them.' + '\n\nSet the tracked folder at header: \'Set playlists folder...\'.' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
+				}
 			}
 			const cache = this.rows;
 			this.rows = (emptyText.match(/\n/g) || []).length; // # lines of previous text = # \n
@@ -6832,9 +6838,9 @@ function _list(x, y, w, h) {
 			}, func: this.resetFilter,
 			altColor: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				const filterKeys = Object.keys(this.getFilter(true));
-				return this.searchMethod.bResetFilters
+				return this.bInit && this.itemsAll > 0 && (this.searchMethod.bResetFilters
 					? filterKeys.length
-					: filterKeys.filter((key) => key !== 'Search').length;
+					: filterKeys.filter((key) => key !== 'Search').length);
 			}
 		},
 		columns: {
