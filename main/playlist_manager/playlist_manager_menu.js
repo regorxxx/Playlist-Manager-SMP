@@ -4235,6 +4235,7 @@ function createMenuRightTop() {
 					d.to = _jsonParseFileCheck(d.to, 'Data json', window.Name, utf8);
 					if (!d.to) {
 						console.popup('Error restoring old playlists data from:\n' + d.file, window.Name);
+						return;
 					}
 					switch (d.type) {
 						case 'pls': {
