@@ -615,7 +615,7 @@ if (!list.properties.bSetup[1]) {
 	{	// Check backup files after crash
 		const backupInit = () => {
 			setTimeout(() => {
-				if (pop.isEnabled()) { backupInit(); return; }
+				if (pop.isEnabled() || list && !list.bInit) { backupInit(); return; }
 				list.backupRestore();
 			}, 1000);
 		};
@@ -637,16 +637,19 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_char', (code) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		list.on_char(code);
 	});
 
 	addEventListener('on_key_down', (k) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		list.key_down(k);
 	});
 
 	addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.btn_up(x, y)) { return; }
@@ -656,6 +659,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			list.mbtn_up(x, y, mask);
@@ -663,6 +667,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.btn_down(x, y)) { return; }
@@ -672,6 +677,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (buttonsPanel.curBtn === null) {
 			if (scroll && scroll.lbtn_dblclk(x, y)) { return; }
@@ -694,6 +700,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_leave', () => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
@@ -701,6 +708,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
+		if (!list.bInit) {return true;}
 		if (pop.isEnabled() || stats.bEnabled) { return true; }
 		if (list.modeUI === 'traditional' && buttonsPanel.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
@@ -725,6 +733,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_wheel', (s) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		list.wheel({ s });
 	});
@@ -1064,6 +1073,7 @@ if (!list.properties.bSetup[1]) {
 
 	// Drag n drop to copy/move tracks to playlists (only files from foobar2000)
 	addEventListener('on_drag_enter', (action, x, y, mask) => {
+		if (!list.bInit) {return;}
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) { action.Effect = dropEffect.none; }
@@ -1074,6 +1084,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_drag_over', (action, x, y, mask) => {
+		if (!list.bInit) {return;}
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none || (action.Effect & dropEffect.link) === dropEffect.link) { action.Effect = dropEffect.none; return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
@@ -1136,6 +1147,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_drag_drop', (action, x, y, mask) => {
+		if (!list.bInit) {return;}
 		// Avoid things outside foobar2000
 		if (action.Effect === dropEffect.none) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); action.Effect = dropEffect.none; return; }
@@ -1187,6 +1199,7 @@ if (!list.properties.bSetup[1]) {
 	keyListener.bShift = false;
 	keyListener.bCtrol = false;
 	keyListener.fn = repeatFn(() => {
+		if (!list.bInit) {return;}
 		if (list.tooltip.bActive) {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
 			const bCtrol = utils.IsKeyPressed(VK_CONTROL);
