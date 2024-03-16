@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/24
+//16/03/24
 
 /* exported _list */
 
@@ -1250,15 +1250,26 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.getIndex = (pls, bAlsoHidden = false) => {
+	const comparekeys = ['nameId', 'id', 'path', 'extension', 'isAutoPlaylist', 'playlist_mbid', 'isFolder'];
+	this.comparePls = (from, to) => {
+		return comparekeys.every((key) => from[key] === to[key]);
+	};
+
+this.getIndex = (pls, bAlsoHidden = false) => {
 		const data = (bAlsoHidden ? this.dataAll : this.data);
 		let idx = data.indexOf(pls);
 		if (idx === -1) { idx = data.findIndex((dataPls) => compareObjects(dataPls, pls)); }
 		if (idx === -1) {
-			const keys = ['nameId', 'id', 'path', 'extension', 'isAutoPlaylist', 'playlist_mbid', 'isFolder'];
-			idx = data.findIndex((dataPls) => keys.every((key) => pls[key] === dataPls[key]));
+			idx = data.findIndex((dataPls) => this.comparePls(dataPls, pls));
 		}
 		return idx;
+	};
+
+	this.getPls= (oldPls, bAlsoHidden = false) => {
+		const idx = this.getIndex(oldPls, bAlsoHidden)
+		return idx !== -1 
+			? (bAlsoHidden ? this.dataAll : this.data)[idx] 
+			: null;
 	};
 
 	this.getIndexSortedBy = ({key = 'modified', bInverse = false, bSkipLibrayViewer = true} = {}) => {
@@ -3027,7 +3038,7 @@ function _list(x, y, w, h) {
 					if (index !== -1 && plman.ActivePlaylist !== index) {
 						plman.UndoBackup(index);
 						plman.InsertPlaylistItems(index, plman.PlaylistItemCount(index), selItems);
-						const idx = this.dataAll.findIndex((item) => item.nameId === pls.nameId && item.extension === pls.extension);
+						const idx = this.getIndex(pls, true);
 						pls = this.dataAll[idx]; // Old object is not available anymore
 						// Edit again data since update did not catch the change
 						if (pls.extension === '.ui') {
@@ -3100,7 +3111,7 @@ function _list(x, y, w, h) {
 			return false;
 		} else if (_isFile(backPath)) { _deleteFile(backPath); }
 		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
-		pls = this.dataAll.find((item) => item.nameId === pls.nameId && item.extension === pls.extension);
+		pls = this.getPls(pls, true);
 		this.editData(pls, {
 			size: pls.size + handleList.Count,
 			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
