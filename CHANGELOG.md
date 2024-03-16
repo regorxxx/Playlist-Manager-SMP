@@ -55,6 +55,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Lite mode: some improvements when switching from/to lite mode to maintain playlist metadata and folder structure. In any case, it is not recommended to switch modes frequently, since some info may be lost for playlist files (like sorting).
 ### Removed
 ### Fixed
 

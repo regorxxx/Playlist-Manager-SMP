@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/03/24
+//16/03/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -14,7 +14,7 @@ include('..\\..\\helpers\\callbacks_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global overwriteProperties:readable, checkProperty:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable */
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -4208,9 +4208,23 @@ function createMenuRightTop() {
 				addInstance('Playlist Manager');
 				list.switchTracking(true, void (0), false);
 			}
-			list.checkConfigPostUpdate(list.checkConfig({ bSilentSorting: true })); // Ensure related config is set properly
-			list.updateUIElements(); // Buttons, etc.
-			list.manualRefresh();
+			// Copy data
+			const toDelete = [];
+			const toCopy = [];
+			const newFile = folders.data + 'playlistManager_' + 
+				(list.bLiteMode ? list.uuid : list.playlistsPathDirName.replace(':', '')) + '.json';
+			toDelete.push(newFile, newFile + '.old');
+			toCopy.push({from: list.filename, to: newFile});
+			const sortingFile = list.filename.replace('.json', '_sorting.json');
+			const newSortingFile = newFile.replace('.json', '_sorting.json');
+			toDelete.push(newSortingFile, newSortingFile + '.old');
+			if (_isFile(sortingFile)) {
+				toCopy.push({from: sortingFile, to: newSortingFile});
+			}
+			toDelete.forEach((f) => _recycleFile(f, true));
+			toCopy.forEach((f) => _copyFile(f.from, f.to));
+			// Reset
+			list.init();
 		}
 	});
 	menu.newCheckMenuLast(() => list.bLiteMode);
