@@ -1255,7 +1255,7 @@ function _list(x, y, w, h) {
 		return comparekeys.every((key) => from[key] === to[key]);
 	};
 
-this.getIndex = (pls, bAlsoHidden = false) => {
+	this.getIndex = (pls, bAlsoHidden = false) => {
 		const data = (bAlsoHidden ? this.dataAll : this.data);
 		let idx = data.indexOf(pls);
 		if (idx === -1) { idx = data.findIndex((dataPls) => compareObjects(dataPls, pls)); }
@@ -1266,9 +1266,9 @@ this.getIndex = (pls, bAlsoHidden = false) => {
 	};
 
 	this.getPls= (oldPls, bAlsoHidden = false) => {
-		const idx = this.getIndex(oldPls, bAlsoHidden)
-		return idx !== -1 
-			? (bAlsoHidden ? this.dataAll : this.data)[idx] 
+		const idx = this.getIndex(oldPls, bAlsoHidden);
+		return idx !== -1
+			? (bAlsoHidden ? this.dataAll : this.data)[idx]
 			: null;
 	};
 
