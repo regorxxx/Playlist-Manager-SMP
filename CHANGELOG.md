@@ -61,7 +61,8 @@
 ### Removed
 ### Fixed
 - UI: sorting errors in some cases when moving items to folders using menus.
-- Configuration: editing 'Panel behavior\Loading delays' not working.
+- Configuration: 'Panel behavior\Loading delays' input not working.
+- Configuration: due to internal changes at init loading, folders were being removed in some cases at startup (but not on panel reload). [Issue 80](https://github.com/regorxxx/Playlist-Manager-SMP/issues/80)
 
 ## [0.14.0] - 2023-03-15
 ### Added

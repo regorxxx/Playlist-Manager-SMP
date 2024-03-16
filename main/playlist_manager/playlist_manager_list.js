@@ -7032,7 +7032,8 @@ function _list(x, y, w, h) {
 	callbacksListener.listenNames = this.bDynamicMenus;
 	this.plsCache = new Map();
 	globProfiler.Print('list.prototype');
-	this.init();
+	this.bInit = false;
+	this.init().finally(() => this.bInit = true);
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process

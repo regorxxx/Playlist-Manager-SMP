@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/03/24
+//16/03/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -562,7 +562,7 @@ if (!list.properties.bSetup[1]) {
 	// Used before updating playlists to finish all changes
 	delayAutoUpdate = () => { if (typeof debouncedAutoUpdate === 'function') { debouncedAutoUpdate(); } };
 	function autoUpdate() { // eslint-disable-line no-inner-declarations
-		if (!list.playlistsPath.length || list.bLiteMode) { return false; }
+		if (!list.playlistsPath.length || list.bLiteMode || !list.bInit) { return false; }
 		let bDone = list.trackedFolderChanged;
 		if (bDone) {
 			if (!pop.isEnabled()) { pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.'); }
@@ -893,6 +893,7 @@ if (!list.properties.bSetup[1]) {
 
 	// Main menu commands
 	addEventListener('on_main_menu_dynamic', (id) => {
+		if (!list.bInit) {return;}
 		if (list.bDynamicMenus && list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
 			const menu = list.mainMenuDynamic[id];
 			let bDone = false;
@@ -990,6 +991,7 @@ if (!list.properties.bSetup[1]) {
 	// if Autosave === 0, then it does nothing...
 	debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
 	addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) => {
+		if (!list.bInit) {return;}
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (!list.isAutosave(name)) { return; }
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
@@ -1000,6 +1002,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
+		if (!list.bInit) {return;}
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
@@ -1013,6 +1016,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
+		if (!list.bInit) {return;}
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
@@ -1032,6 +1036,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playlists_changed', () => {
+		if (!list.bInit) {return;}
 		if (list.bAllPls) { // For UI only playlists
 			list.update(true, true);
 			const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
