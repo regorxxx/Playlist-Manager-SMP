@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.14.1](#0141---2024-03-16)
 - [0.14.0](#0140---2024-03-15)
 - [0.13.0](#0130---2024-02-28)
 - [0.12.1](#0121---2023-12-09)
@@ -55,14 +56,23 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [0.14.1] - 2023-03-16
+### Added
+### Changed
 - Lite mode: some improvements when switching from/to lite mode to maintain playlist metadata and folder structure. Now it tries to merge old and new data, without overwriting. In any case, it is not recommended to switch modes frequently, since some info may be lost for playlist files (like sorting, which can not be merged).
 - UI: move to folder submenus now have a 'No folder' entry to move them to the root.
 - UI: move to folder menu entry now highlights the folder destination if the folder is closed. This is in addition to current behavior, playlist highlighting when it's opened.
+- UI: panel no longer displays a background message about no playlist files on tracked folder on Lite mode or when playlist loading has been delayed. It now shows a blank list.
 ### Removed
 ### Fixed
 - UI: sorting errors in some cases when moving items to folders using menus.
+- UI: filter button was highlighted while loading playlists (even if no filter was active). Cosmetic change, it was properly set after playlist loading.
 - Configuration: 'Panel behavior\Loading delays' input not working.
 - Configuration: due to internal changes at init loading, folders were being removed in some cases at startup (but not on panel reload). [Issue 80](https://github.com/regorxxx/Playlist-Manager-SMP/issues/80)
+- Configuration: due to internal changes at init loading, no playlists were shown of first setup on lite mode.
 
 ## [0.14.0] - 2023-03-15
 ### Added
@@ -1156,7 +1166,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.0...v0.12.1
