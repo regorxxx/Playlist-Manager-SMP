@@ -466,7 +466,7 @@ let autoUpdateRepeat;
 			if (answer === popup.yes) {
 				new Promise((resolve) => {
 					const timer = setInterval(() => {
-						if (list) { clearInterval(timer); resolve(); }
+						if (list && list.bInit) { clearInterval(timer); resolve(); }
 					}, 250);
 				}).then(() => {
 					list.changeSorting(list.manualMethodState());
@@ -496,7 +496,9 @@ let autoUpdateRepeat;
 			setTimeout(() => { callbacksListener.lBrainzTokenListener = false; }, 6000);
 		}
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
-		const callback = () => !pop.isEnabled() ? window.NotifyOthers('Playlist manager: playlistPath', null) : setTimeout(callback, 3000);
+		const callback = () => !pop.isEnabled() && list && list.bInit 
+			? window.NotifyOthers('Playlist manager: playlistPath', null) 
+			: setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
 		const id = addEventListener('on_notify_data', (name, info) => {
 			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
@@ -516,7 +518,7 @@ let autoUpdateRepeat;
 		// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first init...
 		new Promise((resolve) => {
 			const timer = setInterval(() => {
-				if (list) { clearInterval(timer); resolve(); }
+				if (list && list.bInit) { clearInterval(timer); resolve(); }
 			}, 1000);
 		}).then(() => {
 			list.resetFilter();
