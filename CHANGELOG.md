@@ -68,11 +68,12 @@
 - UI: panel no longer displays a background message about no playlist files on tracked folder on Lite mode or when playlist loading has been delayed. It now shows a blank list.
 ### Removed
 ### Fixed
-- UI: sorting errors in some cases when moving items to folders using menus.
-- UI: filter button was highlighted while loading playlists (even if no filter was active). Cosmetic change, it was properly set after playlist loading.
-- Configuration: 'Panel behavior\Loading delays' input not working.
 - Configuration: due to internal changes at init loading, folders were being removed in some cases at startup (but not on panel reload). [Issue 80](https://github.com/regorxxx/Playlist-Manager-SMP/issues/80)
 - Configuration: due to internal changes at init loading, no playlists were shown of first setup on lite mode.
+- Configuration: 'Panel behavior\Loading delays' input not working.
+- UI: filters not applying properly at init in some cases.
+- UI: filter button was highlighted while loading playlists (even if no filter was active). Cosmetic change, it was properly set after playlist loading.
+- UI: sorting errors in some cases when moving items to folders using menus.
 
 ## [0.14.0] - 2023-03-15
 ### Added
