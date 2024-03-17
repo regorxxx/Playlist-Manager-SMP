@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/24
+//17/03/24
 
 /* exported _list */
 
@@ -998,6 +998,11 @@ function _list(x, y, w, h) {
 						return bToFolder && this.data[idx].inFolder === this.data[this.index].nameId || !bToFolder && this.data[idx].inFolder === this.data[this.index].inFolder;
 					})
 					: false;
+				const bFolderToChildFolder = this.index !== -1
+					? this.internalPlsDrop.every((idx) => {
+						return bToFolder && this.isUpperFolder(this.data[idx], this.data[this.index]);
+					})
+					: false;
 				const bValid = this.isInternalDropValid();
 				const backgroundColor = bValid
 					? this.colors.selectedPlaylistColor
@@ -1037,6 +1042,7 @@ function _list(x, y, w, h) {
 				}
 				let dragDropText = '';
 				switch (true) {
+					case bToFolder && !bToSameFolder && bFolderToChildFolder && !bValid: { dragDropText = 'Can not move to child subfolder...'; break; }
 					case bToFolder && !bToSameFolder && !bValid: { dragDropText = 'Level nesting too deep... (> ' + this.folders.maxDepth + ')'; break; }
 					case bToSameFolder && !bValid: { dragDropText = 'Can not move to same folder...'; break; }
 				}
@@ -1769,7 +1775,9 @@ function _list(x, y, w, h) {
 										} else { this.sortingFile = cache; }
 									} else if (currItem.isFolder) {
 										this.internalPlsDrop.forEach((idx) => {
-											this.addToFolder(this.data[idx], currItem);
+											if (!this.isUpperFolder(this.data[idx], currItem)) {
+												this.addToFolder(this.data[idx], currItem);
+											}
 										});
 										this.save();
 										if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
@@ -2842,10 +2850,15 @@ function _list(x, y, w, h) {
 		const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 		const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
 		const bValidPos = typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined' && (currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows;
+		const bToFolder = bValidPos && this.data[currSelIdx].isFolder;
+		const bFolderToChildFolder = bValidPos && currSelIdx !== -1
+			? this.internalPlsDrop.every((idx) => {
+				return bToFolder && this.isUpperFolder(this.data[idx], this.data[currSelIdx]);
+			})
+			: false;
 		if (this.methodState === this.manualMethodState()) {
-			return bValidPos;
+			return bValidPos && (!bToFolder || !bFolderToChildFolder);
 		} else if (bValidPos) {
-			const bToFolder = this.data[currSelIdx].isFolder;
 			const bFolder = bToFolder || this.internalPlsDrop.some((idx) => this.isInFolder(this.data[idx])) && !this.internalPlsDrop.every((idx) => this.data[idx].inFolder === this.data[currSelIdx].inFolder);
 			let level = bToFolder ? 1 : 0;
 			let i = currSelIdx;
@@ -2859,7 +2872,12 @@ function _list(x, y, w, h) {
 					return bToFolder && this.data[idx].inFolder === this.data[currSelIdx].nameId || !bToFolder && this.data[idx].inFolder === this.data[currSelIdx].inFolder;
 				})
 				: false;
-			return bFolder && bMaxLevel && !bToSameFolder;
+			const bFolderToChildFolder = currSelIdx !== -1
+				? this.internalPlsDrop.every((idx) => {
+					return bToFolder && this.isUpperFolder(this.data[idx], this.data[currSelIdx]);
+				})
+				: false;
+			return bFolder && bMaxLevel && !bToSameFolder && !bFolderToChildFolder;
 		}
 	};
 
@@ -5173,40 +5191,71 @@ function _list(x, y, w, h) {
 		itemsArr.forEach((subItem) => { this.folderStack.push([subItem, toFolder]); });
 	};
 
+	// Use isUpperFolder() first to check if the item is not a parent of toFolder,
+	//  otherwise it will crash due to infinite recursion
 	this.moveToFolder = (item, toFolder) => {
 		const itemsArr = isArray(item) ? item : [item];
-		itemsArr.forEach((subItem) => { this.addToFolder(subItem, toFolder); });
+		if (toFolder === null) {
+			itemsArr.forEach((subItem) => this.removeFromFolder(subItem));
+		} else {
+			itemsArr.forEach((subItem) => this.addToFolder(subItem, toFolder));
+		}
 		this.save();
 		if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
 		this.sort();
 	};
 
-	this.addToFolder = (pls, folderObj) => {
-		if (this.isInFolder(pls)) { this.removeFromFolder(pls); }
-		pls.inFolder = folderObj.nameId;
-		folderObj.pls.push(pls);
+	this.addToFolder = (item, folderObj) => {
+		if (this.isInFolder(item)) { this.removeFromFolder(item); }
+		item.inFolder = folderObj.nameId;
+		folderObj.pls.push(item);
 	};
 
-	this.removeFromFolder = (pls) => {
-		const folder = this.data.find((item) => pls.inFolder === item.nameId && item.isFolder);
+	this.removeFromFolder = (item) => {
+		const folder = this.data.find((dataItem) => item.inFolder === dataItem.nameId && dataItem.isFolder);
 		if (!folder) { return false; }
-		const idx = folder.pls.indexOf(pls);
+		const idx = folder.pls.indexOf(item);
 		if (idx !== -1) {
 			folder.pls.splice(idx, 1);
-			pls.inFolder = '';
+			item.inFolder = '';
 			return true;
 		}
 		return false;
 	};
 
-	this.isInFolder = (pls) => {
-		return (Object.hasOwn(pls, 'inFolder') && typeof pls.inFolder !== 'undefined' && pls.inFolder !== null && pls.inFolder.length > 0);
+	this.isInFolder = (item) => {
+		return (Object.hasOwn(item, 'inFolder') && typeof item.inFolder !== 'undefined' && item.inFolder !== null && item.inFolder.length > 0);
 	};
 
-	this.getParentFolder = (pls) => {
-		return this.isInFolder(pls)
-			? this.dataFolder.find((item) => item.isFolder && item.nameId === pls.inFolder)
+	this.getParentFolder = (item) => {
+		return this.isInFolder(item)
+			? this.dataFolder.find((folder) => folder.isFolder && folder.nameId === item.inFolder)
 			: null;
+	};
+
+	this.getUpperFolders = (item) => {
+		const upper = [];
+		let parent = item;
+		while (this.isInFolder(parent)) {
+			parent = this.getParentFolder(parent);
+			upper.push(parent);
+		}
+		return upper;
+	};
+
+	this.getTopFolder = (item) => {
+		return this.getUpperFolders(item).slice(-1)[0] || null;
+	};
+
+	this.getUpperFoldersNames = (item) => {
+		return this.getUpperFolders(item).map((folder) => folder.nameId);
+	};
+
+	this.isUpperFolder = (item, fromFolder) => {
+		if (!item.isFolder || !fromFolder.inFolder) {return false;}
+		const levels = new Set(this.getUpperFoldersNames(fromFolder));
+		if (levels.has(item.nameId)) {return true;}
+		return false;
 	};
 
 	this.converUiPlaylist = ({ idx = -1, name = '', bShowPopups = true, toFolder = null } = {}) => {

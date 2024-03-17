@@ -55,9 +55,11 @@
 
 ## [Unreleased][]
 ### Added
+- UI: move to folder submenus now have a 'New folder...' entry to directly create a new folder and move selection to it.
 ### Changed
 ### Removed
 ### Fixed
+- UI: fixed crash due to infinite recursion trying to move a folder into one of its own subfolders. In the case of drag n' drop, the tooltip now warns about it. If there are multiple items selected but at least one of them can be moved to the child subfolder (for ex. when selecting both playlists and folders), then non valid items are skipped.
 
 ## [0.14.1] - 2023-03-16
 ### Added

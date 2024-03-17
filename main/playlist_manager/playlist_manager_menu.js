@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/24
+//17/03/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -761,38 +761,44 @@ function createMenuLeft(forcedIndex = -1) {
 						menu.newEntry({ menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls([pls], opt.idx) });
 					});
 				}
-				if (showMenus['Folders'] && bHasFolders) {
+				if (showMenus['Folders']) {
 					const subMenuName = menu.newMenu('Move to folder...');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-					options.forEach((opt, i) => {
-						if (i && i % 5 === 0) {
-							menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
-							menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-						}
-						const bSameFolder = opt.name === pls.inFolder;
-						menu.newEntry({
-							menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
-								list.moveToFolder(pls, opt.folder);
-								list.save();
-								if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
-								list.sort();
-								if (opt.folder.isOpen) { list.showPlsByObj(pls); }
-								else { list.showPlsByObj(opt.folder); }
-							}, flags: bSameFolder ? MF_GRAYED : MF_STRING
+					if (options.length) {
+						options.forEach((opt, i) => {
+							if (i && i % 5 === 0) {
+								menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
+								menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+							}
+							const bSameFolder = opt.name === pls.inFolder;
+							menu.newEntry({
+								menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+									list.moveToFolder(pls, opt.folder);
+									if (opt.folder.isOpen) { list.showPlsByObj(pls); }
+									else { list.showPlsByObj(opt.folder); }
+								}, flags: bSameFolder ? MF_GRAYED : MF_STRING
+							});
 						});
-					});
-					if (options.length) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+						menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+						menu.newEntry({
+							menuName: subMenuName, entryText: '- no folder -', func: () => {
+								list.moveToFolder(pls, null);
+								list.showPlsByObj(pls);
+							}, flags: !pls.inFolder ? MF_GRAYED : MF_STRING
+						});
+						menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+					}
 					menu.newEntry({
-						menuName: subMenuName, entryText: '- no folder -', func: () => {
-							list.removeFromFolder(pls);
-							list.save();
-							if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
-							list.sort();
-							list.showPlsByObj(pls);
-						}, flags: !options.length || !pls.inFolder ? MF_GRAYED : MF_STRING
+						menuName: subMenuName, entryText: 'New folder...', func: () => {
+							const folder = list.addFolder();
+							if (!folder) { return; }
+							list.moveToFolder(pls, folder);
+							list.update(true);
+							list.showPlsByObj(folder);
+						}
 					});
 				}
 			}
@@ -973,31 +979,39 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 			.map((f) => Object.fromEntries([['name', f.nameId], ['folder', f]]));
-		options.forEach((opt, i) => {
-			if (i && i % 5 === 0) {
-				menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
-				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-			}
-			const bSameFolder = opt.name === folder.inFolder;
-			menu.newEntry({
-				menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
-					list.moveToFolder(folder, opt.folder);
-					if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
-					list.sort();
-					if (opt.folder.isOpen) { list.showPlsByObj(folder); }
-					else { list.showPlsByObj(opt.folder); }
-				}, flags: bSameFolder ? MF_GRAYED : MF_STRING
+		if (options.length) {
+			options.forEach((opt, i) => {
+				if (i && i % 5 === 0) {
+					menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
+					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				}
+				const bSameFolder = opt.name === folder.inFolder;
+				const bChild = list.isUpperFolder(folder, opt.folder);
+				menu.newEntry({
+					menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+						list.moveToFolder(folder, opt.folder);
+						if (opt.folder.isOpen) { list.showPlsByObj(folder); }
+						else { list.showPlsByObj(opt.folder); }
+					}, flags: bSameFolder || bChild ? MF_GRAYED : MF_STRING
+				});
 			});
-		});
-		if (options.length) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			menu.newEntry({
+				menuName: subMenuName, entryText: '- no folder -', func: () => {
+					list.moveToFolder(folder, null);
+					list.showPlsByObj(folder);
+				}, flags: !folder.inFolder ? MF_GRAYED : MF_STRING
+			});
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		}
 		menu.newEntry({
-			menuName: subMenuName, entryText: '- no folder -', func: () => {
-				list.removeFromFolder(folder);
-				list.save();
-				if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
-				list.sort();
-				list.showPlsByObj(folder);
-			}, flags: !options.length || !folder.inFolder ? MF_GRAYED : MF_STRING
+			menuName: subMenuName, entryText: 'New folder...', func: () => {
+				const parent = list.addFolder();
+				if (!parent) { return; }
+				list.moveToFolder(folder, parent);
+				list.update(true);
+				list.showPlsByObj(parent);
+			}
 		});
 	}
 	menu.newEntry({ entryText: 'sep' });
@@ -1054,7 +1068,6 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const bWritableFormat = playlists.some((pls) => { return writablePlaylistFormats.has(pls.extension); });
 	const bManualSorting = list.methodState === list.manualMethodState();
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
-	const bHasFolders = list.data.some(isFolder);
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
@@ -1398,7 +1411,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 			}
 		}
-		if (showMenus['Sorting'] && bManualSorting || showMenus['Folders'] && bHasFolders) {
+		if (showMenus['Sorting'] && bManualSorting || showMenus['Folders']) {
 			if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome)) { menu.newEntry({ entryText: 'sep' }); }
 			if (showMenus['Sorting'] && bManualSorting) {
 				const subMenuName = menu.newMenu('Sorting...');
@@ -1417,37 +1430,47 @@ function createMenuLeftMult(forcedIndexes = []) {
 					menu.newEntry({ menuName: subMenuName, entryText: opt.name, func: () => list.setManualSortingForPls(playlists, opt.idx) });
 				});
 			}
-			if (showMenus['Folders'] && bHasFolders) {
+			if (showMenus['Folders']) {
 				const subMenuName = menu.newMenu('Move to folder...');
 				menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
 					.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-				options.forEach((opt, i) => {
-					if (i && i % 5 === 0) {
-						menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
-						menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-					}
-					const bSameFolder = playlists.every((pls) => opt.name === pls.inFolder);
-					menu.newEntry({
-						menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
-							list.moveToFolder(playlists, opt.folder);
-							if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
-							list.sort();
-							if (opt.folder.isOpen) { list.showPlsByObj(playlists[0]); }
-							else { list.showPlsByObj(opt.folder); }
-						}, flags: bSameFolder ? MF_GRAYED : MF_STRING
+				if (options.length) {
+					options.forEach((opt, i) => {
+						if (i && i % 5 === 0) {
+							menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
+							menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+						}
+						const bSameFolder = playlists.every((pls) => opt.name === pls.inFolder);
+						const bChild = playlists.every((pls) => list.isUpperFolder(pls, opt.folder));
+						menu.newEntry({
+							menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+								const items = playlists
+									.filter((item) => !list.isUpperFolder(item, opt.folder));
+								list.moveToFolder(items, opt.folder);
+								if (opt.folder.isOpen) { list.showPlsByObj(items[0]); }
+								else { list.showPlsByObj(opt.folder); }
+							}, flags: bSameFolder || bChild ? MF_GRAYED : MF_STRING
+						});
 					});
-				});
-				if (options.length) { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); }
+					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+					menu.newEntry({
+						menuName: subMenuName, entryText: '- no folder -', func: () => {
+							list.moveToFolder(playlists, null);
+							list.showPlsByObj(playlists[0]);
+						}, flags: !playlists.some((pls) => pls.inFolder) ? MF_GRAYED : MF_STRING
+					});
+					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				}
 				menu.newEntry({
-					menuName: subMenuName, entryText: '- no folder -', func: () => {
-						playlists.forEach((pls) => list.removeFromFolder(pls));
-						list.save();
-						if (list.methodState === list.manualMethodState()) { list.saveManualSorting(); }
-						list.sort();
-						list.showPlsByObj(playlists[0]);
-					}, flags: !options.length || !playlists.some((pls) => pls.inFolder) ? MF_GRAYED : MF_STRING
+					menuName: subMenuName, entryText: 'New folder...', func: () => {
+						const folder = list.addFolder();
+						if (!folder) { return; }
+						list.moveToFolder(playlists, folder);
+						list.update(true);
+						list.showPlsByObj(folder);
+					}
 				});
 			}
 		}
