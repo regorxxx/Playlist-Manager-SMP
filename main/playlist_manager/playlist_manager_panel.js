@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//18/03/24
 
 /* exported _panel */
 
@@ -16,31 +16,32 @@ include('..\\..\\helpers\\helpers_xxx_UI.js');
 function _panel(customBackground = false, bSetup = false) {
 
 	const panelProperties = {
-		fontSize 			: ['Font size', _scale(10), {func: isInt}],
-		colorsMode			: ['Background colour mode', 0, {func: isInt, range: [[0,2]]}],
-		customBackground	: ['Custom background colour', RGB(30, 30, 30), {func: isInt}], // Black
-		bCustomText			: ['Text custom colour mode', false, {func: isBoolean}],
-		customText			: ['Custom text colour', RGB(157, 158, 163), {func: isInt}], // Gray
-		buttonsTextColor	: ['Buttons\' text colour', buttonsPanel.config.textColor, {func: isInt}],
-		bAltRowsColor		: ['Alternate rows background colour', true, {func: isBoolean}],
-		bToolbar			: ['Use toolbar mode?', true, {func: isBoolean}],
-		bButtonsBackground	: ['Use buttons background?', false, {func: isBoolean}],
-		buttonsToolbarColor	: ['Buttons\' toolbar colour', RGB(0,0,0), {func: isInt}],
-		buttonsToolbarTransparency	: ['Buttons\' toolbar transparency', 5, {func: isInt, range: [[0,100]]}],
-		imageBackground		: ['Image background config', JSON.stringify({
+		fontSize: ['Font size', _scale(10), { func: isInt }],
+		colorsMode: ['Background color mode', 0, { func: isInt, range: [[0, 2]] }],
+		customBackground: ['Custom background color', RGB(30, 30, 30), { func: isInt }], // Black
+		bCustomText: ['Text custom color mode', false, { func: isBoolean }],
+		customText: ['Custom text color', RGB(157, 158, 163), { func: isInt }], // Gray
+		buttonsTextColor: ['Buttons\' text color', buttonsPanel.config.textColor, { func: isInt }],
+		bAltRowsColor: ['Alternate rows background color', true, { func: isBoolean }],
+		bToolbar: ['Use toolbar mode?', true, { func: isBoolean }],
+		bButtonsBackground: ['Use buttons background?', false, { func: isBoolean }],
+		buttonsToolbarColor: ['Buttons\' toolbar color', RGB(0, 0, 0), { func: isInt }],
+		buttonsToolbarTransparency: ['Buttons\' toolbar transparency', 5, { func: isInt, range: [[0, 100]] }],
+		imageBackground: ['Image background config', JSON.stringify({
 			enabled: true,
 			mode: 1,
-			art: {path: '', image: null},
+			art: { path: '', image: null },
 			transparency: 60,
 			bProportions: true,
 			bFill: true,
 			blur: 10,
 			bTint: true
-		}), {func: isJSON}],
-		bFontOutline			: ['Add shadows to font?', false, {func: isBoolean}],
-		bBold					: ['Use bold font?', false, {func: isBoolean}],
+		}), { func: isJSON }],
+		bFontOutline: ['Add shadows to font?', false, { func: isBoolean }],
+		bBold: ['Use bold font?', false, { func: isBoolean }],
+		headerButtonsColor: ['Header buttons\' toolbar color', -1, { func: isInt }],
 	};
-	for (let key in panelProperties) {panelProperties[key][3] = panelProperties[key][1];}
+	for (let key in panelProperties) { panelProperties[key][3] = panelProperties[key][1]; }
 	setProperties(panelProperties, 'panel_');
 
 	this.colorsChanged = () => {
@@ -59,6 +60,7 @@ function _panel(customBackground = false, bSetup = false) {
 			this.colors.highlight = blendColors(this.colors.text, this.colors.background, 0.4);
 		}
 		this.colors.header = this.colors.highlight & 0x45FFFFFF;
+		if (this.colors.headerButtons === -1) { this.colors.headerButtons = this.colors.highlight; }
 		buttonsPanel.config.bToolbar = this.colors.bToolbar; // buttons_xxx.js
 		buttonsPanel.config.partAndStateID = this.colors.bButtonsBackground ? 1 : 6; // buttons_xxx.js
 		buttonsPanel.config.textColor = this.colors.buttonsTextColor; // buttons_xxx.js
@@ -81,9 +83,9 @@ function _panel(customBackground = false, bSetup = false) {
 		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
 		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
 		this.row_height = this.fonts.normal.Height;
-		this.listObjects.forEach((item) => {item.size();});
-		this.listObjects.forEach((item) => {item.update();});
-		this.textObjects.forEach((item) => {item.size();});
+		this.listObjects.forEach((item) => { item.size(); });
+		this.listObjects.forEach((item) => { item.update(); });
+		this.textObjects.forEach((item) => { item.size(); });
 	};
 
 	this.size = () => {
@@ -111,25 +113,25 @@ function _panel(customBackground = false, bSetup = false) {
 	};
 
 	this.updateImageBg = debounce((bForce = false) => {
-		if (!this.imageBackground.enabled) {this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null;}
+		if (!this.imageBackground.enabled) { this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; }
 		let handle;
 		if (this.imageBackground.mode === 0) { // Selection
 			handle = fb.GetFocusItem(true);
 		} else if (this.imageBackground.mode === 1) { // Now Playing
 			handle = fb.GetNowPlaying() || fb.GetFocusItem(true);
 		}
-		if (!bForce && (handle && this.imageBackground.handle === handle.RawPath || this.imageBackground.handle === this.imageBackground.art.path)) {return;}
+		if (!bForce && (handle && this.imageBackground.handle === handle.RawPath || this.imageBackground.handle === this.imageBackground.art.path)) { return; }
 		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length
 			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
 			: handle
-				? utils.GetAlbumArtAsyncV2(void(0), handle, 0, true, false, false)
+				? utils.GetAlbumArtAsyncV2(void (0), handle, 0, true, false, false)
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
 			if (this.imageBackground.mode === 2) {
 				this.imageBackground.art.image = result;
 				this.imageBackground.handle = this.imageBackground.art.path;
 			} else {
-				if (!result.image) {throw new Error('Image not available');}
+				if (!result.image) { throw new Error('Image not available'); }
 				this.imageBackground.art.image = result.image;
 				this.imageBackground.art.path = result.path;
 				this.imageBackground.handle = handle.RawPath;
@@ -147,7 +149,7 @@ function _panel(customBackground = false, bSetup = false) {
 		});
 	}, 250);
 
-	this.paintImage = (gr, limits = {x: 0, y: 0, w: this.w, h: this.h, offsetH: 0}, fill = null /* {transparency: 20} */) => { // NOSONAR
+	this.paintImage = (gr, limits = { x: 0, y: 0, w: this.w, h: this.h, offsetH: 0 }, fill = null /* {transparency: 20} */) => { // NOSONAR
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.imageBackground.art.image;
@@ -159,18 +161,18 @@ function _panel(customBackground = false, bSetup = false) {
 						const prop = limits.w / (limits.h - limits.offsetH);
 						if (prop > 1) {
 							const offsetY = img.Height / prop;
-							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, 0, this.imageBackground.transparency);
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, 0, this.imageBackground.transparency);
 						} else {
 							const offsetX = img.Width * prop;
-							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.transparency);
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.transparency);
 						}
 					} else {
-						gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
 					}
 				} else {
 					let w, h;
-					if (this.imageBackground.bProportions) {w = h = Math.min(limits.w, limits.h - limits.offsetH);}
-					else {[w , h] = [limits.w, limits.h];}
+					if (this.imageBackground.bProportions) { w = h = Math.min(limits.w, limits.h - limits.offsetH); }
+					else { [w, h] = [limits.w, limits.h]; }
 					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
 				}
 			}
@@ -183,10 +185,10 @@ function _panel(customBackground = false, bSetup = false) {
 		if (typeof col !== 'undefined') {
 			gr.FillSolidRect(0, 0, this.w, this.h, col);
 		}
-		if (bImage) {this.paintImage(gr, {y: 0, w: this.w, h: this.h, offsetH: _scale(1)});}
+		if (bImage) { this.paintImage(gr, { y: 0, w: this.w, h: this.h, offsetH: _scale(1) }); }
 	};
 
-	this.setDefault = ({all = false, buttonText = false, buttonBar = false, oldColor = null} = {}) => {
+	this.setDefault = ({ all = false, buttonText = false, buttonBar = false, oldColor = null } = {}) => {
 		let bDone = false;
 		const defaultCol = invert(this.getColorBackground());
 		if (buttonText || all || oldColor !== null && this.colors.buttonsTextColor === oldColor) {
@@ -195,8 +197,8 @@ function _panel(customBackground = false, bSetup = false) {
 				: defaultCol;
 			bDone = true;
 		}
-		if (buttonBar || all || oldColor !== null && this.colors.buttonsToolbarColor === oldColor) {this.properties.buttonsToolbarColor[1] = this.colors.buttonsToolbarColor = defaultCol; bDone = true;}
-		if (bDone) {this.colorsChanged();}
+		if (buttonBar || all || oldColor !== null && this.colors.buttonsToolbarColor === oldColor) { this.properties.buttonsToolbarColor[1] = this.colors.buttonsToolbarColor = defaultCol; bDone = true; }
+		if (bDone) { this.colorsChanged(); }
 		return bDone;
 	};
 
@@ -219,6 +221,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.bCustomText = this.properties.bCustomText[1];
 	this.colors.customText = this.properties.customText[1];
 	this.colors.buttonsTextColor = this.properties.buttonsTextColor[1];
+	this.colors.headerButtons = this.properties.headerButtonsColor[1];
 	this.colors.default.buttonsTextColor = buttonsPanel.config.textColor; // RGB(0,0,0)
 	this.colors.bAltRowsColor = this.properties.bAltRowsColor[1];
 	this.colors.bToolbar = this.properties.bToolbar[1];
@@ -235,7 +238,9 @@ function _panel(customBackground = false, bSetup = false) {
 	this.updateImageBg();
 	if (bSetup) {
 		const defaultCol = invert(this.getColorBackground());
-		this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground ? this.colors.default.buttonsTextColor : defaultCol;
+		this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground
+			? this.colors.default.buttonsTextColor
+			: defaultCol;
 		this.properties.buttonsToolbarColor[1] = this.colors.buttonsToolbarColor = defaultCol;
 		overwriteProperties(this.properties);
 		this.colorsChanged();

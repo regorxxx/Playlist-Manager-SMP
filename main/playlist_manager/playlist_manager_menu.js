@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/24
+//18/03/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -2916,6 +2916,22 @@ function createMenuRightTop() {
 				}
 			});
 		}
+		{	// Playlist icons
+			const subMenuName = menu.newMenu('Show playlist status...', menuName);
+			const options = Object.keys(list.statusIcons);
+			menu.newEntry({ menuName: subMenuName, entryText: 'Icons at right:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			options.forEach((key) => {
+				menu.newEntry({
+					menuName: subMenuName, entryText: capitalize(key) + ' playlist', func: () => {
+						list.statusIcons[key].enabled = !list.statusIcons[key].enabled;
+						list.properties['statusIcons'][1] = JSON.stringify(list.statusIcons);
+						overwriteProperties(list.properties);
+					}
+				});
+				menu.newCheckMenuLast(() => list.statusIcons[key].enabled);
+			});
+		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Tooltips
 			const subMenuName = menu.newMenu('Show usage info on tooltips...', menuName);
@@ -3006,30 +3022,46 @@ function createMenuRightTop() {
 				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
 			}; // From statistics
 			const subMenuName = menu.newMenu('Set custom colors...', menuName);
-			const options = ['AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
-			options.forEach((item, i) => {
-				if (!item) { return; }
-				let key;
-				switch (i) {
-					case 0: key = 'autoPlaylistColor'; break;
-					case 1: key = 'smartPlaylistColor'; break;
-					case 2: key = 'uiPlaylistColor'; break;
-					case 3: key = 'lockedPlaylistColor'; break;
-					case 4: key = 'selectedPlaylistColor'; break;
-					case 5: key = 'folderColor'; break;
-				}
+			{
+				const subMenuNameTwo = menu.newMenu('List items...', subMenuName);
+				const options = ['Standard playlists...', 'AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
+				options.forEach((item, i) => {
+					if (!item) { return; }
+					let key;
+					switch (i) {
+						case 0: key = 'standardPlaylist'; break;
+						case 1: key = 'autoPlaylist'; break;
+						case 2: key = 'smartPlaylist'; break;
+						case 3: key = 'smartPlaylist'; break;
+						case 4: key = 'lockedPlaylist'; break;
+						case 5: key = 'selectedPlaylist'; break;
+						case 6: key = 'folder'; break;
+					}
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: item + '\t' + _b(getColorName(list.colors[key])), func: () => {
+							list.colors[key] = utils.ColourPicker(window.ID, list.colors[key]);
+							// Update property to save between reloads
+							list.properties.listColors[1] = convertObjectToString(list.colors);
+							overwriteProperties(list.properties);
+							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							window.Repaint();
+						}
+					});
+				});
+				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 				menu.newEntry({
-					menuName: subMenuName, entryText: item + '\t' + _b(getColorName(list.colors[key])), func: () => {
-						list.colors[key] = utils.ColourPicker(window.ID, list.colors[key]);
-						// Update property to save between reloads
-						list.properties.listColors[1] = convertObjectToString(list.colors);
-						overwriteProperties(list.properties);
-						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+					menuName: subMenuNameTwo, entryText: 'Add font shading', func: () => {
+						panel.colors.bFontOutline = !panel.colors.bFontOutline;
+						panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
+						if (panel.colors.bFontOutline) {
+							fb.ShowPopupMessage('Adds font shading to improve readability (usually along art background usage).\n\nIt may heavily affect performance on some systems.', window.Name);
+						}
+						overwriteProperties(panel.properties);
 						window.Repaint();
 					}
 				});
-			});
-			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				menu.newCheckMenuLast(() => panel.colors.bFontOutline);
+			}
 			{	// Text color
 				const subMenuSecondName = menu.newMenu('Standard text...', subMenuName);
 				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Custom'];
@@ -3051,19 +3083,28 @@ function createMenuRightTop() {
 					});
 				});
 				menu.newCheckMenuLast(() => (panel.colors.bCustomText ? 1 : 0), optionsLength);
-				menu.newEntry({ menuName: subMenuSecondName, entryText: 'sep' });
-				menu.newEntry({
-					menuName: subMenuSecondName, entryText: 'Add font shading', func: () => {
-						panel.colors.bFontOutline = !panel.colors.bFontOutline;
-						panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
-						if (panel.colors.bFontOutline) {
-							fb.ShowPopupMessage('Adds font shading to improve readability (usually along art background usage).\n\nIt may heavily affect performance on some systems.', window.Name);
+			}
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			{	// Header toolbar
+				const subMenuSecondName = menu.newMenu('Header toolbar...', subMenuName);
+				const options = ['Use default', 'Custom'];
+				const optionsLength = options.length;
+				options.forEach((item, i) => {
+					menu.newEntry({
+						menuName: subMenuSecondName, entryText: item + (panel.properties.headerButtonsColor[1] !== -1 ? '\t' + _b(getColorName(panel.colors.headerButtons)) : ''), func: () => {
+							panel.colors.headerButtons = i
+								? utils.ColourPicker(window.ID, panel.colors.headerButtons)
+								: -1;
+							panel.properties.headerButtonsColor[1] = panel.colors.headerButtons;
+							// Update property to save between reloads
+							overwriteProperties(panel.properties);
+							panel.colorsChanged();
+							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							window.Repaint();
 						}
-						overwriteProperties(panel.properties);
-						window.Repaint();
-					}
+					});
 				});
-				menu.newCheckMenuLast(() => panel.colors.bFontOutline);
+				menu.newCheckMenuLast(() => (panel.properties.headerButtonsColor[1] === -1 ? 0 : 1), optionsLength);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Buttons' toolbar
@@ -3074,7 +3115,9 @@ function createMenuRightTop() {
 				options.forEach((item, i) => {
 					menu.newEntry({
 						menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsToolbarColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsToolbarColor)) : ''), func: () => {
-							panel.colors.buttonsToolbarColor = i ? utils.ColourPicker(window.ID, panel.colors.buttonsToolbarColor) : defaultCol;
+							panel.colors.buttonsToolbarColor = i
+								? utils.ColourPicker(window.ID, panel.colors.buttonsToolbarColor)
+								: defaultCol;
 							panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor;
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
@@ -3107,7 +3150,9 @@ function createMenuRightTop() {
 				options.forEach((item, i) => {
 					menu.newEntry({
 						menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsTextColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsTextColor)) : ''), func: () => {
-							panel.colors.buttonsTextColor = i ? utils.ColourPicker(window.ID, panel.colors.buttonsTextColor) : defaultCol;
+							panel.colors.buttonsTextColor = i
+								? utils.ColourPicker(window.ID, panel.colors.buttonsTextColor)
+								: defaultCol;
 							panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor;
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
@@ -3162,7 +3207,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Presets
 				const subMenuSecondName = menu.newMenu('Presets...', subMenuName);
-				const presets = [ /*[autoPlaylistColor, smartPlaylistColor, uiPlaylistColor, lockedPlaylistColor, selectedPlaylistColor, standard text, buttons, background ]*/
+				const presets = [ /*[autoPlaylist, smartPlaylist, smartPlaylist, lockedPlaylist, selectedPlaylist, standard text, buttons, background ]*/
 					{ name: 'Color Blindness (light)', colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.white[0]] },
 					{ name: 'Color Blindness (dark)', colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2]] },
 					{ name: 'sep' },
@@ -3189,12 +3234,12 @@ function createMenuRightTop() {
 								panel.properties.customBackground[1] = panel.colors.customBackground = preset.colors[6];
 								panel.properties.bCustomText[1] = panel.colors.bCustomText = true;
 								panel.properties.customText[1] = panel.colors.customText = preset.colors[5];
-								list.colors.autoPlaylistColor = preset.colors[0];
-								list.colors.smartPlaylistColor = preset.colors[1];
-								list.colors.uiPlaylistColor = preset.colors[2];
-								list.colors.lockedPlaylistColor = preset.colors[3];
-								list.colors.selectedPlaylistColor = preset.colors[4];
-								list.colors.folderColor = preset.colors[5];
+								list.colors.autoPlaylist = preset.colors[0];
+								list.colors.smartPlaylist = preset.colors[1];
+								list.colors.smartPlaylist = preset.colors[2];
+								list.colors.lockedPlaylist = preset.colors[3];
+								list.colors.selectedPlaylist = preset.colors[4];
+								list.colors.folder = preset.colors[5];
 							}
 							list.properties.listColors[1] = convertObjectToString(list.colors);
 							panel.colorsChanged();
@@ -3217,22 +3262,22 @@ function createMenuRightTop() {
 								&& panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground())
 								&& panel.colors.buttonsTextColor === invert(panel.getColorBackground())
 								&& panel.colors.bCustomText === false
-								&& list.colors.autoPlaylistColor === blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6) // At list.checkConfig
-								&& list.colors.smartPlaylistColor === blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6)
-								&& list.colors.uiPlaylistColor === blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8)
-								&& list.colors.lockedPlaylistColor === RGB(...toRGB(0xFFDC143C))
-								&& list.colors.selectedPlaylistColor === RGB(...toRGB(0xFF0080C0))
-							&& list.colors.folderColor === panel.colors.text
+								&& list.colors.autoPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6) // At list.checkConfig
+								&& list.colors.smartPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6)
+								&& list.colors.smartPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8)
+								&& list.colors.lockedPlaylist === RGB(...toRGB(0xFFDC143C))
+								&& list.colors.selectedPlaylist === RGB(...toRGB(0xFF0080C0))
+							&& list.colors.folder === panel.colors.text
 							: panel.colors.mode === 2
 							&& panel.colors.customBackground === preset.colors[6]
 							&& panel.colors.bCustomText === true
 							&& panel.colors.customText === preset.colors[5]
-							&& list.colors.autoPlaylistColor === preset.colors[0]
-							&& list.colors.smartPlaylistColor === preset.colors[1]
-							&& list.colors.uiPlaylistColor === preset.colors[2]
-							&& list.colors.lockedPlaylistColor === preset.colors[3]
-							&& list.colors.selectedPlaylistColor === preset.colors[4]
-							&& list.colors.folderColor === preset.colors[5]
+							&& list.colors.autoPlaylist === preset.colors[0]
+							&& list.colors.smartPlaylist === preset.colors[1]
+							&& list.colors.smartPlaylist === preset.colors[2]
+							&& list.colors.lockedPlaylist === preset.colors[3]
+							&& list.colors.selectedPlaylist === preset.colors[4]
+							&& list.colors.folder === preset.colors[5]
 							&& (
 								Object.hasOwn(preset, 'buttonColors') && preset.buttonColors.length
 								&& (
@@ -3252,6 +3297,7 @@ function createMenuRightTop() {
 					list.properties.listColors[1] = convertObjectToString(list.colors);
 					panel.properties.colorsMode[1] = panel.colors.mode = 0;
 					panel.properties.bCustomText[1] = panel.colors.bCustomText = false;
+					panel.properties.headerButtonsColor[1] = panel.colors.headerButtons = -1;
 					panel.colorsChanged();
 					panel.setDefault({ all: true });
 					overwriteProperties(list.properties);
@@ -3454,7 +3500,9 @@ function createMenuRightTop() {
 					options.forEach((opt) => {
 						menu.newEntry({
 							menuName: subMenuNameTwo, entryText: capitalize(opt), func: () => {
-								list.columns.color[i] = opt === 'custom' ? utils.ColourPicker(window.ID, list.columns.color[i]) : opt;
+								list.columns.color[i] = opt === 'custom'
+									? utils.ColourPicker(window.ID, list.columns.color[i])
+									: opt;
 								list.properties.columns[1] = JSON.stringify(list.columns);
 								overwriteProperties(list.properties);
 								list.repaint();

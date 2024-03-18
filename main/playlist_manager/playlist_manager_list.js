@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/24
+//18/03/24
 
 /* exported _list */
 
@@ -385,7 +385,9 @@ function _list(x, y, w, h) {
 				const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
 				const offsetHeader = yOffset / 10;
 				const gfontHeader = _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
-				const iconHeaderColor = this.headerButtons.folder.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
+				const iconHeaderColor = this.headerButtons.folder.inFocus
+					? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+					: blendColors(panel.colors.headerButtons, panelBgColor, 0.1);
 				const iconW = gr.CalcTextWidth(catIcon, gfontHeader);
 				const iconH = gr.CalcTextHeight(catIcon, gfontHeader);
 				const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.normal);
@@ -414,8 +416,8 @@ function _list(x, y, w, h) {
 						position: 0,
 						icon: this.searchInput && this.searchInput.text.length || this.plsState.length ? chars.close : chars.search,
 						color: this.headerButtons.search.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.search.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -430,8 +432,8 @@ function _list(x, y, w, h) {
 						position: this.uiElements['Header buttons'].elements['Help'].position,
 						icon: chars.question,
 						color: this.headerButtons.help.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.help.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -448,8 +450,8 @@ function _list(x, y, w, h) {
 							? this.configFile.ui.icons.category[this.categoryState[0]]
 							: iconCharHeader, // Try setting customized button from json
 						color: this.headerButtons.folder.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.folder.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -464,8 +466,8 @@ function _list(x, y, w, h) {
 						position: this.uiElements['Header buttons'].elements['Settings menu'].position,
 						icon: chars.cogs,
 						color: this.headerButtons.settings.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.settings.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -480,8 +482,8 @@ function _list(x, y, w, h) {
 						position: this.uiElements['Header buttons'].elements['List menu'].position,
 						icon: chars.plus,
 						color: this.headerButtons.newPls.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.newPls.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -496,8 +498,8 @@ function _list(x, y, w, h) {
 						position: this.uiElements['Header buttons'].elements['Switch columns'].position,
 						icon: chars.table,
 						color: this.headerButtons.columns.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.columns.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -512,8 +514,8 @@ function _list(x, y, w, h) {
 						position: this.uiElements['Header buttons'].elements['Reset filters'].position,
 						icon: chars.close,
 						color: this.headerButtons.resetFilters.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.resetFilters.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -528,8 +530,8 @@ function _list(x, y, w, h) {
 						position: this.uiElements['Header buttons'].elements['Power actions'].position,
 						icon: chars.bolt,
 						color: this.headerButtons.action.inFocus
-							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8)
-							: blendColors(panel.colors.highlight, panelBgColor, 0.1),
+							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
+							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
 						bgColor: this.headerButtons.action.inFocus
 							? blendColors(panel.colors.highlight, panelBgColor, 0.8)
 							: null,
@@ -595,9 +597,9 @@ function _list(x, y, w, h) {
 							gr.FillRoundRect(button.x - _scale(2), (maxHeaderH - button.h) / 2 - _scale(1), button.w + _scale(3), button.h + _scale(2), _scale(2), _scale(2), button.bgColor);
 						}
 						const color = parent.highlighting && animationButtons.get(parent).bHighlight
-							? blendColors(RGB(...toRGB(panel.colors.text)), invert(this.colors.selectedPlaylistColor), 0.8)
+							? blendColors(RGB(...toRGB(panel.colors.text)), invert(this.colors.selectedPlaylist), 0.8)
 							: parent.altColor && !parent.inFocus && parent.altColor(void (0), void (0), void (0), parent)
-								? blendColors(RGB(...toRGB(panel.colors.text)), invert(this.colors.selectedPlaylistColor), 0.8)
+								? blendColors(RGB(...toRGB(panel.colors.text)), invert(this.colors.selectedPlaylist), 0.8)
 								: button.color;
 						gr.GdiDrawText(button.icon, gfontHeader, color, button.x, -2, button.w + _scale(1), maxHeaderH, DT_BOTTOM | DT_END_ELLIPSIS | DT_LEFT | DT_CALCRECT | DT_NOPREFIX); // Add some extra width to avoid drawing bugs on small settings
 					});
@@ -605,7 +607,7 @@ function _list(x, y, w, h) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylistColor, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
+						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
 						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
 							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
 							if (this.searchMethod.text.length) {
@@ -630,7 +632,7 @@ function _list(x, y, w, h) {
 					const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : null; // Try setting customized button from json
 					const iconW = catIcon ? gr.CalcTextWidth(catIcon, gfontHeader) : 0;
 					if (catIcon) {
-						const iconHeaderColor = this.headerButtons.folder.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
+						const iconHeaderColor = this.headerButtons.folder.inFocus ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8) : blendColors(panel.colors.highlight, panelBgColor, 0.1);
 						gr.GdiDrawText(catIcon, gfontHeader, iconHeaderColor, LM, 0, iconW, maxHeaderH, DT_BOTTOM | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					}
 					gr.GdiDrawText(this.headerText, panel.fonts.normal, panel.colors.highlight, LM + iconW, 0, panel.w - (LM * 2) - iconW - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, TM, LEFT);
@@ -684,12 +686,12 @@ function _list(x, y, w, h) {
 			return;
 		}
 		// List
-		const standardPlaylistIconColor = blendColors(panel.colors.highlight, panelBgColor, 0.1);
-		const lockedPlaylistIconColor = blendColors(standardPlaylistIconColor, this.colors.lockedPlaylistColor, 0.8);
-		const autoPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.autoPlaylistColor, 0.8);
-		const smartPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.smartPlaylistColor, 0.8);
-		const uiPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.uiPlaylistColor, 0.8);
-		const folderIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.folderColor, 0.8);
+		const standardPlaylistIconColor = blendColors(this.colors.standardPlaylist, panelBgColor, 0.1);
+		const lockedPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.lockedPlaylist, 0.8);
+		const autoPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.autoPlaylist, 0.8);
+		const smartPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.smartPlaylist, 0.8);
+		const uiPlaylistIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.uiPlaylist, 0.8);
+		const folderIconColor = blendColors(RGB(...toRGB(panelBgColor)), this.colors.folder, 0.8);
 		if (!this.categoryHeaderOffset) { this.categoryHeaderOffset = _scale(panel.fonts.size - 4); }
 		const categoryHeaderColor = blendColors(panelBgColor, panel.colors.text, 0.6);
 		const categoryHeaderLineColor = blendColors(panelBgColor, categoryHeaderColor, 0.5);
@@ -704,14 +706,14 @@ function _list(x, y, w, h) {
 			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
-				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
+				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 50));
+				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 30));
 			}
 			if (this.lastCharsPressed.bDraw) { animation.bHighlight = false; }
 			if (animation.bHighlight) {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 50));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 30));
 				}
 				animation.bHighlight = false;
 				animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
@@ -822,13 +824,13 @@ function _list(x, y, w, h) {
 			const iconFont = gfontIconChar();
 			const iconFontAlt = gfontIconCharAlt();
 			// Set colors and icons according to playlist type
-			let playlistColor = panel.colors.text, iconColor = standardPlaylistIconColor;
+			let playlistColor = this.colors.standardPlaylist, iconColor = standardPlaylistIconColor;
 			const plsExtension = pls.isAutoPlaylist ? 'autoPlaylist' : pls.extension;
 			let extension = pls.isLocked ? 'locked' : pls.isAutoPlaylist ? 'autoPlaylist' : plsExtension;
-			if (extension === 'locked') { playlistColor = this.colors.lockedPlaylistColor; iconColor = lockedPlaylistIconColor; }
-			else if (extension === 'autoPlaylist') { playlistColor = this.colors.autoPlaylistColor; iconColor = autoPlaylistIconColor; }
-			else if (extension === '.xsp') { playlistColor = this.colors.smartPlaylistColor; iconColor = smartPlaylistIconColor; }
-			else if (extension === '.ui') { playlistColor = this.colors.uiPlaylistColor; iconColor = uiPlaylistIconColor; }
+			if (extension === 'locked') { playlistColor = this.colors.lockedPlaylist; iconColor = lockedPlaylistIconColor; }
+			else if (extension === 'autoPlaylist') { playlistColor = this.colors.autoPlaylist; iconColor = autoPlaylistIconColor; }
+			else if (extension === '.xsp') { playlistColor = this.colors.smartPlaylist; iconColor = smartPlaylistIconColor; }
+			else if (extension === '.ui') { playlistColor = this.colors.uiPlaylist; iconColor = uiPlaylistIconColor; }
 			if (pls.size === 0) { extension = 'blank'; }
 			// Icon
 			if (this.bShowIcons) {
@@ -874,33 +876,35 @@ function _list(x, y, w, h) {
 			}
 			return playlistColor;
 		};
+		const iconChars = clone(this.statusIcons);
+		Object.keys(iconChars).forEach((k) => {
+			if (iconChars[k].offset) {
+				const sepLeterW = gr.CalcTextWidth('A', panel.fonts.small);
+				iconChars[k].offset = gr.CalcTextWidth(iconChars[k].string, panel.fonts.small) - sepLeterW;
+			} else { iconChars[k].offset = 0; }
+		});
 		const paintIndicators = (pls, textY) => {
-			// Add playing now indicator
+			// Add playing now/active/loaded indicator
 			const findPlsIdx = plman.FindPlaylist(pls.nameId);
 			if (findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoPlaylist) { // If missing it's false
-				const iconChars = {
-					playing: { s: String.fromCharCode(9654), offset: 0 },
-					loaded: { s: String.fromCharCode(187) /* » */, offset: true },
-					loadedV2: { s: String.fromCharCode(9644) /* - */, offset: false },
-					loadedV3: { s: String.fromCharCode(126) /* ~ */, offset: false }
-				};
-				Object.keys(iconChars).forEach((k) => {
-					if (iconChars[k].offset) {
-						const sepLeterW = gr.CalcTextWidth('A', panel.fonts.small);
-						iconChars[k].offset = gr.CalcTextWidth(iconChars[k].s, panel.fonts.small) - sepLeterW;
-					} else { iconChars[k].offset = 0; }
-				});
-				const icon = iconChars[fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist ? 'playing' : 'loaded'];
-				// Draw
-				gr.GdiDrawText(icon.s, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.row_height, RIGHT);
+				let label;
+				switch (true) {
+					case fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist: label = 'playing'; break;
+					case findPlsIdx === plman.ActivePlaylist: label = 'active'; break;
+					default: label = 'loaded'; break;
+				}
+				const icon = iconChars[label];
+				if (icon.enabled) {
+					gr.GdiDrawText(icon.string, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.row_height, RIGHT);
+				}
 			}
 		};
 		const paintSelection = (i, textY) => {
 			// Multiple selection
 			if (this.indexes.length) {
 				if (this.indexes.indexOf(this.offset + i) !== -1) {
-					gr.DrawRect(this.x - 5, textY, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 50));
-					gr.FillSolidRect(this.x - 5, textY, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 30));
+					gr.DrawRect(this.x - 5, textY, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 50));
+					gr.FillSolidRect(this.x - 5, textY, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 30));
 				}
 			}
 		};
@@ -915,11 +919,11 @@ function _list(x, y, w, h) {
 			// Text
 			if (panel.colors.bFontOutline && shading.img) { // Outline current text
 				shading.gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, maxIconWidth + level.offset * 20, i * panel.row_height, Math.min(shading.img.Width, this.textWidth - 25), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-				shading.pls.push([folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folderColor, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25]);
+				shading.pls.push([folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folder, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25]);
 			} else {
-				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folderColor, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
+				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folder, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
 			}
-			return this.colors.folderColor;
+			return this.colors.folder;
 		};
 		// Paint list
 		for (let i = 0; i < rows; i++) {
@@ -975,13 +979,13 @@ function _list(x, y, w, h) {
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
-		if (this.colors.selectedPlaylistColor !== panelBgColor && (this.bMouseOver || this.bSelMenu)) {
+		if (this.colors.selectedPlaylist !== panelBgColor && (this.bMouseOver || this.bSelMenu)) {
 			const currSelIdx = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.index : (this.bSelMenu ? currentItemIndex : -1);
 			const currSelOffset = typeof this.index !== 'undefined' && (this.index !== -1 || !this.bSelMenu) ? this.offset : (this.bSelMenu ? this.lastOffset : 0);
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylistColor);
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylist);
 				}
 			}
 		}
@@ -1005,8 +1009,8 @@ function _list(x, y, w, h) {
 					: false;
 				const bValid = this.isInternalDropValid();
 				const backgroundColor = bValid
-					? this.colors.selectedPlaylistColor
-					: invert(this.colors.selectedPlaylistColor);
+					? this.colors.selectedPlaylist
+					: invert(this.colors.selectedPlaylist);
 				const titleColor = bValid
 					? panel.colors.text
 					: blendColors(panel.colors.text, backgroundColor, 0.5);
@@ -1032,7 +1036,7 @@ function _list(x, y, w, h) {
 				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, Math.max(levelOffset, this.bShowIcons ? maxIconWidth : 0) + this.x, this.my, this.textWidth - 30 - levelOffset / 2, panel.row_height, LEFT);
 				if (levelOffset > 0) {
 					if (bInFolder && !bToSameFolder) {
-						const lineColor = opaqueColor(invert(this.colors.selectedPlaylistColor), 50);
+						const lineColor = opaqueColor(invert(this.colors.selectedPlaylist), 50);
 						gr.GdiDrawText(chars.signOut, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x, this.my, this.textWidth, panel.row_height, LEFT);
 						gr.GdiDrawText(chars.signOut, gfontIconChar(), lineColor, this.x, this.my, this.textWidth, panel.row_height, LEFT);
 					} else {
@@ -1086,19 +1090,19 @@ function _list(x, y, w, h) {
 			}
 			// Draw the letter
 			if (idxHighlight === -1) { // Striked out when not found
-				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylistColor, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylist, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
 				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2);
 				const lineW = Math.min(popX + sizeX / 2 + textW / 2 - 1, popX + sizeX - textOffset / 2);
-				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, invert(opaqueColor(this.colors.selectedPlaylistColor, 70)));
+				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, invert(opaqueColor(this.colors.selectedPlaylist, 70)));
 			} else { // when found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				// And highlight a few ms the found playlist
 				const currSelIdx = idxHighlight;
 				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylistColor, 80));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylistColor, 50));
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 80));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 50));
 				}
 			}
 			this.lastCharsPressed.bDraw = false;
@@ -1118,8 +1122,8 @@ function _list(x, y, w, h) {
 			gr.GdiDrawText(this.dragDropText, panel.fonts.normal, panel.colors.text, x, y, sizeX, sizeY, CENTRE);
 		}
 		// Up/down buttons
-		this.up_btn.paint(gr, this.up_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
-		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylistColor, 0.8) : panel.colors.text);
+		this.up_btn.paint(gr, this.up_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8) : panel.colors.text);
+		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8) : panel.colors.text);
 	};
 
 	this.repaint = () => {
@@ -5252,9 +5256,9 @@ function _list(x, y, w, h) {
 	};
 
 	this.isUpperFolder = (item, fromFolder) => {
-		if (!item.isFolder || !fromFolder.inFolder) {return false;}
+		if (!item.isFolder || !fromFolder.inFolder) { return false; }
 		const levels = new Set(this.getUpperFoldersNames(fromFolder));
-		if (levels.has(item.nameId)) {return true;}
+		if (levels.has(item.nameId)) { return true; }
 		return false;
 	};
 
@@ -6079,6 +6083,7 @@ function _list(x, y, w, h) {
 		this.activePlsStartup = this.properties['activePlsStartup'][1];
 		this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 		this.uuid = this.properties['panelUUID'][1];
+		this.statusIcons = JSON.parse(this.properties['statusIcons'][1]);
 		this.bTracking = true;
 		this.trackedFolderChanged = false;
 		this.plsCache = new Map();
@@ -6217,28 +6222,30 @@ function _list(x, y, w, h) {
 		// Check colors
 		if (!this.colors || !Object.keys(this.colors).length) { // Sets default colors
 			this.colors = {};
-			this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); // Red
-			this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);
-			this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
-			this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); // Blue
-			this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
-			this.colors.folderColor = panel.colors.text;
+			this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);
+			this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
+			this.colors.selectedPlaylist = RGB(...toRGB(0xFF0080C0)); // Blue
+			this.colors.uiPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
+			this.colors.lockedPlaylist = RGB(...toRGB(0xFFDC143C));
+			this.colors.folder = panel.colors.text; // Black
+			this.colors.standardPlaylist = blendColors(panel.colors.text, panel.colors.background, 0.2); // Grey
 			bDone = true;
 		}
 		if (this.colors && Object.keys(this.colors).length !== 6) { // Fills missing colors
-			if (!this.colors.lockedPlaylistColor) { this.colors.lockedPlaylistColor = RGB(...toRGB(0xFFDC143C)); } // Red
-			if (!this.colors.autoPlaylistColor) { this.colors.autoPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
-			if (!this.colors.smartPlaylistColor) { this.colors.smartPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
-			if (!this.colors.selectedPlaylistColor) { this.colors.selectedPlaylistColor = RGB(...toRGB(0xFF0080C0)); } // Blue
-			if (!this.colors.uiPlaylistColor) { this.colors.uiPlaylistColor = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); } // Blue
-			if (!this.colors.folderColor) { this.colors.folderColor = panel.colors.text; }
+			if (!this.colors.autoPlaylist) { this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
+			if (!this.colors.smartPlaylist) { this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
+			if (!this.colors.selectedPlaylist) { this.colors.selectedPlaylist = RGB(...toRGB(0xFF0080C0)); } // Blue
+			if (!this.colors.uiPlaylist) { this.colors.uiPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); } // Blue
+			if (!this.colors.lockedPlaylist) { this.colors.lockedPlaylist = RGB(...toRGB(0xFFDC143C)); } // Red
+			if (!this.colors.folder) { this.colors.folder = panel.colors.text; }  // Black
+			if (!this.colors.standardPlaylist) { this.colors.standardPlaylist = blendColors(panel.colors.text, panel.colors.background, 0.1); } // Grey
 			bDone = true;
 		}
 		if (this.searchInput) {
 			this.searchInput.textColor = panel.colors.highlight;
 			this.searchInput.backColor = panel.getColorBackground();
 			this.searchInput.borderColor = panel.getColorBackground();
-			this.searchInput.backSelectionColor = this.colors.selectedPlaylistColor;
+			this.searchInput.backSelectionColor = this.colors.selectedPlaylist;
 		}
 		if (typeof this.searchMethod.text === 'undefined' || this.searchMethod.text === null) {
 			this.searchMethod.text = '';
@@ -6344,6 +6351,26 @@ function _list(x, y, w, h) {
 			this.switchTracking(false);
 			bDone = true;
 		}
+		// Check status icons
+		const iconChars = {
+			playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
+			active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: false },
+			loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true },
+		};
+		Object.keys(iconChars).forEach((k) => {
+			if (!Object.hasOwn(this.statusIcons, k)) {
+				this.statusIcons[k] = iconChars[k];
+				this.properties.statusIcons[1] = JSON.stringify(this.statusIcons);
+				bDone = true;
+			}
+			Object.keys(iconChars[k]).forEach((sk) => {
+				if (!Object.hasOwn(this.statusIcons[k], sk) || this.statusIcons[k][sk] === '') {
+					this.statusIcons[k][sk] = iconChars[k][sk];
+					this.properties.statusIcons[1] = JSON.stringify(this.statusIcons);
+					bDone = true;
+				}
+			});
+		});
 		return bDone;
 	};
 
@@ -6771,6 +6798,7 @@ function _list(x, y, w, h) {
 	this.uiElements = JSON.parse(this.properties['uiElements'][1]);
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	this.columns = JSON.parse(this.properties['columns'][1]);
+	this.statusIcons = JSON.parse(this.properties['statusIcons'][1]);
 	// Folders
 	this.folders = JSON.parse(this.properties['folders'][1]);
 	// Panel behavior

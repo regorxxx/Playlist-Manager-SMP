@@ -55,6 +55,8 @@
 
 ## [Unreleased][]
 ### Added
+- UI: settings to switch the playlist status icons at the right (loaded/playing now/active). Active playlist icon has been added too.
+- UI: settings to change the standard playlist color and header buttons independently of general text color. Therefore the playlist status icons color can now be changed without affecting the rest by setting the other colors if desired. Beware this update will probably reset all colors customization on existing panel to default values.
 - UI: move to folder submenus now have a 'New folder...' entry to directly create a new folder and move selection to it.
 ### Changed
 ### Removed

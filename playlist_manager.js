@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/24
+//18/03/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -312,6 +312,11 @@ let properties = {
 		dynamicMenus: 2500,
 		playlistCache: 6000,
 	})],
+	statusIcons: ['Playlist status icons', JSON.stringify({
+		active: {enabled: true, string: String.fromCharCode(8226) /* • */, offset: false},
+		playing: {enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false},
+		loaded: {enabled: true, string: String.fromCharCode(187) /* » */, offset: true}
+	})],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -328,6 +333,7 @@ properties['columns'].push({ func: isJSON }, properties['columns'][1]);
 properties['folders'].push({ func: isJSON }, properties['folders'][1]);
 properties['statsConfig'].push({ func: isJSON }, properties['statsConfig'][1]);
 properties['delays'].push({ func: isJSON }, properties['delays'][1]);
+properties['statusIcons'].push({ func: isJSON }, properties['statusIcons'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -782,7 +788,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
-		window.Repaint();
+		if (list.statusIcons.playing.enabled) { list.repaint(); }
 		if (panel.imageBackground.mode === 1) { panel.updateImageBg(); }
 	});
 
@@ -802,6 +808,7 @@ if (!list.properties.bSetup[1]) {
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
 		}
+		if (list.statusIcons.active.enabled) { list.repaint(); }
 	});
 
 	addEventListener('on_playback_stop', (reason) => {
@@ -814,7 +821,7 @@ if (!list.properties.bSetup[1]) {
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
 		}
-		window.Repaint();
+		if (['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(); }
 	});
 
 	addEventListener('on_notify_data', (name, info) => {
