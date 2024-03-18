@@ -3032,7 +3032,7 @@ function createMenuRightTop() {
 						case 0: key = 'standardPlaylist'; break;
 						case 1: key = 'autoPlaylist'; break;
 						case 2: key = 'smartPlaylist'; break;
-						case 3: key = 'smartPlaylist'; break;
+						case 3: key = 'uiPlaylist'; break;
 						case 4: key = 'lockedPlaylist'; break;
 						case 5: key = 'selectedPlaylist'; break;
 						case 6: key = 'folder'; break;
