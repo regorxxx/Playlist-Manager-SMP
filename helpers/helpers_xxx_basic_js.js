@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/01/24
+//21/03/24
 
 /* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
@@ -227,13 +227,14 @@ function tryMethod(fn, parent) {
 	};
 }
 
-function memoize(fn) {
+function memoize(fn, parent) {
 	const results = {};
 	return (...args) => {
+		const boundFunc = parent ? fn.bind(parent) : fn;
 		// Create key for cache
 		const argsKey = JSON.stringify(args);
 		if (!Object.hasOwn(results, argsKey)) {
-			results[argsKey] = fn(...args);
+			results[argsKey] = boundFunc(...args);
 		}
 		return results[argsKey];
 	};

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/03/24
+//20/03/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -166,7 +166,7 @@ const globTags = {
 	acoustidFP: 'ACOUSTID_FINGERPRINT_RAW',
 	fooidFP: 'FINGERPRINT_FOOID',
 	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)',
-	skipCount: '%SKIP_COUNT%',
+	skipCount: '$max(%SKIP_COUNT%,%SKIP_TRACK_SKIP_COUNT%,0)',
 	folksonomy: 'FOLKSONOMY',
 	feedback: 'FEEDBACK',
 	related: 'RELATED',
