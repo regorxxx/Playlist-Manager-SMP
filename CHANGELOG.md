@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.15.0](#0150---2024-03-21)
 - [0.14.1](#0141---2024-03-16)
 - [0.14.0](#0140---2024-03-15)
 - [0.13.0](#0130---2024-02-28)
@@ -54,6 +55,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.15.0] - 2023-03-21
 ### Added
 - UI: settings to switch the playlist status icons at the right (loaded/playing now/active). Active playlist icon has been added too.
 - UI: settings to change the standard playlist color and header buttons independently of general text color. Therefore the playlist status icons color can now be changed without affecting the rest by setting the other colors if desired. Beware this update will probably reset all colors customization on existing panel to default values.
@@ -1171,7 +1178,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.12.1...v0.13.0
