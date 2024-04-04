@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/02/24
+//24/03/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -515,9 +515,12 @@ listenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 };
 
 listenBrainz.getFeedback = async function getFeedback(handleList, user, token, bLookupMBIDs = true, method = 'GET') {
-	const mbid = await this.getMBIDs(handleList, token, bLookupMBIDs);
+	const bList = handleList instanceof FbMetadbHandleList;
+	const mbid = bList
+		? await this.getMBIDs(handleList, token, bLookupMBIDs)
+		: handleList;
 	const mbidSend = mbid.filter(Boolean);
-	const missingCount = handleList.Count - mbidSend.length;
+	const missingCount = (bList ? handleList.Count : handleList.length) - mbidSend.length;
 	if (missingCount) { console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks while getting feedback'); }
 	if (mbidSend.Count > 70) { method = 'POST'; }
 	const noData = { created: null, recording_mbid: null, recording_msid: null, score: 0, track_metadata: null, user_id: user };
@@ -622,9 +625,11 @@ listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*
 	Tracks info
 */
 listenBrainz.lookupTracks = function lookupTracks(handleList, token) {
-	const count = handleList.Count;
-	if (!handleList.Count) { console.log('lookupTracks: no tracks provided'); return Promise.resolve([]); }
-	const [artist, title] = getHandleListTagsV2(handleList, ['ARTIST', 'TITLE']);
+	const bList = handleList instanceof FbMetadbHandleList;
+	const count = bList ? handleList.Count : handleList[0].length;
+	if (!count) { console.log('lookupTracks: no tracks provided'); return Promise.resolve([]); }
+	if (!bList && count !== handleList[1].length) { console.log('lookupTracks: no tags provided'); return Promise.resolve([]); }
+	const [artist, title] = bList ? getHandleListTagsV2(handleList, ['ARTIST', 'TITLE']) : handleList;
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
@@ -662,7 +667,8 @@ listenBrainz.lookupRecordingInfo = function lookupRecordingInfo(handleList, info
 	return this.lookupTracks(handleList, token).then(
 		(resolve) => {
 			const info = {};
-			infoNames.forEach((tag) => { info[tag] = new Array(handleList.Count).fill(''); });
+			const count = handleList instanceof FbMetadbHandleList ? handleList.Count : handleList[0].length;
+			infoNames.forEach((tag) => { info[tag] = new Array(count).fill(''); });
 			if (resolve.length) {
 				infoNames.forEach((tag) => {
 					if (allInfo.indexOf(tag) !== -1) {
@@ -683,7 +689,8 @@ listenBrainz.lookupMBIDs = function lookupMBIDs(handleList, token) { // Shorthan
 	return this.lookupTracks(handleList, token).then(
 		(resolve) => {
 			if (resolve.length) {
-				const MBIDs = new Array(handleList.Count).fill('');
+				const count = handleList instanceof FbMetadbHandleList ? handleList.Count : handleList[0].length;
+				const MBIDs = new Array(count).fill('');
 				resolve.forEach((obj) => { MBIDs[obj.index] = obj.recording_mbid; });
 				return MBIDs; // Response may contain fewer items than original list
 			}
@@ -700,7 +707,8 @@ listenBrainz.lookupArtistMBIDs = function lookupArtistMBIDs(handleList, token) {
 	return this.lookupTracks(handleList, token).then(
 		(resolve) => {
 			if (resolve.length) {
-				const MBIDs = new Array(handleList.Count).fill('');
+				const count = handleList instanceof FbMetadbHandleList ? handleList.Count : handleList[0].length;
+				const MBIDs = new Array(count).fill('');
 				resolve.forEach((obj) => { MBIDs[obj.index] = obj.artist_mbids; });
 				return MBIDs; // Response may contain fewer items than original list
 			}
@@ -715,7 +723,7 @@ listenBrainz.lookupArtistMBIDs = function lookupArtistMBIDs(handleList, token) {
 
 listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 	const count = MBIds.length;
-	if (!count) { console.log('lookupTracks: no MBIds provided'); return Promise.resolve([]); }
+	if (!count) { console.log('lookupTracksByMBIDs: no MBIds provided'); return Promise.resolve([]); }
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};

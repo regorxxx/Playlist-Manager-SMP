@@ -58,6 +58,7 @@
 ### Added
 ### Changed
 - UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - UI: sorting not applying properly to folders when sorting by size or duration.
