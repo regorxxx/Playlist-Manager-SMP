@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/02/24
+//21/03/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -150,7 +150,7 @@ console.flush = () => {
 console.popup = (arg, popupName, bPopup = true, bSplit = true) => {
 	if (bPopup) { fb.ShowPopupMessage(arg, popupName); }
 	if (typeof arg === 'string' && bSplit) {
-		arg.split('\n').forEach((line) => {
+		arg.split(/\r\n|\n\r|\n|\r/).forEach((line) => {
 			if (line && line.length) { console.log(line); }
 		});
 	} else {

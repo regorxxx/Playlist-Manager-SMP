@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/24
+//21/03/24
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist */
 
@@ -125,7 +125,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					let trackPath = '';
 					let trackInfo = '';
 					trackText = trackText.map((item) => {
-						[trackInfo, trackPath] = item.split('\n');
+						[trackInfo, trackPath] = item.split(/\r\n|\n\r|\n|\r/);
 						trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 						return trackInfo + '\n' + trackPath;
 					});
@@ -151,7 +151,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					let trackPath = '';
 					let trackInfo = '';
 					trackText = trackText.map((item) => {
-						[trackPath, ...trackInfo] = item.split('\n');
+						[trackPath, ...trackInfo] = item.split(/\r\n|\n\r|\n|\r/);
 						trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 						return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
 					});
@@ -338,7 +338,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				let trackPath = '';
 				let trackInfo = '';
 				newTrackText = newTrackText.map((item) => {
-					[trackInfo, trackPath] = item.split('\n');
+					[trackInfo, trackPath] = item.split(/\r\n|\n\r|\n|\r/);
 					trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 					return trackInfo + '\n' + trackPath;
 				});
@@ -354,7 +354,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				let trackPath = '';
 				let trackInfo = '';
 				newTrackText = newTrackText.map((item) => {
-					[trackPath, ...trackInfo] = item.split('\n');
+					[trackPath, ...trackInfo] = item.split(/\r\n|\n\r|\n|\r/);
 					trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
 					return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
 				});
