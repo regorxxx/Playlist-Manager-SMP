@@ -57,8 +57,11 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
 ### Removed
 ### Fixed
+- UI: sorting not applying properly to folders when sorting by size or duration.
+- UI: wrong offset for first child item within nested folders when the root folder was not shown on the list.
 
 ## [0.15.0] - 2023-03-21
 ### Added

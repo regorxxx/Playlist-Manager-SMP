@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/03/24
+//26/03/24
 
 /* exported _list */
 
@@ -39,6 +39,7 @@ include('playlist_manager_helpers.js');
 
 function _list(x, y, w, h) {
 	const bProfile = false;
+	const bDebug = false;
 	// Pls Keys
 	const defPls = new PlaylistObj();
 	const defPlsKeys = new Set(Object.keys(new PlaylistObj()));
@@ -937,13 +938,14 @@ function _list(x, y, w, h) {
 			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
 			const textY = this.y + yOffset + (i * panel.row_height);
 			// Set levels
+			const bLevel = level.name.length;
 			if (!this.isInFolder(pls)) {
 				level.offset = 0;
 				level.name = '';
-			} else if (level.name.length && level.name !== pls.inFolder) {
+			} else if (bLevel && level.name !== pls.inFolder && this.data.findIndex((f) => f.name === level.name) >= this.offset) {
 				level.offset -= 1;
 				level.name = pls.inFolder;
-			} else if (!level.name) {
+			} else if (!bLevel) {
 				let folder = this.data.find((item) => pls.inFolder === item.nameId);
 				while (folder) {
 					level.offset += 1;
@@ -1406,6 +1408,7 @@ function _list(x, y, w, h) {
 							// Tooltip for playlists
 							const pls = this.data[this.index];
 							if (pls) {
+								if (bDebug && bMoved && this.index !== this.lastIndex) { console.log(pls); }
 								if (this.isInternalDrop()) {
 									const currY = this.y + yOffset + (this.index - this.offset) * panel.row_height;
 									if (this.methodState !== this.manualMethodState()) {
@@ -4092,8 +4095,21 @@ function _list(x, y, w, h) {
 
 		return outData;
 	};
-
 	this.sortMethods = (bInternal = true) => { // These are constant. Expects the first sorting order of every method to be the natural one... also method must be named 'By + [playlist property]' for quick-searching
+		const propertyGet = (pls, key) => {
+			if (pls.isFolder) {
+				switch (key) {
+					case 'duration':
+					case 'size': {
+						return pls.pls.filtered.reduce((acc, subPls) => {
+							const newVal = propertyGet(subPls, key);
+							return acc + (newVal === '?' ? 0 : newVal);
+						}, 0);
+					}
+				}
+			}
+			return pls[key];
+		};
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		return {
 			'By name':
@@ -4103,8 +4119,8 @@ function _list(x, y, w, h) {
 			},
 			'By size':
 			{
-				'(S) Asc.': (a, b) => { return a.size - b.size; },
-				'(S) Des.': (a, b) => { return b.size - a.size; }
+				'(S) Asc.': (a, b) => { return propertyGet(a, 'size') - propertyGet(b, 'size'); },
+				'(S) Des.': (a, b) => { return propertyGet(b, 'size') - propertyGet(a, 'size'); }
 			},
 			...(showMenus['Category']
 				? {
@@ -4138,8 +4154,8 @@ function _list(x, y, w, h) {
 			},
 			'By duration':
 			{
-				'(D) Asc.': (a, b) => { return a.duration - b.duration; },
-				'(D) Des.': (a, b) => { return b.duration - a.duration; }
+				'(D) Asc.': (a, b) => { return propertyGet(a, 'duration') - propertyGet(b, 'duration'); },
+				'(D) Des.': (a, b) => { return propertyGet(b, 'duration') - propertyGet(a, 'duration'); }
 			},
 			// Manual
 			'Manual sorting':
@@ -4250,6 +4266,7 @@ function _list(x, y, w, h) {
 		const plsSel = !bSkipSel && this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		this.collapseFolders();
 		const bManual = this.methodState === this.manualMethodState();
+		const defSort = this.sortMethods(false)[this.defaultMethodState()][this.defaultSortState()];
 		if (bManual) {
 			let bSave = false;
 			if (this.sortingFile.length) {
@@ -4261,7 +4278,6 @@ function _list(x, y, w, h) {
 					if (idx === -1) { bSave = true; }
 				});
 			} else { // Create new one sorted by name
-				const defSort = this.sortMethods(false)[this.defaultMethodState()][this.defaultSortState()];
 				this.dataAll.sort(defSort);
 				this.dataAll.forEach((pls, i) => {
 					this.sortingFile.push(pls.nameId);
@@ -4271,8 +4287,13 @@ function _list(x, y, w, h) {
 			}
 			if (bSave) { this.saveManualSorting(); }
 		}
-		this.data.sort(sortMethod); // Can use arbitrary methods...
-		this.dataAll.sort(sortMethod); // This is done, because filter uses a copy of dataAll when resetting to no filter! So we need a sorted copy
+		// Sort by name first and then the desired method
+		if (sortMethod !== defSort && !bManual) {
+			this.data.sort(defSort);
+			this.dataAll.sort(defSort);
+		}
+		this.data.sort(sortMethod);
+		this.dataAll.sort(sortMethod); // .filter uses a copy when resetting to no filter! Need a sorted copy
 		if (!bManual && this.bApplyAutoTags) {
 			const { bFirst, bLast } = this.data.reduce((acc, pls) => {
 				if (!acc.bFirst && pls.tags.includes('bPinnedFirst')) { acc.bFirst = true; }
