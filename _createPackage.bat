@@ -207,6 +207,8 @@ REM main
 CALL :check_folder main
 CALL :check_folder main\filter_and_query
 CALL :copy_file main\filter_and_query\remove_duplicates.js
+CALL :check_folder main\playlists
+CALL :copy_file main\playlists\playlist_revive.js
 CALL :copy_folder main\playlist_manager
 CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_button.js
