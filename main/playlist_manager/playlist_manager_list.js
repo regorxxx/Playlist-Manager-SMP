@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/03/24
+//05/04/24
 
 /* exported _list */
 
@@ -3514,7 +3514,7 @@ function _list(x, y, w, h) {
 		}
 		else if (idx === -1) { toSave = bAllExt ? [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp] : [...this.dataAutoPlaylists]; }
 		else { toSave.push(this.data[idx]); }
-		_save(path, JSON.stringify(toSave, this.replacer, '\t'), this.bBOM); // No BOM
+		_save(path, JSON.stringify(toSave, this.replacer, '\t').replace(/\n/g,'\r\n'), this.bBOM); // No BOM
 		return path;
 	};
 
@@ -4320,7 +4320,11 @@ function _list(x, y, w, h) {
 	};
 
 	this.saveManualSorting = () => {
-		_save(this.filename.replace('.json', '_sorting.json'), JSON.stringify(this.sortingFile, this.replacer, '\t'), false); // No BOM
+		_save(
+			this.filename.replace('.json', '_sorting.json'),
+			JSON.stringify(this.sortingFile, this.replacer, '\t').replace(/\n/g,'\r\n'),
+			false
+		); // No BOM
 	};
 
 	this.setManualSortingForPls = (plsArr, toIdx) => {
@@ -5007,7 +5011,7 @@ function _list(x, y, w, h) {
 					formatFolder(pls);
 				}
 			});
-			_save(this.filename, JSON.stringify(data, this.replacer, '\t'), this.bBOM); // No BOM
+			_save(this.filename, JSON.stringify(data, this.replacer, '\t').replace(/\n/g,'\r\n'), this.bBOM); // No BOM
 		}
 		if (!bInit) {
 			if (this.bDynamicMenus) {
@@ -6536,7 +6540,7 @@ function _list(x, y, w, h) {
 					data[wName] = listExport;
 					// Don try to export for ajquery-xxx integration when it isn't installed
 					if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return true; }
-					return (bToFile ? _save(file, JSON.stringify(data, null, '\t')) : true);
+					return (bToFile ? _save(file, JSON.stringify(data, null, '\t').replace(/\n/g,'\r\n')) : true);
 				})
 				.catch((e) => {
 					if (bRetry) {
@@ -6583,7 +6587,7 @@ function _list(x, y, w, h) {
 				listExport.push(pls);
 			});
 			data[wName] = listExport;
-			return _save(file, JSON.stringify(data, null, '\t'));
+			return _save(file, JSON.stringify(data, null, '\t').replace(/\n/g,'\r\n'));
 		} catch (e) { console.log('this.exportPlaylistsInfo: unknown error'); console.log(e.message); }
 		return false;
 	};
@@ -6599,7 +6603,7 @@ function _list(x, y, w, h) {
 			const data = _jsonParseFile(file, utf8) || {};
 			data[wName] = null;
 			delete data[wName];
-			_save(file, JSON.stringify(data, null, '\t'));
+			_save(file, JSON.stringify(data, null, '\t').replace(/\n/g,'\r\n'));
 		});
 	};
 
