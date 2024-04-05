@@ -56,8 +56,10 @@
 
 ## [Unreleased][]
 ### Added
+- Playlists maintenance tools: ported the Playlist revive functionality from [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP), available now at Playlist maintenance tools, for the active playlist. Pressing Shift + L. Click on the menu entry will select the dead items instead of replacing them. For more complex usage, check the other script.
 ### Changed
 - UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
+- Helpers: most json data files are now saved with Windows EOL for compatibility improvements with Windows text editors.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
