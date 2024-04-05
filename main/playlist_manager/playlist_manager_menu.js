@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/03/24
+//05/04/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -41,6 +41,8 @@ include('playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
 /* global isYouTube:readable, youTube:readable */
+include('..\\playlists\\playlist_revive.js');
+/* global playlistRevive:readable, selectDeadItems:readable */
 
 // Menus
 const menuRbtn = new _menu();
@@ -1954,6 +1956,20 @@ function createMenuRight() {
 				}
 			});
 		}
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		const deadItems = selectDeadItems(plman.ActivePlaylist, false).length;
+		const bLoad = plman.ActivePlaylist !== -1;
+		const bLocked = bLoad && new Set(plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [])
+			.intersectionSize(new Set(['AddItems', 'RemoveItems'])) > 0;
+		menu.newEntry({
+			menuName: subMenuName, entryText: 'Revive dead items on active playlist \t' + (bLocked ? '[locked]' : _b(deadItems)), func: () => {
+				if (utils.IsKeyPressed(VK_SHIFT)) {
+					selectDeadItems(plman.ActivePlaylist);
+				} else {
+					playlistRevive({ playlist: plman.ActivePlaylist, simThreshold: 0.5, bFindAlternative: true });
+				}
+			}, flags: bLoad && !bLocked && deadItems ? MF_STRING : MF_GRAYED
+		});
 	}
 	menu.newEntry({ entryText: 'sep' });
 	{	// Find selection
