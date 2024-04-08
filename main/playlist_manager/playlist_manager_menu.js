@@ -1962,7 +1962,7 @@ function createMenuRight() {
 		const bLocked = bLoad && new Set(plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [])
 			.intersectionSize(new Set(['AddItems', 'RemoveItems'])) > 0;
 		menu.newEntry({
-			menuName: subMenuName, entryText: 'Revive dead items on active playlist \t' + (bLocked ? '[locked]' : _b(deadItems)), func: () => {
+			menuName: subMenuName, entryText: 'Revive dead items (active playlist) \t' + (bLocked ? '[locked]' : _b(deadItems)), func: () => {
 				if (utils.IsKeyPressed(VK_SHIFT)) {
 					selectDeadItems(plman.ActivePlaylist);
 				} else {
