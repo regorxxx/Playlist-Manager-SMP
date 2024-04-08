@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/24
+//08/04/24
 
 /*
 	Playlist Revive
@@ -27,7 +27,7 @@ include('..\\..\\helpers\\helpers_xxx_tags.js');
 
 function playlistRevive({
 	playlist = plman.ActivePlaylist, // Set to -1 to create a clone of selItems and output the revived list
-	selItems = playlist !== -1 ? plman.GetPlaylistSelectedItems(playlist) : null,
+	selItems = playlist !== -1 ? plman.GetPlaylistItems(playlist) : null,
 	simThreshold = 1, // 1 only allows exact matches, lower allows some tag differences, but at least the main tag must be the same!
 	bFindAlternative = false,
 	bSimulate = false,
