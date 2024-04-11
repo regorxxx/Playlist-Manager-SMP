@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/24
+//09/04/24
 
 /* exported Input */
 
@@ -209,7 +209,7 @@ const Input = Object.seal(Object.freeze({
 	 * @name string
 	 * @kind method
 	 * @memberof Input
-	 * @param {'string'|'trimmed string'|'unicode'|'path'} type
+	 * @param {'string'|'trimmed string'|'unicode'|'path'|'file'} type
 	 * @param {String} oldVal
 	 * @param {String} message
 	 * @param {String} title
@@ -219,7 +219,7 @@ const Input = Object.seal(Object.freeze({
 	 * @returns {null|String}
 	 */
 	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false) {
-		const types = new Set(['string', 'trimmed string', 'unicode', 'path']);
+		const types = new Set(['string', 'trimmed string', 'unicode', 'path', 'file']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (!types.has(type)) {throw new Error('Invalid type: ' + type);}
 		let input, newVal;
@@ -244,10 +244,11 @@ const Input = Object.seal(Object.freeze({
 					newVal = newVal.split(' ').map((s) => s !== '' ? String.fromCharCode(parseInt(s, 16)) : '').join(' ');
 					break;
 				}
+				case 'file':
 				case 'path': {
 					if (!newVal.length) {
 						if (bFilterEmpty) {throw new Error('Empty');}
-					} else if (!newVal.endsWith('\\')) { newVal += '\\';}
+					} else if (type === 'path' && !newVal.endsWith('\\')) { newVal += '\\';}
 					newVal = this.sanitizePath(newVal);
 					break;
 				}
