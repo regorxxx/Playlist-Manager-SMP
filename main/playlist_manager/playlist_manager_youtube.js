@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/02/24
+//11/04/24
 
 /* global SimpleCrypto:readable */
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
@@ -122,7 +122,7 @@ youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 					// Add tags from input
 					if (tags) {
 						ytItem.url += Object.entries(tags).map((entry) => {
-							if (entry[0] === creatorKey || typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '') { return null; }
+							if (entry[0] === creatorKey || typeof entry[1] === 'undefined' || entry[1] === null || entry[1] === '' || entry[0].indexOf(' ') !== -1) { return null; }
 							const tagVal = Array.isArray(entry[1])
 								? entry[1].map(encodeURIComponent).join(';')
 								: encodeURIComponent(entry[1].toString());
@@ -141,14 +141,10 @@ youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 		(reject) => { // Retry once
 			// console.log('searchForYoutubeTrack: ' + reject.status + ' ' + reject.responseText);
 			if (reject.status === 401) {
-				try {
-					return searchForYoutubeTrack({ title, creator, onAccountError: void (0) });
-				} catch (error) {
-					// Run onAccountError if we can't refresh the token
-					if (isFunction(onAccountError)) {
-						onAccountError();
-					}
-				}
+				return searchForYoutubeTrack({ title, creator, onAccountError: void (0) })
+					.catch(() => { // Run onAccountError if we can't refresh the token
+						if (isFunction(onAccountError)) { onAccountError(); }
+					});
 			}
 			return null;
 		}
