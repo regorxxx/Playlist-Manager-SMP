@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/24
+//11/04/24
 
 /* exported _list */
 
@@ -137,6 +137,7 @@ function _list(x, y, w, h) {
 			switch (key) {
 				case 'duration':
 				case 'fileSize':
+				case 'trackSize':
 				case 'size': {
 					const plsArr = pls.pls.filtered;
 					if (plsArr.length) { val = 0; }
@@ -164,6 +165,7 @@ function _list(x, y, w, h) {
 					}
 					break;
 				}
+				case 'trackSize': // Format it with no more than 4 digits
 				case 'fileSize': { // Format it with no more than 4 digits
 					if (val === 0) { val = '-'; break; }
 					val = utils.FormatFileSize(val);  // X.XX bb
@@ -1111,7 +1113,7 @@ function _list(x, y, w, h) {
 			animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
 		}
 		// Draw a tooltip box on drag n drop
-		if (this.bIsDragDrop) {
+		if (this.bIsDragDrop && this.dragDropText && this.dragDropText.length) {
 			const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
 			const borderCol = opaqueColor(invert(popupCol), 50);
 			const sizeX = gr.CalcTextWidth(this.dragDropText, panel.fonts.normal) + _scale(4);
@@ -1537,8 +1539,8 @@ function _list(x, y, w, h) {
 									else if (pls.extension === '.fpl') { warningText += '\n(.fpl playlists are non editable, convert it first)'; }
 									else if (pls.isLocked) { warningText += '\n(Locked playlists are non editable, unlock it first)'; }
 									else {
-										const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
-										if (!selItems || !selItems.Count) { warningText += '\n(No items on active playlist current selection)'; }
+										const selItems = fb.GetSelections(1);
+										if (!selItems || !selItems.Count) { warningText += '\n(No items on current selection)'; }
 									}
 									if (this.checkSelectionDuplicatesPlaylist({ playlistIndex: this.index })) { warningText += '\nWarning! Some track(s) already present...'; }
 								}
@@ -2019,11 +2021,13 @@ function _list(x, y, w, h) {
 			}
 			// Updates tooltip even when mouse hasn't moved
 			case VK_CONTROL: {
+				if (this.bIsDragDrop) { return true; }
 				if (getKeyboardMask() === kMask.ctrlShift) { this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL); }
 				else { this.move(this.mx, this.my, MK_CONTROL); }
 				return true;
 			}
 			case VK_SHIFT: {
+				if (this.bIsDragDrop) { return true; }
 				if (getKeyboardMask() === kMask.ctrlShift) { this.move(this.mx, this.my, MK_SHIFT + MK_CONTROL); }
 				else { this.move(this.mx, this.my, MK_SHIFT); }
 				return true;
@@ -2168,7 +2172,7 @@ function _list(x, y, w, h) {
 							if (showMenus['Category']) { cycleCategories(); }
 							return true;
 						case 'f9': { // Filter playlists with selected tracks / Search
-							const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+							const selItems = fb.GetSelections(1);
 							if (selItems && selItems.Count) {
 								const bShift = getKeyboardMask() === kMask.shift;
 								const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
@@ -2758,88 +2762,87 @@ function _list(x, y, w, h) {
 
 	// Drag n drop
 	this.on_drag_drop_external = (action, x, y, mask, idx = plman.ActivePlaylist) => {
-		if (idx !== -1) {
-			if (this.searchInput && (this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks) && (action === 'search' || this.searchInput.trackCheck(x, y))) {
-				const selItems = plman.GetPlaylistSelectedItems(idx);
-				if (selItems && selItems.Count) {
-					let search = '';
-					const trackSearch = (method) => {
-						if (method === 'bPath' && this.searchMethod.bPath) {
-							if (selItems.Count > 1 && this.searchMethod.bRegExp) {
-								const paths = selItems.GetLibraryRelativePaths()
-									.map((path) => path.split('\\').slice(-1)[0])
-									.filter(Boolean)
-									.map(escapeRegExpV2);
-								search = '/' + paths.join('|') + '/i';
+		if (this.searchInput && (this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks) && (action === 'search' || this.searchInput.trackCheck(x, y))) {
+			const selItems = fb.GetSelections(1);
+			if (selItems && selItems.Count) {
+				let search = '';
+				const trackSearch = (method) => {
+					if (method === 'bPath' && this.searchMethod.bPath) {
+						if (selItems.Count > 1 && this.searchMethod.bRegExp) {
+							const paths = selItems.GetLibraryRelativePaths()
+								.map((path) => path.split('\\').slice(-1)[0])
+								.filter(Boolean)
+								.map(escapeRegExpV2);
+							search = '/' + paths.join('|') + '/i';
 
-							} else {
-								search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
-							}
-							return true;
-						} else if (method === 'bQuery' && this.searchMethod.bQuery) {
-							const tags = getHandleListTags(selItems, [globTags.title, globTags.artistRaw]);
-							const trackQueries = tags.map((trackTags) => {
-								return queryJoin([
-									_qCond(globTags.title) + ' IS ' + sanitizeQueryVal(trackTags[0][0]),
-									globTags.artistRaw !== 'ARTIST'
-										? queryJoin([
-											queryCombinations(trackTags[1].map(s => s.toLowerCase()), globTags.artist, 'AND'),
-											queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
-										], 'OR')
-										: queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
-								], 'AND');
-							});
-							search = queryJoin(trackQueries, 'OR');
-							return true;
-						} else if (method === 'bMetaTracks' && this.searchMethod.bMetaTracks) {
-							if (selItems.Count > 1 && this.searchMethod.bRegExp) {
-								const tags = getHandleListTags(selItems, [globTags.titleRaw])
-									.flat(Infinity).filter(Boolean)
-									.map(escapeRegExpV2);
-								search = '/' + tags.join('|') + '/i';
+						} else {
+							search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
+						}
+						return true;
+					} else if (method === 'bQuery' && this.searchMethod.bQuery) {
+						const tags = getHandleListTags(selItems, [globTags.title, globTags.artistRaw]);
+						const trackQueries = tags.map((trackTags) => {
+							return queryJoin([
+								_qCond(globTags.title) + ' IS ' + sanitizeQueryVal(trackTags[0][0]),
+								globTags.artistRaw !== 'ARTIST'
+									? queryJoin([
+										queryCombinations(trackTags[1].map(s => s.toLowerCase()), globTags.artist, 'AND'),
+										queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
+									], 'OR')
+									: queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
+							], 'AND');
+						});
+						search = queryJoin(trackQueries, 'OR');
+						return true;
+					} else if (method === 'bMetaTracks' && this.searchMethod.bMetaTracks) {
+						if (selItems.Count > 1 && this.searchMethod.bRegExp) {
+							const tags = getHandleListTags(selItems, [globTags.titleRaw])
+								.flat(Infinity).filter(Boolean)
+								.map(escapeRegExpV2);
+							search = '/' + tags.join('|') + '/i';
 
-							} else {
-								search = getHandleTags(selItems[0], [globTags.titleRaw]).flat(Infinity).filter(Boolean)[0] || '';
-							}
-							return true;
+						} else {
+							search = getHandleTags(selItems[0], [globTags.titleRaw]).flat(Infinity).filter(Boolean)[0] || '';
 						}
-						return false;
-					};
-					this.searchMethod.dragDropPriority.some(trackSearch);
-					this.searchInput.text = search;
-					if (this.searchMethod.bAutoSearch) { this.search(); }
-				}
-			} else {
-				// Create new playlist when pressing alt
-				if ((mask & 32) === 32 || this.index === -1 || this.index >= this.items) {  // NOSONAR [structure]
-					const name = this.properties.bAutoSelTitle[1]
-						? this.plsNameFromSelection(idx)
-						: 'Selection from ' + plman.GetPlaylistName(idx).cut(10);
-					const toFolder = this.index !== -1 && this.data[this.index].isFolder
-						? this.data[this.index]
-						: null;
-					const pls = this.add({ bEmpty: true, name, bInputName: true, toFolder });
-					if (pls) {
-						const playlistIndex = this.getPlaylistsIdxByObj([pls])[0];
-						const newIdx = plman.ActivePlaylist;
-						plman.ActivePlaylist = idx;
-						// Remove track on move
-						const bSucess = this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: (mask - 32) !== MK_CONTROL });
-						if (bSucess) {
-							// Don't reload the list but just paint with changes to avoid jumps
-							plman.ActivePlaylist = newIdx;
-							this.showCurrPls();
-						}
+						return true;
 					}
-				} else { // Send to existing playlist
-					const cache = [this.offset, this.index];
+					return false;
+				};
+				this.searchMethod.dragDropPriority.some(trackSearch);
+				this.searchInput.text = search;
+				if (this.searchMethod.bAutoSearch) { this.search(); }
+			}
+		} else {
+			// Create new playlist when pressing alt
+			if ((mask & 32) === 32 || this.index === -1 || this.index >= this.items) {  // NOSONAR [structure]
+				const bFromPlsUI = fb.GetSelectionType() === 1 && idx !== -1;
+				const name = this.properties.bAutoSelTitle[1]
+					? this.plsNameFromSelection()
+					: 'Selection from ' + (bFromPlsUI ? plman.GetPlaylistName(idx).cut(10) : 'panel');
+				const toFolder = this.index !== -1 && this.data[this.index].isFolder
+					? this.data[this.index]
+					: null;
+				const pls = this.add({ bEmpty: true, name, bInputName: true, toFolder });
+				if (pls) {
+					const playlistIndex = this.getPlaylistsIdxByObj([pls])[0];
+					const newIdx = plman.ActivePlaylist;
+					if (bFromPlsUI) { plman.ActivePlaylist = idx; }
 					// Remove track on move
-					const bSucess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: mask !== MK_CONTROL });
+					const bSucess = this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: (mask - 32) !== MK_CONTROL });
 					if (bSucess) {
 						// Don't reload the list but just paint with changes to avoid jumps
-						window.RepaintRect(0, this.y, window.Width, this.h);
-						[this.offset, this.index] = cache;
+						plman.ActivePlaylist = newIdx;
+						this.showCurrPls();
 					}
+				}
+			} else { // Send to existing playlist
+				const cache = [this.offset, this.index];
+				// Remove track on move
+				const bSucess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: (mask & MK_CONTROL) !== MK_CONTROL });
+				if (bSucess) {
+					// Don't reload the list but just paint with changes to avoid jumps
+					window.RepaintRect(0, this.y, window.Width, this.h);
+					[this.offset, this.index] = cache;
 				}
 			}
 		}
@@ -2933,7 +2936,7 @@ function _list(x, y, w, h) {
 				.flat(Infinity)
 				.every((result) => result === true);
 		} else if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && pls.size) {
-			const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+			const selItems = fb.GetSelections(1);
 			if (selItems && selItems.Count) {
 				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])));
 				const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
@@ -2964,8 +2967,8 @@ function _list(x, y, w, h) {
 		return bDup;
 	};
 
-	this.plsNameFromSelection = (idx) => {
-		const selItems = plman.GetPlaylistSelectedItems(idx);
+	this.plsNameFromSelection = () => {
+		const selItems = fb.GetSelections(1);
 		if (selItems && selItems.Count > 0) {
 			const tags = getHandleListTagsV2(selItems, ['ALBUM ARTIST', 'ALBUM']);
 			const [artists, albums] = tags;
@@ -3022,7 +3025,6 @@ function _list(x, y, w, h) {
 			console.log('Playlist Manager: Error checking duplicates. Index or playlist not provided. (sendSelectionToPlaylist)');
 			return false;
 		}
-		if (plman.ActivePlaylist === -1) { return false; }
 		if (pls.isFolder) { // Only check allowed destinations
 			const plsArr = pls.pls.filtered.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl');
 			const total = plsArr.length;
@@ -3031,7 +3033,7 @@ function _list(x, y, w, h) {
 				.some((result) => result === true);
 		} else {
 			if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) { return false; } // Skip non writable playlists
-			let selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+			let selItems = fb.GetSelections(1);
 			if (selItems && selItems.Count) {
 				if (bCheckDup) { this.checkSelectionDuplicatesPlaylist({ playlistIndex, pls, bAlsoHidden }); }
 				// Remove duplicates
@@ -3075,13 +3077,24 @@ function _list(x, y, w, h) {
 						if (pls.extension === '.ui') {
 							this.editData(pls, {
 								size: pls.size + selItems.Count,
-								duration: (pls.duration !== - 1 ? pls.duration + selItems.CalcTotalDuration() : plman.GetPlaylistSelectedItems(plman.ActivePlaylist).CalcTotalDuration()),
+								duration: (pls.duration !== - 1
+									? pls.duration + selItems.CalcTotalDuration()
+									: pls.size === 0
+										? selItems.CalcTotalDuration()
+										: plman.GetPlaylistItems(index).CalcTotalDuration()
+								),
+								trackSize: (pls.trackSize !== - 1
+									? pls.trackSize + selItems.CalcTotalSize()
+									: pls.size === 0
+										? selItems.CalcTotalSize()
+										: plman.GetPlaylistItems(index).CalcTotalSize()
+								),
 								modified: Date.now(),
 							});
 						}
 					}
 					// Remove items when moving
-					if (bDelSource) {
+					if (bDelSource && plman.ActivePlaylist !== -1 && fb.GetSelectionType() === 1) {
 						plman.UndoBackup(plman.ActivePlaylist);
 						plman.RemovePlaylistSelection(plman.ActivePlaylist);
 						const sourcePls = (bAlsoHidden ? this.dataAll : this.data)
@@ -3089,7 +3102,18 @@ function _list(x, y, w, h) {
 						if (pls !== sourcePls) {
 							this.editData(sourcePls, {
 								size: sourcePls.size - selItems.Count,
-								duration: (sourcePls.duration !== - 1 ? sourcePls.duration - selItems.CalcTotalDuration() : selItems.CalcTotalDuration()),
+								duration: (sourcePls.duration !== - 1
+									? sourcePls.duration - selItems.CalcTotalDuration()
+									: sourcePls.size - selItems.Count === 0
+										? 0
+										: plman.GetPlaylistItems(index).CalcTotalDuration()
+								),
+								trackSize: (sourcePls.trackSize !== - 1
+									? sourcePls.trackSize - selItems.CalcTotalSize()
+									: sourcePls.size - selItems.Count === 0
+										? 0
+										: plman.GetPlaylistItems(index).CalcTotalSize()
+								),
 								modified: Date.now(),
 							});
 						}
@@ -3146,6 +3170,7 @@ function _list(x, y, w, h) {
 		this.editData(pls, {
 			size: pls.size + handleList.Count,
 			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
+			trackSize: (pls.trackSize !== - 1 ? pls.trackSize + handleList.CalcTotalSize() : handleList.CalcTotalSize()),
 			fileSize: bUI ? 0 : utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
 			modified: Date.now(),
 		});
@@ -3328,7 +3353,8 @@ function _list(x, y, w, h) {
 						}
 						this.editData(plsXsp, {
 							size: handlePlaylist.Count,
-							duration: handlePlaylist.CalcTotalDuration()
+							duration: handlePlaylist.CalcTotalDuration(),
+							trackSize: handlePlaylist.CalcTotalSize()
 						}, true);
 						if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handlePlaylist.Count) {
 							this.updateTags(handlePlaylist, plsXsp);
@@ -3426,6 +3452,7 @@ function _list(x, y, w, h) {
 							path: this.playlistsPath + sanitize(plsData.name) + extension,
 							fileSize: utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
 							duration: handleList.CalcTotalDuration(),
+							trackSize: handleList.CalcTotalSize(),
 							modified: Date.now(),
 						});
 						if (plsData.nameId !== playlistNameId) {
@@ -3514,7 +3541,7 @@ function _list(x, y, w, h) {
 		}
 		else if (idx === -1) { toSave = bAllExt ? [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp] : [...this.dataAutoPlaylists]; }
 		else { toSave.push(this.data[idx]); }
-		_save(path, JSON.stringify(toSave, this.replacer, '\t').replace(/\n/g,'\r\n'), this.bBOM); // No BOM
+		_save(path, JSON.stringify(toSave, this.replacer, '\t').replace(/\n/g, '\r\n'), this.bBOM); // No BOM
 		return path;
 	};
 
@@ -3547,12 +3574,14 @@ function _list(x, y, w, h) {
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
+				const trackSize = handleList.CalcTotalSize();
 				const oAutoPlaylistItem = new PlaylistObj({
 					name: item.name,
 					size,
 					bAutoPlaylist: true,
 					queryObj: { query: item.query, sort: item.sort, bSortForced: item.forced },
-					duration
+					duration,
+					trackSize
 				});
 				const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
 				if (diffKeys.size) { diffKeys.forEach((key) => { item[key] = defPls[key]; }); }
@@ -3598,6 +3627,7 @@ function _list(x, y, w, h) {
 					const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 					item.size = handleList.Count;
 					item.duration = handleList.CalcTotalDuration();
+					item.trackSize = handleList.CalcTotalSize();
 					const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
 					if (diffKeys.size) { diffKeys.forEach((key) => { item[key] = defPls[key]; }); }
 					// width is done along all playlist internally later...
@@ -4099,6 +4129,8 @@ function _list(x, y, w, h) {
 		const propertyGet = (pls, key) => {
 			if (pls.isFolder) {
 				switch (key) {
+					case 'fileSize':
+					case 'trackSize':
 					case 'duration':
 					case 'size': {
 						return pls.pls.filtered.reduce((acc, subPls) => {
@@ -4156,6 +4188,16 @@ function _list(x, y, w, h) {
 			{
 				'(D) Asc.': (a, b) => { return propertyGet(a, 'duration') - propertyGet(b, 'duration'); },
 				'(D) Des.': (a, b) => { return propertyGet(b, 'duration') - propertyGet(a, 'duration'); }
+			},
+			'By file size':
+			{
+				'(Fs) Asc.': (a, b) => { return propertyGet(a, 'fileSize') - propertyGet(b, 'fileSize'); },
+				'(Fs) Des.': (a, b) => { return propertyGet(b, 'fileSize') - propertyGet(a, 'fileSize'); }
+			},
+			'By track size':
+			{
+				'(Ts) Asc.': (a, b) => { return propertyGet(a, 'trackSize') - propertyGet(b, 'trackSize'); },
+				'(Ts) Des.': (a, b) => { return propertyGet(b, 'trackSize') - propertyGet(a, 'trackSize'); }
 			},
 			// Manual
 			'Manual sorting':
@@ -4322,7 +4364,7 @@ function _list(x, y, w, h) {
 	this.saveManualSorting = () => {
 		_save(
 			this.filename.replace('.json', '_sorting.json'),
-			JSON.stringify(this.sortingFile, this.replacer, '\t').replace(/\n/g,'\r\n'),
+			JSON.stringify(this.sortingFile, this.replacer, '\t').replace(/\n/g, '\r\n'),
 			false
 		); // No BOM
 	};
@@ -4473,6 +4515,7 @@ function _list(x, y, w, h) {
 					// Process
 					if (item.isAutoPlaylist || item.query) {
 						if (!Object.hasOwn(item, 'duration')) { item.duration = -1; }
+						if (!Object.hasOwn(item, 'trackSize')) { item.trackSize = -1; }
 						i++;
 						// Updates size or track tags for AutoPlaylists. Warning takes a lot of time! Only when required...
 						if (bUpdateSize || bUpdateTags && Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) {
@@ -4481,6 +4524,7 @@ function _list(x, y, w, h) {
 							// So checking it every time the panel is painted is totally useless...
 							const cacheSize = item.size;
 							const cacheDuration = item.duration;
+							const cacheTrackSize = item.trackSize;
 							promises.push(new Promise((resolve) => {
 								const id = setInterval((i) => {
 									if (pop.isEnabled('cacheLib')) { return; }
@@ -4491,19 +4535,21 @@ function _list(x, y, w, h) {
 										if (bProfile) { test.Print(item.nameId); }
 										const size = handleList ? handleList.Count : 0;
 										const duration = handleList ? handleList.CalcTotalDuration() : 0;
+										const trackSize = handleList ? handleList.CalcTotalSize() : 0;
 										if (this.properties.bBlockUpdateAutoPls[1] && !pop.isEnabled()) {
 											pop.enable(true, 'Updating AutoPls...', 'Updating AutoPlaylists...\nPanel will be disabled during the process.', 'AutoPlaylist size');
 										}
-										if (handleList && (size && bUpdateTags || cacheSize !== size || cacheDuration !== duration)) {
+										if (handleList && (size && bUpdateTags || cacheSize !== size || cacheDuration !== duration || cacheTrackSize !== trackSize)) {
 											const pls = item.extension === '.xsp' && Object.hasOwn(item, 'type') && item.type === 'songs'
 												? this.dataXsp.find((pls) => { return pls.nameId === item.nameId; })
 												: this.dataAutoPlaylists.find((pls) => { return pls.nameId === item.nameId; });
-											if ((cacheSize !== size || cacheDuration !== duration)) {
+											if ((cacheSize !== size || cacheDuration !== duration || cacheTrackSize !== trackSize)) {
 												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
 												if (pls) {
 													this.editData(pls, {
 														size,
-														duration
+														duration,
+														trackSize
 													});
 												}
 												this.repaint();
@@ -4558,6 +4604,7 @@ function _list(x, y, w, h) {
 							item.category = fplPlaylist.category;
 							item.tags = fplPlaylist.tags;
 							item.duration = fplPlaylist.duration;
+							item.trackSize = fplPlaylist.trackSize;
 							item.description = fplPlaylist.description;
 						}
 						if (!this.properties.bSetup[1]) { this.fplPopup(); }
@@ -4572,6 +4619,7 @@ function _list(x, y, w, h) {
 							item.tags = xspPlaylist.tags;
 							item.size = xspPlaylist.size;
 							item.duration = xspPlaylist.duration;
+							item.trackSize = xspPlaylist.trackSize;
 							item.isLocked = xspPlaylist.isLocked;
 							item.author = xspPlaylist.author;
 							item.description = xspPlaylist.description;
@@ -4649,13 +4697,15 @@ function _list(x, y, w, h) {
 				if (!this.dataAll.some((dataPls) => { return dataPls.nameId === pls.name; })) {
 					if (!this.dataFoobar.some((dataPls) => { return dataPls.nameId === pls.name; })) { // Remove duplicates
 						const now = Date.now();
+						const handleList = plman.GetPlaylistItems(pls.idx);
 						const item = new PlaylistObj({
 							name: pls.name,
 							extension: '.ui',
-							size: plman.PlaylistItemCount(pls.idx),
+							size: handleList.Count,
 							bLocked: plman.IsPlaylistLocked(pls.idx),
 							category: 'fooPls',
-							duration: plman.GetPlaylistItems(pls.idx).CalcTotalDuration(),
+							duration: handleList.CalcTotalDuration(),
+							trackSize: handleList.CalcTotalSize(),
 							author: 'Foobar2000',
 							created: now,
 							modified: now
@@ -4883,7 +4933,7 @@ function _list(x, y, w, h) {
 		return this.bTracking;
 	};
 
-	this.requiresCachePlaylistSearch = () => this.uiElements['Search filter'].enabled && (this.searchMethod.bMetaTracks || this.searchMethod.bQuery);
+	this.requiresCachePlaylistSearch = () => this.uiElements['Search filter'].enabled && (this.searchMethod.bMetaTracks || this.searchMethod.bQuery) || this.bForceCachePls;
 	this.cachePlaylistSearch = (bIncludeAutoPls = true) => {
 		const id = setInterval(() => {
 			if (pop.isEnabled('cacheLib') || pop.isEnabled('cacheLib waiting')) { return; }
@@ -5011,7 +5061,7 @@ function _list(x, y, w, h) {
 					formatFolder(pls);
 				}
 			});
-			_save(this.filename, JSON.stringify(data, this.replacer, '\t').replace(/\n/g,'\r\n'), this.bBOM); // No BOM
+			_save(this.filename, JSON.stringify(data, this.replacer, '\t').replace(/\n/g, '\r\n'), this.bBOM); // No BOM
 		}
 		if (!bInit) {
 			if (this.bDynamicMenus) {
@@ -5283,8 +5333,7 @@ function _list(x, y, w, h) {
 	this.isUpperFolder = (item, fromFolder) => {
 		if (!item.isFolder || !fromFolder.inFolder) { return false; }
 		const levels = new Set(this.getUpperFoldersNames(fromFolder));
-		if (levels.has(item.nameId)) { return true; }
-		return false;
+		return levels.has(item.nameId);
 	};
 
 	this.converUiPlaylist = ({ idx = -1, name = '', bShowPopups = true, toFolder = null } = {}) => {
@@ -5332,6 +5381,7 @@ function _list(x, y, w, h) {
 			let done = savePlaylist({ playlistIndex: idx, handleList: null, playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
 			if (done) {
 				const now = Date.now();
+				const handleList = plman.GetPlaylistItems(idx);
 				objectPlaylist = new PlaylistObj({
 					id: UUID,
 					path: oPlaylistPath,
@@ -5339,9 +5389,10 @@ function _list(x, y, w, h) {
 					extension: this.playlistsExtension,
 					size: plman.PlaylistItemCount(idx),
 					fileSize: utils.GetFileSize(done),
+					trackSize: handleList.CalcTotalSize(),
 					category: oPlaylistCategory,
 					tags: oPlaylistTags,
-					duration: plman.GetPlaylistItems(idx).CalcTotalDuration(),
+					duration: handleList.CalcTotalDuration(),
 					created: now,
 					modified: now
 				});
@@ -5479,6 +5530,9 @@ function _list(x, y, w, h) {
 		const duration = hasSize && hasQuery && pls.query === newQuery
 			? pls.duration
 			: handleList.CalcTotalDuration();
+		const trackSize = hasSize && hasQuery && pls.query === newQuery
+			? pls.trackSize
+			: handleList.CalcTotalSize();
 		const objectPlaylist = new PlaylistObj({
 			id: UUID,
 			name: newName,
@@ -5488,7 +5542,8 @@ function _list(x, y, w, h) {
 			category: hasCategory ? pls.category : '',
 			tags: hasTags ? pls.tags : [],
 			trackTags: hasTrackTags ? pls.trackTags : [],
-			duration
+			duration,
+			trackSize
 		});
 		// Auto-Tags
 		if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }
@@ -5553,6 +5608,7 @@ function _list(x, y, w, h) {
 		const handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);
 		const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (!bPlaylist ? handleList.Count : '?');
 		const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (!bPlaylist ? handleList.CalcTotalDuration() : -1);
+		const trackSize = hasSize && hasQuery && pls.query === newQuery ? pls.trackSize : (!bPlaylist ? handleList.CalcTotalSize() : -1);
 		let newLimit = 0;
 		if (hasLimit) {
 			if (isFinite(pls.limit)) { newLimit = pls.limit; }
@@ -5575,6 +5631,7 @@ function _list(x, y, w, h) {
 			trackTags: hasTrackTags ? pls.trackTags : [],
 			limit: newLimit,
 			duration,
+			trackSize,
 			type: 'songs'
 		});
 		// Auto-Tags
@@ -5657,6 +5714,7 @@ function _list(x, y, w, h) {
 			let done = savePlaylist({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
 			if (done) {
 				const now = Date.now();
+				const handleList = bEmpty ? null : plman.GetPlaylistItems(plman.ActivePlaylist);
 				objectPlaylist = new PlaylistObj({
 					id: UUID,
 					path: oPlaylistPath,
@@ -5664,9 +5722,10 @@ function _list(x, y, w, h) {
 					extension: this.playlistsExtension,
 					size: bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist),
 					fileSize: utils.GetFileSize(done),
+					trackSize: bEmpty ? -1 : handleList.CalcTotalSize(),
 					category: oPlaylistCategory,
 					tags: oPlaylistTags,
-					duration: bEmpty ? -1 : plman.GetPlaylistItems(plman.ActivePlaylist).CalcTotalDuration(),
+					duration: bEmpty ? -1 : handleList.CalcTotalDuration(),
 					created: now,
 					modified: now
 				});
@@ -5782,7 +5841,8 @@ function _list(x, y, w, h) {
 				const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 				this.editData(pls, {
 					size: handleList.Count,
-					duration: handleList.CalcTotalDuration()
+					duration: handleList.CalcTotalDuration(),
+					trackSize: handleList.CalcTotalSize()
 				}, true); // Update size on load
 				if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 					this.updateTags(handleList, pls);
@@ -5801,7 +5861,8 @@ function _list(x, y, w, h) {
 						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 						this.editData(pls, {
 							size: handleList.Count,
-							duration: handleList.CalcTotalDuration()
+							duration: handleList.CalcTotalDuration(),
+							trackSize: handleList.CalcTotalSize()
 						}, true);
 						if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 							this.updateTags(handleList, pls);
@@ -5809,6 +5870,12 @@ function _list(x, y, w, h) {
 						if (pls.extension === '.xsp') {
 							setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
 						}
+					} else {
+						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
+						this.editData(pls, {
+							duration: handleList.CalcTotalDuration(),
+							trackSize: handleList.CalcTotalSize()
+						}, false);
 					}
 					if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
 						setTimeout(() => { this.updatePlaylistFpl(fbPlaylistIndex); }, 2000);
@@ -5875,18 +5942,34 @@ function _list(x, y, w, h) {
 			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name); }
 			else {
 				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
-				this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); // Update size on load
+				this.editData(pls, {
+					size: handleList.Count,
+					duration: handleList.CalcTotalDuration(),
+					trackSize: handleList.CalcTotalSize()
+				}, true); // Update size on load
 			}
 		} else if (pls.extension === '.ui') {
 			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
-			if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }
+			if (handleList) {
+				this.editData(pls, {
+					size: handleList.Count,
+					duration: handleList.CalcTotalDuration(),
+					trackSize: handleList.CalcTotalSize()
+				}, true);
+			}
 		} else if (_isFile(pls.path)) { // Or file
 			// Try to load handles from library first, greatly speeds up non fpl large playlists
 			// But it will fail as soon as any track is not found on library
 			// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 			const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 			handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
-			if (handleList) { this.editData(pls, { size: handleList.Count, duration: handleList.CalcTotalDuration() }, true); }  // Update size on load for smart playlists
+			if (handleList) {
+				this.editData(pls, {
+					size: handleList.Count,
+					duration: handleList.CalcTotalDuration(),
+					trackSize: handleList.CalcTotalSize()
+				}, true);
+			}  // Update size on load for smart playlists
 		} else {
 			console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
 		}
@@ -6540,7 +6623,7 @@ function _list(x, y, w, h) {
 					data[wName] = listExport;
 					// Don try to export for ajquery-xxx integration when it isn't installed
 					if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return true; }
-					return (bToFile ? _save(file, JSON.stringify(data, null, '\t').replace(/\n/g,'\r\n')) : true);
+					return (bToFile ? _save(file, JSON.stringify(data, null, '\t').replace(/\n/g, '\r\n')) : true);
 				})
 				.catch((e) => {
 					if (bRetry) {
@@ -6587,7 +6670,7 @@ function _list(x, y, w, h) {
 				listExport.push(pls);
 			});
 			data[wName] = listExport;
-			return _save(file, JSON.stringify(data, null, '\t').replace(/\n/g,'\r\n'));
+			return _save(file, JSON.stringify(data, null, '\t').replace(/\n/g, '\r\n'));
 		} catch (e) { console.log('this.exportPlaylistsInfo: unknown error'); console.log(e.message); }
 		return false;
 	};
@@ -6603,7 +6686,7 @@ function _list(x, y, w, h) {
 			const data = _jsonParseFile(file, utf8) || {};
 			data[wName] = null;
 			delete data[wName];
-			_save(file, JSON.stringify(data, null, '\t').replace(/\n/g,'\r\n'));
+			_save(file, JSON.stringify(data, null, '\t').replace(/\n/g, '\r\n'));
 		});
 	};
 
@@ -6857,6 +6940,7 @@ function _list(x, y, w, h) {
 	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
 	this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
+	this.bForceCachePls = this.properties['bForceCachePls'][1];
 	this.bTracking = true;
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
@@ -6974,7 +7058,7 @@ function _list(x, y, w, h) {
 		newPls: {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
-				if (mask === MK_CONTROL && this.items && plman.ActivePlaylist !== -1) {
+				if (mask === MK_CONTROL && this.items && plman.ActivePlaylist !== -1 && !this.bIsDragDrop) {
 					const idx = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibrayViewer: true });
 					this.showPlsByIdxThrottled(idx);
 				} else if (idxHighlight !== -1 && animation.bForce) { idxHighlight = -1; animation.bForce = false; }
@@ -6987,8 +7071,8 @@ function _list(x, y, w, h) {
 				if (mask === MK_SHIFT) {
 					createMenuRight().btn_up(-1, -1, void (0), 'New playlist from selection...');
 				} else if (mask === MK_CONTROL) {
-					if (this.items && plman.ActivePlaylist !== -1) {
-						const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+					if (this.items && plman.ActivePlaylist !== -1 && !this.bIsDragDrop) {
+						const selItems = fb.GetSelections(1);
 						if (selItems && selItems.Count) {
 							const playlistIndex = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibrayViewer: true });
 							this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true });
@@ -7162,6 +7246,17 @@ function cachePlaylist(pls) {
 	} else if (pls.path.length) {
 		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
 		this.plsCache.set(pls.path, handleList);
+	}
+	if (handleList) {
+		this.editData(pls, {
+			duration: handleList.CalcTotalDuration(),
+			trackSize: handleList.CalcTotalSize()
+		}, false);
+	} else if (handleList === null) {
+		this.editData(pls, {
+			duration: 0,
+			trackSize: 0
+		}, false);
 	}
 	return handleList;
 }
