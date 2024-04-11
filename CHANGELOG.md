@@ -57,7 +57,10 @@
 ## [Unreleased][]
 ### Added
 - Playlists maintenance tools: ported the Playlist revive functionality from [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP), available now at Playlist maintenance tools, for the active playlist. Pressing Shift + L. Click on the menu entry will select the dead items instead of replacing them. For more complex usage, check the other script.
+- Importing file: feature similar to the one found at [Playlist Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP), lets you find matches on library using a mask against a text list (for ex. ARTIST - TITLE per line). Additionally, not found items may be replaced with YouTube links. It also works directly on a URL as long as the content is only text. There is an array of configurable query filters to tweak how tracks are preferred (for ex. non live tracks first).
+- UI: total track's size is now available as sorting method and display column. Value is calculated at startup for playlist files (and never saved at the playlist file nor cached) or after loading any of them. This calculation is done without an additional performance impact in case playlist caching is already enabled due to specific search settings (for ex. enabling query searching); it may also be forced with a new setting at 'Playlist behavior\Update other Playlists...' submenu. For UI-only playlists, is always calculated at startup independently of any other setting.
 ### Changed
+- UI: changed all builtin tooltips during external drag n' drop to use the native ones (which also span outside the panel).
 - UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
 - Helpers: most json data files are now saved with Windows EOL for compatibility improvements with Windows text editors.
 - Helpers: updated helpers.
@@ -65,6 +68,8 @@
 ### Fixed
 - UI: sorting not applying properly to folders when sorting by size or duration.
 - UI: wrong offset for first child item within nested folders when the root folder was not shown on the list.
+- Drag and drop: conflict drag n' dropping and pressing Ctrl over the "+" button, unintentionally triggering last edited playlist highlighting at the same time (feature introduced at [0.14.0](#0140---2024-03-15)).
+- UI: drag and drop and other features requiring a playlist selection did not work properly with selections from other panels which were not using a playlist as source.
 
 ## [0.15.0] - 2023-03-21
 ### Added
