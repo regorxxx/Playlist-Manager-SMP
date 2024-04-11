@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/01/24
+//11/04/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
 
@@ -31,7 +31,7 @@ include('..\\..\\helpers\\helpers_xxx_tags.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 /* global removeDuplicatesV2:readable */
 
-function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1 } = {}) {
+function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1, trackSize = -1 } = {}) {
 	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
 		const sfp = utils.SplitFilePath(path);
 		if (typeof extension === 'undefined') { extension = sfp[2]; }
@@ -44,6 +44,7 @@ function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '
 	this.path = path || '';
 	this.size = size;
 	this.fileSize = fileSize;
+	this.trackSize = trackSize;
 	this.isLocked = bLocked;
 	this.isAutoPlaylist = bAutoPlaylist;
 	this.query = queryObj['query'];
@@ -85,6 +86,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 		let queryObj = null;
 		let limit = null;
 		let duration = null;
+		let trackSize = null;
 		let playlist_mbid = '';
 		let author = '';
 		let description = '';
@@ -157,7 +159,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 							iFound++;
 							description = lineText.split(':').slice(1).join(':');
 						}
-						if (iFound === 11) { break; }
+						if (iFound === 11 || !lineText.startsWith('#')) { break; }
 						j++;
 					}
 				}
@@ -272,6 +274,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 			trackTags: isArray(trackTags) ? trackTags : void (0),
 			limit: Number.isFinite(limit) ? limit : void (0),
 			duration: Number.isFinite(duration) ? duration : void (0),
+			trackSize: Number.isFinite(trackSize) ? trackSize : void (0),
 			playlist_mbid,
 			author,
 			description,
