@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/02/24
+//09/04/24
 
 /* exported getText, paginatedFetch */
 
@@ -9,14 +9,21 @@ function getText(URL) {
 		: Promise.reject(new Error('Input is not a link.'));
 }
 
-function onStateChange(timer, resolve, reject, func = null) {
+function onStateChange(timer, resolve, reject, func = null, type = null) {
 	if (this !== null && timer !== null) { // this is xmlhttp bound
 		if (this.readyState === 4) {
 			clearTimeout(timer); timer = null;
 			if (this.status === 200) {
 				if (func) { return func(this.responseText); }
-				else { resolve(this.responseText); }
-
+				else {
+					if (type !== null) {
+						const contentType = this.getResponseHeader('Content-Type');
+						if (contentType.indexOf('type') === -1) {
+							reject({ status: this.status, responseText: 'Type missmatch: ' + contentType + ' is not ' + type });
+						}
+					}
+					resolve(this.responseText);
+				}
 			} else if (!func) { reject({ status: this.status, responseText: this.responseText }); }
 		}
 	} else if (!func) { reject({ status: 408, responseText: this.responseText }); } // 408 Request Timeout
@@ -24,7 +31,7 @@ function onStateChange(timer, resolve, reject, func = null) {
 }
 
 // May be used to async run a func for the response or as promise
-function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false }) {
+function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, type }) {
 	const p = new Promise((resolve, reject) => {
 		let timer = null;
 		const xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
@@ -53,7 +60,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 				reject({ status, responseText: 'Request Timeout' });
 			}
 		}, 30000, xmlhttp);
-		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func);
+		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type);
 		xmlhttp.send(method === 'POST' ? body : void (0));
 	});
 	return p;
