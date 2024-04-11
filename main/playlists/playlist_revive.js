@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/04/24
+//11/04/24
 
 /*
 	Playlist Revive
@@ -122,10 +122,10 @@ function playlistRevive({
 						alternativesSet.add(indexLibr);
 						alternativesObj.push({ idx: indexLibr, simil: score, bExact: false });
 					} else if (bFindAlternative) {
-						const trackNum = file.match(/\d+ *- */);
-						const trackNumLibr = fileLibr.match(/\d+ *- */);
-						const fileName = file.replace(trackNum, '');
-						const fileNameLibr = fileLibr.replace(trackNumLibr, '');
+						const trackNum = RegExp(/\d+ *- */).exec(file);
+						const trackNumLibr = RegExp(/\d+ *- */).exec(fileLibr);
+						const fileName = file.replace(String(trackNum), '');
+						const fileNameLibr = fileLibr.replace(String(trackNumLibr), '');
 						if (fileName === fileNameLibr) {
 							alternativesSet.add(indexLibr);
 							alternativesObj.push({ idx: indexLibr, simil: score, bExact: false });
@@ -218,7 +218,10 @@ function playlistRevive({
 				}
 			});
 		}
-		if (alternativesSet.size !== 0) { alternatives.set(index, alternativesObj.sort(function (a, b) { return b.simil - a.simil; })); }
+		if (alternativesSet.size !== 0) {
+			alternativesObj.sort((a, b) => b.simil - a.simil);
+			alternatives.set(index, alternativesObj);
+		}
 	});
 	if (!bSilent) { console.log('Found ' + alternatives.size + ' alternative(s) on active playlist'); }
 	if (alternatives.size !== 0) {
