@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/03/24
+//11/04/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -11,7 +11,7 @@
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.15.0', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
-/* global globSettings:readable, folders:readable, globFonts:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable */
+/* global globSettings:readable, folders:readable, globFonts:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable, globQuery:readable */
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
@@ -30,6 +30,8 @@ include('helpers\\buttons_panel_xxx.js');
 /* global addButton:readable, buttonsPanel:readable, on_paint_buttn:readable, on_size_buttn:readable, on_mouse_lbtn_down_buttn:readable, on_mouse_move_buttn:readable, on_mouse_leave_buttn:readable, ThemedButton:readable, on_mouse_lbtn_up_buttn:readable */
 include('helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, _hasRecycleBin:readable */
+include('helpers\\helpers_xxx_tags.js');
+/* global checkQuery:readable */
 include('helpers\\popup_xxx.js');
 /* global _popup:readable */
 include('helpers\\helpers_xxx_instances.js');
@@ -317,6 +319,9 @@ let properties = {
 		playing: {enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false},
 		loaded: {enabled: true, string: String.fromCharCode(187) /* » */, offset: true}
 	})],
+	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }, false],
+	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone])],
+	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist])]
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -334,6 +339,8 @@ properties['folders'].push({ func: isJSON }, properties['folders'][1]);
 properties['statsConfig'].push({ func: isJSON }, properties['statsConfig'][1]);
 properties['delays'].push({ func: isJSON }, properties['delays'][1]);
 properties['statusIcons'].push({ func: isJSON }, properties['statusIcons'][1]);
+properties['importPlaylistFilters'].push({ func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }, properties['importPlaylistFilters'][1]);
+properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlaylistMask'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -699,7 +706,7 @@ if (!list.properties.bSetup[1]) {
 		if (buttonsPanel.curBtn === null) {
 			list.move(x, y, mask, bDragDrop);
 		} else {
-			list.move(-1, -1, void (0), void (0), true);
+			list.move(-1, -1, void (0), bDragDrop, true);
 			list.up_btn.hover = false;
 			list.down_btn.hover = false;
 		}
@@ -1113,39 +1120,41 @@ if (!list.properties.bSetup[1]) {
 		if (list.traceHeader(x, y)) {
 			if (list.searchInput && list.searchInput.trackCheck(x, y)) { // Search input
 				const trackText = (method) => {
-					if (method === 'bPath' && list.searchMethod.bPath) { action.Effect = dropEffect.copy; list.dragDropText = 'Add paths to search box'; return true; }
-					else if (method === 'bQuery' && list.searchMethod.bQuery) { action.Effect = dropEffect.copy; list.dragDropText = 'Add query to search box'; return true; }
-					else if (method === 'bMetaTracks' && list.searchMethod.bMetaTracks) { action.Effect = dropEffect.copy; list.dragDropText = 'Add tags to search box'; return true; }
+					if (method === 'bPath' && list.searchMethod.bPath) { action.Effect = dropEffect.copy; action.Text = 'Add paths to search box'; return true; }
+					else if (method === 'bQuery' && list.searchMethod.bQuery) { action.Effect = dropEffect.copy; action.Text = 'Add query to search box'; return true; }
+					else if (method === 'bMetaTracks' && list.searchMethod.bMetaTracks) { action.Effect = dropEffect.copy; action.Text = 'Add tags to search box'; return true; }
 					return false;
 				};
 				if (!list.searchMethod.dragDropPriority.some(trackText)) {
-					action.Effect = dropEffect.none; list.dragDropText = 'Path searching must be enabled';
+					action.Effect = dropEffect.none; action.Text = 'Path searching must be enabled';
 				}
 				return;
 			} else if (headerbuttons.some((key) => list.headerButtons[key].inFocus)) { // New playlist button
 				if (list.headerButtons.newPls.inFocus) {
-					list.dragDropText = 'Create new Playlist';
+					action.Text = 'Create new Playlist ' + _p((mask & MK_CONTROL) === MK_CONTROL ? 'copy' : 'move');
 				} else {
 					action.Effect = dropEffect.none;
-					list.dragDropText = '';
+					action.Text = '';
 					return;
 				}
 			} else {
 				action.Effect = dropEffect.none;
-				list.dragDropText = '';
+				action.Text = '';
 				return;
 			}
 		} else if (buttonsPanel.curBtn !== null || (scroll && scroll.trace(x, y))) { // Scrollbar or buttons
 			// else if (buttonsPanel.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
 			action.Effect = dropEffect.none;
-			list.dragDropText = '';
+			action.Text = '';
 			return;
 		} else { // List
+			const modifier = (mask & MK_CONTROL) === MK_CONTROL
+				? 'Copy'
+				: 'Move';
 			if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) { // NOSONAR [structure]
-				list.dragDropText = 'Create new Playlist';
-				if (bToFolder) { list.dragDropText += ' (in folder)'; }
-			} else if (list.data[list.index].isFolder) { list.dragDropText = 'To selected Folder'; }
-			else { list.dragDropText = 'To selected Playlist'; }
+				action.Text = 'Create new Playlist ' + _p(modifier.toLowerCase()) + (bToFolder ? ' (in folder)' : '');
+			} else if (list.data[list.index].isFolder) { action.Text = modifier + ' to selected Folder'; }
+			else { action.Text = modifier + ' to selected Playlist'; }
 		}
 		// Set effects
 		if ((mask & dropMask.ctrl) === dropMask.ctrl) { action.Effect = dropEffect.copy; } // Mask is mouse + key
@@ -1211,10 +1220,10 @@ if (!list.properties.bSetup[1]) {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
 			const bCtrol = utils.IsKeyPressed(VK_CONTROL);
 			if (bShift === keyListener.bShift && bCtrol === keyListener.bCtrol) { return; }
-			else if (bShift && bCtrol) { list.move(list.mx, list.my, MK_SHIFT + MK_CONTROL); }
-			else if (bShift) { list.move(list.mx, list.my, MK_SHIFT); }
-			else if (bCtrol) { list.move(list.mx, list.my, MK_CONTROL); }
-			else { list.move(list.mx, list.my, null); }
+			else if (bShift && bCtrol) { list.move(list.mx, list.my, MK_SHIFT + MK_CONTROL, list.bIsDragDrop); }
+			else if (bShift) { list.move(list.mx, list.my, MK_SHIFT, list.bIsDragDrop); }
+			else if (bCtrol) { list.move(list.mx, list.my, MK_CONTROL, list.bIsDragDrop); }
+			else { list.move(list.mx, list.my, null, list.bIsDragDrop); }
 			keyListener.bShift = bShift;
 			keyListener.bCtrol = bCtrol;
 		} else {
