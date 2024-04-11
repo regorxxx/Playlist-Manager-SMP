@@ -1,12 +1,12 @@
 ﻿'use strict';
-//05/04/24
+//11/04/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, buttonsPanel:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, recalcWidth:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable */
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers\\callbacks_xxx.js');
@@ -43,6 +43,8 @@ include('playlist_manager_youtube.js');
 /* global isYouTube:readable, youTube:readable */
 include('..\\playlists\\playlist_revive.js');
 /* global playlistRevive:readable, selectDeadItems:readable */
+include('..\\playlists\\import_text_playlist.js');
+/* global ImportTextPlaylist:readable */
 
 // Menus
 const menuRbtn = new _menu();
@@ -138,7 +140,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newMenu('Items...', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
 				}
 				menu.newEntry({ entryText: 'sep' });
-				const selItems = plman.GetPlaylistSelectedItems(plman.ActivePlaylist);
+				const selItems = fb.GetSelections(1);
 				menu.newEntry({
 					entryText: 'Copy selection to playlist', func: () => {
 						if (selItems && selItems.Count) {
@@ -530,6 +532,9 @@ function createMenuLeft(forcedIndex = -1) {
 												}
 												// Find missing tracks on youTube
 												if (bYouTube) {
+													if (!pop.isEnabled()) { // Display animation except for UI playlists
+														pop.enable(true, 'Searching...', 'Searching YouTube...\nPanel will be disabled during the process.', 'searching');
+													}
 													// Add MBIDs to youTube track metadata
 													notFound.forEach((track) => track.tags = { musicbrainz_trackid: track.identifier });
 													// Send request in parallel every x ms and process when all are done
@@ -569,6 +574,8 @@ function createMenuLeft(forcedIndex = -1) {
 																clearInterval(delay);
 																list.enableAutosaveForPls(pls.nameId);
 																return bDone;
+															}).finally(() => {
+																if (pop.isEnabled('searching')) { pop.disable(true); }
 															});
 													});
 												} else {
@@ -1545,6 +1552,7 @@ function createMenuRight() {
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 		});
 		if (showMenus['Online sync']) {
+			menu.newEntry({ entryText: 'sep' });
 			menu.newEntry({
 				entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 					if (!await checkLBToken()) { return Promise.resolve(false); }
@@ -1736,6 +1744,110 @@ function createMenuRight() {
 							});
 					} else { return Promise.resolve(true); }
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED
+			});
+			menu.newEntry({
+				entryText: 'Import from file \\ url...', func: () => {
+					const path = Input.string('file', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
+					if (path === null) { return; }
+					if (!_isFile(path) && /https?:\/\/|www./g.test(path)) {
+						fb.ShowPopupMessage('File not found:\n\n' + path, window.Name);
+						return;
+					}
+					// Presets
+					const maskPresets = [
+						{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]) },
+						{ name: 'Track list', val: JSON.stringify(['%TITLE%', ' - ', globTags.artist]) },
+						{ name: 'M3U Extended', val: JSON.stringify(['#EXTINF:', ',', globTags.artist, ' - ', '%TITLE%']) }
+					];
+					let formatMask = Input.string(
+						'string',
+						list.properties.importPlaylistMask[1].replace(/"/g, '\''),
+						'Enter pattern to retrieve tracks. Mask is saved for future use.\nPresets at bottom may also be loaded by their number ([x]).\n\nTo discard a section, use \'\' or "".\nTo match a section, put the exact chars to match.\nStrings with \'%\' are considered tags to extract.\n\n[\'. \', \'%TITLE%\', \' - \', \'%ALBUM ARTIST%\'] matches something like:\n1. Respect - Aretha Franklin' + (maskPresets.length ? '\n\n' + maskPresets.map((preset, i) => { return '[' + i + ']' + (preset.name.length ? ' ' + preset.name : '') + ': ' + preset.val; }).join('\n') : ''),
+						window.Name,
+						maskPresets[0].val, void (0), true
+					) || Input.lastInput;
+					if (formatMask === null) { return; }
+					try {
+						formatMask = formatMask.replace(/'/g, '"');
+						// Load preset if possible
+						if (formatMask.search(/^\[\d*\]/g) !== -1) {
+							const idx = formatMask.slice(1, -1);
+							formatMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].val : null;
+							if (!formatMask) { console.log('Playlist Tools: Invalid format mask preset'); return; }
+						}
+						// Parse mask
+						formatMask = JSON.parse(formatMask);
+					}
+					catch (e) { console.log('Playlist Tools: Invalid format mask'); return; }
+					if (!formatMask) { return; }
+					const queryFilters = JSON.parse(list.properties.importPlaylistFilters[1]);
+					if (!pop.isEnabled()) { // Display animation except for UI playlists
+						pop.enable(true, 'Importing...', 'Importing file / url...\nPanel will be disabled during the process.', 'importing');
+					}
+					ImportTextPlaylist.getHandles({ path, formatMask, queryFilters })
+						.then((data) => {
+							if (pop.isEnabled('importing')) { pop.disable(true); }
+							let bYouTube = false;
+							const notFoundFiltered = data.notFound
+								.filter((v) => Object.hasOwn(v, 'creator') && Object.hasOwn(v, 'title'))
+								.map((v) => { return { creator: v.creator, title: capitalize(v.title), tags: v.tags }; });
+							if (data.notFound.length) {
+								const report = data.notFound.reduce((acc, line) => {
+									return acc + (acc.length ? '\n' : '') +
+										'Line ' + line.idx + '-> ' +
+										Object.keys(line.tags).map((key) => { return capitalize(key) + ': ' + line.tags[key]; }).join(', ');
+								}, '');
+								const reportPls = data.notFound.reduce((acc, line) => {
+									return acc + (acc.length ? '\n' : '') +
+										Object.keys(line.tags).map((key) => { return line.tags[key]; }).join(' - ');
+								}, '');
+								fb.ShowPopupMessage(reportPls, 'Not found list');
+								fb.ShowPopupMessage(report, 'Tracks not found at source');
+								if (notFoundFiltered.length && isYouTube) {
+									const answer = WshShell.Popup('Some imported tracks have not been found on library (see popup).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+									if (answer === popup.yes) { bYouTube = true; }
+								}
+							}
+							if (bYouTube) {
+								if (!pop.isEnabled()) { // Display animation except for UI playlists
+									pop.enable(true, 'Searching...', 'Searching YouTube...\nPanel will be disabled during the process.', 'searching');
+								}
+								// Send request in parallel every x ms and process when all are done
+								return Promise.parallel(notFoundFiltered, youTube.searchForYoutubeTrack, 5).then((results) => {
+									let j = 0;
+									const itemsLen = data.handleArr.length;
+									let foundLinks = 0;
+									results.forEach((result) => {
+										for (void (0); j <= itemsLen; j++) {
+											if (result.status !== 'fulfilled') { break; }
+											const link = result.value;
+											if (!link || !link.length) { break; }
+											if (!data.handleArr[j]) {
+												data.handleArr[j] = link.url;
+												foundLinks++;
+												break;
+											}
+										}
+									});
+									console.log('Found ' + foundLinks + ' tracks on YouTube');
+									const idx = plman.FindOrCreatePlaylist('Import', true);
+									plman.UndoBackup(idx);
+									plman.ClearPlaylist(idx);
+									plman.ActivePlaylist = idx;
+									return plman.AddPlaylistItemsOrLocations(idx, data.handleArr.filter(Boolean), true);
+								});
+							} else if (data.handleList.Count) {
+								const idx = plman.FindOrCreatePlaylist('Import', true);
+								plman.UndoBackup(idx);
+								plman.ClearPlaylist(idx);
+								plman.InsertPlaylistItems(idx, 0, data.handleList);
+								plman.ActivePlaylist = idx;
+							}
+						})
+						.finally(() => {
+							if (pop.isEnabled('searching') || pop.isEnabled('importing')) { pop.disable(true); }
+						});
+				}
 			});
 		}
 	}
@@ -2479,10 +2591,10 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName, entryText: 'sep' });
 		}
 		{	// Playlist Size
-			const subMenuName = menu.newMenu('Update AutoPlaylists size...', menuName);
+			const subMenuName = menu.newMenu('Update AutoPlaylists...', menuName);
 			const options = ['Yes: Automatically on every startup', 'No: Only when loading them'];
 			const optionsLength = options.length;
-			menu.newEntry({ menuName: subMenuName, entryText: 'Track count on parenthesis:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Refresh metadata:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			options.forEach((item, i) => {
 				menu.newEntry({
@@ -2502,7 +2614,7 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Block panel while updating', func: () => {
 					list.properties.bBlockUpdateAutoPls[1] = !list.properties.bBlockUpdateAutoPls[1];
 					overwriteProperties(list.properties);
-				}, flags: list.bAutoTrackTagAutoPlsInit ? MF_STRING : MF_GRAYED
+				}, flags: list.properties['bUpdateAutoPlaylist'][1] ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => list.properties.bBlockUpdateAutoPls[1]);
 		}
@@ -2521,6 +2633,27 @@ function createMenuRightTop() {
 				});
 			});
 			menu.newCheckMenuLast(() => (list.properties['bAutoRefreshXsp'][1] ? 0 : 1), optionsLength);
+		}
+		if (!list.bLiteMode) {	// Other Playlists
+			const subMenuName = menu.newMenu('Update other Playlists...', menuName);
+			const options = ['Yes: Automatically on startup', 'No: Only when loading them'];
+			const optionsLength = options.length;
+			menu.newEntry({ menuName: subMenuName, entryText: 'Refresh metadata for files:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			const bForced = list.requiresCachePlaylistSearch() && !list.bForceCachePls;
+			options.forEach((item, i) => {
+				menu.newEntry({
+					menuName: subMenuName, entryText: item, func: () => {
+						list.bForceCachePls = list.properties['bForceCachePls'][1] = i === 0;
+						overwriteProperties(list.properties);
+					}, flags: bForced ? MF_GRAYED : MF_STRING
+				});
+			});
+			menu.newCheckMenuLast(() => (list.properties['bForceCachePls'][1] || bForced ? 0 : 1), optionsLength);
+			if (bForced) {
+				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				menu.newEntry({ menuName: subMenuName, entryText: 'Note: forced by search settings', flags: MF_GRAYED });
+			}
 		}
 		{	// AutoPlaylist / Smart Playlists loading duplicates
 			const subMenuName = menu.newMenu('Duplicates filter...', menuName);
@@ -2834,6 +2967,29 @@ function createMenuRightTop() {
 						list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
 						overwriteProperties(list.properties);
 						if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+					}
+				});
+			}
+		}
+		{
+			menu.newEntry({ menuName, entryText: 'sep' });
+			{	//Export and copy
+				const subMenuName = menu.newMenu('Import from file \\ url...', menuName);
+				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of import tool:', flags: MF_GRAYED });
+				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				menu.newEntry({
+					menuName: subMenuName, entryText: 'Configure query filters...', func: () => {
+						let input = Input.json(
+							'array strings',
+							JSON.parse(list.properties.importPlaylistFilters[1]),
+							'Enter array of queries to apply as consecutive conditions:\n\n["%CHANNELS% LESS 3", "%RATING% GREATER 2"]\n\nThe example would try to find matches with 2 or less channels, then filter those results with rating > 2. In case the later filter does not output at least a single track, then will be skipped and only the previous filter applied (channels)... and so on (for more filters).',
+							window.Name,
+							JSON.parse(list.properties.importPlaylistFilters[3]),
+							void(0), true
+						);
+						if (input === null) { return; }
+						list.properties.importPlaylistFilters[1] = JSON.stringify(input);
+						overwriteProperties(list.properties);
 					}
 				});
 			}
@@ -3457,7 +3613,7 @@ function createMenuRightTop() {
 			list.columns.labels.forEach((key, i) => {
 				const subMenuColumn = menu.newMenu('Column ' + (i + 1) + '\t ' + _b(key), subMenuName);
 				{	// Metadata
-					const options = ['duration', 'size', 'fileSize', 'playlist_mbid', 'trackTags', 'isLocked'];
+					const options = ['duration', 'size', 'fileSize', 'trackSize', 'playlist_mbid', 'trackTags', 'isLocked'];
 					const subMenuNameTwo = menu.newMenu('Metadata...', subMenuColumn);
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Display:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
