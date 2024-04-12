@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/04/24
+//12/04/24
 
 /* exported ImportTextPlaylist */
 
@@ -37,6 +37,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @memberof ImportTextPlaylist
 	 * @param {string} path
 	 * @param {string[]} formatMask
+	 * @param {string} discardMask
 	 * @param {string[]} queryFilters
 	 * @param {string} sortBias
 	 * @returns {Promise.<{idx: Number, handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}>}
@@ -44,13 +45,14 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	getPlaylist: function getPlaylist({
 		path = folders.data + 'playlistImport.txt',
 		formatMask = ['', '. ', '%TITLE%', ' - ', globTags.artist],
+		discardMask = '',
 		queryFilters = [globQuery.noLiveNone, globQuery.notLowRating],
 		sortBias = globQuery.remDuplBias
 	} = {}) {
 		const data = { idx: -1, handleList: new FbMetadbHandleList, handleArr: [], notFound: [] };
 		return this.importFile(path)
 			.then((text) => typeof text !== 'undefined' && text.length
-				? { ...data, ...this.createPlaylist(text, formatMask, queryFilters, sortBias) }
+				? { ...data, ...this.createPlaylist(text, formatMask, discardMask, queryFilters, sortBias) }
 				: data
 			);
 	},
@@ -63,6 +65,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @memberof ImportTextPlaylist
 	 * @param {string} path
 	 * @param {string[]} formatMask
+	 * @param {string} discardMask
 	 * @param {string[]} queryFilters
 	 * @param {string} sortBias
 	 * @returns {Promise.<{idx: Number, handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}>}
@@ -70,13 +73,14 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	getHandles: function getHandles({
 		path = folders.data + 'playlistImport.txt',
 		formatMask = ['', '. ', '%TITLE%', ' - ', globTags.artist],
+		discardMask = '',
 		queryFilters = [globQuery.noLiveNone, globQuery.notLowRating],
 		sortBias = globQuery.remDuplBias,
 	} = {}) {
 		const data = { handleList: new FbMetadbHandleList, handleArr: [], notFound: [] };
 		return this.importFile(path)
 			.then((text) => typeof text !== 'undefined' && text.length
-				? this.getHandlesFromText(text, formatMask, queryFilters, sortBias)
+				? this.getHandlesFromText(text, formatMask, discardMask, queryFilters, sortBias)
 				: data
 			);
 	},
@@ -101,21 +105,18 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 			const codePage = checkCodePage(text.split(/\r\n|\n\r|\n|\r/), '.' + path.split('.').pop(), true);
 			if (codePage !== -1) { text = _open(path, codePage); }
 			return Promise.resolve(text || '');
-		} else if (/https?:\/\/|www./g.test(path)) {
+		} else if (/https?:\/\/|www./.test(path)) {
 			return send({
 				method: 'GET',
 				URL: path,
 				bypassCache: true,
 				type: 'text'
 			}).then(
-				(resolve) => {
-					return resolve && Object.hasOwn(resolve, 'responseText')
-						? resolve.responseText
-						: '';
-				},
+				(resolve) => resolve || '',
 				(reject) => {
-					if (reject.responseText.startSWith('Type missmatch')) {
+					if (reject.responseText.startsWith('Type missmatch')) {
 						console.log('ImportTexTPlaylist.importFile(): could not retrieve any text from ' + path);
+						console.log('ImportTexTPlaylist.importFile(): ' + reject.responseText);
 					} else {
 						console.log('HTTP error: ' + reject.status);
 					}
@@ -133,12 +134,13 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @memberof ImportTextPlaylist
 	 * @param {string} text
 	 * @param {string[]} formatMask
+	 * @param {string} discardMask
 	 * @param {string[]} queryFilters
 	 * @param {string} sortBias
 	 * @returns {{handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}}
 	 */
-	createPlaylist: function createPlaylist(text, formatMask, queryFilters, sortBias) {
-		let { handleList, handleArr, notFound } = this.getHandlesFromText(text, formatMask, queryFilters, sortBias);
+	createPlaylist: function createPlaylist(text, formatMask, discardMask, queryFilters, sortBias) {
+		let { handleList, handleArr, notFound } = this.getHandlesFromText(text, formatMask, discardMask, queryFilters, sortBias);
 		let idx = -1;
 		if (notFound.length) {
 			const report = notFound.reduce((acc, line) => { return acc + (acc.length ? '\n' : '') + 'Line ' + line.idx + '-> ' + Object.keys(line.tags).map((key) => { return capitalize(key) + ': ' + line.tags[key]; }).join(', '); }, '');
@@ -166,12 +168,14 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @memberof ImportTextPlaylist
 	 * @param {string} text
 	 * @param {string[]} formatMask
+	 * @param {string} discardMask
 	 * @param {string[]} queryFilters
+	 * @param {string} sort
 	 * @returns {{handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}}
 	 */
-	getHandlesFromText: function getHandlesFromText(text, formatMask, queryFilters, sort = globQuery.remDuplBias) {
+	getHandlesFromText: function getHandlesFromText(text, formatMask, discardMask, queryFilters, sort) {
 		if (typeof text !== 'undefined' && text.length) {
-			const tags = this.getTagsFromText(text.split(/\r\n|\n\r|\n|\r/), formatMask);
+			const tags = this.getTagsFromText(text.split(/\r\n|\n\r|\n|\r/), formatMask, discardMask);
 			if (tags && tags.length) {
 				const { handleList, handleArr, notFound } = this.contentResolver(tags, queryFilters, sort);
 				return { handleList, handleArr, notFound };
@@ -188,15 +192,17 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @memberof ImportTextPlaylist
 	 * @param {string} text
 	 * @param {string[]} formatMask
+	 * @param {string} discardMask
 	 * @returns {string[][]}
 	 */
-	getTagsFromText: function getTagsFromText(text, formatMask) {
+	getTagsFromText: function getTagsFromText(text, formatMask, discardMask = '') {
 		let tags = [];
 		if (typeof text !== 'undefined' && text.length) {
 			const maskLength = formatMask.length;
 			let lines = text.length;
 			for (let j = 0; j < lines; j++) {
 				const line = text[j];
+				if (discardMask.length && line.startsWith(discardMask)) { continue; }
 				let breakPoint = [];
 				let prevIdx = 0;
 				let bPrevTag = false;
@@ -263,6 +269,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		tags.forEach((handleTags, idx) => {
 			if (Object.keys(handleTags).length) {
 				const queryTags = Object.keys(handleTags).map((key) => {
+					if (typeof handleTags[key] === 'undefined' || handleTags[key] === null || handleTags[key] === '') { return; }
 					const query = key + ' IS ' + handleTags[key];
 					if (key === 'artist' || key === 'album artist' || key === 'title') {
 						const tfoKey = '"$stripprefix(%' + key + '%,' + stripPrefix.join(',') + ')"';
@@ -290,7 +297,8 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 					} else {
 						return query;
 					}
-				});
+				}).filter(Boolean);
+				if (!queryTags.length) { return; }
 				const query = queryJoin(queryTags, 'AND');
 				const handles = queryCache.has(query)
 					? queryCache.get(query)
@@ -299,7 +307,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 							? fb.GetQueryItems(fb.GetLibraryItems(), query)
 							: null
 					);
-				if (!queryCache.has(query)) {
+				if (handles && !queryCache.has(query)) {
 					if (sortBiasTF) { handles.OrderByFormat(sortBiasTF, -1); }
 					queryCache.set(query, handles);
 				}

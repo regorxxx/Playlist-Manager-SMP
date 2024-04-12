@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/04/24
+//12/04/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -1747,18 +1747,20 @@ function createMenuRight() {
 			});
 			menu.newEntry({
 				entryText: 'Import from file \\ url...', func: () => {
-					const path = Input.string('file', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
+					const path = Input.string('file|url', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
 					if (path === null) { return; }
-					if (!_isFile(path) && /https?:\/\/|www./g.test(path)) {
+					if (!/https?:\/\/|www./.test(path) && !_isFile(path)) {
 						fb.ShowPopupMessage('File not found:\n\n' + path, window.Name);
 						return;
 					}
 					// Presets
 					const maskPresets = [
-						{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]) },
-						{ name: 'Track list', val: JSON.stringify(['%TITLE%', ' - ', globTags.artist]) },
-						{ name: 'M3U Extended', val: JSON.stringify(['#EXTINF:', ',', globTags.artist, ' - ', '%TITLE%']) }
+						{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), discard: '#'},
+						{ name: 'Track list', val: JSON.stringify(['%TITLE%', ' - ', globTags.artist]), discard: '#' },
+						{ name: 'M3U Extended', val: JSON.stringify(['#EXTINF:', ',', globTags.artist, ' - ', '%TITLE%']), discard: '' }
 					];
+					let bPresetUsed = false;
+					let discardMask = '';
 					let formatMask = Input.string(
 						'string',
 						list.properties.importPlaylistMask[1].replace(/"/g, '\''),
@@ -1773,18 +1775,29 @@ function createMenuRight() {
 						if (formatMask.search(/^\[\d*\]/g) !== -1) {
 							const idx = formatMask.slice(1, -1);
 							formatMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].val : null;
-							if (!formatMask) { console.log('Playlist Tools: Invalid format mask preset'); return; }
+							discardMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].discard : null;
+							bPresetUsed = true;
+							if (!formatMask) { console.log('Playlist Manager: Invalid format mask preset'); return; }
 						}
 						// Parse mask
 						formatMask = JSON.parse(formatMask);
 					}
-					catch (e) { console.log('Playlist Tools: Invalid format mask'); return; }
+					catch (e) { console.log('Playlist Manager: Invalid format mask'); return; }
 					if (!formatMask) { return; }
+					if (!bPresetUsed) {
+						discardMask = Input.string(
+							'string',
+							'',
+							'Any line starting with the following string will be skipped:\n(For ex. to skip lines starting with \'#BLABLABLA...\', write \'#\')',
+							window.Name
+						) || Input.lastInput;
+						if (discardMask === null) { return; }
+					}
 					const queryFilters = JSON.parse(list.properties.importPlaylistFilters[1]);
 					if (!pop.isEnabled()) { // Display animation except for UI playlists
 						pop.enable(true, 'Importing...', 'Importing file / url...\nPanel will be disabled during the process.', 'importing');
 					}
-					ImportTextPlaylist.getHandles({ path, formatMask, queryFilters })
+					ImportTextPlaylist.getHandles({ path, formatMask, discardMask,queryFilters })
 						.then((data) => {
 							if (pop.isEnabled('importing')) { pop.disable(true); }
 							let bYouTube = false;
