@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/04/24
+//12/04/24
 
 /* exported Input */
 
@@ -209,7 +209,7 @@ const Input = Object.seal(Object.freeze({
 	 * @name string
 	 * @kind method
 	 * @memberof Input
-	 * @param {'string'|'trimmed string'|'unicode'|'path'|'file'} type
+	 * @param {'string'|'trimmed string'|'unicode'|'path'|'file'|'url'|'file|url'} type
 	 * @param {String} oldVal
 	 * @param {String} message
 	 * @param {String} title
@@ -219,7 +219,7 @@ const Input = Object.seal(Object.freeze({
 	 * @returns {null|String}
 	 */
 	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false) {
-		const types = new Set(['string', 'trimmed string', 'unicode', 'path', 'file']);
+		const types = new Set(['string', 'trimmed string', 'unicode', 'path', 'file','url','file|url']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (!types.has(type)) {throw new Error('Invalid type: ' + type);}
 		let input, newVal;
@@ -242,6 +242,16 @@ const Input = Object.seal(Object.freeze({
 				case 'unicode': { // https://www.rapidtables.com/code/text/unicode-characters.html
 					if (bFilterEmpty && !newVal.length) {throw new Error('Empty');}
 					newVal = newVal.split(' ').map((s) => s !== '' ? String.fromCharCode(parseInt(s, 16)) : '').join(' ');
+					break;
+				}
+				case 'file|url':
+				case 'url': {
+					if (!newVal.length) {
+						if (bFilterEmpty) {throw new Error('Empty');}
+					}
+					if (type === 'file|url' && !/https?:\/\/|www./.test(newVal)) {
+						newVal = this.sanitizePath(newVal);
+					}
 					break;
 				}
 				case 'file':

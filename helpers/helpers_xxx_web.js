@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/04/24
+//12/04/24
 
 /* exported getText, paginatedFetch */
 
@@ -18,7 +18,7 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 				else {
 					if (type !== null) {
 						const contentType = this.getResponseHeader('Content-Type');
-						if (contentType.indexOf('type') === -1) {
+						if (contentType.indexOf(type) === -1) {
 							reject({ status: this.status, responseText: 'Type missmatch: ' + contentType + ' is not ' + type });
 						}
 					}
