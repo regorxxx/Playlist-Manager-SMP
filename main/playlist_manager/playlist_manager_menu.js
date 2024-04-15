@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/04/24
+//15/04/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -714,8 +714,8 @@ function createMenuLeft(forcedIndex = -1) {
 						{ type: 'ReplaceItems', entryText: 'Replacing items' },
 						{ type: 'ReorderItems', entryText: 'Sorting items' },
 						{ type: 'RenamePlaylist', entryText: 'Renaming playlist' },
-						{ type: 'RemovePlaylist', entryText: 'Deleting playlist' },
-						{ type: 'ExecuteDefaultAction', entryText: 'Default action' }
+						{ type: 'RemovePlaylist', entryText: 'Deleting playlist' }
+						// { type: 'ExecuteDefaultAction', entryText: 'Default action' } // BUG: SMP
 					];
 					const index = plman.FindPlaylist(pls.nameId);
 					const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
@@ -732,6 +732,15 @@ function createMenuLeft(forcedIndex = -1) {
 									currentLocks.delete(lock.type);
 								} else {
 									currentLocks.add(lock.type);
+								}
+								// BUG: SMP if any lock is applied, playback doesn't wor unless this is added
+								const locksNum = currentLocks.size;
+								if (locksNum) {
+									if (locksNum === 1 && currentLocks.has('ExecuteDefaultAction')) {
+										currentLocks.delete('ExecuteDefaultAction');
+									} else {
+										currentLocks.add('ExecuteDefaultAction');
+									}
 								}
 								plman.SetPlaylistLockedActions(index, [...currentLocks]);
 							}, flags
