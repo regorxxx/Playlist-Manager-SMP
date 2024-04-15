@@ -70,7 +70,7 @@
 - UI: wrong offset for first child item within nested folders when the root folder was not shown on the list.
 - Drag and drop: conflict drag n' dropping and pressing Ctrl over the "+" button, unintentionally triggering last edited playlist highlighting at the same time (feature introduced at [0.14.0](#0140---2024-03-15)).
 - UI: drag and drop and other features requiring a playlist selection did not work properly with selections from other panels which were not using a playlist as source. Issue #81
-- Playlist locks: workaround for [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/198) related to playback on locked playlists. It should now work fine, but the 'default action' lock can not be switched anymore.
+- Playlist locks: workaround for [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/198) related to playback on locked playlists. It should now work fine, but the 'default action' lock can not be switched anymore. Issue #82
 
 ## [0.15.0] - 2023-03-21
 ### Added
