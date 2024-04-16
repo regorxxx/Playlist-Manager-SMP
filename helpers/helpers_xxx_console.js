@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/03/24
+//16/04/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -16,6 +16,7 @@ Object.defineProperty(console, 'Timer', { enumerable: false, configurable: false
 Object.defineProperty(console, 'Cache', { enumerable: false, configurable: false, writable: true, value: [] });
 // Global switch
 Object.defineProperty(console, 'Enabled', { enumerable: false, configurable: false, writable: true, value: true });
+Object.defineProperty(console, 'EnabledFile', { enumerable: false, configurable: false, writable: true, value: true });
 
 /* global fso:readable */
 const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
@@ -165,8 +166,9 @@ if (console.File && console.File.length && console.MaxSize && console.log) {
 		oldLog(...args);
 	};
 	console.log = function () {
-		if (!console.Enabled) {return;}
+		if (!console.Enabled) { return; }
 		console.logUI(...arguments);
+		if (!console.EnabledFile) { return; }
 		if (console.Throttling) {
 			clearTimeout(console.Timer);
 			// Add HH:MM:SS
@@ -180,8 +182,10 @@ if (console.File && console.File.length && console.MaxSize && console.log) {
 	console.checkSize();
 }
 
-console.enable = () => {console.Enabled = true;};
-console.disable = () => {console.flush(); console.Enabled = false;};
+console.enable = () => { console.Enabled = true; };
+console.disable = () => { console.flush(); console.Enabled = false; };
+console.enableFile = () => { console.EnabledFile = true; };
+console.disableFile = () => { console.EnabledFile = false; };
 
 // Rewrap FbProfiler to expose Name variable
 if (FbProfiler.prototype) {

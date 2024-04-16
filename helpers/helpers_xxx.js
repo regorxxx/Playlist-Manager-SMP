@@ -1,10 +1,10 @@
 ﻿'use strict';
-//04/03/24
+//16/04/24
 
 // Folders
 const folders = {};
-folders.JsPackageDirs = (utils.GetPackageInfo(window.ScriptInfo.PackageId || -1) || {Directories: null}).Directories;
-if (folders.JsPackageDirs) {for (const key in folders.JsPackageDirs) {folders.JsPackageDirs[key] += '\\';}}
+folders.JsPackageDirs = (utils.GetPackageInfo(window.ScriptInfo.PackageId || -1) || { Directories: null }).Directories;
+if (folders.JsPackageDirs) { for (const key in folders.JsPackageDirs) { folders.JsPackageDirs[key] += '\\'; } }
 folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install path (this is relative to the profile path)
 folders.dataName = 'js_data\\';
 folders.xxx = folders.JsPackageDirs ? folders.JsPackageDirs.Root : fb.ProfilePath + folders.xxxName;
@@ -66,7 +66,9 @@ addGlobTags();
 
 const globProfiler = globSettings.bProfileInit
 	? new FbProfiler(window.Name + ' - Global profiler')
-	: {Print: () => void(0), Time: void(0), Reset: () => void(0) };
+	: { Print: () => void (0), Time: void (0), Reset: () => void (0) };
+
+if (!globSettings.bLogToFile) { console.disableFile(); }
 
 /*
 	SO features
@@ -97,7 +99,7 @@ Object.keys(globFonts).forEach((key) => {
 	SO features
 */
 if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if something fails
-	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then(() => {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);});
-} else {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);}
+	new Promise((resolve) => { setTimeout(getSoFeatures, 1000); resolve(true); }).then(() => { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); });
+} else { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); }
 
 globProfiler.Print('helpers_xxx');

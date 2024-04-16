@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/24
+//16/04/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -253,4 +253,5 @@ const globSettings = {
 	bProfileInit: false,
 	bDebugPaint: false,
 	bTooltip: true,
+	bLogToFile: false
 };
