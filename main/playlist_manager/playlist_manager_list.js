@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/04/24
+//16/04/24
 
 /* exported _list */
 
@@ -1449,6 +1449,11 @@ function _list(x, y, w, h) {
 										? utils.FormatDuration(pls.duration)
 										: '?'
 								);
+								if (pls.isFolder) {
+									playlistDataText += ' (' + utils.FormatFileSize(this.calcColumnVal('trackSize', pls, true)) + ')';
+								} else if (pls.trackSize !== -1) {
+									playlistDataText += ' (' + utils.FormatFileSize(pls.trackSize) + ')';
+								}
 								// Text for AutoPlaylists
 								if (pls.isAutoPlaylist || pls.query) {
 									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
@@ -7190,6 +7195,7 @@ function _list(x, y, w, h) {
 						'\nTooltip:' +
 						'\n-------------------' +
 						'\nShift / Ctrl over buttons / playlists will show the associated action.' +
+						'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
 						'\n' +
 						'\nSorting & Filters:' +
 						'\n-------------------' +
