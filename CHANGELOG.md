@@ -62,6 +62,7 @@
 - UI: added tip at quick help popup ('?' button) about tooltip font settings.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for console logging to file. Disabled by default. Now this is a change from the previous behavior, where console was always logged to 'console.log' file at the [FOOBAR PROFILE FOLDER]. It can now be switched, but since it's probably not useful for most users is disabled by default.
 ### Changed
+- Clone: .xsp playlists and Auto Playlists will now make a copy of the loaded playlist (if possible) when cloning as UI playlist, instead of re-calculating the playlist to create the copy. This ensures the clone has the same sorting than the loaded version.
 - UI: changed all builtin tooltips during external drag n' drop to use the native ones (which also span outside the panel).
 - UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
 - Helpers: most json data files are now saved with Windows EOL for compatibility improvements with Windows text editors.
