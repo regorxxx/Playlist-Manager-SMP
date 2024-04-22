@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/04/24
+//22/04/24
 
 /* exported _list */
 
@@ -3002,24 +3002,31 @@ function _list(x, y, w, h) {
 		const cache = [this.offset, this.index];
 		let bSucess = false;
 		if (playlistIndexArr.length) {
+			const sources = [];
 			playlistIndexArr.forEach((zz) => {
 				const item = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
 				if (item && item.isFolder) {
-					if (!!item.pls.lengthFiltered && this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: false, bDelSource })) {
+					if (!!item.pls.lengthFiltered && this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: false, bDelSource, bSkipXspRefresh: true })) {
 						bSucess = true;
 					}
-				} else if (this.sendSelectionToPlaylist({ playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource })) {
+				} else if (this.sendSelectionToPlaylist({ playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource, bSkipXspRefresh: true })) {
 					bSucess = true;
 				}
+				if (bSucess && item) { sources.push(item.nameId); }
 			});
+			if (this.bAutoRefreshXsp) { this.refreshSmartPlaylists({ sources }); }
 		}
 		if (bSucess) {
-			[this.offset, this.index] = cache;
-			window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+			if (['By track size', 'By duration'].includes(this.getMethodState())) {
+				this.sort();
+			} else {
+				[this.offset, this.index] = cache;
+				window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+			}
 		}
 	};
 
-	this.sendSelectionToPlaylist = ({ playlistIndex, pls = null, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false } = {}) => {
+	this.sendSelectionToPlaylist = ({ playlistIndex, pls = null, bCheckDup = false, bAlsoHidden = false, bPaint = true, bDelSource = false, bSkipXspRefresh = false } = {}) => {
 		if (typeof playlistIndex !== 'undefined' && playlistIndex !== null) {
 			if (playlistIndex < 0 || (!bAlsoHidden && playlistIndex >= this.items) || (bAlsoHidden && playlistIndex >= this.itemsAll)) {
 				console.log('Playlist Manager: Error adding tracks to playlist. Index ' + _p(playlistIndex) + ' out of bounds. (sendSelectionToPlaylist)');
@@ -3121,6 +3128,12 @@ function _list(x, y, w, h) {
 								),
 								modified: Date.now(),
 							});
+						}
+					}
+					if (!bSkipXspRefresh && this.bAutoRefreshXsp) {
+						this.refreshSmartPlaylists({ sources: [pls.nameId] });
+						if (['By track size', 'By duration'].includes(this.getMethodState())) {
+							this.sort();
 						}
 					}
 					return true;
@@ -3343,29 +3356,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			if (bRefresh) {
-				const remDupl = this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-				this.dataXsp.forEach((plsXsp) => {
-					if (plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId)) {
-						const { handlePlaylist } = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog: false });
-						if (!handlePlaylist) { return; }
-						const duplicated = getPlaylistIndexArray(plsXsp.nameId);
-						if (duplicated.length === 1) {
-							setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'remove');
-							plman.UndoBackup(duplicated[0]);
-							plman.ClearPlaylist(duplicated[0]);
-							plman.InsertPlaylistItems(duplicated[0], 0, handlePlaylist);
-							setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'add');
-						}
-						this.editData(plsXsp, {
-							size: handlePlaylist.Count,
-							duration: handlePlaylist.CalcTotalDuration(),
-							trackSize: handlePlaylist.CalcTotalSize()
-						}, true);
-						if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handlePlaylist.Count) {
-							this.updateTags(handlePlaylist, plsXsp);
-						}
-					}
-				});
+				this.refreshSmartPlaylists({ sources: [playlistNameId] });
 			}
 		}
 		if (bCallback) {
@@ -3497,6 +3488,40 @@ function _list(x, y, w, h) {
 				if (plsData.extension !== '.ui') { setTimeout(() => { if (pop.isEnabled('saving')) { pop.disable(true); } }, 500); }
 				return true;
 			}
+		}
+		return false;
+	};
+
+	this.refreshSmartPlaylists = ({ sources = [] }) => {
+		if (this.itemsXsp && sources.length) { // Refresh XSP playlists using playlist sources
+			const remDupl = this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+			const update = this.dataXsp.map((plsXsp) => {
+				return sources.some((playlistNameId) => {
+					return plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId);
+				});
+			});
+			this.dataXsp.forEach((plsXsp, i) => {
+				if (update[i]) {
+					const handlePlaylist = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog: false });
+					if (!handlePlaylist) { return; }
+					const duplicated = getPlaylistIndexArray(plsXsp.nameId);
+					if (duplicated.length === 1) {
+						setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'remove');
+						plman.UndoBackup(duplicated[0]);
+						plman.ClearPlaylist(duplicated[0]);
+						plman.InsertPlaylistItems(duplicated[0], 0, handlePlaylist);
+						setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'add');
+					}
+					this.editData(plsXsp, {
+						size: handlePlaylist.Count,
+						duration: handlePlaylist.CalcTotalDuration(),
+						trackSize: handlePlaylist.CalcTotalSize()
+					}, true);
+					if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handlePlaylist.Count) {
+						this.updateTags(handlePlaylist, plsXsp);
+					}
+				}
+			});
 		}
 		return false;
 	};
@@ -4949,7 +4974,13 @@ function _list(x, y, w, h) {
 					? this.dataAll.filter((pls) => !pls.isFolder)
 					: this.dataAll.filter((pls) => !pls.isAutoPlaylist && !pls.isFolder)
 				, cachePlaylist.bind(this), 200)
-				.then(() => console.log('Playlist manager: Cached playlists for searching ' + _p(bIncludeAutoPls ? 'all' : 'files')));
+				.then(() => {
+					console.log('Playlist manager: Cached playlists for searching ' + _p(bIncludeAutoPls ? 'all' : 'files'));
+					// Refresh sorting with new data
+					if (['By track size', 'By duration'].includes(this.getMethodState())) {
+						this.sort();
+					}
+				});
 		}, 250);
 	};
 
@@ -5992,7 +6023,23 @@ function _list(x, y, w, h) {
 		plman.ActivePlaylist = index;
 	};
 
-	this.removePlaylist = (idx, bAlsoHidden = false) => {
+	this.removePlaylists = (idxArr, bAlsoHidden = false) => {
+		const playlists = idxArr.map((i) => (bAlsoHidden ? this.dataAll : this.data)[i]);
+		const sources = playlists.map((pls) => pls.nameId);
+		playlists.forEach((pls) => {
+			// Index change on every removal so it has to be recalculated
+			const z = this.getIndex(pls);
+			if (z !== -1) { this.removePlaylist(z, bAlsoHidden, true); }
+		});
+		if (this.bAutoRefreshXsp) {
+			this.refreshSmartPlaylists({ sources });
+			if (['By track size', 'By duration'].includes(this.getMethodState())) {
+				this.sort();
+			}
+		}
+	};
+
+	this.removePlaylist = (idx, bAlsoHidden = false, bSkipXspRefresh = false) => {
 		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
 			console.log('Playlist Manager: Error removing playlist. Index ' + _p(idx) + ' out of bounds. (removePlaylist)');
 			return false;
@@ -6084,6 +6131,12 @@ function _list(x, y, w, h) {
 				this.cacheLastPosition(Math.min(idx, this.items - 1));
 				this.jumpLastPosition();
 			}, 10);
+		}
+		if (!bSkipXspRefresh && this.bAutoRefreshXsp) {
+			this.refreshSmartPlaylists({ sources: [pls.nameId] });
+			if (['By track size', 'By duration'].includes(this.getMethodState())) {
+				this.sort();
+			}
 		}
 	};
 

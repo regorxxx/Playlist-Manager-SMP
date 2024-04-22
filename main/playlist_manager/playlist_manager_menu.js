@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/04/24
+//22/04/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -1497,11 +1497,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			// Deletes playlist file and playlist loaded
 			menu.newEntry({
 				entryText: 'Delete', func: () => {
-					playlists.forEach((pls) => {
-						// Index change on every removal so it has to be recalculated
-						const z = list.getIndex(pls);
-						if (z !== -1) { list.removePlaylist(z); }
-					});
+					list.removePlaylists(list.indexes);
 					list.indexes.length = 0; // Reset selection since there is no playlists now
 				}
 			});
@@ -1917,6 +1913,12 @@ function createMenuRight() {
 							}
 							list.filter({ categoryState });
 							list.deletedItems.splice(i, 1);
+							if (list.bAutoRefreshXsp) {
+								list.refreshSmartPlaylists({ sources: [item.nameId] });
+								if (['By track size', 'By duration'].includes(list.getMethodState())) {
+									list.sort();
+								}
+							}
 						}
 					});
 				});
