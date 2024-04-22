@@ -62,9 +62,11 @@
 - UI: added tip at quick help popup ('?' button) about tooltip font settings.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for console logging to file. Disabled by default. Now this is a change from the previous behavior, where console was always logged to 'console.log' file at the [FOOBAR PROFILE FOLDER]. It can now be switched, but since it's probably not useful for most users is disabled by default.
 ### Changed
+- XSP: smart playlist are now also refreshed when the playlist sources change by drag n' drop, mouse actions, deleted or restored, in addition to changes when they are loaded in UI (introduced at [0.13.0](#0130---2024-02-28)).
 - Clone: .xsp playlists and Auto Playlists will now make a copy of the loaded playlist (if possible) when cloning as UI playlist, instead of re-calculating the playlist to create the copy. This ensures the clone has the same sorting than the loaded version.
 - UI: changed all builtin tooltips during external drag n' drop to use the native ones (which also span outside the panel).
 - UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
+- UI: smoother scroll bar movement when using the mouse and dragging the bar.
 - Helpers: most json data files are now saved with Windows EOL for compatibility improvements with Windows text editors.
 - Helpers: updated helpers.
 ### Removed
@@ -75,7 +77,7 @@
 - UI: drag and drop and other features requiring a playlist selection did not work properly with selections from other panels which were not using a playlist as source. Issue #81
 - Playlist locks: workaround for [SMP bug](https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/198) related to playback on locked playlists. It should now work fine, but the 'default action' lock can not be switched anymore. Issue #82
 
-## [0.15.0] - 2023-03-21
+## [0.15.0] - 2024-03-21
 ### Added
 - UI: settings to switch the playlist status icons at the right (loaded/playing now/active). Active playlist icon has been added too.
 - UI: settings to change the standard playlist color and header buttons independently of general text color. Therefore the playlist status icons color can now be changed without affecting the rest by setting the other colors if desired. Beware this update will probably reset all colors customization on existing panel to default values.
@@ -85,7 +87,7 @@
 ### Fixed
 - UI: fixed crash due to infinite recursion trying to move a folder into one of its own subfolders. In the case of drag n' drop, the tooltip now warns about it. If there are multiple items selected but at least one of them can be moved to the child subfolder (for ex. when selecting both playlists and folders), then non valid items are skipped.
 
-## [0.14.1] - 2023-03-16
+## [0.14.1] - 2024-03-16
 ### Added
 ### Changed
 - Lite mode: some improvements when switching from/to lite mode to maintain playlist metadata and folder structure. Now it tries to merge old and new data, without overwriting. In any case, it is not recommended to switch modes frequently, since some info may be lost for playlist files (like sorting, which can not be merged).
@@ -101,7 +103,7 @@
 - UI: filter button was highlighted while loading playlists (even if no filter was active). Cosmetic change, it was properly set after playlist loading.
 - UI: sorting errors in some cases when moving items to folders using menus.
 
-## [0.14.0] - 2023-03-15
+## [0.14.0] - 2024-03-15
 ### Added
 - Playlist formats: new menu entries on playlist contextual menu to convert UI-playlists to physical files. Works in single and multiple selection. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
 - UI: new action on list button (+), using Shift + L. Click to send selection to a new playlist.
@@ -115,7 +117,7 @@
 ### Fixed
 - Playlist formats: creating a playlist file from active playlist when the playlist was an UI-only playlist did not properly convert it in some cases, complaining duplicated names. [Request 79](https://github.com/regorxxx/Playlist-Manager-SMP/issues/79)
 
-## [0.13.0] - 2023-02-28
+## [0.13.0] - 2024-02-28
 ### Added
 - Importing JSON: allows to import any available playlist metadata from UI-only playlists, .fpl, .xsp, .pls and .srtm files (which is only saved in the JSON file). In such case, the playlist file (with same filename and name) must already reside in the tracked folder to be matched at the importing step and overwritten with the metadata found.
 - Importing JSON: allows to import the folder structure saved in the JSON file.
