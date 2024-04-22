@@ -2,7 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [0.16.0](#0150---2024-04-22)
+- [0.16.0](#0160---2024-04-22)
 - [0.15.0](#0150---2024-03-21)
 - [0.14.1](#0141---2024-03-16)
 - [0.14.0](#0140---2024-03-15)
@@ -1202,7 +1202,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.13.0...v0.14.0
