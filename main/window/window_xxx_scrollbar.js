@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//22/04/24
 
 /* exported _scrollBar */
 
@@ -31,6 +31,8 @@ function _scrollBar({
 	this.w = w;
 	this.wHidden = Math.max(this.w / 10, _scale(2));
 	this.h = h;
+	this.mx = -1;
+	this.my = -1;
 	this.size = size;
 	this.color = color;
 	this.bgColor = bgColor;
@@ -140,7 +142,9 @@ function _scrollBar({
 		// Curr position
 		this.barLength = this.h - buttonHeight * 2;
 		this.buttonHeight = buttonHeight;
-		const currY = Math.min(Math.max(this.calcCurrPos(), this.y + buttonHeight), this.y + this.buttonHeight + this.barLength - this.size);
+		const currY = this.bDrag
+			? Math.min(Math.max(this.my, this.y + buttonHeight), this.y + this.buttonHeight + this.barLength - this.size)
+			: Math.min(Math.max(this.calcCurrPos(), this.y + buttonHeight), this.y + this.buttonHeight + this.barLength - this.size);
 		const currColor = this.bDrag
 			? tintColor(color, 20)
 			: this.bHoveredCurr
@@ -211,6 +215,7 @@ function _scrollBar({
 			this.bHoveredBarDown = this.bHoveredCurr || this.bHoveredUp || this.bHoveredDown || this.bHoveredBarUp ? false : true;
 			if (this.bHoveredCurr) {
 				this.bDrag = true;
+				this.my = this.calcCurrPos();
 				this.bDragUp = this.bDragDown = false;
 			} else if (this.bHoveredUp || this.bHoveredBarUp) {
 				draggingTime = 0;
@@ -283,6 +288,7 @@ function _scrollBar({
 			this.bHoveredUp = this.bHoveredCurr ? false : this.traceButtons(x, y, 'up');
 			this.bHoveredDown = this.bHoveredCurr ? false : this.traceButtons(x, y, 'down');
 			if (this.bDrag) {
+				this.my = y;
 				const oldRow = this.currRow;
 				this.currRow = this.calcCurrRow(y);
 				if (oldRow !== this.currRow) { this.scrollFunc({ current: this.currRow, delta: oldRow - this.currRow }); }
@@ -294,6 +300,7 @@ function _scrollBar({
 			this.repaint();
 			return true;
 		} else {
+			this.my = -1;
 			if (this.bHoveredCurr || this.bHovered) {
 				this.bHoveredCurr = this.bHovered = this.bHoveredUp = this.bHoveredDown = this.bDragUp = this.bDragDown = this.bHoveredBarUp = this.bHoveredBarDown = false;
 				this.repaint();
