@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.16.0](#0150---2024-04-22)
 - [0.15.0](#0150---2024-03-21)
 - [0.14.1](#0141---2024-03-16)
 - [0.14.0](#0140---2024-03-15)
@@ -55,6 +56,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.16.0] - 2024-04-22
 ### Added
 - Playlists maintenance tools: ported the Playlist revive functionality from [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP), available now at Playlist maintenance tools, for the active playlist. Pressing Shift + L. Click on the menu entry will select the dead items instead of replacing them. For more complex usage, check the other script.
 - Importing file: feature similar to the one found at [Playlist Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP), lets you find matches on library using a mask against a text list (for ex. ARTIST - TITLE per line). Additionally, not found items may be replaced with YouTube links. It also works directly on a URL as long as the content is only text. There is an array of configurable query filters to tweak how tracks are preferred (for ex. non live tracks first).
