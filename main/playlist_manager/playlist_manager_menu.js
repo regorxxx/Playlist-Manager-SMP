@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/04/24
+//25/04/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -29,6 +29,8 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 /* global XSPF:readable */
+include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
+/* global XSP:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -36,7 +38,7 @@ include('..\\..\\helpers\\helpers_xxx_UI.js');
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('playlist_manager_helpers.js');
-/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable,findDuplicates:readable */
+/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable, findDuplicates:readable, findCircularReferences:readable */
 include('playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
@@ -197,10 +199,19 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: 'Edit query...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let newQuery = '';
-						try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, pls.query); }
+						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (pls.extension === '.xsp' ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
 						catch (e) { return; }
 						const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
 						if (!bPlaylist && !checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
+						if (pls.extension === '.xsp') {
+							const { rules } = XSP.getRules(newQuery);
+							if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return; }
+							const jsp = XSP.emptyJSP('songs');
+							jsp.playlist.rules = rules;
+							if (list.checkCircularXsp({ jsp, name: pls.name })) {
+								console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
+							}
+						}
 						if (newQuery !== pls.query) {
 							const bDone = pls.extension === '.xsp' ? rewriteXSPQuery(pls, newQuery) : true;
 							if (bDone) {
@@ -1760,7 +1771,7 @@ function createMenuRight() {
 					}
 					// Presets
 					const maskPresets = [
-						{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), discard: '#'},
+						{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), discard: '#' },
 						{ name: 'Track list', val: JSON.stringify(['%TITLE%', ' - ', globTags.artist]), discard: '#' },
 						{ name: 'M3U Extended', val: JSON.stringify(['#EXTINF:', ',', globTags.artist, ' - ', '%TITLE%']), discard: '' }
 					];
@@ -1802,7 +1813,7 @@ function createMenuRight() {
 					if (!pop.isEnabled()) { // Display animation except for UI playlists
 						pop.enable(true, 'Importing...', 'Importing file / url...\nPanel will be disabled during the process.', 'importing');
 					}
-					ImportTextPlaylist.getHandles({ path, formatMask, discardMask,queryFilters })
+					ImportTextPlaylist.getHandles({ path, formatMask, discardMask, queryFilters })
 						.then((data) => {
 							if (pop.isEnabled('importing')) { pop.disable(true); }
 							let bYouTube = false;
@@ -2083,10 +2094,24 @@ function createMenuRight() {
 				menuName: subMenuName, entryText: 'Format specific errors...', func: () => {
 					let answer = WshShell.Popup('Scan all playlists to check for errors on playlist structure or format.', 0, window.Name, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
-					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking fprmat errors...\nPanel will be disabled during the process.'); }
+					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking format errors...\nPanel will be disabled during the process.'); }
 					findFormatErrors().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
 						fb.ShowPopupMessage('Found these playlists with format errors:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						pop.disable(true);
+					});
+				}
+			});
+		}
+		if (!list.bLiteMode) {	// Circular references
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Circular references...', func: () => {
+					let answer = WshShell.Popup('Scan all playlists to check for circular references on Smart Playlists (.xsp).', 0, window.Name, popup.question + popup.yes_no);
+					if (answer !== popup.yes) { return; }
+					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking circular references...\nPanel will be disabled during the process.'); }
+					findCircularReferences().then(({ found, report }) => {
+						if (found.length) { list.filter({ plsState: found }); }
+						fb.ShowPopupMessage('Found these playlists with circular references:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 						pop.disable(true);
 					});
 				}
@@ -3009,7 +3034,7 @@ function createMenuRightTop() {
 							'Enter array of queries to apply as consecutive conditions:\n\n["%CHANNELS% LESS 3", "%RATING% GREATER 2"]\n\nThe example would try to find matches with 2 or less channels, then filter those results with rating > 2. In case the later filter does not output at least a single track, then will be skipped and only the previous filter applied (channels)... and so on (for more filters).',
 							window.Name,
 							JSON.parse(list.properties.importPlaylistFilters[3]),
-							void(0), true
+							void (0), true
 						);
 						if (input === null) { return; }
 						list.properties.importPlaylistFilters[1] = JSON.stringify(input);
@@ -3214,7 +3239,7 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
-			const getColorName = (val) => {
+			const getColorName = (val = -1) => {
 				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
 			}; // From statistics
 			const subMenuName = menu.newMenu('Set custom colors...', menuName);
