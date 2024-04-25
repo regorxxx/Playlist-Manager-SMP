@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/04/24
+//26/04/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,7 +8,7 @@
 
 /* exported delayAutoUpdate */
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.16.0', features: { drag_n_drop: true, grab_focus: true } }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.16.1', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
 /* global globSettings:readable, folders:readable, globFonts:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable, globQuery:readable */
@@ -121,7 +121,7 @@ let properties = {
 	bSaveFilterStates: ['Maintain filters between sessions?', true, { func: isBoolean }, true],
 	filterStates: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
 	bShowSep: ['Show name/category separators: ', true, { func: isBoolean }, true],
-	listColors: ['Colour codes for the list. Use contextual menu to set them: ', '', { func: isStringWeak }, ''],
+	listColors: ['List items color codes', '', { func: isStringWeak }, ''],
 	bFirstPopup: ['Playlist Manager: Fired once', false, { func: isBoolean }, false],
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }, false],
 	bFirstPopupFpl: ['Playlist Manager fpl: Fired once', false, { func: isBoolean }, false],
