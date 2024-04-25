@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.16.1](#0161---2024-04-26)
 - [0.16.0](#0160---2024-04-22)
 - [0.15.0](#0150---2024-03-21)
 - [0.14.1](#0141---2024-03-16)
@@ -61,6 +62,17 @@
 ### Removed
 ### Fixed
 
+## [0.16.1] - 2024-04-26
+### Added
+- XSP: new entry at Playlist maintenance tools to check for circular references in all playlists.
+### Changed
+- XSP: Smart Playlists are now checked for infinite recursion or circular references when they are created, loaded or cached. This avoids situations where Playlist A tries to load Playlist B, which at the same time tries to load Playlist A. Or if it references itself. There is also a new recursion limit of 100 steps; any playlist which tries to look for sources with nesting higher than that will also throw a warning.
+- UI: all list items color settings will be lost, make a backup if needed of property plm_15 and reapply later after updating.
+### Removed
+### Fixed
+- UI: tracks duration and size was not properly refreshed in some cases for playlist files.
+- UI: wrong handling of colors when upgrading from old versions. Crash when opening the settings menu.
+
 ## [0.16.0] - 2024-04-22
 ### Added
 - Playlists maintenance tools: ported the Playlist revive functionality from [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP), available now at Playlist maintenance tools, for the active playlist. Pressing Shift + L. Click on the menu entry will select the dead items instead of replacing them. For more complex usage, check the other script.
@@ -69,7 +81,7 @@
 - UI: added tip at quick help popup ('?' button) about tooltip font settings.
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for console logging to file. Disabled by default. Now this is a change from the previous behavior, where console was always logged to 'console.log' file at the [FOOBAR PROFILE FOLDER]. It can now be switched, but since it's probably not useful for most users is disabled by default.
 ### Changed
-- XSP: smart playlist are now also refreshed when the playlist sources change by drag n' drop, mouse actions, deleted or restored, in addition to changes when they are loaded in UI (introduced at [0.13.0](#0130---2024-02-28)).
+- XSP: Smart Playlists are now also refreshed when the playlist sources change by drag n' drop, mouse actions, deleted or restored, in addition to changes when they are loaded in UI (introduced at [0.13.0](#0130---2024-02-28)).
 - Clone: .xsp playlists and Auto Playlists will now make a copy of the loaded playlist (if possible) when cloning as UI playlist, instead of re-calculating the playlist to create the copy. This ensures the clone has the same sorting than the loaded version.
 - UI: changed all builtin tooltips during external drag n' drop to use the native ones (which also span outside the panel).
 - UI: all sorting methods now also sort elements by name in case they have the same priority (for ex. all 0-sized playlists sorted alphabetically instead of randomly).
@@ -1202,7 +1214,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.1...HEAD
+[0.16.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.0...v0.14.1
