@@ -1,7 +1,7 @@
 ﻿'use strict';
-//21/04/24
+//24/04/24
 
-/* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead */
+/* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
 /* global list:readable, delayAutoUpdate:readable */
 include(fb.ComponentPath + 'docs\\Codepages.js');
@@ -19,7 +19,7 @@ include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getPlaylistIndexArray:readable, getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable,  */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global loadablePlaylistFormats:readable, fplCache:readable, xmlDomCache:readable , getFilePathsFromPlaylist:readable, _explorer:readable, savePlaylist:readable, xspCache:readable, xspfCache:readable, arePathsInMediaLibrary:readable, pathTF:readable */
+/* global loadablePlaylistFormats:readable, fplCache:readable, xmlDomCache:readable , getFilePathsFromPlaylist:readable, _explorer:readable, savePlaylist:readable, xspCache:readable, xspfCache:readable, arePathsInMediaLibrary:readable, pathTF:readable, loadXspPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_fpl.js');
 /* global FPL:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
@@ -1327,34 +1327,24 @@ function rewriteXSPQuery(pls, newQuery) {
 		}
 		const { rules, match } = XSP.getRules(newQuery);
 		if (rules.length) {
-			const playlistPath = pls.path;
-			const bCache = xspCache.has(playlistPath);
-			let playlistText = '';
-			if (!bCache) {
-				playlistText = _open(playlistPath);
-				if (playlistText && playlistText.length) {
-					// Safe checks to ensure proper encoding detection
-					const codePage = checkCodePage(playlistText, '.xsp');
-					if (codePage !== -1) { playlistText = _open(playlistPath, codePage); if (!playlistText.length) { return bDone; } }
-				} else { return bDone; }
-			}
-			const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
-			const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
+			const plsPath = pls.path;
+			const jsp = loadXspPlaylist(plsPath);
+			if (!jsp) {return bDone;}
 			jsp.playlist.rules = rules;
 			jsp.playlist.match = match;
 			const xspText = XSP.toXSP(jsp);
 			if (xspText && xspText.length) {
 				// Backup
-				const backPath = playlistPath + '.back';
-				_copyFile(playlistPath, backPath);
-				bDone = _save(playlistPath, xspText.join('\r\n'));
+				const backPath = plsPath + '.back';
+				_copyFile(plsPath, backPath);
+				bDone = _save(plsPath, xspText.join('\r\n'));
 				if (!bDone) {
-					_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+					_renameFile(backPath, plsPath); // Restore backup in case something goes wrong
 					console.log('Playlist manager: Restoring backup...');
 				} else if (_isFile(backPath)) { _deleteFile(backPath); }
 				if (bDone) {
-					xspCache.set(playlistPath, jsp);
-					xmlDomCache.delete(playlistPath);
+					xspCache.set(plsPath, jsp);
+					xmlDomCache.delete(plsPath);
 				}
 			}
 		}
@@ -1370,34 +1360,23 @@ function rewriteXSPSort(pls, newSort) {
 			return bDone;
 		}
 		const order = XSP.getOrder(newSort);
-		const playlistPath = pls.path;
-		const bCache = xspCache.has(playlistPath);
-		let playlistText = '';
-		if (!bCache) {
-			playlistText = _open(playlistPath);
-			if (playlistText && playlistText.length) {
-				// Safe checks to ensure proper encoding detection
-				const codePage = checkCodePage(playlistText, '.xsp');
-				if (codePage !== -1) { playlistText = _open(playlistPath, codePage); if (!playlistText.length) { return bDone; } }
-			} else { return bDone; }
-		}
-		const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
-		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
-		if (!bCache) { xspCache.set(playlistPath, jsp); }
+		const plsPath = pls.path;
+		const jsp = loadXspPlaylist(plsPath);
+		if (!jsp) {return bDone;}
 		jsp.playlist.order = order;
 		const xspText = XSP.toXSP(jsp);
 		if (xspText && xspText.length) {
 			// Backup
-			const backPath = playlistPath + '.back';
-			_copyFile(playlistPath, backPath);
-			bDone = _save(playlistPath, xspText.join('\r\n'));
+			const backPath = plsPath + '.back';
+			_copyFile(plsPath, backPath);
+			bDone = _save(plsPath, xspText.join('\r\n'));
 			if (!bDone) {
-				_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+				_renameFile(backPath, plsPath); // Restore backup in case something goes wrong
 				console.log('Playlist manager: Restoring backup...');
 			} else if (_isFile(backPath)) { _deleteFile(backPath); }
 			if (bDone) {
-				xspCache.set(playlistPath, jsp);
-				xmlDomCache.delete(playlistPath);
+				xspCache.set(plsPath, jsp);
+				xmlDomCache.delete(plsPath);
 			}
 		}
 	}
@@ -1411,34 +1390,23 @@ function rewriteXSPLimit(pls, newLimit) {
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return bDone;
 		}
-		const playlistPath = pls.path;
-		const bCache = xspCache.has(playlistPath);
-		let playlistText = '';
-		if (!bCache) {
-			playlistText = _open(playlistPath);
-			if (playlistText && playlistText.length) {
-				// Safe checks to ensure proper encoding detection
-				const codePage = checkCodePage(playlistText, '.xsp');
-				if (codePage !== -1) { playlistText = _open(playlistPath, codePage); if (!playlistText.length) { return bDone; } }
-			} else { return bDone; }
-		}
-		const xmldom = bCache ? null : xmlDomCache.get(playlistPath) || XSP.XMLfromString(playlistText);
-		const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
-		if (!bCache) { xspCache.set(playlistPath, jsp); }
+		const plsPath = pls.path;
+		const jsp = loadXspPlaylist(plsPath);
+		if (!jsp) {return bDone;}
 		jsp.playlist.limit = Number.isFinite(newLimit) ? newLimit : 0;
 		const xspText = XSP.toXSP(jsp);
 		if (xspText && xspText.length) {
 			// Backup
-			const backPath = playlistPath + '.back';
-			_copyFile(playlistPath, backPath);
-			bDone = _save(playlistPath, xspText.join('\r\n'));
+			const backPath = plsPath + '.back';
+			_copyFile(plsPath, backPath);
+			bDone = _save(plsPath, xspText.join('\r\n'));
 			if (!bDone) {
-				_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+				_renameFile(backPath, plsPath); // Restore backup in case something goes wrong
 				console.log('Playlist manager: Restoring backup...');
 			} else if (_isFile(backPath)) { _deleteFile(backPath); }
 			if (bDone) {
-				xspCache.set(playlistPath, jsp);
-				xmlDomCache.delete(playlistPath);
+				xspCache.set(plsPath, jsp);
+				xmlDomCache.delete(plsPath);
 			}
 		}
 	}
@@ -1869,6 +1837,35 @@ function findFormatErrors() {
 					}
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
 					if (progress > prevProgress) { prevProgress = progress; console.log('Checking format errors ' + progress + '%.'); }
+					resolve('done');
+				}, iDelay);
+			}));
+		});
+		Promise.all(promises).then(() => {
+			resolve({ found, report });
+		});
+	});
+}
+
+function findCircularReferences() {
+	const found = [];
+	const report = [];
+	return new Promise((resolve) => {
+		const playlists = list.dataAll.filter((pls) => pls.extension === '.xsp' && pls.type == 'songs');
+		const total = playlists.length - 1;
+		const promises = [];
+		let prevProgress = -1;
+		let iDelay = 0;
+		playlists.forEach((playlist, i) => {
+			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
+			promises.push(new Promise((resolve) => {
+				setTimeout(() => {
+					if (list.checkCircularXsp({pls: playlist})) {
+						found.push(playlist);
+						report.push(playlist.path);
+					}
+					const progress = total ? Math.round(i / total * 10) * 10 : 100;
+					if (progress > prevProgress) { prevProgress = progress; console.log('Checking circular references ' + progress + '%.'); }
 					resolve('done');
 				}, iDelay);
 			}));
