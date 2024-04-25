@@ -1,11 +1,11 @@
 ﻿'use strict';
-//22/04/24
+//25/04/24
 
 /* exported _list */
 
 /* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -21,7 +21,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable */
+/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -4626,6 +4626,7 @@ function _list(x, y, w, h) {
 			this.itemsFolder = this.dataFolder.length;
 			this.data = [];
 			if (!this.bLiteMode) {
+				const bCache = this.requiresCachePlaylistSearch();
 				this.data = loadPlaylistsFromFolder(this.playlistsPath).map((item) => {
 					if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
 						if (this.bFplLock) { item.isLocked = true; }
@@ -4655,6 +4656,12 @@ function _list(x, y, w, h) {
 							item.description = xspPlaylist.description;
 						}
 						if (!this.properties.bSetup[1]) { this.xspPopup(); }
+					}
+					if (!bInit && bCache && new Set(['.m3u8', '.m3u', '.xspf', '.pls']).has(item.extension)) {
+						const handleList = getHandlesFromPlaylist({ playlistPath: item.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
+						this.plsCache.set(item.path, handleList);
+						item.duration = handleList ? handleList.CalcTotalDuration() : 0;
+						item.trackSize = handleList ? handleList.CalcTotalSize() : 0;
 					}
 					return item;
 				});
@@ -5372,6 +5379,42 @@ function _list(x, y, w, h) {
 		return levels.has(item.nameId);
 	};
 
+	this.checkCircularXsp = ({ jsp, name, pls }) => {
+		if (!jsp && pls) { jsp = loadXspPlaylist(pls.path); }
+		else if (!jsp) { throw new Error('No jsp or pls provided'); }
+		if (!name && pls) { name = pls.name; }
+		else if (!name) { throw new Error('No name and pls provided'); }
+		const queue = new Set(XSP.getQueryPlaylists(jsp).is);
+		let isCircular = false;
+		let i = 0;
+		while (queue.size || i > 100) {
+			if (isCircular || queue.has(name)) { isCircular = true; break; }
+			else {
+				this.dataAll.forEach((source) => {
+					if (isCircular || !queue.size) { return; }
+					if (pls === source || pls && pls.nameId === source.nameId || source.name === name) { return; }
+					if (queue.has(source.name) && source.extension === '.xsp') {
+						const subJsp = loadXspPlaylist(source.path);
+						if (!subJsp) { return; }
+						queue.delete(source.name);
+						XSP.getQueryPlaylists(subJsp).is.forEach((newName) => queue.add(newName));
+						if (queue.has(name) || queue.has(source.name)) { isCircular = true; return; }
+					} else {
+						queue.delete(source.name);
+					}
+				});
+			}
+			// Ommit non found sources
+			[...queue].forEach((val) => {
+				if (!this.dataAll.some((source) => source.name === val)) {
+					queue.delete(val);
+				}
+			});
+			i++;
+		}
+		return isCircular;
+	};
+
 	this.converUiPlaylist = ({ idx = -1, name = '', bShowPopups = true, toFolder = null } = {}) => {
 		if (idx === -1) {
 			if (plman.ActivePlaylist === -1) { return null; }
@@ -5637,6 +5680,14 @@ function _list(x, y, w, h) {
 		if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
 		const { rules, match } = XSP.getRules(newQuery);
 		if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return null; }
+		else {
+			const jsp = XSP.emptyJSP('songs');
+			jsp.playlist.rules = rules;
+			if (this.checkCircularXsp({ jsp, name: newName })) {
+				console.popup(newName + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
+				return null;
+			}
+		}
 		const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
 		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
 		const newForced = false;
@@ -5682,13 +5733,13 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
 		let bDone = false;
 		if (rules.length) {
-			const jspPls = XSP.emptyJSP('songs');
-			jspPls.playlist.name = newName;
-			jspPls.playlist.rules = rules;
-			jspPls.playlist.match = match;
-			jspPls.playlist.limit = newLimit;
-			jspPls.playlist.sort = XSP.getOrder(newSort);
-			const xspText = XSP.toXSP(jspPls);
+			const jsp = XSP.emptyJSP('songs');
+			jsp.playlist.name = newName;
+			jsp.playlist.rules = rules;
+			jsp.playlist.match = match;
+			jsp.playlist.limit = newLimit;
+			jsp.playlist.sort = XSP.getOrder(newSort);
+			const xspText = XSP.toXSP(jsp);
 			if (xspText && xspText.length) { bDone = _save(playlistPath, xspText.join('\r\n')); }
 		}
 		if (!bDone) { return null; }
@@ -5758,10 +5809,10 @@ function _list(x, y, w, h) {
 					extension: this.playlistsExtension,
 					size: bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist),
 					fileSize: utils.GetFileSize(done),
-					trackSize: bEmpty ? -1 : handleList.CalcTotalSize(),
+					trackSize: bEmpty ? 0 : handleList.CalcTotalSize(),
 					category: oPlaylistCategory,
 					tags: oPlaylistTags,
-					duration: bEmpty ? -1 : handleList.CalcTotalDuration(),
+					duration: bEmpty ? 0 : handleList.CalcTotalDuration(),
 					created: now,
 					modified: now
 				});
@@ -5998,7 +6049,11 @@ function _list(x, y, w, h) {
 			// But it will fail as soon as any track is not found on library
 			// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 			const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-			handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
+			if (pls.extension === '.xsp' && this.checkCircularXsp({ pls })) {
+				console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
+			} else {
+				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
+			}
 			if (handleList) {
 				this.editData(pls, {
 					size: handleList.Count,
@@ -6386,18 +6441,18 @@ function _list(x, y, w, h) {
 			this.mbidStates = this.constMbidStates().rotate(rotations[3]);
 		}
 		// Check colors
-		if (!this.colors || !Object.keys(this.colors).length) { // Sets default colors
+		const propColorKeys = Object.keys(this.colors || {});
+		if (!propColorKeys.length) { // Sets default colors
 			this.colors = {};
-			this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6);
-			this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6);
-			this.colors.selectedPlaylist = RGB(...toRGB(0xFF0080C0)); // Blue
-			this.colors.uiPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); // Blue
-			this.colors.lockedPlaylist = RGB(...toRGB(0xFFDC143C));
-			this.colors.folder = panel.colors.text; // Black
-			this.colors.standardPlaylist = blendColors(panel.colors.text, panel.colors.background, 0.2); // Grey
 			bDone = true;
 		}
-		if (this.colors && Object.keys(this.colors).length !== 6) { // Fills missing colors
+		const colorKeys = ['autoPlaylist', 'smartPlaylist', 'selectedPlaylist', 'uiPlaylist', 'lockedPlaylist', 'folder', 'standardPlaylist'];
+		if (propColorKeys.length !== colorKeys.length || colorKeys.some((key) => !propColorKeys.includes(key))) {
+			propColorKeys.forEach((key) => {
+				if (!colorKeys.includes(key)) { delete this.colors[key]; }
+			});
+			this.properties['listColors'][1] = convertObjectToString(this.colors);
+			// Delete unused values and save as is, then fill with missing colors without saving to properties
 			if (!this.colors.autoPlaylist) { this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
 			if (!this.colors.smartPlaylist) { this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
 			if (!this.colors.selectedPlaylist) { this.colors.selectedPlaylist = RGB(...toRGB(0xFF0080C0)); } // Blue
