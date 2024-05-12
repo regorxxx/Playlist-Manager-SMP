@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/04/24
+//07/05/24
 
 /* exported _scrollBar */
 
@@ -212,7 +212,7 @@ function _scrollBar({
 			this.bHoveredUp = this.bHoveredCurr ? false : this.traceButtons(x, y, 'up');
 			this.bHoveredDown = this.bHoveredCurr ? false : this.traceButtons(x, y, 'down');
 			this.bHoveredBarUp = this.bHoveredCurr || this.bHoveredUp || this.bHoveredDown ? false : this.tracePosRel(x, y, 'u');
-			this.bHoveredBarDown = this.bHoveredCurr || this.bHoveredUp || this.bHoveredDown || this.bHoveredBarUp ? false : true;
+			this.bHoveredBarDown = !(this.bHoveredCurr || this.bHoveredUp || this.bHoveredDown || this.bHoveredBarUp);
 			if (this.bHoveredCurr) {
 				this.bDrag = true;
 				this.my = this.calcCurrPos();
