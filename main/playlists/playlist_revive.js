@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/04/24
+//07/05/24
 
 /*
 	Playlist Revive
@@ -246,7 +246,7 @@ function playlistRevive({
 				if (newHandleIdxBest.bExact) { bExact = true; }
 				if (!bSilent) { console.log(oldHandle.Path + '   --(' + (newHandleIdxBest.bExact ? 'Exact Match' : newHandleIdxBest.simil + '% ') + ')-->   \n                  ' + newHandleBest.Path); }
 			} else { // Just console log
-				if (bReportAllMatches) {
+				if (bReportAllMatches) { // NOSONAR
 					newHandleIdx.forEach((obj) => {
 						if (obj.simil > 100) { bOverHundred = true; }
 						if (obj.bExact) { bExact = true; }
