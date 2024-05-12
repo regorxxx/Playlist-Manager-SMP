@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/24
+//09/05/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -29,7 +29,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global checkQuery:readable, getSortObj:readable, stripSort:readable */
 include('..\\filter_and_query\\remove_duplicates.js');
-/* global removeDuplicatesV2:readable */
+/* global removeDuplicates:readable */
 
 function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1, trackSize = -1 } = {}) {
 	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
@@ -695,7 +695,7 @@ function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Aut
 	return bDone;
 }
 
-function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+function cloneAsStandardPls(list, z, opt = {remDupl: [], bAdvTitle: false, bMultiple: false}, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -721,7 +721,7 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
 		return false;
 	}
-	if (remDupl && remDupl.length && removeDuplicatesV2) { removeDuplicatesV2({ checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle }); }
+	if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
 	if (bAddToList) {
 		const objectPlaylist = list.add({ bEmpty: false }); // Create playlist from active playlist
 		bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
@@ -733,13 +733,13 @@ function cloneAsStandardPls(list, z, remDupl = [], bAdvTitle = false, bAddToList
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden = false, toFolder = void(0)) {
-	if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+function clonePlaylistInUI(list, z, opt = {remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false}, toFolder = void(0)) {
+	if (z < 0 || (!opt.bAlsoHidden && z >= list.items) || (opt.bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
 	}
 	let bDone = false;
-	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
+	const pls = opt.bAlsoHidden ? list.dataAll[z] : list.data[z];
 	// For query playlists, use the UI copy if possible
 	const bUI = pls.extension === '.ui'
 		|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
@@ -768,7 +768,7 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 		if (idx !== -1) {
 			plman.ActivePlaylist = idx;
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-			if (remDupl && remDupl.length && removeDuplicatesV2) { removeDuplicatesV2({ checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle }); }
+			if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
 			bDone = true;
 		}
 		if (toFolder) {
@@ -779,13 +779,13 @@ function clonePlaylistInUI(list, z, remDupl = [], bAdvTitle = false, bAlsoHidden
 	return bDone;
 }
 
-function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAlsoHidden = false) {
+function clonePlaylistMergeInUI(list, zArr, opt = {remDupl: [], bAdvTitle: false, bMultiple: false}) {
 	if (!Array.isArray(zArr)) {
 		console.log('Playlist Manager: Error merge-loading playlists. Index is not an array.');
 		return false;
 	}
 	for (let z of zArr) {
-		if (z < 0 || (!bAlsoHidden && z >= list.items) || (bAlsoHidden && z >= list.itemsAll)) {
+		if (z < 0 || (!opt.bAlsoHidden && z >= list.items) || (opt.bAlsoHidden && z >= list.itemsAll)) {
 			console.log('Playlist Manager: Error merge-loading playlists (merge). Index out of bounds.');
 			return false;
 		}
@@ -794,7 +794,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 	let handleList = new FbMetadbHandleList();
 	let names = [];
 	for (let z of zArr) {
-		const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
+		const pls = opt.bAlsoHidden ? list.dataAll[z] : list.data[z];
 		const bUI = pls.extension === '.ui';
 		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
@@ -818,7 +818,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 				handleList.AddRange(handleListZ);
 				names.push(pls.name);
 			}
-		} else { bDone = false; }
+		} else if (pls.size !== 0) { bDone = false; }
 	}
 	if (bDone && handleList && handleList.Count) {
 		const playlistName = 'Merge-load from ' + names[0] + ' - ' + names[names.length - 1] + ' ' + _p(names.length);
@@ -826,7 +826,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 		if (idx !== -1) {
 			plman.ActivePlaylist = idx;
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-			if (remDupl && remDupl.length && removeDuplicatesV2) { removeDuplicatesV2({ checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle }); }
+			if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
 		} else { bDone = false; }
 		if (bDone) { console.log('Playlist Manager: merge-load ' + names.join(', ') + ' done.'); }
 	} else { bDone = false; }
@@ -834,7 +834,7 @@ function clonePlaylistMergeInUI(list, zArr, remDupl = [], bAdvTitle = false, bAl
 }
 
 function clonePlaylistFile(list, z, ext, toFolder) {
-	if (ext === '.ui') { return clonePlaylistInUI(list, z, void (0), void (0), void (0), toFolder); }
+	if (ext === '.ui') { return clonePlaylistInUI(list, z, void (0), toFolder); }
 	let bDone = false;
 	const pls = list.data[z];
 	const bUI = pls.extension === '.ui';
@@ -1026,7 +1026,7 @@ function exportPlaylistFileWithTracks({ list, z, defPath = '', bAsync = true, bN
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
+function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
@@ -1051,7 +1051,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
 	// Get tracks
 	const handleList = !bUI
-		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle })
+		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle, bMultiple })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const subsongRegex = /,\d*$/g;
 	const paths = (!bUI && !bXSP ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => { return path.replace(subsongRegex, ''); });
@@ -1111,7 +1111,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	return bDone;
 }
 
-function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false) {
+function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
@@ -1133,7 +1133,7 @@ function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp
 	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 	if (handleList && handleList.Count) {
 		const sortObj = pls.sort && pls.sort.length ? getSortObj(pls.sort) : null;
-		if (remDupl && remDupl.length && removeDuplicatesV2) { handleList = removeDuplicatesV2({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle }); }
+		if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }
 		if (sortObj) { handleList.OrderByFormat(sortObj.tf, sortObj.direction); }
 		const subsongRegex = /,\d*$/g;
 		const paths = fb.TitleFormat('%path%').EvalWithMetadbs(handleList).map((path) => { return path.replace(subsongRegex, ''); });
