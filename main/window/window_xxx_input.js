@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/24
+//07/05/24
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -799,7 +799,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		if (!parent) {
 			window.RepaintRect(this.x, this.y, this.w, this.h, bForce);
 		} else {
-			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce); }
+			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce); } // NOSONAR
 			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce); }
 			else { console.log('oInputbox: parentObject has no repaint method.'); }
 		}
@@ -872,7 +872,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 			SelBegin: this.SelBegin,
 			SelEnd: this.SelEnd,
 		};
-		this.hover = this.trackCheck(x, y) ? true : false;
+		this.hover = this.trackCheck(x, y);
 		switch (callback) {
 			case 'down':
 				if (this.hover) {
@@ -1117,7 +1117,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 								this.text = '';
 								this.Cpos = 0;
 							} else {
-								if (this.SelBegin > 0) {
+								if (this.SelBegin > 0) { // NOSONAR
 									this.text = this.text.substring(0, this.SelBegin) + this.text.substring(this.SelEnd, this.text.length);
 									this.Cpos = this.SelBegin;
 								} else {
@@ -1125,15 +1125,13 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.Cpos = this.SelBegin;
 								}
 							}
-						} else {
-							if (this.Cpos > 0) {
-								this.text = this.text.substring(0, this.Cpos - 1) + this.text.substring(this.Cpos);
-								if (this.offset > 0) {
-									this.offset--;
-								}
-								this.Cpos--;
-								this.repaint();
+						} else if (this.Cpos > 0) {
+							this.text = this.text.substring(0, this.Cpos - 1) + this.text.substring(this.Cpos);
+							if (this.offset > 0) {
+								this.offset--;
 							}
+							this.Cpos--;
+							this.repaint();
 						}
 					}
 					this.calcText();
@@ -1153,7 +1151,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 								this.text = '';
 								this.Cpos = 0;
 							} else {
-								if (this.SelBegin > 0) {
+								if (this.SelBegin > 0) { // NOSONAR
 									this.text = this.text.substring(0, this.SelBegin) + this.text.substring(this.SelEnd, this.text.length);
 									this.Cpos = this.SelBegin;
 								} else {
@@ -1161,11 +1159,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.Cpos = this.SelBegin;
 								}
 							}
-						} else {
-							if (this.Cpos < this.text.length) {
-								this.text = this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + 1);
-								this.repaint();
-							}
+						} else if (this.Cpos < this.text.length) {
+							this.text = this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + 1);
+							this.repaint();
 						}
 					}
 					this.calcText();
@@ -1209,9 +1205,8 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							} else {
 								this.Cpos--;
 							}
-						} else {
-							if (this.Cpos > 0)
-								this.Cpos--;
+						} else if (this.Cpos > 0) {
+							this.Cpos--;
 						}
 						this.SelBegin = this.Cpos;
 						this.SelEnd = this.Cpos;
@@ -1246,16 +1241,14 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.select = true;
 									this.Cpos = 0;
 								}
-							} else {
-								if (this.Cpos > 0) {
-									if (this.anchor < this.Cpos) {
-										this.SelBegin = 0;
-										this.SelEnd = this.anchor;
-									} else if (this.anchor > this.Cpos) {
-										this.SelBegin = 0;
-									}
-									this.Cpos = 0;
+							} else if (this.Cpos > 0) {
+								if (this.anchor < this.Cpos) {
+									this.SelBegin = 0;
+									this.SelEnd = this.anchor;
+								} else if (this.anchor > this.Cpos) {
+									this.SelBegin = 0;
 								}
+								this.Cpos = 0;
 							}
 							if (this.offset > 0) {
 								this.offset = 0;
@@ -1273,16 +1266,14 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.Cpos = this.text.length;
 									this.select = true;
 								}
-							} else {
-								if (this.Cpos < this.text.length) {
-									if (this.anchor < this.Cpos) {
-										this.SelEnd = this.text.length;
-									} else if (this.anchor > this.Cpos) {
-										this.SelBegin = this.anchor;
-										this.SelEnd = this.text.length;
-									}
-									this.Cpos = this.text.length;
+							} else if (this.Cpos < this.text.length) {
+								if (this.anchor < this.Cpos) {
+									this.SelEnd = this.text.length;
+								} else if (this.anchor > this.Cpos) {
+									this.SelBegin = this.anchor;
+									this.SelEnd = this.text.length;
 								}
+								this.Cpos = this.text.length;
 							}
 							this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
 							while (this.Cx >= this.w - this.rightMargin) {
@@ -1303,15 +1294,13 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.select = true;
 									this.Cpos--;
 								}
-							} else {
-								if (this.Cpos > 0) {
-									if (this.anchor < this.Cpos) {
-										this.SelEnd--;
-									} else if (this.anchor > this.Cpos) {
-										this.SelBegin--;
-									}
-									this.Cpos--;
+							} else if (this.Cpos > 0) {
+								if (this.anchor < this.Cpos) {
+									this.SelEnd--;
+								} else if (this.anchor > this.Cpos) {
+									this.SelBegin--;
 								}
+								this.Cpos--;
 							}
 							if (this.offset > 0) {
 								const tmp = this.Cpos;
@@ -1332,15 +1321,13 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.SelEnd = this.Cpos;
 									this.select = true;
 								}
-							} else {
-								if (this.Cpos < this.text.length) {
-									if (this.anchor < this.Cpos) {
-										this.SelEnd++;
-									} else if (this.anchor > this.Cpos) {
-										this.SelBegin++;
-									}
-									this.Cpos++;
+							} else if (this.Cpos < this.text.length) {
+								if (this.anchor < this.Cpos) {
+									this.SelEnd++;
+								} else if (this.anchor > this.Cpos) {
+									this.SelBegin++;
 								}
+								this.Cpos++;
 							}
 
 							// handle scroll text on cursor selection
@@ -1435,7 +1422,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.text = '';
 									this.Cpos = 0;
 								} else {
-									if (this.SelBegin > 0) {
+									if (this.SelBegin > 0) { // NOSONAR
 										this.text = this.text.substring(0, this.SelBegin) + this.text.substring(this.SelEnd, this.text.length);
 										this.Cpos = this.SelBegin;
 									} else {
@@ -1443,16 +1430,14 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 										this.Cpos = this.SelBegin;
 									}
 								}
-							} else {
-								if (this.Cpos <= this.text.length) {
-									const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
-									const idx = leftTrim.search(/\b /);
-									this.text = idx !== -1
-										? this.text.substring(0, this.Cpos - idx) + this.text.substring(this.Cpos)
-										: '';
-									this.Cpos = idx !== -1 ? this.Cpos - idx : 0;
-									this.repaint();
-								}
+							} else if (this.Cpos <= this.text.length) {
+								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
+								const idx = leftTrim.search(/\b /);
+								this.text = idx !== -1
+									? this.text.substring(0, this.Cpos - idx) + this.text.substring(this.Cpos)
+									: '';
+								this.Cpos = idx !== -1 ? this.Cpos - idx : 0;
+								this.repaint();
 							}
 						}
 						this.calcText();
@@ -1472,7 +1457,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									this.text = '';
 									this.Cpos = 0;
 								} else {
-									if (this.SelBegin > 0) {
+									if (this.SelBegin > 0) { // NOSONAR
 										this.text = this.text.substring(0, this.SelBegin) + this.text.substring(this.SelEnd, this.text.length);
 										this.Cpos = this.SelBegin;
 									} else {
@@ -1480,23 +1465,21 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 										this.Cpos = this.SelBegin;
 									}
 								}
-							} else {
-								if (this.Cpos < this.text.length) {
-									const right = this.text.substring(this.Cpos);
-									const rightTrim = right.trimStart();
-									let idx = rightTrim.search(/ \b/);
-									if (idx !== -1) {
-										const offset = right.length - rightTrim.length;
-										const old = idx - 1;
-										if (this.Cpos === 0 && offset) { idx = offset; }
-										else { idx += offset; }
-										while (right[old] === ' ' && right[idx] === ' ') { idx++; }
-									}
-									this.text = idx !== -1
-										? this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + idx)
-										: this.text.substring(0, this.Cpos);
-									this.repaint();
+							} else if (this.Cpos < this.text.length) {
+								const right = this.text.substring(this.Cpos);
+								const rightTrim = right.trimStart();
+								let idx = rightTrim.search(/ \b/);
+								if (idx !== -1) {
+									const offset = right.length - rightTrim.length;
+									const old = idx - 1;
+									if (this.Cpos === 0 && offset) { idx = offset; }
+									else { idx += offset; }
+									while (right[old] === ' ' && right[idx] === ' ') { idx++; }
 								}
+								this.text = idx !== -1
+									? this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + idx)
+									: this.text.substring(0, this.Cpos);
+								this.repaint();
 							}
 						}
 						this.calcText();
@@ -1654,10 +1637,8 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 				this.calcText();
 				if (this.TWidth <= (this.w)) {
 					this.offset = 0;
-				} else {
-					if (this.Cpos - this.offset < 0) {
-						this.offset = this.offset > 0 ? this.Cpos - 1 : 0;
-					}
+				} else if (this.Cpos - this.offset < 0) {
+					this.offset = this.offset > 0 ? this.Cpos - 1 : 0;
 				}
 				this.select = false;
 			}

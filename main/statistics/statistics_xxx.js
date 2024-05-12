@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/01/24
+//07/05/24
 
 /* exported _chart */
 
@@ -107,7 +107,7 @@ function _chart({
 		}
 	};
 
-	this.paintScatter = (gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues) => {
+	this.paintScatter = (gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = this.graph.borderWidth * 2;
 		let valH;
@@ -164,7 +164,7 @@ function _chart({
 		});
 	};
 
-	this.paintLines = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => {
+	this.paintLines = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
@@ -195,7 +195,7 @@ function _chart({
 		});
 	};
 
-	this.paintBars = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => {
+	this.paintBars = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const xValues = x + i * barW;
@@ -218,7 +218,7 @@ function _chart({
 		});
 	};
 
-	this.paintTimeline = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => {
+	this.paintTimeline = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const xValues = x + i * barW;
@@ -242,7 +242,7 @@ function _chart({
 		});
 	};
 
-	this.paintPie = (gr, serie, i, x, y, w, h, maxY, r) => {
+	this.paintPie = (gr, serie, i, x, y, w, h, maxY, r) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		let circleArr = [];
@@ -294,7 +294,7 @@ function _chart({
 		return labelCoord;
 	};
 
-	this.paintDoughnut = (gr, serie, i, x, y, w, h, maxY, r, rInner) => {
+	this.paintDoughnut = (gr, serie, i, x, y, w, h, maxY, r, rInner) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		let circleArr = [];
@@ -1305,7 +1305,7 @@ function _chart({
 				right = 1;
 			}
 		} else {
-			if (Number.isFinite(newRange)) {
+			if (Number.isFinite(newRange)) { // NOSONAR
 				if (step < 0 && points - currPoint[1] < Math.round(newRange / 2)) {
 					left = points - newRange;
 				} else {
