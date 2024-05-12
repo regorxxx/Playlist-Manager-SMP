@@ -1,7 +1,7 @@
 ﻿'use strict';
 //26/02/24
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable */
@@ -683,6 +683,22 @@ Array.prototype.radixSort = function (bReverse = false, start, end) { // NOSONAR
 Array.prototype.radixSortInt = function (bReverse = false, start, end) { // NOSONAR
 	return bReverse ? bitmask.sortInt.call(this, this, start, end).reverse() : bitmask.sortInt.call(this, this, start, end);
 };
+
+function cartesian(...args) {
+	const r = [], max = args.length - 1;
+	function helper(arr, i) {
+		for (let j = 0, l = args[i].length; j < l; j++) {
+			const a = arr.slice(0); // clone arr
+			a.push(args[i][j]);
+			if (i == max)
+				r.push(a);
+			else
+				helper(a, i + 1);
+		}
+	}
+	helper([], 0);
+	return r;
+}
 
 /*
 	Sets

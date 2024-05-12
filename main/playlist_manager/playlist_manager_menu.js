@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/24
+//09/05/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -367,13 +367,13 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-						clonePlaylistInUI(list, z, remDupl, list.bAdvTitle);
+						clonePlaylistInUI(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
 					}
 				});
 				!list.bLiteMode && menu.newEntry({
 					entryText: 'Clone as standard playlist...', func: () => {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-						cloneAsStandardPls(list, z, remDupl, list.bAdvTitle);
+						cloneAsStandardPls(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.newEntry({
@@ -474,9 +474,9 @@ function createMenuLeft(forcedIndex = -1) {
 							menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
 								if (!pls.isAutoPlaylist) {
-									exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); // Include remDupl for XSP playlists
+									exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple); // Include remDupl for XSP playlists
 								} else {
-									exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle);
+									exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple);
 								}
 							}, flags
 						});
@@ -947,7 +947,7 @@ function createMenuFolder(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, []);
+					clonePlaylistMergeInUI(list, zArr, { remDupl: []});
 				}
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
@@ -957,7 +957,7 @@ function createMenuFolder(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, list.removeDuplicatesAutoPls, list.bAdvTitlem, true);
+					clonePlaylistMergeInUI(list, zArr, { remDupl: list.removeDuplicatesAutoPls, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
 				}
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
@@ -973,7 +973,7 @@ function createMenuFolder(menu, folder, z) {
 					if (!isPlsUI(pls) && !isFolder(pls)) {
 						if (pls.isAutoPlaylist) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-							cloneAsStandardPls(list, z, remDupl, list.bAdvTitle, false);
+							cloneAsStandardPls(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, false);
 						} else {
 							clonePlaylistFile(list, z, '.ui');
 						}
@@ -1120,7 +1120,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			entryText: 'Merge-load playlists', func: () => {
 				const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, []);
+					clonePlaylistMergeInUI(list, zArr, { remDupl: []});
 				}
 			}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
@@ -1128,7 +1128,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			entryText: 'Merge-load (no duplicates)', func: () => {
 				const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, list.removeDuplicatesAutoPls, list.bAdvTitle);
+					clonePlaylistMergeInUI(list, zArr, { remDupl: list.removeDuplicatesAutoPls, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
 				}
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
@@ -1141,7 +1141,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					if (!isPlsUI(pls) && !isFolder(pls)) {
 						if (pls.isAutoPlaylist) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-							cloneAsStandardPls(list, z, remDupl, list.bAdvTitle, false);
+							cloneAsStandardPls(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, false);
 						} else {
 							clonePlaylistFile(list, z, '.ui');
 						}
@@ -1307,8 +1307,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 							if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
 							if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
 								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-								if (!pls.isAutoPlaylist) { exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); }
-								else { exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle); }
+								if (!pls.isAutoPlaylist) { exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple); }
+								else { exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple); }
 							}
 						});
 					}, flags
@@ -2728,7 +2728,7 @@ function createMenuRightTop() {
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Use RegExp for title matching?', func: () => {
+				menuName: subMenuName, entryText: 'Use RegExp for title matching', func: () => {
 					list.bAdvTitle = !list.bAdvTitle;
 					list.properties.bAdvTitle[1] = list.bAdvTitle;
 					if (list.bAdvTitle) { fb.ShowPopupMessage(globRegExp.title.desc, window.Name); }
@@ -2736,6 +2736,15 @@ function createMenuRightTop() {
 				}
 			});
 			menu.newCheckMenuLast(() => list.bAdvTitle);
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Partial Multi-value tag matching', func: () => {
+					list.bMultiple = !list.bMultiple;
+					list.properties.bMultiple[1] = list.bMultiple;
+					if (list.bMultiple) { fb.ShowPopupMessage(globRegExp.singleTags.desc, window.Name); }
+					overwriteProperties(list.properties);
+				}
+			});
+			menu.newCheckMenuLast(() => list.bMultiple);
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
@@ -4567,7 +4576,7 @@ function createMenuRightTop() {
 						console.popup('Error restoring old playlists data from:\n' + d.file, window.Name);
 						return;
 					}
-					switch (d.type) {
+					switch (d.type) { // NOSONAR
 						case 'pls': {
 							for (const pls of d.from) {
 								if (!d.to.find((oldPls) => list.comparePls(oldPls, pls))) {

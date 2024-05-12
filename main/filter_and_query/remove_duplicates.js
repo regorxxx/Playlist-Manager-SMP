@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/12/23
+//09/05/24
 
 /*
 	Remove duplicates
@@ -23,43 +23,248 @@
 		Add musicBraiz track ID and album as default: solves same track with different dates...
 */
 
-/* exported removeDuplicates, removeDuplicatesV2, removeDuplicatesV3, showDuplicates */
+/* exported filterDuplicates, removeDuplicates, removeDuplicatesAsync, showDuplicates */
 
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global isFoobarV2:readable, globTags:readable, globRegExp:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes_smp.js');
-/* global _p:readable */
-if (isFoobarV2) {include('..\\..\\helpers\\helpers_xxx_tags_cache.js');}
+/* global _p:readable, _t:readable, cartesian:readable */
+if (isFoobarV2) { include('..\\..\\helpers\\helpers_xxx_tags_cache.js'); }
 /* global tagsCache:readable */
 
-// Note number of final duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
-// 'nAllowed = 0' removes all duplicates.
-function removeDuplicates({handleList = null, sortOutput = null, checkKeys = globTags.remDupl, sortBias = null /* globQuery.remDuplBias */, nAllowed = 0, bPreserveSort = (sortOutput === null && sortBias && sortBias.length), bAdvTitle = false, bProfile = false} = {}) {
+/**
+ * Filters duplicates on a handlelist, allowing only n+1 copies of a track identified by an array of keys
+ *
+ * @function
+ * @name filterDuplicates
+ * @kind function
+ * @param {object} [o] - arguments
+ * @param {FbMetadbHandleList?} o.handleList - [=null] Input handle List, null will use the active playlist
+ * @param {string?} o.sortOutput - Output sorting. Omitting this will sort list by checkKeys unless bPreserveSort is used.
+ * @param {string[]} o.checkKeys - Tag checking for duplicates. i.e. ['DATE', 'ARTIST', 'TITLE']
+ * @param {string?} o.sortBias - Bias to chose the output track when there are duplicates. Recommended globQuery.remDuplBias
+ * @param {number} o.nAllowed - Number of duplicates is always nAllowed + 1, since it allows n duplicates and the 'main' copy.
+ * @param {boolean} o.bPreserveSort - Set to true to force original sorting at output
+ * @param {boolean} o.bAdvTitle - Parse titles with RegExp to find duplicates (defined at globRegExp)
+ * @param {boolean} o.bMultiple - Parse multi-value tags separately (by ', '), requiring a single match
+ * @param {boolean} o.bProfile - Log profiling
+ * @returns {FbMetadbHandleList?}
+ */
+function filterDuplicates({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, sortBias = null /* globQuery.remDuplBias */, nAllowed = 0, bPreserveSort = (sortOutput === null && sortBias && sortBias.length), bAdvTitle = false, bMultiple = false, bProfile = false } = {}) {
+	// Check input
+	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+		console.log('filterDuplicates: checkKeys [' + checkKeys + '] was null, empty or not an array');
+		return handleList;
+	} else {
+		let i = checkKeys.length;
+		while (i--) {
+			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
+				console.log('filterDuplicates: checkKeys [' + checkKeys + '] some keys are not String objects');
+				return handleList;
+			}
+		}
+	}
+	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) { bPreserveSort = false; }
+	const test = bProfile ? new FbProfiler('filterDuplicates') : null;
+	let copyHandleList, copyHandleListUnsorted;
+
+	// Only use RegExp title matching when the tags contain title!
+	const titleRe = /title/i;
+	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
+
+	// Active playlist or input list
+	let bActivePlaylist = false;
+	if (handleList === null) {
+		if (plman.ActivePlaylist === -1) { console.log('filterDuplicates: No active playlist'); return null; }
+		bActivePlaylist = true;
+		copyHandleList = plman.GetPlaylistItems(plman.ActivePlaylist);
+	} else {
+		copyHandleList = handleList.Clone();
+	}
+	let items = [];
+
+	const sep = '|';
+	let sortInput; // Sorting
+	let checklength = checkKeys.length;
+	let i = 0;
+	while (i < checklength) {
+		const key = _t(checkKeys[i]);
+		if (i === 0) { sortInput = key; }
+		else { sortInput += sep + key; }
+		i++;
+	}
+	if (sortBias && sortBias.length) { // In case of duplicates, prefer high rating non-live tracks
+		if (bPreserveSort) { copyHandleListUnsorted = copyHandleList.Convert(); }
+		const biasTF = fb.TitleFormat(sortBias);
+		copyHandleList.OrderByFormat(biasTF, -1); // 600 ms on 80K tracks
+	}
+	let tfo = fb.TitleFormat(sortInput);
+	const tfoCopy = tfo.EvalWithMetadbs(copyHandleList);
+	copyHandleList = copyHandleList.Convert();
+
+	i = 0;
+	const count = tfoCopy.length;
+	const countMap = new Map([]);
+	if (bMultiple) {
+		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		if (bAdvTitle) {
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const strArr = tfoCopy[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim()];
+				});
+				const combs = cartesian(...strArr);
+				let bAdd = true;
+				for (const str of combs) {
+					const id = str.join(sep);
+					const found = countMap.get(id);
+					if (found) {
+						if (found.val <= nAllowed) {
+							found.val++;
+						} else { bAdd = false; }
+					} else {
+						countMap.set(id, { val: 1 });
+					}
+				}
+				if (bAdd) { items.push(copyHandleList[i]); }
+				i++;
+			}
+		} else {
+			while (i < count) {
+				const strArr = tfoCopy[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str];
+				});
+				const combs = cartesian(...strArr);
+				let bAdd = true;
+				for (const str of combs) {
+					const id = str.join(sep);
+					const found = countMap.get(id);
+					if (found) {
+						if (found.val <= nAllowed) {
+							found.val++;
+						} else { bAdd = false; }
+					} else {
+						countMap.set(id, { val: 1 });
+					}
+				}
+				if (bAdd) { items.push(copyHandleList[i]); }
+				i++;
+			}
+		}
+	} else {
+		if (bAdvTitle) { // NOSONAR
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const str = tfoCopy[i]
+					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
+					.trim();
+				const found = countMap.get(str);
+				if (found) {
+					if (found.val <= nAllowed) {
+						found.val++;
+						items.push(copyHandleList[i]);
+					}
+				} else {
+					countMap.set(str, { val: 1 });
+					items.push(copyHandleList[i]);
+				}
+				i++;
+			}
+		} else {
+			while (i < count) {
+				const str = tfoCopy[i];
+				const found = countMap.get(str);
+				if (found) {
+					if (found.val <= nAllowed) {
+						found.val++;
+						items.push(copyHandleList[i]);
+					}
+				} else {
+					countMap.set(str, { val: 1 });
+					items.push(copyHandleList[i]);
+				}
+				i++;
+			}
+		}
+	}
+
+	if (bPreserveSort) { // 600 ms on 80K tracks
+		items = FbMetadbHandleList.partialSort(items, copyHandleListUnsorted);
+	}
+	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
+
+	if (sortOutput !== null) { // Output Sorting?
+		if (sortOutput.length && sortOutput !== sortInput) { tfo = fb.TitleFormat(sortOutput); }
+		else { tfo = fb.TitleFormat('$rand()'); }
+		items.OrderByFormat(tfo, 1);
+	}
+
+	if (bActivePlaylist) {
+		let removedCount = count - items.Count;
+		if (removedCount) { // Send to active playlist if there was no input list and changes were made
+			plman.UndoBackup(plman.ActivePlaylist);
+			plman.ClearPlaylist(plman.ActivePlaylist);
+			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, items);
+			console.log('Removed ' + removedCount + ' duplicates from active playlist by: ' + sortInput + (bAdvTitle ? '\t' + _p('Title RegExp') : ''));
+		} else {
+			console.log('No duplicates found by: ' + sortInput);
+		}
+	}
+	if (bProfile) { test.Print(nAllowed ? 'Task #1: Filter playlist' : 'Task #1: Remove duplicates', false); }
+	return items;
+}
+
+/**
+ * Removes all duplicates on a handlelist, tracks identified by an array of keys. Faster than filterDuplicates
+ *
+ * @function
+ * @name removeDuplicates
+ * @kind function
+ * @param {object} [o] - arguments
+ * @param {FbMetadbHandleList?} o.handleList - [=null] Input handle List, null will use the active playlist
+ * @param {string?} o.sortOutput - Output sorting. Omitting this will sort list by checkKeys unless bPreserveSort is used.
+ * @param {string[]} o.checkKeys - Tag checking for duplicates. i.e. ['DATE', 'ARTIST', 'TITLE']
+ * @param {string?} o.sortBias - Bias to chose the output track when there are duplicates. Recommended globQuery.remDuplBias
+ * @param {boolean} o.bPreserveSort - Set to true to force original sorting at output
+ * @param {boolean} o.bAdvTitle - Parse titles with RegExp to find duplicates (defined at globRegExp)
+ * @param {boolean} o.bMultiple - Parse multi-value tags separately (by ', '), requiring a single match
+ * @param {boolean} o.bProfile - Log profiling
+ * @returns {FbMetadbHandleList?}
+ */
+function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, sortBias = null /* globQuery.remDuplBias */, bPreserveSort = (sortOutput === null && sortBias && sortBias.length), bAdvTitle = false, bMultiple = false, bProfile = false } = {}) {
 	// Check input
 	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicates: checkKeys [' + checkKeys + '] was null, empty or not an array');
 		return handleList;
 	} else {
 		let i = checkKeys.length;
-		while (i--){
+		while (i--) {
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
 				console.log('removeDuplicates: checkKeys [' + checkKeys + '] some keys are not String objects');
 				return handleList;
 			}
 		}
 	}
-	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) {bPreserveSort = false;}
+	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) { bPreserveSort = false; }
 	const test = bProfile ? new FbProfiler('removeDuplicates') : null;
 	let copyHandleList, copyHandleListUnsorted;
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
 
-	// Active playlist or input list
+	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
-		if (plman.ActivePlaylist === -1) {console.log('removeDuplicates: No active playlist'); return null;}
+		if (plman.ActivePlaylist === -1) { console.log('removeDuplicates: No active playlist'); return null; }
 		bActivePlaylist = true;
 		copyHandleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	} else {
@@ -67,17 +272,18 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 	}
 	let items = [];
 
+	const sep = '|';
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
 	while (i < checklength) {
-		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
-		else {sortInput += (check_i.replace('%',) === check_i) ? ' - %' + check_i + '%' :  ' - ' + check_i;}
+		const key = _t(checkKeys[i]);
+		if (i === 0) { sortInput = key; }
+		else { sortInput += sep + key; }
 		i++;
 	}
 	if (sortBias && sortBias.length) { // In case of duplicates, prefer high rating non-live tracks
-		if (bPreserveSort) {copyHandleListUnsorted = copyHandleList.Convert();}
+		if (bPreserveSort) { copyHandleListUnsorted = copyHandleList.Convert(); }
 		const biasTF = fb.TitleFormat(sortBias);
 		copyHandleList.OrderByFormat(biasTF, -1); // 600 ms on 80K tracks
 	}
@@ -86,38 +292,67 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 	copyHandleList = copyHandleList.Convert();
 
 	i = 0;
-	let countMap = new Map([]);
 	const count = tfoCopy.length;
-	if (bAdvTitle) {
-		const titleRe = globRegExp.title.re;
-		const titleReV2 = globRegExp.ingAposVerbs.re;
-		const titleReV3 = globRegExp.ingVerbs.re;
-		while (i < count) {
-			const str = tfoCopy[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
-			if (countMap.has(str)) {
-				if (countMap.get(str).val <= nAllowed) {
-					countMap.get(str).val++;
+	if (bMultiple) {
+		const dics = [...new Array(checklength)].map(() => new Set());
+		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		if (bAdvTitle) {
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const strArr = tfoCopy[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim()];
+				});
+				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
+				if (!bFound) {
 					items.push(copyHandleList[i]);
+					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
 				}
-			} else {
-				countMap.set(str, {val: 1});
-				items.push(copyHandleList[i]);
+				i++;
 			}
-			i++;
+		} else {
+			while (i < count) {
+				const strArr = tfoCopy[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str];
+				});
+				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
+				if (!bFound) {
+					items.push(copyHandleList[i]);
+					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
+				}
+				i++;
+			}
 		}
 	} else {
-		while (i < count) {
-			const str = tfoCopy[i];
-			if (countMap.has(str)) {
-				if (countMap.get(str).val <= nAllowed) {
-					countMap.get(str).val++;
+		const set = new Set();
+		if (bAdvTitle) {
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const str = tfoCopy[i]
+					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
+					.trim();
+				if (!set.has(str)) {
+					set.add(str);
 					items.push(copyHandleList[i]);
 				}
-			} else {
-				countMap.set(str, {val: 1});
-				items.push(copyHandleList[i]);
+				i++;
 			}
-			i++;
+		} else {
+			while (i < count) {
+				const str = tfoCopy[i];
+				if (!set.has(str)) {
+					set.add(str);
+					items.push(copyHandleList[i]);
+				}
+				i++;
+			}
 		}
 	}
 
@@ -127,8 +362,8 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
 
 	if (sortOutput !== null) { // Output Sorting?
-		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
-		else {tfo = fb.TitleFormat('$rand()');}
+		if (sortOutput.length && sortOutput !== sortInput) { tfo = fb.TitleFormat(sortOutput); }
+		else { tfo = fb.TitleFormat('$rand()'); }
 		items.OrderByFormat(tfo, 1);
 	}
 
@@ -143,161 +378,76 @@ function removeDuplicates({handleList = null, sortOutput = null, checkKeys = glo
 			console.log('No duplicates found by: ' + sortInput);
 		}
 	}
-	if (bProfile) {test.Print(nAllowed ? 'Task #1: Filter playlist' : 'Task #1: Remove duplicates', false);}
+	if (bProfile) { test.Print('Task #1: Remove duplicates', false); }
 	return items;
 }
 
-// V2: Equal to V1 but without n checks (faster)
-function removeDuplicatesV2({handleList = null, sortOutput = null, checkKeys = globTags.remDupl, sortBias = null /* globQuery.remDuplBias */, bPreserveSort = (sortOutput === null && sortBias && sortBias.length), bAdvTitle = false, bProfile = false} = {}) {
+/**
+ * Removes all duplicates on a handlelist, tracks identified by an array of keys. Async.
+ *
+ * @function
+ * @name removeDuplicatesAsync
+ * @kind function
+ * @param {object} [o] - arguments
+ * @param {FbMetadbHandleList?} o.handleList - [=null] Input handle List, null will use the active playlist
+ * @param {string?} o.sortOutput - Output sorting. Omitting this will sort list by checkKeys unless bPreserveSort is used.
+ * @param {string[]} o.checkKeys - Tag checking for duplicates. i.e. ['DATE', 'ARTIST', 'TITLE']
+ * @param {boolean} o.bAdvTitle - Parse titles with RegExp to find duplicates (defined at globRegExp)
+ * @param {boolean} o.bMultiple - Parse multi-value tags separately (by ', '), requiring a single match
+ * @param {boolean} o.bTagsCache - Use tag cache file
+ * @param {boolean} o.bProfile - Log profiling
+ * @returns {FbMetadbHandleList?}
+ */
+async function removeDuplicatesAsync({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bMultiple = true, bTagsCache = true, bProfile = false } = {}) {
 	// Check input
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log('removeDuplicatesV2: checkKeys [' + checkKeys + '] was null, empty or not an array');
-		return handleList;
+	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+		console.log('removeDuplicatesAsync: checkKeys [' + checkKeys + '] was null, empty or not an array');
+		return Promise.resolve(handleList);
 	} else {
 		let i = checkKeys.length;
-		while (i--){
+		while (i--) {
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
-				console.log('removeDuplicatesV2: checkKeys [' + checkKeys + '] some keys are not String objects');
-				return handleList;
+				console.log('removeDuplicatesAsync: checkKeys [' + checkKeys + '] some keys are not String objects');
+				return Promise.resolve(handleList);
 			}
 		}
 	}
-	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) {bPreserveSort = false;}
-	const test = bProfile ? new FbProfiler('removeDuplicatesV2') : null;
-	let copyHandleList, copyHandleListUnsorted;
+	const test = bProfile ? new FbProfiler('removeDuplicatesAsync') : null;
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
 
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
-		if (plman.ActivePlaylist === -1) {console.log('removeDuplicatesV2: No active playlist'); return null;}
-		bActivePlaylist = true;
-		copyHandleList = plman.GetPlaylistItems(plman.ActivePlaylist);
-	} else {
-		copyHandleList = handleList.Clone();
-	}
-	let items = [];
-
-	let sortInput; // Sorting
-	let checklength = checkKeys.length;
-	let i = 0;
-	while (i < checklength) {
-		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
-		else {sortInput += (check_i.replace('%',) === check_i) ? '|%' + check_i + '%' :  '|' + check_i;}
-		i++;
-	}
-	if (sortBias && sortBias.length) { // In case of duplicates, prefer high rating non-live tracks
-		if (bPreserveSort) {copyHandleListUnsorted = copyHandleList.Convert();}
-		const biasTF = fb.TitleFormat(sortBias);
-		copyHandleList.OrderByFormat(biasTF, -1); // 600 ms on 80K tracks
-	}
-	let tfo = fb.TitleFormat(sortInput);
-	const tfoCopy = tfo.EvalWithMetadbs(copyHandleList);
-	copyHandleList = copyHandleList.Convert();
-
-	i = 0;
-	let set = new Set();
-	const count = tfoCopy.length;
-	if (bAdvTitle) {
-		const titleRe = globRegExp.title.re;
-		const titleReV2 = globRegExp.ingAposVerbs.re;
-		const titleReV3 = globRegExp.ingVerbs.re;
-		while (i < count) {
-			const str = tfoCopy[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
-			if (!set.has(str)) {
-				set.add(str);
-				items.push(copyHandleList[i]);
-			}
-			i++;
+		if (plman.ActivePlaylist === -1) {
+			console.log('removeDuplicatesAsync: No active playlist');
+			return Promise.resolve(null);
 		}
-	} else {
-		while (i < count) {
-			const str = tfoCopy[i];
-			if (!set.has(str)) {
-				set.add(str);
-				items.push(copyHandleList[i]);
-			}
-			i++;
-		}
-	}
-
-	if (bPreserveSort) { // 600 ms on 80K tracks
-		items = FbMetadbHandleList.partialSort(items, copyHandleListUnsorted);
-	}
-	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
-
-	if (sortOutput !== null) { // Output Sorting?
-		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
-		else {tfo = fb.TitleFormat('$rand()');}
-		items.OrderByFormat(tfo, 1);
-	}
-
-	if (bActivePlaylist) {
-		let removedCount = count - items.Count;
-		if (removedCount) { // Send to active playlist if there was no input list and changes were made
-			plman.UndoBackup(plman.ActivePlaylist);
-			plman.ClearPlaylist(plman.ActivePlaylist);
-			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, items);
-			console.log('Removed ' + removedCount + ' duplicates from active playlist by: ' + sortInput + (bAdvTitle ? '\t' + _p('Title RegExp') : ''));
-		} else {
-			console.log('No duplicates found by: ' + sortInput);
-		}
-	}
-	if (bProfile) {test.Print('Task #1: Remove duplicates', false);}
-	return items;
-}
-
-// V3: Equal to V2 but async using tag cache
-async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bTagsCache = true, bProfile = false} = {}) {
-	// Check input
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		console.log('removeDuplicatesV3: checkKeys [' + checkKeys + '] was null, empty or not an array');
-		return handleList;
-	} else {
-		let i = checkKeys.length;
-		while (i--){
-			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
-				console.log('removeDuplicatesV3: checkKeys [' + checkKeys + '] some keys are not String objects');
-				return handleList;
-			}
-		}
-	}
-	const test = bProfile ? new FbProfiler('removeDuplicatesV3') : null;
-
-	// Only use RegExp title matching when the tags contain title!
-	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
-
-	// Active playlist or input list?
-	let bActivePlaylist = false;
-	if (handleList === null) {
-		if (plman.ActivePlaylist === -1) {console.log('removeDuplicatesV3: No active playlist'); return null;}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	}
 	let items = [];
 	let copy = handleList.Clone();
 
+	const sep = '|';
 	let sortInput; // Sorting
 	let tags = [];
 	const count = copy.Count;
 	const checklength = checkKeys.length;
 	for (let i = 0; i < checklength; i++) {
-		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
-		else {sortInput += (check_i.replace('%',) === check_i) ? '|%' + check_i + '%' :  '|' + check_i;}
+		let key = _t(checkKeys[i]);
+		if (i === 0) { sortInput = key; }
+		else { sortInput += sep + key; }
 	}
 	let tfo = fb.TitleFormat(sortInput);
 	if (bTagsCache) {
-		const tagNames = checkKeys.map((tagName) => {return (tagName.indexOf('$') === -1 ? '%' + tagName + '%' : tagName);});
+		const tagNames = checkKeys.map((tagName) => _t(tagName));
 		const tagsVal = await tagsCache.getTags(tagNames, handleList.Convert());
 		for (let i = 0; i < count; i++) {
 			let id = '';
-			tagNames.forEach((tag, j) => {id += (j ?  '|' : '') + tagsVal[tag][i].join(', ');});
+			tagNames.forEach((tag, j) => { id += (j ? sep : '') + tagsVal[tag][i].join(', '); });
 			tags.push(id);
 		}
 	} else {
@@ -305,31 +455,71 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 	}
 
 	let set = new Set();
-	if (bAdvTitle) {
-		const titleRe = globRegExp.title.re;
-		const titleReV2 = globRegExp.ingAposVerbs.re;
-		const titleReV3 = globRegExp.ingVerbs.re;
-		for (let i = 0; i < count; i++) {
-			const str = tags[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
-			if (!set.has(str)) {
-				set.add(str);
-				items.push(copy[i]);
+	if (bMultiple) {
+		const dics = [...new Array(checklength)].map(() => new Set());
+		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		let i = 0;
+		if (bAdvTitle) {
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const strArr = tags[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim()];
+				});
+				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
+				if (!bFound) {
+					items.push(copy[i]);
+					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
+				}
+				i++;
+			}
+		} else {
+			while (i < count) {
+				const strArr = tags[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str];
+				});
+				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
+				if (!bFound) {
+					items.push(copy[i]);
+					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
+				}
+				i++;
 			}
 		}
 	} else {
-		for (let i = 0; i < count; i++) {
-			const str = tags[i];
-			if (!set.has(str)) {
-				set.add(str);
-				items.push(copy[i]);
+		if (bAdvTitle) { // NOSONAR
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			for (let i = 0; i < count; i++) {
+				const str = tags[i]
+					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
+					.trim();
+				if (!set.has(str)) {
+					set.add(str);
+					items.push(copy[i]);
+				}
+			}
+		} else {
+			for (let i = 0; i < count; i++) {
+				const str = tags[i];
+				if (!set.has(str)) {
+					set.add(str);
+					items.push(copy[i]);
+				}
 			}
 		}
 	}
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
 
 	if (sortOutput !== null) { // Output Sorting?
-		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
-		else {tfo = fb.TitleFormat('$rand()');}
+		if (sortOutput.length && sortOutput !== sortInput) { tfo = fb.TitleFormat(sortOutput); }
+		else { tfo = fb.TitleFormat('$rand()'); }
 		items.OrderByFormat(tfo, 1);
 	}
 
@@ -344,19 +534,33 @@ async function removeDuplicatesV3({handleList = null, sortOutput = null, checkKe
 			console.log('No duplicates found by: ' + sortInput);
 		}
 	}
-	if (bProfile) {test.Print('Task #1: Remove duplicates', false);}
-	return items;
+	if (bProfile) { test.Print('Task #1: Remove duplicates', false); }
+	return Promise.resolve(items);
 }
 
-// The inverse function to remove duplicates, only outputs duplicates according to TF
-function showDuplicates({handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bProfile = false} = {}) {
+/**
+ * Inverse function to remove duplicates, only outputs duplicates according to an array of keys
+ *
+ * @function
+ * @name showDuplicates
+ * @kind function
+ * @param {object} [o] - arguments
+ * @param {FbMetadbHandleList?} o.handleList - [=null] Input handle List, null will use the active playlist
+ * @param {string?} o.sortOutput - Output sorting. Omitting this will sort list by checkKeys.
+ * @param {string[]} o.checkKeys - Tag checking for duplicates. i.e. ['DATE', 'ARTIST', 'TITLE']
+ * @param {boolean} o.bAdvTitle - Parse titles with RegExp to find duplicates (defined at globRegExp)
+ * @param {boolean} o.bMultiple - Parse multi-value tags separately (by ', '), requiring a single match
+ * @param {boolean} o.bProfile - Log profiling
+ * @returns {FbMetadbHandleList?}
+ */
+function showDuplicates({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bMultiple = false, bProfile = false } = {}) {
 	// Check input
-	if ( checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
+	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('showDuplicates: checkKeys [' + checkKeys + '] was null, empty or not an array');
 		return handleList;
 	} else {
 		let i = checkKeys.length;
-		while (i--){
+		while (i--) {
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
 				console.log('showDuplicates: checkKeys [' + checkKeys + '] some keys are not String objects');
 				return handleList;
@@ -367,25 +571,26 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => {return key.match(titleRe);}) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
 
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
-		if (plman.ActivePlaylist === -1) {console.log('showDuplicates: No active playlist'); return null;}
+		if (plman.ActivePlaylist === -1) { console.log('showDuplicates: No active playlist'); return null; }
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	}
 	let items = [];
 	let copy = handleList.Clone();
 
+	const sep = '|';
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
 	while (i < checklength) {
-		let check_i = checkKeys[i];
-		if (i === 0) {sortInput = (check_i.replace('%',) === check_i) ? '%' + check_i + '%' : check_i;}
-		else {sortInput += (check_i.replace('%',) === check_i) ? '|%' + check_i + '%' :  '|' + check_i;}
+		const key = _t(checkKeys[i]);
+		if (i === 0) { sortInput = key; }
+		else { sortInput += sep + key; }
 		i++;
 	}
 	let tfo = fb.TitleFormat(sortInput);
@@ -393,34 +598,82 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 
 	// Count items per TF and store only those with more than 1 handle per TF
 	i = 0;
-	let map = new Map();
+	const idxMap = new Map();
 	const count = tfoCopy.length;
-	if (bAdvTitle) {
-		const titleRe = globRegExp.title.re;
-		const titleReV2 = globRegExp.ingAposVerbs.re;
-		const titleReV3 = globRegExp.ingVerbs.re;
-		while (i < count) {
-			const str = tfoCopy[i].replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim();
-			if (!map.has(str)) {map.set(str, [i]);}
-			else {map.set(str, map.get(str).concat([i]));}
-			i++;
+	if (bMultiple) {
+		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		if (bAdvTitle) {
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const strArr = tfoCopy[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim()];
+				});
+				const combs = cartesian(...strArr);
+				for (let str of combs) {
+					const id = str.join(sep);
+					if (!idxMap.has(id)) { idxMap.set(id, [i]); }
+					else { idxMap.set(id, idxMap.get(id).concat([i])); break; }
+				}
+				i++;
+			}
+		} else {
+			while (i < count) {
+				const strArr = tfoCopy[i].split(sep).map((str, j) => {
+					return toSplitKeys[j]
+						? str.split(', ')
+						: [str];
+				});
+				const combs = cartesian(...strArr);
+				for (let str of combs) {
+					const id = str.join(sep);
+					if (!idxMap.has(id)) { idxMap.set(id, [i]); }
+					else { idxMap.set(id, idxMap.get(id).concat([i])); break; }
+				}
+				i++;
+			}
 		}
 	} else {
-		while (i < count) {
-			const str = tfoCopy[i];
-			if (!map.has(str)) {map.set(str, [i]);}
-			else {map.set(str, map.get(str).concat([i]));}
-			i++;
+		if (bAdvTitle) { // NOSONAR
+			const titleRe = globRegExp.title.re;
+			const titleReV2 = globRegExp.ingAposVerbs.re;
+			const titleReV3 = globRegExp.ingVerbs.re;
+			while (i < count) {
+				const str = tfoCopy[i]
+					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
+					.trim();
+				if (!idxMap.has(str)) { idxMap.set(str, [i]); }
+				else { idxMap.set(str, idxMap.get(str).concat([i])); }
+				i++;
+			}
+		} else {
+			while (i < count) {
+				const str = tfoCopy[i];
+				if (!idxMap.has(str)) { idxMap.set(str, [i]); }
+				else { idxMap.set(str, idxMap.get(str).concat([i])); }
+				i++;
+			}
 		}
 	}
-	map.forEach((idxArr) => {
-		if (idxArr.length > 1) {idxArr.forEach((idx) => {items.push(copy[idx]);});}
+	const idxSet = new Set(); 	// With multi-value tags idx may be duplicated at multiple maps
+	idxMap.forEach((idxArr) => {
+		if (idxArr.length > 1) {
+			idxArr.forEach((idx) => {
+				if (!bMultiple || !idxSet.has(idx)) {
+					items.push(copy[idx]);
+					if (bMultiple) { idxSet.add(idx); }
+				}
+			});
+		}
 	});
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
 
 	if (sortOutput !== null) { // Output Sorting?
-		if (sortOutput.length && sortOutput !== sortInput) {tfo = fb.TitleFormat(sortOutput);}
-		else {tfo = fb.TitleFormat('$rand()');}
+		if (sortOutput.length && sortOutput !== sortInput) { tfo = fb.TitleFormat(sortOutput); }
+		else { tfo = fb.TitleFormat('$rand()'); }
 		items.OrderByFormat(tfo, 1);
 	}
 
@@ -436,6 +689,6 @@ function showDuplicates({handleList = null, sortOutput = null, checkKeys = globT
 			console.log('No unique items found by: ' + sortInput + (bAdvTitle ? '\t' + _p('Title RegExp') : ''));
 		}
 	}
-	if (bProfile) {test.Print('Task #1: Show duplicates', false);}
+	if (bProfile) { test.Print('Task #1: Show duplicates', false); }
 	return items;
 }

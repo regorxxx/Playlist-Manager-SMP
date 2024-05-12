@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/04/24
+//09/05/24
 
 /* exported _list */
 
@@ -2106,7 +2106,7 @@ function _list(x, y, w, h) {
 									} else if (pls.isAutoPlaylist || pls.query) {
 										if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return false; }
 										const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-										return clonePlaylistInUI(this, idx, remDupl, this.bAdvTitle);
+										return clonePlaylistInUI(this, idx, { remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 									} else {
 										return clonePlaylistInUI(this, idx);
 									}
@@ -2620,7 +2620,7 @@ function _list(x, y, w, h) {
 							const zz = this.getIndex(item);
 							if ((item.isAutoPlaylist || item.query) && shortcut.key === 'Clone playlist in UI') {
 								const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-								shortcut.func(zz, remDupl, this.bAdvTitle);
+								shortcut.func(zz, { remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 							} else {
 								if (this.data[zz].isFolder) { // NOSONAR
 									if (shortcut.key === 'Multiple selection' && this.indexes.includes(zz)) { shortcut.func(zz); }
@@ -2649,7 +2649,7 @@ function _list(x, y, w, h) {
 					const pls = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
 					if (pls && (pls.isAutoPlaylist || pls.query) && shortcut.key === 'Clone playlist in UI') {
 						const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-						shortcut.func(zz, remDupl, this.bAdvTitle);
+						shortcut.func(zz, { remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 					} else {
 						shortcut.func(zz);
 					}
@@ -2658,7 +2658,7 @@ function _list(x, y, w, h) {
 		} else if (pls) { // Single playlist
 			if ((pls.isAutoPlaylist || pls.query) && shortcut.key === 'Clone playlist in UI') {
 				const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-				shortcut.func(z, remDupl, this.bAdvTitle);
+				shortcut.func(z, { remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 			} else {
 				if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(z, x, y); } // NOSONAR
 				else { shortcut.func(z); }
@@ -3502,7 +3502,7 @@ function _list(x, y, w, h) {
 			});
 			this.dataXsp.forEach((plsXsp, i) => {
 				if (update[i]) {
-					const handlePlaylist = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog: false });
+					const handlePlaylist = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
 					if (!handlePlaylist) { return; }
 					const duplicated = getPlaylistIndexArray(plsXsp.nameId);
 					if (duplicated.length === 1) {
@@ -5942,7 +5942,7 @@ function _list(x, y, w, h) {
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-					let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl, this.bAdvTitle);
+					let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl, this.bAdvTitle, this.bMultiple);
 					if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
 					else if (pls.query) { // Update size on load for smart playlists
 						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
@@ -6052,7 +6052,7 @@ function _list(x, y, w, h) {
 			if (pls.extension === '.xsp' && this.checkCircularXsp({ pls })) {
 				console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
 			} else {
-				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bLog });
+				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog });
 			}
 			if (handleList) {
 				this.editData(pls, {
@@ -6297,6 +6297,7 @@ function _list(x, y, w, h) {
 		this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 		this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
 		this.bAdvTitle = this.properties['bAdvTitle'][1];
+		this.bMultiple = this.properties['bMultiple'][1];
 		this.bSavingWarnings = this.properties['bSavingWarnings'][1];
 		this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 		this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
@@ -7043,6 +7044,7 @@ function _list(x, y, w, h) {
 	this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
 	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 	this.bAdvTitle = this.properties['bAdvTitle'][1];
+	this.bMultiple = this.properties['bMultiple'][1];
 	this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
 	this.bSavingWarnings = this.properties['bSavingWarnings'][1];
 	this.bSavingDefExtension = this.properties['bSavingDefExtension'][1];

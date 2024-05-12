@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/04/24
+//09/05/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -218,6 +218,10 @@ const globRegExp = {
 	ingVerbs: {
 		re: /\b(?:walk|talk|rock|kick|mak|shak|work|look|knock|sneak|park|break|makin|fuck|smok|drink|chok|tak|pick|shak|reel|truck|pack|cook|break|someth|check|think|juk|jerk|speak|fak|mack|suck|skank|folk|stack)(in)(?=\s+)/i, // NOSONAR [must be a single regEx]
 		desc: 'Replaces verb-in words with verb-ing versions'
+	},
+	singleTags: {
+		re: /^(title|album|date|year|tracknumber|mastering|description|comment)$/i, // NOSONAR [must be a single regEx]
+		desc: 'Multi-value tags will be split by \', \' if possible and matched individually at duplicates removal.'
 	}
 };
 Object.keys(globRegExp).filter((k) => !k.startsWith('_')).forEach((k) => globRegExp[k].default = globRegExp[k].re); // Add default values

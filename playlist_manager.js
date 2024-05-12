@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/04/24
+//09/05/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -195,7 +195,7 @@ let properties = {
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
 	lBrainzEncrypt: ['Encript ListenBrainz user token?', false, { func: isBoolean }, false],
 	bLookupMBIDs: ['Lookup for missing track MBIDs?', true, { func: isBoolean }, true],
-	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching?', true, { func: isBoolean }, true],
+	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching', true, { func: isBoolean }, true],
 	activePlsStartup: ['Active playlist on startup', '', { func: isStringWeak }, ''],
 	bBlockUpdateAutoPls: ['Block panel while updating AutoPlaylists', false, { func: isBoolean }, false],
 	bQuicSearchNext: ['Quick-search jump to next item when letter is pressed twice', true, { func: isBoolean }, true],
@@ -321,7 +321,8 @@ let properties = {
 	})],
 	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }, false],
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone])],
-	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist])]
+	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist])],
+	bMultiple: ['Partial Multi-value tag matching', true, { func: isBoolean }, true],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -943,7 +944,11 @@ if (!list.properties.bSetup[1]) {
 				}
 				case 'clone in ui': {
 					const idx = [...menu.arg];
-					idx.forEach((i) => { clonePlaylistInUI(list, i, true); });
+					idx.forEach((i) => {
+						const item = list.dataAll[i];
+						const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
+						clonePlaylistInUI(list, i, { remDupl, bMultiple: list.bMultiple, bAdvTitle: list.bAdvTitle, bAlsoHidden: true });
+					});
 					bDone = true;
 					break;
 				}
@@ -998,9 +1003,9 @@ if (!list.properties.bSetup[1]) {
 						const preset = menu.arg;
 						const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls : [];
 						if (!list.dataAll[i].isAutoPlaylist) {
-							exportPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle);
+							exportPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle, list.bMultiple);
 						} else {
-							exportAutoPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle);
+							exportAutoPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle, list.bMultiple);
 						}
 					});
 					bDone = true;
