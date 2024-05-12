@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//07/05/24
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
@@ -18,7 +18,7 @@ include('helpers_xxx_file.js');
 // Note it uses the get method by default. Change bForce to use Set method.
 // For ex. for setting properties with UI buttons after initialization.
 function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
-	const bNumber = count > 0 ? true : false;
+	const bNumber = count > 0;
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		const description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
@@ -26,7 +26,7 @@ function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 			if (!checkProperty(propertiesDescriptor[k])) { window.SetProperty(description, propertiesDescriptor[k][3]); }
 			else { window.SetProperty(description, propertiesDescriptor[k][1]); }
 		} else {
-			if (!checkProperty(propertiesDescriptor[k])) { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][3])); }
+			if (!checkProperty(propertiesDescriptor[k])) { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][3])); } // NOSONAR
 			else { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][1])); }
 		}
 		if (bNumber) { count++; }
@@ -61,7 +61,7 @@ function deleteProperties(propertiesDescriptor) {
 // Recreates the property object like this: {propertyKey : ['description',defaultValue]} -> {propertyKey : userSetValue}
 // Returns the entire list of values
 function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true) {
-	const bNumber = count > 0 ? true : false;
+	const bNumber = count > 0;
 	const output = {};
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
@@ -73,7 +73,7 @@ function getProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 
 // // Recreates the property object and gets the property variable associated to propertyKey: {propertyKey : ['description', defaultValue]} -> userSetValue
 function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPadding = true) {
-	const bNumber = count > 0 ? true : false;
+	const bNumber = count > 0;
 	let output = null;
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
@@ -89,7 +89,7 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPa
 // Recreates the property object and returns it: {propertyKey : ['description',defaultValue]} -> {propertyKey : ['prefix + count(padded) + 'description', userSetValue]}
 // Use this to get descriptions along the values, instead of the previous ones
 function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bOnlyValues = false) {
-	const bNumber = count > 0 ? true : false;
+	const bNumber = count > 0;
 	const output = {};
 	if (bOnlyValues) { // only outputs values, without description
 		let cacheDescription = null;
