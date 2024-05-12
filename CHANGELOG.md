@@ -58,9 +58,12 @@
 
 ## [Unreleased][]
 ### Added
+- Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu.
 ### Changed
+- Remove Duplicates: improved performance of duplicates removal in multiple places.
 ### Removed
 ### Fixed
+- UI: merge-load not working in multiple selection if one of the playlists was empty.
 
 ## [0.16.1] - 2024-04-26
 ### Added
