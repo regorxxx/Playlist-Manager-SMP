@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/24
+//14/05/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -2731,7 +2731,7 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Use RegExp for title matching', func: () => {
 					list.bAdvTitle = !list.bAdvTitle;
 					list.properties.bAdvTitle[1] = list.bAdvTitle;
-					if (list.bAdvTitle) { fb.ShowPopupMessage(globRegExp.title.desc, window.Name); }
+					fb.ShowPopupMessage(globRegExp.title.desc, 'Playlist Manager');
 					overwriteProperties(list.properties);
 				}
 			});
@@ -2740,8 +2740,14 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Partial Multi-value tag matching', func: () => {
 					list.bMultiple = !list.bMultiple;
 					list.properties.bMultiple[1] = list.bMultiple;
-					if (list.bMultiple) { fb.ShowPopupMessage(globRegExp.singleTags.desc, window.Name); }
-					overwriteProperties(list.properties);
+					fb.ShowPopupMessage(
+						'When this option is enabled, multi-value tags are parsed independently and a track may be considered a duplicate if at least one of those values match (instead of requiring all to match in the same order).\n\nSo for \'[ARTIST, DATE, TITLE]\' tags, these are duplicates with this option enabled:\n' +
+						'\nJimi Hendrix - 1969 - Blabla' +
+						'\nJimi Hendrix experience, Jimi Hendrix - 1969 - Blabla' +
+						'\nBand of Gypys, Jimi Hendrix - 1969 - Blabla' +
+						'\n\nWith multi-value parsing disabled, these are considered non-duplicated tracks since not all artists match.',
+						'Playlist Manager'
+					);
 				}
 			});
 			menu.newCheckMenuLast(() => list.bMultiple);
