@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/01/24
+//14/05/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -494,6 +494,7 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 	let i = 0;
 	let tagString = '';
 	const outputArray_length = handleList.Count;
+	const sep = '|‎ |'; // Contains U+200E invisible char
 	while (i < tagArray_length) {
 		const tagStr = tagsArray[i].indexOf('$') === -1
 			? tagsArray[i].indexOf('%') === -1
@@ -501,7 +502,7 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 				: tagsArray[i]
 			: tagsArray[i];
 		if (options.bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
-		else { tagString += (i === 0 ? '' : '| ') + _b(tagStr); } // We have tag values separated by comma and different tags by |
+		else { tagString += (i === 0 ? '' : sep) + _b(tagStr); } // We have tag values separated by comma and different tags by |
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
@@ -512,7 +513,7 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 		}
 	} else { // Array of values tag and per track; n x tagNumber
 		for (let i = 0; i < outputArray_length; i++) {
-			outputArray[i] = outputArray[i].split('| ');
+			outputArray[i] = outputArray[i].split(sep);
 			for (let j = 0; j < tagArray_length; j++) {
 				outputArray[i][j] = outputArray[i][j].split(', ');
 			}
