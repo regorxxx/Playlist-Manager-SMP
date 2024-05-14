@@ -58,7 +58,7 @@
 
 ## [Unreleased][]
 ### Added
-- Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu.
+- Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu. See [this](https://github.com/regorxxx/Search-by-Distance-SMP/issues/31#issuecomment-2111061984) for more info.
 ### Changed
 - Remove Duplicates: improved performance of duplicates removal in multiple places.
 ### Removed
