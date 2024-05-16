@@ -65,6 +65,7 @@
 ### Removed
 ### Fixed
 - UI: merge-load not working in multiple selection if one of the playlists was empty.
+- Fixed possible crash renaming UI-only playlist on main program.
 
 ## [0.16.1] - 2024-04-26
 ### Added

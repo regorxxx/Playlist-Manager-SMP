@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/24
+//14/05/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -1080,7 +1080,9 @@ if (!list.properties.bSetup[1]) {
 					const idx = list.getPlaylistsIdxByName([oldName]);
 					if (idx.length === 1) {
 						const newName = plman.GetPlaylistName(plman.ActivePlaylist);
-						let bDone = renamePlaylist(list, idx[0], newName, false);
+						let bDone = list.data[idx[0]]
+							? renamePlaylist(list, idx[0], newName, false)
+							: false;
 						if (bDone) { console.log('Playlist manager: renamed playlist ' + oldName + ' --> ' + newName); list.showCurrPls(); }
 						else { console.log('Playlist manager: failed renaming playlist ' + oldName + ' --> ' + newName); }
 					}
