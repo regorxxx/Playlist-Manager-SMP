@@ -155,7 +155,7 @@ function createMenuLeft(forcedIndex = -1) {
 			// Renames both playlist file and playlist within foobar2000. Only 1 instance allowed
 			menu.newEntry({
 				entryText: (!bIsLockPls && !bIsLockPlsRename ? 'Rename...' : (bIsAutoPls || bIsPlsUI ? 'Rename...' : 'Rename... (only filename)')) + list.getGlobalShortcut('rename'), func: () => {
-					const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void (0), true);
+					const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name + ': ' + pls.name, 'My playlist', void (0), true);
 					if (input === null) { return; }
 					renamePlaylist(list, z, input);
 				}, flags: bIsPlsUI && bIsLockPlsRename ? MF_GRAYED : MF_STRING
@@ -167,7 +167,7 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: 'Edit sort pattern...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let bDone = false;
-						let input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
+						let input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name + ': ' + pls.name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
 						if (input === null) {
 							if (!Input.isLastEqual) { return; }
 							else { input = Input.lastInput; }
@@ -228,7 +228,7 @@ function createMenuLeft(forcedIndex = -1) {
 				if (pls.extension === '.xsp') {
 					menu.newEntry({
 						entryText: 'Edit limit...', func: () => {
-							let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name, 50);
+							let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name + ': ' + pls.name, 50);
 							if (input === null) { return; }
 							if (!Number.isFinite(input)) { input = 0; }
 							const bDone = rewriteXSPLimit(pls, input);
@@ -301,7 +301,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const menuName = menu.newMenu('Set category...', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New category...', func: () => {
-							const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name, 'My category');
+							const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name + ': ' + pls.name, 'My category');
 							if (input === null) { return; }
 							setCategory(input, list, z);
 						}
@@ -322,7 +322,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const menuName = menu.newMenu('Set playlist tag(s)...', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New tag(s)...', func: () => {
-							const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name, '["TagA","TagB"]', void (0), true);
+							const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name + ': ' + pls.name, '["TagA","TagB"]', void (0), true);
 							if (input === null) { return; }
 							setTag(input, list, z);
 						}
@@ -918,7 +918,7 @@ function createMenuFolder(menu, folder, z) {
 	menu.newEntry({ entryText: 'sep' });
 	menu.newEntry({
 		entryText: 'Rename...' + list.getGlobalShortcut('rename'), func: () => {
-			const input = Input.string('string', folder.nameId, 'Enter folder name:', window.Name, 'My folder', void (0), true);
+			const input = Input.string('string', folder.nameId, 'Enter folder name:', window.Name + ':' + folder.name, 'My folder', void (0), true);
 			if (input === null) { return; }
 			renameFolder(list, z, input);
 		}
