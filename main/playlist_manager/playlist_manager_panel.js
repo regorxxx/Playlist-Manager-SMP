@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/03/24
+//19/05/24
 
 /* exported _panel */
 
@@ -30,12 +30,13 @@ function _panel(customBackground = false, bSetup = false) {
 		imageBackground: ['Image background config', JSON.stringify({
 			enabled: true,
 			mode: 1,
-			art: { path: '', image: null },
+			art: { path: '', image: null, id: '' },
 			transparency: 60,
 			bProportions: true,
 			bFill: true,
 			blur: 10,
-			bTint: true
+			bTint: true,
+			bCacheAlbum: true
 		}), { func: isJSON }],
 		bFontOutline: ['Add shadows to font?', false, { func: isBoolean }],
 		bBold: ['Use bold font?', false, { func: isBoolean }],
@@ -113,7 +114,7 @@ function _panel(customBackground = false, bSetup = false) {
 	};
 
 	this.updateImageBg = debounce((bForce = false) => {
-		if (!this.imageBackground.enabled) { this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; }
+		if (!this.imageBackground.enabled) { this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.id = null; }
 		let handle;
 		if (this.imageBackground.mode === 0) { // Selection
 			handle = fb.GetFocusItem(true);
@@ -121,6 +122,12 @@ function _panel(customBackground = false, bSetup = false) {
 			handle = fb.GetNowPlaying() || fb.GetFocusItem(true);
 		}
 		if (!bForce && (handle && this.imageBackground.handle === handle.RawPath || this.imageBackground.handle === this.imageBackground.art.path)) { return; }
+		let id = null;
+		if (this.imageBackground.bCacheAlbum && handle) {
+			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
+			id = tf.EvalWithMetadb(handle);
+			if (id === this.imageBackground.art.id) { return; }
+		}
 		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length
 			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
 			: handle
@@ -135,6 +142,7 @@ function _panel(customBackground = false, bSetup = false) {
 				this.imageBackground.art.image = result.image;
 				this.imageBackground.art.path = result.path;
 				this.imageBackground.handle = handle.RawPath;
+				this.imageBackground.art.id = id;
 			}
 			if (this.imageBackground.art.image && this.imageBackground.blur !== -1 && Number.isInteger(this.imageBackground.blur)) {
 				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
@@ -144,7 +152,7 @@ function _panel(customBackground = false, bSetup = false) {
 			}
 			return window.Repaint();
 		}).catch(() => {
-			this.imageBackground.art.path = null; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null;
+			this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.art.id = null;
 			return window.Repaint();
 		});
 	}, 250);
@@ -230,7 +238,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
 	this.colors.bFontOutline = this.properties.bFontOutline[1];
 	this.colors.bBold = this.properties.bBold[1];
-	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => key === 'image' || key === 'handle' || key === 'colors' ? null : value);
+	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => ['image', 'handle', 'colors', 'id'].includes(key) ? null : value);
 	this.listObjects = [];
 	this.textObjects = [];
 	this.fontChanged();

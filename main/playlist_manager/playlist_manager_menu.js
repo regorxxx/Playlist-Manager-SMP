@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/24
+//19/05/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -947,7 +947,7 @@ function createMenuFolder(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, { remDupl: []});
+					clonePlaylistMergeInUI(list, zArr, { remDupl: [] });
 				}
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
@@ -1120,7 +1120,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			entryText: 'Merge-load playlists', func: () => {
 				const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, { remDupl: []});
+					clonePlaylistMergeInUI(list, zArr, { remDupl: [] });
 				}
 			}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
@@ -3597,7 +3597,15 @@ function createMenuRightTop() {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: item, func: () => {
 							if (i === 2) {
-								const input = Input.string('string', panel.imageBackground.mode === 2 ? panel.imageBackground.art.path : '', 'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)', window.Name, 'myfile.jpg');
+								const input = Input.string(
+									'string', 
+									panel.imageBackground.mode === 2 
+										? panel.imageBackground.art.path 
+										: JSON.parse(panel.properties.imageBackground[1]).art.path || '',
+									'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)', 
+									window.Name, 
+									'myfile.jpg'
+								);
 								if (input === null) { return; }
 								panel.imageBackground.art.path = input;
 							}
@@ -3610,6 +3618,15 @@ function createMenuRightTop() {
 					});
 				});
 				menu.newCheckMenuLast(() => panel.imageBackground.mode, optionsLength);
+				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
+				menu.newEntry({
+					menuName: subMenuNameTwo, entryText: 'Cache same album\'s tracks art', func: () => {
+						panel.imageBackground.bCacheAlbum = !panel.imageBackground.bCacheAlbum;
+						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						overwriteProperties(panel.properties);
+					}, flags: panel.imageBackground.mode !== 2 ? MF_STRING : MF_GRAYED
+				});
+				menu.newCheckMenuLast(() => panel.imageBackground.bCacheAlbum);
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
