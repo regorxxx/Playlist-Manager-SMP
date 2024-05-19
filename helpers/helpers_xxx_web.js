@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/04/24
+//17/04/24
 
 /* exported getText, paginatedFetch */
 
@@ -26,7 +26,7 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 				}
 			} else if (!func) { reject({ status: this.status, responseText: this.responseText }); }
 		}
-	} else if (!func) { reject({ status: 408, responseText: this.responseText }); } // 408 Request Timeout
+	} else if (!func && this !== null) { reject({ status: 408, responseText: this.responseText }); } // 408 Request Timeout
 	return null;
 }
 
