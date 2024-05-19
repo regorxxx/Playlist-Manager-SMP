@@ -298,7 +298,7 @@ function createMenuLeft(forcedIndex = -1) {
 		{	// Tags and category
 			if (showMenus['Category']) {
 				{	// Set category
-					const menuName = menu.newMenu('Set category...', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
+					const menuName = menu.newMenu('Set category', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New category...', func: () => {
 							const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name + ': ' + pls.name, 'My category');
@@ -319,7 +319,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}
 			if (showMenus['Tags']) {
 				{	// Set tag(s)
-					const menuName = menu.newMenu('Set playlist tag(s)...', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
+					const menuName = menu.newMenu('Set playlist tag(s)', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New tag(s)...', func: () => {
 							const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name + ': ' + pls.name, '["TagA","TagB"]', void (0), true);
@@ -415,7 +415,7 @@ function createMenuLeft(forcedIndex = -1) {
 				// Clone as
 				{
 					const presets = [...writablePlaylistFormats, 'sep', '.ui'];
-					const subMenuName = menu.newMenu('Clone as...');
+					const subMenuName = menu.newMenu('Clone as');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Select a format:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					presets.forEach((ext) => {
@@ -733,7 +733,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const lockName = plman.GetPlaylistLockName(index);
 					const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
 					const flags = bSMPLock ? MF_STRING : MF_GRAYED;
-					const subMenuName = menu.newMenu('Edit UI Playlist lock...');
+					const subMenuName = menu.newMenu('Edit UI Playlist lock');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					lockTypes.forEach((lock) => {
@@ -774,7 +774,7 @@ function createMenuLeft(forcedIndex = -1) {
 			if (showMenus['Sorting'] && bManualSorting || showMenus['Folders'] && bHasFolders) {
 				if (showMenus['File locks'] || showMenus['UI playlist locks'] && bIsPlsLoaded) { menu.newEntry({ entryText: 'sep' }); }
 				if (showMenus['Sorting'] && bManualSorting) {
-					const subMenuName = menu.newMenu('Sorting...');
+					const subMenuName = menu.newMenu('Sorting');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					const options = [
@@ -791,7 +791,7 @@ function createMenuLeft(forcedIndex = -1) {
 					});
 				}
 				if (showMenus['Folders']) {
-					const subMenuName = menu.newMenu('Move to folder...');
+					const subMenuName = menu.newMenu('Move to folder');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
@@ -873,7 +873,7 @@ function createMenuFolder(menu, folder, z) {
 	});
 	menu.newEntry({ entryText: 'sep' });
 	{ // New Playlists
-		const subMenuName = menu.newMenu('New child item...');
+		const subMenuName = menu.newMenu('New child item');
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Playlist File...', func: () => { list.add({ bEmpty: true, toFolder: folder }); } });
 		menu.newEntry({ menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => { list.addAutoPlaylist(void (0), void (0), folder); } });
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
@@ -985,7 +985,7 @@ function createMenuFolder(menu, folder, z) {
 	}
 	if (showMenus['Sorting'] && bManualSorting) {
 		menu.newEntry({ entryText: 'sep' });
-		const subMenuName = menu.newMenu('Sorting...');
+		const subMenuName = menu.newMenu('Sorting');
 		menu.newEntry({ menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		const options = [
@@ -1003,7 +1003,7 @@ function createMenuFolder(menu, folder, z) {
 	}
 	menu.newEntry({ entryText: 'sep' });
 	{
-		const subMenuName = menu.newMenu('Move to folder...');
+		const subMenuName = menu.newMenu('Move to folder');
 		menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
@@ -1365,7 +1365,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 				lockName = [...lockName][0] + (lockName.size > 1 ? ' & ...' : '');
 				const flags = bSMPLock ? MF_STRING : MF_GRAYED;
-				const subMenuName = menu.newMenu('Edit UI Playlist lock...');
+				const subMenuName = menu.newMenu('Edit UI Playlist lock');
 				menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				lockTypes.forEach((lock) => {
@@ -1443,7 +1443,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		if (showMenus['Sorting'] && bManualSorting || showMenus['Folders']) {
 			if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome)) { menu.newEntry({ entryText: 'sep' }); }
 			if (showMenus['Sorting'] && bManualSorting) {
-				const subMenuName = menu.newMenu('Sorting...');
+				const subMenuName = menu.newMenu('Sorting');
 				menu.newEntry({ menuName: subMenuName, entryText: 'Manual sorting:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const options = [
@@ -1460,7 +1460,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 			}
 			if (showMenus['Folders']) {
-				const subMenuName = menu.newMenu('Move to folder...');
+				const subMenuName = menu.newMenu('Move to folder');
 				menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
@@ -2220,7 +2220,7 @@ function createMenuRightTop() {
 		menu.newEntry({ entryText: 'sep' });
 	}
 	if (showMenus['Category']) {	// Category Filter
-		const subMenuName = menu.newMenu('Categories shown...');
+		const subMenuName = menu.newMenu('Categories shown');
 		const options = list.categories();
 		const defOpt = options[0];
 		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
@@ -2250,7 +2250,7 @@ function createMenuRightTop() {
 		});
 	}
 	if (showMenus['Tags']) {	// Tag Filter
-		const subMenuName = menu.newMenu('Tags shown...');
+		const subMenuName = menu.newMenu('Tags shown');
 		const options = list.tags();
 		const defOpt = options[0];
 		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
@@ -2285,7 +2285,7 @@ function createMenuRightTop() {
 		const menuName = menu.newMenu('Playlist saving');
 		{
 			if (!list.bLiteMode) {	// Relative folder
-				const subMenuName = menu.newMenu('Save paths relative to folder...', menuName);
+				const subMenuName = menu.newMenu('Save paths relative to folder', menuName);
 				const options = ['Yes: Relative to playlists folder', 'No: Use absolute paths (default)'];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'How track\'s paths are written:', flags: MF_GRAYED });
@@ -2306,7 +2306,7 @@ function createMenuRightTop() {
 				}
 			}
 			if (!list.bLiteMode) {	// Playlist extension
-				const subMenuName = menu.newMenu('Default playlist extension...', menuName);
+				const subMenuName = menu.newMenu('Default playlist extension', menuName);
 				const options = [...writablePlaylistFormats];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'Writable formats:', flags: MF_GRAYED });
@@ -2342,7 +2342,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bSavingDefExtension);
 			}
 			if (!list.bLiteMode) {	// BOM
-				const subMenuName = menu.newMenu('Save files with BOM...', menuName);
+				const subMenuName = menu.newMenu('Save files with BOM', menuName);
 				const options = ['Yes: UTF8-BOM', 'No: UTF8'];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'Playlists and json:', flags: MF_GRAYED });
@@ -2361,7 +2361,7 @@ function createMenuRightTop() {
 				}
 			}
 			if (!list.bLiteMode) {	// Saving warnings
-				const subMenuName = menu.newMenu('Warnings about format change...', menuName);
+				const subMenuName = menu.newMenu('Warnings about format change', menuName);
 				const options = ['Yes: If format will be changed', 'No: Never'];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'Warns when updating a file:', flags: MF_GRAYED });
@@ -2380,7 +2380,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => (list.bSavingWarnings ? 0 : 1), optionsLength);
 			}
 			if (!list.bLiteMode) {	// Smart Playlist saving
-				const subMenuName = menu.newMenu('Skip Smart Playlists on Auto-saving...', menuName);
+				const subMenuName = menu.newMenu('Skip Smart Playlists on Auto-saving', menuName);
 				const options = ['Yes: Original format will be maintained', 'No: Format will change on Auto-saving'];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'Treat Smart Playlists as AutoPlaylists:', flags: MF_GRAYED });
@@ -2404,7 +2404,7 @@ function createMenuRightTop() {
 	{	// Panel behavior
 		const menuName = menu.newMenu('Panel behavior');
 		{	// Filtering
-			const subMenuName = menu.newMenu('Save filtering between sessions...', menuName);
+			const subMenuName = menu.newMenu('Save filtering between sessions', menuName);
 			const options = ['Yes: Always restore last used', 'No: Reset on startup'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Sorting, category and Playlists view:', flags: MF_GRAYED });
@@ -2421,7 +2421,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bSaveFilterStates ? 0 : 1), optionsLength);
 		}
 		if (!list.bLiteMode) {	// UI-only playlists
-			const subMenuName = menu.newMenu('Track UI-only playlists...', menuName);
+			const subMenuName = menu.newMenu('Track UI-only playlists', menuName);
 			const options = ['Yes: also show UI-only playlists', 'No: Only playlist files on tracked folder'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Use manager as native organizer:', flags: MF_GRAYED });
@@ -2443,7 +2443,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Duplicated pls handling
-			const subMenuName = menu.newMenu('Duplicated playlists handling...', menuName);
+			const subMenuName = menu.newMenu('Duplicated playlists handling', menuName);
 			const options = ['Warn about playlists with duplicated names', 'Ignore it'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Only for tracked playlists within the manager:', flags: MF_GRAYED });
@@ -2460,7 +2460,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bCheckDuplWarnings ? 0 : 1), optionsLength);
 		}
 		{	// Duplicated tracks handling
-			const subMenuName = menu.newMenu('Duplicated tracks handling...', menuName);
+			const subMenuName = menu.newMenu('Duplicated tracks handling', menuName);
 			const options = ['Skip duplicates when adding new tracks', 'Only warn about it on tooltip'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'When sending selection to a playlist:', flags: MF_GRAYED });
@@ -2477,7 +2477,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bForbidDuplicates ? 0 : 1), optionsLength);
 		}
 		{	// Dead items handling
-			const subMenuName = menu.newMenu('Dead items handling...', menuName);
+			const subMenuName = menu.newMenu('Dead items handling', menuName);
 			const options = ['Also check for dead items on auto-saving', 'Only on manual saving or when adding tracks'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Dead items warnings (streams are skipped):', flags: MF_GRAYED });
@@ -2530,7 +2530,7 @@ function createMenuRightTop() {
 		}
 		{	// Updates
 			menu.newEntry({ menuName, entryText: 'sep' });
-			const subMenuName = menu.newMenu('Loading delays...', menuName);
+			const subMenuName = menu.newMenu('Loading delays', menuName);
 			for (const key in list.delays) {
 				let entry = key;
 				let info = '';
@@ -2602,7 +2602,7 @@ function createMenuRightTop() {
 		const menuName = menu.newMenu('Playlists behavior');
 		if (!list.bLiteMode) {
 			{	// UUID
-				const subMenuName = menu.newMenu('Use UUIDs for playlist names...', menuName);
+				const subMenuName = menu.newMenu('Use UUIDs for playlist names', menuName);
 				const options = list.optionsUUID();
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'For playlists tracked by Manager:', flags: MF_GRAYED });
@@ -2622,7 +2622,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => options.indexOf(list.optionUUID), optionsLength);
 			}
 			{	// Automatic playlist names
-				const subMenuName = menu.newMenu('Automatic playlist names...', menuName);
+				const subMenuName = menu.newMenu('Automatic playlist names', menuName);
 				const options = ['Yes: use ARTIST[ - ALBUM]', 'No: use source as name'];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'For playlists created from selection:', flags: MF_GRAYED });
@@ -2640,7 +2640,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName, entryText: 'sep' });
 		}
 		{	// Playlist Size
-			const subMenuName = menu.newMenu('Update AutoPlaylists...', menuName);
+			const subMenuName = menu.newMenu('Update AutoPlaylists', menuName);
 			const options = ['Yes: Automatically on every startup', 'No: Only when loading them'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Refresh metadata:', flags: MF_GRAYED });
@@ -2668,7 +2668,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => list.properties.bBlockUpdateAutoPls[1]);
 		}
 		if (!list.bLiteMode) {	// Smart Playlists
-			const subMenuName = menu.newMenu('Update Smart Playlists...', menuName);
+			const subMenuName = menu.newMenu('Update Smart Playlists', menuName);
 			const options = ['Yes: Automatically on source(s) changes', 'No: Only when loading them'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Refresh tracks and metadata:', flags: MF_GRAYED });
@@ -2684,7 +2684,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.properties['bAutoRefreshXsp'][1] ? 0 : 1), optionsLength);
 		}
 		if (!list.bLiteMode) {	// Other Playlists
-			const subMenuName = menu.newMenu('Update other Playlists...', menuName);
+			const subMenuName = menu.newMenu('Update other Playlists', menuName);
 			const options = ['Yes: Automatically on startup', 'No: Only when loading them'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Refresh metadata for files:', flags: MF_GRAYED });
@@ -2705,7 +2705,7 @@ function createMenuRightTop() {
 			}
 		}
 		{	// AutoPlaylist / Smart Playlists loading duplicates
-			const subMenuName = menu.newMenu('Duplicates filter...', menuName);
+			const subMenuName = menu.newMenu('Duplicates filter', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Removes duplicates after loading:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
@@ -2782,7 +2782,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file\'s Tags relatad actions:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
-				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with', subMenuName);
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED });
 				const options = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
@@ -2812,7 +2812,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoCustomTag);
 			}
 			{
-				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags', subMenuName);
 				const options = ['Yes: At playlist loading', 'No: Ignore them'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -2834,7 +2834,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'Track\'s Tags related actions:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
-				const subMenuNameTwo = menu.newMenu('Automatically tag added tracks on...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Automatically tag added tracks on', subMenuName);
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Switch for different playlist types:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep', flags: MF_GRAYED });
 				menu.newEntry({
@@ -2883,7 +2883,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.properties.bBlockUpdateAutoPls[1]);
 			}
 			{
-				const subMenuNameTwo = menu.newMenu('Enable auto-tagging...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Enable auto-tagging', subMenuName);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
 						if (!list.bAutoTrackTag) { fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load (AutoPlaylists) and/or save. Also on manual refresh (AutoPlaylists).\n\n(*) Use contextual menu.', window.Name); }
@@ -2907,7 +2907,7 @@ function createMenuRightTop() {
 		if (!list.bLiteMode) {	// Export and Converter settings
 			menu.newEntry({ menuName, entryText: 'sep' });
 			{	//Export and copy
-				const subMenuName = menu.newMenu('Export and copy...', menuName);
+				const subMenuName = menu.newMenu('Export and copy', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
@@ -2919,7 +2919,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.properties['bCopyAsync'][1]);
 			}
 			{	//Export and convert
-				const subMenuName = menu.newMenu('Export and convert...', menuName);
+				const subMenuName = menu.newMenu('Export and convert', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of exporting presets:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const presets = JSON.parse(list.properties.converterPreset[1]);
@@ -2946,7 +2946,7 @@ function createMenuRightTop() {
 						}
 					});
 					{
-						const subMenuNameThree = menu.newMenu('Set playlist format...', subMenuNameTwo);
+						const subMenuNameThree = menu.newMenu('Set playlist format', subMenuNameTwo);
 						const options = ['', ...writablePlaylistFormats];
 						options.forEach((extension) => {
 							menu.newEntry({
@@ -2999,14 +2999,14 @@ function createMenuRightTop() {
 				});
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
-					menuName: subMenuName, entryText: 'Add new preset', func: () => {
+					menuName: subMenuName, entryText: 'Add new preset...', func: () => {
 						presets.push({ dsp: '...', tf: '.\\%filename%.mp3', path: '' });
 						list.properties['converterPreset'][1] = JSON.stringify(presets);
 						overwriteProperties(list.properties);
 						if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 					}
 				});
-				const subMenuNameTwo = menu.newMenu('Remove preset...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Remove preset', subMenuName);
 				presets.forEach((preset, i) => {
 					const path = preset.path;
 					let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
@@ -3038,7 +3038,7 @@ function createMenuRightTop() {
 		{
 			menu.newEntry({ menuName, entryText: 'sep' });
 			{	//Export and copy
-				const subMenuName = menu.newMenu('Import from file \\ url...', menuName);
+				const subMenuName = menu.newMenu('Import from file \\ url', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of import tool:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
@@ -3085,7 +3085,7 @@ function createMenuRightTop() {
 	{	// UI
 		const menuName = menu.newMenu('UI');
 		{	// Playlist Size
-			const subMenuName = menu.newMenu('Show Playlist size...', menuName);
+			const subMenuName = menu.newMenu('Show Playlist size', menuName);
 			const options = ['Yes: Shown along the playlist name', 'No: Only shown on tooltip/columns'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'Track count on parenthesis:', flags: MF_GRAYED });
@@ -3103,7 +3103,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bShowSize ? 0 : 1), optionsLength);
 		}
 		{	// Name/category sep
-			const subMenuName = menu.newMenu('Show name/category separators...', menuName);
+			const subMenuName = menu.newMenu('Show name/category separators', menuName);
 			const options = ['Yes: Dotted line and initials', 'No: Only shown on tooltip'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'When sorting by name/category:', flags: MF_GRAYED });
@@ -3120,10 +3120,10 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bShowSep ? 0 : 1), optionsLength);
 		}
 		{	// Playlist icons
-			const subMenuName = menu.newMenu('Set playlist icons...', menuName);
+			const subMenuName = menu.newMenu('Set playlist icons', menuName);
 			const options = ['Yes: icons + playlist name', 'No: only playlist name'];
 			const optionsLength = options.length;
-			menu.newEntry({ menuName: subMenuName, entryText: 'Show playlist icons?', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Show playlist icons:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			options.forEach((item, i) => {
 				menu.newEntry({
@@ -3153,7 +3153,7 @@ function createMenuRightTop() {
 			});
 		}
 		{	// Playlist icons
-			const subMenuName = menu.newMenu('Show playlist status...', menuName);
+			const subMenuName = menu.newMenu('Show playlist status', menuName);
 			const options = Object.keys(list.statusIcons);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Icons at right:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
@@ -3170,7 +3170,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Tooltips
-			const subMenuName = menu.newMenu('Show usage info on tooltips...', menuName);
+			const subMenuName = menu.newMenu('Show usage info on tooltips', menuName);
 			const options = ['Yes: Show shortcuts', 'No: Only show basic info'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'On playlist and header tooltips:', flags: MF_GRAYED });
@@ -3187,7 +3187,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bShowTips ? 0 : 1), optionsLength);
 		}
 		{	// Playlist header menu
-			const subMenuName = menu.newMenu('Show playlist header on menus...', menuName);
+			const subMenuName = menu.newMenu('Show playlist header on menus', menuName);
 			const options = ['Yes: Show playlist format and name', 'No: Only the contextual menu'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'On playlist contextual menu:', flags: MF_GRAYED });
@@ -3205,7 +3205,7 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Font size
-			const subMenuName = menu.newMenu('Font size...', menuName);
+			const subMenuName = menu.newMenu('Font size', menuName);
 			if (panel.listObjects.length || panel.textObjects.length) {
 				const options = [...panel.fonts.sizes, 'Other...'];
 				const optionsLength = options.length;
@@ -3257,9 +3257,9 @@ function createMenuRightTop() {
 			const getColorName = (val = -1) => {
 				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
 			}; // From statistics
-			const subMenuName = menu.newMenu('Set custom colors...', menuName);
+			const subMenuName = menu.newMenu('Set custom colors', menuName);
 			{
-				const subMenuNameTwo = menu.newMenu('List items...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('List items', subMenuName);
 				const options = ['Standard playlists...', 'AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
 				options.forEach((item, i) => {
 					if (!item) { return; }
@@ -3299,7 +3299,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => panel.colors.bFontOutline);
 			}
 			{	// Text color
-				const subMenuSecondName = menu.newMenu('Standard text...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Standard text', subMenuName);
 				const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -3322,7 +3322,7 @@ function createMenuRightTop() {
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Header toolbar
-				const subMenuSecondName = menu.newMenu('Header toolbar...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Header toolbar', subMenuName);
 				const options = ['Use default', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -3345,7 +3345,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Buttons' toolbar
 				const defaultCol = invert(panel.getColorBackground());
-				const subMenuSecondName = menu.newMenu('Button toolbar...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Button toolbar', subMenuName);
 				const options = ['Use default', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -3380,7 +3380,7 @@ function createMenuRightTop() {
 			}
 			{	// Buttons' Text color
 				const defaultCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
-				const subMenuSecondName = menu.newMenu('Buttons\' text...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Buttons\' text', subMenuName);
 				const options = ['Use default', 'Custom'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -3403,7 +3403,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Background color
 				const defaultButtonsCol = invert(panel.getColorBackground());
-				const subMenuSecondName = menu.newMenu('Background...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Background', subMenuName);
 				if (panel.customBackground) {
 					const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom'];
 					const optionsLength = options.length;
@@ -3442,7 +3442,7 @@ function createMenuRightTop() {
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Presets
-				const subMenuSecondName = menu.newMenu('Presets...', subMenuName);
+				const subMenuSecondName = menu.newMenu('Presets', subMenuName);
 				const presets = [ /*[autoPlaylist, smartPlaylist, smartPlaylist, lockedPlaylist, selectedPlaylist, standard text, buttons, background ]*/
 					{ name: 'Color Blindness (light)', colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.white[0]] },
 					{ name: 'Color Blindness (dark)', colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2]] },
@@ -3545,7 +3545,7 @@ function createMenuRightTop() {
 		}
 		{	// Buttons' toolbar
 			const defaultButtonsCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
-			const subMenuName = menu.newMenu('Button toolbar...', menuName);
+			const subMenuName = menu.newMenu('Button toolbar', menuName);
 			const options = ['Use default (toolbar)', 'Use no background buttons', 'Use background buttons (theme manager)'];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
@@ -3564,7 +3564,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (panel.colors.bToolbar ? 0 : (panel.colors.bButtonsBackground ? 2 : 1)), optionsLength);
 		}
 		{	// Panel background
-			const subMenuName = menu.newMenu('Panel background...', menuName);
+			const subMenuName = menu.newMenu('Panel background', menuName);
 			const options = ['Use front cover', 'Use color background'];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
@@ -3590,7 +3590,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (panel.imageBackground.enabled ? 0 : 1), optionsLength);
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
-				const subMenuNameTwo = menu.newMenu('Selection mode...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Selection mode', subMenuName);
 				const options = ['Follow selection', 'Follow now playing', 'External file...'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -3630,7 +3630,7 @@ function createMenuRightTop() {
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{
-				const subMenuNameTwo = menu.newMenu('Display mode...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Display mode', subMenuName);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Maintain proportions', func: () => {
 						panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
@@ -3688,14 +3688,14 @@ function createMenuRightTop() {
 		}
 		menu.newEntry({ menuName, entryText: 'sep' });
 		{	// Columns
-			const subMenuName = menu.newMenu('Columns...', menuName);
+			const subMenuName = menu.newMenu('Columns', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Columns config:' + '\t' + (list.getColumnsEnabled() ? '(disabled)' : ''), flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			list.columns.labels.forEach((key, i) => {
 				const subMenuColumn = menu.newMenu('Column ' + (i + 1) + '\t ' + _b(key), subMenuName);
 				{	// Metadata
 					const options = ['duration', 'size', 'fileSize', 'trackSize', 'playlist_mbid', 'trackTags', 'isLocked'];
-					const subMenuNameTwo = menu.newMenu('Metadata...', subMenuColumn);
+					const subMenuNameTwo = menu.newMenu('Metadata', subMenuColumn);
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Display:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					const toEntry = (s) => capitalizeAll(s.replace(/[A-Z]/g, ' $&').replace(/_/g, ' '));
@@ -3713,7 +3713,7 @@ function createMenuRightTop() {
 				}
 				{	// Size
 					const options = ['normal', 'small', 'title'];
-					const subMenuNameTwo = menu.newMenu('Size...', subMenuColumn);
+					const subMenuNameTwo = menu.newMenu('Size', subMenuColumn);
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Font size:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					options.forEach((opt) => {
@@ -3730,7 +3730,7 @@ function createMenuRightTop() {
 				}
 				{	// Align
 					const options = ['right', 'left', 'center'];
-					const subMenuNameTwo = menu.newMenu('Align...', subMenuColumn);
+					const subMenuNameTwo = menu.newMenu('Align', subMenuColumn);
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Alignment:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					options.forEach((opt) => {
@@ -3747,7 +3747,7 @@ function createMenuRightTop() {
 				}
 				{	// Color
 					const options = ['playlistColor', 'textColor', 'custom'];
-					const subMenuNameTwo = menu.newMenu('Color...', subMenuColumn);
+					const subMenuNameTwo = menu.newMenu('Color', subMenuColumn);
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Color:', flags: MF_GRAYED });
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					options.forEach((opt) => {
@@ -3766,7 +3766,7 @@ function createMenuRightTop() {
 				}
 				// Width
 				menu.newEntry({
-					menuName: subMenuColumn, entryText: 'Width...' + '\t' + _b(list.columns.width[i]), func: () => {
+					menuName: subMenuColumn, entryText: 'Width' + '\t' + _b(list.columns.width[i]), func: () => {
 						const input = Input.number('real positive', list.columns.width[i], 'Enter width: (px)\n(0 to set width automatically)', window.Name, 60);
 						if (input === null) { return; }
 						list.columns.width[i] = input || 'auto';
@@ -3788,18 +3788,19 @@ function createMenuRightTop() {
 			});
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Add new column', func: () => {
+				menuName: subMenuName, entryText: 'Add new column...', func: () => {
 					list.columns.labels.push('size');
-					list.columns.width.push('auto');
-					list.columns.font.push('normal');
-					list.columns.align.push('right');
+					list.columns.width.push(list.columns.width.slice(-1)[0] || 'auto');
+					list.columns.font.push(list.columns.font.slice(-1)[0] || 'normal');
+					list.columns.align.push(list.columns.align.slice(-1)[0] || 'rigth');
+					list.columns.color.push(list.columns.color.slice(-1)[0] || 'playlistColor');
 					list.columns.bShown.push(true);
 					list.properties['columns'][1] = JSON.stringify(list.columns);
 					overwriteProperties(list.properties);
 					list.repaint();
 				}
 			});
-			const subMenuNameTwo = menu.newMenu('Remove column...', subMenuName);
+			const subMenuNameTwo = menu.newMenu('Remove column', subMenuName);
 			list.columns.labels.forEach((key, i) => {
 				const column = 'Column ' + (i + 1) + '\t ' + _b(key);
 				menu.newEntry({
@@ -3815,7 +3816,7 @@ function createMenuRightTop() {
 			});
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Line
-				const subMenuNameTwo = menu.newMenu('Border...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Border', subMenuName);
 				const options = ['none', 'first', 'all'];
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Column borders:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
@@ -3832,7 +3833,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.line); return idx !== -1 ? idx : 0; }, options.length);
 			}
 			{	// Auto-Width
-				const subMenuNameTwo = menu.newMenu('Auto-Width...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Auto-Width', subMenuName);
 				const options = ['entire list', 'current view'];
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Calculate by:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
@@ -3849,7 +3850,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => { const idx = options.indexOf(list.columns.autoWidth); return idx !== -1 ? idx : 0; }, options.length);
 			}
 			{	// Size unis
-				const subMenuNameTwo = menu.newMenu('Size units...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Size units', subMenuName);
 				const options = ['prefix', 'suffix'];
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Calculate by:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
@@ -3881,7 +3882,7 @@ function createMenuRightTop() {
 			});
 		}
 		{	// Enabled UI elements
-			const subMenuName = menu.newMenu('UI elements...', menuName);
+			const subMenuName = menu.newMenu('UI elements', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Elements shown:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			Object.keys(list.uiElements).forEach((key) => {
@@ -4006,7 +4007,7 @@ function createMenuRightTop() {
 						}
 					},
 				];
-				const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Presets', subMenuName);
 				options.forEach((preset) => {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: preset.name, func: () => {
@@ -4041,7 +4042,7 @@ function createMenuRightTop() {
 		}
 		if (showMenus['Quick-search']) {	// QuickSearch
 			menu.newEntry({ menuName, entryText: 'sep' });
-			const subMenuName = menu.newMenu('Quick-search...', menuName);
+			const subMenuName = menu.newMenu('Quick-search', menuName);
 			{
 				menu.newEntry({ menuName: subMenuName, entryText: 'Quick-search configuration:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
@@ -4081,7 +4082,7 @@ function createMenuRightTop() {
 			});
 		}
 		{	// Folder size
-			const subMenuName = menu.newMenu('Show size...', menuName);
+			const subMenuName = menu.newMenu('Show size', menuName);
 			const options = [
 				{ name: 'Deep recursion', settings: { bShowSize: true, bShowSizeDeep: true } },
 				{ name: 'Current level', settings: { bShowSize: true, bShowSizeDeep: false } },
@@ -4108,7 +4109,7 @@ function createMenuRightTop() {
 			}, optionsLength);
 		}
 		{	// Icons
-			const subMenuName = menu.newMenu('Icons...', menuName);
+			const subMenuName = menu.newMenu('Icons', menuName);
 			const options = [
 				{ name: 'Charets', icons: { open: chars.downOutline, closed: chars.leftOutline } },
 				{ name: 'Folders (solid)', icons: { open: chars.folderOpenBlack, closed: chars.folderCloseBlack } },
@@ -4143,12 +4144,12 @@ function createMenuRightTop() {
 			}, optionsLength);
 		}
 		{	// Colors
-			menu.newEntry({ menuName, entryText: 'Color...', func: () => createMenuRightTop().btn_up(void (0), void (0), void (0), 'Set custom colors...\\Folders...') });
+			menu.newEntry({ menuName, entryText: 'Color...', func: () => createMenuRightTop().btn_up(void (0), void (0), void (0), 'Set custom colors\\List items\\Folders...') });
 		}
 		menu.newEntry({ entryText: 'sep' });
 	}
 	{	// Shortcuts
-		const subMenuName = menu.newMenu('Shortcuts...');
+		const subMenuName = menu.newMenu('Shortcuts');
 		menu.newEntry({ menuName: subMenuName, entryText: 'Mouse / Keyboard actions:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		{	// List L. Click
@@ -4373,7 +4374,7 @@ function createMenuRightTop() {
 	}
 	{	// Enabled menus
 		const showMenus = JSON.parse(list.properties.showMenus[1]);
-		const subMenuName = menu.newMenu('Features...');
+		const subMenuName = menu.newMenu('Features');
 		menu.newEntry({ menuName: subMenuName, entryText: 'Menu entries / Features enabled:', flags: MF_GRAYED });
 		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 		Object.keys(showMenus).forEach((key) => {
@@ -4402,7 +4403,7 @@ function createMenuRightTop() {
 					options: { 'Online sync': true, 'Relative paths handling': false, 'Export and copy': false, 'File locks': false, 'UI playlist locks': false, 'Statistics mode': false, 'Sorting': false }
 				},
 			];
-			const subMenuNameTwo = menu.newMenu('Presets...', subMenuName);
+			const subMenuNameTwo = menu.newMenu('Presets', subMenuName);
 			options.forEach((preset) => {
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: preset.name, func: () => {
@@ -4422,7 +4423,7 @@ function createMenuRightTop() {
 		const menuName = menu.newMenu('Integration');
 		{	// Dynamic menus
 			const flags = isCompatible('1.6.1', 'smp') ? MF_STRING : MF_GRAYED;
-			const subMenuName = menu.newMenu('Create dynamic menus...', menuName);
+			const subMenuName = menu.newMenu('Create dynamic menus', menuName);
 			const options = ['Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...', 'No: don\'t integrate the panel in main menu'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'File\\Spider Monkey Panel\\Script commands:', flags: MF_GRAYED });
@@ -4446,7 +4447,7 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => (list.bDynamicMenus ? 0 : 1), optionsLength);
 		}
 		if (showMenus['Online sync']) {	// ListenBrainz
-			const subMenuName = menu.newMenu('ListenBrainz...', menuName);
+			const subMenuName = menu.newMenu('ListenBrainz', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Set token...', func: async () => { return checkLBToken(''); } });
 			menu.newCheckMenuLast(() => !!list.properties.lBrainzToken[1].length);
 			menu.newEntry({
@@ -4504,7 +4505,7 @@ function createMenuRightTop() {
 			const idx = list.dataAll.findIndex((pls) => { return pls.nameId === nameUI; });
 			const name = idx !== -1 ? list.dataAll[idx].name : nameUI;
 
-			const subMenuName = menu.newMenu('Startup active playlist...', menuName);
+			const subMenuName = menu.newMenu('Startup active playlist', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Set active playlist at startup:', flags: MF_GRAYED });
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
@@ -4767,7 +4768,7 @@ function createMenuSearch() {
 	menu.newEntry({ entryText: 'sep' });
 	// Settings
 	{	// Filter
-		const subMenu = menu.newMenu('Settings...');
+		const subMenu = menu.newMenu('Settings');
 		const options = [
 			{ entryText: 'By playlist\'s name', key: 'bName' },
 			showMenus['Tags'] ? { entryText: 'By playlist\'s tags', key: 'bTags' } : null,

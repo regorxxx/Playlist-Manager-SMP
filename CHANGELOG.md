@@ -62,9 +62,13 @@
 ### Changed
 - Remove Duplicates: improved performance of duplicates removal in multiple places.
 - UI: popups opened via contextual menus related to a playlist now show the playlist name at the window title.
+- UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. Setting can be switched a the panel background selection mode submenu.
+- UI: renamed most submenus, removing '...'.
+- UI: new columns added reuse the last font, width, align and color settings used.
 ### Removed
 ### Fixed
 - UI: merge-load not working in multiple selection if one of the playlists was empty.
+- UI: new columns missing default color.
 - Fixed possible crash renaming UI-only playlist on main program.
 
 ## [0.16.1] - 2024-04-26
