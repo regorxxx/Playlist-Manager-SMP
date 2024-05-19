@@ -4144,7 +4144,10 @@ function createMenuRightTop() {
 			}, optionsLength);
 		}
 		{	// Colors
-			menu.newEntry({ menuName, entryText: 'Color...', func: () => createMenuRightTop().btn_up(void (0), void (0), void (0), 'Set custom colors\\List items\\Folders...') });
+			const getColorName = (val = -1) => {
+				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
+			}; // From statistics
+			menu.newEntry({ menuName, entryText: 'Set color...' + '\t' + _b(getColorName(list.colors.folder)), func: () => createMenuRightTop().btn_up(void (0), void (0), void (0), 'List items\\Folders...') });
 		}
 		menu.newEntry({ entryText: 'sep' });
 	}
