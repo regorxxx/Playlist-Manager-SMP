@@ -1,5 +1,5 @@
 'use strict';
-//25/12/23
+//20/05/24
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, registerAllCallbacks */
 
@@ -18,7 +18,7 @@
 
 		Following [Mozilla implementation](https://developer.mozilla.org/es/docs/Web/API/EventTarget/removeEventListener)
 		event listeners may be removed using their UUID or event listener function itself.
-		addEventListener() returns the UUID for the provided	function, which may be useful for anonymous or inline functions.
+		addEventListener() returns the UUID for the provided function, which may be useful for anonymous or inline functions.
 		removeEventListener() accepts both the listener (2nd arg) or UUID (3rd arg) as arguments.
 
 		Callback registering is done under the hood automatically although it may be done manually using
@@ -102,6 +102,17 @@ const callbacks = {
 const parentWindow = this; // This is Window in this context without SMP wrapping
 parentWindow.eventListener = {event: null, id: null};
 
+/**
+ * Adds a listener to any SMP callback
+ *
+ * @function
+ * @name addEventListener
+ * @kind function
+ * @param {('on_always_on_top_changed '|'on_char '|'on_colours_changed '|'on_cursor_follow_playback_changed: '|'on_drag_drop '|'on_drag_enter '|'on_drag_leave '|'on_drag_over '|'on_dsp_preset_changed '|'on_focus '|'on_font_changed '|'on_get_album_art_done '|'on_item_focus_change '|'on_item_played '|'on_key_down '|'on_key_up '|'on_library_items_added '|'on_library_items_changed '|'on_library_items_removed '|'on_load_image_done '|'on_main_menu '|'on_main_menu_dynamic '|'on_metadb_changed '|'on_mouse_lbtn_dblclk '|'on_mouse_lbtn_down '|'on_mouse_lbtn_up '|'on_mouse_leave '|'on_mouse_mbtn_dblclk '|'on_mouse_mbtn_down '|'on_mouse_mbtn_up '|'on_mouse_move '|'on_mouse_rbtn_dblclk '|'on_mouse_rbtn_down '|'on_mouse_rbtn_up '|'on_mouse_wheel '|'on_mouse_wheel_h '|'on_notify_data '|'on_output_device_changed '|'on_paint '|'on_playback_dynamic_info '|'on_playback_dynamic_info_track '|'on_playback_edited '|'on_playback_follow_cursor_changed '|'on_playback_new_track '|'on_playback_order_changed '|'on_playback_pause '|'on_playback_queue_changed '|'on_playback_seek '|'on_playback_starting '|'on_playback_stop '|'on_playback_time '|'on_playlist_item_ensure_visible '|'on_playlist_items_added '|'on_playlist_items_removed '|'on_playlist_items_reordered: '|'on_playlist_items_selection_change: '|'on_playlist_stop_after_current_changed '|'on_playlist_switch '|'on_playlists_changed '|'on_replaygain_mode_changed '|'on_script_unload '|'on_selection_changed'|'on_size'|'on_volume_change')} event - Event type
+ * @param {Function} listener - Callback function
+ * @param {boolean} bRegister? - Add to global context
+ * @returns {false | { event: any; id: string; }}
+ */
 function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
 	if (!Object.hasOwn(callbacks, event)) {console.log('addEventListener: event does not exist -> ' + event); return false;}
 	const id = UUID();
@@ -110,12 +121,34 @@ function addEventListener(event, listener, bRegister = true) { // eslint-disable
 	return {event, id};
 }
 
+/**
+ * Retrieves the listener idx from any SMP callback using either the name, function or UUID
+ *
+ * @function
+ * @name findEventListener
+ * @kind function
+ * @param {('on_always_on_top_changed '|'on_char '|'on_colours_changed '|'on_cursor_follow_playback_changed: '|'on_drag_drop '|'on_drag_enter '|'on_drag_leave '|'on_drag_over '|'on_dsp_preset_changed '|'on_focus '|'on_font_changed '|'on_get_album_art_done '|'on_item_focus_change '|'on_item_played '|'on_key_down '|'on_key_up '|'on_library_items_added '|'on_library_items_changed '|'on_library_items_removed '|'on_load_image_done '|'on_main_menu '|'on_main_menu_dynamic '|'on_metadb_changed '|'on_mouse_lbtn_dblclk '|'on_mouse_lbtn_down '|'on_mouse_lbtn_up '|'on_mouse_leave '|'on_mouse_mbtn_dblclk '|'on_mouse_mbtn_down '|'on_mouse_mbtn_up '|'on_mouse_move '|'on_mouse_rbtn_dblclk '|'on_mouse_rbtn_down '|'on_mouse_rbtn_up '|'on_mouse_wheel '|'on_mouse_wheel_h '|'on_notify_data '|'on_output_device_changed '|'on_paint '|'on_playback_dynamic_info '|'on_playback_dynamic_info_track '|'on_playback_edited '|'on_playback_follow_cursor_changed '|'on_playback_new_track '|'on_playback_order_changed '|'on_playback_pause '|'on_playback_queue_changed '|'on_playback_seek '|'on_playback_starting '|'on_playback_stop '|'on_playback_time '|'on_playlist_item_ensure_visible '|'on_playlist_items_added '|'on_playlist_items_removed '|'on_playlist_items_reordered: '|'on_playlist_items_selection_change: '|'on_playlist_stop_after_current_changed '|'on_playlist_switch '|'on_playlists_changed '|'on_replaygain_mode_changed '|'on_script_unload '|'on_selection_changed'|'on_size'|'on_volume_change')} event - Event type
+ * @param {Function} listener? - Callback function
+ * @param {string} id? - UUID
+ * @returns {number}
+ */
 function findEventListener(event, listener = null, id = null) {
 	if (!Object.hasOwn(callbacks, event)) {return -1;}
 	if (!listener && !id) {return -1;}
 	return callbacks[event].listeners.findIndex((event) => (event.id === id || event.listener === listener));
 }
 
+/**
+ * Deletes the listener from any SMP callback using either the name, function or UUID
+ *
+ * @function
+ * @name removeEventListener
+ * @kind function
+ * @param {('on_always_on_top_changed '|'on_char '|'on_colours_changed '|'on_cursor_follow_playback_changed: '|'on_drag_drop '|'on_drag_enter '|'on_drag_leave '|'on_drag_over '|'on_dsp_preset_changed '|'on_focus '|'on_font_changed '|'on_get_album_art_done '|'on_item_focus_change '|'on_item_played '|'on_key_down '|'on_key_up '|'on_library_items_added '|'on_library_items_changed '|'on_library_items_removed '|'on_load_image_done '|'on_main_menu '|'on_main_menu_dynamic '|'on_metadb_changed '|'on_mouse_lbtn_dblclk '|'on_mouse_lbtn_down '|'on_mouse_lbtn_up '|'on_mouse_leave '|'on_mouse_mbtn_dblclk '|'on_mouse_mbtn_down '|'on_mouse_mbtn_up '|'on_mouse_move '|'on_mouse_rbtn_dblclk '|'on_mouse_rbtn_down '|'on_mouse_rbtn_up '|'on_mouse_wheel '|'on_mouse_wheel_h '|'on_notify_data '|'on_output_device_changed '|'on_paint '|'on_playback_dynamic_info '|'on_playback_dynamic_info_track '|'on_playback_edited '|'on_playback_follow_cursor_changed '|'on_playback_new_track '|'on_playback_order_changed '|'on_playback_pause '|'on_playback_queue_changed '|'on_playback_seek '|'on_playback_starting '|'on_playback_stop '|'on_playback_time '|'on_playlist_item_ensure_visible '|'on_playlist_items_added '|'on_playlist_items_removed '|'on_playlist_items_reordered: '|'on_playlist_items_selection_change: '|'on_playlist_stop_after_current_changed '|'on_playlist_switch '|'on_playlists_changed '|'on_replaygain_mode_changed '|'on_script_unload '|'on_selection_changed'|'on_size'|'on_volume_change')} event - Event type
+ * @param {Function} listener? - Callback function
+ * @param {string} id? - UUID
+ * @returns {Boolean}
+ */
 function removeEventListener(event, listener = null, id = null) { // eslint-disable-line no-redeclare
 	if (!Object.hasOwn(callbacks, event)) {return false;}
 	if (!listener && !id) {return false;}
@@ -123,6 +156,15 @@ function removeEventListener(event, listener = null, id = null) { // eslint-disa
 	return idx !== -1 && callbacks[event].listeners.splice(idx, 1);
 }
 
+/**
+ * Deletes all listeners for any SMP callback using either the event/callback name
+ *
+ * @function
+ * @name removeEventListeners
+ * @kind function
+ * @param {('on_always_on_top_changed '|'on_char '|'on_colours_changed '|'on_cursor_follow_playback_changed: '|'on_drag_drop '|'on_drag_enter '|'on_drag_leave '|'on_drag_over '|'on_dsp_preset_changed '|'on_focus '|'on_font_changed '|'on_get_album_art_done '|'on_item_focus_change '|'on_item_played '|'on_key_down '|'on_key_up '|'on_library_items_added '|'on_library_items_changed '|'on_library_items_removed '|'on_load_image_done '|'on_main_menu '|'on_main_menu_dynamic '|'on_metadb_changed '|'on_mouse_lbtn_dblclk '|'on_mouse_lbtn_down '|'on_mouse_lbtn_up '|'on_mouse_leave '|'on_mouse_mbtn_dblclk '|'on_mouse_mbtn_down '|'on_mouse_mbtn_up '|'on_mouse_move '|'on_mouse_rbtn_dblclk '|'on_mouse_rbtn_down '|'on_mouse_rbtn_up '|'on_mouse_wheel '|'on_mouse_wheel_h '|'on_notify_data '|'on_output_device_changed '|'on_paint '|'on_playback_dynamic_info '|'on_playback_dynamic_info_track '|'on_playback_edited '|'on_playback_follow_cursor_changed '|'on_playback_new_track '|'on_playback_order_changed '|'on_playback_pause '|'on_playback_queue_changed '|'on_playback_seek '|'on_playback_starting '|'on_playback_stop '|'on_playback_time '|'on_playlist_item_ensure_visible '|'on_playlist_items_added '|'on_playlist_items_removed '|'on_playlist_items_reordered: '|'on_playlist_items_selection_change: '|'on_playlist_stop_after_current_changed '|'on_playlist_switch '|'on_playlists_changed '|'on_replaygain_mode_changed '|'on_script_unload '|'on_selection_changed'|'on_size'|'on_volume_change')} event - Event type
+ * @returns {Boolean}
+ */
 function removeEventListeners(event) {
 	if (Array.isArray(event)) {
 		event.forEach((ev) => {removeEventListeners(ev);});
