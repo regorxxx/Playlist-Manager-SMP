@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/24
+//20/05/24
 
 /* exported getText, paginatedFetch */
 
@@ -12,6 +12,7 @@ function getText(URL) {
 function onStateChange(timer, resolve, reject, func = null, type = null) {
 	if (this !== null && timer !== null) { // this is xmlhttp bound
 		if (this.readyState === 4) {
+			if (window.WebRequests) { window.WebRequests.delete(this); }
 			clearTimeout(timer); timer = null;
 			if (this.status === 200) {
 				if (func) { return func(this.responseText); }
@@ -19,22 +20,34 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 					if (type !== null) {
 						const contentType = this.getResponseHeader('Content-Type');
 						if (contentType.indexOf(type) === -1) {
-							reject({ status: this.status, responseText: 'Type missmatch: ' + contentType + ' is not ' + type });
+							reject({ status: this.status, responseText: 'Type mismatch: ' + contentType + ' is not ' + type });
 						}
 					}
 					resolve(this.responseText);
 				}
-			} else if (!func) { reject({ status: this.status, responseText: this.responseText }); }
+			} else if (!func) {
+				window.IsUnload
+					? reject({ status: 408, responseText: 'Forced shutdown' })
+					: reject({ status: this.status, responseText: this.responseText });
+
+			}
 		}
-	} else if (!func && this !== null) { reject({ status: 408, responseText: this.responseText }); } // 408 Request Timeout
+	} else if (!func && this !== null) {
+		if (window.WebRequests) { window.WebRequests.delete(this); }
+		window.IsUnload
+			? reject({ status: 408, responseText: 'Forced shutdown' })
+			: reject({ status: this.status, responseText: this.responseText });
+	} // 408 Request Timeout
 	return null;
 }
 
 // May be used to async run a func for the response or as promise
-function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, type }) {
+function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
 	const p = new Promise((resolve, reject) => {
+		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; }
 		let timer = null;
 		const xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
+		if (window.WebRequests) { window.WebRequests.add(xmlhttp); }
 		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
 		// Add ('&' + new Date().getTime()) to URLS to avoid caching
 		xmlhttp.open(
@@ -52,14 +65,15 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 			xmlhttp.setRequestHeader('Pragma', 'no-cache');
 		}
 		timer = setTimeout((xmlhttp) => {
+			if (window.WebRequests) { window.WebRequests.delete(xmlhttp); }
 			xmlhttp.abort();
 			timer = null;
 			if (!func) { // 408 Request Timeout
-				let status = 408;
-				try { status = xmlhttp.status; } catch (e) { /* empty */ }
+				let status;
+				try { status = xmlhttp.status; } catch (e) { status = 408; }
 				reject({ status, responseText: 'Request Timeout' });
 			}
-		}, 30000, xmlhttp);
+		}, timeOut, xmlhttp);
 		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type);
 		xmlhttp.send(method === 'POST' ? body : void (0));
 	});
@@ -92,4 +106,17 @@ function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], incre
 			}
 			return response;
 		});
+}
+
+// Add handling to terminate activeX objects on foobar shutdown to avoid crashes
+if (typeof addEventListener !== 'undefined') {
+	window.WebRequests = new Set();
+	addEventListener('on_script_unload', () => {
+		window.IsUnload = true;
+		window.WebRequests.forEach((webObj) => {
+			if (webObj.Abort) {webObj.Abort();}
+			else if (webObj.abort) {webObj.abort();}
+		});
+		window.WebRequests.clear();
+	});
 }
