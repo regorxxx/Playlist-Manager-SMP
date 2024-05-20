@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//20/05/24
 
 /*
 	Playlist Revive
@@ -81,7 +81,7 @@ function playlistRevive({
 		);
 	});
 	// instead of using this, which would combine the different tags too
-	// const query =  queryJoin(queryCombinations(tags, tagsToCheck, 'OR', 'OR'), 'OR');
+	// queryJoin(queryCombinations(tags, tagsToCheck, 'OR', 'OR'), 'OR');
 	const query = queryJoin(queryArr.filter(Boolean), 'OR');
 	if (!bSilent && bSimulate) { console.log('Filtered library by: ' + query); }
 	try { fb.GetQueryItems(fb.GetLibraryItems(), query); } // Sanity check
@@ -98,7 +98,7 @@ function playlistRevive({
 		let alternativesObj = []; // {idx: , simil: , bExact: }
 		if (utils.IsFile(handle.Path)) { return; }
 		const info = handle.GetFileInfo();
-		if (!info) { // When the old item has already been deleted from cache, no tags can be retrieved, compare filenames
+		if (!info || !info.MetaCount) { // When the old item has already been deleted from cache, no tags can be retrieved, compare filenames
 			if (simThreshold === 1) { return; } // only items with same path would pass and if the path is the same, then it's not a dead item.
 			libraryItemsArr.forEach((handleLibr, indexLibr) => {
 				if (!alternativesSet.has(indexLibr)) {
