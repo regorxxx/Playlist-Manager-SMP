@@ -69,7 +69,9 @@
 ### Fixed
 - UI: merge-load not working in multiple selection if one of the playlists was empty.
 - UI: new columns missing default color.
+- Playlists maintenance tools: fixed handling of files without tags at Playlist revive tool, which were supposed to match by paths similarity.
 - Fixed possible crash renaming UI-only playlist on main program.
+- Fixed possible crash handling web request while closing foobar2000. See [this](https://hydrogenaud.io/index.php/topic,121047.msg1044579.html#msg1044579), although current methods don't use 'WinHttp.WinHttpRequest.5.1' but 'Microsoft.XMLHTTP' which hasn't given any problems yet.
 
 ## [0.16.1] - 2024-04-26
 ### Added
