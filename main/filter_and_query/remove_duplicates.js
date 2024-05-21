@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/24
+//21/05/24
 
 /*
 	Remove duplicates
@@ -292,9 +292,9 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 	copyHandleList = copyHandleList.Convert();
 
 	i = 0;
+	const set = new Set();
 	const count = tfoCopy.length;
 	if (bMultiple) {
-		const dics = [...new Array(checkLength)].map(() => new Set());
 		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
@@ -306,15 +306,16 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 						? str.split(', ')
 						: [str.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim()];
 				});
-				const bFound = strArr.every((subStrArr, j) =>
-					subStrArr.some((subStr) => (dics[j] || new Set()).has(subStr))
-				);
-				if (!bFound) {
-					items.push(copyHandleList[i]);
-					strArr.forEach((subStrArr, j) =>
-						subStrArr.forEach((subStr) => (dics[j] || new Set()).add(subStr))
-					);
+				const combs = cartesian(...strArr);
+				let bAdd = false;
+				for (const str of combs) {
+					const id = str.join(sep);
+					if (!set.has(id)) {
+						set.add(id);
+						bAdd = true;
+					}
 				}
+				if (bAdd) { items.push(copyHandleList[i]); }
 				i++;
 			}
 		} else {
@@ -324,16 +325,20 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 						? str.split(', ')
 						: [str];
 				});
-				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
-				if (!bFound) {
-					items.push(copyHandleList[i]);
-					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
+				const combs = cartesian(...strArr);
+				let bAdd = false;
+				for (const str of combs) {
+					const id = str.join(sep);
+					if (!set.has(id)) {
+						set.add(id);
+						bAdd = true;
+					}
 				}
+				if (bAdd) { items.push(copyHandleList[i]); }
 				i++;
 			}
 		}
 	} else {
-		const set = new Set();
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
