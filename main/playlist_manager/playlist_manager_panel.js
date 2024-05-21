@@ -1,13 +1,13 @@
 ﻿'use strict';
-//19/05/24
+//21/05/24
 
 /* exported _panel */
 
 /* global buttonsPanel:readable, */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global globFonts:readable, FontStyle:readable, InterpolationMode:readable, DLGC_WANTALLKEYS:readable */
+/* global globFonts:readable, FontStyle:readable, InterpolationMode:readable, DLGC_WANTALLKEYS:readable, clone: readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable, isJSON:readable, isInt:readable, debounce:readable */
+/* global isInt:readable, isBoolean:readable, isJSON:readable, isInt:readable, debounce:readable, deepAssign:readable*/
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global overwriteProperties:readable, setProperties:readable, getPropertiesPairs:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -114,7 +114,7 @@ function _panel(customBackground = false, bSetup = false) {
 	};
 
 	this.updateImageBg = debounce((bForce = false) => {
-		if (!this.imageBackground.enabled) { this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.id = null; }
+		if (!this.imageBackground.enabled) { this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.art.id = null; }
 		let handle;
 		if (this.imageBackground.mode === 0) { // Selection
 			handle = fb.GetFocusItem(true);
@@ -210,6 +210,16 @@ function _panel(customBackground = false, bSetup = false) {
 		return bDone;
 	};
 
+	this.getConfig = () => {
+		const config = clone(this.imageBackground);
+		if (this.imageBackground.mode !== 2) { config.art.path = ''; }
+		config.art.image = null;
+		config.art.id = '';
+		delete config.handle;
+		delete config.art.colors;
+		return config;
+	};
+
 	window.DlgCode = DLGC_WANTALLKEYS;
 	this.properties = getPropertiesPairs(panelProperties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.fonts = {};
@@ -238,7 +248,13 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
 	this.colors.bFontOutline = this.properties.bFontOutline[1];
 	this.colors.bBold = this.properties.bBold[1];
-	this.imageBackground = JSON.parse(this.properties.imageBackground[1], (key, value) => ['image', 'handle', 'colors', 'id'].includes(key) ? null : value);
+	this.imageBackground = deepAssign()(
+		JSON.parse(this.properties.imageBackground[3]),
+		JSON.parse(
+			this.properties.imageBackground[1],
+			(key, value) => ['image', 'handle', 'colors', 'id'].includes(key) ? null : value
+		)
+	);
 	this.listObjects = [];
 	this.textObjects = [];
 	this.fontChanged();

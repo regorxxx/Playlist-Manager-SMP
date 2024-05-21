@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/05/24
+//21/05/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -3571,12 +3571,10 @@ function createMenuRightTop() {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
 						panel.imageBackground.enabled = i === 0;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						if (panel.imageBackground.enabled) { // Add shadows by default
 							const answer = WshShell.Popup('Add font shading to improve readability?\n(it may heavily affect performance on some systems)', 0, window.Name, popup.question + popup.yes_no);
-							if (answer === popup.yes) {
-								panel.colors.bFontOutline = true;
-							}
+							panel.colors.bFontOutline = answer === popup.yes;
 						} else {
 							panel.colors.bFontOutline = false;
 						}
@@ -3598,19 +3596,19 @@ function createMenuRightTop() {
 						menuName: subMenuNameTwo, entryText: item, func: () => {
 							if (i === 2) {
 								const input = Input.string(
-									'string', 
-									panel.imageBackground.mode === 2 
-										? panel.imageBackground.art.path 
+									'string',
+									panel.imageBackground.mode === 2
+										? panel.imageBackground.art.path
 										: JSON.parse(panel.properties.imageBackground[1]).art.path || '',
-									'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)', 
-									window.Name, 
+									'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)',
+									window.Name,
 									'myfile.jpg'
 								);
 								if (input === null) { return; }
 								panel.imageBackground.art.path = input;
 							}
 							panel.imageBackground.mode = i;
-							panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+							panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 							overwriteProperties(panel.properties);
 							panel.updateImageBg(true);
 							window.Repaint();
@@ -3622,7 +3620,7 @@ function createMenuRightTop() {
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Cache same album\'s tracks art', func: () => {
 						panel.imageBackground.bCacheAlbum = !panel.imageBackground.bCacheAlbum;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
 					}, flags: panel.imageBackground.mode !== 2 ? MF_STRING : MF_GRAYED
 				});
@@ -3634,7 +3632,7 @@ function createMenuRightTop() {
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Maintain proportions', func: () => {
 						panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
 						panel.updateImageBg();
 						window.Repaint();
@@ -3644,7 +3642,7 @@ function createMenuRightTop() {
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Fill panel', func: () => {
 						panel.imageBackground.bFill = !panel.imageBackground.bFill;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
 						panel.updateImageBg();
 						window.Repaint();
@@ -3655,7 +3653,7 @@ function createMenuRightTop() {
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Tint all UI elements', func: () => {
 						panel.imageBackground.bTint = !panel.imageBackground.bTint;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
 						window.Repaint();
 					}
@@ -3668,7 +3666,7 @@ function createMenuRightTop() {
 					let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(0-100)', window.Name, 50, [(n) => n >= 0 && n <= 100]);
 					if (input === null) { return; }
 					panel.imageBackground.transparency = input;
-					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 					overwriteProperties(panel.properties);
 					panel.updateImageBg();
 					window.Repaint();
@@ -3679,7 +3677,7 @@ function createMenuRightTop() {
 					let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(>= 0)', window.Name, 10);
 					if (input === null) { return; }
 					panel.imageBackground.blur = input;
-					panel.properties.imageBackground[1] = JSON.stringify(panel.imageBackground);
+					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 					overwriteProperties(panel.properties);
 					panel.updateImageBg(true);
 					window.Repaint();
