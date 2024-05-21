@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/24
+//21/05/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -142,6 +142,8 @@ function addGlobTags() { // Add calculated properties
 		'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)' +
 		'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
 		'|$add(1,' + globTags.feedback + ')' +
+		'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
+		'|%DYNAMIC RANGE%' +
 		'|' + globTags.playCount;
 }
 /* eslint-enable no-useless-escape */
