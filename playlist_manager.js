@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/24
+//27/05/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -431,7 +431,7 @@ let autoUpdateRepeat;
 			}
 		}
 		{	// Simple mode
-			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync'].concat(prop.bLiteMode[1] ? ['File locks'] : []);
+			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'Statistics mode'].concat(prop.bLiteMode[1] ? ['File locks'] : []);
 			const otherFeatures = ['Advanced search tools'];
 			const answer = prop.bLiteMode[1]
 				? popup.no
@@ -501,6 +501,12 @@ let autoUpdateRepeat;
 		if (prop.bLiteMode[1]) {
 			prop.bAutoSelTitle[1] = true;
 			prop.autoSave[1] = 1000;
+			prop.delays[1] = JSON.stringify({
+				playlistLoading: 0,
+				startupPlaylist: 1000,
+				dynamicMenus: 2500,
+				playlistCache: 6000,
+			});
 		}
 		overwriteProperties(prop); // Updates panel
 		// Share ListenBrainz Token
@@ -819,7 +825,7 @@ if (!list.properties.bSetup[1]) {
 		if (list.statusIcons.active.enabled) { list.repaint(); }
 	});
 
-	addEventListener('on_playback_stop', (reason) => {
+	addEventListener('on_playback_stop', (/** @type {number} */ reason) => {
 		if (reason !== 2) { // Invoked by user or Starting another track
 			if (panel.imageBackground.mode === 1) { panel.updateImageBg(); }
 		}
@@ -1020,7 +1026,7 @@ if (!list.properties.bSetup[1]) {
 	// Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
 	// if Autosave === 0, then it does nothing...
 	debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
-	addEventListener('on_playlist_items_reordered', (playlistIndex, oldName = null) => {
+	addEventListener('on_playlist_items_reordered', (/** @type {number} */ playlistIndex, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (!list.isAutosave(name)) { return; }
@@ -1045,7 +1051,7 @@ if (!list.properties.bSetup[1]) {
 		if (debouncedUpdate) { debouncedUpdate({ playlistIndex, bCallback: true }); }
 	});
 
-	addEventListener('on_playlist_items_added', (playlistIndex, oldName = null) => {
+	addEventListener('on_playlist_items_added', (/** @type {number} */ playlistIndex, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {

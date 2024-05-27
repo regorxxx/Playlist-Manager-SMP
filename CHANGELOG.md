@@ -62,6 +62,8 @@
 ### Changed
 - Remove Duplicates: improved performance of duplicates removal in multiple places.
 - Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values.
+- Lite Mode: loading delays set to zero on this mode by default.
+- Lite mode: statistics mode feature is now disabled by default.
 - UI: popups opened via contextual menus related to a playlist now show the playlist name at the window title.
 - UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. Setting can be switched a the panel background selection mode submenu.
 - UI: renamed most submenus, removing '...'.

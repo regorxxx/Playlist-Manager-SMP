@@ -4539,7 +4539,7 @@ function createMenuRightTop() {
 			list.properties['bLiteMode'][1] = list.bLiteMode;
 			if (list.bLiteMode) {
 				// Menus
-				const menus = Object.fromEntries([...list.liteMenusOmmit, 'Tags', 'Online sync'].map((k) => [k, false]));
+				const menus = Object.fromEntries([...list.liteMenusOmmit, 'Tags', 'Online sync', 'Statistics mode'].map((k) => [k, false]));
 				list.updateMenus({ menus, bSave: false, bOverrideDefaults: true });
 				// Other tools
 				if (list.searchInput) {
@@ -4549,6 +4549,13 @@ function createMenuRightTop() {
 				// Auto-save
 				list.properties.autoSave[1] = 1000;
 				debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]); // NOSONAR [shared on files]
+				// Timeouts
+				list.properties.delays[1] = JSON.stringify({
+					playlistLoading: 0,
+					startupPlaylist: 1000,
+					dynamicMenus: 2500,
+					playlistCache: 6000,
+				});
 				// Tracking
 				list.bAllPls = list.properties.bAllPls[1] = true;
 				overwriteProperties(list.properties);
@@ -4563,6 +4570,7 @@ function createMenuRightTop() {
 			} else {
 				list.updateMenus({ menus: list.showMenusDef, bSave: false, bOverrideDefaults: true }); // Restore default values from init
 				list.properties.autoSave[1] = list.properties.autoSave[3];
+				list.properties.delays[1] = list.properties.delays[3];
 				overwriteProperties(list.properties);
 				const autoBackTimer = Number(list.properties.autoBack[1]);
 				autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null; // NOSONAR [shared on files]
