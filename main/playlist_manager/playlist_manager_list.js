@@ -299,7 +299,7 @@ function _list(x, y, w, h) {
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
-		this.jumpLastPosition();
+		this.jumpLastPosition({bCenter: false});
 	};
 
 	this.getHeaderSize = () => { return { h: Math.max(headerH, this.y), w: headerW }; };
@@ -1178,18 +1178,25 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.jumpToIndex = (idx, bScroll = false) => { // Puts selected playlist in the middle of the window, if possible
+	this.jumpToIndex = (idx, options = {bScroll: false, bCenter: true}) => { // Puts selected playlist in the middle of the window, if possible
+		options = {...{bScroll: false, bCenter: true}, ...options};
 		const cache = { index: this.index, offset: this.offset };
 		this.index = idx;
 		// Safechecks
 		if (this.items < this.rows) { this.offset = 0; }
 		if (this.index >= this.items) { this.index = this.items - 1; }
 		// Jump
-		this.offset = this.index > this.rows / 2
-			? Math.floor(this.index / this.rows) * this.rows + this.index % this.rows - Math.round(this.rows / 2 - 1)
-			: 0;
+		if (options.bCenter) {
+			this.offset = this.index > this.rows / 2
+				? Math.floor(this.index / this.rows) * this.rows + this.index % this.rows - Math.round(this.rows / 2 - 1)
+				: 0;
+		} else {
+			this.offset = this.index > this.rows / 2
+				? cache.offset
+				: 0;
+		}
 		if (this.offset + this.rows >= this.items) { this.offset = this.items > this.rows ? this.items - this.rows : 0; }
-		if (bScroll) { this.index = -1; }
+		if (options.bScroll) { this.index = -1; }
 		if (cache.index !== this.index || cache.offset !== this.offset) { this.repaint(); }
 		return this.index;
 	};
@@ -1624,28 +1631,29 @@ function _list(x, y, w, h) {
 		this.offset = 0;
 	};
 
-	this.jumpLastPosition = () => {
+	this.jumpLastPosition = (options = {bScroll: false, bCenter: true}) => {
+		options = {...{bScroll: false, bCenter: true}, ...options};
 		if (currentItemIndex < this.items) {
 			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to
 				// Get current index of the previously selected item to not move the list focus when updating...
 				// Offset is calculated simulating the wheel, so it moves to the previous location
 				if (currentItemIsAutoPlaylist) { // AutoPlaylists
 					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) {
-						this.jumpToIndex(i);
+						this.jumpToIndex(i, options);
 						break;
 					}
 				} else if (currentItemIsUI) {
 					if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) {
-						this.jumpToIndex(i);
+						this.jumpToIndex(i, options);
 						break;
 					}
 				} else if (currentItemIsFolder) { // Standard Playlists
 					if (this.data[i].isFolder && this.data[i].nameId === currentItemNameId) {
-						this.jumpToIndex(i);
+						this.jumpToIndex(i, options);
 						break;
 					}
 				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.jumpToIndex(i);
+					this.jumpToIndex(i, options);
 					break;
 				}
 			}
@@ -4843,7 +4851,7 @@ function _list(x, y, w, h) {
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		}
 		if (!bMaintainFocus) { this.offset = 0; } // Don't move the list focus...
-		else { this.jumpLastPosition(); }
+		else { this.jumpLastPosition({bCenter: false}); }
 		this.save(bInit); // Updates this.dataAutoPlaylists
 		this.itemsAutoPlaylist = this.dataAutoPlaylists.length;
 		if (this.bUpdateAutoPlaylist) { this.bUpdateAutoPlaylist = false; }
@@ -6217,7 +6225,7 @@ function _list(x, y, w, h) {
 			this.filter({ categoryState });
 			setTimeout(() => { // Required since input popup invokes move callback after this func!
 				this.cacheLastPosition(Math.min(idx, this.items - 1));
-				this.jumpLastPosition();
+				this.jumpLastPosition({bCenter: false});
 			}, 10);
 		}
 		if (!bSkipXspRefresh && this.bAutoRefreshXsp) {

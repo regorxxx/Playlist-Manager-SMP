@@ -58,13 +58,14 @@
 
 ## [Unreleased][]
 ### Added
-- Folders: new setting to select a destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83)
+- Folders: new setting to select a destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu. See [this](https://github.com/regorxxx/Search-by-Distance-SMP/issues/31#issuecomment-2111061984) for more info.
 ### Changed
 - Remove Duplicates: improved performance of duplicates removal in multiple places.
 - Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values.
 - Lite Mode: loading delays set to zero on this mode by default.
 - Lite mode: statistics mode feature is now disabled by default.
+- UI: panel now tries to maintain the current position instead of centering the view on the last focused item after some actions (i.e. no "jumping"). [Issue 84](https://github.com/regorxxx/Playlist-Manager-SMP/issues/84).
 - UI: popups opened via contextual menus related to a playlist now show the playlist name at the window title.
 - UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. Setting can be switched a the panel background selection mode submenu.
 - UI: renamed most submenus, removing '...'.
