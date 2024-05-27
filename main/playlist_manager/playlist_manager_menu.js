@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/05/24
+//27/05/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -902,7 +902,7 @@ function createMenuFolder(menu, folder, z) {
 					? list.addUiPlaylist({ bInputName: true, toFolder: folder })
 					: list.add({ bEmpty: true, name, bInputName: true, toFolder: folder });
 				if (pls) {
-					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
+					const playlistIndex = list.getIndex(pls, true);
 					const newIdx = plman.ActivePlaylist;
 					plman.ActivePlaylist = oldIdx;
 					list.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: false });
@@ -1557,7 +1557,7 @@ function createMenuRight() {
 					? list.addUiPlaylist({ bInputName: true })
 					: list.add({ bEmpty: true, name, bInputName: true });
 				if (pls) {
-					const playlistIndex = list.getPlaylistsIdxByObj([pls])[0];
+					const playlistIndex = list.getIndex(pls, true);
 					const newIdx = plman.ActivePlaylist;
 					plman.ActivePlaylist = oldIdx;
 					list.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: false });
@@ -3058,10 +3058,10 @@ function createMenuRightTop() {
 				});
 			}
 		}
-		{	// FIle deletion
+		{	// File deletion
 			menu.newEntry({ menuName, entryText: 'sep' });
 			{
-				const subMenuName = menu.newMenu('Playlist deletion..', menuName);
+				const subMenuName = menu.newMenu('Playlist deletion', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Bound UI-only playlist:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const options = [
@@ -3152,7 +3152,7 @@ function createMenuRightTop() {
 				}
 			});
 		}
-		{	// Playlist icons
+		{	// Playlist status
 			const subMenuName = menu.newMenu('Show playlist status', menuName);
 			const options = Object.keys(list.statusIcons);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Icons at right:', flags: MF_GRAYED });

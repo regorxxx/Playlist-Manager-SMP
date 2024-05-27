@@ -68,6 +68,7 @@
 - UI: new columns added reuse the last font, width, align and color settings used.
 ### Removed
 ### Fixed
+- Lite mode: drag n' drop to new playlist and 'New playlist from selection' not working properly.
 - UI: merge-load not working in multiple selection if one of the playlists was empty.
 - UI: new columns missing default color.
 - UI: re-setting the background to use front cover did not properly disable the font shading option selected if it was already enabled.

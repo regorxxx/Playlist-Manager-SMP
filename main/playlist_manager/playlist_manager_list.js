@@ -1,9 +1,9 @@
 ﻿'use strict';
-//09/05/24
+//27/05/24
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, createMenuRight:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
+/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable */
 include('..\\window\\window_xxx_input.js');
@@ -2827,9 +2827,12 @@ function _list(x, y, w, h) {
 				const toFolder = this.index !== -1 && this.data[this.index].isFolder
 					? this.data[this.index]
 					: null;
-				const pls = this.add({ bEmpty: true, name, bInputName: true, toFolder });
+				
+				const pls = this.bLiteMode
+					? this.addUiPlaylist({ name, bInputName: true, toFolder })
+					: this.add({ bEmpty: true, name, bInputName: true, toFolder });
 				if (pls) {
-					const playlistIndex = this.getPlaylistsIdxByObj([pls])[0];
+					const playlistIndex = this.getIndex(pls, true);
 					const newIdx = plman.ActivePlaylist;
 					if (bFromPlsUI) { plman.ActivePlaylist = idx; }
 					// Remove track on move
@@ -5138,6 +5141,9 @@ function _list(x, y, w, h) {
 		} else if (objectPlaylist.extension === '.xsp') {
 			this.dataXsp.push(objectPlaylist);
 			this.itemsXsp++;
+		} else if (objectPlaylist.extension === '.ui') {
+			this.dataUI.push(objectPlaylist);
+			this.itemsFoobar++;
 		} else if (objectPlaylist.isFolder) {
 			this.dataFolder.push(objectPlaylist);
 			this.itemsFolder++;
@@ -5528,7 +5534,10 @@ function _list(x, y, w, h) {
 		let input = name;
 		if (bInputName) {
 			input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
-			if (input === null && !Input.isLastEqual) { return -1; }
+			if (input === null) {
+				if (!Input.isLastEqual) { return null; }
+				else {input = Input.lastInput; }
+			}
 		}
 		let i = 0;
 		let newName;
@@ -5538,27 +5547,43 @@ function _list(x, y, w, h) {
 		}
 		if (this.dataAll.some((pls) => pls.nameId === newName)) {
 			fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', window.Name);
-			return -1;
+			return null;
 		}
 		plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
-		// Set focus on new playlist if possible
-		if (plman.ActivePlaylist !== -1) {
-			setTimeout(() => { // Required since input popup invokes move callback after this func
-				if (newName === plman.GetPlaylistName(plman.ActivePlaylist)) {
-					const objectPlaylist = this.data.find((pls) => { return pls.nameId === newName; });
-					if (toFolder !== null && objectPlaylist !== null) {
-						this.addToFolder(objectPlaylist, toFolder);
-						this.save();
-						if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
-						this.sort();
-						if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
-					}
-					this.cacheLastPosition();
-					this.showCurrPls();
-				}
-			}, 10);
+		const now = Date.now();
+		const objectPlaylist = new PlaylistObj({
+			name: newName,
+			extension: '.ui',
+			size: 0,
+			fileSize: 0,
+			trackSize: 0,
+			duration: 0,
+			created: now,
+			modified: now
+		});
+		// Auto-Tags
+		if (this.bAutoLockTag) { objectPlaylist.tags.push('bAutoLock'); }
+		if (this.bMultMenuTag) { objectPlaylist.tags.push('bMultMenu'); }
+		if (this.bAutoCustomTag) { this.autoCustomTag.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
+		// Add tags of current view
+		if (this.tagState.indexOf(this.tags(0)) === -1) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
+		// Categories
+		// Add Category of current view if none was forced
+		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
+		// Save
+		this.addToData(objectPlaylist);
+		this.update(true, true); // We have already updated data before only for the variables changed
+		this.filter();
+		if (toFolder !== null) {
+			this.addToFolder(objectPlaylist, toFolder);
+			this.save();
+			if (this.methodState === this.manualMethodState()) { this.saveManualSorting(); }
+			this.sort();
+			if (!toFolder.isOpen) { this.switchFolder(this.getIndex(toFolder)) && this.save(); }
 		}
-		return plman.ActivePlaylist;
+		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
+		this.showPlsByObj(objectPlaylist);
+		return objectPlaylist;
 	};
 
 	this.addAutoPlaylist = (pls = null, bEdit = true, toFolder = null) => {
