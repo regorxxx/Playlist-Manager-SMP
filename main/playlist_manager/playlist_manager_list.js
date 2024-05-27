@@ -2166,10 +2166,16 @@ function _list(x, y, w, h) {
 						case 'f7': { // Add playlist (new)
 							if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) { // NOSONAR
 								this.addFolder();
-							} else if (this.bLiteMode) {
-								this.addUiPlaylist({ bInputName: true });
-							} else {
-								this.add({ bEmpty: true });
+							} else{
+								const rule = this.bLiteMode ? this.folderRules.internalUi : this.folderRules.others;
+								const toFolder = rule.length
+									? this.dataFolder.find((f) => f.name === rule) || this.addFolder(rule)
+									: null;
+								if (this.bLiteMode) {
+									this.addUiPlaylist({ bInputName: true, toFolder });
+								} else {
+									this.add({ bEmpty: true, toFolder });
+								}
 							}
 							return true;
 						}
@@ -2824,10 +2830,12 @@ function _list(x, y, w, h) {
 				const name = this.properties.bAutoSelTitle[1]
 					? this.plsNameFromSelection()
 					: 'Selection from ' + (bFromPlsUI ? plman.GetPlaylistName(idx).cut(10) : 'panel');
+				const rule = this.bLiteMode ? this.folderRules.plsFromSel : this.folderRules.others;
 				const toFolder = this.index !== -1 && this.data[this.index].isFolder
 					? this.data[this.index]
-					: null;
-				
+					: rule.length
+						? this.dataFolder.find((f) => f.name === rule) || this.addFolder(rule)
+						: null;
 				const pls = this.bLiteMode
 					? this.addUiPlaylist({ name, bInputName: true, toFolder })
 					: this.add({ bEmpty: true, name, bInputName: true, toFolder });
@@ -7087,6 +7095,7 @@ function _list(x, y, w, h) {
 	this.bLiteMode = this.properties['bLiteMode'][1];
 	/** @type {{playlistLoading:number, dynamicMenus:number, playlistCache:number, startupPlaylist:number}} */
 	this.delays = JSON.parse(this.properties.delays[1]);
+	this.folderRules = JSON.parse(this.properties.folderRules[1]);
 	// Other
 	this.uuid = this.properties['panelUUID'][1];
 	this.dropUp = this.dropDown = this.dropIn = false;

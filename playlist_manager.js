@@ -323,6 +323,12 @@ let properties = {
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone])],
 	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist])],
 	bMultiple: ['Partial Multi-value tag matching', true, { func: isBoolean }, true],
+	folderRules: ['Send new playlists to folders', JSON.stringify({
+		externalUi: '',
+		internalUi: '',
+		plsFromSel: '',
+		others: ''
+	})]
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -342,6 +348,7 @@ properties['delays'].push({ func: isJSON }, properties['delays'][1]);
 properties['statusIcons'].push({ func: isJSON }, properties['statusIcons'][1]);
 properties['importPlaylistFilters'].push({ func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }, properties['importPlaylistFilters'][1]);
 properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlaylistMask'][1]);
+properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');

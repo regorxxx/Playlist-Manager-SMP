@@ -1527,10 +1527,34 @@ function createMenuRight() {
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{ // New Playlists
-		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => { list.add({ bEmpty: true }); } });
-		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => { list.addAutoPlaylist(); } });
-		!list.bLiteMode && menu.newEntry({ entryText: 'New Smart Playlist...', func: () => { list.addSmartplaylist(); } });
-		menu.newEntry({ entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => { list.addUiPlaylist({ bInputName: true }); } });
+		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => {
+			const rule = list.folderRules.others;
+			const toFolder = rule.length
+				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+				: null;
+			list.add({ bEmpty: true, toFolder });
+		}});
+		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => {
+			const rule = list.folderRules.others;
+			const toFolder = rule.length
+				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+				: null;
+			list.addAutoPlaylist(void(0), void(0), toFolder);
+		}});
+		!list.bLiteMode && menu.newEntry({ entryText: 'New Smart Playlist...', func: () => {
+			const rule = list.folderRules.others;
+			const toFolder = rule.length
+				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+				: null;
+			list.addSmartplaylist(void(0), void(0), toFolder);
+		}});
+		menu.newEntry({ entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
+			const rule = list.folderRules.internalUi;
+			const toFolder = rule.length
+				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+				: null;
+			list.addUiPlaylist({ bInputName: true, toFolder });
+		}});
 		if (showMenus['Folders']) {
 			menu.newEntry({ entryText: 'sep' });
 			menu.newEntry({ entryText: 'New Folder...' + list.getGlobalShortcut('new folder'), func: () => { list.addFolder(); } });
@@ -1553,9 +1577,13 @@ function createMenuRight() {
 				const name = list.properties.bAutoSelTitle[1]
 					? list.plsNameFromSelection(oldIdx)
 					: 'Selection from ' + plman.GetPlaylistName(oldIdx).cut(10);
+				const rule = list.bLiteMode ? list.folderRules.plsFromSel : list.folderRules.others;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
 				const pls = list.bLiteMode
-					? list.addUiPlaylist({ bInputName: true })
-					: list.add({ bEmpty: true, name, bInputName: true });
+					? list.addUiPlaylist({ bInputName: true, toFolder })
+					: list.add({ bEmpty: true, name, bInputName: true, toFolder });
 				if (pls) {
 					const playlistIndex = list.getIndex(pls, true);
 					const newIdx = plman.ActivePlaylist;
@@ -3078,6 +3106,39 @@ function createMenuRightTop() {
 					});
 				});
 				menu.newCheckMenuLast(() => list.properties['deleteBehavior'][1], options.length);
+			}
+		}
+		if (showMenus['Folders']) {	// Folder destination
+			menu.newEntry({ menuName, entryText: 'sep' });
+			{
+				const subMenuName = menu.newMenu('Auto-add playlists to folder', menuName);
+				menu.newEntry({ menuName: subMenuName, entryText: 'Set destination of new playlists:', flags: MF_GRAYED });
+				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				const options = [
+					// list.bAllPls ? {name: 'External UI-only playlists', rule: 'externalUi'} : null,
+					list.bAllPls ? {name: 'UI-only playlists from panel', rule: 'internalUi'} : null,
+					{name: 'Any playlist from selection', rule: 'plsFromSel'},
+					{name: 'Any other case', rule: 'others'}
+				].filter(Boolean);
+				options.forEach((opt) => {
+					const folder = list.folderRules[opt.rule];
+					menu.newEntry({
+						menuName: subMenuName, entryText: opt.name + (folder.length ? '\t' + _p(folder) : ''), func: () => {
+							const input =  Input.string(
+								'string',
+								folder,
+								'Set destination folder:\n(if it does not exist, a new one will be created)',
+								window.Name,
+								'My new playlists'
+							);
+							if (input === null) { return; }
+							list.folderRules[opt.rule] = input;
+							list.properties['folderRules'][1] = JSON.stringify(list.folderRules);
+							overwriteProperties(list.properties);
+						}
+					});
+					menu.newCheckMenuLast(() => !!list.folderRules[opt.rule].length);
+				});
 			}
 		}
 	}
