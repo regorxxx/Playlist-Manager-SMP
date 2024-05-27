@@ -190,7 +190,7 @@ function createMenuLeft(forcedIndex = -1) {
 						}
 						if (bDone) { bDone = pls.extension === '.xsp' ? rewriteXSPSort(pls, input) : true; }
 						if (bDone) {
-							list.update(true, true, z);
+							list.update({bReuseData: true, bNotPaint: true, currentItemIndex: z});
 							list.filter();
 						}
 					}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
@@ -219,7 +219,7 @@ function createMenuLeft(forcedIndex = -1) {
 									query: newQuery,
 									size: bPlaylist ? '?' : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
 								});
-								list.update(true, true, z);
+								list.update({bReuseData: true, bNotPaint: true, currentItemIndex: z});
 								list.filter();
 							}
 						}
@@ -236,7 +236,7 @@ function createMenuLeft(forcedIndex = -1) {
 								list.editData(pls, {
 									limit: input,
 								});
-								list.update(true, true, z);
+								list.update({bReuseData: true, bNotPaint: true, currentItemIndex: z});
 								list.filter();
 							}
 						}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
@@ -580,7 +580,10 @@ function createMenuLeft(forcedIndex = -1) {
 																// Restore backup in case something goes wrong
 																if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 																else if (_isFile(backPath)) { _deleteFile(backPath); }
-																if (bDone) { list.update(false, true, list.lastIndex); list.filter(); }
+																if (bDone) { 
+																	list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
+																	 list.filter(); 
+																}
 																if (bDone && !bLoaded) { plman.RemovePlaylist(idx); }
 																clearInterval(delay);
 																list.enableAutosaveForPls(pls.nameId);
@@ -673,7 +676,10 @@ function createMenuLeft(forcedIndex = -1) {
 												if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 												else if (_isFile(backPath)) { _deleteFile(backPath); }
 												if (bDone && plman.FindPlaylist(pls.nameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), pls.nameId); }
-												if (bDone) { list.update(false, true, list.lastIndex); list.filter(); }
+												if (bDone) { 
+													list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
+													list.filter(); 
+												}
 												clearInterval(delay);
 												return bDone;
 											}
@@ -825,7 +831,7 @@ function createMenuLeft(forcedIndex = -1) {
 							const folder = list.addFolder();
 							if (!folder) { return; }
 							list.moveToFolder(pls, folder);
-							list.update(true);
+							list.update({bReuseData: true});
 							list.showPlsByObj(folder);
 						}
 					});
@@ -1038,7 +1044,7 @@ function createMenuFolder(menu, folder, z) {
 				const parent = list.addFolder();
 				if (!parent) { return; }
 				list.moveToFolder(folder, parent);
-				list.update(true);
+				list.update({bReuseData: true});
 				list.showPlsByObj(parent);
 			}
 		});
@@ -1497,7 +1503,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						const folder = list.addFolder();
 						if (!folder) { return; }
 						list.moveToFolder(playlists, folder);
-						list.update(true);
+						list.update({bReuseData: true});
 						list.showPlsByObj(folder);
 					}
 				});
@@ -1680,7 +1686,10 @@ function createMenuRight() {
 														// Restore backup in case something goes wrong
 														if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 														else if (_isFile(backPath)) { _deleteFile(backPath); }
-														if (bDone) { list.update(false, true, list.lastIndex); list.filter(); }
+														if (bDone) { 
+															list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
+															list.filter(); 
+														}
 														if (bDone && !bLoaded) { plman.RemovePlaylist(idx); }
 														clearInterval(delay);
 														list.enableAutosaveForPls(playlistNameId);
@@ -1702,7 +1711,10 @@ function createMenuRight() {
 											list.disableAutosaveForPls(playlistNameId);
 											const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
 											if (bDone && idx !== -1) { sendToPlaylist(handleList, playlistNameId); }
-											if (bDone) { list.update(false, true, list.lastIndex); list.filter(); }
+											if (bDone) { 
+												list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
+												list.filter(); 
+											}
 											clearInterval(delay);
 											list.enableAutosaveForPls(playlistNameId);
 											return bDone;
@@ -1775,7 +1787,10 @@ function createMenuRight() {
 										if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 										else if (_isFile(backPath)) { _deleteFile(backPath); }
 										if (bDone && plman.FindPlaylist(playlistNameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId); }
-										if (bDone) { list.update(false, true, list.lastIndex); list.filter(); }
+										if (bDone) { 
+											list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
+											list.filter(); 
+										}
 										clearInterval(delay);
 										return bDone;
 									}
@@ -1929,7 +1944,7 @@ function createMenuRight() {
 							// Easy way: intersect current view + new one with refreshed list
 							const categoryState = [...new Set(list.categoryState.concat(item.category)).intersection(new Set(list.categories()))];
 							if (item.isAutoPlaylist) {
-								list.update(true, true); // Only paint and save to json
+								list.update({bReuseData: true, bNotPaint: true}); // Only paint and save to json
 							} else if (item.extension === '.ui') {
 								for (let j = 0; j < plman.PlaylistRecycler.Count; j++) { // First pls is the last one deleted
 									if (plman.PlaylistRecycler.GetName(j) === item.nameId) {
@@ -1940,7 +1955,7 @@ function createMenuRight() {
 										}
 									}
 								}
-								list.update(true, true); // Only paint and save to json
+								list.update({bReuseData: true, bNotPaint: true}); // Only paint and save to json
 							} else {
 								_restoreFile(item.path);
 								// Revert timestamps
@@ -1948,7 +1963,7 @@ function createMenuRight() {
 								const newName = newPath.pop().split('_ts_')[0];
 								newPath = newPath.concat([newName]).join('\\') + item.extension;
 								_renameFile(item.path, newPath);
-								list.update(false, true); // Updates path..
+								list.update({bReuseData: false, bNotPaint: true}); // Updates path..
 							}
 							list.filter({ categoryState });
 							list.deletedItems.splice(i, 1);
@@ -1958,6 +1973,7 @@ function createMenuRight() {
 									list.sort();
 								}
 							}
+							list.showPlsByObj(item);
 						}
 					});
 				});
@@ -2236,7 +2252,7 @@ function createMenuRightTop() {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.headerTextUpdate();
 				list.bUpdateAutoPlaylist = true;
-				list.update(void (0), true, z); // Forces AutoPlaylist size update according to query and tags
+				list.update({bReuseData: false, bNotPaint: true, currentItemIndex: z}); // Forces AutoPlaylist size update according to query and tags
 				list.checkConfigPostUpdate(bDone);
 				list.filter();
 				test.Print();

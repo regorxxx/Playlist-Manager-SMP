@@ -597,7 +597,7 @@ if (!list.properties.bSetup[1]) {
 			if (!pop.isEnabled()) { pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.'); }
 			const z = list.offset + Math.round(list.rows / 2 - 1);
 			list.cacheLastPosition(z);
-			list.update(false, true, z);
+			list.update({bReuseData: false, bNotPaint: true, currentItemIndex: z});
 			// Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
 			list.filter();
 			list.jumpLastPosition();
@@ -1081,7 +1081,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlists_changed', () => {
 		if (!list.bInit) { return; }
 		if (list.bAllPls) { // For UI only playlists
-			list.update(true, true);
+			list.update({bReuseData: true, bNotPaint: true});
 			const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
 			list.filter({ categoryState });
 		}

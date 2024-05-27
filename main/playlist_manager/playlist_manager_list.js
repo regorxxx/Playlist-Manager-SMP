@@ -1631,31 +1631,35 @@ function _list(x, y, w, h) {
 		this.offset = 0;
 	};
 
-	this.jumpLastPosition = (options = {bScroll: false, bCenter: true}) => {
-		options = {...{bScroll: false, bCenter: true}, ...options};
+	this.jumpLastPosition = (options = {bScroll: false, bCenter: true, bOmitType: false}) => {
+		options = {...{bScroll: false, bCenter: true, bOmitType: false}, ...options};
 		if (currentItemIndex < this.items) {
-			for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to
-				// Get current index of the previously selected item to not move the list focus when updating...
-				// Offset is calculated simulating the wheel, so it moves to the previous location
-				if (currentItemIsAutoPlaylist) { // AutoPlaylists
-					if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) {
+			if (!options.bOmitType) {
+				for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to
+					// Get current index of the previously selected item to not move the list focus when updating...
+					// Offset is calculated simulating the wheel, so it moves to the previous location
+					if (currentItemIsAutoPlaylist) { // AutoPlaylists
+						if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) {
+							this.jumpToIndex(i, options);
+							break;
+						}
+					} else if (currentItemIsUI) {
+						if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) {
+							this.jumpToIndex(i, options);
+							break;
+						}
+					} else if (currentItemIsFolder) { // Standard Playlists
+						if (this.data[i].isFolder && this.data[i].nameId === currentItemNameId) {
+							this.jumpToIndex(i, options);
+							break;
+						}
+					} else if (this.data[i].path === currentItemPath) { // Standard Playlists
 						this.jumpToIndex(i, options);
 						break;
 					}
-				} else if (currentItemIsUI) {
-					if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) {
-						this.jumpToIndex(i, options);
-						break;
-					}
-				} else if (currentItemIsFolder) { // Standard Playlists
-					if (this.data[i].isFolder && this.data[i].nameId === currentItemNameId) {
-						this.jumpToIndex(i, options);
-						break;
-					}
-				} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-					this.jumpToIndex(i, options);
-					break;
 				}
+			} else {
+				this.jumpToIndex(currentItemIndex, options);
 			}
 		} else {
 			this.clearLastPosition();
@@ -2233,7 +2237,7 @@ function _list(x, y, w, h) {
 							this.removePlaylist(z);
 							setTimeout(() => { // Required since input popup invokes move callback after this func!
 								this.cacheLastPosition(Math.min(z, this.items - 1));
-								this.jumpLastPosition();
+								this.jumpLastPosition({bCenter: false, bOmitType: true});
 								this.move(this.mx, this.my); // Update cursor
 							}, 10);
 							return true;
@@ -2935,7 +2939,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			console.log('Playlist Manager: Drag n drop done.');
-			this.update(void (0), true);
+			this.update({bNotPaint: true});
 			this.filter();
 			return true;
 		}
@@ -3214,7 +3218,7 @@ function _list(x, y, w, h) {
 		if (this.bAutoTrackTag) { this.updateTrackTags(handleUpdate, tagsUpdate); } // Apply tags from before
 		console.log('Playlist Manager: drag n drop done.');
 		this.lastPlsLoaded.push(pls);
-		this.update(true, true); // We have already updated data before only for the variables changed
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 		if (bPaint) { this.filter(); }
 		return true;
 	};
@@ -3338,7 +3342,7 @@ function _list(x, y, w, h) {
 					size: plman.PlaylistItemCount(fbPlaylistIndex),
 				});
 				console.log('Playlist Manager: done.');
-				this.update(true, true); // We have already updated data before only for the variables changed
+				this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 				this.filter();
 				break;
 			}
@@ -3502,7 +3506,7 @@ function _list(x, y, w, h) {
 					this.repaint();
 				}
 				if (plsData.path && this.requiresCachePlaylistSearch()) { this.plsCache.set(plsData.path, handleList); }
-				this.update(true, true, currentItemIndex); // We have already updated data before only for the variables changed
+				this.update({bReuseData: true, bNotPaint: true, currentItemIndex}); // We have already updated data before only for the variables changed
 				this.filter();
 				if (plsData.extension !== '.ui') { setTimeout(() => { if (pop.isEnabled('saving')) { pop.disable(true); } }, 500); }
 				return true;
@@ -3770,7 +3774,7 @@ function _list(x, y, w, h) {
 				}
 			});
 		}
-		this.update(true, true); // Updates and saves AutoPlaylist to our own json format
+		this.update({bReuseData: true, bNotPaint: true}); // Updates and saves AutoPlaylist to our own json format
 		this.resetFilter();
 		if (bProfile) { test.Print(); }
 		return true;
@@ -3909,7 +3913,7 @@ function _list(x, y, w, h) {
 	this.isFilterActive = (filter = null) => {
 		return filter ? this.getFilter()[filter] : Object.values(this.getFilter()).some(Boolean);
 	};
-	this.filter = ({ autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false, bRepaint = true } = {}) => {
+	this.filter = ({ autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false, bRepaint = true, focusOptions = {} } = {}) => {
 		// Apply current search
 		const bPlsFilter = plsState.length;
 		if (this.searchInput && this.searchInput.text.length && !bSkipSearch) {
@@ -4004,7 +4008,7 @@ function _list(x, y, w, h) {
 		}
 		// Focus
 		this.items = this.data.length;
-		if (bMaintainFocus) { this.jumpLastPosition(); }
+		if (bMaintainFocus) { this.jumpLastPosition(focusOptions); }
 		// Update filters with current values
 		// Lock, playlist type, extension
 		// Rotate original matrix until it matches the current one
@@ -4353,7 +4357,7 @@ function _list(x, y, w, h) {
 		this.sort(void (0), true); // uses current sort state and repaint
 	};
 
-	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false) => {
+	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions) => {
 		const plsSel = !bSkipSel && this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		this.collapseFolders();
 		const bManual = this.methodState === this.manualMethodState();
@@ -4406,7 +4410,7 @@ function _list(x, y, w, h) {
 		if (plsSel.length) {
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		}
-		if (bMaintainFocus) { this.jumpLastPosition(); }
+		if (bMaintainFocus) { this.jumpLastPosition(focusOptions); }
 		if (bPaint) { this.repaint(); }
 	};
 
@@ -4532,7 +4536,8 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.update = (bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false) => {
+	this.update = ({bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false, focusOptions = {bCenter: false, bOmitType: false}} = {}) => {
+		focusOptions = {bCenter: false, bOmitType: false, ...focusOptions};
 		const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const oldCategories = this.categories();
@@ -4846,12 +4851,12 @@ function _list(x, y, w, h) {
 			totalFileSize += this.dataAll[i].fileSize; // For auto-updating check...
 		}
 		this.totalFileSize = totalFileSize; // Better to set it on one step to not call autoupdate in the middle of this update!
-		this.sort(void (0), void (0), true); // Sorts data according to current sort state
+		this.sort(void (0), void (0), true, focusOptions); // Sorts data according to current sort state
 		if (plsSel.length) {
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		}
 		if (!bMaintainFocus) { this.offset = 0; } // Don't move the list focus...
-		else { this.jumpLastPosition({bCenter: false}); }
+		else { this.jumpLastPosition(focusOptions); }
 		this.save(bInit); // Updates this.dataAutoPlaylists
 		this.itemsAutoPlaylist = this.dataAutoPlaylists.length;
 		if (this.bUpdateAutoPlaylist) { this.bUpdateAutoPlaylist = false; }
@@ -4903,7 +4908,7 @@ function _list(x, y, w, h) {
 
 	this.updateAllUUID = () => {
 		this.dataAll.forEach((pls, z) => { if (pls.extension !== '.pls' && pls.extension !== '.ui') { this.updateUUID(pls, z); } }); // Changes data on the other arrays too since they link to same object
-		this.update(true, true);
+		this.update({bReuseData: true, bNotPaint: true});
 		this.filter();
 	};
 
@@ -5016,7 +5021,7 @@ function _list(x, y, w, h) {
 			const answer = WshShell.Popup('Playlist(s) backup file(s) have been found.\nDo you want to restore them?\n(Pressing \'No\' will open the playlists folder)\n\n' + files.map((f) => f.replace(this.playlistsPath, '')).joinEvery(', ', 3), 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				files.forEach((file) => _renameFile(file, file.replace('.back', '')));
-				this.update(void (0), void (0), currentItemIndex);
+				this.update({currentItemIndex});
 				return true;
 			}
 			_explorer(this.playlistsPath);
@@ -5268,7 +5273,7 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !folder.category.length) { folder.category = this.categoryState[0]; }
 		// Save
 		this.addToData(folder);
-		this.update(true, true); // We have already updated data before only for the variables changed
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(folder, toFolder);
@@ -5532,7 +5537,7 @@ function _list(x, y, w, h) {
 			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
 			return null;
 		}
-		this.update(true, true); // We have already updated data
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5588,7 +5593,7 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
 		// Save
 		this.addToData(objectPlaylist);
-		this.update(true, true); // We have already updated data before only for the variables changed
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5677,7 +5682,7 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
 		// Save
 		this.addToData(objectPlaylist);
-		this.update(true, true); // We have already updated data before only for the variables changed
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5786,7 +5791,7 @@ function _list(x, y, w, h) {
 		if (!bDone) { return null; }
 		// Save
 		this.addToData(objectPlaylist);
-		this.update(true, true); // We have already updated data before only for the variables changed
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5910,7 +5915,7 @@ function _list(x, y, w, h) {
 			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
 			return null;
 		}
-		this.update(true, true); // We have already updated data
+		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -6199,11 +6204,11 @@ function _list(x, y, w, h) {
 			this.multSelect(idx);
 		}
 		if (!bUI) {
-			this.update(true, true, currentItemIndex); // Call this immediately after removal! If paint fires before updating things get weird
+			this.update({bReuseData: true, bNotPaint: true, currentItemIndex: idx, focusOptions: {bCenter: false, bOmitType: true}}); // Call this immediately after removal! If paint fires before updating things get weird
 			// Delete category from current view if needed
 			// Easy way: intersect current view + with refreshed list
 			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
-			this.filter({ categoryState });
+			this.filter({ categoryState, focusOptions: {bCenter: false, bOmitType: true} });
 		}
 		clearInterval(delay);
 		if (duplicated !== -1) {
@@ -6220,13 +6225,16 @@ function _list(x, y, w, h) {
 		}
 		// Needed after removing the playlist on UI
 		if (bUI) {
-			this.update(true, true, currentItemIndex);
+			this.update({bReuseData: true, bNotPaint: true, currentItemIndex: idx, focusOptions: {bCenter: false, bOmitType: true}});
 			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
-			this.filter({ categoryState });
+			this.filter({ categoryState, focusOptions: {bCenter: false, bOmitType: true} });
 			setTimeout(() => { // Required since input popup invokes move callback after this func!
 				this.cacheLastPosition(Math.min(idx, this.items - 1));
-				this.jumpLastPosition({bCenter: false});
+				this.jumpLastPosition({bCenter: false, bOmitType: true});
 			}, 10);
+		} else {
+			this.cacheLastPosition(Math.min(idx, this.items - 1));
+			this.jumpLastPosition({bCenter: false, bOmitType: true});
 		}
 		if (!bSkipXspRefresh && this.bAutoRefreshXsp) {
 			this.refreshSmartPlaylists({ sources: [pls.nameId] });
@@ -6361,7 +6369,7 @@ function _list(x, y, w, h) {
 		const z = this.offset + Math.round(this.rows / 2 - 1);
 		this.cacheLastPosition(z);
 		this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
-		this.update(void (0), true, z);
+		this.update({bNotPaint: true, currentItemIndex: z});
 		this.filter();
 		this.lastPlsLoaded = [];
 		this.folderStack = [];
@@ -6910,7 +6918,7 @@ function _list(x, y, w, h) {
 			: new Promise((resolve) => {
 				setTimeout(() => {
 					if (this.delays.playlistLoading) { globProfiler.Reset(); }
-					this.update(false, true, void (0), true); // bInit is true to avoid reloading all categories
+					this.update({bReuseData: false, bNotPaint: true, bInit: true}); // bInit is true to avoid reloading all categories
 					resolve();
 				}, this.delays.playlistLoading);
 			});

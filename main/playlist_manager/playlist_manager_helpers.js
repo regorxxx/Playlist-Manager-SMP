@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/24
+//27/05/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -301,7 +301,7 @@ function setTrackTags(trackTags, list, z) {
 	if (oldTags !== newTags) { // Compares objects
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			list.editData(pls, { trackTags });
-			list.update(true, true);
+			list.update({bReuseData: true, bNotPaint: true});
 			list.filter();
 			bDone = true;
 		} else if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls') {
@@ -328,7 +328,7 @@ function setTrackTags(trackTags, list, z) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { trackTags });
-					list.update(true, true);
+					list.update({bReuseData: true, bNotPaint: true});
 					list.filter();
 				}
 			} else {
@@ -346,7 +346,7 @@ function setTag(tags, list, z) {
 	if (!new Set(tags).isEqual(new Set(pls.tags))) { // Compares arrays
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui' || pls.isFolder) {
 			list.editData(pls, { tags });
-			list.update(true, true);
+			list.update({bReuseData: true, bNotPaint: true});
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 			list.filter({ tagState });
 			bDone = true;
@@ -374,7 +374,7 @@ function setTag(tags, list, z) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { tags });
-					list.update(true, true);
+					list.update({bReuseData: true, bNotPaint: true});
 					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 					list.filter({ tagState });
 				}
@@ -399,7 +399,7 @@ function setCategory(category, list, z) {
 			list.editData(pls, { category });
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
-			list.update(true, true);
+			list.update({bReuseData: true, bNotPaint: true});
 			const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
 			list.filter({ categoryState });
 			bDone = true;
@@ -427,7 +427,7 @@ function setCategory(category, list, z) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { category });
-					list.update(true, true);
+					list.update({bReuseData: true, bNotPaint: true});
 					// Add new category to current view! (otherwise it gets filtered)
 					// Easy way: intersect current view + new one with refreshed list
 					const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
@@ -452,7 +452,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 				return bDone;
 			}
 			list.editData(pls, { playlist_mbid });
-			list.update(true, true);
+			list.update({bReuseData: true, bNotPaint: true});
 			bDone = true;
 		} else if (pls.extension === '.ui' || pls.extension === '.strm') {
 			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
@@ -483,7 +483,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { playlist_mbid });
-					list.update(true, true);
+					list.update({bReuseData: true, bNotPaint: true});
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist file does not exist: ' + name + '\nPath: ' + path, window.Name);
@@ -503,7 +503,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 	const boolText = pls.isLocked ? ['true', 'false'] : ['false', 'true'];
 	if (pls.isAutoPlaylist || pls.extension === '.fpl' || pls.extension === '.strm' || pls.extension === '.xsp') {
 		list.editData(pls, { isLocked: !pls.isLocked });
-		list.update(true, true);
+		list.update({bReuseData: true, bNotPaint: true});
 		list.filter();
 		bDone = true;
 	} else if (pls.extension === '.ui' || pls.extension === '.pls') {
@@ -530,7 +530,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 			} else {
 				if (_isFile(backPath)) { _deleteFile(backPath); }
 				list.editData(pls, { isLocked: !pls.isLocked });
-				list.update(true, true);
+				list.update({bReuseData: true, bNotPaint: true});
 				list.filter();
 			}
 		} else {
@@ -556,7 +556,7 @@ function switchLockUI(list, z, bAlsoHidden = false) {
 	const newLock = bLocked ? [] : lockTypes; // This filters blank values
 	plman.SetPlaylistLockedActions(index, newLock);
 	list.editData(pls, { isLocked: !pls.isLocked });
-	list.update(true, true);
+	list.update({bReuseData: true, bNotPaint: true});
 	list.filter();
 	return true;
 }
@@ -644,7 +644,7 @@ function convertToRelPaths(list, z) {
 				fileSize: utils.GetFileSize(playlistPath),
 			});
 			console.log('Playlist Manager: done.');
-			list.update(true, true); // We have already updated data before only for the variables changed
+			list.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
 			list.filter();
 		} else {
 			fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
@@ -1198,7 +1198,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 				});
 				list.editSortingFile(oldNameId, newNameId);
 				if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
-				list.update(true, true);
+				list.update({bReuseData: true, bNotPaint: true});
 				list.filter();
 				bRenamedSucessfully = true;
 			} else {
@@ -1250,12 +1250,12 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 									nameId: list.bUseUUID ? newName + newId : newName,
 								});
 								if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
-								list.update(true, true);
+								list.update({bReuseData: true, bNotPaint: true});
 								list.filter();
 								bRenamedSucessfully = true;
 							}
 						} else {
-							list.update(true, true);
+							list.update({bReuseData: true, bNotPaint: true});
 							list.filter();
 							bRenamedSucessfully = true;
 						}
@@ -1284,7 +1284,7 @@ function renameFolder(list, z, newName) {
 			id: '',
 			nameId: newName,
 		});
-		list.update(true, true);
+		list.update({bReuseData: true, bNotPaint: true});
 		list.filter();
 		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 		list.showPlsByObj(folder);

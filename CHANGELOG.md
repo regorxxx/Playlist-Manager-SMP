@@ -66,6 +66,7 @@
 - Lite Mode: loading delays set to zero on this mode by default.
 - Lite mode: statistics mode feature is now disabled by default.
 - UI: panel now tries to maintain the current position instead of centering the view on the last focused item after some actions (i.e. no "jumping"). [Issue 84](https://github.com/regorxxx/Playlist-Manager-SMP/issues/84).
+- UI: after restoring a deleted playlist within the panel, it will be highlighted.
 - UI: popups opened via contextual menus related to a playlist now show the playlist name at the window title.
 - UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. Setting can be switched a the panel background selection mode submenu.
 - UI: renamed most submenus, removing '...'.
