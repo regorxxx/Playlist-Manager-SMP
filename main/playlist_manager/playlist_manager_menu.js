@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/24
+//28/05/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -190,7 +190,7 @@ function createMenuLeft(forcedIndex = -1) {
 						}
 						if (bDone) { bDone = pls.extension === '.xsp' ? rewriteXSPSort(pls, input) : true; }
 						if (bDone) {
-							list.update({bReuseData: true, bNotPaint: true, currentItemIndex: z});
+							list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 							list.filter();
 						}
 					}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
@@ -219,7 +219,7 @@ function createMenuLeft(forcedIndex = -1) {
 									query: newQuery,
 									size: bPlaylist ? '?' : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
 								});
-								list.update({bReuseData: true, bNotPaint: true, currentItemIndex: z});
+								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 								list.filter();
 							}
 						}
@@ -236,7 +236,7 @@ function createMenuLeft(forcedIndex = -1) {
 								list.editData(pls, {
 									limit: input,
 								});
-								list.update({bReuseData: true, bNotPaint: true, currentItemIndex: z});
+								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 								list.filter();
 							}
 						}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
@@ -472,12 +472,22 @@ function createMenuLeft(forcedIndex = -1) {
 						if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 						menu.newEntry({
 							menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-								if (!pls.isAutoPlaylist) {
-									exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple); // Include remDupl for XSP playlists
-								} else {
-									exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple);
-								}
+								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls)
+									? list.removeDuplicatesAutoPls
+									: [];
+								const exportFunc = pls.isAutoPlaylist
+									? exportAutoPlaylistFileWithTracksConvert
+									: exportPlaylistFileWithTracksConvert;
+								exportFunc({
+									list, z,
+									tf,
+									preset: dsp,
+									defPath: path,
+									ext: extension,
+									remDupl, // Include remDupl for XSP playlists
+									bAdvTitle: list.bAdvTitle,
+									bMultiple: list.bMultiple
+								});
 							}, flags
 						});
 					});
@@ -580,9 +590,9 @@ function createMenuLeft(forcedIndex = -1) {
 																// Restore backup in case something goes wrong
 																if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 																else if (_isFile(backPath)) { _deleteFile(backPath); }
-																if (bDone) { 
-																	list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
-																	 list.filter(); 
+																if (bDone) {
+																	list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+																	list.filter();
 																}
 																if (bDone && !bLoaded) { plman.RemovePlaylist(idx); }
 																clearInterval(delay);
@@ -676,9 +686,9 @@ function createMenuLeft(forcedIndex = -1) {
 												if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 												else if (_isFile(backPath)) { _deleteFile(backPath); }
 												if (bDone && plman.FindPlaylist(pls.nameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), pls.nameId); }
-												if (bDone) { 
-													list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
-													list.filter(); 
+												if (bDone) {
+													list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+													list.filter();
 												}
 												clearInterval(delay);
 												return bDone;
@@ -831,7 +841,7 @@ function createMenuLeft(forcedIndex = -1) {
 							const folder = list.addFolder();
 							if (!folder) { return; }
 							list.moveToFolder(pls, folder);
-							list.update({bReuseData: true});
+							list.update({ bReuseData: true });
 							list.showPlsByObj(folder);
 						}
 					});
@@ -1044,7 +1054,7 @@ function createMenuFolder(menu, folder, z) {
 				const parent = list.addFolder();
 				if (!parent) { return; }
 				list.moveToFolder(folder, parent);
-				list.update({bReuseData: true});
+				list.update({ bReuseData: true });
 				list.showPlsByObj(parent);
 			}
 		});
@@ -1312,9 +1322,22 @@ function createMenuLeftMult(forcedIndexes = []) {
 							const pls = playlists[i];
 							if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
 							if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
-								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-								if (!pls.isAutoPlaylist) { exportPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple); }
-								else { exportAutoPlaylistFileWithTracksConvert(list, z, tf, dsp, path, extension, remDupl, list.bAdvTitle, list.bMultiple); }
+								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls)
+									? list.removeDuplicatesAutoPls
+									: [];
+								const exportFunc = pls.isAutoPlaylist
+									? exportAutoPlaylistFileWithTracksConvert
+									: exportPlaylistFileWithTracksConvert;
+								exportFunc({
+									list, z,
+									tf,
+									preset: dsp,
+									defPath: path,
+									ext: extension,
+									remDupl, // Include remDupl for XSP playlists
+									bAdvTitle: list.bAdvTitle,
+									bMultiple: list.bMultiple
+								});
 							}
 						});
 					}, flags
@@ -1503,7 +1526,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						const folder = list.addFolder();
 						if (!folder) { return; }
 						list.moveToFolder(playlists, folder);
-						list.update({bReuseData: true});
+						list.update({ bReuseData: true });
 						list.showPlsByObj(folder);
 					}
 				});
@@ -1533,34 +1556,42 @@ function createMenuRight() {
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{ // New Playlists
-		!list.bLiteMode && menu.newEntry({ entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => {
-			const rule = list.folderRules.others;
-			const toFolder = rule.length
-				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-				: null;
-			list.add({ bEmpty: true, toFolder });
-		}});
-		menu.newEntry({ entryText: 'New AutoPlaylist...', func: () => {
-			const rule = list.folderRules.others;
-			const toFolder = rule.length
-				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-				: null;
-			list.addAutoPlaylist(void(0), void(0), toFolder);
-		}});
-		!list.bLiteMode && menu.newEntry({ entryText: 'New Smart Playlist...', func: () => {
-			const rule = list.folderRules.others;
-			const toFolder = rule.length
-				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-				: null;
-			list.addSmartplaylist(void(0), void(0), toFolder);
-		}});
-		menu.newEntry({ entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
-			const rule = list.folderRules.internalUi;
-			const toFolder = rule.length
-				? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-				: null;
-			list.addUiPlaylist({ bInputName: true, toFolder });
-		}});
+		!list.bLiteMode && menu.newEntry({
+			entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => {
+				const rule = list.folderRules.others;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				list.add({ bEmpty: true, toFolder });
+			}
+		});
+		menu.newEntry({
+			entryText: 'New AutoPlaylist...', func: () => {
+				const rule = list.folderRules.others;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				list.addAutoPlaylist(void (0), void (0), toFolder);
+			}
+		});
+		!list.bLiteMode && menu.newEntry({
+			entryText: 'New Smart Playlist...', func: () => {
+				const rule = list.folderRules.others;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				list.addSmartplaylist(void (0), void (0), toFolder);
+			}
+		});
+		menu.newEntry({
+			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
+				const rule = list.folderRules.internalUi;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				list.addUiPlaylist({ bInputName: true, toFolder });
+			}
+		});
 		if (showMenus['Folders']) {
 			menu.newEntry({ entryText: 'sep' });
 			menu.newEntry({ entryText: 'New Folder...' + list.getGlobalShortcut('new folder'), func: () => { list.addFolder(); } });
@@ -1686,9 +1717,9 @@ function createMenuRight() {
 														// Restore backup in case something goes wrong
 														if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 														else if (_isFile(backPath)) { _deleteFile(backPath); }
-														if (bDone) { 
-															list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
-															list.filter(); 
+														if (bDone) {
+															list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+															list.filter();
 														}
 														if (bDone && !bLoaded) { plman.RemovePlaylist(idx); }
 														clearInterval(delay);
@@ -1711,9 +1742,9 @@ function createMenuRight() {
 											list.disableAutosaveForPls(playlistNameId);
 											const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
 											if (bDone && idx !== -1) { sendToPlaylist(handleList, playlistNameId); }
-											if (bDone) { 
-												list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
-												list.filter(); 
+											if (bDone) {
+												list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+												list.filter();
 											}
 											clearInterval(delay);
 											list.enableAutosaveForPls(playlistNameId);
@@ -1787,9 +1818,9 @@ function createMenuRight() {
 										if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 										else if (_isFile(backPath)) { _deleteFile(backPath); }
 										if (bDone && plman.FindPlaylist(playlistNameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId); }
-										if (bDone) { 
-											list.update({bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex});
-											list.filter(); 
+										if (bDone) {
+											list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+											list.filter();
 										}
 										clearInterval(delay);
 										return bDone;
@@ -1944,7 +1975,7 @@ function createMenuRight() {
 							// Easy way: intersect current view + new one with refreshed list
 							const categoryState = [...new Set(list.categoryState.concat(item.category)).intersection(new Set(list.categories()))];
 							if (item.isAutoPlaylist) {
-								list.update({bReuseData: true, bNotPaint: true}); // Only paint and save to json
+								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
 							} else if (item.extension === '.ui') {
 								for (let j = 0; j < plman.PlaylistRecycler.Count; j++) { // First pls is the last one deleted
 									if (plman.PlaylistRecycler.GetName(j) === item.nameId) {
@@ -1955,7 +1986,7 @@ function createMenuRight() {
 										}
 									}
 								}
-								list.update({bReuseData: true, bNotPaint: true}); // Only paint and save to json
+								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
 							} else {
 								_restoreFile(item.path);
 								// Revert timestamps
@@ -1963,7 +1994,7 @@ function createMenuRight() {
 								const newName = newPath.pop().split('_ts_')[0];
 								newPath = newPath.concat([newName]).join('\\') + item.extension;
 								_renameFile(item.path, newPath);
-								list.update({bReuseData: false, bNotPaint: true}); // Updates path..
+								list.update({ bReuseData: false, bNotPaint: true }); // Updates path..
 							}
 							list.filter({ categoryState });
 							list.deletedItems.splice(i, 1);
@@ -2252,7 +2283,7 @@ function createMenuRightTop() {
 				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
 				list.headerTextUpdate();
 				list.bUpdateAutoPlaylist = true;
-				list.update({bReuseData: false, bNotPaint: true, currentItemIndex: z}); // Forces AutoPlaylist size update according to query and tags
+				list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: z }); // Forces AutoPlaylist size update according to query and tags
 				list.checkConfigPostUpdate(bDone);
 				list.filter();
 				test.Print();
@@ -3131,16 +3162,16 @@ function createMenuRightTop() {
 				menu.newEntry({ menuName: subMenuName, entryText: 'Set destination of new playlists:', flags: MF_GRAYED });
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const options = [
-					// list.bAllPls ? {name: 'External UI-only playlists', rule: 'externalUi'} : null,
-					list.bAllPls ? {name: 'UI-only playlists from panel', rule: 'internalUi'} : null,
-					{name: 'Any playlist from selection', rule: 'plsFromSel'},
-					{name: 'Any other case', rule: 'others'}
+					list.bAllPls ? { name: 'External UI-only playlists', rule: 'externalUi' } : null,
+					list.bAllPls ? { name: 'UI-only playlists from panel', rule: 'internalUi' } : null,
+					{ name: 'Any playlist from selection', rule: 'plsFromSel' },
+					{ name: 'Any other case', rule: 'others' }
 				].filter(Boolean);
 				options.forEach((opt) => {
 					const folder = list.folderRules[opt.rule];
 					menu.newEntry({
 						menuName: subMenuName, entryText: opt.name + (folder.length ? '\t' + _p(folder) : ''), func: () => {
-							const input =  Input.string(
+							const input = Input.string(
 								'string',
 								folder,
 								'Set destination folder:\n(if it does not exist, a new one will be created)',
