@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/24
+//03/06/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -301,7 +301,7 @@ function setTrackTags(trackTags, list, z) {
 	if (oldTags !== newTags) { // Compares objects
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			list.editData(pls, { trackTags });
-			list.update({bReuseData: true, bNotPaint: true});
+			list.update({ bReuseData: true, bNotPaint: true });
 			list.filter();
 			bDone = true;
 		} else if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls') {
@@ -328,7 +328,7 @@ function setTrackTags(trackTags, list, z) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { trackTags });
-					list.update({bReuseData: true, bNotPaint: true});
+					list.update({ bReuseData: true, bNotPaint: true });
 					list.filter();
 				}
 			} else {
@@ -346,7 +346,7 @@ function setTag(tags, list, z) {
 	if (!new Set(tags).isEqual(new Set(pls.tags))) { // Compares arrays
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui' || pls.isFolder) {
 			list.editData(pls, { tags });
-			list.update({bReuseData: true, bNotPaint: true});
+			list.update({ bReuseData: true, bNotPaint: true });
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 			list.filter({ tagState });
 			bDone = true;
@@ -374,7 +374,7 @@ function setTag(tags, list, z) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { tags });
-					list.update({bReuseData: true, bNotPaint: true});
+					list.update({ bReuseData: true, bNotPaint: true });
 					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 					list.filter({ tagState });
 				}
@@ -399,7 +399,7 @@ function setCategory(category, list, z) {
 			list.editData(pls, { category });
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
-			list.update({bReuseData: true, bNotPaint: true});
+			list.update({ bReuseData: true, bNotPaint: true });
 			const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
 			list.filter({ categoryState });
 			bDone = true;
@@ -427,7 +427,7 @@ function setCategory(category, list, z) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { category });
-					list.update({bReuseData: true, bNotPaint: true});
+					list.update({ bReuseData: true, bNotPaint: true });
 					// Add new category to current view! (otherwise it gets filtered)
 					// Easy way: intersect current view + new one with refreshed list
 					const categoryState = [...new Set(list.categoryState.concat([category])).intersection(new Set(list.categories()))];
@@ -452,7 +452,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 				return bDone;
 			}
 			list.editData(pls, { playlist_mbid });
-			list.update({bReuseData: true, bNotPaint: true});
+			list.update({ bReuseData: true, bNotPaint: true });
 			bDone = true;
 		} else if (pls.extension === '.ui' || pls.extension === '.strm') {
 			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
@@ -483,7 +483,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
 					list.editData(pls, { playlist_mbid });
-					list.update({bReuseData: true, bNotPaint: true});
+					list.update({ bReuseData: true, bNotPaint: true });
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist file does not exist: ' + name + '\nPath: ' + path, window.Name);
@@ -503,7 +503,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 	const boolText = pls.isLocked ? ['true', 'false'] : ['false', 'true'];
 	if (pls.isAutoPlaylist || pls.extension === '.fpl' || pls.extension === '.strm' || pls.extension === '.xsp') {
 		list.editData(pls, { isLocked: !pls.isLocked });
-		list.update({bReuseData: true, bNotPaint: true});
+		list.update({ bReuseData: true, bNotPaint: true });
 		list.filter();
 		bDone = true;
 	} else if (pls.extension === '.ui' || pls.extension === '.pls') {
@@ -530,7 +530,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 			} else {
 				if (_isFile(backPath)) { _deleteFile(backPath); }
 				list.editData(pls, { isLocked: !pls.isLocked });
-				list.update({bReuseData: true, bNotPaint: true});
+				list.update({ bReuseData: true, bNotPaint: true });
 				list.filter();
 			}
 		} else {
@@ -556,7 +556,7 @@ function switchLockUI(list, z, bAlsoHidden = false) {
 	const newLock = bLocked ? [] : lockTypes; // This filters blank values
 	plman.SetPlaylistLockedActions(index, newLock);
 	list.editData(pls, { isLocked: !pls.isLocked });
-	list.update({bReuseData: true, bNotPaint: true});
+	list.update({ bReuseData: true, bNotPaint: true });
 	list.filter();
 	return true;
 }
@@ -644,7 +644,7 @@ function convertToRelPaths(list, z) {
 				fileSize: utils.GetFileSize(playlistPath),
 			});
 			console.log('Playlist Manager: done.');
-			list.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+			list.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 			list.filter();
 		} else {
 			fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
@@ -655,7 +655,7 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
-function cloneAsAutoPls(list, z, uiIdx = -1, toFolder = void(0)) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsAutoPls(list, z, uiIdx = -1, toFolder = void (0)) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -695,7 +695,7 @@ function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Aut
 	return bDone;
 }
 
-function cloneAsStandardPls(list, z, opt = {remDupl: [], bAdvTitle: false, bMultiple: false}, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -733,7 +733,7 @@ function cloneAsStandardPls(list, z, opt = {remDupl: [], bAdvTitle: false, bMult
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z, opt = {remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false}, toFolder = void(0)) {
+function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false }, toFolder = void (0)) {
 	if (z < 0 || (!opt.bAlsoHidden && z >= list.items) || (opt.bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
@@ -779,7 +779,7 @@ function clonePlaylistInUI(list, z, opt = {remDupl: [], bAdvTitle: false, bMulti
 	return bDone;
 }
 
-function clonePlaylistMergeInUI(list, zArr, opt = {remDupl: [], bAdvTitle: false, bMultiple: false}) {
+function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }) {
 	if (!Array.isArray(zArr)) {
 		console.log('Playlist Manager: Error merge-loading playlists. Index is not an array.');
 		return false;
@@ -890,7 +890,7 @@ function exportPlaylistFile(list, z, defPath = '') {
 	if (_isFile(path)) {
 		let answer = WshShell.Popup('There is a file with same name. Overwrite?', 0, window.Name, popup.question + popup.yes_no);
 		if (answer === popup.no) { return bDone; }
-		bDone = _recycleFile(path);
+		bDone = _recycleFile(path, true);
 	}
 	bDone = _copyFile(playlistPath, path);
 	if (bDone) {
@@ -922,7 +922,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 		if (_isFile(path + playlistName)) {
 			let answer = WshShell.Popup('There is a file with same name. Overwrite?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.no) { return bDone; }
-			bDone = _recycleFile(path + playlistName);
+			bDone = _recycleFile(path + playlistName, true);
 		}
 		bDone = _copyFile(playlistPath, path + playlistName);
 		if (bDone) {
@@ -1026,7 +1026,7 @@ function exportPlaylistFileWithTracks({ list, z, defPath = '', bAsync = true, bN
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false) {
+function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false } = {}) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
@@ -1111,7 +1111,7 @@ function exportPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', 
 	return bDone;
 }
 
-function exportAutoPlaylistFileWithTracksConvert(list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false) {
+function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false } = {}) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
@@ -1198,7 +1198,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 				});
 				list.editSortingFile(oldNameId, newNameId);
 				if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
-				list.update({bReuseData: true, bNotPaint: true});
+				list.update({ bReuseData: true, bNotPaint: true });
 				list.filter();
 				bRenamedSucessfully = true;
 			} else {
@@ -1250,12 +1250,12 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 									nameId: list.bUseUUID ? newName + newId : newName,
 								});
 								if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
-								list.update({bReuseData: true, bNotPaint: true});
+								list.update({ bReuseData: true, bNotPaint: true });
 								list.filter();
 								bRenamedSucessfully = true;
 							}
 						} else {
-							list.update({bReuseData: true, bNotPaint: true});
+							list.update({ bReuseData: true, bNotPaint: true });
 							list.filter();
 							bRenamedSucessfully = true;
 						}
@@ -1284,7 +1284,7 @@ function renameFolder(list, z, newName) {
 			id: '',
 			nameId: newName,
 		});
-		list.update({bReuseData: true, bNotPaint: true});
+		list.update({ bReuseData: true, bNotPaint: true });
 		list.filter();
 		// Set focus on new playlist if possible (if there is an active filter, then pls may be not found on this.data)
 		list.showPlsByObj(folder);
@@ -1329,7 +1329,7 @@ function rewriteXSPQuery(pls, newQuery) {
 		if (rules.length) {
 			const plsPath = pls.path;
 			const jsp = loadXspPlaylist(plsPath);
-			if (!jsp) {return bDone;}
+			if (!jsp) { return bDone; }
 			jsp.playlist.rules = rules;
 			jsp.playlist.match = match;
 			const xspText = XSP.toXSP(jsp);
@@ -1362,7 +1362,7 @@ function rewriteXSPSort(pls, newSort) {
 		const order = XSP.getOrder(newSort);
 		const plsPath = pls.path;
 		const jsp = loadXspPlaylist(plsPath);
-		if (!jsp) {return bDone;}
+		if (!jsp) { return bDone; }
 		jsp.playlist.order = order;
 		const xspText = XSP.toXSP(jsp);
 		if (xspText && xspText.length) {
@@ -1392,7 +1392,7 @@ function rewriteXSPLimit(pls, newLimit) {
 		}
 		const plsPath = pls.path;
 		const jsp = loadXspPlaylist(plsPath);
-		if (!jsp) {return bDone;}
+		if (!jsp) { return bDone; }
 		jsp.playlist.limit = Number.isFinite(newLimit) ? newLimit : 0;
 		const xspText = XSP.toXSP(jsp);
 		if (xspText && xspText.length) {
@@ -1860,7 +1860,7 @@ function findCircularReferences() {
 			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
-					if (list.checkCircularXsp({pls: playlist})) {
+					if (list.checkCircularXsp({ pls: playlist })) {
 						found.push(playlist);
 						report.push(playlist.path);
 					}
