@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/24
+//03/06/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -389,9 +389,9 @@ setProperties(properties, 'plm_');
 			const suffix = ['.json', '_sorting.json', '_config.json', '.json.old', '_sorting.json.old', '_config.json.old'];
 			if (suffix.every((s) => { return !_isFile(file + s) || _copyFile(file + s, newFile + s); })) {
 				console.log(window.Name + ': creating UUID file from existing JSON ' + _p(file + '.json')); // DEBUG
-				suffix.forEach((s) => _recycleFile(file + s));
+				suffix.forEach((s) => _recycleFile(file + s, true));
 			} else {
-				suffix.forEach((s) => _recycleFile(newFile + s));
+				suffix.forEach((s) => _recycleFile(newFile + s, true));
 				console.popup(window.Name + ': error creating UUID file from existing JSON\n\n' + file, window.Name);
 			}
 		}
@@ -626,7 +626,7 @@ if (!list.properties.bSetup[1]) {
 
 	// Tracking a network drive?
 	if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
-		console.log('Playlist manager: tracked folder is on a network drive.');
+		console.log('Playlist manager: tracked folder is on a drive without Recycle Bin.');
 		if (!list.properties.bNetworkPopup[1]) {
 			list.properties.bNetworkPopup[1] = true;
 			overwriteProperties(list.properties); // Updates panel
@@ -1013,13 +1013,24 @@ if (!list.properties.bSetup[1]) {
 				case 'export convert (mult)': {
 					const idx = list.dataAll.map((pls, i) => { return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1); }).filter((idx) => { return idx !== -1; });
 					idx.forEach((i) => {
+						const pls = list.dataAll[i];
 						const preset = menu.arg;
-						const remDupl = list.bRemoveDuplicatesAutoPls ? list.removeDuplicatesAutoPls : [];
-						if (!list.dataAll[i].isAutoPlaylist) {
-							exportPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle, list.bMultiple);
-						} else {
-							exportAutoPlaylistFileWithTracksConvert(list, i, preset.tf, preset.dsp, preset.path, preset.extension, remDupl, list.bAdvTitle, list.bMultiple);
-						}
+						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls)
+							? list.removeDuplicatesAutoPls
+							: [];
+						const exportFunc = list.dataAll[i].isAutoPlaylist
+							? exportAutoPlaylistFileWithTracksConvert
+							: exportPlaylistFileWithTracksConvert;
+						exportFunc({
+							list, z: i,
+							tf: preset.tf,
+							preset: preset.dsp,
+							defPath: preset.path,
+							ext: preset.extension,
+							remDupl, // Include remDupl for XSP playlists
+							bAdvTitle: list.bAdvTitle,
+							bMultiple: list.bMultiple
+						});
 					});
 					bDone = true;
 					break;

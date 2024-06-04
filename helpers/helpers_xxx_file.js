@@ -1,7 +1,7 @@
 ﻿'use strict';
-//17/04/24
+//03/06/24
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -47,6 +47,7 @@ console.enable();
 // Additional code to check for network drives: these don't have recycle bin so _recycleFile would always fail or show a prompt
 const mappedDrivesFile = folders.temp + 'mappedDrives.txt';
 const mappedDrives = [];
+const binDrives = {};
 if (!_isFile(mappedDrivesFile) || lastStartup() !== lastModified(mappedDrivesFile)) {
 	_runCmd('CMD /C wmic path Win32_LogicalDisk Where DriveType="4" get DeviceID, ProviderName > ' + _q(mappedDrivesFile), true);
 }
@@ -84,7 +85,13 @@ const popup = {
 */
 
 function _hasRecycleBin(drive) {
-	return mappedDrives.indexOf(drive.toLowerCase()) === -1 || _isFolder(drive + '\\$RECYCLE.BIN');
+	drive = drive.toLowerCase();
+	if (!Object.hasOwn(binDrives, drive)) { binDrives[drive] = _isFolder(drive + '\\$RECYCLE.BIN'); }
+	return binDrives[drive];
+}
+
+function _isNetwork(drive) {
+	return mappedDrives.indexOf(drive.toLowerCase()) === -1;
 }
 
 function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which is only usable on _explorer()
