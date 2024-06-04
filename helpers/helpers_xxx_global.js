@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/05/24
+//28/05/24
 
 /* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
 
@@ -222,7 +222,7 @@ const globRegExp = {
 		desc: 'Replaces verb-in words with verb-ing versions'
 	},
 	singleTags: {
-		re: /^(title|album|date|year|tracknumber|mastering|description|comment)$/i, // NOSONAR [must be a single regEx]
+		re: /(^|%)(title|album|date|year|tracknumber|mastering|description|comment)($|%)/i, // NOSONAR [must be a single regEx]
 		desc: 'Multi-value tags will be split by \', \' if possible and matched individually at duplicates removal.'
 	}
 };
