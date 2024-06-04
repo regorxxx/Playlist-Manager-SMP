@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/24
+//28/05/24
 
 /* exported _list */
 
@@ -88,14 +88,15 @@ function _list(x, y, w, h) {
 	// Global tooltip
 	// Timers follow the double click timer
 	this.tooltip = new _tt(null, void (0), void (0), 600);
-	this.updateUIElements = (bReload = false) => {
+	this.updateUIElements = (bReload = false, options = { bScroll: false, bCenter: false, bOmitType: false }) => {
+		options = { ...{ bScroll: false, bCenter: false, bOmitType: false }, ...options };
 		if (bReload) { window.Reload(); }
 		if (!this.uiElements['Search filter'].enabled) { this.searchInput = null; }
 		for (let key in this.headerButtons) {
 			const button = this.headerButtons[key];
 			button.x = button.y = button.w = button.h = 0;
 		}
-		this.size();
+		this.size(options);
 		this.repaint();
 	};
 
@@ -116,6 +117,7 @@ function _list(x, y, w, h) {
 			overwriteProperties(this.properties);
 			this.checkConfigPostUpdate(this.checkConfig({ bSilentSorting: true })); // Ensure related config is set properly
 		}
+		if (Object.hasOwn(menus, 'Folders')) { this.update({ bReuseData: false, bLog: false }); }
 	};
 
 	this.updatePlaylistIcons = () => {
@@ -284,7 +286,8 @@ function _list(x, y, w, h) {
 		return this.uiElements['Columns'].enabled && this.getColumnsEnabled(label).length > 0;
 	};
 
-	this.size = () => {
+	this.size = (options = { bScroll: false, bCenter: false, bOmitType: false }) => {
+		options = { ...{ bScroll: false, bCenter: false, bOmitType: false }, ...options };
 		this.cacheLastPosition();
 		const oldH = this.h;
 		this.w = panel.w - (this.x * 2);
@@ -299,7 +302,7 @@ function _list(x, y, w, h) {
 		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
-		this.jumpLastPosition({bCenter: false});
+		this.jumpLastPosition(options);
 	};
 
 	this.getHeaderSize = () => { return { h: Math.max(headerH, this.y), w: headerW }; };
@@ -1178,8 +1181,8 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.jumpToIndex = (idx, options = {bScroll: false, bCenter: true}) => { // Puts selected playlist in the middle of the window, if possible
-		options = {...{bScroll: false, bCenter: true}, ...options};
+	this.jumpToIndex = (idx, options = { bScroll: false, bCenter: true }) => { // Puts selected playlist in the middle of the window, if possible
+		options = { ...{ bScroll: false, bCenter: true }, ...options };
 		const cache = { index: this.index, offset: this.offset };
 		this.index = idx;
 		// Safechecks
@@ -1631,8 +1634,8 @@ function _list(x, y, w, h) {
 		this.offset = 0;
 	};
 
-	this.jumpLastPosition = (options = {bScroll: false, bCenter: true, bOmitType: false}) => {
-		options = {...{bScroll: false, bCenter: true, bOmitType: false}, ...options};
+	this.jumpLastPosition = (options = { bScroll: false, bCenter: true, bOmitType: false }) => {
+		options = { ...{ bScroll: false, bCenter: true, bOmitType: false }, ...options };
 		if (currentItemIndex < this.items) {
 			if (!options.bOmitType) {
 				for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to
@@ -2178,7 +2181,7 @@ function _list(x, y, w, h) {
 						case 'f7': { // Add playlist (new)
 							if (showMenus['Folders'] && getKeyboardMask() === kMask.shift) { // NOSONAR
 								this.addFolder();
-							} else{
+							} else {
 								const rule = this.bLiteMode ? this.folderRules.internalUi : this.folderRules.others;
 								const toFolder = rule.length
 									? this.dataFolder.find((f) => f.name === rule) || this.addFolder(rule)
@@ -2230,14 +2233,21 @@ function _list(x, y, w, h) {
 						this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
 						this.properties.uiElements[1] = JSON.stringify(this.uiElements);
 						overwriteProperties(this.properties);
-						this.updateUIElements();
+						this.updateUIElements(void(0), {bScroll: true});
 						return true;
+					case 'b':
+						if (getKeyboardMask() === kMask.ctrl) {
+							const showMenus = JSON.parse(this.properties.showMenus[1]);
+							this.updateMenus({ menus: { Folders: !showMenus['Folders'] } });
+							return true;
+						}
+						break;
 					case 'delete': // Delete playlist (delete)
 						if (z !== -1) {
 							this.removePlaylist(z);
 							setTimeout(() => { // Required since input popup invokes move callback after this func!
 								this.cacheLastPosition(Math.min(z, this.items - 1));
-								this.jumpLastPosition({bCenter: false, bOmitType: true});
+								this.jumpLastPosition({ bCenter: false, bOmitType: true });
 								this.move(this.mx, this.my); // Update cursor
 							}, 10);
 							return true;
@@ -2939,7 +2949,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			console.log('Playlist Manager: Drag n drop done.');
-			this.update({bNotPaint: true});
+			this.update({ bNotPaint: true });
 			this.filter();
 			return true;
 		}
@@ -3218,7 +3228,7 @@ function _list(x, y, w, h) {
 		if (this.bAutoTrackTag) { this.updateTrackTags(handleUpdate, tagsUpdate); } // Apply tags from before
 		console.log('Playlist Manager: drag n drop done.');
 		this.lastPlsLoaded.push(pls);
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 		if (bPaint) { this.filter(); }
 		return true;
 	};
@@ -3342,7 +3352,7 @@ function _list(x, y, w, h) {
 					size: plman.PlaylistItemCount(fbPlaylistIndex),
 				});
 				console.log('Playlist Manager: done.');
-				this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+				this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 				this.filter();
 				break;
 			}
@@ -3506,7 +3516,7 @@ function _list(x, y, w, h) {
 					this.repaint();
 				}
 				if (plsData.path && this.requiresCachePlaylistSearch()) { this.plsCache.set(plsData.path, handleList); }
-				this.update({bReuseData: true, bNotPaint: true, currentItemIndex}); // We have already updated data before only for the variables changed
+				this.update({ bReuseData: true, bNotPaint: true, currentItemIndex }); // We have already updated data before only for the variables changed
 				this.filter();
 				if (plsData.extension !== '.ui') { setTimeout(() => { if (pop.isEnabled('saving')) { pop.disable(true); } }, 500); }
 				return true;
@@ -3774,7 +3784,7 @@ function _list(x, y, w, h) {
 				}
 			});
 		}
-		this.update({bReuseData: true, bNotPaint: true}); // Updates and saves AutoPlaylist to our own json format
+		this.update({ bReuseData: true, bNotPaint: true }); // Updates and saves AutoPlaylist to our own json format
 		this.resetFilter();
 		if (bProfile) { test.Print(); }
 		return true;
@@ -3943,56 +3953,67 @@ function _list(x, y, w, h) {
 			this.data = [...this.dataAll];
 		}
 		// Process folders
-		this.collapseFolders();
-		this.processFolders({ plsState });
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		if (showMenus['Folders']) {
+			this.collapseFolders();
+			this.processFolders({ plsState });
+		} else {
+			const isNotFolder = (item) => !item.isFolder;
+			this.data = this.data.filter(isNotFolder);
+		}
 		// AutoPlaylists
 		if (autoPlaylistState === this.constAutoPlaylistStates()[0]) { // AutoPlaylists
 			// As is
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[1]) {
-			const isAutoPls = (item) => { return item.isAutoPlaylist || item.query || (item.isFolder && item.pls.some(isAutoPls)); };
+			const isAutoPls = (item) => item.isAutoPlaylist || item.query || (item.isFolder && item.pls.some(isAutoPls));
 			this.data = this.data.filter(isAutoPls);
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
 			if (!this.bLiteMode) {
-				const isFilePls = (item) => { return !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls)); };
+				const isFilePls = (item) => !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls));
 				this.data = this.data.filter(isFilePls);
 			} else {
 				const isUiPls = (item) => { return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls)); };
 				this.data = this.data.filter(isUiPls);
 			}
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
-			const isUiPls = (item) => { return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls)); };
+			const isUiPls = (item) => item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls));
 			this.data = this.data.filter(isUiPls);
 		}
 		// And then... we use this.data to filter again by lock state
 		if (lockState === this.constLockStates()[0]) {
 			// As is
 		} else if (lockState === this.constLockStates()[1]) {
-			const isNotLocked = (item) => { return !item.isLocked || (item.isFolder && item.pls.some(isNotLocked)); };
+			const isNotLocked = (item) => !item.isLocked || (item.isFolder && item.pls.some(isNotLocked));
 			this.data = this.data.filter(isNotLocked);
 		} else if (lockState === this.constLockStates()[2]) {
-			const isLocked = (item) => { return item.isLocked || (item.isFolder && item.pls.some(isLocked)); };
+			const isLocked = (item) => item.isLocked || (item.isFolder && item.pls.some(isLocked));
 			this.data = this.data.filter(isLocked);
 		}
 		// And again with extension
 		if (extState === this.constExtStates()[0]) {
 			// As is
 		} else {
-			const isExt = (item) => { return item.extension === extState || (item.isFolder && item.pls.some(isExt)); };
+			const isExt = (item) => item.extension === extState || (item.isFolder && item.pls.some(isExt));
 			this.data = this.data.filter(isExt);
 		}
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
 			const isCategory = (item) => {
-				if (categoryState.indexOf('(None)') !== -1) { return (!item.category.length || categoryState.indexOf(item.category) !== -1) || (item.isFolder && item.pls.some(isCategory)); }
-				else { return (categoryState.indexOf(item.category) !== -1 || (item.isFolder && item.pls.some(isCategory))); }
+				const cat = item.category;
+				return categoryState.includes('(None)')
+					? (!cat.length || categoryState.includes(cat)) || (item.isFolder && item.pls.some(isCategory))
+					: (categoryState.indexOf(cat) !== -1 || (item.isFolder && item.pls.some(isCategory)));
 			};
 			this.data = this.data.filter(isCategory);
 		}
 		// And again with tags
 		if (!isArrayEqual(tagState, this.tags())) {
+			const tagsFilter = new Set(tagState);
 			const isTag = (item) => {
-				if (tagState.indexOf('(None)') !== -1) { return (!item.tags.length || new Set(tagState).intersectionSize(new Set(item.tags)) !== 0) || (item.isFolder && item.pls.some(isTag)); }
-				else { return new Set(tagState).intersectionSize(new Set(item.tags)) !== 0 || (item.isFolder && item.pls.some(isTag)); }
+				const tags = new Set(item.tags);
+				return tagsFilter.has('(None)')
+					? (!tags.size || tagsFilter.intersectionSize(tags) !== 0) || (item.isFolder && item.pls.some(isTag))
+					: (tagsFilter.intersectionSize(tags) !== 0 || (item.isFolder && item.pls.some(isTag)));
 			};
 			this.data = this.data.filter(isTag);
 		}
@@ -4000,10 +4021,10 @@ function _list(x, y, w, h) {
 		if (mbidState === this.constMbidStates()[0]) {
 			// As is
 		} else if (mbidState === this.constMbidStates()[1]) {
-			const isNoMbid = (item) => { return !item.playlist_mbid.length || (item.isFolder && item.pls.some(isNoMbid)); };
+			const isNoMbid = (item) => !item.playlist_mbid.length || (item.isFolder && item.pls.some(isNoMbid));
 			this.data = this.data.filter(isNoMbid);
 		} else if (mbidState === this.constMbidStates()[2]) {
-			const isMbid = (item) => { return item.playlist_mbid.length || (item.isFolder && item.pls.some(isMbid)); };
+			const isMbid = (item) => item.playlist_mbid.length || (item.isFolder && item.pls.some(isMbid));
 			this.data = this.data.filter(isMbid);
 		}
 		// Focus
@@ -4074,6 +4095,7 @@ function _list(x, y, w, h) {
 		}
 	};
 	this.resetFilter = () => {
+		if (!this.isFilterActive()) { return; }
 		if (this.searchInput && this.searchMethod.bResetFilters) { this.searchInput.on_key_down(VK_ESCAPE); }
 		this.filter({ autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories(), mbidState: this.constMbidStates()[0], plsState: [] });
 	};
@@ -4357,9 +4379,10 @@ function _list(x, y, w, h) {
 		this.sort(void (0), true); // uses current sort state and repaint
 	};
 
-	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions) => {
+	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions = void(0)) => {
 		const plsSel = !bSkipSel && this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
-		this.collapseFolders();
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		if (showMenus['Folders']) { this.collapseFolders(); }
 		const bManual = this.methodState === this.manualMethodState();
 		const defSort = this.sortMethods(false)[this.defaultMethodState()][this.defaultSortState()];
 		if (bManual) {
@@ -4406,7 +4429,7 @@ function _list(x, y, w, h) {
 				this.dataAll.sort(method);
 			}
 		}
-		this.processFolders();
+		if (showMenus['Folders']) { this.processFolders(); }
 		if (plsSel.length) {
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		}
@@ -4536,17 +4559,18 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.update = ({bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false, focusOptions = {bCenter: false, bOmitType: false}} = {}) => {
-		focusOptions = {bCenter: false, bOmitType: false, ...focusOptions};
+	this.update = ({ bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false, focusOptions = { bCenter: false, bOmitType: false }, bLog = true } = {}) => {
+		focusOptions = { bCenter: false, bOmitType: false, ...focusOptions };
 		const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const oldCategories = this.categories();
 		const oldTags = this.tags();
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		// Saves currently selected item for later use
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
 		if (!bReuseData) { // Recalculates from files
 			// AutoPlaylist and FPL From json
-			console.log('Playlist manager: reading files from ' + _q(this.playlistsPath));
+			if (bLog) { console.log('Playlist manager: reading files from ' + _q(this.playlistsPath)); }
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
@@ -4598,7 +4622,7 @@ function _list(x, y, w, h) {
 												? this.dataXsp.find((pls) => { return pls.nameId === item.nameId; })
 												: this.dataAutoPlaylists.find((pls) => { return pls.nameId === item.nameId; });
 											if ((cacheSize !== size || cacheDuration !== duration || cacheTrackSize !== trackSize)) {
-												console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name);
+												if (bLog) { console.log('Updating ' + (item.isAutoPlaylist ? 'AutoPlaylist' : 'Smart Playlist') + ' size: ' + item.name); }
 												if (pls) {
 													this.editData(pls, {
 														size,
@@ -4737,7 +4761,7 @@ function _list(x, y, w, h) {
 			});
 			this.dataAll = [...this.data];
 		}
-		// Playlists on UI
+		// Playlists on
 		if (this.bAllPls) {
 			// Remove any previous UI pls on update
 			const cache = bReuseData
@@ -4821,8 +4845,10 @@ function _list(x, y, w, h) {
 					}).filter(Boolean);
 					this.addFolderProperties(folder);
 				});
-				this.data = this.data.filter((item) => !this.isInFolder(item));
-				this.data = this.data.concat(this.dataFolder);
+				if (showMenus['Folders']) {
+					this.data = this.data.filter((item) => !this.isInFolder(item));
+					this.data = this.data.concat(this.dataFolder);
+				}
 				this.dataAll = this.dataAll.concat(this.dataFolder);
 			} else {
 				this.dataAll.forEach((folder) => {
@@ -4840,7 +4866,9 @@ function _list(x, y, w, h) {
 						this.addFolderProperties(folder);
 					}
 				});
-				this.data = this.data.filter((item) => !this.isInFolder(item));
+				if (showMenus['Folders']) {
+					this.data = this.data.filter((item) => !this.isInFolder(item));
+				}
 			}
 		}
 		// Always
@@ -4908,7 +4936,7 @@ function _list(x, y, w, h) {
 
 	this.updateAllUUID = () => {
 		this.dataAll.forEach((pls, z) => { if (pls.extension !== '.pls' && pls.extension !== '.ui') { this.updateUUID(pls, z); } }); // Changes data on the other arrays too since they link to same object
-		this.update({bReuseData: true, bNotPaint: true});
+		this.update({ bReuseData: true, bNotPaint: true });
 		this.filter();
 	};
 
@@ -5021,7 +5049,7 @@ function _list(x, y, w, h) {
 			const answer = WshShell.Popup('Playlist(s) backup file(s) have been found.\nDo you want to restore them?\n(Pressing \'No\' will open the playlists folder)\n\n' + files.map((f) => f.replace(this.playlistsPath, '')).joinEvery(', ', 3), 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				files.forEach((file) => _renameFile(file, file.replace('.back', '')));
-				this.update({currentItemIndex});
+				this.update({ currentItemIndex });
 				return true;
 			}
 			_explorer(this.playlistsPath);
@@ -5252,16 +5280,7 @@ function _list(x, y, w, h) {
 		return key === 'width' ? void (0) : value;
 	};
 
-	this.addFolder = (name = '', toFolder = null) => {
-		if (!name.length) {
-			try { name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true); }
-			catch (e) { return null; }
-			if (!name.length) { return null; }
-			if (this.dataAll.some((pls) => pls.nameId === name)) {
-				fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
-				return null;
-			}
-		}
+	this.createFolderObj = (name) => {
 		const now = Date.now();
 		const defaults = new PlaylistObj({ name, bLocked: false, category: '', author: 'Foobar2000', created: now, modified: now });
 		const folder = { ...defaults, isFolder: true, isOpen: false, pls: [] };
@@ -5273,7 +5292,21 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !folder.category.length) { folder.category = this.categoryState[0]; }
 		// Save
 		this.addToData(folder);
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+		return folder;
+	};
+
+	this.addFolder = (name = '', toFolder = null) => {
+		if (!name.length) {
+			try { name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true); }
+			catch (e) { return null; }
+			if (!name.length) { return null; }
+			if (this.dataAll.some((pls) => pls.nameId === name)) {
+				fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
+				return null;
+			}
+		}
+		const folder = this.createFolderObj(name);
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(folder, toFolder);
@@ -5537,7 +5570,7 @@ function _list(x, y, w, h) {
 			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
 			return null;
 		}
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5557,7 +5590,7 @@ function _list(x, y, w, h) {
 			input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
 			if (input === null) {
 				if (!Input.isLastEqual) { return null; }
-				else {input = Input.lastInput; }
+				else { input = Input.lastInput; }
 			}
 		}
 		let i = 0;
@@ -5593,7 +5626,7 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
 		// Save
 		this.addToData(objectPlaylist);
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5682,7 +5715,7 @@ function _list(x, y, w, h) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
 		// Save
 		this.addToData(objectPlaylist);
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5791,7 +5824,7 @@ function _list(x, y, w, h) {
 		if (!bDone) { return null; }
 		// Save
 		this.addToData(objectPlaylist);
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data before only for the variables changed
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -5915,7 +5948,7 @@ function _list(x, y, w, h) {
 			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
 			return null;
 		}
-		this.update({bReuseData: true, bNotPaint: true}); // We have already updated data
+		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data
 		this.filter();
 		if (toFolder !== null) {
 			this.addToFolder(objectPlaylist, toFolder);
@@ -6204,11 +6237,11 @@ function _list(x, y, w, h) {
 			this.multSelect(idx);
 		}
 		if (!bUI) {
-			this.update({bReuseData: true, bNotPaint: true, currentItemIndex: idx, focusOptions: {bCenter: false, bOmitType: true}}); // Call this immediately after removal! If paint fires before updating things get weird
+			this.update({ bReuseData: true, bNotPaint: true, currentItemIndex: idx, focusOptions: { bCenter: false, bOmitType: true } }); // Call this immediately after removal! If paint fires before updating things get weird
 			// Delete category from current view if needed
 			// Easy way: intersect current view + with refreshed list
 			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
-			this.filter({ categoryState, focusOptions: {bCenter: false, bOmitType: true} });
+			this.filter({ categoryState, focusOptions: { bCenter: false, bOmitType: true } });
 		}
 		clearInterval(delay);
 		if (duplicated !== -1) {
@@ -6225,16 +6258,16 @@ function _list(x, y, w, h) {
 		}
 		// Needed after removing the playlist on UI
 		if (bUI) {
-			this.update({bReuseData: true, bNotPaint: true, currentItemIndex: idx, focusOptions: {bCenter: false, bOmitType: true}});
+			this.update({ bReuseData: true, bNotPaint: true, currentItemIndex: idx, focusOptions: { bCenter: false, bOmitType: true } });
 			const categoryState = [...new Set(this.categoryState).intersection(new Set(this.categories()))];
-			this.filter({ categoryState, focusOptions: {bCenter: false, bOmitType: true} });
+			this.filter({ categoryState, focusOptions: { bCenter: false, bOmitType: true } });
 			setTimeout(() => { // Required since input popup invokes move callback after this func!
 				this.cacheLastPosition(Math.min(idx, this.items - 1));
-				this.jumpLastPosition({bCenter: false, bOmitType: true});
+				this.jumpLastPosition({ bCenter: false, bOmitType: true });
 			}, 10);
 		} else {
 			this.cacheLastPosition(Math.min(idx, this.items - 1));
-			this.jumpLastPosition({bCenter: false, bOmitType: true});
+			this.jumpLastPosition({ bCenter: false, bOmitType: true });
 		}
 		if (!bSkipXspRefresh && this.bAutoRefreshXsp) {
 			this.refreshSmartPlaylists({ sources: [pls.nameId] });
@@ -6369,7 +6402,7 @@ function _list(x, y, w, h) {
 		const z = this.offset + Math.round(this.rows / 2 - 1);
 		this.cacheLastPosition(z);
 		this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
-		this.update({bNotPaint: true, currentItemIndex: z});
+		this.update({ bNotPaint: true, currentItemIndex: z });
 		this.filter();
 		this.lastPlsLoaded = [];
 		this.folderStack = [];
@@ -6918,7 +6951,7 @@ function _list(x, y, w, h) {
 			: new Promise((resolve) => {
 				setTimeout(() => {
 					if (this.delays.playlistLoading) { globProfiler.Reset(); }
-					this.update({bReuseData: false, bNotPaint: true, bInit: true}); // bInit is true to avoid reloading all categories
+					this.update({ bReuseData: false, bNotPaint: true, bInit: true }); // bInit is true to avoid reloading all categories
 					resolve();
 				}, this.delays.playlistLoading);
 			});
@@ -7216,7 +7249,7 @@ function _list(x, y, w, h) {
 					this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
 					this.properties.uiElements[1] = JSON.stringify(this.uiElements);
 					overwriteProperties(this.properties);
-					this.updateUIElements();
+					this.updateUIElements(void(0), {bScroll: true});
 				}
 			}
 		},
@@ -7328,6 +7361,7 @@ function _list(x, y, w, h) {
 						'\n-------------------' +
 						this.listGlobalShortcuts(void (0), false) +
 						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
+						'\n- Ctrl + B: flat/folders view' +
 						'\n- DEL: delete playlist.' +
 						(this.searchInput ? '\n- Ctrl + E: focus on search box.' : '') +
 						'\n(*) Also apply to multiple selection and recursively to folders.' +
