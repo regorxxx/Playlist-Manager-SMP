@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/05/24
+//07/06/24
 
 /* exported _list */
 
@@ -6802,7 +6802,7 @@ function _list(x, y, w, h) {
 				const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
 				menusGlobal.forEach((menu, i) => {
 					const type = menu.type;
-					const name = menu.name;
+					const name = menu.name.split('\t').map((s) => s.cut(50)).join('\t');
 					const description = menu.description;
 					const arg = menu.arg || [i];
 					this.mainMenuDynamic.push({ type, arg, name, description });
@@ -6816,6 +6816,12 @@ function _list(x, y, w, h) {
 				resolve(true);
 			})
 				.then(() => {
+					for (let type in listExport) {
+						listExport[type].forEach((entry) => {
+							entry.fullName = entry.name;
+							entry.name = entry.name.split('\t').map((s) => s.cut(50)).join('\t');
+						});
+					}
 					data[wName] = listExport;
 					// Don try to export for ajquery-xxx integration when it isn't installed
 					if (bToFile && file.indexOf('ajquery-xxx') !== -1 && !folders.ajqueryCheck()) { return true; }

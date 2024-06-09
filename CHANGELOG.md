@@ -66,6 +66,7 @@
 - Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values.
 - Lite Mode: loading delays set to zero on this mode by default.
 - Lite mode: statistics mode feature is now disabled by default.
+- UI: SMP main menus entries (at File\...) are now cut to 50 chars in length before creating them.
 - UI: panel now tries to maintain the current position instead of centering the view on the last focused item after some actions (i.e. no "jumping"). [Issue 84](https://github.com/regorxxx/Playlist-Manager-SMP/issues/84).
 - UI: after restoring a deleted playlist within the panel, it will be highlighted.
 - UI: popups opened via contextual menus related to a playlist now show the playlist name at the window title.
