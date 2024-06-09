@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/24
+//06/06/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -351,7 +351,19 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 	return query;
 }
 
-function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
+/**
+ * Checks if a query is valid
+ *
+ * @function
+ * @name checkQuery
+ * @kind function
+ * @param {string} query
+ * @param {boolean} bAllowEmpty - If false, empty queries are non-valid
+ * @param {boolean} bAllowSort? - If false, queries with 'SORT BY' expressions are non-valid
+ * @param {boolean} bAllowPlaylist? - If false, queries with '#PLAYLIST#' expressions are non-valid
+ * @returns {boolean}
+ */
+function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
 	if (!bAllowEmpty && (!query || !query.length)) { return false; }
 	let queryNoSort = query;
@@ -372,6 +384,15 @@ function checkQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = fal
 	return bPass;
 }
 
+/**
+ * Checks if the SORT BY expression on a query string is valid.
+ *
+ * @function
+ * @name checkSort
+ * @kind function
+ * @param {string} queryOrSort
+ * @returns {boolean}
+ */
 function checkSort(queryOrSort) {
 	let bPass = true;
 	const sortObj = getSortObj(queryOrSort);
@@ -379,7 +400,15 @@ function checkSort(queryOrSort) {
 	return bPass;
 }
 
-// Must check query too to be sure it's a valid query!
+/**
+ * Strips and SORT BY expression from a query string. Must check query too to be sure it's a valid query!
+ *
+ * @function
+ * @name stripSort
+ * @kind function
+ * @param {string} query
+ * @returns {string}
+ */
 function stripSort(query) {
 	let queryNoSort = query;
 	if (query.match(/ *SORT .*$/)) {
@@ -391,6 +420,15 @@ function stripSort(query) {
 	return queryNoSort;
 }
 
+/**
+ * Process a sort or query string and outputs a sort object with direction, TF and tags
+ *
+ * @function
+ * @name getSortObj
+ * @kind function
+ * @param {string} queryOrSort
+ * @returns {{direction: number, tf: FbTitleFormat, tag: string}}
+ */
 function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIST'}
 	const query = stripSort(queryOrSort);
 	const sort = query && query.length ? queryOrSort.replace(query, '') : queryOrSort;
@@ -407,11 +445,32 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	return sortObj;
 }
 
+/**
+ * Checks if a string has any query operator
+ *
+ * @function
+ * @name hasQueryExpression
+ * @kind function
+ * @param {string} query
+ * @returns {boolean}
+ */
 function hasQueryExpression(query) {
 	return query && query.length && ['PRESENT', 'HAS', 'IS', 'LESS', 'GREATER', 'EQUAL', 'MISSING', 'BEFORE', 'AFTER', 'SINCE', 'DURING'].some((key) => query.includes(key));
 }
 
-function isQuery(query, bAllowEmpty, bAllowSort = false, bAllowPlaylist = false) {
+/**
+ * Checks if a string is valid query
+ *
+ * @function
+ * @name isQuery
+ * @kind function
+ * @param {string} query
+ * @param {boolean} bAllowEmpty - If false, empty strings are non-valid
+ * @param {boolean} bAllowSort? - If false, strings with 'SORT BY' expressions are non-valid
+ * @param {boolean} bAllowPlaylist? - If false, strings with '#PLAYLIST#' expressions are non-valid
+ * @returns {boolean}
+ */
+function isQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist = false) {
 	let bPass = true;
 	if (query && query.length) {
 		bPass = hasQueryExpression(query) && checkQuery(query, false, bAllowSort, bAllowPlaylist);
