@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/06/24
+//10/06/24
 
 /* exported _list */
 
@@ -2233,7 +2233,7 @@ function _list(x, y, w, h) {
 						this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
 						this.properties.uiElements[1] = JSON.stringify(this.uiElements);
 						overwriteProperties(this.properties);
-						this.updateUIElements(void(0), {bScroll: true});
+						this.updateUIElements(void (0), { bScroll: true });
 						return true;
 					case 'b':
 						if (getKeyboardMask() === kMask.ctrl) {
@@ -4379,7 +4379,7 @@ function _list(x, y, w, h) {
 		this.sort(void (0), true); // uses current sort state and repaint
 	};
 
-	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions = void(0)) => {
+	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions = void (0)) => {
 		const plsSel = !bSkipSel && this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		if (showMenus['Folders']) { this.collapseFolders(); }
@@ -6741,13 +6741,13 @@ function _list(x, y, w, h) {
 			data[wName] = {};
 			// Per playlist
 			const menusPls = [
-				{ type: 'load playlist', name: 'Load playlist/', description: 'Load playlist into UI.', skipExt: ['.ui'], skipProp: [] },
-				{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked'] },
-				{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked'] },
-				{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: [] },
-				{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['', '.ui'], skipProp: ['!size'] },
-				{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked'] },
-				{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked'] },
+				{ type: 'load playlist', name: 'Load playlist/', description: 'Load playlist into UI.', skipExt: ['.ui'], skipProp: ['isFolder'] },
+				{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked', 'isFolder'] },
+				{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked', 'isFolder'] },
+				{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: ['isFolder'] },
+				{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['', '.ui'], skipProp: ['!size', 'isFolder'] },
+				{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
+				{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
 			];
 			menusPls.forEach((menu) => { listExport[menu.type] = []; });
 			this.dataAll.forEach((pls, i) => {
@@ -6868,7 +6868,8 @@ function _list(x, y, w, h) {
 			const wName = window.Name;
 			let listExport = [];
 			this.dataAll.forEach((pls) => {
-				if (pls.extension === '.ui') { return; }
+				if (!this.bAllPls && pls.extension === '.ui') { return; }
+				if (pls.isFolder) { return; }
 				listExport.push(pls);
 			});
 			data[wName] = listExport;
@@ -7255,7 +7256,7 @@ function _list(x, y, w, h) {
 					this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
 					this.properties.uiElements[1] = JSON.stringify(this.uiElements);
 					overwriteProperties(this.properties);
-					this.updateUIElements(void(0), {bScroll: true});
+					this.updateUIElements(void (0), { bScroll: true });
 				}
 			}
 		},

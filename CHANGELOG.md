@@ -73,6 +73,7 @@
 - UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. Setting can be switched a the panel background selection mode submenu.
 - UI: renamed most submenus, removing '...'.
 - UI: new columns added reuse the last font, width, align and color settings used.
+- Online controllers integration: improved exporting of playlists and menu entries.
 - Helpers: updated helpers.
 - Improved compatibility when running foobar2000 on drives without recycle bin.
 ### Removed
