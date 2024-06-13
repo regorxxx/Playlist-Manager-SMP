@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/05/24
+//13/06/24
 
 /* exported _panel */
 
@@ -126,7 +126,7 @@ function _panel(customBackground = false, bSetup = false) {
 		if (this.imageBackground.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
 			id = tf.EvalWithMetadb(handle);
-			if (id === this.imageBackground.art.id) { return; }
+			if (!bForce && id === this.imageBackground.art.id) { return; }
 		}
 		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length
 			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
@@ -144,7 +144,7 @@ function _panel(customBackground = false, bSetup = false) {
 				this.imageBackground.handle = handle.RawPath;
 				this.imageBackground.art.id = id;
 			}
-			if (this.imageBackground.art.image && this.imageBackground.blur !== -1 && Number.isInteger(this.imageBackground.blur)) {
+			if (this.imageBackground.art.image && Number.isInteger(this.imageBackground.blur) && this.imageBackground.blur > 0) {
 				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
 			}
 			if (this.imageBackground.art.image) {
