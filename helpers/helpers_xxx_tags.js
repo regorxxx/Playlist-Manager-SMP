@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/06/24
+//13/06/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -485,24 +485,24 @@ function isQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist 
  * @function
  * @name getHandleTags
  * @kind function
- * @param {FbMetadbHandleList} handleList
+ * @param {FbMetadbHandle} handle
  * @param {string[]} tagsArray
  * @param {{ bMerged: boolean bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleTags(handleList, tagsArray, options = { bMerged: false, bCached: false }) {
+function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: false }) {
 	if (!isArrayStrings(tagsArray)) { return null; }
-	if (!handleList) { return null; }
+	if (!handle) { return null; }
 	options = { bMerged: false, bCached: false, ...(options || {}) };
 	const tagArrayLen = tagsArray.length;
 	const toCache = new Set(tagsArray);
 	let outputArray = new Array(tagArrayLen);
 	if (options.bCached) {
-		const values = tagsVolatileCache.get(handleList, tagsArray) || {};
+		const values = tagsVolatileCache.get(handle, tagsArray) || {};
 		for (const key in values) { outputArray[tagsArray.indexOf(key)] = values[key]; toCache.delete(key); }
 	}
 	if (outputArray.filter(Boolean).length !== tagArrayLen) {
-		const handleInfo = handleList.GetFileInfo();
+		const handleInfo = handle.GetFileInfo();
 		let i = 0;
 		while (i < tagArrayLen) {
 			let tagValues = [];
@@ -520,7 +520,7 @@ function getHandleTags(handleList, tagsArray, options = { bMerged: false, bCache
 		}
 		if (toCache.size) {
 			tagsVolatileCache.set(
-				handleList,
+				handle,
 				Object.fromEntries(outputArray.map((tag, i) => {
 					const key = tagsArray[i];
 					return toCache.has(key) ? [tagsArray[i], tag] : null;
@@ -539,7 +539,7 @@ function getHandleTags(handleList, tagsArray, options = { bMerged: false, bCache
  * @function
  * @name getHandleListTags
  * @kind function
- * @param {FbMetadbHandle} handleList
+ * @param {FbMetadbHandleList} handleList
  * @param {string[]} tagsArray
  * @param {{ bMerged: boolean bCached: boolean }} options
  * @returns {string[][]|string[]}
@@ -588,18 +588,18 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
  * @function
  * @name getHandleListTagsV2
  * @kind function
- * @param {FbMetadbHandle} handleList
+ * @param {FbMetadbHandleList} handleList
  * @param {string[]} tagsArray
  * @param {{ bMerged: boolean bEmptyVal: boolean splitBy: boolean iLimit: number bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleListTagsV2(handle, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
+function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
 	if (!isArrayStrings(tagsArray)) { return null; }
-	if (!handle) { return null; }
+	if (!handleList) { return null; }
 	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
 	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
-	let outputArrayi_length = handle.Count;
+	let outputArrayi_length = handleList.Count;
 	let outputArray = [];
 	let i = 0;
 	while (i < tagArray_length) {
@@ -618,7 +618,7 @@ function getHandleListTagsV2(handle, tagsArray, options = { bMerged: false, bEmp
 			? tagString
 			: '[' + tagString + ']';
 		let tfo = fb.TitleFormat(tagString);
-		outputArray[i] = tfo.EvalWithMetadbs(handle);
+		outputArray[i] = tfo.EvalWithMetadbs(handleList);
 		if (options.splitBy && options.splitBy.length) {
 			for (let j = 0; j < outputArrayi_length; j++) {
 				outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
@@ -642,18 +642,18 @@ function getHandleListTagsV2(handle, tagsArray, options = { bMerged: false, bEmp
  * @function
  * @name getHandleListTagsTyped
  * @kind function
- * @param {FbMetadbHandle} handleList
+ * @param {FbMetadbHandleList} handleList
  * @param {{name: string type: string}[]} tagsArray - Type: number|string
  * @param {{ bMerged: boolean bEmptyVal: boolean splitBy: boolean iLimit: number bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleListTagsTyped(handle, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
+function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
 	if (!isArray(tagsArray)) { return null; }
-	if (!handle) { return null; }
+	if (!handleList) { return null; }
 	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
 	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
-	let outputArrayi_length = handle.Count;
+	let outputArrayi_length = handleList.Count;
 	let outputArray = [];
 	let i = 0;
 	while (i < tagArray_length) {
@@ -668,7 +668,7 @@ function getHandleListTagsTyped(handle, tagsArray, options = { bMerged: false, b
 			? (options.bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]')
 			: (options.bEmptyVal ? tagName : '[' + tagName + ']');
 		let tfo = fb.TitleFormat(tagString);
-		outputArray[i] = tfo.EvalWithMetadbs(handle);
+		outputArray[i] = tfo.EvalWithMetadbs(handleList);
 		if (options.splitBy && options.splitBy.length) {
 			for (let j = 0; j < outputArrayi_length; j++) {
 				outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
