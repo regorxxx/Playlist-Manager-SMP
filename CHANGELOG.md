@@ -86,6 +86,7 @@
 - XSP: duplicates not being removed on playlist exporting + convert using SMP main dynamic menus.
 - Playlists maintenance tools: fixed handling of files without tags at Playlist revive tool, which were supposed to match by paths similarity.
 - Configuration: removed unnecessary saving of cover paths when setting any panel background option.
+- Configuration: .json files at 'foobar2000\js_data\presets\global' not being saved with the calculated properties based on user values from other files.
 - Fixed possible crash renaming UI-only playlist on main program.
 - Fixed possible crash handling web request while closing foobar2000. See [this](https://hydrogenaud.io/index.php/topic,121047.msg1044579.html#msg1044579), although current methods don't use 'WinHttp.WinHttpRequest.5.1' but 'Microsoft.XMLHTTP' which hasn't given any problems yet.
 

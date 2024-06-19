@@ -1,7 +1,7 @@
 ﻿'use strict';
-//28/05/24
+//19/06/24
 
-/* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
+/* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
 include('helpers_xxx.js');
 /* global folders:readable */
@@ -72,12 +72,12 @@ function loadUserDefFile(def) {
 								}
 							}
 						}
-					} else {bSave = true;}
+					} else { bSave = true; }
 				}
 			} else if (def._type === 'RegExp') {
 				for (const key in data) {
 					if (Object.hasOwn(def, key)) {
-						const back = {...def[key]};
+						const back = { ...def[key] };
 						def[key] = data[key];
 						if (Object.hasOwn(def[key], 're')) { // Parse RegExp from strings and make sure it's valid or use default value
 							let re, flag;
@@ -87,7 +87,7 @@ function loadUserDefFile(def) {
 							} catch (e) {
 								fb.ShowPopupMessage(
 									'There has been an error trying to parse the RegExp expression:\n' + def[key].re.toSource() +
-									'\n\nParsed as:\n' +  def[key].re +
+									'\n\nParsed as:\n' + def[key].re +
 									'\n\nExpression:\n' + re +
 									'\n\nFlag:\n' + flag +
 									'\n\nDefault value will be used:\n' + back.re.toSource()
@@ -95,57 +95,80 @@ function loadUserDefFile(def) {
 								);
 								def[key] = back;
 							}
-						} else {bSave = true;}
+						} else { bSave = true; }
 					}
 				}
 			}
+			addGlobValues(def._type);
 			if (!bSave) {
 				const defKeys = Object.keys(def).filter((key) => key !== '_type' && key !== '_file');
-				if (defKeys.length !== Object.keys(data).length) {bSave = true;}
+				const fileKeys = Object.keys(data);
+				if (defKeys.length !== fileKeys.length || defKeys.some((key) => !fileKeys.includes(key))) { bSave = true; }
 			}
 		}
-	} else {bSave = true;}
+	} else { addGlobValues(def._type); bSave = true; }
 	if (bSave) {
-		const {_type, _file, ...rest} = def; // eslint-disable-line no-unused-vars
-		_save(_file, JSON.stringify(rest, (key, value) => {return (value instanceof RegExp ? value.toSource() : value);}, '\t').replace(/\n/g,'\r\n'));
+		const { _type, _file, ...rest } = def; // eslint-disable-line no-unused-vars
+		_save(_file, JSON.stringify(rest, (key, value) => { return (value instanceof RegExp ? value.toSource() : value); }, '\t').replace(/\n/g, '\r\n'));
 	}
 }
 
 /* eslint-disable no-useless-escape */
-function addGlobTags() { // Add calculated properties
-	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
-	globTags.artist = !globTags.artistRaw.includes('%') && !globTags.artistRaw.includes('$')
-		? '%' + globTags.artistRaw + '%'
-		: globTags.artistRaw;
-	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
-	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
-	globTags.isLoved =  !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
-		? '$ifequal(%' + globTags.feedback + '%,1,1$not(0),0)'
-		: '$ifequal(' + globTags.feedback + ',1,1$not(0),0)';
-	globTags.isHated =  !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
-		? '$ifequal(%' + globTags.feedback + '%,-1,1$not(0),0)'
-		: '$ifequal(' + globTags.feedback + ',-1,1$not(0),0)';
-	globTags.isRatedTop =  !globTags.rating.includes('%') && !globTags.rating.includes('$')
-		? '$ifequal(%' + globTags.rating + '%,5,1$not(0),0)'
-		: '$ifequal(' + globTags.rating + ',5,1$not(0),0)';
-	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
-	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
-	globQuery.compareTitle = '"$stricmp(' + (!globTags.title.includes('$') ? '%' + globTags.title + '%' : globTags.title) + ',#' + globTags.title + '#)" IS 1';
-	globQuery.noFemale = 'NOT (' + globQuery.female + ')';
-	globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
-	globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
-	globQuery.liveHifi = '(' + globQuery.live + ') AND (' + globQuery.hifi + ')';
-	globQuery.noLiveNone = 'NOT (' + globQuery.live + ')';
-	globQuery.noLive = globQuery.noLiveNone + ' OR (' + globQuery.liveHifi + ')';
-	globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
-	globQuery.remDuplBias = globTags.rating +
-		'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)' +
-		'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
-		'|$add(1,' + globTags.feedback + ')' +
-		'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
-		'|%DYNAMIC RANGE%' +
-		'|' + globTags.playCount;
+
+/**
+ * Description
+ *
+ * @function
+ * @name addGlobValues
+ * @kind function
+ * @param {('tags'|'query'|'all')} type
+ * @returns {void}
+ */
+function addGlobValues(type) { // Add calculated properties
+	switch (type) {
+		case 'TF':
+			globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
+			globTags.artist = !globTags.artistRaw.includes('%') && !globTags.artistRaw.includes('$')
+				? '%' + globTags.artistRaw + '%'
+				: globTags.artistRaw;
+			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
+			globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
+			globTags.isLoved = !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
+				? '$ifequal(%' + globTags.feedback + '%,1,1$not(0),0)'
+				: '$ifequal(' + globTags.feedback + ',1,1$not(0),0)';
+			globTags.isHated = !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
+				? '$ifequal(%' + globTags.feedback + '%,-1,1$not(0),0)'
+				: '$ifequal(' + globTags.feedback + ',-1,1$not(0),0)';
+			globTags.isRatedTop = !globTags.rating.includes('%') && !globTags.rating.includes('$')
+				? '$ifequal(%' + globTags.rating + '%,5,1$not(0),0)'
+				: '$ifequal(' + globTags.rating + ',5,1$not(0),0)';
+			globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
+			globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
+			globQuery.compareTitle = '"$stricmp(' + (!globTags.title.includes('$') ? '%' + globTags.title + '%' : globTags.title) + ',#' + globTags.title + '#)" IS 1';
+			break;
+		case 'Query':
+			globQuery.noFemale = 'NOT (' + globQuery.female + ')';
+			globQuery.noInstrumental = 'NOT (' + globQuery.instrumental + ')';
+			globQuery.noAcoustic = 'NOT (' + globQuery.acoustic + ')';
+			globQuery.liveHifi = '(' + globQuery.live + ') AND (' + globQuery.hifi + ')';
+			globQuery.noLiveNone = 'NOT (' + globQuery.live + ')';
+			globQuery.noLive = globQuery.noLiveNone + ' OR (' + globQuery.liveHifi + ')';
+			globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
+			globQuery.remDuplBias = globTags.rating +
+				'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)' +
+				'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
+				'|$add(1,' + globTags.feedback + ')' +
+				'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
+				'|%DYNAMIC RANGE%' +
+				'|' + globTags.playCount;
+			break;
+		case 'All':
+			addGlobValues('tags');
+			addGlobValues('query');
+			break;
+	}
 }
+
 /* eslint-enable no-useless-escape */
 
 // Tags: user replaceable with a presets file at folders.data
@@ -235,13 +258,13 @@ const globFonts = {
 	_file: folders.userPresetsGlobal + 'globFonts.json',
 	_description: 'Fonts used by scripts at multiple places on UI. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values). The fallback font can not be changed, is forced by SMP/foobar2000.',
 	_usage: 'Most users will probably not need to touch these. Adding a not-installed font should fallback into the default one (Segoe UI). Special characters like single quotes (\') or backslash (\\) must be properly escaped.',
-	_fallback: {name: 'Segoe UI', size: 10},
-	button: {name: 'Segoe UI', size: 12},
-	buttonIcon: {name: 'FontAwesome', size: 12},
-	standard: {name: 'Segoe UI', size: 10},
-	standardSmall: {name: 'Segoe UI', size: 8},
-	standardMedium: {name: 'Segoe UI', size: 12},
-	standardBig: {name: 'Segoe UI', size: 15}
+	_fallback: { name: 'Segoe UI', size: 10 },
+	button: { name: 'Segoe UI', size: 12 },
+	buttonIcon: { name: 'FontAwesome', size: 12 },
+	standard: { name: 'Segoe UI', size: 10 },
+	standardSmall: { name: 'Segoe UI', size: 8 },
+	standardMedium: { name: 'Segoe UI', size: 12 },
+	standardBig: { name: 'Segoe UI', size: 15 }
 };
 
 // Fonts: user replaceable with a presets file at folders.data

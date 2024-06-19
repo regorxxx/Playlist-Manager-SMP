@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/04/24
+//19/06/24
 
 // Folders
 const folders = {};
@@ -56,13 +56,12 @@ console.MaxSize = 1000000; // File size, in bytes. Setting to zero or null disab
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
-/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, addGlobTags:readable */
+/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable */
 // Load user files used at helpers_xxx_global.js
 loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
 loadUserDefFile(globRegExp);
 loadUserDefFile(globSettings);
-addGlobTags();
 
 const globProfiler = globSettings.bProfileInit
 	? new FbProfiler(window.Name + ' - Global profiler')
