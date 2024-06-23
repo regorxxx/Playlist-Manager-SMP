@@ -61,15 +61,15 @@
 - Folders: new setting to select a destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu. See [this](https://github.com/regorxxx/Search-by-Distance-SMP/issues/31#issuecomment-2111061984) for more info.
 ### Changed
-- Folders: enabling or disable the folders feature should now hide/show them instead of totally deleting them from data files. Now is possible to switch temporarily to a flat view without losing the entire folder tree on the process.
+- Folders: enabling or disable the folders feature should now hide/show them instead of totally deleting them from data files. Now is possible to temporarily switch to a flat view without losing the entire folder tree on the process.
 - Remove Duplicates: improved performance of duplicates removal in multiple places.
-- Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values.
+- Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values (if present).
 - Lite Mode: loading delays set to zero on this mode by default.
 - Lite mode: statistics mode feature is now disabled by default.
 - Quick-search: pressing Ctrl allows to find the pressed chars/words at any position, equal to Shift behavior. i.e. both can be used now.
 - UI: SMP main menus entries (at File\...) are now cut to 50 chars in length before creating them.
 - UI: panel now tries to maintain the current position instead of centering the view on the last focused item after some actions (i.e. no "jumping"). [Issue 84](https://github.com/regorxxx/Playlist-Manager-SMP/issues/84).
-- UI: after restoring a deleted playlist within the panel, it will be highlighted.
+- UI:  restoring a deleted playlist within the panel will also highlight it afterwards.
 - UI: popups opened via contextual menus related to a playlist now show the playlist name at the window title.
 - UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. Setting can be switched a the panel background selection mode submenu.
 - UI: renamed most submenus, removing '...'.
@@ -80,10 +80,10 @@
 ### Removed
 ### Fixed
 - Lite mode: drag n' drop to new playlist and 'New playlist from selection' not working properly.
-- UI: merge-load not working in multiple selection if one of the playlists was empty.
-- UI: new columns missing default color.
+- UI: merge-load not working in multiple selection if one of the selected playlists was empty.
+- UI: new columns missing the default color.
 - UI: re-setting the background to use front cover did not properly disable the font shading option selected if it was already enabled.
-- UI: minor UI cosmetic fixes on double click on some buttons and switching columns view.
+- UI: minor UI cosmetic fixes on double click on some buttons or switching columns view.
 - XSP: duplicates not being removed on playlist exporting + convert using SMP main dynamic menus.
 - Playlists maintenance tools: fixed handling of files without tags at Playlist revive tool, which were supposed to match by paths similarity.
 - Configuration: removed unnecessary saving of cover paths when setting any panel background option.
