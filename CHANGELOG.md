@@ -66,6 +66,7 @@
 - Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values.
 - Lite Mode: loading delays set to zero on this mode by default.
 - Lite mode: statistics mode feature is now disabled by default.
+- Quick-search: pressing Ctrl allows to find the pressed chars/words at any position, equal to Shift behavior. i.e. both can be used now.
 - UI: SMP main menus entries (at File\...) are now cut to 50 chars in length before creating them.
 - UI: panel now tries to maintain the current position instead of centering the view on the last focused item after some actions (i.e. no "jumping"). [Issue 84](https://github.com/regorxxx/Playlist-Manager-SMP/issues/84).
 - UI: after restoring a deleted playlist within the panel, it will be highlighted.
@@ -317,7 +318,7 @@
 ## [0.8.0] - 2023-10-18
 ### Added
 - Search: fuzzy search can be enabled by adding '~' to the beginning/end of the search term (when not using RegExp). There are 2 modes, one which only works with single words (fast) and a full fledged fuzzy search for multiple word input (slower).
-- Quick-search: pressing shift allows to find the pressed chars/words at any position of the name, contrary to the default behavior which only looks at the start of the name. Popup on Quick-search has been adjusted to indicate this.
+- Quick-search: pressing Shift allows to find the pressed chars/words at any position of the name, contrary to the default behavior which only looks at the start of the name. Popup on Quick-search has been adjusted to indicate this.
 ### Changed
 - Configuration: the installation process now asks to enable the items contextual menu if desired.
 - Configuration: after changing the playlists path, a popup now asks to enable relative path handling menu entries.

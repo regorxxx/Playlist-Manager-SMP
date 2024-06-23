@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/24
+//21/06/24
 
 /* exported _list */
 
@@ -1089,6 +1089,7 @@ function _list(x, y, w, h) {
 			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
 			switch (this.lastCharsPressed.mask) { // NOSONAR
+				case kMask.ctrl:
 				case kMask.shift:
 					gr.GdiDrawText('Contains:', panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					break;
@@ -2281,16 +2282,13 @@ function _list(x, y, w, h) {
 							const bArray = isArray(pls[method]);
 							if (bArray && !pls[method].length) { return false; }
 							const val = bArray ? pls[method][0] : pls[method];
+							const type = typeof val;
 							this.lastCharsPressed.mask = getKeyboardMask();
-							if (typeof val === 'string' && val.length) {
-								return (this.lastCharsPressed.mask === kMask.shift
-									? val.toLowerCase().includes(this.lastCharsPressed.str)
-									: val.toLowerCase().startsWith(this.lastCharsPressed.str)
-								);
-							} else if (typeof val === 'number') {
-								return (this.lastCharsPressed.mask === kMask.shift
-									? val.toString().includes(this.lastCharsPressed.str)
-									: val.toString().startsWith(this.lastCharsPressed.str)
+							const bAnyPosition = this.lastCharsPressed.mask === kMask.shift || this.lastCharsPressed.mask === kMask.ctrl;
+							if (type === 'string' && val.length || type === 'number') {
+								return (bAnyPosition
+									? val.toString().toLowerCase().includes(this.lastCharsPressed.str)
+									: val.toString().toLowerCase().startsWith(this.lastCharsPressed.str)
 								);
 							} else { return false; }
 						} else { return false; }
@@ -7376,8 +7374,9 @@ function _list(x, y, w, h) {
 						(showMenus['Quick-search']
 							? '\nQuick-search:' +
 							'\n-------------------' +
-							'\nPress any letter / number to jump by current sorting' +
-							'\n(i.e. sorting by category jumps by it instead of name).' +
+							'\nPress any letter / number to jump to items matched by current sorting' +
+							'\n(i.e. sorting by category jumps by it instead of item name).' +
+							'\nPressing Shift/Ctrl matches at any position, not only from the beggining.' +
 							'\n'
 							: '') +
 						'\nDrag n\' drop (tracks):' +
