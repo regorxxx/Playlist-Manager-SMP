@@ -463,8 +463,8 @@ function createMenuLeft(forcedIndex = -1) {
 						const playlistOutPath = preset.playlistOutPath || '';
 						let pathName = playlistOutPath.length
 							? '(Fixed folder)'
-							: path.length 
-								? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) 
+							: path.length
+								? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
 								: '(Folder)';
 						const dsp = preset.dsp;
 						let dspName = (dsp !== '...' ? dsp : '(DSP)');
@@ -488,7 +488,7 @@ function createMenuLeft(forcedIndex = -1) {
 									tf,
 									preset: dsp,
 									defPath: path,
-									playlistOutPath, 
+									playlistOutPath,
 									ext: extension,
 									remDupl, // Include remDupl for XSP playlists
 									bAdvTitle: list.bAdvTitle,
@@ -3009,8 +3009,8 @@ function createMenuRightTop() {
 					const playlistOutPath = preset.playlistOutPath || '';
 					let pathName = playlistOutPath.length
 						? '(Fixed folder)'
-						: path.length 
-							? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) 
+						: path.length
+							? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
 							: '(Folder)';
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp : '(DSP)');
@@ -3031,7 +3031,7 @@ function createMenuRightTop() {
 							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
-					menu.newCheckMenuLast(() => preset.path.length);
+					menu.newCheckMenuLast(() => !!preset.path.length);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set fixed export path...', func: () => {
 							const input = Input.string('file', playlistOutPath, 'Enter output path:\n(Left it empty to set output at execution)\n\n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.', window.Name, '');
@@ -3042,7 +3042,7 @@ function createMenuRightTop() {
 							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
-					menu.newCheckMenuLast(() => playlistOutPath.length);
+					menu.newCheckMenuLast(() => !!playlistOutPath.length);
 					{
 						const subMenuNameThree = menu.newMenu('Set playlist format', subMenuNameTwo);
 						const options = ['', ...writablePlaylistFormats];
