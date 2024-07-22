@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/03/24
+//22/07/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -645,7 +645,7 @@ listenBrainz.lookupTracks = function lookupTracks(handleList, token) {
 		(resolve) => {
 			if (resolve) { // Ensure it matches the ID
 				const response = JSON.parse(resolve);
-				console.log('lookupTracks: ' + response.length + '/' + count + ' found items');
+				console.log('lookupTracks: found ' + response.length + '/' + count + ' items');
 				return response; // Response may contain fewer items than original list
 			}
 			return [];
@@ -727,7 +727,8 @@ listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
-		thisArr[i]['[recording_mbid]'] = MBIds[i];
+		// Old and new API just to be safe
+		thisArr[i]['[recording_mbid]'] = thisArr[i]['recording_mbid'] = MBIds[i];
 	});
 	return send({
 		method: 'POST',
@@ -738,7 +739,7 @@ listenBrainz.lookupTracksByMBIDs = function lookupTracksByMBIDs(MBIds, token) {
 		(resolve) => {
 			if (resolve) { // Ensure it matches the ID
 				const response = JSON.parse(resolve);
-				console.log('lookupTracksByMBIDs: ' + response.length + '/' + count + ' found items');
+				console.log('lookupTracksByMBIDs: found ' + response.length + '/' + count + ' items');
 				return response; // Response should contain same items than original list
 			}
 			return [];
@@ -788,12 +789,12 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 */
 
 // To use along listenBrainz.retrieveSimilarArtists
-listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type = 'artist', count = 50, condition = 'or') {
+listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type = 'artist', count = 50, operator = 'or', popularity = [0, 75]) {
 	const queryParams = tagsArr.map((tag) => 'tag=' + encodeURIComponent(tag.toLowerCase())).join('&')
-		+ '&condition=' + (condition || 'or');
+		+ '&operator=' + (operator || 'or');
 	return send({
 		method: 'GET',
-		URL: 'https://api.listenbrainz.org/1/lb-radio/tags?' + queryParams + '&begin_percent=0&end_percent=50&count=' + count,
+		URL: 'https://api.listenbrainz.org/1/lb-radio/tags?' + queryParams + '&pop_begin=' + popularity[0] + '&pop_end=' + popularity[1] + '&count=' + count,
 		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
 	}).then(
 		(resolve) => {
@@ -802,7 +803,7 @@ listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type =
 				if (response) {
 					if (type) {
 						if (Object.hasOwn(response, type)) {
-							console.log('getEntitiesByTag: ' + response[type].length + ' found items');
+							console.log('getEntitiesByTag: found ' + response[type].length + ' items');
 							return response[type]; // [{recording_mbid}, ...]
 						}
 						console.log('getEntitiesByTag: type not found - ' + type);
@@ -822,8 +823,8 @@ listenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type =
 };
 
 // To use along listenBrainz.retrieveSimilarArtists
-listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, count = 50, condition = 'or') {
-	return this.getEntitiesByTag(tagsArr, token, 'recording', count, condition);
+listenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, count = 50, operator = 'or', popularity = [0, 75]) {
+	return this.getEntitiesByTag(tagsArr, token, null, count, operator, popularity);
 };
 
 /*
@@ -944,7 +945,7 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 		artist_mbids,
 		(mbid) => send({
 			method: 'GET',
-			URL: 'https://api.listenbrainz.org/1/popularity/top-recordings-for-artist?artist_mbid=' + mbid,
+			URL: 'https://api.listenbrainz.org/1/popularity/top-recordings-for-artist/' + mbid,
 			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]]
 		})
 		, 5
@@ -957,7 +958,7 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 			return JSON.parse(response.value).slice(0, count);
 		}).filter(Boolean).flat(Infinity);
 	}).then((response) => {
-		console.log('getPopularRecordingsByArtist: ' + response.length + ' found items');
+		console.log('getPopularRecordingsByArtist: found ' + response.length + ' items');
 		return response; // [{artist_mbids, count, recording_mbid}, ...]
 	}).catch((reason) => {
 		console.log('getPopularRecordingsByArtist: error ' + reason);
@@ -969,11 +970,12 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 	Similarity
 */
 // Only default algorithms work
-listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid, token, algorithm = 'v1') { // May add algorithm directly or by key
-	if (!artistMbid || !artistMbid.length) { console.log('retrieveSimilarArtists: no artistMbid provided'); return Promise.resolve([]); }
+listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1') { // May add algorithm directly or by key
+	if (!artistMbids || !artistMbids.length) { console.log('retrieveSimilarArtists: no artistMbids provided'); return Promise.resolve([]); }
 	if (Object.hasOwn(this.algorithm.retrieveSimilarArtists, algorithm)) { algorithm = this.algorithm.retrieveSimilarArtists[algorithm]; }
 	const data = [{
-		'artist_mbid': artistMbid,
+		'artist_mbid': Array.isArray(artistMbids) ? artistMbids[0] : artistMbids,
+		'artist_mbids': Array.isArray(artistMbids)? artistMbids : [artistMbids],
 		'algorithm': algorithm
 	}];
 	return send({
@@ -984,10 +986,10 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 	}).then(
 		(resolve) => {
 			if (resolve) {
-				const response = (JSON.parse(resolve) || Array(4))[3];
-				if (response && Object.hasOwn(response, 'data')) {
-					console.log('retrieveSimilarArtists: ' + response.data.length + ' found items');
-					return response.data; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+				const response = JSON.parse(resolve) || [];
+				if (response && response.length) {
+					console.log('retrieveSimilarArtists: found ' + response.length + ' items');
+					return response; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
 				}
 			}
 			return [];
@@ -1000,11 +1002,12 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 };
 
 // Only default algorithm works
-listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBId, token, algorithm = 'v1') {
-	if (!recordingMBId || !recordingMBId.length) { console.log('retrieveSimilarRecordings: no recordingMBId provided'); return Promise.resolve([]); }
+listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBIds, token, algorithm = 'v1') {
+	if (!recordingMBIds || !recordingMBIds.length) { console.log('retrieveSimilarRecordings: no recordingMBIds provided'); return Promise.resolve([]); }
 	if (Object.hasOwn(this.algorithm.retrieveSimilarRecordings, algorithm)) { algorithm = this.algorithm.retrieveSimilarRecordings[algorithm]; }
 	const data = [{
-		'recording_mbid': recordingMBId,
+		'recording_mbid': Array.isArray(recordingMBIds) ? recordingMBIds[0] : recordingMBIds,
+		'recording_mbids': Array.isArray(recordingMBIds)? recordingMBIds : [recordingMBIds],
 		'algorithm': algorithm
 	}];
 	return send({
@@ -1015,10 +1018,10 @@ listenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
 	}).then(
 		(resolve) => {
 			if (resolve) {
-				const response = (JSON.parse(resolve) || Array(4))[3];
-				if (response && Object.hasOwn(response, 'data')) {
-					console.log('retrieveSimilarRecordings: ' + response.data.length + ' found items');
-					return response.data; // [{recording_mbid, recording_name, artist_credit_name, [artist_credit_mbids], caa_id, caa_release_mbid, canonical_recording_mbid, score, reference_mbid}, ...]
+				const response = JSON.parse(resolve) || [];
+				if (response.length) {
+					console.log('retrieveSimilarRecordings: found ' + response.length + ' items');
+					return response; // [{recording_mbid, recording_name, artist_credit_name, [artist_credit_mbids], caa_id, caa_release_mbid, canonical_recording_mbid, score, reference_mbid}, ...]
 				} else {
 					console.log('retrieveSimilarRecordings: No similar recordings found');
 				}
