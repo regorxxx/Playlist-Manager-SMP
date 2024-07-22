@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//22/07/24
 
 /* exported _chart */
 
@@ -739,40 +739,42 @@ function _chart({
 						points.forEach((serie, i) => {
 							serie.forEach((value, j) => {
 								const zLabel = x + (xAxisValues.indexOf(value.x) + i / this.series) * tickW;
-								let valueZ = this.configuration.bAltVerticalText ? value.z.flip() : value.z;
+								let valueZ = (this.configuration.bAltVerticalText ? value.z.flip() : value.z) || '';
 								const xTickW = gr.CalcTextWidth(valueZ, this.gFont);
-								if (this.configuration.bAltVerticalText) { // Flip chars
-									gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-									gr.DrawString(valueZ, this.gFont, xAxisColor, zLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
-									gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
-								} else {
-									const keyH = gr.CalcTextHeight(valueZ, this.gFont);
-									const img = gdi.CreateImage(xTickW, keyH);
-									const _gr = img.GetGraphics();
-									let topMax = xTickW;
-									if (this.currPoint[0] !== i || this.currPoint[1] !== j) {
-										topMax = Math.min(xTickW, value.y / maxY * (y - h));
-										if (valueZ.length > 3 && topMax > 30) {
-											if (xTickW > (topMax - this.axis.x.width - _scale(2))) {
-												const wPerChar = (xTickW / valueZ.length);
-												valueZ = valueZ.cut(Math.floor((topMax - this.axis.x.width) / (wPerChar) - 3));
-											}
-										} else { valueZ = valueZ.cut(1); }
-									} else if (this.hasToolbar && (zLabel + keyH) >= this.buttonsCoords.x()) { bHideToolbar = true; }
-									_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
-									_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-									_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
-									img.RotateFlip(RotateFlipType.Rotate90FlipXY);
-									img.ReleaseGraphics(_gr);
-									gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-									if (this.graph.type === 'timeline') {
-										const point = this.dataCoords[i][j];
-										gr.DrawImage(img, zLabel, point.y + point.h * 2 - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+								if (xTickW) {
+									if (this.configuration.bAltVerticalText) { // Flip chars
+										gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
+										gr.DrawString(valueZ, this.gFont, xAxisColor, zLabel, y - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
+										gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 									} else {
-										gr.DrawImage(img, zLabel, y - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+										const keyH = gr.CalcTextHeight(valueZ, this.gFont);
+										const img = gdi.CreateImage(xTickW, keyH);
+										const _gr = img.GetGraphics();
+										let topMax = xTickW;
+										if (this.currPoint[0] !== i || this.currPoint[1] !== j) {
+											topMax = Math.min(xTickW, value.y / maxY * (y - h));
+											if (valueZ.length > 3 && topMax > 30) {
+												if (xTickW > (topMax - this.axis.x.width - _scale(2))) {
+													const wPerChar = (xTickW / valueZ.length);
+													valueZ = valueZ.cut(Math.floor((topMax - this.axis.x.width) / (wPerChar) - 3));
+												}
+											} else { valueZ = valueZ.cut(1); }
+										} else if (this.hasToolbar && (zLabel + keyH) >= this.buttonsCoords.x()) { bHideToolbar = true; }
+										_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+										_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
+										_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+										_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
+										img.RotateFlip(RotateFlipType.Rotate90FlipXY);
+										img.ReleaseGraphics(_gr);
+										gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
+										if (this.graph.type === 'timeline') {
+											const point = this.dataCoords[i][j];
+											gr.DrawImage(img, zLabel, point.y + point.h * 2 - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+										} else {
+											gr.DrawImage(img, zLabel, y - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+										}
+										gr.SetInterpolationMode(InterpolationMode.Default);
 									}
-									gr.SetInterpolationMode(InterpolationMode.Default);
 								}
 							});
 						});
@@ -1845,7 +1847,7 @@ function _chart({
 			}
 		}
 		if (data) { this.data = data; this.dataDraw = data; this.series = data.length; }
-		if (dataAsync) { this.dataAsync = dataAsync; }
+		if (dataAsync) { this.dataAsync = dataAsync; this.data = []; this.dataDraw = []; this.series = 0; }
 		if (dataManipulation) {
 			this.dataManipulation = { ...this.dataManipulation, ...dataManipulation };
 			if (Object.hasOwn(dataManipulation, 'sort')) { this.sortKey = null; }
@@ -1892,7 +1894,7 @@ function _chart({
 			}
 		}
 		this.checkConfig();
-		if (data || dataManipulation || graph) { this.initData(); }
+		if (data || (dataManipulation || graph) && !(dataAsync || this.dataAsync)) { this.initData(); }
 		if (this.configuration.bLoadAsyncData) {
 			if (dataAsync) { this.initDataAsync(); }
 			else if (bCheckColors && this.dataAsync) { this.dataAsync.then(() => this.checkColors()); }
