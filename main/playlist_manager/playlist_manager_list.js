@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/06/24
+//05/07/24
 
 /* exported _list */
 
@@ -710,16 +710,18 @@ function _list(x, y, w, h) {
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
 			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
+			const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height);
+			const h = Math.min(panel.row_height, window.Height - y - buttonCoordinatesOne.h);
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
-				gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 50));
-				gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 30));
+				gr.DrawRect(this.x - 5, y, selWidth, h, 0, opaqueColor(this.colors.selectedPlaylist, 50));
+				gr.FillSolidRect(this.x - 5, y, selWidth, h, opaqueColor(this.colors.selectedPlaylist, 30));
 			}
 			if (this.lastCharsPressed.bDraw) { animation.bHighlight = false; }
 			if (animation.bHighlight) {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 50));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 30));
+					gr.DrawRect(this.x - 5, y, selWidth, h, 0, opaqueColor(this.colors.selectedPlaylist, 50));
+					gr.FillSolidRect(this.x - 5, y, selWidth, h, opaqueColor(this.colors.selectedPlaylist, 30));
 				}
 				animation.bHighlight = false;
 				animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
@@ -992,7 +994,9 @@ function _list(x, y, w, h) {
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, this.colors.selectedPlaylist);
+					const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height);
+					const h = Math.min(panel.row_height, window.Height - y - buttonCoordinatesOne.h);
+					gr.DrawRect(this.x - 5, y, selWidth, h, 0, this.colors.selectedPlaylist);
 				}
 			}
 		}
