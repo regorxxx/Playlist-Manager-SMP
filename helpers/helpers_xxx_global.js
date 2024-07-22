@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/24
+//06/07/24
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -158,6 +158,7 @@ function addGlobValues(type) { // Add calculated properties
 				'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)' +
 				'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
 				'|$add(1,' + globTags.feedback + ')' +
+				'|$ifgreater(%__CHANNELS%,2,0,1)' +
 				'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
 				'|%DYNAMIC RANGE%' +
 				'|' + globTags.playCount;
