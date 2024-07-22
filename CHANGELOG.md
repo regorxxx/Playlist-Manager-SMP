@@ -60,7 +60,9 @@
 ### Added
 - Folders: new setting to select a destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu. See [this](https://github.com/regorxxx/Search-by-Distance-SMP/issues/31#issuecomment-2111061984) for more info.
+- Exporting Playlists: new option to set a fixed output path (without a popup asking for it). n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.
 ### Changed
+- Exporting Playlists: changed the output path to default output path. At execution, the playlist name and extension will be appended and suggested as output via popups. When left empty, the default folder for the panel will be used instead.
 - Folders: enabling or disable the folders feature should now hide/show them instead of totally deleting them from data files. Now is possible to temporarily switch to a flat view without losing the entire folder tree on the process.
 - Remove Duplicates: improved performance of duplicates removal in multiple places.
 - Configuration: changed the remove duplicates bias to prefer lossless tracks with 16 bits per sample, 44.1 Khz sample rate and greater %DYNAMIC RANGE% values (if present).
@@ -79,11 +81,13 @@
 - Improved compatibility when running foobar2000 on drives without recycle bin.
 ### Removed
 ### Fixed
+- ListenBrainz: updated with latest ListenBrainz API changes.
 - Lite mode: drag n' drop to new playlist and 'New playlist from selection' not working properly.
 - UI: merge-load not working in multiple selection if one of the selected playlists was empty.
 - UI: new columns missing the default color.
 - UI: re-setting the background to use front cover did not properly disable the font shading option selected if it was already enabled.
 - UI: minor UI cosmetic fixes on double click on some buttons or switching columns view.
+- UI: minor UI cosmetic fixes on selection and highlight rectangle over bottom buttons in some cases.
 - XSP: duplicates not being removed on playlist exporting + convert using SMP main dynamic menus.
 - Playlists maintenance tools: fixed handling of files without tags at Playlist revive tool, which were supposed to match by paths similarity.
 - Configuration: removed unnecessary saving of cover paths when setting any panel background option.

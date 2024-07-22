@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/05/24
+//06/07/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -460,7 +460,12 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 					presets.forEach((preset) => {
 						const path = preset.path;
-						let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
+						const playlistOutPath = preset.playlistOutPath || '';
+						let pathName = playlistOutPath.length
+							? '(Fixed folder)'
+							: path.length 
+								? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) 
+								: '(Folder)';
 						const dsp = preset.dsp;
 						let dspName = (dsp !== '...' ? dsp : '(DSP)');
 						const tf = preset.tf;
@@ -483,6 +488,7 @@ function createMenuLeft(forcedIndex = -1) {
 									tf,
 									preset: dsp,
 									defPath: path,
+									playlistOutPath, 
 									ext: extension,
 									remDupl, // Include remDupl for XSP playlists
 									bAdvTitle: list.bAdvTitle,
@@ -2999,8 +3005,13 @@ function createMenuRightTop() {
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				const presets = JSON.parse(list.properties.converterPreset[1]);
 				presets.forEach((preset, i) => {
-					const path = preset.path;
-					let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
+					const path = preset.path || '';
+					const playlistOutPath = preset.playlistOutPath || '';
+					let pathName = playlistOutPath.length
+						? '(Fixed folder)'
+						: path.length 
+							? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) 
+							: '(Folder)';
 					const dsp = preset.dsp;
 					let dspName = (dsp !== '...' ? dsp : '(DSP)');
 					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
@@ -3012,7 +3023,7 @@ function createMenuRightTop() {
 					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
-							const input = Input.string('path', preset.path, 'Enter destination path:\n(Left it empty to set output folder at execution)', window.Name, '');
+							const input = Input.string('path', preset.path, 'Enter output path:\n(At execution, the playlist name and extension will be appended and suggested as output)\n\nIf left empty, the default folder for the panel will be used instead.', window.Name, '');
 							if (input === null) { return; }
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
@@ -3020,6 +3031,18 @@ function createMenuRightTop() {
 							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
+					menu.newCheckMenuLast(() => preset.path.length);
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: 'Set fixed export path...', func: () => {
+							const input = Input.string('file', playlistOutPath, 'Enter output path:\n(Left it empty to set output at execution)\n\n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.', window.Name, '');
+							if (input === null) { return; }
+							preset.playlistOutPath = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						}
+					});
+					menu.newCheckMenuLast(() => playlistOutPath.length);
 					{
 						const subMenuNameThree = menu.newMenu('Set playlist format', subMenuNameTwo);
 						const options = ['', ...writablePlaylistFormats];
