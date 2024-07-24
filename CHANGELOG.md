@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.17.0](#0170---2024-07-24)
 - [0.16.1](#0161---2024-04-26)
 - [0.16.0](#0160---2024-04-22)
 - [0.15.0](#0150---2024-03-21)
@@ -57,6 +58,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.17.0] - 2024-07-24
 ### Added
 - Folders: new setting to select a destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu. See [this](https://github.com/regorxxx/Search-by-Distance-SMP/issues/31#issuecomment-2111061984) for more info.
@@ -1247,7 +1254,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.14.1...v0.15.0
