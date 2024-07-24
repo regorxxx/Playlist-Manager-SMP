@@ -67,7 +67,7 @@
 ### Added
 - Folders: new setting to select a destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Remove Duplicates: added multi-value parsing to features related to duplicates removal. i.e. A track with multiple artists but same title can be considered a duplicated if at least one of those artists matches (instead of requiring all to match). This is used for AutoPlaylist and Smart Playlist cloning, merge-load, etc. This setting can be switched at the 'Duplicates filter...' submenu. See [this](https://github.com/regorxxx/Search-by-Distance-SMP/issues/31#issuecomment-2111061984) for more info.
-- Exporting Playlists: new option to set a fixed output path (without a popup asking for it). n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.
+- Exporting Playlists: new option to set a fixed output path (without a popup asking for it). #EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.
 ### Changed
 - Exporting Playlists: changed the output path to default output path. At execution, the playlist name and extension will be appended and suggested as output via popups. When left empty, the default folder for the panel will be used instead.
 - Folders: enabling or disable the folders feature should now hide/show them instead of totally deleting them from data files. Now is possible to temporarily switch to a flat view without losing the entire folder tree on the process.
