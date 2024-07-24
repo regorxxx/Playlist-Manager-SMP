@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/05/24
+//24/07/24
 
 /*
 	Remove duplicates
@@ -339,7 +339,7 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 			}
 		}
 	} else {
-		if (bAdvTitle) {
+		if (bAdvTitle) { // NOSONAR
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
 			const titleReV3 = globRegExp.ingVerbs.re;

@@ -1,7 +1,7 @@
 ﻿'use strict';
-//20/05/24
+//23/07/24
 
-/* exported getText, paginatedFetch */
+/* exported getText, paginatedFetch, abortWebRequests */
 
 function getText(URL) {
 	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1
@@ -108,15 +108,24 @@ function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], incre
 		});
 }
 
+function abortWebRequests(bClear = true) {
+	if (window.WebRequests) {
+		window.WebRequests.forEach((webObj) => {
+			if (webObj.Abort) { webObj.Abort(); }
+			else if (webObj.abort) { webObj.abort(); }
+		});
+		if (bClear) { window.WebRequests.clear(); }
+	}
+}
+
 // Add handling to terminate activeX objects on foobar shutdown to avoid crashes
+// If a panel error is thrown while a web request is active, the entire foobar2000
+// instance may also crash; also the activeX object seems to be dispatched a few ms
+// later than abort() is called
 if (typeof addEventListener !== 'undefined') {
 	window.WebRequests = new Set();
 	addEventListener('on_script_unload', () => {
 		window.IsUnload = true;
-		window.WebRequests.forEach((webObj) => {
-			if (webObj.Abort) {webObj.Abort();}
-			else if (webObj.abort) {webObj.abort();}
-		});
-		window.WebRequests.clear();
+		abortWebRequests();
 	});
 }
