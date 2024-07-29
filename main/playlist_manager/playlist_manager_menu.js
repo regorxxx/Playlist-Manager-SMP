@@ -176,6 +176,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (!Input.isLastEqual) {
 							list.editData(pls, {
 								sort: input,
+								modified: Date.now()
 							});
 							bDone = true;
 						}
@@ -219,7 +220,7 @@ function createMenuLeft(forcedIndex = -1) {
 								list.editData(pls, {
 									query: newQuery,
 									size: bPlaylist
-										? '?' 
+										? '?'
 										: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
 									modified: Date.now()
 								});
