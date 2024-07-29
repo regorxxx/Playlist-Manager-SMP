@@ -1054,8 +1054,8 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 					window.ID,
 					'Current preset: ' + preset + ' --> ' + tf.cut(100) + '\n\n\nEnter destination path:\n(root will be copied to clipboard)\n\n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.',
 					window.Name,
-					defPath.length 
-						? defPath + playlistNameExt 
+					defPath.length
+						? defPath + playlistNameExt
 						: list.playlistsPath + 'Export\\' + playlistNameExt,
 					true
 				)
@@ -1093,6 +1093,13 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	if (handleList) {
 		if (report.length) {
 			fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
+		}
+		if (bXSP) {
+			list.editData(pls, {
+				size: handleList.Count,
+				duration: handleList.CalcTotalDuration(),
+				trackSize: handleList.CalcTotalSize()
+			}, true); // Update size on load
 		}
 		if (handleList.Count) {
 			// Convert tracks
@@ -1153,45 +1160,52 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	// Get tracks
 	if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone; }
 	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
-	if (handleList && handleList.Count) {
-		const sortObj = pls.sort && pls.sort.length ? getSortObj(pls.sort) : null;
-		if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }
-		if (sortObj) { handleList.OrderByFormat(sortObj.tf, sortObj.direction); }
-		const subsongRegex = /,\d*$/g;
-		const paths = fb.TitleFormat('%path%').EvalWithMetadbs(handleList).map((path) => { return path.replace(subsongRegex, ''); });
-		const root = utils.SplitFilePath(newPath)[0];
-		_setClipboardData(root);
-		const report = [];
-		paths.forEach((trackPath) => { if (!_isFile(trackPath)) { report.push(trackPath); } });
-		if (report.length) {
-			fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
-		}
-		// Convert tracks
-		fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
-		// Retrieve new paths
-		const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
-		if (!isArrayStrings(fileNames)) {
-			fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
-			return bDone;
-		}
-		let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
-		if (_isFile(newPath)) { bDeleted = _recycleFile(newPath, true); }
-		// Create new playlist file when translating between different formats
-		savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM });
-		let file = _open(newPath, utf8);
-		paths.forEach((path, i) => { file = file.replace(path, fileNames[i]); });
-		if (bDeleted !== false) {
-			bDone = file && file.length ? _save(newPath, file, list.bBOM) : false; // No BOM
-			if (!bDone) {
-				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
-				if (bDeleted) { _restoreFile(newPath); } // Since it failed, may need to restore the original playlist back to the folder!
+	if (handleList) {
+		list.editData(pls, {
+			size: handleList.Count,
+			duration: handleList.CalcTotalDuration(),
+			trackSize: handleList.CalcTotalSize()
+		}, true); // Update size on load
+		if (handleList.Count) {
+			const sortObj = pls.sort && pls.sort.length ? getSortObj(pls.sort) : null;
+			if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }
+			if (sortObj) { handleList.OrderByFormat(sortObj.tf, sortObj.direction); }
+			const subsongRegex = /,\d*$/g;
+			const paths = fb.TitleFormat('%path%').EvalWithMetadbs(handleList).map((path) => { return path.replace(subsongRegex, ''); });
+			const root = utils.SplitFilePath(newPath)[0];
+			_setClipboardData(root);
+			const report = [];
+			paths.forEach((trackPath) => { if (!_isFile(trackPath)) { report.push(trackPath); } });
+			if (report.length) {
+				fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
 			}
-		} else {
-			fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-			return bDone;
+			// Convert tracks
+			fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
+			// Retrieve new paths
+			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
+			if (!isArrayStrings(fileNames)) {
+				fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
+				return bDone;
+			}
+			let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
+			if (_isFile(newPath)) { bDeleted = _recycleFile(newPath, true); }
+			// Create new playlist file when translating between different formats
+			savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM });
+			let file = _open(newPath, utf8);
+			paths.forEach((path, i) => { file = file.replace(path, fileNames[i]); });
+			if (bDeleted !== false) {
+				bDone = file && file.length ? _save(newPath, file, list.bBOM) : false; // No BOM
+				if (!bDone) {
+					fb.ShowPopupMessage('Playlist generation failed while writing file \'' + newPath + '\'.', window.Name);
+					if (bDeleted) { _restoreFile(newPath); } // Since it failed, may need to restore the original playlist back to the folder!
+				}
+			} else {
+				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
+				return bDone;
+			}
+			if (bOpenOnExport) { _explorer(newPath); }
+			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 		}
-		if (bOpenOnExport) { _explorer(newPath); }
-		console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 	}
 	return bDone;
 }

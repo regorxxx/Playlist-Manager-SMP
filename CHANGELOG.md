@@ -60,6 +60,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- AutoPlaylist: AutoPlaylists are now refreshed when exporting them, updating the cached size, duration, etc.
+- XSP: Smart Playlists are now refreshed when exporting them, updating the cached size, duration, etc.
 ### Removed
 ### Fixed
 - AutoPlaylist: creation and modification date not being added properly to AutoPlaylists.
