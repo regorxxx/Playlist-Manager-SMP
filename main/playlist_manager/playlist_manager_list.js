@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/07/24
+//29/07/24
 
 /* exported _list */
 
@@ -5693,6 +5693,7 @@ function _list(x, y, w, h) {
 		const trackSize = hasSize && hasQuery && pls.query === newQuery
 			? pls.trackSize
 			: handleList.CalcTotalSize();
+		const now = Date.now();
 		const objectPlaylist = new PlaylistObj({
 			id: UUID,
 			name: newName,
@@ -5703,7 +5704,9 @@ function _list(x, y, w, h) {
 			tags: hasTags ? pls.tags : [],
 			trackTags: hasTrackTags ? pls.trackTags : [],
 			duration,
-			trackSize
+			trackSize,
+			created: now,
+			modified: now
 		});
 		// Auto-Tags
 		if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }
@@ -5786,6 +5789,7 @@ function _list(x, y, w, h) {
 			if (Number.isNaN(newLimit)) { return null; }
 			if (!Number.isFinite(newLimit)) { newLimit = 0; }
 		}
+		const now = Date.now();
 		const playlistPath = this.playlistsPath + sanitize(newName) + '.xsp';
 		const objectPlaylist = new PlaylistObj({
 			id: UUID,
@@ -5800,7 +5804,9 @@ function _list(x, y, w, h) {
 			limit: newLimit,
 			duration,
 			trackSize,
-			type: 'songs'
+			type: 'songs',
+			created: now,
+			modified: now
 		});
 		// Auto-Tags
 		if (this.bAutoLockTag && objectPlaylist.tags.indexOf('bAutoLock') === -1) { objectPlaylist.tags.push('bAutoLock'); }

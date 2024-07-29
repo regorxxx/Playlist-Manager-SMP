@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/24
+//29/07/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -184,6 +184,7 @@ function createMenuLeft(forcedIndex = -1) {
 							if (bSortForced !== pls.bSortForced) {
 								list.editData(pls, {
 									bSortForced,
+									modified: Date.now()
 								});
 								bDone = true;
 							}
@@ -217,7 +218,10 @@ function createMenuLeft(forcedIndex = -1) {
 							if (bDone) {
 								list.editData(pls, {
 									query: newQuery,
-									size: bPlaylist ? '?' : fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
+									size: bPlaylist
+										? '?' 
+										: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
+									modified: Date.now()
 								});
 								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 								list.filter();
@@ -235,6 +239,7 @@ function createMenuLeft(forcedIndex = -1) {
 							if (bDone) {
 								list.editData(pls, {
 									limit: input,
+									modified: Date.now()
 								});
 								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 								list.filter();

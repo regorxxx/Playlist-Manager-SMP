@@ -62,6 +62,8 @@
 ### Changed
 ### Removed
 ### Fixed
+- AutoPlaylist: creation and modification date not being added properly to AutoPlaylists.
+- XSP: creation and modification date not being added properly to Smart Playlists.
 
 ## [0.17.0] - 2024-07-24
 ### Added
