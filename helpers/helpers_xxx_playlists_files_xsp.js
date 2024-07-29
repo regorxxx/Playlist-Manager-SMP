@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/24
+//26/07/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -430,6 +430,7 @@ XSP.getRules = function (querySort) {
 };
 
 XSP.getRule = function (query) {
+	/** @type {{operator:string, field:string, value: any[]}|{operator:string, filed:string, value: any[]}[]} */
 	let rule = { operator: '', field: '', value: [] };
 	if (Array.isArray(query)) { rule = query.map((q) => { return this.getRule(q); }); }
 	else {
@@ -510,7 +511,7 @@ XSP.getRule = function (query) {
 if (typeof queryJoin === 'undefined') {
 	const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
 	// Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
-	var queryJoin = function (queryArray, setLogic) { // NOSONAR
+	var queryJoin = function (queryArray, setLogic = 'AND') { // NOSONAR
 		setLogic = (setLogic || '').toUpperCase();
 		if (logicDic.indexOf(setLogic) === -1) {
 			console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');

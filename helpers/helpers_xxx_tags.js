@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/24
+//26/07/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -34,6 +34,7 @@ const cyclicTagsDescriptor = {
 };
 // Add here the external files required for cyclic tags
 // This tells the helper to load tags descriptors extra files. False by default
+/** * @type {boolean} */
 var bLoadTags; // NOSONAR
 if (bLoadTags) {
 	let externalPath = [
@@ -123,8 +124,8 @@ function sanitizeTagValIds(val, bSpace = true) {
  * @kind function
  * @param {string} query
  * @param {FbMetadbHandle} handle
- * @param {{string: string}} tags - If no handle is provided, evaluates TF expression looking for 'strTF' property at the object
- * @param {{ bToLowerCase: boolean bDebug: boolean }} options - bToLowerCase: value from #strTF# will use lowercase
+ * @param {{string?: string}} tags - If no handle is provided, evaluates TF expression looking for 'strTF' property at the object
+ * @param {{ bToLowerCase: boolean, bDebug: boolean }} options - bToLowerCase: value from #strTF# will use lowercase
  * @returns {?string}
  */
 function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerCase: false, bDebug: false }) {
@@ -135,9 +136,9 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 	let bStatic = false;
 	if (/#MONTH#|#YEAR#|#DAY#/g.test(query)) {
 		const date = new Date();
-		query = query.replace(/#MONTH#/g, date.getMonth() + 1);
-		query = query.replace(/#YEAR#/g, date.getFullYear());
-		query = query.replace(/#DAY#/g, date.getDate());
+		query = query.replace(/#MONTH#/g, (date.getMonth() + 1).toString());
+		query = query.replace(/#YEAR#/g, date.getFullYear().toString());
+		query = query.replace(/#DAY#/g, date.getDate().toString());
 		bStatic = true;
 	}
 	// With handle
@@ -164,7 +165,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 		if (options.bDebug) { console.log(startQuery, '-', endQuery); }
 		if (count % 2 === 0) { // Must be on pairs of 2
 			let tempQuery = '';
-			let tfo = '', tfoVal = '';
+			let /** @type {FbTitleFormat|string} */ tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
 				const tagKey = tfo;
@@ -224,7 +225,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
  * @name queryJoin
  * @kind function
  * @param {string[]} queryArray - Array of queries created by {@link queryCombinations}
- * @param {string} setLogic - May be: AND|OR|AND NOT|OR NOT
+ * @param {string} setLogic - [='AND'] May be: AND|OR|AND NOT|OR NOT
  * @returns {string|undefined}
  *  @example
  * // Returns '(ARTIST IS A OR ARTIST IS B) OR (TITLE IS A OR TITLE IS B)'
@@ -233,7 +234,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
  * 	, 'OR'
  * );
  */
-function queryJoin(queryArray, setLogic) {
+function queryJoin(queryArray, setLogic = 'AND') {
 	setLogic = (setLogic || '').toUpperCase();
 	if (logicDic.indexOf(setLogic) === -1) {
 		console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
@@ -302,12 +303,13 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 		let i = 0;
 		let queryArray = [];
 		while (i < queryKeyLength) {
-			queryArray.push(queryCombinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match));
+			queryArray.push(/** @type {string} */(queryCombinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match)));
 			i++;
 		}
 		return queryArray;
 	}
 	let tagsArrayLength = tagsArray.length;
+	/** @type {string|string[]} */
 	let query = '';
 	let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
 	if (!isArray) { //no subtagsArrays
@@ -318,9 +320,9 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 		let i = 0;
 		while (i < tagsArrayLength) {
 			if (i === 0) {
-				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[0]);
+				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */ (tagsArray[0]));
 			} else {
-				query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i]);
+				query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[i]));
 			}
 			i++;
 		}
@@ -380,7 +382,7 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 			catch (e) { bPass = false; }
 		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
 	}
-	if (!bAllowPlaylist && queryNoSort && queryNoSort.match(/.*#(PLAYLIST|playlist)# IS.*/)) { bPass = false; }
+	if (!bAllowPlaylist && queryNoSort && RegExp(/.*#(PLAYLIST|playlist)# IS.*/).exec(queryNoSort)) { bPass = false; }
 	return bPass;
 }
 
@@ -411,10 +413,10 @@ function checkSort(queryOrSort) {
  */
 function stripSort(query) {
 	let queryNoSort = query;
-	if (query.match(/ *SORT .*$/)) {
-		if (query.match(/ *SORT BY .*$/)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
-		else if (query.match(/ *SORT DESCENDING BY .*$/)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
-		else if (query.match(/ *SORT ASCENDING BY .*$/)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
+	if (RegExp(/ *SORT .*$/).exec(query)) {
+		if (RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
+		else if (RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
+		else if (RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
 		else { queryNoSort = ''; }
 	}
 	return queryNoSort;
@@ -427,18 +429,19 @@ function stripSort(query) {
  * @name getSortObj
  * @kind function
  * @param {string} queryOrSort
- * @returns {{direction: number, tf: FbTitleFormat, tag: string}}
+ * @returns {{direction: number, tf: FbTitleFormat, tag: string}|null}
  */
 function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIST'}
 	const query = stripSort(queryOrSort);
 	const sort = query && query.length ? queryOrSort.replace(query, '') : queryOrSort;
+	/** @type {{direction?:number|string, tf?:FbTitleFormat, tag?:string}} */
 	let sortObj = null;
 	if (sort.length) {
 		sortObj = {};
 		[sortObj.direction, sortObj.tag] = sort.split(/(?: BY )(.*$)/i);
-		if (!sortObj.tag || !sortObj.tag.length || !sortObj.tag.match(/\w+$/) && !sortObj.tag.match(/"*\$.+\(.*\)"*$|%.+%$/)) { sortObj = null; }
-		else if (sortObj.direction.match(/SORT$|SORT ASCENDING$/)) { sortObj.direction = 1; }
-		else if (sortObj.direction.match(/SORT DESCENDING$/)) { sortObj.direction = -1; }
+		if (!sortObj.tag || !sortObj.tag.length || !RegExp(/\w+$/).exec(sortObj.tag) && !RegExp(/"*\$.+\(.*\)"*$|%.+%$/).exec(sortObj.tag)) { sortObj = null; }
+		else if (RegExp(/SORT$|SORT ASCENDING$/).exec(sortObj.direction)) { sortObj.direction = 1; }
+		else if (RegExp(/SORT DESCENDING$/).exec(sortObj.direction)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
 	}
 	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
@@ -487,7 +490,7 @@ function isQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist 
  * @kind function
  * @param {FbMetadbHandle} handle
  * @param {string[]} tagsArray
- * @param {{ bMerged: boolean bCached: boolean }} options
+ * @param {{ bMerged: boolean, bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
 function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: false }) {
@@ -541,7 +544,7 @@ function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: f
  * @kind function
  * @param {FbMetadbHandleList} handleList
  * @param {string[]} tagsArray
- * @param {{ bMerged: boolean bCached: boolean }} options
+ * @param {{ bMerged: boolean, bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
 function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bCached: false }) {
@@ -549,6 +552,7 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 	if (!handleList) { return null; }
 	options = { bMerged: false, bCached: false, ...(options || {}) };
 	const tagArray_length = tagsArray.length;
+	/** @type {any[]|any[][]} */
 	let outputArray = [];
 	let i = 0;
 	let tagString = '';
@@ -590,7 +594,7 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
  * @kind function
  * @param {FbMetadbHandleList} handleList
  * @param {string[]} tagsArray
- * @param {{ bMerged: boolean bEmptyVal: boolean splitBy: boolean iLimit: number bCached: boolean }} options
+ * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, iLimit: number, bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
 function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
@@ -600,6 +604,7 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handleList.Count;
+	/** @type {any[]|any[][]} */
 	let outputArray = [];
 	let i = 0;
 	while (i < tagArray_length) {
@@ -643,9 +648,9 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
  * @name getHandleListTagsTyped
  * @kind function
  * @param {FbMetadbHandleList} handleList
- * @param {{name: string type: string}[]} tagsArray - Type: number|string
- * @param {{ bMerged: boolean bEmptyVal: boolean splitBy: boolean iLimit: number bCached: boolean }} options
- * @returns {string[][]|string[]}
+ * @param {{name: string, type: string}[]} tagsArray - Type: number|string
+ * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, iLimit: number, bCached: boolean }} options
+ * @returns {string[][]|string[]|number[][]|number[]}
  */
 function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
 	if (!isArray(tagsArray)) { return null; }
@@ -654,6 +659,7 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
 	let outputArrayi_length = handleList.Count;
+	/** @type {any[]|any[][]} */
 	let outputArray = [];
 	let i = 0;
 	while (i < tagArray_length) {
