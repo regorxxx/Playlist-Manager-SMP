@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.18.0](#0180---2024-07-30)
 - [0.17.0](#0170---2024-07-24)
 - [0.16.1](#0161---2024-04-26)
 - [0.16.0](#0160---2024-04-22)
@@ -59,10 +60,17 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.18.0] - 2024-07-30
+### Added
 - Exporting Playlists: new 'Export and convert' preset for FiiO devices. Uses a SD card named 'external_sd1', but adjust as desired.
 ### Changed
 - AutoPlaylist: AutoPlaylists are now refreshed when exporting them, updating the cached size, duration, etc.
 - XSP: Smart Playlists are now refreshed when exporting them, updating the cached size, duration, etc.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - AutoPlaylist: creation and modification date not being added properly to AutoPlaylists.
@@ -1259,7 +1267,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.15.0...v0.16.0
@@ -1314,4 +1323,4 @@
 [0.2.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/623c80a...v0.1.0
+[0.1.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/623c80a...v0.1.07
