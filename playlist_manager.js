@@ -140,13 +140,14 @@ let properties = {
 	bAutoTrackTagAutoPls: ['Auto-tagging for AutoPlaylists', false, { func: isBoolean }, false],
 	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false, { func: isBoolean }, false],
 	converterPreset: ['Converter Preset list', JSON.stringify([
-		{ name: '', dsp: '...', tf: '.\\%FILENAME%.mp3', path: '', extension: '' }, // Export all at same folder
-		{ name: '', dsp: '...', tf: '.\\' + _t(globTags.artist) + '\\%ALBUM%\\%TRACK% - %TITLE%.mp3', path: '', extension: '' }, // Transfer library
-		{ name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', extension: '.m3u' }, // Kodi-like library
-		{ name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%album%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u' }, // Kodi-like library
-		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on different folder than music
-		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on same root than music (without a folder)
-		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', extension: '.m3u8' } // Foobar2000 mobile, playlists on same folder than music
+		{ name: '', dsp: '...', tf: '.\\%FILENAME%.mp3', path: '', playlistOutPath: '', extension: '' }, // Export all at same folder
+		{ name: '', dsp: '...', tf: '.\\' + _t(globTags.artist) + '\\%ALBUM%\\%TRACK% - %TITLE%.mp3', path: '', playlistOutPath: '', extension: '' }, // Transfer library
+		{ name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', playlistOutPath: '', extension: '.m3u' }, // Kodi-like library
+		{ name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%album%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u' }, // Kodi-like library
+		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on different folder than music
+		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '',extension: '.m3u8' }, // Foobar2000 mobile, playlists on same root than music (without a folder)
+		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on same folder than music
+		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\$trim($replace($ascii($replace($if($meta_test(ALBUM ARTIST),$meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,-)\\$replace(%ALBUM%,\\,-)\\%TRACK% - $replace(%TITLE%,\\,-)),:,, ?\\,,?,,¿,,/,-,\'$\',,\'%\',,# ,,#,,*,,!,,¡,,|,-,",\'\'\'\',<,,>,,^,,... ,,...,)).mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8' } // FiiO music
 	])],
 	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }, true],
 	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }, false],
@@ -315,9 +316,9 @@ let properties = {
 		playlistCache: 6000,
 	})],
 	statusIcons: ['Playlist status icons', JSON.stringify({
-		active: {enabled: true, string: String.fromCharCode(8226) /* • */, offset: false},
-		playing: {enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false},
-		loaded: {enabled: true, string: String.fromCharCode(187) /* » */, offset: true}
+		active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: false },
+		playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
+		loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true }
 	})],
 	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }, false],
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone])],
@@ -597,7 +598,7 @@ if (!list.properties.bSetup[1]) {
 			if (!pop.isEnabled()) { pop.enable(true, 'Updating...', 'Loading playlists...\nPanel will be disabled during the process.'); }
 			const z = list.offset + Math.round(list.rows / 2 - 1);
 			list.cacheLastPosition(z);
-			list.update({bReuseData: false, bNotPaint: true, currentItemIndex: z});
+			list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: z });
 			// Updates with current filter (instead of showing all files when something changes) and maintains focus on last selected item
 			list.filter();
 			list.jumpLastPosition();
@@ -1092,7 +1093,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlists_changed', () => {
 		if (!list.bInit) { return; }
 		if (list.bAllPls) { // For UI only playlists
-			list.update({bReuseData: true, bNotPaint: true});
+			list.update({ bReuseData: true, bNotPaint: true });
 			const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
 			list.filter({ categoryState });
 		}

@@ -59,6 +59,7 @@
 
 ## [Unreleased][]
 ### Added
+- Exporting Playlists: new 'Export and convert' preset for FiiO devices. Uses a SD card named 'external_sd1', but adjust as desired.
 ### Changed
 - AutoPlaylist: AutoPlaylists are now refreshed when exporting them, updating the cached size, duration, etc.
 - XSP: Smart Playlists are now refreshed when exporting them, updating the cached size, duration, etc.
