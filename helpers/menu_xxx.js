@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/07/24
+//30/07/24
 
 /* exported _menu, _attachedMenu */
 
@@ -294,6 +294,24 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		);
 	};
 	/**
+	 * Appends an stromg to the last menu entry added. Works with entries whose names are static or provided by functions.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name appendToLast
+	 * @param {string|function} text - String to append. May also be a function returning a text.
+	 * @returns {boolean}
+	 */
+	this.appendToLast = (text) => {
+		const lastEntry = this.getLastEntry();
+		if (lastEntry) {
+			const lastName = lastEntry.entryText;
+			lastEntry.entryText = () => (isFunction(lastName) ? lastName() : lastName) + (isFunction(text) ? String(text()) : text);
+			return true;
+		}
+		return false;
+	};
+	/**
 	 * Adds a forced bullet check to the last menu entry added.
 	 *
 	 * Shorthand for .newCheckMenu(menuName, entryTextA, entryTextA, () => 0))
@@ -319,15 +337,37 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @param {string} indicator - [='⬅'] String to append if 'boolFunc' returns true. It's appended by adding '\t' first.
 	 * @returns {boolean}
 	 */
-	this.addIndicatorNameLast = (boolFunc = () => true, indicator = '⬅') => {
-		const lastEntry = this.getLastEntry();
-		if (lastEntry) {
-			const lastName = lastEntry.entryText;
-			lastEntry.entryText = () => (isFunction(lastName) ? lastName() : lastName) + (boolFunc() ? '\t' + indicator : '');
-			return true;
-		}
-		return false;
+	this.addIndicatorNameLast = (boolFunc = () => true, indicator = '⬅') => this.appendToLast(() => boolFunc() ? '\t' + indicator : '');
+	/**
+	 * Joins multiple strings preced by a tab (\t), meant to be used on menu entries as tips or show a value.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name tip
+	 * @param {...string} args - Strings to join.
+	 * @returns {string}
+	 */
+	this.tip = (...args) => {
+		let tip = '';
+		args.forEach((arg) => {
+			if (arg === null || typeof arg === 'undefined') { return; } else { arg = String(arg); }
+			if (arg.length) {
+				if (!tip.length) {tip += '\t'; }
+				tip += arg;
+			}
+		});
+		return tip;
 	};
+	/**
+	 * Adds a tip to last entry, joining multiple strings preced by a tab (\t).
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name addTipLast
+	 * @param {...string} args - Strings to join.
+	 * @returns {boolean}
+	 */
+	this.addTipLast = (...args) => this.appendToLast(this.tip(...args));
 	/**
 	 * Used to create dynamic menus only when calling the menu, useful to check for tracks selection, etc. You may use any other method like .newMenu(), .newEntry(), etc. within condFunc. Thus creating menus only if required at init.
 	 *
@@ -345,11 +385,11 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	};
 
 	// <-- Internal
-	this.getMenu = (menuName) => { return (!menuName) ? menuMap : menuMap.get(menuName); };
-	this.getIdx = (menuNameEntryText) => { return (!menuNameEntryText) ? entryMap : entryMap.get(menuNameEntryText); };
-	this.getEntry = (idx) => { return (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx); };
-	this.getEntryFunc = (idx) => { return (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx); };
-	this.getCheckMenu = (menuName) => { return (!menuName) ? checkMenuMap : checkMenuMap.get(menuName); };
+	this.getMenu = (menuName) => !menuName ? menuMap : menuMap.get(menuName);
+	this.getIdx = (menuNameEntryText) => !menuNameEntryText ? entryMap : entryMap.get(menuNameEntryText);
+	this.getEntry = (idx) => (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);
+	this.getEntryFunc = (idx) => (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx);
+	this.getCheckMenu = (menuName) => !menuName ? checkMenuMap : checkMenuMap.get(menuName);
 	this.resetIds = () => invsId(void (0), true);
 
 	this.createMenu = (menuName = menuArr[0].menuName) => {
@@ -756,7 +796,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	// Crashing the panel when web requests are active may crash the entire foobar2000 instance
 	// As a workaround, the script tries to abort all request first and then throws the error after some ms
 	function throwError(message) {
-		if (!bThrowErrors) {return;}
+		if (!bThrowErrors) { return; }
 		const requests = window.WebRequests;
 		if (requests && requests.size && typeof abortWebRequests !== 'undefined') {
 			abortWebRequests(false);
