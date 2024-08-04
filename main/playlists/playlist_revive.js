@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/24
+//04/08/24
 
 /*
 	Playlist Revive
@@ -74,7 +74,7 @@ function playlistRevive({
 				if (values.has(tag)) { return true; }
 				else { values.add(tag); return false; }
 			});
-		}).flat();
+		}).flat().filter((s) => s !== '.');
 		queryArr.push(tagsArr.length // Don't report missing tags for items without tags...
 			? queryCombinations(tagsArr, tagName, 'OR')
 			: ''
@@ -172,7 +172,7 @@ function playlistRevive({
 			!bExact && libraryItemsArr.forEach((handleLibr, indexLibr) => {
 				if (bExact) { return; } // No need to continue then
 				const tag = tags[3][index][0], tagLibr = tagsLibrary[3][indexLibr][0];
-				if (tag.length && tagLibr.length && tag === tagLibr) { bExact = true; }
+				if (tag.length && tagLibr.length && tag === tagLibr && tag !== '.') { bExact = true; }
 				if (bExact && !alternativesSet.has(indexLibr)) {
 					alternativesSet.add(indexLibr);
 					alternativesObj.push({ idx: indexLibr, simil: 100, bExact });
@@ -182,7 +182,7 @@ function playlistRevive({
 			!bExact && libraryItemsArr.forEach((handleLibr, indexLibr) => {
 				if (bExact) { return; } // No need to continue then
 				const tag = tags[4][index][0], tagLibr = tagsLibrary[4][indexLibr][0];
-				if (tag.length && tagLibr.length && tag === tagLibr) { bExact = true; }
+				if (tag.length && tagLibr.length && tag === tagLibr && tag !== '.') { bExact = true; }
 				if (bExact && !alternativesSet.has(indexLibr)) {
 					alternativesSet.add(indexLibr);
 					alternativesObj.push({ idx: indexLibr, simil: 100, bExact });
