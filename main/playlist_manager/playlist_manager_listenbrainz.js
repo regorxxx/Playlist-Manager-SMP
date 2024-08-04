@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/24
+//02/08/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -117,7 +117,7 @@ listenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, b
 	const missingCount = missingIds.length;
 	if (bLookupMBIDs && missingCount) {
 		const missingHandleList = new FbMetadbHandleList(missingIds.map((idx) => { return handleList[idx]; }));
-		const missingMBIDs = await this.lookupArtistMBIDs(missingHandleList, token);
+		const missingMBIDs = await this.lookupArtistMBIDs(missingHandleList, token, bAlbumArtist);
 		if (missingMBIDs.length) {
 			missingMBIDs.forEach((mbid, i) => {
 				const idx = missingIds[i];
@@ -144,7 +144,7 @@ listenBrainz.joinArtistMBIDs = async function joinArtistMBIDs(artists, MBIds, to
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
 		results[i] = { artists: [] };
-		thisArr[i]['[artist_mbid]'] = results[i].mbid = MBIds[i];
+		thisArr[i]['[artist_mbid]'] = results[i].mbid = Array.isArray(MBIds[i]) ? MBIds[i][0] : MBIds[i];
 	});
 	return send({
 		method: 'POST',
@@ -624,17 +624,17 @@ listenBrainz.getUserFeedback = async function getUserFeedback(user, params = {/*
 /*
 	Tracks info
 */
-listenBrainz.lookupTracks = function lookupTracks(handleList, token) {
+listenBrainz.lookupTracks = function lookupTracks(handleList, token, bAlbumArtist = true) {
 	const bList = handleList instanceof FbMetadbHandleList;
 	const count = bList ? handleList.Count : handleList[0].length;
 	if (!count) { console.log('lookupTracks: no tracks provided'); return Promise.resolve([]); }
 	if (!bList && count !== handleList[1].length) { console.log('lookupTracks: no tags provided'); return Promise.resolve([]); }
-	const [artist, title] = bList ? getHandleListTagsV2(handleList, ['ARTIST', 'TITLE']) : handleList;
+	const [artist, title] = bList ? getHandleListTagsV2(handleList, [bAlbumArtist ? 'ALBUM ARTIST' :'ARTIST', 'TITLE']) : handleList;
 	const data = new Array(count).fill({});
 	data.forEach((_, i, thisArr) => {
 		thisArr[i] = {};
-		thisArr[i]['[artist_credit_name]'] = artist[i].join(', ');
-		thisArr[i]['[recording_name]'] = title[i].join(', ');
+		thisArr[i]['artist_credit_name'] = thisArr[i]['[artist_credit_name]'] = artist[i].join(', ');
+		thisArr[i]['recording_name'] = thisArr[i]['[recording_name]'] = title[i].join(', ');
 	});
 	return send({
 		method: 'POST',
@@ -703,8 +703,8 @@ listenBrainz.lookupMBIDs = function lookupMBIDs(handleList, token) { // Shorthan
 	);
 };
 
-listenBrainz.lookupArtistMBIDs = function lookupArtistMBIDs(handleList, token) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
-	return this.lookupTracks(handleList, token).then(
+listenBrainz.lookupArtistMBIDs = function lookupArtistMBIDs(handleList, token, bAlbumArtist = true) { // Shorthand for lookupRecordingInfo when looking for 'recording_mbid'
+	return this.lookupTracks(handleList, token, bAlbumArtist).then(
 		(resolve) => {
 			if (resolve.length) {
 				const count = handleList instanceof FbMetadbHandleList ? handleList.Count : handleList[0].length;
@@ -758,7 +758,7 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 	if (!count) { console.log('lookupRecordingInfoByMBIDs: no MBIds provided'); return Promise.resolve({}); }
 	const allInfo = [
 		'recording_mbid', 'recording_name', 'length', 'artist_credit_id',
-		'artist_credit_name', '[artist_credit_mbids]',
+		'artist_credit_name', 'artist_credit_mbids',
 		'canonical_recording_mbid', 'original_recording_mbid'
 	];
 	if (!infoNames || !infoNames.length) { infoNames = allInfo; }
@@ -970,12 +970,12 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 	Similarity
 */
 // Only default algorithms work
-listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1') { // May add algorithm directly or by key
+listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1', bRetry = true) { // May add algorithm directly or by key
 	if (!artistMbids || !artistMbids.length) { console.log('retrieveSimilarArtists: no artistMbids provided'); return Promise.resolve([]); }
 	if (Object.hasOwn(this.algorithm.retrieveSimilarArtists, algorithm)) { algorithm = this.algorithm.retrieveSimilarArtists[algorithm]; }
 	const data = [{
 		'artist_mbid': Array.isArray(artistMbids) ? artistMbids[0] : artistMbids,
-		'artist_mbids': Array.isArray(artistMbids)? artistMbids : [artistMbids],
+		'artist_mbids': Array.isArray(artistMbids) ? artistMbids : [artistMbids],
 		'algorithm': algorithm
 	}];
 	return send({
@@ -987,9 +987,15 @@ listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 		(resolve) => {
 			if (resolve) {
 				const response = JSON.parse(resolve) || [];
-				if (response && response.length) {
-					console.log('retrieveSimilarArtists: found ' + response.length + ' items');
-					return response; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+				if (response) {
+					const count = response.length;
+					if (count < 5 && bRetry && (algorithm !== 'v2' || algorithm !==  this.algorithm.retrieveSimilarArtists.v2)) {
+						console.log('retrieveSimilarArtists: not enough items found, retrying with v2 algorithm');
+						return this.retrieveSimilarArtists(artistMbids, token, 'v2', false);
+					} else if (count) {
+						console.log('retrieveSimilarArtists: found ' + count + ' items');
+						return response; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
+					}
 				}
 			}
 			return [];

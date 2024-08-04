@@ -64,6 +64,7 @@
 ### Removed
 ### Fixed
 - Playlists maintenance tools: fixed handling of files with tags showing '.' as value at Playlist revive tool, being reported as exact matches in some cases.
+- API: updated with latest ListenBrainz API changes.
 
 ## [0.18.0] - 2024-07-30
 ### Added
