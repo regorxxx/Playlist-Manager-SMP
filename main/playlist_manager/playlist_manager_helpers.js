@@ -847,11 +847,14 @@ function clonePlaylistFile(list, z, ext, toFolder) {
 	const handleList = !bUI
 		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
-	const paths = !bUI ? getFilePathsFromPlaylist(pls.path) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList);
+	const paths = !bUI
+		? getFilePathsFromPlaylist(pls.path)
+		: fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
+	const subsongRegex = /,\d*$/g;
 	paths.forEach((trackPath) => {
-		if (!testPath(trackPath, list.playlistsPath) && !_isLink(trackPath)) { report.push(trackPath); }
+		if (!testPath(trackPath.replace(subsongRegex, ''), list.playlistsPath) && !_isLink(trackPath)) { report.push(trackPath); }
 	});
 	if (handleList) {
 		if (report.length) { fb.ShowPopupMessage('Failed when cloning playlist to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name); }
@@ -1078,7 +1081,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	const subsongRegex = /,\d*$/g;
 	const paths = !bUI && !bXSP
 		? getFilePathsFromPlaylist(playlistPath)
-		: fb.TitleFormat('%PATH%').EvalWithMetadbs(handleList);
+		: fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(newPath)[0];
 	_setClipboardData(root);
 	const report = [];
@@ -1173,11 +1176,11 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }
 			if (sortObj) { handleList.OrderByFormat(sortObj.tf, sortObj.direction); }
 			const subsongRegex = /,\d*$/g;
-			const paths = fb.TitleFormat('%path%').EvalWithMetadbs(handleList).map((path) => { return path.replace(subsongRegex, ''); });
+			const paths = fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
 			const root = utils.SplitFilePath(newPath)[0];
 			_setClipboardData(root);
 			const report = [];
-			paths.forEach((trackPath) => { if (!_isFile(trackPath)) { report.push(trackPath); } });
+			paths.forEach((trackPath) => { if (!_isFile(trackPath.replace(subsongRegex, ''))) { report.push(trackPath); } });
 			if (report.length) {
 				fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
 			}
