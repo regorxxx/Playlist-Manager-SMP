@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/07/24
+//05/08/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -1076,19 +1076,21 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle, bMultiple })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const subsongRegex = /,\d*$/g;
-	const paths = (!bUI && !bXSP ? getFilePathsFromPlaylist(playlistPath) : fb.TitleFormat('%path%').EvalWithMetadbs(handleList)).map((path) => { return path.replace(subsongRegex, ''); });
+	const paths = !bUI && !bXSP
+		? getFilePathsFromPlaylist(playlistPath)
+		: fb.TitleFormat('%PATH%').EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(newPath)[0];
 	_setClipboardData(root);
 	const report = [];
 	if (bUI) {
 		const newHandleList = new FbMetadbHandleList();
-		paths.forEach((trackPath, i) => { if (!_isFile(trackPath)) { report.push(trackPath); } else { newHandleList.Add(handleList[i]); } });
+		paths.forEach((trackPath, i) => { if (!_isFile(trackPath.replace(subsongRegex, ''))) { report.push(trackPath); } else { newHandleList.Add(handleList[i]); } });
 		if (report.length) { // Omit not found
 			handleList.RemoveAll();
 			handleList.AddRange(newHandleList);
 		}
 	} else {
-		paths.forEach((trackPath) => { if (!_isFile(trackPath)) { report.push(trackPath); } });
+		paths.forEach((trackPath) => { if (!_isFile(trackPath.replace(subsongRegex, ''))) { report.push(trackPath); } });
 	}
 	if (handleList) {
 		if (report.length) {

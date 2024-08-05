@@ -63,6 +63,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- Subsongs: fixed path handling for tracks with subsongs when using 'Export and convert'. Indexes were being added at the output playlist (like my track.mp3,16), instead of being removed (since the converted tracks are always individual files). Seems to be a long time bug, which was not fixed previously and went unnoticed because the tracks were converted fine with proper paths (but the playlist did not point to the file).
 - Playlists maintenance tools: fixed handling of files with tags showing '.' as value at Playlist revive tool, being reported as exact matches in some cases.
 - API: updated with latest ListenBrainz API changes.
 
