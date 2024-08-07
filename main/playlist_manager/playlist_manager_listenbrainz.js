@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/08/24
+//06/08/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -969,10 +969,24 @@ listenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
 /*
 	Similarity
 */
-// Only default algorithms work
+/**
+ * Output similar artists (based on listening sessions) to the ones provided by MBIDs
+ *
+ * @property
+ * @async
+ * @function
+ * @name retrieveSimilarArtists
+ * @kind method
+ * @memberof listenBrainz
+ * @param {string[]} artistMbids - Array of artist MBIDs
+ * @param {('v1'|'v2')} algorithm - [='v1'] see {@link listenBrainz.algorithm.retrieveSimilarArtists} for further information
+ * @param {string} token - ListenBrainz user token
+ * @param {boolean} bRetry - [=true] Tries v2 algorithm is the lookup doesnt return at least 5 results
+ * @returns {Promise<{ {artist_mbid: string, comment:string, gender: string, name: string, reference_mbid: string, score: number, type: string }[]}>}
+ */
 listenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1', bRetry = true) { // May add algorithm directly or by key
 	if (!artistMbids || !artistMbids.length) { console.log('retrieveSimilarArtists: no artistMbids provided'); return Promise.resolve([]); }
-	if (Object.hasOwn(this.algorithm.retrieveSimilarArtists, algorithm)) { algorithm = this.algorithm.retrieveSimilarArtists[algorithm]; }
+	if (Object.hasOwn(this.algorithm.retrieveSimilarArtists, algorithm.toLowerCase())) { algorithm = this.algorithm.retrieveSimilarArtists[algorithm.toLowerCase()]; }
 	const data = [{
 		'artist_mbid': Array.isArray(artistMbids) ? artistMbids[0] : artistMbids,
 		'artist_mbids': Array.isArray(artistMbids) ? artistMbids : [artistMbids],
