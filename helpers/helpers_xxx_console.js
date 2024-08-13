@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/04/24
+//09/08/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -162,7 +162,7 @@ console.popup = (arg, popupName, bPopup = true, bSplit = true) => {
 if (console.File && console.File.length && console.MaxSize && console.log) {
 	const oldLog = console.log;
 	console.logUI = function () {
-		const args = [...arguments].map((arg) => console.formatArg(arg));
+		const args = Array.from(arguments, (arg) => console.formatArg(arg));
 		oldLog(...args);
 	};
 	console.log = function () {

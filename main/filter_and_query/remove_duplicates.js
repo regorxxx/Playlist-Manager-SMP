@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/07/24
+//09/08/24
 
 /*
 	Remove duplicates
@@ -465,7 +465,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 
 	let set = new Set();
 	if (bMultiple) {
-		const dics = [...new Array(checkLength)].map(() => new Set());
+		const dics = Array.from({ length: checkLength }, () => new Set());
 		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
 		let i = 0;
 		if (bAdvTitle) {

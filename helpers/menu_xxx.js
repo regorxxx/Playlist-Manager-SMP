@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/07/24
+//09/08/24
 
 /* exported _menu, _attachedMenu */
 
@@ -352,7 +352,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		args.forEach((arg) => {
 			if (arg === null || typeof arg === 'undefined') { return; } else { arg = String(arg); }
 			if (arg.length) {
-				if (!tip.length) {tip += '\t'; }
+				if (!tip.length) { tip += '\t'; }
 				tip += arg;
 			}
 		});
@@ -506,7 +506,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		entryArr.forEach((entry) => {
 			if (Object.hasOwn(entry, 'condFunc') && entry.condFunc) { // Create menu
 				if (bindArgs !== null) {
-					if (bindArgs.pos >= 1) { entry.condFunc(...[...Array(bindArgs.pos)].map(() => void (0)), bindArgs.args); }
+					if (bindArgs.pos >= 1) { entry.condFunc(...Array.from({ length: bindArgs.pos }, () => void (0)), bindArgs.args); }
 					else { entry.condFunc(bindArgs.args); }
 				} else { entry.condFunc(); }
 			}
@@ -627,7 +627,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 					this.clear(); // Needed to not recreate conditional entries on recursive calls!
 					if (bExecute) {
 						if (bindArgs !== null) {
-							if (bindArgs.pos >= 1) { func(...[...Array(bindArgs.pos)].map(() => void (0)), bindArgs.args); }
+							if (bindArgs.pos >= 1) { func(...Array.from({ length: bindArgs.pos }, () => void (0)), bindArgs.args); }
 							else { func(bindArgs.args); }
 						} else { func(); }
 					}

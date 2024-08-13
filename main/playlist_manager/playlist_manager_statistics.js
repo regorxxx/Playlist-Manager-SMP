@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/01/24
+//09/08/24
 
 /* exported _listStatistics */
 
@@ -559,7 +559,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						else { count.set(subVal, count.get(subVal) + 1); }
 					});
 				});
-				data = [[...count].map((point) => { return { x: point[0], y: point[1] }; })];
+				data = [Array.from(count, (point) => { return { x: point[0], y: point[1] }; })];
 				break;
 			}
 		}
@@ -616,8 +616,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		];
 		rows = newConfig.length;
 		columns = newConfig[0].length;
-		nCharts = new Array(rows).fill(1).map(() => { return new Array(columns).fill(1); }).map((row, i) => {
-			return row.map((cell, j) => {
+		nCharts = Array.from({length: rows}, (row, i) => {
+			return Array.from({length: columns}, (cell, j) => {
 				const w = window.Width / columns;
 				const h = window.Height / rows * (i + 1);
 				const x = w * j;

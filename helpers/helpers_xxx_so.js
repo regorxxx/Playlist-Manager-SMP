@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/03/24
+//09/08/24
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -61,7 +61,7 @@ function getSoFeatures() {
 	const soArchFile = folders.temp + 'soArch.txt';
 	if (!utils.IsFile(soArchFile)) {
 		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
-		const run = function () { try { WshShell.Run([...arguments].map((arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } };
+		const run = function () { try { WshShell.Run(Array.from(arguments, (arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } };
 		run(soBat, soArchFile);
 	}
 	if (utils.IsFile(soArchFile) && !(utils.ReadTextFile(soArchFile) || '').startsWith('x64')) { soFeat.x64 = false; }

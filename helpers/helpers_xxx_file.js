@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/06/24
+//09/08/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
@@ -416,7 +416,7 @@ function getFiles(folderPath, extensionSet) {
 
 function _run() {
 	try {
-		WshShell.Run([...arguments].map((arg) => _q(arg)).join(' '));
+		WshShell.Run(Array.from(arguments, (arg) => _q(arg)).join(' '));
 		return true;
 	} catch (e) {
 		return false;
@@ -425,7 +425,7 @@ function _run() {
 
 function _runHidden() {
 	try {
-		WshShell.Run([...arguments].map((arg) => _q(arg)).join(' '), 0, true);
+		WshShell.Run(Array.from(arguments, (arg) => _q(arg)).join(' '), 0, true);
 		return true;
 	} catch (e) {
 		return false;
