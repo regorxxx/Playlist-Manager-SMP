@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.18.1](#0181---2024-08-13)
 - [0.18.0](#0180---2024-07-30)
 - [0.17.0](#0170---2024-07-24)
 - [0.16.1](#0161---2024-04-26)
@@ -63,8 +64,17 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [0.18.1] - 2024-08-13
+### Added
+### Changed
+- Helpers: updated helpers.
+### Removed
+### Fixed
 - Subsongs: fixed path handling for tracks with subsongs when using 'Export and convert'. Indexes were being added at the output playlist (like my track.mp3,16), instead of being removed (since the converted tracks are always individual files). Seems to be a long time bug, which was not fixed previously and went unnoticed because the tracks were converted fine with proper paths (but the playlist did not point to the file).
 - Playlists maintenance tools: fixed handling of files with tags showing '.' as value at Playlist revive tool, being reported as exact matches in some cases.
+- Playlist Manager Path: disk checking not working properly when setting the playlists folder via menus.
+- Relative paths: relative path handling not working properly -on saving- if tracks were not on the same disk than the playlist file. Now it uses absolute paths in such cases.
 - API: updated with latest ListenBrainz API changes.
 
 ## [0.18.0] - 2024-07-30
@@ -1270,7 +1280,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.0...v0.16.1
