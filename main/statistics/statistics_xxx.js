@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/24
+//12/08/24
 
 /* exported _chart */
 
@@ -113,6 +113,7 @@ function _chart({
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
+		const pointType = (this.graph.point || 'circle').toLowerCase();
 		serie.forEach((value, j) => {
 			valH = value.y / maxY * (y - h);
 			const xPoint = x + xAxisValues.indexOf(value.x) * tickW;
@@ -121,21 +122,14 @@ function _chart({
 			if (bFocused) {
 				gr.FillSolidRect(xPoint - selBar / 2, yPoint, selBar, valH, borderColor);
 			}
-			if (!this.graph.point || this.graph.point.toLowerCase() === 'circle') {
-				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth / 2, w: selBar, h: valH };
-				const paintPoint = (color) => {
-					gr.DrawEllipse(xPoint - this.graph.borderWidth / 2, yPoint - this.graph.borderWidth / 2, this.graph.borderWidth, this.graph.borderWidth, this.graph.borderWidth, color);
-				};
-				paintPoint(color);
-				if (bFocused) { paintPoint(borderColor); }
-			} else if (this.graph.point.toLowerCase() === 'circumference') {
+			if (pointType === 'circumference') {
 				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth / 2, w: selBar, h: valH };
 				const paintPoint = (color) => {
 					gr.DrawEllipse(xPoint - this.graph.borderWidth * 2 / 3, yPoint - this.graph.borderWidth * 2 / 3, this.graph.borderWidth * 4 / 3, this.graph.borderWidth * 4 / 3, this.graph.borderWidth / 2, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
-			} else if (this.graph.point.toLowerCase() === 'cross') {
+			} else if (pointType === 'cross') {
 				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth, w: selBar, h: valH };
 				const paintPoint = (color) => {
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint - this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, this.graph.borderWidth / 2, color);
@@ -143,7 +137,7 @@ function _chart({
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
-			} else if (this.graph.point.toLowerCase() === 'plus') {
+			} else if (pointType === 'plus') {
 				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth, w: selBar, h: valH };
 				const paintPoint = (color) => {
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint, xPoint + this.graph.borderWidth, yPoint, this.graph.borderWidth / 2, color);
@@ -151,12 +145,19 @@ function _chart({
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
-			} else if (this.graph.point.toLowerCase() === 'triangle') {
+			} else if (pointType === 'triangle') {
 				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth, w: selBar, h: valH };
 				const paintPoint = (color) => {
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, this.graph.borderWidth / 2, color);
 					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth / 8, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
 					gr.DrawLine(xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint - this.graph.borderWidth / 8, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
+				};
+				paintPoint(color);
+				if (bFocused) { paintPoint(borderColor); }
+			} else { // circle
+				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth / 2, w: selBar, h: valH };
+				const paintPoint = (color) => {
+					gr.DrawEllipse(xPoint - this.graph.borderWidth / 2, yPoint - this.graph.borderWidth / 2, this.graph.borderWidth, this.graph.borderWidth, this.graph.borderWidth, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
@@ -342,20 +343,21 @@ function _chart({
 		this.dataCoords = this.dataDraw.map(() => { return []; });
 		let x, y, w, h, xOffsetKey, yOffsetKey;
 		let bHideToolbar;
-		const bgColor = this.configuration.bDynColor && this.callbacks.config.backgroundColor
+		const bDynColor = this.configuration.bDynColor && this.callbacks.config.backgroundColor;
+		const bgColor = bDynColor
 			? this.configuration.bDynColorBW
 				? invert(this.callbacks.config.backgroundColor()[0], true)
 				: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
 			: this.background.color;
-		const xAxisColor = bgColor || this.axis.x.color;
+		const xAxisColor = bDynColor ? bgColor : this.axis.x.color || bgColor;
 		const xAxisColorInverted = xAxisColor === this.axis.x.color
 			? xAxisColor
 			: this.configuration.bDynColorBW
 				? bgColor
 				: invert(xAxisColor, true);
-		const yAxisColor = bgColor || this.axis.y.color;
-		const xGridColor = bgColor || this.grid.x.color;
-		const yGridColor = bgColor || this.grid.y.color;
+		const yAxisColor = bDynColor ? bgColor : this.axis.y.color || bgColor;
+		const xGridColor = bDynColor ? bgColor : this.grid.x.color || bgColor;
+		const yGridColor = bDynColor ? bgColor : this.grid.y.color || bgColor;
 		// Max Y value for all series
 		let maxY = 0, minY = 0;
 		this.dataDraw.forEach((serie) => {
@@ -992,7 +994,9 @@ function _chart({
 				size.x = point.x;
 				size.y = point.y;
 				size.w = point.w;
-				size.h = point.h;
+				size.h = this.graph.type === 'timeline'
+					? point.h * 2
+					: point.h;
 			}
 		}
 		if (bWithOffset) {
@@ -2025,7 +2029,13 @@ function _chart({
 		if (this.dataManipulation.probabilityPlot) { this.dataManipulation.probabilityPlot = this.dataManipulation.probabilityPlot.replace('–', '-'); }
 		const pPlot = this.dataManipulation.probabilityPlot ? this.dataManipulation.probabilityPlot.toLowerCase() : null;
 		const dist = this.dataManipulation.distribution ? this.dataManipulation.distribution.toLowerCase() : null;
+		const pointType = this.graph.point ? this.graph.point.toLowerCase() : null;
 		let bPass = true;
+		if (pointType && !['circle', 'circumference', 'cross', 'plus', 'triangle'].includes(pointType)) {
+			this.graph.point = 'circle';
+			console.log('Statistics: not recognized point type ' + _p(pointType) + '.');
+			bPass = false;
+		}
 		if (!this.graph.multi) {
 			this.axis.z = {};
 		}
