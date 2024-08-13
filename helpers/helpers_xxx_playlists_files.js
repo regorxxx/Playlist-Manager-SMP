@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/24
+//13/08/24
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -447,7 +447,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 						let line = originalText[j].trim();
 						if (line.length) {
 							let path = line; // PATH
-							if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
+							if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
 							paths.push(path);
 						}
 					}
@@ -459,7 +459,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 					if (originalText[j].startsWith('File')) { // Spaces are not allowed on variable no need to trim
 						// Path may contain '=' so get anything past first '='
 						let path = originalText[j].split('=').slice(1).join('='); // fileX=PATH
-						if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
+						if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
 						paths.push(path);
 					}
 				}
@@ -483,7 +483,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 							} catch (e) {
 								path = loc;
 							}
-							if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
+							if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
 							if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
 								const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 								if (metaSubSong) { path += ',' + metaSubSong.subSong; }
@@ -522,7 +522,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 					} catch (e) {
 						path = row.location;
 					}
-					if (!_isLink(path)) {path = path.replace(/\//g, '\\');}
+					if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
 					if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for DVDs
 						const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 						if (metaSubSong) { path += ',' + metaSubSong.subSong; }
@@ -669,14 +669,16 @@ function getRelPaths(pathArr, relPath = '') {
 }
 
 function getRelPath(itemPath, relPathSplit) {
-	let cache = '';
-	relPathSplit.forEach((folder) => {
-		const level = new RegExp(escapeRegExp(folder) + '\\\\', 'i');
-		cache = itemPath.replace(level, '');
-		if (itemPath === cache) { itemPath = '..\\' + cache; }
-		else { itemPath = cache; }
-	});
-	if (!itemPath.startsWith('..\\')) { itemPath = '.\\' + itemPath; }
+	if ((itemPath.match(/^\w:/g) || [''])[0].toLowerCase() === relPathSplit[0].toLowerCase()) { // Compare disks
+		let cache = '';
+		relPathSplit.forEach((folder) => {
+			const level = new RegExp(escapeRegExp(folder) + '\\\\', 'i');
+			cache = itemPath.replace(level, '');
+			if (itemPath === cache) { itemPath = '..\\' + cache; }
+			else { itemPath = cache; }
+		});
+		if (!itemPath.startsWith('..\\')) { itemPath = '.\\' + itemPath; }
+	}
 	return itemPath;
 }
 
@@ -738,10 +740,10 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				const queryPlaylists = XSP.getQueryPlaylists(jsp);
 				// From playlist manager or loaded playlists
 				const toIncludeHandle = typeof list !== 'undefined'
-					? list.getHandleFromPlaylists(queryPlaylists.is, void(0), bLog) // eslint-disable-line no-undef
+					? list.getHandleFromPlaylists(queryPlaylists.is, void (0), bLog) // eslint-disable-line no-undef
 					: getHandlesFromUIPlaylists(queryPlaylists.is);
 				const toExcludeHandle = typeof list !== 'undefined'
-					? list.getHandleFromPlaylists(queryPlaylists.isnot, void(0), bLog) // eslint-disable-line no-undef
+					? list.getHandleFromPlaylists(queryPlaylists.isnot, void (0), bLog) // eslint-disable-line no-undef
 					: getHandlesFromUIPlaylists(queryPlaylists.isnot);
 				// Difference
 				toIncludeHandle.Sort();
@@ -868,7 +870,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 						if (Object.hasOwn(row, key) && row[key]) {
 							const keyVal = subKey
 								? Array.isArray(row[key]) // Meta is an array of objects
-									? (row[key].find((obj) => Object.hasOwn(obj,subKey)) || {})[subKey] || ''
+									? (row[key].find((obj) => Object.hasOwn(obj, subKey)) || {})[subKey] || ''
 									: ''
 								: row[key]; // Array or single value
 							const bMultiple = Array.isArray(keyVal);
@@ -913,7 +915,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				}
 			}
 		}
-		pathsNotFound = [...notFound].map((idx) => { return filePaths[idx]; });
+		pathsNotFound = Array.from(notFound, (idx) => filePaths[idx]);
 		if (playlistLength) {
 			if (count === playlistLength) {
 				if (bLog) { console.log(playlistPath.split('\\').pop() + ': found all tracks on library.'); } // DEBUG
