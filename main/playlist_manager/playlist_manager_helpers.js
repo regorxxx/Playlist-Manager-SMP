@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/08/24
+//09/08/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -1463,7 +1463,7 @@ function backup(n = 50, bAsync = false) { // Backup playlist and json file
 			_recycleFile(files.pop(), true);
 		}
 	}
-	const playlistFilesMask = [...loadablePlaylistFormats].map((ext) => { return list.playlistsPath + '*' + ext; }); // Ext already has a .
+	const playlistFilesMask = Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext); // Ext already has a .
 	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip', bAsync);
 	test.Print();
 	return true;
