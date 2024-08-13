@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/24
+//13/08/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
 
@@ -2275,7 +2275,7 @@ function createMenuRightTop() {
 				list.properties['playlistPath'][1] = input;
 				list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
 				list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
-				list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase;
+				list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 				// Tracking network drive?
 				if (mappedDrives.indexOf(list.playlistsPath.match(/^(.+?:)/g)[0]) !== -1) {
 					if (!list.properties['bNetworkPopup'][1]) { list.properties['bNetworkPopup'][1] = true; }
