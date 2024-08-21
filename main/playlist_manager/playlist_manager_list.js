@@ -6630,7 +6630,7 @@ function _list(x, y, w, h) {
 					const defKeys = new Set(Object.keys(defEl.elements));
 					const newKeys = new Set(Object.keys(newEl.elements));
 					newKeys.difference(defKeys).forEach((subKey) => {
-						delete newEl.elements[subKey]
+						delete newEl.elements[subKey];
 					});
 					defKeys.difference(newKeys).forEach((subKey) => {
 						newEl.elements[subKey] = defEl.elements[subKey];
