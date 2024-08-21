@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/08/24
+//21/08/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -4054,6 +4054,7 @@ function createMenuRightTop() {
 					const keys = list.bLiteMode
 						? Object.keys(subElement.elements).filter((subKey) => subKey !== 'Folder')
 						: Object.keys(subElement.elements);
+					keys.sort((a, b) => subElement.elements[a].position - subElement.elements[b].position);
 					const bCanHideSettings = (subKey) => {
 						if (!list.uiElements['Search filter'].enabled) { return true; }
 						else if (subKey === 'Settings menu') { return Object.hasOwn(subElement.elements, 'Power actions') && subElement.elements['Power actions'].enabled; }
