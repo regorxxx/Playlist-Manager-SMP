@@ -1,9 +1,9 @@
 ﻿'use strict';
-//29/07/24
+//21/08/24
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
+/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable */
 include('..\\window\\window_xxx_input.js');
@@ -294,12 +294,16 @@ function _list(x, y, w, h) {
 		this.h = panel.h - this.y;
 		this.index = 0;
 		this.offset = 0;
-		if (oldH > 0 && this.h > 0) { yOffset = (_scale(6) + panel.row_height / 4) * (this.h / oldH); }
-		this.rows = Math.floor((this.h - _scale(this.uiElements['Up/down buttons'].enabled ? 24 : 12) - yOffset) / panel.row_height); // 24
+		if (oldH > 0 && this.h > 0) { yOffset = (_scale(1) + panel.row_height / 4) * (this.h / oldH); }
+		const hOffset =  _scale(this.uiElements['Up/down buttons'].enabled
+			? (this.uiElements['Bottom toolbar'].enabled ? 24 : 12)
+			: (this.uiElements['Bottom toolbar'].enabled ? 12 : 4)
+		);
+		this.rows = Math.floor((this.h - hOffset - yOffset) / panel.row_height); // 24
 		this.up_btn.x = this.x + Math.round((this.w - _scale(12)) / 2);
 		this.down_btn.x = this.up_btn.x;
 		this.up_btn.y = this.y + _scale(1);
-		this.down_btn.y = this.y + this.h - _scale(12) - buttonCoordinatesOne.h; // Accommodate space for buttons!
+		this.down_btn.y = this.y + this.h - _scale(12) - (this.uiElements['Bottom toolbar'].enabled ? buttonCoordinatesOne.h : 0); // Accommodate space for buttons!
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
 		this.jumpLastPosition(options);
@@ -515,10 +519,12 @@ function _list(x, y, w, h) {
 						w: 0,
 						h: 0
 					},
-					{	// Reset Filters
-						parent: this.uiElements['Header buttons'].elements['Reset filters'].enabled ? this.headerButtons.resetFilters : null,
-						position: this.uiElements['Header buttons'].elements['Reset filters'].position,
-						icon: chars.close,
+					{	// Filter and sorting
+						parent: this.uiElements['Header buttons'].elements['Filter and sorting'].enabled ? this.headerButtons.resetFilters : null,
+						position: this.uiElements['Header buttons'].elements['Filter and sorting'].position,
+						icon: this.headerButtons.resetFilters.altColor(void (0), void (0), void (0), this.headerButtons.resetFilters)
+							? chars.close
+							: chars.filter,
 						color: this.headerButtons.resetFilters.inFocus
 							? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
 							: blendColors(panel.colors.headerButtons, panelBgColor, 0.1),
@@ -660,8 +666,12 @@ function _list(x, y, w, h) {
 		const panelBgColor = panel.getColorBackground();
 		// Header
 		const [lineY, lineColor] = this.paintHeader(gr, this.modeUI);
-		// Art background
-		panel.paintImage(gr, { w: window.Width, h: this.h - buttonCoordinatesOne.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2 });
+		// Art
+		if (this.uiElements['Bottom toolbar'].enabled) {
+			panel.paintImage(gr, { w: window.Width, h: this.h - buttonCoordinatesOne.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2 });
+		} else {
+			panel.paintImage(gr, { w: window.Width, h: this.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2 });
+		}
 		// Line
 		if (lineY > 0) { gr.DrawLine(0, lineY, panel.w, lineY, 1, lineColor); }
 		// Empty Panel
@@ -711,7 +721,7 @@ function _list(x, y, w, h) {
 			const currSelIdx = idxHighlight;
 			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
 			const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height);
-			const h = Math.min(panel.row_height, window.Height - y - buttonCoordinatesOne.h);
+			const h = Math.min(panel.row_height, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? buttonCoordinatesOne.h : 0));
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
 				gr.DrawRect(this.x - 5, y, selWidth, h, 0, opaqueColor(this.colors.selectedPlaylist, 50));
@@ -995,7 +1005,7 @@ function _list(x, y, w, h) {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
 					const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height);
-					const h = Math.min(panel.row_height, window.Height - y - buttonCoordinatesOne.h);
+					const h = Math.min(panel.row_height, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? buttonCoordinatesOne.h : 0));
 					gr.DrawRect(this.x - 5, y, selWidth, h, 0, this.colors.selectedPlaylist);
 				}
 			}
@@ -6611,6 +6621,29 @@ function _list(x, y, w, h) {
 			this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
 			bDone = true;
 		}
+		for (let key in this.uiElements) {
+			const newEl = this.uiElements[key];
+			const defEl = uiELementsDef[key];
+			const bMissingSubs = Object.hasOwn(defEl, 'elements') && !isArrayEqual(Object.keys(newEl.elements || {}), Object.keys(defEl.elements));
+			if (!isArrayEqual(Object.keys(newEl), Object.keys(defEl)) || bMissingSubs) {
+				if (bMissingSubs) {
+					const defKeys = new Set(Object.keys(defEl.elements));
+					const newKeys = new Set(Object.keys(newEl.elements));
+					newKeys.difference(defKeys).forEach((subKey) => {
+						delete newEl.elements[subKey]
+					});
+					defKeys.difference(newKeys).forEach((subKey) => {
+						newEl.elements[subKey] = defEl.elements[subKey];
+					});
+				} else {
+					for (let subKey in defEl) {
+						newEl[subKey] = defEl[subKey];
+					}
+				}
+				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
+				bDone = true;
+			}
+		}
 		const headerButtons = this.uiElements['Header buttons'].elements;
 		const headerButtonsDef = uiELementsDef['Header buttons'].elements;
 		if (!isArrayEqual(Object.keys(headerButtons), Object.keys(headerButtonsDef))) {
@@ -7225,16 +7258,29 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false, text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				const filters = this.getFilter(true);
 				const filterKeys = Object.keys(filters);
-				let info = 'Reset all filters...';
+				const bFilter = filterKeys.length;
+				let info = bFilter ? 'Reset all filters...' : 'Filter and sorting menu...';
 				info += '\n----------------------------------------------\n';
-				info += filterKeys.length
+				info += '(Shift + L. Click to cycle current filter)\n';
+				info += bFilter ? '(Ctrl + L. Click to open filter and sorting menu)\n' : '';
+				info += '----------------------------------------------\n';
+				info += bFilter
 					? 'Active:\t' + filterKeys.joinEvery(', ', 3, '\n\t')
 					: 'No active filters.';
 				if (filters.Search && !this.searchMethod.bResetFilters) {
 					info += '\nSearch filter set to be ommited.';
 				}
 				return info;
-			}, func: this.resetFilter,
+			}, func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
+				if (getKeyboardMask() === kMask.shift) {
+					const buttonKey = 'filterOneButton';
+					buttonsPanel.buttons[buttonKey].func();
+				} else {
+					return Object.keys(this.getFilter(true)).length && getKeyboardMask() !== kMask.ctrl
+						? this.resetFilter()
+						: createMenuFilterSorting().btn_up(x, y);
+				}
+			},
 			altColor: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				const filterKeys = Object.keys(this.getFilter(true));
 				return this.bInit && this.itemsAll > 0 && (this.searchMethod.bResetFilters

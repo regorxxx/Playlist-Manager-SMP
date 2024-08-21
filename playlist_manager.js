@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/08/24
+//19/08/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -145,7 +145,7 @@ let properties = {
 		{ name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', playlistOutPath: '', extension: '.m3u' }, // Kodi-like library
 		{ name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%album%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u' }, // Kodi-like library
 		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on different folder than music
-		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '',extension: '.m3u8' }, // Foobar2000 mobile, playlists on same root than music (without a folder)
+		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on same root than music (without a folder)
 		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on same folder than music
 		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\$trim($replace($ascii($replace($if($meta_test(ALBUM ARTIST),$meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,-)\\$replace(%ALBUM%,\\,-)\\%TRACK% - $replace(%TITLE%,\\,-)),:,, ?\\,,?,,¿,,/,-,\'$\',,\'%\',,# ,,#,,*,,!,,¡,,|,-,",\'\'\'\',<,,>,,^,,... ,,...,)).mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8' } // FiiO music
 	])],
@@ -252,11 +252,12 @@ let properties = {
 		'Search filter': { enabled: true },
 		'Columns': { enabled: true },
 		'Up/down buttons': { enabled: false },
+		'Bottom toolbar': { enabled: true },
 		'Header buttons': {
 			enabled: true, elements:
 			{
 				'Power actions': { enabled: true, position: 0 },
-				'Reset filters': { enabled: true, position: 1 },
+				'Filter and sorting': { enabled: true, position: 1 },
 				'Switch columns': { enabled: true, position: 2 },
 				'List menu': { enabled: true, position: 3 },
 				'Settings menu': { enabled: true, position: 4 },
@@ -773,14 +774,14 @@ if (!list.properties.bSetup[1]) {
 			if (window.debugPainting) { window.drawDebugRectAreas(gr); }
 			return;
 		}
-		if (panel.imageBackground.bTint) {
+		if (panel.imageBackground.bTint && list.uiElements['Bottom toolbar'].enabled) {
 			panel.paintImage(
 				gr,
 				{ w: window.Width, h: buttonCoordinatesOne.h, x: 0, y: buttonCoordinatesOne.y(), offsetH: _scale(1) },
 				{ transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
 			);
 		}
-		on_paint_buttn(gr);
+		if (list.uiElements['Bottom toolbar'].enabled) { on_paint_buttn(gr); }
 		list.paint(gr);
 		if (scroll) {
 			scroll.rows = Math.max(list.items - list.rows, 0);
@@ -803,7 +804,8 @@ if (!list.properties.bSetup[1]) {
 		if (scroll) {
 			scroll.x = window.Width - scroll.w;
 			scroll.y = list.getHeaderSize().h;
-			scroll.h = list.h - (scroll.y - list.y) - buttonCoordinatesOne.h - _scale(1);
+			scroll.h = list.h - (scroll.y - list.y);
+			if (list.uiElements['Bottom toolbar'].enabled) { scroll.h -= buttonCoordinatesOne.h - _scale(1); }
 			scroll.rows = Math.max(list.items - list.rows, 0);
 			scroll.rowsPerPage = list.rows;
 		}

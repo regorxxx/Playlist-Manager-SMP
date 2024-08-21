@@ -1,7 +1,7 @@
 ﻿'use strict';
-//13/08/24
+//19/08/24
 
-/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort */
+/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, buttonsPanel:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, recalcWidth:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
@@ -56,6 +56,7 @@ const menuLbtnMult = new _menu();
 const menuRbtnTop = new _menu();
 const menuRbtnSort = new _menu();
 const menuSearch = new _menu();
+const menuFilterSorting = new _menu();
 
 // on callbacks
 function createMenuLeft(forcedIndex = -1) {
@@ -328,7 +329,15 @@ function createMenuLeft(forcedIndex = -1) {
 					const menuName = menu.newMenu('Set playlist tag(s)', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New tag(s)...', func: () => {
-							const input = Input.json('array strings', pls.tags, 'Tag(s) Name(s):\n(JSON)', window.Name + ': ' + pls.name, '["TagA","TagB"]', void (0), true);
+							const input = Input.json(
+								'array strings',
+								pls.tags,
+								'Tag(s) Name(s):\n(JSON)\n\nFor ex: ["Summer", "Cool"]',
+								window.Name + ': ' + pls.name,
+								'["TagA","TagB"]',
+								void (0),
+								true
+							);
 							if (input === null) { return; }
 							setTag(input, list, z);
 						}
@@ -1228,10 +1237,16 @@ function createMenuLeftMult(forcedIndexes = []) {
 			const menuName = menu.newMenu('Set playlist tag(s)...', void (0), !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({
 				menuName, entryText: 'New tag(s)...', func: () => {
-					let tags = '';
-					try { tags = utils.InputBox(window.ID, 'Tag(s) Name(s), multiple values separated by \';\' :', window.Name, playlists[0].tags.join(';'), true); }
-					catch (e) { return; }
-					tags = tags.split(';').filter(Boolean); // This filters blank values
+					const tags = Input.json(
+						'array strings',
+						playlists[0].tags,
+						'Tag(s) Name(s):\n(JSON)\n\nFor ex: ["Summer", "Cool"]',
+						window.Name + ': ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 50),
+						'["TagA","TagB"]',
+						void (0),
+						true
+					);
+					if (tags === null) { return; }
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
 						if (!isLockPls(pls) && isPlsEditable(pls)) {
@@ -2306,68 +2321,70 @@ function createMenuRightTop() {
 		menu.newEntry({ entryText: 'Open playlists folder', func: () => { _explorer(list.playlistsPath); } });
 		menu.newEntry({ entryText: 'sep' });
 	}
-	if (showMenus['Category']) {	// Category Filter
-		const subMenuName = menu.newMenu('Categories shown');
-		const options = list.categories();
-		const defOpt = options[0];
-		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
-		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-		menu.newEntry({
-			menuName: subMenuName, entryText: 'Restore all', func: () => {
-				list.filter({ categoryState: options });
-			}
-		});
-		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-		const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
-		options.forEach((item, i) => {
-			const count = list.data.reduce((total, pls) => { return (pls.category === (i === 0 ? '' : item) ? total + 1 : total); }, 0);
+	if (!list.uiElements['Header buttons'].elements['Filter and sorting'].enabled) {
+		if (showMenus['Category']) {	// Category Filter
+			const subMenuName = menu.newMenu('Categories shown');
+			const options = list.categories();
+			const defOpt = options[0];
+			menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
-				menuName: subMenuName, entryText: item + '\t' + (i === iInherit ? '-inherit- ' : '') + _b(count), func: () => {
-					let categoryState;
-					// Disable all other tags when pressing shift
-					if (utils.IsKeyPressed(VK_SHIFT)) {
-						categoryState = [item];
-					} else {
-						categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
-					}
-					list.filter({ categoryState });
+				menuName: subMenuName, entryText: 'Restore all', func: () => {
+					list.filter({ categoryState: options });
 				}
 			});
-			menu.newCheckMenuLast(() => list.categoryState.indexOf(item) !== -1);
-		});
-	}
-	if (showMenus['Tags']) {	// Tag Filter
-		const subMenuName = menu.newMenu('Tags shown');
-		const options = list.tags();
-		const defOpt = options[0];
-		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
-		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-		menu.newEntry({
-			menuName: subMenuName, entryText: 'Restore all', func: () => {
-				list.filter({ tagState: options });
-			}
-		});
-		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-		const bDef = list.tagState.indexOf(defOpt) !== -1;
-		options.forEach((item, i) => {
-			const bInherit = !bDef && list.tagState.indexOf(item) !== -1;
-			const count = list.data.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(item)) ? total + 1 : total); }, 0);
-			menu.newEntry({
-				menuName: subMenuName, entryText: item + '\t' + (bInherit && i !== 0 ? '-inherit- ' : '') + _b(count), func: () => {
-					let tagState;
-					// Disable all other categories when pressing shift
-					if (utils.IsKeyPressed(VK_SHIFT)) {
-						tagState = [item];
-					} else {
-						tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
+			options.forEach((item, i) => {
+				const count = list.data.reduce((total, pls) => { return (pls.category === (i === 0 ? '' : item) ? total + 1 : total); }, 0);
+				menu.newEntry({
+					menuName: subMenuName, entryText: item + '\t' + (i === iInherit ? '-inherit- ' : '') + _b(count), func: () => {
+						let categoryState;
+						// Disable all other tags when pressing shift
+						if (utils.IsKeyPressed(VK_SHIFT)) {
+							categoryState = [item];
+						} else {
+							categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
+						}
+						list.filter({ categoryState });
 					}
-					list.filter({ tagState });
+				});
+				menu.newCheckMenuLast(() => list.categoryState.indexOf(item) !== -1);
+			});
+		}
+		if (showMenus['Tags']) {	// Tag Filter
+			const subMenuName = menu.newMenu('Tags shown');
+			const options = list.tags();
+			const defOpt = options[0];
+			menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Restore all', func: () => {
+					list.filter({ tagState: options });
 				}
 			});
-			menu.newCheckMenuLast(() => list.tagState.indexOf(item) !== -1);
-		});
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			const bDef = list.tagState.indexOf(defOpt) !== -1;
+			options.forEach((item, i) => {
+				const bInherit = !bDef && list.tagState.indexOf(item) !== -1;
+				const count = list.data.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(item)) ? total + 1 : total); }, 0);
+				menu.newEntry({
+					menuName: subMenuName, entryText: item + '\t' + (bInherit && i !== 0 ? '-inherit- ' : '') + _b(count), func: () => {
+						let tagState;
+						// Disable all other categories when pressing shift
+						if (utils.IsKeyPressed(VK_SHIFT)) {
+							tagState = [item];
+						} else {
+							tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
+						}
+						list.filter({ tagState });
+					}
+				});
+				menu.newCheckMenuLast(() => list.tagState.indexOf(item) !== -1);
+			});
+		}
+		if (showMenus['Category'] || showMenus['Tags']) { menu.newEntry({ entryText: 'sep' }); }
 	}
-	if (showMenus['Category'] || showMenus['Tags']) { menu.newEntry({ entryText: 'sep' }); }
 	if (!list.bLiteMode) {	// Playlist saving
 		const menuName = menu.newMenu('Playlist saving');
 		{
@@ -2841,7 +2858,15 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Configure Tags or TF expression...', func: () => {
-					const input = Input.json('array strings', list.removeDuplicatesAutoPls, 'Enter tag(s) or TF expression(s):\n(JSON)', window.Name, '["$ascii($lower($trim(%TITLE%)))","ARTIST","$year(%DATE%)"]', void (0), true);
+					const input = Input.json(
+						'array strings',
+						list.removeDuplicatesAutoPls,
+						'Enter tag(s) or TF expression(s):\n(JSON)',
+						window.Name,
+						'["$ascii($lower($trim(%TITLE%)))","ARTIST","$year(%DATE%)"]',
+						void (0),
+						true
+					);
 					if (input === null) { return; }
 					list.removeDuplicatesAutoPls = input;
 					list.properties.removeDuplicatesAutoPls[1] = JSON.stringify(list.removeDuplicatesAutoPls);
@@ -3479,19 +3504,35 @@ function createMenuRightTop() {
 				});
 				menu.newCheckMenuLast(() => (panel.properties.headerButtonsColor[1] === -1 ? 0 : 1), optionsLength);
 			}
-			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
-			{	// Buttons' toolbar
-				const defaultCol = invert(panel.getColorBackground());
-				const subMenuSecondName = menu.newMenu('Button toolbar', subMenuName);
-				const options = ['Use default', 'Custom'];
-				const optionsLength = options.length;
-				options.forEach((item, i) => {
+			if (list.uiElements['Bottom toolbar'].enabled) {
+				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				{	// Filter bottom toolbar
+					const defaultCol = invert(panel.getColorBackground());
+					const subMenuSecondName = menu.newMenu('Bottom toolbar', subMenuName);
+					const options = ['Use default', 'Custom'];
+					const optionsLength = options.length;
+					options.forEach((item, i) => {
+						menu.newEntry({
+							menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsToolbarColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsToolbarColor)) : ''), func: () => {
+								panel.colors.buttonsToolbarColor = i
+									? utils.ColourPicker(window.ID, panel.colors.buttonsToolbarColor)
+									: defaultCol;
+								panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor;
+								// Update property to save between reloads
+								overwriteProperties(panel.properties);
+								panel.colorsChanged();
+								list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+								window.Repaint();
+							}
+						});
+					});
+					menu.newCheckMenuLast(() => (panel.colors.buttonsToolbarColor === defaultCol ? 0 : 1), optionsLength);
+					menu.newEntry({ menuName: subMenuSecondName, entryText: 'sep' });
 					menu.newEntry({
-						menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsToolbarColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsToolbarColor)) : ''), func: () => {
-							panel.colors.buttonsToolbarColor = i
-								? utils.ColourPicker(window.ID, panel.colors.buttonsToolbarColor)
-								: defaultCol;
-							panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor;
+						menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
+							const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 50);
+							if (input === null) { return; }
+							panel.properties.buttonsToolbarTransparency[1] = panel.colors.buttonsToolbarTransparency = input;
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
@@ -3499,43 +3540,29 @@ function createMenuRightTop() {
 							window.Repaint();
 						}
 					});
-				});
-				menu.newCheckMenuLast(() => (panel.colors.buttonsToolbarColor === defaultCol ? 0 : 1), optionsLength);
-				menu.newEntry({ menuName: subMenuSecondName, entryText: 'sep' });
-				menu.newEntry({
-					menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
-						const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 50);
-						if (input === null) { return; }
-						panel.properties.buttonsToolbarTransparency[1] = panel.colors.buttonsToolbarTransparency = input;
-						// Update property to save between reloads
-						overwriteProperties(panel.properties);
-						panel.colorsChanged();
-						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
-						window.Repaint();
-					}
-				});
-			}
-			{	// Buttons' Text color
-				const defaultCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
-				const subMenuSecondName = menu.newMenu('Buttons\' text', subMenuName);
-				const options = ['Use default', 'Custom'];
-				const optionsLength = options.length;
-				options.forEach((item, i) => {
-					menu.newEntry({
-						menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsTextColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsTextColor)) : ''), func: () => {
-							panel.colors.buttonsTextColor = i
-								? utils.ColourPicker(window.ID, panel.colors.buttonsTextColor)
-								: defaultCol;
-							panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor;
-							// Update property to save between reloads
-							overwriteProperties(panel.properties);
-							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
-							window.Repaint();
-						}
+				}
+				{	// Buttons' Text color
+					const defaultCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
+					const subMenuSecondName = menu.newMenu('Buttons\' text', subMenuName);
+					const options = ['Use default', 'Custom'];
+					const optionsLength = options.length;
+					options.forEach((item, i) => {
+						menu.newEntry({
+							menuName: subMenuSecondName, entryText: item + (i == 1 && panel.colors.buttonsTextColor === defaultCol ? '\t' + _b(getColorName(panel.colors.buttonsTextColor)) : ''), func: () => {
+								panel.colors.buttonsTextColor = i
+									? utils.ColourPicker(window.ID, panel.colors.buttonsTextColor)
+									: defaultCol;
+								panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor;
+								// Update property to save between reloads
+								overwriteProperties(panel.properties);
+								panel.colorsChanged();
+								list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+								window.Repaint();
+							}
+						});
 					});
-				});
-				menu.newCheckMenuLast(() => (panel.colors.buttonsTextColor === defaultCol ? 0 : 1), optionsLength);
+					menu.newCheckMenuLast(() => (panel.colors.buttonsTextColor === defaultCol ? 0 : 1), optionsLength);
+				}
 			}
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			{	// Background color
@@ -3680,9 +3707,9 @@ function createMenuRightTop() {
 				}
 			});
 		}
-		{	// Buttons' toolbar
+		if (list.uiElements['Bottom toolbar'].enabled) {	// Buttons' toolbar
 			const defaultButtonsCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
-			const subMenuName = menu.newMenu('Button toolbar', menuName);
+			const subMenuName = menu.newMenu('Bottom toolbar', menuName);
 			const options = ['Use default (toolbar)', 'Use no background buttons', 'Use background buttons (theme manager)'];
 			const optionsLength = options.length;
 			options.forEach((item, i) => {
@@ -4080,11 +4107,12 @@ function createMenuRightTop() {
 						name: 'Full', elements: {
 							'Search filter': { enabled: true },
 							'Columns': { enabled: true },
+							'Bottom toobar': { enabled: true },
 							'Header buttons': {
 								enabled: true, elements:
 								{
 									'Power actions': { enabled: true },
-									'Reset filters': { enabled: true },
+									'Filter and sorting': { enabled: true },
 									'List menu': { enabled: true },
 									'Settings menu': { enabled: true },
 									'Folder': { enabled: !list.bLiteMode },
@@ -4096,11 +4124,12 @@ function createMenuRightTop() {
 					{
 						name: 'Essential + Search', elements: {
 							'Search filter': { enabled: true },
+							'Bottom toobar': { enabled: true },
 							'Header buttons': {
 								enabled: true, elements:
 								{
 									'Power actions': { enabled: true },
-									'Reset filters': { enabled: true },
+									'Filter and sorting': { enabled: true },
 									'List menu': { enabled: true },
 									'Settings menu': { enabled: false },
 									'Folder': { enabled: false },
@@ -4116,7 +4145,7 @@ function createMenuRightTop() {
 								enabled: true, elements:
 								{
 									'Power actions': { enabled: true },
-									'Reset filters': { enabled: true },
+									'Filter and sorting': { enabled: true },
 									'List menu': { enabled: true },
 									'Settings menu': { enabled: false },
 									'Folder': { enabled: false },
@@ -4128,11 +4157,12 @@ function createMenuRightTop() {
 					{
 						name: 'Simple header', elements: {
 							'Search filter': { enabled: false },
+							'Bottom toobar': { enabled: true },
 							'Header buttons': {
 								enabled: false, elements:
 								{
 									'Power actions': { enabled: false },
-									'Reset filters': { enabled: false },
+									'Filter and sorting': { enabled: false },
 									'List menu': { enabled: false },
 									'Settings menu': { enabled: false },
 									'Folder': { enabled: false },
@@ -5094,6 +5124,177 @@ function createMenuSearch() {
 	return menu;
 }
 
+function createMenuFilterSorting() {
+	// Constants
+	const menu = menuFilterSorting;
+	menu.clear(true); // Reset one every call
+	const buttonKey = 'filterOneButton';
+	// Enabled menus
+	const showMenus = JSON.parse(list.properties.showMenus[1]);
+	// Entries
+	{	// Sorting method
+		const subMenuName = menu.newMenu('Sorting method');
+		const options = Object.keys(list.sortMethods(false)).slice(0, -1).sort((a, b) => a.localeCompare(b)).concat(['sep', list.manualMethodState()]);
+		const optionsLength = options.length;
+		menu.newEntry({ menuName: subMenuName, entryText: 'Change sorting method:', flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		if (optionsLength) {
+			options.forEach((item) => {
+				if (item === 'sep') { menu.newEntry({ menuName: subMenuName, entryText: 'sep' }); return; }
+				menu.newEntry({
+					menuName: subMenuName,
+					entryText: item, func: () => {
+						list.changeSorting(item);
+					}
+				});
+			});
+			menu.newCheckMenuLast(() => options.filter((s) => s !== 'sep').indexOf(list.methodState), optionsLength);
+		}
+	}
+	{	// Sorting
+		const subMenuName = menu.newMenu('Sorting order');
+		menu.newEntry({ menuName: subMenuName, entryText: 'Change sorting order:', flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		const options = ['Natural sorting', 'Inverse sorting'];
+		options.forEach((item) => {
+			menu.newEntry({ menuName: subMenuName, entryText: item, func: buttonsPanel.buttons.sortButton.func });
+		});
+		menu.newCheckMenuLast(list.getIndexSortState, options);
+	}
+	menu.newEntry({ entryText: 'sep' });
+	if (showMenus['Category']) {	// Category Filter
+		const subMenuName = menu.newMenu('Categories shown');
+		const options = list.categories();
+		const defOpt = options[0];
+		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		menu.newEntry({
+			menuName: subMenuName, entryText: 'Restore all', func: () => {
+				list.filter({ categoryState: options });
+			}
+		});
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
+		options.forEach((item, i) => {
+			const count = list.data.reduce((total, pls) => { return (pls.category === (i === 0 ? '' : item) ? total + 1 : total); }, 0);
+			menu.newEntry({
+				menuName: subMenuName, entryText: item + '\t' + (i === iInherit ? '-inherit- ' : '') + _b(count), func: () => {
+					let categoryState;
+					// Disable all other tags when pressing shift
+					if (utils.IsKeyPressed(VK_SHIFT)) {
+						categoryState = [item];
+					} else {
+						categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
+					}
+					list.filter({ categoryState });
+				}
+			});
+			menu.newCheckMenuLast(() => list.categoryState.indexOf(item) !== -1);
+		});
+	}
+	if (showMenus['Tags']) {	// Tag Filter
+		const subMenuName = menu.newMenu('Tags shown');
+		const options = list.tags();
+		const defOpt = options[0];
+		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		menu.newEntry({
+			menuName: subMenuName, entryText: 'Restore all', func: () => {
+				list.filter({ tagState: options });
+			}
+		});
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		const bDef = list.tagState.indexOf(defOpt) !== -1;
+		options.forEach((item, i) => {
+			const bInherit = !bDef && list.tagState.indexOf(item) !== -1;
+			const count = list.data.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(item)) ? total + 1 : total); }, 0);
+			menu.newEntry({
+				menuName: subMenuName, entryText: item + '\t' + (bInherit && i !== 0 ? '-inherit- ' : '') + _b(count), func: () => {
+					let tagState;
+					// Disable all other categories when pressing shift
+					if (utils.IsKeyPressed(VK_SHIFT)) {
+						tagState = [item];
+					} else {
+						tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
+					}
+					list.filter({ tagState });
+				}
+			});
+			menu.newCheckMenuLast(() => list.tagState.indexOf(item) !== -1);
+		});
+	}
+	menu.newEntry({ entryText: 'sep' });
+	{	// Filter
+		const subMenuName = menu.newMenu('Filtering method');
+		const options = list.availableFilters();
+		const optionsLength = options.length;
+		menu.newEntry({ menuName: subMenuName, entryText: 'Change filtering method:', flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+		if (optionsLength) {
+			options.forEach((item) => {
+				menu.newEntry({
+					menuName: subMenuName,
+					entryText: item, func: () => {
+						// Switch buttons if they are duplicated
+						const buttonsArr = Object.entries(buttonsPanel.buttons);
+						const idx = buttonsArr.findIndex((pair) => { return pair[0] !== buttonKey && pair[1].method === item; });
+						if (idx !== -1) { buttonsPanel.buttons[buttonsArr[idx][0]].method = buttonsPanel.buttons[buttonKey].method; }
+						// Set new one
+						buttonsPanel.buttons[buttonKey].method = item;
+						// Resize buttons
+						recalcWidth();
+						// Save properties
+						list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => { return (Object.hasOwn(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
+						overwriteProperties(list.properties);
+					}
+				});
+			});
+			menu.newCheckMenuLast(() => options.indexOf(buttonsPanel.buttons[buttonKey].method), optionsLength);
+		}
+	}
+	{	// Filter
+		const subMenuName = menu.newMenu('Current filter');
+		const options = filterEntries.call(buttonsPanel.buttons[buttonKey]);
+		const optionsLength = options.length;
+		if (optionsLength) {
+			menu.newEntry({ menuName: subMenuName, entryText: options[0].entryText, flags: options[0].flags });
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			options.slice(1).forEach((item) => {
+				menu.newEntry({
+					menuName: subMenuName,
+					entryText: item.entryText,
+					func: item.func,
+					flags: item.flags
+				});
+			});
+			menu.newCheckMenuLast(() => options.slice(1).findIndex((item) => item.check), optionsLength - 1);
+			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Cycle filter', func: buttonsPanel.buttons[buttonKey].func.bind(buttonsPanel.buttons[buttonKey]) });
+		}
+	}
+	{
+		const subMenuName = menu.newMenu('Other settings');
+		menu.newEntry({
+			menuName: subMenuName,
+			entryText: 'Also reset search filter', func: () => {
+				list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
+				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+				overwriteProperties(list.properties);
+			}, flags: list.searchInput ? MF_STRING : MF_GRAYED
+		});
+		menu.newCheckMenuLast(() => list.searchMethod.bResetFilters);
+	}
+	menu.newEntry({ entryText: 'sep' });
+	{	// Reset
+		menu.newEntry({
+			entryText: 'Reset all filters', func: () => {
+				list.resetFilter();
+			}, flags: Object.keys(list.getFilter(true)).length ? MF_STRING : MF_GRAYED
+		});
+	}
+	return menu;
+}
+
 async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 	if (!lBrainzToken.length) {
 		const lb = listenBrainz;
@@ -5121,4 +5322,118 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 		overwriteProperties(list.properties);
 	}
 	return true;
+}
+
+function filterEntries(method) {
+	let entries = [];
+	switch (method || this.method) {
+		case 'Category': {
+			const options = list.categories();
+			const defOpt = options[0];
+			const iInherit = list.categoryState.length === 1 && list.categoryState[0] !== defOpt
+				? options.indexOf(list.categoryState[0])
+				: -1;
+			entries.push({entryText: 'Cycle through the different categories:', flags: MF_GRAYED});
+			options.forEach((item, i) => {
+				entries.push({
+					func: () => {
+						list.filter({ categoryState: [item] });
+					},
+					entryText: item,
+					tabText: list.categoryState.indexOf(item) !== -1 ? (i === iInherit ? '\t-inherit-' : '') : '',
+					check: list.categoryState.indexOf(item) !== -1,
+					flags: MF_STRING
+				});
+			});
+			break;
+		}
+		case 'Extension': {
+			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			list.constExtStates().forEach((item, i) => {
+				// Add a cross to those extensions not being used
+				entries.push({
+					func: () => {
+						list.extStates = list.constExtStates().rotate(i);
+						list.update({ bReuseData: true, bNotPaint: true });
+						list.filter(); // Current filter state
+					},
+					entryText: item,
+					tabText: (list.extStates[0] === item ? '' : (list.dataAll.some((pls) => { return pls.extension === item; }) || item === list.constExtStates()[0] ? '' : '\t[x]')),
+					check: list.extStates[0] === item,
+					flags: MF_STRING
+				});
+			});
+			break;
+		}
+		case 'Lock state': {
+			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			list.constLockStates().forEach((item, i) => {
+				entries.push({
+					func: () => {
+						list.lockStates = list.constLockStates().rotate(i);
+						list.update({ bReuseData: true, bNotPaint: true });
+						list.filter(); // Current filter state
+					},
+					entryText: item,
+					tabText: '',
+					check: list.lockStates[0] === item,
+					flags: MF_STRING
+				});
+			});
+			break;
+		}
+		case 'MBID': {
+			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			list.constMbidStates().forEach((item, i) => {
+				entries.push({
+					func: () => {
+						list.mbidStates = list.constMbidStates().rotate(i);
+						list.update({ bReuseData: true, bNotPaint: true });
+						list.filter(); // Current filter state
+					},
+					entryText: item,
+					tabText: '',
+					check: list.mbidStates[0] === item,
+					flags: MF_STRING
+				});
+			});
+			break;
+		}
+		case 'Playlist type': {
+			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			list.constAutoPlaylistStates().forEach((item, i) => {
+				entries.push({
+					func: () => {
+						list.autoPlaylistStates = list.constAutoPlaylistStates().rotate(i);
+						list.update({ bReuseData: true, bNotPaint: true });
+						list.filter(); // Current filter state
+					},
+					entryText: item,
+					tabText: '',
+					check: list.autoPlaylistStates[0] === item,
+					flags: MF_STRING
+				});
+			});
+			break;
+		}
+		case 'Tag': {
+			const options = list.tags();
+			const defOpt = options[0];
+			const bInherit = list.tagState.indexOf(defOpt) === -1;
+			entries.push({entryText: 'Cycle through the different tags:', flags: MF_GRAYED});
+			list.tags().map((item, i) => {
+				entries.push({
+					func: () => {
+						list.filter({ tagState: [item] });
+					},
+					entryText: item,
+					tabText: list.tagState.indexOf(item) !== -1 ? (bInherit && i !== 0 ? '\t-inherit-' : '') : '',
+					check: list.tagState.indexOf(item) !== -1,
+					flags: MF_STRING
+				});
+			});
+			break;
+		}
+	}
+	return entries;
 }
