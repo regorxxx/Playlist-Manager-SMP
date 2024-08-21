@@ -7453,14 +7453,18 @@ function _list(x, y, w, h) {
 						'\nShift / Ctrl over buttons / playlists will show the associated action.' +
 						'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
 						'\n' +
-						'\nSorting & Filters:' +
-						'\n-------------------' +
-						'\nRight click on buttons allow to switch current filters and sorting.' +
-						'\n' +
+						(this.uiElements['Bottom toolbar'].enabled 
+							? '\nFilter/sorting bottom toolbar:' +
+							'\n-------------------' +
+							'\nLeft click on button to apply current method.' +
+							'\nRight click on button to configure available methods.' +
+							'\n'
+							: ''
+						) + 
 						(this.searchInput
 							? '\nSearch Filter:' +
 							'\n-------------------' +
-							'\nRight Left click on buttons allow to configure the search.' +
+							'\nRight click on button to configure search method.' +
 							'\nTracks drag n\' drop will search playlists by (priority configurable):' +
 							this.searchMethod.dragDropPriority
 								.map((method, i) => '\n\t' + (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')))
