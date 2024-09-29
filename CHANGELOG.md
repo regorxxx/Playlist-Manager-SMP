@@ -66,6 +66,7 @@
 - UI: reset filters button is now renamed to 'Filter and sorting' button, and has a dual purpose allowing to clear all filters or set sorting and filtering options via menus (replacing the bottom filter toolbar if desired). Note, however, the filter/sorting bottom toolbar has an advantage since it allows setting 2 filters at the same time.
 - UI: header buttons list is now sorted by order of appeareance at the 'UI elements' submenu.
 - UI: cleanup of quick help popup.
+- Helpers: updated helpers.
 ### Removed
 - UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionality.
 ### Fixed

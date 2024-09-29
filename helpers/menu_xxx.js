@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/24
+//19/08/24
 
 /* exported _menu, _attachedMenu */
 
@@ -288,7 +288,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		const lastEntry = this.getLastEntry();
 		if (!lastEntry) { return false; }
 		const len = options ? (Array.isArray(options) ? options.length : Number(options)) : 0;
-		return (len > 1
+		return (len >= 1
 			? this.newCheckMenu(lastEntry.menuName, entryArr[entryArr.length - len].entryText, lastEntry.entryText, func) /* idx check */
 			: this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void (0), func) /* boolean check */
 		);
