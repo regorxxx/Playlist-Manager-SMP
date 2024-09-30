@@ -3116,10 +3116,44 @@ function createMenuRightTop() {
 					});
 					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
 					menu.newEntry({
-						menuName: subMenuNameTwo, entryText: 'Set name...', func: () => {
+						menuName: subMenuNameTwo, entryText: 'Set preset name...', func: () => {
 							const input = Input.string('string', Object.hasOwn(preset, 'name') ? preset.name : '', 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, '-- Kodi --');
 							if (input === null) { return; }
 							preset.name = input;
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						}
+					});
+					menu.newEntry({ menuName: subMenuNameTwo, entryText: 'sep' });
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: 'Clone preset...', func: () => {
+							const clone = { ...preset };
+							const input = Input.string('string', Object.hasOwn(clone, 'name') ? clone.name : '', 'Enter new preset name:\n(Left it empty to use TF expression instead)', window.Name, '-- Kodi --');
+							console.log(input);
+							if (input === null) {
+								if (!Input.isLastEqual) { return; }
+							} else { clone.name = input; }
+							presets.push(clone);
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						}
+					});
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: 'Move preset...', func: () => {
+							const input = Input.number('int positive', i + 1, 'Enter new position:\n(from 1 to ' + presets.length + ')', window.Name, '3');
+							if (input === null) { return; }
+							presets.splice(i, 1);
+							presets.splice(input - 1, 0, preset);
+							list.properties['converterPreset'][1] = JSON.stringify(presets);
+							overwriteProperties(list.properties);
+							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						}
+					});
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: 'Remove preset', func: () => {
+							presets.splice(i, 1);
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
 							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
@@ -3134,25 +3168,6 @@ function createMenuRightTop() {
 						overwriteProperties(list.properties);
 						if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 					}
-				});
-				const subMenuNameTwo = menu.newMenu('Remove preset', subMenuName);
-				presets.forEach((preset, i) => {
-					const path = preset.path;
-					let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
-					const dsp = preset.dsp;
-					let dspName = (dsp !== '...' ? dsp : '(DSP)');
-					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
-					if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
-					if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
-					if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
-					menu.newEntry({
-						menuName: subMenuNameTwo, entryText: 'Preset ' + (i + 1) + ': ' + pathName + ': ' + dspName + ' ---> ' + tfName, func: () => {
-							presets.splice(i, 1);
-							list.properties['converterPreset'][1] = JSON.stringify(presets);
-							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
-						}
-					});
 				});
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 				menu.newEntry({
@@ -5334,7 +5349,7 @@ function filterEntries(method) {
 			const iInherit = list.categoryState.length === 1 && list.categoryState[0] !== defOpt
 				? options.indexOf(list.categoryState[0])
 				: -1;
-			entries.push({entryText: 'Cycle through the different categories:', flags: MF_GRAYED});
+			entries.push({ entryText: 'Cycle through the different categories:', flags: MF_GRAYED });
 			options.forEach((item, i) => {
 				entries.push({
 					func: () => {
@@ -5349,7 +5364,7 @@ function filterEntries(method) {
 			break;
 		}
 		case 'Extension': {
-			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			entries.push({ entryText: 'Cycle through the different filters:', flags: MF_GRAYED });
 			list.constExtStates().forEach((item, i) => {
 				// Add a cross to those extensions not being used
 				entries.push({
@@ -5367,7 +5382,7 @@ function filterEntries(method) {
 			break;
 		}
 		case 'Lock state': {
-			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			entries.push({ entryText: 'Cycle through the different filters:', flags: MF_GRAYED });
 			list.constLockStates().forEach((item, i) => {
 				entries.push({
 					func: () => {
@@ -5384,7 +5399,7 @@ function filterEntries(method) {
 			break;
 		}
 		case 'MBID': {
-			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			entries.push({ entryText: 'Cycle through the different filters:', flags: MF_GRAYED });
 			list.constMbidStates().forEach((item, i) => {
 				entries.push({
 					func: () => {
@@ -5401,7 +5416,7 @@ function filterEntries(method) {
 			break;
 		}
 		case 'Playlist type': {
-			entries.push({entryText: 'Cycle through the different filters:', flags: MF_GRAYED});
+			entries.push({ entryText: 'Cycle through the different filters:', flags: MF_GRAYED });
 			list.constAutoPlaylistStates().forEach((item, i) => {
 				entries.push({
 					func: () => {
@@ -5421,7 +5436,7 @@ function filterEntries(method) {
 			const options = list.tags();
 			const defOpt = options[0];
 			const bInherit = list.tagState.indexOf(defOpt) === -1;
-			entries.push({entryText: 'Cycle through the different tags:', flags: MF_GRAYED});
+			entries.push({ entryText: 'Cycle through the different tags:', flags: MF_GRAYED });
 			list.tags().map((item, i) => {
 				entries.push({
 					func: () => {

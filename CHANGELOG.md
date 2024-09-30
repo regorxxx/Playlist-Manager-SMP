@@ -62,6 +62,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: 'Export and convert' presets can now be cloned or moved into another position.
+- UI: 'Export and convert' presets are now removed directly using every preset submenu instead of the 'Remove preset' submenu.
 - UI: filter/sorting bottom toolbar can now be hidden.
 - UI: reset filters button is now renamed to 'Filter and sorting' button, and has a dual purpose allowing to clear all filters or set sorting and filtering options via menus (replacing the bottom filter toolbar if desired). Note, however, the filter/sorting bottom toolbar has an advantage since it allows setting 2 filters at the same time.
 - UI: header buttons list is now sorted by order of appeareance at the 'UI elements' submenu.
