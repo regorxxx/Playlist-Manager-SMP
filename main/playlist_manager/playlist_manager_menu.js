@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/08/24
+//30/09/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -3130,7 +3130,6 @@ function createMenuRightTop() {
 						menuName: subMenuNameTwo, entryText: 'Clone preset...', func: () => {
 							const clone = { ...preset };
 							const input = Input.string('string', Object.hasOwn(clone, 'name') ? clone.name : '', 'Enter new preset name:\n(Left it empty to use TF expression instead)', window.Name, '-- Kodi --');
-							console.log(input);
 							if (input === null) {
 								if (!Input.isLastEqual) { return; }
 							} else { clone.name = input; }
