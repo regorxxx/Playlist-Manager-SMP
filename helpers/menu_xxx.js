@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/08/24
+//06/10/24
 
 /* exported _menu, _attachedMenu */
 
@@ -294,7 +294,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		);
 	};
 	/**
-	 * Appends an stromg to the last menu entry added. Works with entries whose names are static or provided by functions.
+	 * Appends a string to the last menu entry added. Works with entries whose names are static or provided by functions.
 	 *
 	 * @kind method
 	 * @memberof _menu
