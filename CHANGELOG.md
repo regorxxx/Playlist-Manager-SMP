@@ -70,6 +70,7 @@
 - UI: cleanup of quick help popup.
 - Configuration: changed the remove duplicates bias to prefer tracks containing 'BEST' within a 'TRACKDSP' tag.
 - Helpers: updated helpers.
+- [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support and ES2021 compatibility.
 ### Removed
 - UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionality.
 ### Fixed

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/01/24
+//06/10/24
 
 /* exported extendGR */
 
@@ -19,6 +19,23 @@ if (!Object.hasOwn) {
 				throw new TypeError('Cannot convert undefined or null to object');
 			}
 			return Object.prototype.hasOwnProperty.call(Object(object), property); // NOSONAR
+		}
+	});
+}
+
+/*
+	RegExp
+*/
+
+// Add unnoficial method
+// https://reference.codeproject.com/javascript/Reference/Global_Objects/Regexp/toSource
+if (!RegExp.prototype.toSource) {
+	Object.defineProperty(RegExp.prototype, 'toSource', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: function () {
+			return '/' + this.source + '/' + this.flags; // NOSONAR
 		}
 	});
 }

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/09/24
+//06/10/24
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -86,7 +86,7 @@ function loadUserDefFile(def) {
 								def[key].re = new RegExp(re, flag);
 							} catch (e) {
 								fb.ShowPopupMessage(
-									'There has been an error trying to parse the RegExp expression:\n' + def[key].re.toSource() +
+									'There has been an error trying to parse the RegExp expression:\n' + def[key].re +
 									'\n\nParsed as:\n' + def[key].re +
 									'\n\nExpression:\n' + re +
 									'\n\nFlag:\n' + flag +

@@ -1,7 +1,7 @@
 ﻿'use strict';
-//21/03/24
+//06/10/24
 
-/* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
+/* exported clone, getNested, setNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
 // https://github.com/angus-c/just
 /*
@@ -21,7 +21,7 @@ function clone(obj) {
 			} else if (type === 'Date') {
 				result.add(new Date(value.getTime()));
 			} else if (type === 'RegExp') {
-				result.add(RegExp(value.source, getRegExpFlags(value)));
+				result.add(RegExp(value.source, value.flags));
 			} else {
 				result.add(value);
 			}
@@ -37,7 +37,7 @@ function clone(obj) {
 			} else if (type === 'Date') {
 				result.set(key, new Date(value.getTime()));
 			} else if (type === 'RegExp') {
-				result.set(key, RegExp(value.source, getRegExpFlags(value)));
+				result.set(key, RegExp(value.source, value.flags));
 			} else {
 				result.set(key, value);
 			}
@@ -54,7 +54,7 @@ function clone(obj) {
 			} else if (type === 'Date') {
 				result[key] = new Date(value.getTime());
 			} else if (type === 'RegExp') {
-				result[key] = RegExp(value.source, getRegExpFlags(value));
+				result[key] = RegExp(value.source, value.flags);
 			} else {
 				result[key] = value;
 			}
@@ -101,20 +101,6 @@ function forEachNested(obj, func, options = { bIterateAll: false }) {
 		});
 	}
 	return obj;
-}
-
-function getRegExpFlags(regExp) {
-	if (typeof regExp.source.flags === 'string') {
-		return regExp.source.flags;
-	} else {
-		const flags = [];
-		regExp.global && flags.push('g');
-		regExp.ignoreCase && flags.push('i');
-		regExp.multiline && flags.push('m');
-		regExp.sticky && flags.push('y');
-		regExp.unicode && flags.push('u');
-		return flags.join('');
-	}
 }
 
 function baseToString(value) {
