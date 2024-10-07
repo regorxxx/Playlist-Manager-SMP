@@ -1,12 +1,12 @@
 ﻿'use strict';
-//19/08/24
+//07/10/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
 	See readmes\playlist_manager.pdf for full documentation
 */
 
-/* exported delayAutoUpdate */
+/* exported delayAutoUpdate, plsRwLock */
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.18.1', features: { drag_n_drop: true, grab_focus: true } }); }
 
@@ -330,7 +330,8 @@ let properties = {
 		internalUi: '',
 		plsFromSel: '',
 		others: ''
-	})]
+	})],
+	bRwLock: ['Not overwrite playlists loading new files', false, { func: isBoolean }, false],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -415,6 +416,7 @@ let debouncedUpdate;
 let delayAutoUpdate = () => void (0);
 let autoBackRepeat;
 let autoUpdateRepeat;
+let plsRwLock;
 
 {	// Info Popup and setup
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -1058,6 +1060,7 @@ if (!list.properties.bSetup[1]) {
 		if (debouncedUpdate) { debouncedUpdate({ playlistIndex, bCallback: true }); }
 	});
 
+	plsRwLock = { idx: -1, date: -1, apply: false, isUndo: false };
 	addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
@@ -1068,6 +1071,18 @@ if (!list.properties.bSetup[1]) {
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, newCount, name); return; }
 		if (oldName && oldName.length && name !== oldName) { return; }
+		if (list.isRwLock()) {
+			if (newCount === 0 && !plsRwLock.isUndo) {
+				plsRwLock.idx = playlistIndex;
+				plsRwLock.date = Date.now();
+				plsRwLock.apply = true;
+			} else {
+				plsRwLock.idx = -1;
+				plsRwLock.date = -1;
+				plsRwLock.apply = false;
+			}
+			plsRwLock.isUndo = false;
+		}
 		// Update
 		if (debouncedUpdate) { debouncedUpdate({ playlistIndex, bCallback: true }); }
 	});
@@ -1082,9 +1097,20 @@ if (!list.properties.bSetup[1]) {
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, name); return; }
 		if (oldName && oldName.length && name !== oldName) { return; }
+		if (!list.isRwLock() || plsRwLock.idx !== playlistIndex || Date.now() - plsRwLock.date > 100) {
+			plsRwLock.idx = -1;
+			plsRwLock.date = -1;
+			plsRwLock.apply = false;
+			plsRwLock.isUndo = false;
+		}
 		// Update
-		if (debouncedUpdate) { debouncedUpdate({ playlistIndex, bCallback: true }); }
-		else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
+		if (debouncedUpdate) { 
+			if (plsRwLock.apply) { 
+				list.updatePlaylist({ playlistIndex, bCallback: true, applyRwLock: plsRwLock.apply });
+			} else {
+				debouncedUpdate({ playlistIndex, bCallback: true });
+			}
+		} else if (list.bAutoTrackTag && playlistIndex < plman.PlaylistCount) { // Double check playlist index to avoid crashes with callback delays and playlist removing
 			if (list.bAutoTrackTagAlways) { list.updatePlaylistOnlyTracks(playlistIndex); }
 			else if (plman.IsAutoPlaylist(playlistIndex)) {
 				if (list.bAutoTrackTagAutoPls) { list.updatePlaylistOnlyTracks(playlistIndex); }

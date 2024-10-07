@@ -2503,6 +2503,25 @@ function createMenuRightTop() {
 				}
 				menu.newCheckMenuLast(() => (list.bSavingXsp ? 1 : 0), optionsLength);
 			}
+			if (!list.bLiteMode) {	// RW lock
+				const subMenuName = menu.newMenu('Skip overwritting Playlists on file loading', menuName);
+				const options = ['Yes: Playlist will be restored without saving', 'No: Clear playlist and load new files'];
+				const optionsLength = options.length;
+				menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file behavior loading external files:', flags: MF_GRAYED });
+				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
+				if (optionsLength) {
+					options.forEach((item) => {
+						menu.newEntry({
+							menuName: subMenuName, entryText: item, func: () => {
+								list.properties['bRwLock'][1] = !list.properties['bRwLock'][1];
+								overwriteProperties(list.properties);
+								if (list.properties['bRwLock'][1]) { fb.ShowPopupMessage('Selections from the album list or loading a folder or file(s) into foobar2000 may overwrite the active playlist with the new track(s). In such case, autosaving may also overwrite the associated playlist file which may be undesirable or happen without the user noticing it.\n\nWhen this option is enabled, the playlist will be restored back to the previous state automatically and no saving will be performed. Note playback will start anyway with the selected track(s) although now they will not be visible on any playlist.\n\nThis "overwrite lock" safeguard is only applied to playlists with a playlist file associated, not to UI-only playlists. Also, if enabled, some extra garbage logging may be produced when manually applying undo on a playlist (which can not be avoided since every undo action counts -internally- as deleting the entire playlist).', window.Name); }
+							}
+						});
+					});
+				}
+				menu.newCheckMenuLast(() => (list.bRwLock ? 0 : 1), optionsLength);
+			}
 		}
 	}
 	{	// Panel behavior

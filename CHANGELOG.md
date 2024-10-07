@@ -61,6 +61,7 @@
 
 ## [Unreleased][]
 ### Added
+- Auto-saving: new setting at 'Playlist saving\Skip overwriting Playlists on file loading' submenu to avoid overwriting the active playlist when sending selections from the album list or loading a folder or file(s). In such case, auto-saving may also overwrite the associated playlist file which may be undesirable or happen without the user noticing it. When this option is enabled, the playlist will be restored back to the previous state automatically and no saving will be performed. Note playback will start anyway with the selected track(s) although now they will not be visible on any playlist. This "overwrite lock" safeguard is only applied to playlists with a playlist file associated, not to UI-only playlists. Also, if enabled, some extra garbage logging may be produced when manually applying undo on a playlist (which can not be avoided since every undo action counts -internally- as deleting the entire playlist).
 ### Changed
 - UI: 'Export and convert' presets can now be cloned or moved into another position.
 - UI: 'Export and convert' presets are now removed directly using every preset submenu instead of the 'Remove preset' submenu.
@@ -74,7 +75,7 @@
 ### Removed
 - UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionality.
 ### Fixed
-- Autosave: fix for playlist update debouncing while panel was busy and tracks were deleted.
+- Auto-saving: fix for playlist update debouncing while panel was busy and tracks were deleted.
 
 ## [0.18.1] - 2024-08-13
 ### Added
@@ -717,7 +718,7 @@
 ### Added
 ### Changed
 - UI: popup when cloning an AutoPlaylist now adds a tip to cancel, thus skipping playlist file creation.
-- Autosave: renamed property, config will be reset on update (this doesn't affect to most users since this config is usually not touched).
+- Auto-saving: renamed property, config will be reset on update (this doesn't affect to most users since this config is usually not touched).
 - Documentation: updated readme PDF to be up to date with all changes.
 - Internal code cleanup of menus.
 ### Removed
@@ -1135,8 +1136,8 @@
 - Cache: added safechecks to library cache to ensure loaded item is the one pointed at the playlist. At some instances, after adding/removing library items without reloading the panel cache, some tracks could have been mixed up due to different index.
 - Cache: now gets rebuilt whenever an item is added/removed to the library, not only at startup. This is in addition to the previous check (to automatically solve it). Cache is shared between multiple panels (so it's only calculated once per Foobar2000 instance).
 - Bind active playlist to file: when canceling the popup that appears trying to bind the active playlist to a playlist file with a non-default format, playlist file binding was properly aborted (no file changes) but the active playlist was already renamed. Now aborting also reverts the renaming, renaming it again back to the original name. This 'fix' also applies in any case where the playlist saving fails or is aborted.
-- Autosave & Autoupdate: changing the properties via menus or properties panel could lead to values being formatted as strings instead of numbers, now disallowed at input (menus) and loading (value checking).
-- Autosave: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
+- Auto-saving & Auto-update: changing the properties via menus or properties panel could lead to values being formatted as strings instead of numbers, now disallowed at input (menus) and loading (value checking).
+- Auto-saving: playlists were not being auto-saved when current filter view did not show them on the panel. Now updates them in any case (as it should have been from the start).
 - Categories: adding or removing playlists updates the category filter accordingly. i.e. when adding a new playlist with a new category, it doesn't get filtered but added to the current view, no matter what the current filtering is. Previously the new playlist would be hidden by default, since the category filter did only showed currently selected categories. The same when removing the last playlist within a category.
 - Categories: due to a copy/paste typo, the menu to filter categories only worked when using custom background colors on the panel.
 - Menus: crash when selected playlist index was out of bounds on L. Click menu creation due to menu being created 100 ms later than clicking. If the mouse was moved really fast out of the list within that 100 ms delay, the selected playlist was considered null (crash). It would also change the playlist to which the menu applied if the mouse was moved to another playlist really fast (bug). Fixed both cases now, forcing the playlist index at the exact moment the L. Click was done (on button up).

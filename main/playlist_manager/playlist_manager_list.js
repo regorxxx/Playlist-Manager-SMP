@@ -1,9 +1,9 @@
 ﻿'use strict';
-//21/08/24
+//07/10/24
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable */
+/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable */
 include('..\\window\\window_xxx_input.js');
@@ -3384,7 +3384,7 @@ function _list(x, y, w, h) {
 		return count;
 	};
 
-	this.updatePlaylist = ({ playlistIndex, bCallback = false, bForceLocked = false } = {}) => { // Only changes total size
+	this.updatePlaylist = ({ playlistIndex, bCallback = false, bForceLocked = false, applyRwLock = false } = {}) => { // Only changes total size
 		// playlistIndex: We have a foobar2000 playlist and we iterate over playlist files
 		// Or we have the playlist file and we iterate over foobar2000 playlists
 		if (typeof playlistIndex === 'undefined' || playlistIndex === null || playlistIndex === -1) { return false; }
@@ -3439,6 +3439,19 @@ function _list(x, y, w, h) {
 			const dataIndex = (bCallback) ? i : playlistIndex; // This one always point to the index of data
 			const fbPlaylistIndex = (bCallback) ? playlistIndex : i; // And this one to fb playlists... according to bCallback
 			if (playlistNameId === i_pnameId) {
+				if (bCallback && !this.isAutosave(i_pnameId)) {return false;}
+				if (bCallback && this.isRwLock() && applyRwLock) {
+					if (plman.IsUndoAvailable(fbPlaylistIndex)) {
+						console.log('Playlist Manager: Restoring overwritten playlist...');
+						plsRwLock.isUndo = true;
+						this.disableAutosaveForPls(i_pnameId);
+						plman.Undo(fbPlaylistIndex);
+						setTimeout(() => this.enableAutosaveForPls(i_pnameId), 1000);
+					} else {
+						console.log('Playlist Manager: Playlist overwrite update omitted...');
+					}
+					return false;
+				}
 				const plsData = (bCallback)  // All playlist or only current view
 					? this.dataAll[dataIndex]
 					: this.data[dataIndex];
@@ -5029,7 +5042,7 @@ function _list(x, y, w, h) {
 			this.cacheLibTimer = null;
 			this.bLibraryChanged = true;
 		}
-		if (bNotify) { window.NotifyOthers('Playlist manager: switch tracking', this.bTracking); }
+		if (bNotify) { window.NotifyOthers('Playlist manager: switch tracking', this.bTracking); } // TODO move to init to avoid double execution in some cases?
 		this.repaint();
 		return this.bTracking;
 	};
@@ -5093,6 +5106,10 @@ function _list(x, y, w, h) {
 
 	this.isAutosave = (nameId) => {
 		return this.disableAutosave.indexOf(nameId) === -1;
+	};
+
+	this.isRwLock = () => {
+		return this.properties.bRwLock[1] && !this.bLiteMode;
 	};
 
 	this.checkTrackedFolderChanged = () => {
@@ -7453,14 +7470,14 @@ function _list(x, y, w, h) {
 						'\nShift / Ctrl over buttons / playlists will show the associated action.' +
 						'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
 						'\n' +
-						(this.uiElements['Bottom toolbar'].enabled 
+						(this.uiElements['Bottom toolbar'].enabled
 							? '\nFilter/sorting bottom toolbar:' +
 							'\n-------------------' +
 							'\nLeft click on button to apply current method.' +
 							'\nRight click on button to configure available methods.' +
 							'\n'
 							: ''
-						) + 
+						) +
 						(this.searchInput
 							? '\nSearch Filter:' +
 							'\n-------------------' +
