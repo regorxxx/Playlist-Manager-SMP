@@ -882,7 +882,7 @@ if (!list.properties.bSetup[1]) {
 					cacheLib(void (0), void (0), void (0), true);
 				} else {
 					const now = Date.now();
-					if (Date.now() - plmInit.lastUpdate > 1000) { plmInit.lastUpdate = now; } else { plmInit.lastUpdate = now; return; } // Update once per time needed...
+					if (now - plmInit.lastUpdate > 1000) { plmInit.lastUpdate = now; } else { plmInit.lastUpdate = now; return; } // Update once per time needed...
 					libItemsAbsPaths = [...info];
 					if (plmInit.interval) { clearInterval(plmInit.interval); plmInit.interval = null; }
 					console.log('precacheLibraryPaths: using paths from another instance.', window.Name);
@@ -1066,7 +1066,7 @@ if (!list.properties.bSetup[1]) {
 		}
 		if (!list.isAutosave(name)) { return; }
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
-		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, name); return; }
+		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, newCount, name); return; }
 		if (oldName && oldName.length && name !== oldName) { return; }
 		// Update
 		if (debouncedUpdate) { debouncedUpdate({ playlistIndex, bCallback: true }); }
