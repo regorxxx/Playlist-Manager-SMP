@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/09/24
+//07/10/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -2504,7 +2504,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => (list.bSavingXsp ? 1 : 0), optionsLength);
 			}
 			if (!list.bLiteMode) {	// RW lock
-				const subMenuName = menu.newMenu('Skip overwritting Playlists on file loading', menuName);
+				const subMenuName = menu.newMenu('Skip overwriting Playlists on file loading', menuName);
 				const options = ['Yes: Playlist will be restored without saving', 'No: Clear playlist and load new files'];
 				const optionsLength = options.length;
 				menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file behavior loading external files:', flags: MF_GRAYED });
