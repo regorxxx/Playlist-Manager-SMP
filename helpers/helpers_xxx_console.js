@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/24
+//09/10/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -89,7 +89,7 @@ console.formatArg = (arg) => {
 					}
 				}
 				try {
-					val = (instance ? instance.name + ' ' : 'Object ') + JSON.stringify(val ? val : arg, (k, v) => {
+					val = (instance ? instance.name + ' ' : 'Object ') + JSON.stringify(val || arg, (k, v) => {
 						if (typeof v !== 'undefined' && v !== null) {
 							if (v.RawPath && v.Path) {
 								return 'FbMetadbHandle ' + JSON.stringify({ FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');

@@ -1,12 +1,10 @@
 ﻿'use strict';
-//09/08/24
+//09/10/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
-include('helpers_xxx.js');
-/* global folders:readable, isCompatible:readable, lastStartup:readable, VK_SHIFT:readable */
 include('helpers_xxx_basic_js.js');
 /* global tryMethod:readable */
 include('helpers_xxx_prototypes.js');
@@ -24,6 +22,9 @@ const utf8 = convertCharsetToCodepage('UTF-8');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
 const absPathRegExp = /[A-z]*:\\/;
 const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR
+
+include('helpers_xxx.js');
+/* global folders:readable, isCompatible:readable, lastStartup:readable, VK_SHIFT:readable */
 
 // Create global folders
 _createFolder(folders.data);
@@ -304,6 +305,8 @@ function _save(file, value, bBOM = false) {
 	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.Name + ': JSON saving'); }
 	if (_isFolder(filePath) && utils.WriteTextFile(file, value, bBOM)) {
 		return true;
+	} else if (file.length > 255) {
+		fb.ShowPopupMessage('Script is trying to save a file in a path containing more than 256 chars which leads to problems on Windows systems.\n\nPath:\n' + file + '\n\nTo avoid this problem, install your foobar portable installation at another path (with less nesting).');
 	}
 	console.log('Error saving to ' + file);
 	return false;
@@ -577,18 +580,15 @@ function testPath(path, relativeTo = '') {
 	}
 	return !bDead;
 }
-
-/* eslint-disable no-useless-escape */
 function sanitize(value) {
-	return value && value.length ? value.replace(/[\/\\|:–]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '') : '';
+	return value && value.length ? value.replace(/[/\\|:–]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '') : '';
 }
 
 function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	if (!value || !value.length) { return ''; }
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
-	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
+	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
 }
-/* eslint-enable  no-useless-escape */
 
 function UUID() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
