@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [0.19.0](#0190---2024-10-09)
 - [0.18.1](#0181---2024-08-13)
 - [0.18.0](#0180---2024-07-30)
 - [0.17.0](#0170---2024-07-24)
@@ -61,6 +62,12 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [0.19.0] - 2024-10-09
+### Added
 - Auto-saving: new setting at 'Playlist saving\Skip overwriting Playlists on file loading' submenu to avoid overwriting the active playlist when sending selections from the album list or loading a folder or file(s). In such case, auto-saving may also overwrite the associated playlist file which may be undesirable or happen without the user noticing it. When this option is enabled, the playlist will be restored back to the previous state automatically and no saving will be performed. Note playback will start anyway with the selected track(s) although now they will not be visible on any playlist. This "overwrite lock" safeguard is only applied to playlists with a playlist file associated, not to UI-only playlists. Also, if enabled, some extra garbage logging may be produced when manually applying undo on a playlist (which can not be avoided since every undo action counts -internally- as deleting the entire playlist).
 ### Changed
 - UI: 'Export and convert' presets can now be cloned or moved into another position.
@@ -74,7 +81,7 @@
 - Helpers: in case saving a file throws an error due to long paths (+255 chars) a warning popup will be shown.
 - Helpers: updated helpers.
 ### Removed
-- UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionality.
+- UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionalit
 ### Fixed
 - Auto-saving: fix for playlist update debouncing while panel was busy and tracks were deleted.
 
@@ -1293,7 +1300,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.1...v0.19.0
 [0.18.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.16.1...v0.17.0
