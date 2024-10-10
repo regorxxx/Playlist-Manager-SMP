@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/24
+//10/10/24
 
 /* exported _list */
 
@@ -7382,7 +7382,10 @@ function _list(x, y, w, h) {
 					(
 						this.bLiteMode
 							? ''
-							: (!this.bTracking ? (bHighlighting ? '\n' : '') + 'Library tracking disabled\n' : '') + '(Shift + L. Click to switch library tracking)'
+							: (!this.bTracking ? (bHighlighting ? '\n' : '') +
+								'Library tracking disabled\n' : '') +
+								'(Shift + L. Click to switch library tracking)' +
+								'\n(Shift + Win + R. Click for SMP panel menu)'
 					);
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
@@ -7493,7 +7496,11 @@ function _list(x, y, w, h) {
 						'\n-------------------' +
 						'\n- Up / Down: scroll down / up.' +
 						'\n- Re Pag / Av Pag: scroll down / up page.' +
-						'\n- Home / End: scroll to top / bottom.'
+						'\n- Home / End: scroll to top / bottom.' +
+						'\n' +
+						'\nSMP / JSplitter Panel:' +
+						'\n-------------------' +
+						'\n- Shift + Win + R. Click: open panel menu.'
 						, window.Name + ': Quick help');
 				} else {
 					createMenuRightTop().btn_up(x, y, void (0), 'Open documentation...');

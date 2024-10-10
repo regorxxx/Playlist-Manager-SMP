@@ -1,9 +1,9 @@
 ﻿'use strict';
-//19/12/23
+//10/10/23
 
 /* exported ThemedButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, getUniquePrefix, addButton */
 
-/* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable */
+/* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable */
 include('helpers_xxx_prototypes.js');
 /* global isFunction:readable */
 include('helpers_xxx_UI.js');
@@ -129,7 +129,7 @@ function ThemedButton(
 	};
 
 	this.draw = function (gr, bLast = false) {
-		extendGR(gr, { DrawRoundRect: true, FillRoundRect: true }); // helpers_xxx_prototypes_smp.js
+		extendGR(gr, { DrawRoundRect: true, FillRoundRect: true, Debug: globSettings.bDebugPaint }); // helpers_xxx_prototypes_smp.js
 		// Draw?
 		if (this.state === buttonStates.hide) { return; }
 		const bDrawBackground = buttonsPanel.config.partAndStateID === 1;
