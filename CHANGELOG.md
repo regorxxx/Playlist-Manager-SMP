@@ -65,6 +65,7 @@
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
 ### Changed
+- Readme: updated readme pdf with latest changes and tips about 'Shift + Win + R. Click' shortcut (see above).
 ### Removed
 ### Fixed
 
