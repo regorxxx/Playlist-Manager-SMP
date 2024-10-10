@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/08/24
+//10/10/24
 
 /* exported _chart */
 
@@ -1096,25 +1096,25 @@ function _chart({
 				if (this.buttons.xScroll) {
 					if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'L. Click to scroll on X-axis...\nDouble L. Click to jump to ' + (this.rightBtn.hover ? 'right' : 'left');
+						ttText = 'L. Click to scroll on X-axis\n\nDouble L. Click to jump to ' + (this.rightBtn.hover ? 'right' : 'left');
 					}
 				}
 				if (this.buttons.settings) {
 					if (this.settingsBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'Main settings...';
+						ttText = 'Main settings\n\n(Shift + Win + R. Click\nfor SMP panel menu)';
 					}
 				}
 				if (this.buttons.display) {
 					if (this.displayBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'Display settings...';
+						ttText = 'Display settings';
 					}
 				}
 				if (this.buttons.zoom) {
 					if (this.zoomBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'Press Shift to zoom out...\nDouble CLick for max zoom in/out';
+						ttText = 'Press Shift to zoom out\n\nDouble CLick for max zoom in/out';
 					}
 				}
 				if (this.buttons.custom) {

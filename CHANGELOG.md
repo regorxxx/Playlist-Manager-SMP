@@ -66,6 +66,7 @@
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
 ### Changed
 - Readme: updated readme pdf with latest changes and tips about 'Shift + Win + R. Click' shortcut (see above).
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 

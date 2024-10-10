@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/10/24
+//10/10/24
 
 /* exported extendGR */
 
@@ -104,7 +104,7 @@ Object.defineProperty(fb, 'tfCache', {
 	gr
 */
 // Augment gr.DrawRoundRect() with error handling
-function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, ImgBox: true }) {
+function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, ImgBox: true, Debug: false }) {
 	if (!gr.Extended) { gr.Extended = options; }
 	else { Object.keys(options).forEach((opt) => { if (options[opt]) { gr.Extended[opt] = true; } }); }
 	if (options.DrawRoundRect) {
@@ -121,7 +121,7 @@ function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repa
 				try {
 					that = old(...arguments);
 				} catch (e) { bRetry = false; }
-				if (typeof doOnce !== 'undefined') {
+				if (typeof doOnce !== 'undefined' && options.Debug) {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: DrawRoundRect\n' +
 						e.message + '\n\n' +
@@ -152,7 +152,7 @@ function extendGR(gr, options = { DrawRoundRect: true, FillRoundRect: true, Repa
 				try {
 					that = old(...arguments);
 				} catch (e) { bRetry = false; }
-				if (typeof doOnce !== 'undefined') {
+				if (typeof doOnce !== 'undefined' && options.Debug) {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: FillRoundRect\n' +
 						e.message + '\n\n' +

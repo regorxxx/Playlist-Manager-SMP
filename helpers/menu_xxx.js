@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/10/24
+//10/10/24
 
 /* exported _menu, _attachedMenu */
 
@@ -714,10 +714,10 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name isSeparator
-	 * @param {{entrytext:string, name?:string} obj - Menu entry object.
+	 * @param {{entrytext?:string, name?:string}|string} obj - Menu entry object.
 	 * @returns {boolean}
 	 */
-	this.isSeparator = (obj) => { return ((obj.entryText || obj.name) === 'separator' || (obj.entryText || obj.name) === 'sep'); };
+	this.isSeparator = (obj) => { return ((obj.entryText || obj.name || obj) === 'separator' || (obj.entryText || obj.name || obj) === 'sep'); };
 	/**
 	 * Checks if a menu entry (object) is not a separator.
 	 *
