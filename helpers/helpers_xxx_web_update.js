@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//28/10/23
 
 /* exported checkUpdate */
 
@@ -10,7 +10,7 @@ include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
 /* global WshShell:readable */
 include('helpers_xxx_web.js');
-/* global getText:readable */
+/* global downloadText:readable */
 
 function checkUpdate({
 	scriptName = window.ScriptInfo.Name,
@@ -24,7 +24,7 @@ function checkUpdate({
 	const versionURL = bGithub
 		? repository.replace('github.com', 'raw.githubusercontent.com').replace(/\/$/, '') + '/main/VERSION'
 		: repository;
-	return getText(versionURL)
+	return downloadText(versionURL)
 		.then((lastVersion) => {
 			if (!compareVersions(version, lastVersion.replace(/^v/i, ''))) {
 				console.log('A new version has been found for ' + scriptName + ' script: ' + lastVersion.replace(/^v/i, ''));
@@ -56,7 +56,7 @@ function checkUpdate({
 				case 12007: reason = 'Network error'; break;
 				case '': reason = 'Uknown error'; break;
 			}
-			console.log('getText(): ' + reason + '\n\t' + versionURL);
+			console.log('downloadText(): ' + reason + '\n\t' + versionURL);
 			return false;
 		});
 }

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/07/24
+//28/10/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -179,7 +179,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST\)/g, '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
 				if (options.bDebug) { console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey); }
-				tfo = handle ? fb.TitleFormat(tfo) : null;
+				tfo = handle || bStatic ? fb.TitleFormat(tfo) : null;
 				tfoVal = bIsFunc || bIsWithinFunc
 					? sanitizeTagTfo(handle
 						? tfo.EvalWithMetadb(handle)
@@ -193,7 +193,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 				// If no value is returned but using a static variable with no tags, retry without []
 				if (bStatic && (typeof tfoVal === 'undefined' || tfoVal === null || tfoVal === '')) {
 					tfo = fb.TitleFormat(tfo.Expression.slice(1, -1));
-					tfoVal = sanitizeTagTfo(tfo.EvalWithMetadb(handle));
+					tfoVal = sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : tfo.Eval(true));
 				}
 				if (options.bDebug) { console.log('tfoVal:', tfoVal); }
 				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!

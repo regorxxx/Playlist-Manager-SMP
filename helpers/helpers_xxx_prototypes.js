@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/24
+//27/10/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian */
 
@@ -169,6 +169,11 @@ function roughSizeOfObject(object) {
 				for (const [key, subVal] of value) {
 					stack.push(key, subVal);
 				}
+			}
+		} else if (type === 'object' && value instanceof Promise) {
+			if (!objectList.has(value)) {
+				objectList.add(value);
+				bytes += value.toString().length * 2; // Obviously no way to check resolve size
 			}
 		} else if (type === 'object') {
 			if (!objectList.has(value)) {

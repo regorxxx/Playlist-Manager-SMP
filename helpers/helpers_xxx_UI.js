@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//27/10/24
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -191,6 +191,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		if (value === null) {
 			this.Deactivate();
 		} else {
+			value = value.replace(/&/g,'&&');
 			if (this.tooltip.Text !== value) {
 				this.text = this.tooltip.Text = value;
 				this.Activate();

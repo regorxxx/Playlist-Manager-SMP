@@ -1,9 +1,9 @@
 ﻿'use strict';
-//23/07/24
+//28/10/24
 
-/* exported getText, paginatedFetch, abortWebRequests */
+/* exported downloadText, paginatedFetch, abortWebRequests */
 
-function getText(URL) {
+function downloadText(URL) {
 	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1
 		? send({ method: 'GET', URL, bypassCache: true })
 		: Promise.reject(new Error('Input is not a link.'));
@@ -15,13 +15,14 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 			if (window.WebRequests) { window.WebRequests.delete(this); }
 			clearTimeout(timer); timer = null;
 			if (this.status === 200) {
-				if (func) { return func(this.responseText); }
+				if (func) { return func(this.responseText, this.response); }
 				else {
 					if (type !== null) {
 						const contentType = this.getResponseHeader('Content-Type');
 						if (contentType.indexOf(type) === -1) {
 							reject({ status: this.status, responseText: 'Type mismatch: ' + contentType + ' is not ' + type });
 						}
+						resolve(contentType.indexOf('text') !== -1 ? this.responseText : this.response);
 					}
 					resolve(this.responseText);
 				}

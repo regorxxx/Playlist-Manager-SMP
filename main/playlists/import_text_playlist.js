@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/04/24
+//28/10/24
 
 /* exported ImportTextPlaylist */
 
@@ -336,7 +336,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 					Object.keys(handleTags).forEach((key) => {
 						tags[key] = handleTags[key];
 						const lookupKey = lookupKeys.get(key.toUpperCase());
-						if (lookupKey) { lookup[lookupKey] = handleTags[key]; } // For youtube search
+						if (lookupKey) { lookup[lookupKey] = handleTags[key]; } // For youTube search
 					});
 					handleArr.push(void (0));
 					notFound.push({ idx, ...lookup, tags });
