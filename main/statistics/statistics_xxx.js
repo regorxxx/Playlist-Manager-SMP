@@ -1,10 +1,10 @@
 ﻿'use strict';
-//10/10/24
+//27/10/24
 
 /* exported _chart */
 
 include('statistics_xxx_helper.js');
-/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable */
+/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable */
 
 function _chart({
 	data /* [[{x, y}, ...]]*/,
@@ -31,13 +31,14 @@ function _chart({
 	callbacks = {
 		point: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
 		focus: {/* onMouseWwheel, onRbtnUp */ },
-		settings: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
-		display: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
-		zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
+		settings: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
+		display: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
+		zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
 		custom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
+		xScroll: {/* tooltip */ },
 		config: {/* change, backgroundColor */ }
 	},
-	configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true , maxSliceOnDataChange: 100 */ },
+	configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bDebug: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true , maxSliceOnDataChange: 100 */ },
 	x = 0,
 	y = 0,
 	w = window.Width,
@@ -73,20 +74,23 @@ function _chart({
 				onMouseWwheel: this.zoomX,
 				onRbtnUp: null
 			},
-			settings: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
-			display: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
+			settings: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
+			display: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
 			zoom: {
 				onLbtnUp: (x, y, mask) => this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -1 : 1),
 				onDblLbtn: (x, y, mask) => { this.zoomX(mask === MK_SHIFT || this.getCurrentRange() === 1 ? -Infinity : Infinity); },
 				onRbtnUp: null,
+				tooltip: null
 			},
 			custom: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
+			xScroll: { tooltip: null },
 			config: { change: null, backgroundColor: null }
 		};
 		this.configuration = {
 			bLoadAsyncData: true,
 			bAltVerticalText: false,
 			bPopupBackground: false,
+			bDebug: false,
 			bProfile: false,
 			bSlicePerKey: true,
 			bDynColor: true, bDynColorBW: true,
@@ -191,7 +195,89 @@ function _chart({
 					gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
 				};
 				paintPoint(color);
+			}
+		});
+	};
+
+	// Same than paintLines but splits thick lines into multiple pieces to avoid drawing glitches
+	this.paintLinesHighQ = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
+		// Antialias for lines use gr.SetSmoothingMode(4) before calling
+		const selBar = tickW;
+		// Values
+		let valH;
+		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
+		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
+		serie.forEach((value, j) => {
+			valH = value.y / maxY * (y - h);
+			const idx = xAxisValues.indexOf(value.x);
+			const xPoint = x + idx * tickW;
+			const yPoint = y - valH;
+			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
+			const point = this.dataCoords[i][j] = {
+				x: j > 0 ? xPoint - selBar / 2 : xPoint,
+				y: yPoint,
+				w: (j > 0 && j !== last ? selBar : selBar / 2),
+				h: valH
+			};
+			if (bFocused) {
+				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
+			}
+			if (j !== 0) {
+				const paintPoint = (color) => {
+					const newValH = serie[j - 1].y / maxY * (y - h);
+					const newXPoint = x + (idx - 1) * tickW;
+					const newYPoint = y - newValH;
+					if (this.graph.borderWidth > 1) {
+						const half = this.graph.borderWidth / 2;
+						const m = (newXPoint - xPoint) / Math.abs(newYPoint - yPoint);
+						const alpha = Math.atan(m) * (m < 0 && newYPoint > yPoint ? -1 : 1);
+						const xOffset = half * Math.cos(alpha);
+						const yOffset = half * Math.sin(alpha);
+						// const lineArr = [ - half, yPoint - half, xPoint + half, yPoint + half, newXPoint + half, newYPoint + half, newXPoint - half, newYPoint - half];
+						const lineArr = [xPoint - xOffset, yPoint - yOffset, xPoint + xOffset, yPoint + yOffset, newXPoint + xOffset, newYPoint + yOffset, newXPoint - xOffset, newYPoint - yOffset];
+						// const lineArr = [xPoint, yPoint, xPoint, y, newXPoint, y, newXPoint, newYPoint];
+						gr.FillPolygon(color, 0, lineArr);
+					} else {
+						gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
+					}
+				};
+				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
+			}
+		});
+	};
+
+	this.paintFill = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
+		// Antialias for lines use gr.SetSmoothingMode(4) before calling
+		const selBar = tickW;
+		// Values
+		let valH;
+		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
+		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
+		serie.forEach((value, j) => {
+			valH = value.y / maxY * (y - h);
+			const idx = xAxisValues.indexOf(value.x);
+			const xPoint = x + idx * tickW;
+			const yPoint = y - valH;
+			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
+			const point = this.dataCoords[i][j] = {
+				x: j > 0 ? xPoint - selBar / 2 : xPoint,
+				y: yPoint,
+				w: (j > 0 && j !== last ? selBar : selBar / 2),
+				h: valH
+			};
+			if (bFocused) {
+				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
+			}
+			if (j !== 0) {
+				const paintPoint = (color) => {
+					const newValH = serie[j - 1].y / maxY * (y - h);
+					const newXPoint = x + (idx - 1) * tickW;
+					const newYPoint = y - newValH;
+					const lineArr = [xPoint, yPoint, xPoint, y, newXPoint + 0.25, y, newXPoint + 0.25, newYPoint];
+					gr.FillPolygon(color, 0, lineArr);
+				};
+				paintPoint(color);
 			}
 		});
 	};
@@ -441,7 +527,9 @@ function _chart({
 		y -= this.axis.y.width;
 		let tickW, barW, offsetTickText = 0;
 		switch (this.graph.type) {
-			case 'lines': {
+			case 'lines':
+			case 'lines-hq':
+			case 'fill': {
 				x -= this.axis.x.width * 1 / 2;
 				tickW = (w - this.margin.leftAuto) / ((xAxisValuesLen - 1) || 1);
 				barW = 0;
@@ -450,7 +538,13 @@ function _chart({
 				const last = xAxisValuesLen - 1;
 				gr.SetSmoothingMode(4); // Antialias for lines
 				this.dataDraw.forEach((serie, i) => {
-					this.paintLines(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+					if (this.graph.type === 'fill') {
+						this.paintFill(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+					} else if (this.graph.type === 'lines') {
+						this.paintLines(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+					} else if (this.graph.type === 'lines-hq') {
+						this.paintLinesHighQ(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+					}
 				});
 				gr.SetSmoothingMode(0);
 				break;
@@ -664,35 +758,42 @@ function _chart({
 				}
 				if (this.axis.x.show) {
 					if (this.axis.x.show && this.axis.x.labels) {
-						if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
-							const yPos = (y - h) + this.margin.top - this.graph.borderWidth / 2 - (this.axis.x.bAltLabels ? 0 : (y - h) / 2);
-							xAxisValues.forEach((valueX, i) => {
-								const xLabel = x + i * tickW;
-								if (this.axis.x.labels) {
-									const tickH = gr.CalcTextHeight(valueX, this.gFont);
-									const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
-									const xTickW = gr.CalcTextWidth(valueX, this.gFont);
-									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-									gr.FillSolidRect(xLabel + tickW / 2 + offsetTickText - _scale(3) - xTickW / 2, yPos + tickH / 6, xTickW + _scale(4), tickH, borderColor);
-									gr.GdiDrawText(valueX, this.gFont, xAxisColorInverted, xLabel + offsetTickText, yPos + this.axis.y.width, tickW, this.h, flags);
-								}
-								const yLine = yPos + this.axis.x.width * 2;
-								let xLine = xLabel;
-								let hLine = yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0);
-								// Center line and ajust height if data is evenly grouped
-								if (this.graphSpecs.timeline.bAxisCenteredX) {
-									xLine += tickW / 2;
-									if (this.dataManipulation.group % 2 !== 0) {
-										const [serie, idx] = this.tracePoint(xLine, yPos - this.axis.x.width - (y - h) / 2);
-										if (serie !== -1 && idx !== -1) {
-											const coords = this.sizePoint(this.dataCoords[serie][idx], false);
-											hLine += coords.h;
-										}
+						const yPos = (y - h) + this.margin.top - this.graph.borderWidth / 2 - (this.axis.x.bAltLabels ? 0 : (y - h) / 2);
+						const minTickW = w / 30;
+						const bFitTicks = w / tickW < 30;
+						const drawLabelW = bFitTicks ? tickW : tickW * 3;
+						let lastLabel = x;
+						xAxisValues.forEach((valueX, i) => {
+							const xLabel = x + i * tickW;
+							// Don't paint labels when they can't be fitted properly
+							if (!bFitTicks) {
+								if (i !== 0 && (xLabel - lastLabel) < minTickW) { return; }
+								lastLabel = xLabel;
+							}
+							if (this.axis.x.labels) {
+								const tickH = gr.CalcTextHeight(valueX, this.gFont);
+								const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+								const xTickW = gr.CalcTextWidth(valueX, this.gFont);
+								const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+								gr.FillSolidRect(xLabel + tickW / 2 + offsetTickText - _scale(3) - xTickW / 2, yPos + tickH / 6, xTickW + _scale(4), tickH, borderColor);
+								gr.GdiDrawText(valueX, this.gFont, xAxisColorInverted, xLabel + offsetTickText - (bFitTicks ? 0 : tickW), yPos + this.axis.y.width, drawLabelW, this.h, flags);
+							}
+							const yLine = yPos + this.axis.x.width * 2;
+							let xLine = xLabel;
+							let hLine = yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0);
+							// Center line and ajust height if data is evenly grouped
+							if (this.graphSpecs.timeline.bAxisCenteredX) {
+								xLine += tickW / 2;
+								if (this.dataManipulation.group % 2 !== 0) {
+									const [serie, idx] = this.tracePoint(xLine, yPos - this.axis.x.width - (y - h) / 2);
+									if (serie !== -1 && idx !== -1) {
+										const coords = this.sizePoint(this.dataCoords[serie][idx], false);
+										hLine += coords.h;
 									}
 								}
-								gr.DrawLine(xLine, yLine, xLine, hLine, this.axis.x.width / 2, xAxisColor);
-							});
-						}
+							}
+							gr.DrawLine(xLine, yLine, xLine, hLine, this.axis.x.width / 2, xAxisColor);
+						});
 					}
 					if (this.axis.x.key.length && this.axis.x.showKey) {
 						const offsetH = this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0;
@@ -703,38 +804,45 @@ function _chart({
 			// eslint-disable-next-line no-fallthrough
 			case 'bars': // NOSONAR [fallthrough]
 				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels && this.graph.type !== 'timeline') {
-					if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
-						const yLabel = (y - h) / 2;
-						xAxisValues.forEach((valueX, i) => {
-							let xLabel = x + i * tickW;
-							valueX = this.configuration.bAltVerticalText ? valueX.flip() : valueX;
-							const xTickW = gr.CalcTextWidth(valueX, this.gFont);
-							const xtickH = gr.CalcTextHeight(valueX, this.gFont);
-							// Draw line and rectangle
-							const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
-							gr.DrawLine(xLabel, y, xLabel, yLabel, this.axis.x.width / 2, xAxisColor);
-							xLabel -= (i === 0 ? 0 : xtickH / 2);
-							gr.FillSolidRect(xLabel, yLabel - xTickW - _scale(5), xtickH, xTickW + _scale(5), borderColor);
-							if (this.configuration.bAltVerticalText) { // Flip chars
-								gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-								gr.DrawString(valueX, this.gFont, xAxisColor, xLabel, yLabel - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
-								gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
-							} else {
-								const keyH = gr.CalcTextHeight(valueX, this.gFont);
-								const img = gdi.CreateImage(xTickW, keyH);
-								const _gr = img.GetGraphics();
-								_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
-								_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-								_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
-								img.RotateFlip(RotateFlipType.Rotate90FlipXY);
-								img.ReleaseGraphics(_gr);
-								gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-								gr.DrawImage(img, xLabel, yLabel - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
-								gr.SetInterpolationMode(InterpolationMode.Default);
-							}
-						});
-					}
+					const yLabel = (y - h) / 2;
+					const minTickW = w / 30;
+					const bFitTicks = w / tickW < 30;
+					if (!bFitTicks) { offsetTickText -= tickW; }
+					let lastLabel = x;
+					xAxisValues.forEach((valueX, i) => {
+						let xLabel = x + i * tickW;
+						// Don't paint labels when they can't be fitted properly
+						if (!bFitTicks) {
+							if (i !== 0 && (xLabel - lastLabel) < minTickW) { return; }
+							lastLabel = xLabel;
+						}
+						valueX = this.configuration.bAltVerticalText ? valueX.flip() : valueX;
+						const xTickW = gr.CalcTextWidth(valueX, this.gFont);
+						const xtickH = gr.CalcTextHeight(valueX, this.gFont);
+						// Draw line and rectangle
+						const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+						gr.DrawLine(xLabel, y, xLabel, yLabel, this.axis.x.width / 2, xAxisColor);
+						xLabel -= (i === 0 ? 0 : xtickH / 2);
+						gr.FillSolidRect(xLabel, yLabel - xTickW - _scale(5), xtickH, xTickW + _scale(5), borderColor);
+						if (this.configuration.bAltVerticalText) { // Flip chars
+							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
+							gr.DrawString(valueX, this.gFont, xAxisColor, xLabel, yLabel - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
+							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
+						} else {
+							const keyH = gr.CalcTextHeight(valueX, this.gFont);
+							const img = gdi.CreateImage(xTickW, keyH);
+							const _gr = img.GetGraphics();
+							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+							_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
+							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+							_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
+							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
+							img.ReleaseGraphics(_gr);
+							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
+							gr.DrawImage(img, xLabel, yLabel - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
+							gr.SetInterpolationMode(InterpolationMode.Default);
+						}
+					});
 				}
 				if (this.graph.multi) {
 					if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
@@ -826,36 +934,45 @@ function _chart({
 				// X Axis ticks
 				if (this.axis.x.show) {
 					if (this.graph.type !== 'timeline') {
-						if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
-							const last = xAxisValuesLen - 1;
-							const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
-							xAxisValues.forEach((valueX, i) => {
-								const xtickH = gr.CalcTextHeight(valueX, this.gFont);
-								const xtickW = gr.CalcTextWidth(valueX, this.gFont);
-								const xLabel = x + i * tickW;
-								if (this.axis.x.labels && (this.graph.type !== 'bars' || !this.axis.x.bAltLabels)) {
-									if (i === 0 && offsetTickText) { // Fix for first label position
-										const zeroW = xLabel + offsetTickText + tickW - this.x - this.margin.leftAuto / 2;
-										if (this.axis.x.bAltLabels) { gr.FillSolidRect(this.x + this.margin.leftAuto + xOffsetKey - xtickW / 2 + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
-										const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-										gr.GdiDrawText(valueX, this.gFont, xAxisColor, this.x + this.margin.leftAuto / 2 + xOffsetKey, y + this.axis.y.width, zeroW, this.h, flags);
-									} else if (i === last) { // Fix for last label position
-										const lastW = xLabel + offsetTickText + tickW > w - this.margin.right
-											? this.x + w - (xLabel + offsetTickText) + this.margin.right
-											: tickW;
-										if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel + offsetTickText + xOffsetKey + (lastW / 2 - xtickW) + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
-										const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-										gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
-									} else {
-										if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel - xtickW / 2 - _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
-										const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-										gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText, y + this.axis.y.width, tickW, this.h, flags);
-									}
+						const last = xAxisValuesLen - 1;
+						const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+						const minTickW = w / 30;
+						const bFitTicks = w / tickW < 30;
+						const drawLabelW = bFitTicks ? tickW : tickW * 3;
+						if (!bFitTicks) { offsetTickText -= tickW; }
+						let lastLabel = x;
+						xAxisValues.forEach((valueX, i) => {
+							const xtickH = gr.CalcTextHeight(valueX, this.gFont);
+							const xtickW = gr.CalcTextWidth(valueX, this.gFont);
+							let xLabel = x + i * tickW;
+							// Don't paint labels when they can't be fitted properly
+							if (!bFitTicks) {
+								if (i !== 0 && (xLabel - lastLabel) < minTickW) { return; }
+								lastLabel = xLabel;
+							}
+							if (this.axis.x.labels && (this.graph.type !== 'bars' || !this.axis.x.bAltLabels)) {
+								if (i === 0 && offsetTickText) { // Fix for first label position
+									const zeroW = xLabel + offsetTickText - this.x - this.margin.leftAuto / 2 + (bFitTicks ? tickW : drawLabelW);
+									const zeroX = this.x + this.margin.leftAuto / 2 + xOffsetKey + (bFitTicks ? 0 : tickW * 2 / 3);
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(this.x + this.margin.leftAuto + xOffsetKey - xtickW / 2 + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+									gr.GdiDrawText(valueX, this.gFont, xAxisColor, zeroX, y + this.axis.y.width, zeroW, this.h, flags);
+								} else if (i === last) { // Fix for last label position
+									const lastW = xLabel + offsetTickText + tickW > w - this.margin.right
+										? this.x + w - (xLabel + offsetTickText) + this.margin.right
+										: tickW;
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel + offsetTickText + xOffsetKey + (lastW / 2 - xtickW) + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+									gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
+								} else {
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel - xtickW / 2 - _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+									gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText, y + this.axis.y.width, drawLabelW, this.h, flags);
 								}
-								const xLine = xLabel + barW;
-								gr.DrawLine(xLine, y + this.axis.x.width * 2, xLine, y - this.axis.x.width, this.axis.x.width / 2, xAxisColor);
-							});
-						}
+							}
+							const xLine = xLabel + barW;
+							gr.DrawLine(xLine, y + this.axis.x.width * 2, xLine, y - this.axis.x.width, this.axis.x.width / 2, xAxisColor);
+						});
 						if (this.axis.x.key.length && this.axis.x.showKey) {
 							const offsetH = this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0;
 							gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColor, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
@@ -881,7 +998,7 @@ function _chart({
 
 	this.paintButtons = (gr, bHideToolbar = false) => {
 		const color = invert(this.callbacks.config.backgroundColor ? this.callbacks.config.backgroundColor()[0] : this.background.color || this.axis.x.color, true);
-		if (this.buttons.xScroll) {
+		if (this.buttons.xScroll && this.getCurrentRange() < this.getMaxRange()) {
 			this.leftBtn.paint(gr, color);
 			this.rightBtn.paint(gr, color);
 		}
@@ -1096,32 +1213,50 @@ function _chart({
 				if (this.buttons.xScroll) {
 					if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'L. Click to scroll on X-axis\n\nDouble L. Click to jump to ' + (this.rightBtn.hover ? 'right' : 'left');
+						ttText = this.callbacks.xScroll.tooltip
+							? isFunction(this.callbacks.xScroll.tooltip)
+								? this.callbacks.xScroll.tooltip(this.rightBtn.hover)
+								: this.callbacks.xScroll.tooltip
+							: 'L. Click to scroll on X-axis\n\nDouble L. Click to jump to ' + (this.rightBtn.hover ? 'right' : 'left');
 					}
 				}
 				if (this.buttons.settings) {
 					if (this.settingsBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'Main settings\n\n(Shift + Win + R. Click\nfor SMP panel menu)';
+						ttText = this.callbacks.settings.tooltip
+							? isFunction(this.callbacks.settings.tooltip)
+								? this.callbacks.settings.tooltip()
+								: this.callbacks.settings.tooltip
+							: 'Main settings\n\n(Shift + Win + R. Click\nfor SMP panel menu)';
 					}
 				}
 				if (this.buttons.display) {
 					if (this.displayBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'Display settings';
+						ttText = this.callbacks.display.tooltip
+							? isFunction(this.callbacks.display.tooltip)
+								? this.callbacks.display.tooltip()
+								: this.callbacks.display.tooltip
+							: 'Display settings';
 					}
 				}
 				if (this.buttons.zoom) {
 					if (this.zoomBtn.move(x, y)) {
 						bHand = true;
-						ttText = 'Press Shift to zoom out\n\nDouble CLick for max zoom in/out';
+						ttText = this.callbacks.zoom.tooltip
+							? isFunction(this.callbacks.zoom.tooltip)
+								? this.callbacks.zoom.tooltip()
+								: this.callbacks.zoom.tooltip
+							: 'Press Shift to zoom out\n\nDouble L. Click for max zoom in/out';
 					}
 				}
 				if (this.buttons.custom) {
 					if (this.customBtn.move(x, y)) {
 						bHand = true;
 						ttText = this.callbacks.custom.tooltip
-							? isFunction(this.callbacks.custom.tooltip) ? this.callbacks.custom.tooltip() : this.callbacks.custom.tooltip
+							? isFunction(this.callbacks.custom.tooltip)
+								? this.callbacks.custom.tooltip()
+								: this.callbacks.custom.tooltip
 							: '';
 					}
 				}
@@ -1145,17 +1280,28 @@ function _chart({
 					this.currPoint = [serie, idx];
 					if (bPoint) {
 						bHand = true;
-						const serieData = this.dataDraw[serie];
-						const point = serieData[idx];
 						const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
-						const percent = bPercent ? Math.round(point.y * 100 / serieData.reduce((acc, point) => acc + point.y, 0)) : null;
-						ttText = point.x + ': ' + round(point.y, 3) + (this.axis.y.key ? ' ' + this.axis.y.key : '') +
-							(bPercent ? ' ' + _p(percent + '%') : '') +
-							(Object.hasOwn(point, 'z') ? ' - ' + point.z : '') +
-							(this.tooltipText
-								? isFunction(tooltipText) ? tooltipText.call(this, point, serie, mask) : tooltipText
-								: ''
-							);
+						const refPoint = this.dataDraw[serie][idx];
+						const bShowAllPoints = this.graph.multi && ['scatter', 'lines', 'fill'].includes(this.graph.type);
+						const points = bShowAllPoints && this.dataDraw.length > 1
+							? this.dataDraw.map((s) => s.find((p) => p.x === refPoint.x)).flat(Infinity).filter(Boolean)
+							: [refPoint];
+						ttText = '';
+						const bMultiLine = points.length > 1;
+						ttText += '[X]' + this.axis.x.key + ' - [Y]' + this.axis.y.key + (this.graph.multi ? ' - [Z]' + this.axis.z.key : '') + '\n\n';
+						points.forEach((point, i) => {
+							const percent = bPercent
+								? Math.round(point.y * 100 / this.dataDraw[i].reduce((acc, point) => acc + point.y, 0))
+								: null;
+							ttText += (i === 0 || !bMultiLine ? point.x + ':' : '') + (bMultiLine ? '\n\t' : ' ');
+							ttText += round(point.y, 3)
+								+ (this.axis.y.key ? ' ' + this.axis.y.key : '') +
+								(bPercent ? ' ' + _p(percent + '%') : '') +
+								(this.graph.multi ? ' - ' + point.z : '');
+						});
+						ttText += this.tooltipText
+							? isFunction(tooltipText) ? tooltipText.call(this, refPoint, serie, mask) : tooltipText
+							: '';
 					}
 				}
 				if (ttText.length) { this.tooltip.SetValue(ttText, true); }
@@ -1165,6 +1311,15 @@ function _chart({
 			}
 		}
 		this.leavePoints(false);
+		return false;
+	};
+
+	this.isOnButton = (x, y) => {
+		if (!window.ID) { return false; }
+		if (this.pop.isEnabled()) { return false; }
+		if (this.trace(x, y)) {
+			return this.getButtonKeys().filter(Boolean).some((button) => this[button].move(x, y));
+		}
 		return false;
 	};
 
@@ -1244,6 +1399,10 @@ function _chart({
 		const points = Math.max(...this.stats.points);
 		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
 		return Math.max(Math.min(currSlice[1] - currSlice[0], points), 1);
+	};
+
+	this.getMaxRange = () => {
+		return Math.max(...this.stats.points);
 	};
 
 	let prevX = null;
@@ -1341,7 +1500,9 @@ function _chart({
 	this.hasToolbar = false;
 	this.buttonsCoords = { x: () => this.x + this.w - _scale(26), y: () => this.y + _scale(12), size: _scale(24) };
 	this.resizeButtons = () => {
-		this.leftBtn.x = this.x;
+		this.leftBtn.x = this.axis.y.show && !['doughnut', 'pie'].includes(this.graph.type)
+			? this.x + this.margin.leftAuto * 2
+			: this.x;
 		this.leftBtn.y = (this.y + this.h) / 2;
 		this.leftBtn.w = this.buttonsCoords.size / 2;
 		this.rightBtn.x = this.x + this.w - this.rightBtn.w;
@@ -1529,6 +1690,7 @@ function _chart({
 	this.filter = () => { // Filter points with user provided function
 		if (!this.dataManipulation.filter) { return; }
 		this.dataDraw = this.dataDraw.map((serie) => { return serie.filter(this.dataManipulation.filter); });
+		if (this.configuration.bDebug) { memoryPrint('filter', this.dataDraw); }
 	};
 
 	this.slice = () => { // Draw only selected points
@@ -1578,6 +1740,7 @@ function _chart({
 
 	this.normal = (bInverse = false) => { // Sort as normal distribution
 		this.dataDraw = this.normalApply(this.dataDraw, bInverse);
+		if (this.configuration.bDebug) { memoryPrint('normal', this.dataDraw); }
 	};
 
 	this.normalApply = (series, bInverse = false) => { // Sort as normal distribution
@@ -1585,7 +1748,7 @@ function _chart({
 		series = series.map((serie) => { return serie.sort(sort).reduceRight((acc, val, i) => { return i % 2 === 0 ? [...acc, val] : [val, ...acc]; }, []); });
 		const slice = this.dataManipulation.slice;
 		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return series; } // NOSONAR
-		series = series.map((serie) => {
+		return series.map((serie) => {
 			const len = serie.length;
 			const tail = slice[1];
 			const center = Math.round(len / 2) + slice[0];
@@ -1593,7 +1756,6 @@ function _chart({
 			const right = center + tail;
 			return serie.slice(left - 1, right);
 		});
-		return series;
 	};
 
 	this.normalInverse = () => { // Tails of normal distribution
@@ -1771,6 +1933,7 @@ function _chart({
 			}
 			statistics.median = statistics.min + (i > 0 ? (2 * i - 1) * binSize / 2 : 0);
 		}
+		if (this.configuration.bDebug) { memoryPrint('statistics', [statistics, histogram]); }
 		return statistics;
 	};
 
@@ -1791,6 +1954,63 @@ function _chart({
 			histogram[Math.floor((item - min) / size)]++;
 		}
 		return histogram;
+	};
+
+	this.computeStatisticsPoint = (point = this.getCurrentPoint(), precision = 1) => {
+		const serieIdx = this.dataDraw.length === 1
+			? 0
+			: this.getCurrentPoint() === point
+				? this.getCurrentPointIndex()
+				: this.dataDraw.findIndex((serie) => serie.findIndex((p) => {
+					return ['x', 'y', 'z'].every((c) => !p[c] && !point[c] || p[c] === point[c]);
+				}));
+		const bIs3D = this.graph.multi;
+		let currNum = 0, totalNum = 0;
+		const total = bIs3D
+			? this.data[serieIdx]
+				.map((pointArr) => pointArr.map((subPoint) => subPoint.y)).flat(Infinity)
+				.reduce((acc, curr) => { totalNum++; return acc + curr; }, 0)
+			: this.data[serieIdx]
+				.map((dataPoint) => dataPoint.y).flat(Infinity)
+				.reduce((acc, curr) => { totalNum++; return acc + curr; }, 0);
+		const totalCurr = bIs3D
+			? this.data[serieIdx]
+				.map((pointArr) => pointArr.filter((dataPoint) => dataPoint.z === point.z))
+				.map((pointArr) => pointArr.map((subPoint) => subPoint.y)).flat(Infinity)
+				.reduce((acc, curr) => { currNum++; return acc + curr; }, 0)
+			: total;
+		const avg = total / totalNum;
+		const avgCurr = bIs3D
+			? totalCurr / currNum
+			: avg;
+		const stats = {
+			global: {
+				total,
+				avg,
+				avg100: avg / total * 100
+			},
+			current: {
+				total: totalCurr,
+				total100: totalCurr / total * 100,
+				avg: avgCurr,
+				avg100: avgCurr / totalCurr * 100,
+				y: round(point.x, 1),
+				y100: point.y / total * 100
+			}
+		};
+		if (precision >= 0) {
+			['global', 'current'].forEach((key) => {
+				['total', 'avg', 'y'].forEach((subKey) => {
+					const item = stats[key];
+					if (Object.hasOwn(item, subKey)) { item[subKey] = round(item[subKey], precision); }
+				});
+				['total100', 'avg100', 'y100'].forEach((subKey) => {
+					const item = stats[key];
+					if (Object.hasOwn(item, subKey)) { item[subKey] = round(item[subKey], precision + 1); }
+				});
+			});
+		}
+		return stats;
 	};
 
 	this.expandData = (group = this.dataManipulation.group) => {
@@ -1818,6 +2038,7 @@ function _chart({
 
 	this.manipulateData = () => {
 		if (!this.data) { return false; }
+		if (this.configuration.bDebug) { memoryPrint('manipulate data init'); }
 		if (this.configuration.bProfile) { this.profile.Reset(); }
 		this.expandData();
 		if (this.configuration.bProfile) { this.profile.Print('Expand data', false); }
@@ -1836,13 +2057,24 @@ function _chart({
 			if (this.configuration.bProfile) { this.profile.Print('Probability plot', false); }
 		}
 		this.stats.pointsDraw = this.dataDraw.map((serie) => serie.length);
+		if (this.configuration.bDebug) { memoryPrint('manipulate data end', this.dataDraw); }
 	};
 
 	/*
 		Config related
 	*/
 
-	this.changeConfig = ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, graphSpecs, margin, x, y, w, h, title, configuration, gFont, bPaint = true, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) => {
+	this.getButtonKeys = () => {
+		return [
+			...(this.buttons.xScroll ? ['leftBtn', 'rightBtn'] : []),
+			(this.buttons.settings ? 'settingsBtn' : ''),
+			(this.buttons.display ? 'displayBtn' : ''),
+			(this.buttons.zoom ? 'zoomBtn' : ''),
+			(this.buttons.custom ? 'custom' : '')
+		];
+	};
+
+	this.changeConfig = ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, graphSpecs, margin, x, y, w, h, title, configuration, gFont, bPaint = true, bForceLoadData = false, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) => {
 		let bCheckColors = false;
 		if (gFont) { this.gFont = gFont; }
 		if (this.data && this.data.length) {
@@ -1879,6 +2111,7 @@ function _chart({
 			if (axis.x) { this.axis.x = { ...this.axis.x, ...axis.x }; }
 			if (axis.y) { this.axis.y = { ...this.axis.y, ...axis.y }; }
 			if (axis.z) { this.axis.z = { ...this.axis.z, ...axis.z }; }
+			if (Object.hasOwn(axis.y, 'show')) { this.resizeButtons(); }
 		}
 		if (graphSpecs) {
 			if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
@@ -1898,8 +2131,8 @@ function _chart({
 			}
 		}
 		this.checkConfig();
-		if (data || (dataManipulation || graph) && !(dataAsync || this.dataAsync)) { this.initData(); }
-		if (this.configuration.bLoadAsyncData) {
+		if (data || (dataManipulation || graph) && !dataAsync) { this.initData(); }
+		if (this.configuration.bLoadAsyncData || bForceLoadData) {
 			if (dataAsync) { this.initDataAsync(); }
 			else if (bCheckColors && this.dataAsync) { this.dataAsync.then(() => this.checkColors()); }
 		} // May be managed by the chart or externally
@@ -2196,6 +2429,7 @@ function _chart({
 		// Missing colors
 		this.checkScheme();
 		if (this.data && this.data.length) { this.checkColors(); }
+		if (this.configuration.bDebug) { memoryPrint('init data', this.data); }
 	};
 
 	this.initDataAsync = () => {
@@ -2220,17 +2454,28 @@ function _chart({
 	};
 
 	this.setDefaults();
+	/** @type {GdiFont} */
 	this.gFont = gFont;
+	/** @type {any[][]} */
 	this.data = data;
+	/** @type {null|Promise.<any[][]>} */
 	this.dataAsync = dataAsync;
+	/** @type {any[][]>} */
 	this.dataDraw = data || [];
+	/** @type {any[][][]>} */
 	this.dataCoords = this.dataDraw.map(() => { return []; });
 	this.dataManipulation = { ...this.dataManipulation, ...(dataManipulation || {}) };
+	/** @type {null|string[]} */
 	this.sortKey = null;
+	/** @type {number}} */
 	this.series = data ? data.length : 0;
+	/** @type {{type: string, multi: Boolean, borderWidth: number, point:'circle'|'cross'|'triangle', pointAlpha: number}} */
 	this.graph = { ...this.graph, ...(graph || {}) };
+	/** @type {{color: number, image: {imageGDI: GdiGraphics}}} */
 	this.background = { ...this.background, ...(background || {}) };
+	/** @type {nunmber[]|number[][]} */
 	this.colors = colors;
+	/** @type {{scheme: 'diverging'|'qualitative'|'sequential'|'random'|number[], colorBlindSafe: Boolean, interpolation: 'lrgb'|'rgb'|'lab'|'hsl'|'lch'}} @see https://vis4.net/chromajs/#color-scales */
 	this.chroma = { ...this.chroma, ...(chroma || {}) };
 	if (axis) {
 		if (axis.x) { this.axis.x = { ...this.axis.x, ...axis.x }; }
@@ -2241,6 +2486,7 @@ function _chart({
 		if (grid.x) { this.grid.x = { ...this.grid.x, ...grid.x }; }
 		if (grid.y) { this.grid.y = { ...this.grid.y, ...grid.y }; }
 	}
+	/** @type {{left: number, right: number, top: number, bottom: number}} */
 	this.margin = { ...this.margin, ...(margin || {}) };
 	if (graphSpecs) {
 		if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
@@ -2287,7 +2533,9 @@ function _chart({
 		lbtnDblFunc: (x, y, mask, parent) => { this.scrollX({ step: Infinity, bThrottle: false }); } // eslint-disable-line no-unused-vars
 	});
 	this.zoomBtn = new _button({
-		text: () => utils.IsKeyPressed(VK_SHIFT) || this.getCurrentRange() === 1 ? chars.searchMinus : chars.searchPlus,
+		text: () => utils.IsKeyPressed(VK_SHIFT) || this.getCurrentRange() === 1 && this.getMaxRange() > 0
+			? chars.searchMinus
+			: chars.searchPlus,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
 		notVisibleMode: 25, bTimerOnVisible: true,

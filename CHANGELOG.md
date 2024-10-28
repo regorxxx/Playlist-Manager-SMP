@@ -65,10 +65,21 @@
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
 ### Changed
+- Statistics: scrolling cursor is displayed when scrolling using mouse + dragging.
+- Statistics: added horizontal (x) scrolling using the mouse wheel (for mouses with horizontal moves).
+- Statistics: 'fill' chart type.
+- Statistics: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
+- Statistics: settings button tooltip now shows 'Double Click' shortcut to force data update (see above).
+- Statistics: general improvements and optimizations of point statistics. Now also show the total number of tracks before deduplication.
+- Statistics: axis legend is now shown at tooltip and point statistics popup.
+- Statistics: X-axis keys are now shown even when not all keys can be displayed, omitting some of the values. This ensures that charts displaying numbers at the axis at least show the initial and some middle values. This applies for bars, lines, scatter, fill and timeline charts.
+- Statistics: left scrolling button position is now adjusted following Y-Axis display (except for doughnut and pie charts).
+- Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
 - Readme: updated readme pdf with latest changes and tips about 'Shift + Win + R. Click' shortcut (see above).
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Statistics: minor fixes.
 
 ## [0.19.0] - 2024-10-09
 ### Added
