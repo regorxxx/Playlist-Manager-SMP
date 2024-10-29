@@ -65,6 +65,7 @@
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
 ### Changed
+- [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
 - Statistics: scrolling cursor is displayed when scrolling using mouse + dragging.
 - Statistics: added horizontal (x) scrolling using the mouse wheel (for mouses with horizontal moves).
 - Statistics: 'fill' chart type.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/24
+//29/10/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -768,7 +768,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const index = plman.FindPlaylist(pls.nameId);
 					const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 					const lockName = plman.GetPlaylistLockName(index);
-					const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+					const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
 					const flags = bSMPLock ? MF_STRING : MF_GRAYED;
 					const subMenuName = menu.newMenu('Edit UI Playlist lock');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED });
@@ -1416,7 +1416,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				playlistsLoaded.forEach((pls) => {
 					const index = plman.FindPlaylist(pls.nameId);
 					const lockNamePls = plman.GetPlaylistLockName(index);
-					if (!bSMPLock) { bSMPLock = (lockNamePls === 'foo_spider_monkey_panel' || !lockNamePls); }
+					if (!bSMPLock) { bSMPLock = (lockNamePls === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockNamePls); }
 					if (!bSMPLock) { lockName.add(lockNamePls); }
 				});
 				lockName = [...lockName][0] + (lockName.size > 1 ? ' & ...' : '');
@@ -1432,7 +1432,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								const index = plman.FindPlaylist(pls.nameId);
 								const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 								const lockName = plman.GetPlaylistLockName(index);
-								const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+								const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
 								if (bSMPLock) {
 									if (currentLocks.has(lock.type)) {
 										currentLocks.delete(lock.type);
@@ -1464,7 +1464,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const lockName = plman.GetPlaylistLockName(index);
-							const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+							const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
 							if (bSMPLock) {
 								plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
 							} else {
@@ -1482,7 +1482,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const lockName = plman.GetPlaylistLockName(index);
-							const bSMPLock = lockName === 'foo_spider_monkey_panel' || !lockName;
+							const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
 							if (bSMPLock) {
 								plman.SetPlaylistLockedActions(index, []);
 							} else {

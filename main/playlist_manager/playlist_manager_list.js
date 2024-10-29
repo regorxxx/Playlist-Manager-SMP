@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/24
+//29/10/24
 
 /* exported _list */
 
@@ -2100,7 +2100,7 @@ function _list(x, y, w, h) {
 										if (index === -1) { return false; }
 										const currentLocks = plman.GetPlaylistLockedActions(index) || [];
 										const lockName = plman.GetPlaylistLockName(index);
-										if (lockName === 'foo_spider_monkey_panel' || !lockName) {
+										if (lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName) {
 											if (currentLocks.length) {
 												plman.SetPlaylistLockedActions(index, []);
 											} else {
