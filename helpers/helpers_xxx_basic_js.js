@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/10/24
+//31/10/24
 
 /* exported clone, getNested, setNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
@@ -205,10 +205,10 @@ function tryFunc(fn) {
 	};
 }
 
-function tryMethod(fn, parent) {
+function tryMethod(fn, parent, returnOnError) {
 	return (...args) => {
 		let cache;
-		try { cache = parent[fn](...args); } catch (e) {/* continue regardless of error */ }
+		try { cache = parent[fn](...args); } catch (e) { return returnOnError; }
 		return cache;
 	};
 }

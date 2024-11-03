@@ -3,7 +3,7 @@ REQUISITES:
 Spider Monkey Panel 1.6.1 or greater (only stable releases supported):
 https://theqwertiest.github.io/foo_spider_monkey_panel/
 
-WINE USERS: 
+WINE USERS:
 -----------
 All scripts try to use wine-friendly methods, focusing on config settings that can be changed via
 menus or the UI panel, instead of using HTML (which only works on Windows), known working fonts, etc.
@@ -11,7 +11,7 @@ menus or the UI panel, instead of using HTML (which only works on Windows), know
 Please read this page and feel free to report (me) any problems with these scripts:
 https://theqwertiest.github.io/foo_spider_monkey_panel/docs/wine/
 
-INSTALLATION: 
+INSTALLATION:
 -------------
 If the script is provided as package file, use the SMP package manager to install it. Look
 at the wiki for a guide. Otherwise, to install as file follow these steps:
@@ -21,13 +21,13 @@ If there is no such path, create all the required folders and subfolders on it.
 Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg) (*)
 For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...
 For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  (**)
-For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\... 
+For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
 
 Then load any script found on the root folder into a SMP panel within foobar ('File' as
 script source). Check 'INFO' section (at bottom) for usage.
 
-Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section 
+Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section
 for more details, the github page or the related pdf documentation at 'readmes' folder (if available).
 
 (*) To change the hardcoded installation part of the path, go to .\helpers\helpers_xxx.js
@@ -41,24 +41,24 @@ where they should reside (instead of the root of the foobar2000 installation pat
 and files which must be moved include:
 	index-data, js_data, component-updates, configuration, crash reports, user-components,
 	foo_spider_monkey_panel, library, playlists, theme.fth, LargeFieldsConfig.txt, version.txt
-Some extra folders from other components which must be moved include (non extensive list): 
+Some extra folders from other components which must be moved include (non extensive list):
 	autobackup, dvda_metabase, foo_httpcontrol_data, foo_youtube, images, lastfm, python, sacd_metabase,
 	vst-presets, yttm,minibar.db, playlist-tree-0.pts, playlist-tree-1.pts,
 If you don't move all the config folders/files then on startup default values will be used for things
 not found, probably "losing" the theme or other config. You may "fix" it later moving the missing files
 which still reside in the root. May take some tries to do them all.
 
-SMP 1.5.2+ WINE BUG (crash when installing scripts): 
+SMP 1.5.2+ WINE BUG (crash when installing scripts):
 ----------------------------------------------------
 After loading a script into a panel, Foobar2000 may crash (not only the panel). See below.
 
-SMP 1.5.2+ BUG (crash when installing scripts): 
+SMP 1.5.2+ BUG (crash when installing scripts):
 -----------------------------------------------
 After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files',
-check '_switchPaths.zip'. Follow its instructions to fix it. Then report it at 
+check '_switchPaths.zip'. Follow its instructions to fix it. Then report it at
 https://hydrogenaud.io/index.php?topic=116669.0
 
-PORTABLE TIP: 
+PORTABLE TIP:
 -------------
 Some scripts have configurable paths to save json data, track playlists, etc. Those can be found on
 the properties panel. Instead of using the menus and adding an absolute path, it would be advisable
@@ -68,38 +68,38 @@ H:\MySoftware\foobar2000\profile\playlist_manager\	--> .\profile\playlist_manage
 													--> .\playlist_manager\			(<= 1.5:)
 
 When an script finds it's being loaded within a portable installation, will set the default paths using
-relative paths. It will also warn with popups and/or the console about the -non recommended- use of 
+relative paths. It will also warn with popups and/or the console about the -non recommended- use of
 absolute paths on portable installations. If you are using a portable installation on fixed discs with
-absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it in a 
-removable device (whose disk letter changes). The configured paths would look for a disk letter which 
+absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it in a
+removable device (whose disk letter changes). The configured paths would look for a disk letter which
 would be different every time.
 
 FOO_JESUS TIP:
 -------------
-If using Autosave & Autobackup component (https://www.foobar2000.org/components/view/foo_jesus) it's 
-recommended to add 'js_data' and 'playlist_manager' folders at 
-'Preferences\Advanced\Autosave & Autobackup\Files and directories to backup (...)'. 
-'js_data' contains config json data for most of these scripts, while 'playlist_manager' folder is the 
+If using Autosave & Autobackup component (https://www.foobar2000.org/components/view/foo_jesus) it's
+recommended to add 'js_data' and 'playlist_manager' folders at
+'Preferences\Advanced\Autosave & Autobackup\Files and directories to backup (...)'.
+'js_data' contains config json data for most of these scripts, while 'playlist_manager' folder is the
 default folder to save playlists files for the playlist manager (*).
 
 Note the same tip applies if using the SMP script replacement Autobackup-SMP: https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/autobackup-smp/
 
 (*) When the default path is changed or when using multiple playlist manager panels (and thus different
-paths), don't forget to add them to Autosave config too. There is a limit though, paths outside the 
-profile folder can not be autosaved by the component. That happens when tracking a playlist folder at 
-the place where the music resides (for relative paths playlist usage), network locations, etc. In some 
+paths), don't forget to add them to Autosave config too. There is a limit though, paths outside the
+profile folder can not be autosaved by the component. That happens when tracking a playlist folder at
+the place where the music resides (for relative paths playlist usage), network locations, etc. In some
 cases this limitation can be bypassed by creating a SymLink at the profile folder to the external path.
 For ex: C:\Foobar2000\profile\my_external_folder\ -> symlink -> H:\Music\
 
 Presets TIP:
 -------------
-There are multiple useful presets for components, the UI or these SMP scripts at the folder named 
-'Presets'. Readmes can be found there. Some of them are meant to be loaded automatically (recipes and 
-themes for Search By Distance) to then be set at buttons, others are meant to be loaded on demand to 
+There are multiple useful presets for components, the UI or these SMP scripts at the folder named
+'Presets'. Readmes can be found there. Some of them are meant to be loaded automatically (recipes and
+themes for Search By Distance) to then be set at buttons, others are meant to be loaded on demand to
 modify the panel behavior (Playlist Tools). Masstagger presets can be loaded at its panel, while UI
-TF scripts are meant to be used at different places of UI config (columns, library view, etc.) if 
-desired. In both cases their use is in line with these SMP scripts, so they make it easier to tag or 
-visualize most commonly used tags, variables, etc. (for ex. a CUI script which displays keys in 
+TF scripts are meant to be used at different places of UI config (columns, library view, etc.) if
+desired. In both cases their use is in line with these SMP scripts, so they make it easier to tag or
+visualize most commonly used tags, variables, etc. (for ex. a CUI script which displays keys in
 Camelot Wheel notation with colors).
 	- AutoHotkey: for world map script automatic tagging
 	- Masstagger: general tagging scripts which may be useful
@@ -113,11 +113,11 @@ Camelot Wheel notation with colors).
 		- CUI
 	- World Map: pre-filled database with artist/country tags
 
-INFO: 
+INFO:
 -----
 This is general info for all the scripts. Within all files you will find 6 [+] big scripts: Playlist
 Manager, Timeline, World Map, Not a Waveform Seekbar, Search by Distance (button) and Playlist Tools
-(button). And a collection of other small utilities and/or buttons (quicksearch, top tracks, 
+(button). And a collection of other small utilities and/or buttons (quicksearch, top tracks,
 duplicates, device priority, etc.). All files have extensive comments and descriptions at the header
 and all along the code, so you can check specific info about what everything does in its own file.
 
@@ -134,7 +134,7 @@ The root folder (with this readme) contains these scripts which can be loaded in
 		- May be used along Biography 1.1.X or 1.2.X+
 		- Requires some fonts.
 			- _resources\fontawesome-webfont.ttf
-		- A pre-built artist-country database is provided: 
+		- A pre-built artist-country database is provided:
 			presets\World Map\worldMap.json\worldMap.json
 	+ timeline.js [+]
 		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/timeline-smp/
@@ -196,7 +196,7 @@ The buttons folder (the one named 'buttons') contains buttons to be loaded by th
 	+ Last.fm:
 		- .\buttons\buttons_lastfm_tools.js
 	+ Tagging:
-		- .\buttons\buttons_tags_automation.js
+		- .\buttons\buttons_tags_tagger.js
 		- .\buttons\buttons_tags_save_tags.js
 	+ Autobackup:
 		- .\buttons\buttons_others_autobackup.js
@@ -208,12 +208,12 @@ is not supported. Only loading them via the toolbar script. The buttons folder c
 example files in case anyone wants to create their own buttons using the existing framework.
 
 The 'helpers' and 'main' folder contains common files used by most of the scripts. Don't touch
-or load these alone. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js' 
-and 'dyngenre_map_xxx.js' files, are related to 'Search by Distance' scripts. Look at those 
-files to understand what they do. Some users may want to add their own genres/styles at 
-'music_graph_descriptors_xxx_user.js', to do so a copy of the file must be placed at 
+or load these alone. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js'
+and 'dyngenre_map_xxx.js' files, are related to 'Search by Distance' scripts. Look at those
+files to understand what they do. Some users may want to add their own genres/styles at
+'music_graph_descriptors_xxx_user.js', to do so a copy of the file must be placed at
 (profile folder) '.\\js_data\\helpers\\' (this can be done with the customizable button).
 
-The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create 
-graphs within foobar or for html rendering. Read 'music_graph_descriptors_xxx.js' and check 
+The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create
+graphs within foobar or for html rendering. Read 'music_graph_descriptors_xxx.js' and check
 'Draw Graph.html' in your browser (drag n drop) to see what they do.
