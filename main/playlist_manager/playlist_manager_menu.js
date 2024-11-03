@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/24
+//03/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -173,7 +173,7 @@ function createMenuLeft(forcedIndex = -1) {
 							if (!Input.isLastEqual) { return; }
 							else { input = Input.lastInput; }
 						}
-						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
+						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name); return null; }
 						if (!Input.isLastEqual) {
 							list.editData(pls, {
 								sort: input,
@@ -768,7 +768,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const index = plman.FindPlaylist(pls.nameId);
 					const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 					const lockName = plman.GetPlaylistLockName(index);
-					const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
+					const bSMPLock = lockName === window.Parent || !lockName;
 					const flags = bSMPLock ? MF_STRING : MF_GRAYED;
 					const subMenuName = menu.newMenu('Edit UI Playlist lock');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED });
@@ -1416,7 +1416,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				playlistsLoaded.forEach((pls) => {
 					const index = plman.FindPlaylist(pls.nameId);
 					const lockNamePls = plman.GetPlaylistLockName(index);
-					if (!bSMPLock) { bSMPLock = (lockNamePls === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockNamePls); }
+					if (!bSMPLock) { bSMPLock = (lockNamePls === window.Parent || !lockNamePls); }
 					if (!bSMPLock) { lockName.add(lockNamePls); }
 				});
 				lockName = [...lockName][0] + (lockName.size > 1 ? ' & ...' : '');
@@ -1432,7 +1432,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								const index = plman.FindPlaylist(pls.nameId);
 								const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 								const lockName = plman.GetPlaylistLockName(index);
-								const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
+								const bSMPLock = lockName === window.Parent || !lockName;
 								if (bSMPLock) {
 									if (currentLocks.has(lock.type)) {
 										currentLocks.delete(lock.type);
@@ -1464,7 +1464,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const lockName = plman.GetPlaylistLockName(index);
-							const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
+							const bSMPLock = lockName === window.Parent || !lockName;
 							if (bSMPLock) {
 								plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
 							} else {
@@ -1482,7 +1482,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						playlistsLoaded.forEach((pls) => {
 							const index = plman.FindPlaylist(pls.nameId);
 							const lockName = plman.GetPlaylistLockName(index);
-							const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
+							const bSMPLock = lockName === window.Parent || !lockName;
 							if (bSMPLock) {
 								plman.SetPlaylistLockedActions(index, []);
 							} else {
@@ -3208,7 +3208,7 @@ function createMenuRightTop() {
 						let input = Input.json(
 							'array strings',
 							JSON.parse(list.properties.importPlaylistFilters[1]),
-							'Enter array of queries to apply as consecutive conditions:\n\n["%CHANNELS% LESS 3", "%RATING% GREATER 2"]\n\nThe example would try to find matches with 2 or less channels, then filter those results with rating > 2. In case the later filter does not output at least a single track, then will be skipped and only the previous filter applied (channels)... and so on (for more filters).',
+							'Enter array of queries to apply as consecutive conditions:\n\n["%CHANNELS% LESS 3", "' + globTags.rating + ' GREATER 2"]\n\nThe example would try to find matches with 2 or less channels, then filter those results with rating > 2. In case the later filter does not output at least a single track, then will be skipped and only the previous filter applied (channels)... and so on (for more filters).',
 							window.Name,
 							JSON.parse(list.properties.importPlaylistFilters[3]),
 							void (0), true

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/24
+//03/11/24
 
 /* exported _list */
 
@@ -2100,7 +2100,7 @@ function _list(x, y, w, h) {
 										if (index === -1) { return false; }
 										const currentLocks = plman.GetPlaylistLockedActions(index) || [];
 										const lockName = plman.GetPlaylistLockName(index);
-										if (lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName) {
+										if (lockName === window.Parent || !lockName) {
 											if (currentLocks.length) {
 												plman.SetPlaylistLockedActions(index, []);
 											} else {
@@ -5698,7 +5698,7 @@ function _list(x, y, w, h) {
 			? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '')
 			: (hasSort ? pls.sort : '');
 		if (newSort.length && !checkSort(newSort)) {
-			fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name);
+			fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name);
 			return null;
 		}
 		const newForced = (bPls && Object.hasOwn(pls, 'bSortForced')
@@ -5800,7 +5800,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
-		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY %RATING%.', window.Name); return null; }
+		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name); return null; }
 		const newForced = false;
 		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
 		const handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);

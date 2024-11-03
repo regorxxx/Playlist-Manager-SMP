@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/24
+//30/10/24
 
 /* exported extendGR */
 
@@ -27,7 +27,7 @@ if (!Object.hasOwn) {
 	RegExp
 */
 
-// Add unnoficial method
+// Add unnoficial method for JSsplitter
 // https://reference.codeproject.com/javascript/Reference/Global_Objects/Regexp/toSource
 if (!RegExp.prototype.toSource) {
 	Object.defineProperty(RegExp.prototype, 'toSource', {
@@ -349,3 +349,16 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		} catch (e) { /* Continue */ }
 	}).bind(window)
 });
+
+/* Global */
+
+if (!window.Parent) {
+	Object.defineProperty(window, 'Parent', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: fb.ComponentPath.includes('foo_uie_jsplitter')
+			? 'foo_uie_jsplitter'
+			: 'foo_spider_monkey_panel'
+	});
+}

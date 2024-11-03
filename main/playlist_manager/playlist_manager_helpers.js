@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/24
+//30/10/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -551,7 +551,7 @@ function switchLockUI(list, z, bAlsoHidden = false) {
 	if (index === -1) { return false; }
 	const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
 	const lockName = plman.GetPlaylistLockName(index);
-	const bSMPLock = lockName === 'foo_spider_monkey_panel' || lockName === 'foo_uie_jsplitter' || !lockName;
+	const bSMPLock = lockName === window.Parent || !lockName;
 	const bLocked = !bSMPLock || playlistLockTypes.size;
 	const newLock = bLocked ? [] : lockTypes; // This filters blank values
 	plman.SetPlaylistLockedActions(index, newLock);
