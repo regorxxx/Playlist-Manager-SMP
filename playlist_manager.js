@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/10/24
+//31/10/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -27,7 +27,7 @@ include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('helpers\\buttons_panel_xxx.js');
-/* global addButton:readable, buttonsPanel:readable, on_paint_buttn:readable, on_size_buttn:readable, on_mouse_lbtn_down_buttn:readable, on_mouse_move_buttn:readable, on_mouse_leave_buttn:readable, ThemedButton:readable, on_mouse_lbtn_up_buttn:readable */
+/* global addButton:readable, buttonsPanel:readable, on_paint_buttn:readable, on_size_buttn:readable, on_mouse_lbtn_down_buttn:readable, on_mouse_move_buttn:readable, on_mouse_leave_buttn:readable, ThemedPanelButton:readable, on_mouse_lbtn_up_buttn:readable */
 include('helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, _hasRecycleBin:readable */
 include('helpers\\helpers_xxx_tags.js');
@@ -1301,7 +1301,7 @@ if (!list.properties.bSetup[1]) {
 	buttonsPanel.config.partAndStateID = 1;
 	buttonsPanel.config.bUseThemeManager = false;
 	addButton({
-		setup: new ThemedButton(window.Width / 3, 0, window.Width / 2, window.Height / 3, 'Setup', function () {
+		setup: new ThemedPanelButton(window.Width / 3, 0, window.Width / 2, window.Height / 3, 'Setup', function () {
 			const answer = WshShell.Popup('First, before setup, be sure to close all Spider Monkey Panel windows.\nClicking ok will start the configuration of the panel. Read the popups and follow their instructions.\n\nPanel will be reloaded. Continue Setup?', 0, window.Name, popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				list.properties.bSetup[1] = false;

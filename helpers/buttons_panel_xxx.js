@@ -1,7 +1,7 @@
 ﻿'use strict';
-//10/10/23
+//31/10/23
 
-/* exported ThemedButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, getUniquePrefix, addButton */
+/* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, getUniquePrefix, addButton */
 
 /* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable */
 include('helpers_xxx_prototypes.js');
@@ -83,7 +83,7 @@ function calcNextButtonCoordinates(coord, buttonOrientation = buttonsPanel.confi
 	return newCoordinates;
 }
 
-function ThemedButton(
+function ThemedPanelButton(
 	x, y, w, h,
 	text,
 	func,

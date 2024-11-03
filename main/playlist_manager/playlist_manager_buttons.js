@@ -1,7 +1,7 @@
 ﻿'use strict';
-//28/05/24
+//31/10/24
 
-/* global list:readable, chars:readable, _gr:readable, addButton:readable, buttonsPanel:readable, ThemedButton:readable, calcNextButtonCoordinates:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable */
+/* global list:readable, chars:readable, _gr:readable, addButton:readable, buttonsPanel:readable, ThemedPanelButton:readable, calcNextButtonCoordinates:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable */
 
 //Always loaded along other buttons and panel
 include('..\\..\\helpers\\buttons_panel_xxx.js');
@@ -13,7 +13,7 @@ buttonsPanel.config.orientation = 'x';
 addButton({
 	// Sort button: the name, icon and tooltip changes according to the list sort state. The 3 texts are sent as functions, so they are always refreshed when executed.
 	// Since the opposite sort state (Az -> Za) is expected to be on even indexes, we use that to toggle icon and tooltip for any method.
-	sortButton: new ThemedButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void (0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => { return list.getSortState(); }, function () {
+	sortButton: new ThemedPanelButton(calcNextButtonCoordinates(buttonCoordinatesOne).x, calcNextButtonCoordinates(buttonCoordinatesOne, void (0), false).y, buttonCoordinatesOne.w, buttonCoordinatesOne.h, () => { return list.getSortState(); }, function () {
 		const test = new FbProfiler(window.Name + ': ' + 'Sorting - ' + list.getMethodState() + ' - ' + list.getSortState());
 		let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
 		list.setSortState(newSortState);
@@ -21,11 +21,11 @@ addButton({
 		test.Print();
 	}, null, void (0), sortTooltip, 'plm_', void (0), sortIcon),
 	// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
-	filterOneButton: new ThemedButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void (0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
+	filterOneButton: new ThemedPanelButton(calcNextButtonCoordinates(buttonCoordinatesTwo).x, calcNextButtonCoordinates(buttonCoordinatesTwo, void (0), false).y, buttonCoordinatesTwo.w, buttonCoordinatesTwo.h, filterName, function () {
 		doFilter(this);
 	}, null, void (0), filterTooltip, 'plm_', void (0), filterIcon),
 	// Cycle filtering between playlist lock states: all, not locked, locked
-	filterTwoButton: new ThemedButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void (0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
+	filterTwoButton: new ThemedPanelButton(calcNextButtonCoordinates(buttonCoordinatesThree).x, calcNextButtonCoordinates(buttonCoordinatesThree, void (0), false).y, buttonCoordinatesThree.w, buttonCoordinatesThree.h, filterName, function () {
 		doFilter(this);
 	}, null, void (0), filterTooltip, 'plm_', void (0), filterIcon),
 });
