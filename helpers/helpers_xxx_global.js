@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/10/24
+//03/11/24
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -163,6 +163,7 @@ function addGlobValues(type) { // Add calculated properties
 				'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
 				'|%DYNAMIC RANGE%' +
 				'|' + globTags.playCount;
+			globQuery.fav = '((' + globQuery.loved + ') OR (' + globQuery.ratingTop + '))';
 			break;
 		case 'All':
 			addGlobValues('tags');
@@ -211,22 +212,22 @@ const globQuery = {
 	_description: 'These are queries used across all the tools, being the default values. In case you want to expan the default queries with additional tags or values feel free to do so here. Every new panel installed will use the new values by default (not requiring manual editing on every panel). Already existing panels will only load these values when using the "Reset to defaults" option (if available).',
 	_usage: 'Queries built with the globTags file. This file can be deleted to recreate it from the tags file. Otherwise feel free to finetune the queries. Special characters like single quotes (\') or backslash (\\) must be properly escaped. Remember to also properly escape special characters according to TF and query rules!',
 	filter: 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1) AND NOT (' + globTags.style + ' IS live AND NOT ' + globTags.style + ' IS hi-fi) AND %CHANNELS% LESS 3 AND NOT COMMENT HAS quad',
-	female: globTags.style + ' IS female vocal OR ' + globTags.style + ' IS female OR ' + globTags.genre + ' IS female vocal OR ' + globTags.genre + ' IS female OR GENDER IS female',
-	instrumental: globTags.style + ' IS instrumental OR ' + globTags.genre + ' IS instrumental OR SPEECHNESS EQUAL 0 OR LANGUAGE IS zxx',
-	acoustic: globTags.style + ' IS acoustic OR ' + globTags.genre + ' IS acoustic OR ACOUSTICNESS GREATER 75',
+	female: '(' + globTags.style + ' IS female vocal OR ' + globTags.style + ' IS female OR ' + globTags.genre + ' IS female vocal OR ' + globTags.genre + ' IS female OR GENDER IS female)',
+	instrumental: '(' + globTags.style + ' IS instrumental OR ' + globTags.genre + ' IS instrumental OR SPEECHNESS EQUAL 0 OR LANGUAGE IS zxx)',
+	acoustic: '(' + globTags.style + ' IS acoustic OR ' + globTags.genre + ' IS acoustic OR ACOUSTICNESS GREATER 75)',
 	notLowRating: 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1)',
 	ratingGr2: globTags.rating + ' GREATER 2',
 	ratingGr3: globTags.rating + ' GREATER 3',
 	ratingTop: globTags.rating + ' EQUAL 5',
 	shortLength: '%LENGTH_SECONDS% LESS 360',
-	stereo: '%CHANNELS% LESS 3 AND NOT COMMENT HAS quad',
+	stereo: '(%CHANNELS% LESS 3 AND NOT COMMENT HAS quad)',
 	noRating: globTags.rating + ' MISSING',
-	live: globTags.genre + ' IS live OR ' + globTags.style + ' IS live',
+	live: '(' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live)',
 	hifi: globTags.style + ' IS hi-fi',
-	SACD: '%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64',
-	recent: '%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS',
+	SACD: '(%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64)',
+	recent: '(%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS)',
 	loved: globTags.feedback + ' IS 1',
-	hated: globTags.feedback + ' IS -1',
+	hated: globTags.feedback + ' IS -1'
 };
 
 /* eslint-disable no-useless-escape */
