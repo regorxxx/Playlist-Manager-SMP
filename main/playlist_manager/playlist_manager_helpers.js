@@ -299,13 +299,13 @@ function setTrackTags(trackTags, list, z) {
 	const oldTags = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 	const newTags = trackTags && trackTags.length ? JSON.stringify(trackTags) : '';
 	if (oldTags !== newTags) { // Compares objects
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+		if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls') {
+			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
+		} else if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			list.editData(pls, { trackTags });
 			list.update({ bReuseData: true, bNotPaint: true });
 			list.filter();
 			bDone = true;
-		} else if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls') {
-			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
 		} else {
 			const name = pls.name;
 			const path = pls.path;
@@ -446,7 +446,9 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 	const extension = pls.extension;
 	if (pls.isFolder) { return bDone; }
 	if (playlist_mbid !== pls.playlist_mbid) {
-		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
+		if (pls.extension === '.ui' || pls.extension === '.strm') {
+			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
+		} else if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 				return bDone;
@@ -454,8 +456,6 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 			list.editData(pls, { playlist_mbid });
 			list.update({ bReuseData: true, bNotPaint: true });
 			bDone = true;
-		} else if (pls.extension === '.ui' || pls.extension === '.strm') {
-			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
 		} else {
 			const name = pls.name;
 			const path = pls.path;
@@ -501,13 +501,13 @@ function switchLock(list, z, bAlsoHidden = false) {
 	let bDone = false;
 	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
 	const boolText = pls.isLocked ? ['true', 'false'] : ['false', 'true'];
-	if (pls.isAutoPlaylist || pls.extension === '.fpl' || pls.extension === '.strm' || pls.extension === '.xsp') {
+	if (pls.extension === '.ui' || pls.extension === '.pls') {
+		console.log('Playlist Manager: Playlist can not be locked due to format ' + pls.extension);
+	} else if (pls.isAutoPlaylist || pls.extension === '.fpl' || pls.extension === '.strm' || pls.extension === '.xsp') {
 		list.editData(pls, { isLocked: !pls.isLocked });
 		list.update({ bReuseData: true, bNotPaint: true });
 		list.filter();
 		bDone = true;
-	} else if (pls.extension === '.ui' || pls.extension === '.pls') {
-		console.log('Playlist Manager: Playlist can not be locked due to format ' + pls.extension);
 	} else {
 		const name = pls.name;
 		const path = pls.path;
@@ -743,6 +743,7 @@ function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMult
 	// For query playlists, use the UI copy if possible
 	const bUI = pls.extension === '.ui'
 		|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
+	if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone; }
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 		return bDone;
@@ -809,7 +810,7 @@ function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: fals
 		if (bDone && handleListZ) {
 			bDone = true;
 			if (handleListZ.Count) {
-				if (pls.isAutoPlaylist && pls.sort.length) {
+				if (pls.sort && pls.sort.length) {
 					const sort = getSortObj(pls.sort);
 					if (sort && sort.tf) {
 						handleListZ.OrderByFormat(sort.tf, sort.direction);
@@ -1858,7 +1859,7 @@ function findFormatErrors() {
 				setTimeout(() => {
 					let bDone = false;
 					const errors = [];
-					if (playlist.isAutoPlaylist || playlist.query) { // Invalid queries
+					if ((playlist.isAutoPlaylist || playlist.query) && playlist.extension !== '.ui') { // Invalid queries
 						if (!checkQuery(playlist.query, true, true, playlist.extension === '.xsp')) { // Allow #PLAYLIST# on XSP
 							bDone = true;
 							errors.push('Invalid query');
