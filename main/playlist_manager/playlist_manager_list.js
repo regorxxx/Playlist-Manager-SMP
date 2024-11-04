@@ -378,6 +378,15 @@ function _list(x, y, w, h) {
 				headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
 				headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
 			}
+			if (this.bLiteMode) {
+				const replaceActions = [
+					{ from: 'Add new empty playlist file', to: 'Add new UI-only playlist' },
+					{ from: 'Add active playlist', to: 'Clone active playlist' },
+				];
+				replaceActions.forEach((t) => {
+					headerText = headerText.replace(new RegExp('(\\n\\(.*)(' + escapeRegExp(t.from) + ')(\\))', 'gi'), '$1' + t.to + '$3');
+				});
+			}
 		}
 		let warningText = '';
 		if (this.bLibraryChanged && !this.bLiteMode) { warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
@@ -1454,15 +1463,22 @@ function _list(x, y, w, h) {
 								}
 								const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath, '') + ')' : '';
 								const locks = getLocks(pls.nameId);
+								const showMenus = JSON.parse(this.properties.showMenus[1]);
 								let playlistDataText = (pls.isAutoPlaylist ? 'AutoPlaylist' : (pls.extension === '.xsp' ? 'Smart Playlist' : pls.isFolder ? 'Folder' : 'Playlist')) + ': ';
 								playlistDataText += pls.nameId + ' - ' + (pls.isFolder ? this.calcColumnVal('size', pls, true) : pls.size) + ' Tracks ' + path;
 								if (!pls.isFolder) {
 									playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
 									playlistDataText += locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '') + locks.name.replace('playlist', 'Playlist')) : '';
-									playlistDataText += locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
-									playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
-									playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
-									playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => { return Object.keys(_)[0]; }).join(', ') : '-');
+									if (showMenus['UI playlist locks']) {
+										playlistDataText += locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
+									}
+									if (showMenus['Category']) {
+										playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
+									}
+									if (showMenus['Tags']) {
+										playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
+										playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => { return Object.keys(_)[0]; }).join(', ') : '-');
+									}
 								} else {
 									const total = pls.pls.lengthDeep;
 									const totalCurrentView = pls.pls.lengthFilteredDeep;
@@ -1481,8 +1497,8 @@ function _list(x, y, w, h) {
 								}
 								// Text for AutoPlaylists
 								if (pls.isAutoPlaylist || pls.query) {
-									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : '-');
-									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : '-');
+									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
+									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
 									playlistDataText += '\n' + 'Limit: ' + (pls.limit ? pls.limit : '\u221E') + ' tracks';
 								}
 								// Synced playlists with ListenBrainz
@@ -1499,6 +1515,14 @@ function _list(x, y, w, h) {
 								const mShortcuts = this.getShortcuts('M');
 								const rShortcuts = this.getShortcuts('R');
 								const defaultAction = this.getDefaultShortcutAction('M'); // All actions are shared for M or L mouse
+								// Delete non valid actions (default is none)
+								[lShortcuts, mShortcuts, rShortcuts].forEach((shortcuts) => {
+									for (const key in shortcuts) {
+										if (!this.isValidAction(shortcuts[key].key)) {
+											shortcuts[key].key = defaultAction;
+										}
+									}
+								});
 								if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
 									playlistDataText += '\n---------------------------------------------------';
 								}
@@ -1540,6 +1564,9 @@ function _list(x, y, w, h) {
 										playlistDataText += '\n(L. Click to Manage playlist)';
 									}
 								}
+								if (pls.extension === '.ui') {  // Change text for UI-only playlists
+									playlistDataText = playlistDataText.replace(/Load \/ show/gi, 'Show');
+								}
 								if (pls.isFolder) { // Change text for folders
 									// Remove unused actions
 									const ignoreActions = ['Playlist\'s items menu'];
@@ -1561,6 +1588,18 @@ function _list(x, y, w, h) {
 									if (playlistRe.test(playlistDataText)) {
 										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('playlists', match));
 									}
+								}
+								if (pls.isAutoPlaylist && !Object.hasOwn(lShortcuts, mask)) { // Change text for AutoPlaylists
+									const ignoreActions = ['Move selection to playlist', 'Copy selection to playlist'];
+									ignoreActions.forEach((t) => {
+										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+									});
+								}
+								if (pls.extension === '.ui' && !Object.hasOwn(lShortcuts, mask)) { // Change text for UI-ony playlists
+									const ignoreActions = ['Lock/unlock playlist file'];
+									ignoreActions.forEach((t) => {
+										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+									});
 								}
 								// Adding Duplicates on selection hint
 								let warningText = '';
@@ -2631,8 +2670,19 @@ function _list(x, y, w, h) {
 		else { this.indexes = range(0, this.data.length - 1, 1); }
 	};
 
+	this.isValidAction = (action) => {
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		if (!showMenus['File locks'] && action === 'Lock/unlock playlist file') { return false; }
+		if (!showMenus['UI playlist locks'] && action === 'Lock/unlock UI playlist') { return false; }
+		if (!showMenus['Category'] && action === 'Cycle categories') { return false; }
+		if (!showMenus['Tags'] && action === 'Cycle tags') { return false; }
+		if (this.bLiteMode && action.includes('Manual saving')) { return false; }
+		return true;
+	};
+
 	this.executeAction = (z, x, y, shortcut, bMultiple = !!this.indexes.length) => {
 		const pls = typeof z !== 'undefined' && z !== -1 ? this.data[z] : null;
+		if (!this.isValidAction(shortcut.key)) { return; }
 		if (shortcut.bStandAlone) {
 			shortcut.func();
 		} else if (pls && pls.isFolder) { // Folder
@@ -2766,8 +2816,18 @@ function _list(x, y, w, h) {
 						{ key: 'Multiple selection (all)', func: this.multSelectAll },
 						{ key: 'Cycle categories', func: cycleCategories.bind(this, this) },
 						{ key: 'Cycle tags', func: cycleTags.bind(this, this) },
-						{ key: 'Add new empty playlist file', func: () => { this.add({ bEmpty: true }); } },
-						{ key: 'Add active playlist', func: () => { this.add({ bEmpty: false }); } },
+						{
+							key: 'Add new empty playlist file', func: () => {
+								if (this.bLiteMode) { this.addUiPlaylist({ bInputName: true }); }
+								else { this.add({ bEmpty: true }); }
+							}
+						},
+						{
+							key: 'Add active playlist', func: () => {
+								if (this.bLiteMode) { this.addUiPlaylist({ bInputName: true, bEmpty: false }); }
+								else { this.add({ bEmpty: false }); }
+							}
+						},
 						{ key: 'Manual refresh', func: this.manualRefresh },
 						{ key: 'Manual saving (all not locked)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(false) + ' playlists.'); } },
 						{ key: 'Manual saving (all)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(true) + ' playlists.'); } },
@@ -5621,10 +5681,11 @@ function _list(x, y, w, h) {
 		return objectPlaylist;
 	};
 
-	this.addUiPlaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null } = {}) => {
+	this.addUiPlaylist = ({ name = 'New playlist', bInputName = !name.length, toFolder = null, bEmpty = true } = {}) => {
+		if (!bEmpty && plman.ActivePlaylist === -1) { return null; }
 		let input = name;
 		if (bInputName) {
-			input = Input.string('string', name, 'Input playlist name:', 'Playlist Manager', 'New playlist');
+			input = Input.string('string', name, 'Enter playlist name:', 'Playlist Manager', 'New playlist');
 			if (input === null) {
 				if (!Input.isLastEqual) { return null; }
 				else { input = Input.lastInput; }
@@ -5640,15 +5701,18 @@ function _list(x, y, w, h) {
 			fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', window.Name);
 			return null;
 		}
-		plman.ActivePlaylist = plman.CreatePlaylist(plman.PlaylistCount, newName);
+		const handleList = bEmpty ? null : plman.GetPlaylistItems(plman.ActivePlaylist);
+		plman.ActivePlaylist = bEmpty
+			? plman.CreatePlaylist(plman.PlaylistCount, newName)
+			: plman.DuplicatePlaylist(plman.ActivePlaylist, newName);
 		const now = Date.now();
 		const objectPlaylist = new PlaylistObj({
 			name: newName,
 			extension: '.ui',
-			size: 0,
+			size: bEmpty ? 0 : handleList.Count,
 			fileSize: 0,
-			trackSize: 0,
-			duration: 0,
+			trackSize: bEmpty ? 0 : handleList.CalcTotalSize(),
+			duration: bEmpty ? 0 : handleList.CalcTotalDuration(),
 			created: now,
 			modified: now
 		});
@@ -7553,7 +7617,7 @@ function cacheAutoPlaylists(pls) {
 
 function cachePlaylist(pls) {
 	let handleList;
-	if (pls.isAutoPlaylist) {
+	if (pls.isAutoPlaylist && pls.extension !== '.ui') {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true);
 	} else if (pls.path.length) {
 		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });

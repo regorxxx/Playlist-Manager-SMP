@@ -4434,7 +4434,9 @@ function createMenuRightTop() {
 					? menu.newMenu(modifier + '\t(enable List Menu button)', subMenuNameL, MF_GRAYED)
 					: menu.newMenu(modifier, subMenuNameL);
 				actions.forEach((action) => {
-					const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
+					const flags = modifier === 'Double Click' && action === 'Multiple selection' || !list.isValidAction(action) 
+						? MF_GRAYED
+						: MF_STRING;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							list.lShortcuts[modifier] = action;
@@ -4471,6 +4473,7 @@ function createMenuRightTop() {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameR);
 				actions.forEach((action) => {
+					const flags = !list.isValidAction(action) ? MF_GRAYED : MF_STRING;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							list.rShortcuts[modifier] = action;
@@ -4479,7 +4482,7 @@ function createMenuRightTop() {
 							if (action === 'Multiple selection') {
 								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
 							}
-						}
+						}, flags
 					});
 				});
 				menu.newCheckMenuLast(() => {
@@ -4506,6 +4509,7 @@ function createMenuRightTop() {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameM);
 				actions.forEach((action) => {
+					const flags = !list.isValidAction(action) ? MF_GRAYED : MF_STRING;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							list.mShortcuts[modifier] = action;
@@ -4514,7 +4518,7 @@ function createMenuRightTop() {
 							if (action === 'Multiple selection') {
 								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
 							}
-						}
+						}, flags
 					});
 				});
 				menu.newCheckMenuLast(() => {
@@ -4543,7 +4547,9 @@ function createMenuRightTop() {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameL);
 				actions.forEach((action) => {
-					const flags = modifier === 'Double Click' && action === 'Multiple selection' ? MF_GRAYED : MF_STRING;
+					const flags = modifier === 'Double Click' && action === 'Multiple selection' || !list.isValidAction(action) 
+						? MF_GRAYED 
+						: MF_STRING;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							list.lShortcutsHeader[modifier] = action;
@@ -4580,6 +4586,7 @@ function createMenuRightTop() {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameM);
 				actions.forEach((action) => {
+					const flags = !list.isValidAction(action) ? MF_GRAYED : MF_STRING;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							list.mShortcutsHeader[modifier] = action;
@@ -4588,7 +4595,7 @@ function createMenuRightTop() {
 							if (action === 'Multiple selection') {
 								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
 							}
-						}
+						}, flags
 					});
 				});
 				menu.newCheckMenuLast(() => {
