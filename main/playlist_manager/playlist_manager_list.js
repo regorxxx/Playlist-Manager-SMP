@@ -853,7 +853,13 @@ function _list(x, y, w, h) {
 			// Set colors and icons according to playlist type
 			let playlistColor = this.colors.standardPlaylist, iconColor = standardPlaylistIconColor;
 			const plsExtension = pls.isAutoPlaylist ? 'autoPlaylist' : pls.extension;
-			let extension = pls.isLocked ? 'locked' : pls.isAutoPlaylist ? 'autoPlaylist' : plsExtension;
+			let extension = pls.isLocked
+				? this.bLiteMode && pls.isAutoPlaylist
+					? 'autoPlaylist'
+					: 'locked'
+				: pls.isAutoPlaylist
+					? 'autoPlaylist'
+					: plsExtension;
 			if (extension === 'locked') { playlistColor = this.colors.lockedPlaylist; iconColor = lockedPlaylistIconColor; }
 			else if (extension === 'autoPlaylist') { playlistColor = this.colors.autoPlaylist; iconColor = autoPlaylistIconColor; }
 			else if (extension === '.xsp') { playlistColor = this.colors.smartPlaylist; iconColor = smartPlaylistIconColor; }
@@ -4876,6 +4882,7 @@ function _list(x, y, w, h) {
 							size: handleList.Count,
 							bLocked: plman.IsPlaylistLocked(pls.idx),
 							category: 'fooPls',
+							bAutoPlaylist: plman.IsAutoPlaylist(pls.idx),
 							duration: handleList.CalcTotalDuration(),
 							trackSize: handleList.CalcTotalSize(),
 							author: 'Foobar2000',

@@ -78,7 +78,7 @@ function createMenuLeft(forcedIndex = -1) {
 	const lb = listenBrainz;
 	// Helpers
 	const isPlsActive = (pls) => { return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId; };
-	const isAutoPls = (pls) => { return pls.isAutoPlaylist || pls.query || isPlsUI(pls) && plman.IsAutoPlaylist(plman.FindPlaylist(pls.nameId)); };
+	const isAutoPls = (pls) => { return pls.isAutoPlaylist || pls.query; };
 	const isLockPls = (pls) => { return pls.isLocked; };
 	const isPlsEditable = (pls) => { return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl' || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui'; };
 	const isPlsLockable = (pls) => { return isPlsEditable(pls) || pls.extension === '.strm'; };

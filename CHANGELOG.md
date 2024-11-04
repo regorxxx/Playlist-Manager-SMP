@@ -79,8 +79,10 @@
 - Statistics: X-axis keys are now shown even when not all keys can be displayed, omitting some of the values. This ensures that charts displaying numbers at the axis at least show the initial and some middle values. This applies for bars, lines, scatter, fill and timeline charts.
 - Statistics: left scrolling button position is now adjusted following Y-Axis display (except for doughnut and pie charts).
 - Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
+- AutoPlaylist: UI-only AutoPlaylists are now treated as AutoPlaylists internally and not only as UI-only playlists (this involves some big changes internally so there may be some minor bugs as consequence). Thanks to these changes a lot of other improvements have been possible.
 - AutoPlaylist: new AutoPlaylists created are now automatically loaded.
 - AutoPlaylist: 'Clone in UI' menu entry or action also updates metadata now.
+- AutoPlaylist: UI-only AutoPlaylists use the AutoPlaylist icon when using Lite mode, otherwise use the locked icon.
 - XSP: new Smart Playlists created are now automatically loaded.
 - XSP: 'Clone in UI' menu entry or action also updates metadata now.
 - XSP: improved console logging for Smart Playlists loading, now the query part associated to playlists is also shown.
