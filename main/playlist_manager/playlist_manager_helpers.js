@@ -757,25 +757,32 @@ function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMult
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
 			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
-	if (handleList && handleList.Count) {
-		if (pls.isAutoPlaylist && pls.sort.length) {
-			const sort = getSortObj(pls.sort);
-			if (sort && sort.tf) {
-				handleList.OrderByFormat(sort.tf, sort.direction);
+	if (handleList) {
+		list.editData(pls, {
+			size: handleList.Count,
+			duration: handleList.CalcTotalDuration(),
+			trackSize: handleList.CalcTotalSize()
+		}, true); // Update size on load
+		if (handleList.Count) {
+			if (pls.sort && pls.sort.length) {
+				const sort = getSortObj(pls.sort);
+				if (sort && sort.tf) {
+					handleList.OrderByFormat(sort.tf, sort.direction);
+				}
 			}
+			const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
+			const idx = plman.CreatePlaylist(plman.PlaylistCount, playlistName);
+			if (idx !== -1) {
+				plman.ActivePlaylist = idx;
+				plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
+				if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
+				bDone = true;
+			}
+			if (toFolder) {
+				list.moveToFolderStack({ nameId: playlistName, extension: '.ui' }, toFolder);
+			}
+			if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); }
 		}
-		const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
-		const idx = plman.CreatePlaylist(plman.PlaylistCount, playlistName);
-		if (idx !== -1) {
-			plman.ActivePlaylist = idx;
-			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-			if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
-			bDone = true;
-		}
-		if (toFolder) {
-			list.moveToFolderStack({ nameId: playlistName, extension: '.ui' }, toFolder);
-		}
-		if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); }
 	}
 	return bDone;
 }
