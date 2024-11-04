@@ -736,7 +736,8 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 		if (jsp) {
 			const query = XSP.getQuery(jsp, true);
 			const sort = XSP.getSort(jsp);
-			if (XSP.hasQueryPlaylists(jsp)) { // Uses playlists as sources
+			const bHasQueryPls = XSP.hasQueryPlaylists(jsp);
+			if (bHasQueryPls) { // Uses playlists as sources
 				const queryPlaylists = XSP.getQueryPlaylists(jsp);
 				// From playlist manager or loaded playlists
 				const toIncludeHandle = typeof list !== 'undefined'
@@ -763,7 +764,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				if (sortObj) { handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction); }
 				const limit = XSP.getLimit(jsp);
 				if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count); }
-				if (bLog) { console.log('Loaded successfully XSP Playlist: ' + query + ' ' + sort); }
+				if (bLog) { console.log('Loaded successfully XSP Playlist: ' + (bHasQueryPls ? XSP.getQuery(jsp) : query) + ' ' + sort); }
 			}
 		} else {
 			console.log(playlistPath.split('\\').pop() + ': playlist can not be loaded or parsed'); // DEBUG
