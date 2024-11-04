@@ -1583,6 +1583,15 @@ function createMenuRight() {
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
 	{ // New Playlists
+		list.bLiteMode && menu.newEntry({
+			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
+				const rule = list.folderRules.internalUi;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				list.addUiPlaylist({ bInputName: true, toFolder });
+			}
+		});
 		!list.bLiteMode && menu.newEntry({
 			entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => {
 				const rule = list.folderRules.others;
@@ -1598,7 +1607,8 @@ function createMenuRight() {
 				const toFolder = rule.length
 					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 					: null;
-				list.addAutoPlaylist(void (0), void (0), toFolder);
+				const pls = list.addAutoPlaylist(void (0), void (0), toFolder);
+				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls])); }
 			}
 		});
 		!list.bLiteMode && menu.newEntry({
@@ -1607,10 +1617,11 @@ function createMenuRight() {
 				const toFolder = rule.length
 					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 					: null;
-				list.addSmartplaylist(void (0), void (0), toFolder);
+				const pls = list.addSmartplaylist(void (0), void (0), toFolder);
+				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls])); }
 			}
 		});
-		menu.newEntry({
+		!list.bLiteMode && menu.newEntry({
 			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
 				const rule = list.folderRules.internalUi;
 				const toFolder = rule.length
@@ -1659,6 +1670,43 @@ function createMenuRight() {
 				}
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 		});
+		menu.newEntry({ entryText: 'sep' });
+		{	// Preset AutoPlaylists
+			const options = [
+				{ name: 'Media library (full)', query: 'ALL' },
+				{ name: 'Tracks never played', query: 'NOT %LAST_PLAYED% PRESENT' },
+				{ name: 'Tracks played in the last 5 days', query: '%LAST_PLAYED% DURING LAST 5 DAYS SORT DESCENDING BY %LAST_PLAYED%' },
+				{ name: 'sep' },
+				{ name: 'Tracks unrated', query: 'NOT %RATING% PRESENT' },
+				{ name: 'Tracks rated 1', query: '%RATING% IS 1' },
+				{ name: 'Tracks rated 2', query: '%RATING% IS 2' },
+				{ name: 'Tracks rated 3', query: '%RATING% IS 3' },
+				{ name: 'Tracks rated 4', query: '%RATING% IS 4' },
+				{ name: 'Tracks rated 5', query: '%RATING% IS 5' },
+				{ name: 'sep' },
+				{ name: 'Loved tracks', query: globTags.feedback + ' IS 1' },
+			];
+			const subMenuName = menu.newMenu('Preset AutoPlaylists');
+			options.forEach((opt) => {
+				menu.newEntry({
+					menuName: subMenuName,
+					entryText: opt.name, func: !opt.query ? null : () => {
+						const rule = list.folderRules.others;
+						const toFolder = rule.length
+							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+							: null;
+						let name = opt.name;
+						let i = 0;
+						while (list.dataAll.some((pls) => pls.nameId === name)) {
+							name = name.replace(/ \((\n\))/,'') + ' ' + _p(++i);
+							if (i > 10) { fb.ShowPopupMessage('There are more than 10 playlists with same name: ' + opt.name, window.Name); return; }
+						}
+						const pls = list.addAutoPlaylist({ ...opt, name, sort: '' }, false, toFolder);
+						if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls])); }
+					}
+				});
+			});
+		}
 		if (showMenus['Online sync']) {
 			menu.newEntry({ entryText: 'sep' });
 			menu.newEntry({
@@ -1989,7 +2037,7 @@ function createMenuRight() {
 		{	// Restore
 			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
 			const bItems = (list.deletedItems.length + plman.PlaylistRecycler.Count) > 0;
-			const subMenuName = menu.newMenu('Restore...' + (!bBin ? ' [missing recycle bin]' : ''), void (0), bItems ? MF_STRING : MF_GRAYED);
+			const subMenuName = menu.newMenu('Restore' + (!bBin ? ' [missing recycle bin]' : ''), void (0), bItems ? MF_STRING : MF_GRAYED);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED });
 			if (list.deletedItems.length > 0 && bBin) {
 				menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
