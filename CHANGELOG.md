@@ -86,6 +86,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
 - Statistics: minor fixes.
 

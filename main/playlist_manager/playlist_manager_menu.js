@@ -377,7 +377,7 @@ function createMenuLeft(forcedIndex = -1) {
 							try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; }
 						}
 						if (tagsString !== currValue) { setTrackTags(tags, list, z); }
-					}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP || bIsPlsUI ? MF_STRING : MF_GRAYED
+					}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP && !bIsPlsUI ? MF_STRING : MF_GRAYED
 				});
 			}
 			menu.newEntry({ entryText: 'sep' });
@@ -398,22 +398,22 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.newEntry({
-					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
+					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist && !bIsPlsUI ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
 						cloneAsAutoPls(list, z, uiIdx);
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.addIndicatorNameLast(() => bIsPlsUI); // Add an indicator for required cloning
 				!list.bLiteMode && menu.newEntry({
-					entryText: 'Clone as Smart Playlist and edit...' + (pls.extension === '.xsp' ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a Kodi XSP smart no matter the original format
+					entryText: 'Clone as Smart Playlist and edit...' + (pls.extension === '.xsp' ? list.getGlobalShortcut('clone') : '') + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => { // Here creates a Kodi XSP smart no matter the original format
 						cloneAsSmartPls(list, z);
-					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
+					}, flags: bIsValidXSP && !bIsPlsUI ? MF_STRING : MF_GRAYED
 				});
 				if (showMenus['Export and copy']) {
 					!list.bLiteMode && menu.newEntry({
-						entryText: 'Export as json file...', func: () => {
+						entryText: 'Export as json file...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 							const path = list.exportJson({ idx: z, bAllExt: true });
 							if (_isFile(path)) { _explorer(path); }
-						}, flags: bIsAutoPls ? MF_STRING : MF_GRAYED
+						}, flags: bIsAutoPls  && !bIsPlsUI ? MF_STRING : MF_GRAYED
 					});
 					if (pls.extension === '.xsp') {
 						// Copy
@@ -1297,11 +1297,11 @@ function createMenuLeftMult(forcedIndexes = []) {
 					}
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
-						if (!isLockPls(pls) && isPlsEditable(pls) && !isFolder(pls)) {
+						if (!isLockPls(pls) && isPlsEditable(pls) && !isFolder(pls) && !isPlsUI(pls)) {
 							if (tagsString !== JSON.stringify(pls.trackTags)) { setTrackTags(tags, list, z); }
 						}
 					});
-				}, flags: !bIsLockPlsEvery && bIsPlsEditable && !bIsFolderEvery ? MF_STRING : MF_GRAYED
+				}, flags: !bIsLockPlsEvery && bIsPlsEditable && !bIsFolderEvery && !bIsPlsUIEvery ? MF_STRING : MF_GRAYED
 			});
 		}
 	}
