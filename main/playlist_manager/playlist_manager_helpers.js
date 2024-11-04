@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/10/24
+//04/11/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -1791,12 +1791,17 @@ function findBlank() {
 	});
 }
 
-function findSubSongs() {
+function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 	const found = [];
 	const report = [];
+	mode = mode.toLowerCase();
+	const filterFunc = mode === 'pls'
+		? (pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type === 'songs') && !pls.isFolder
+		: mode === 'autopls'
+			? (pls) => pls.isAutoPlaylist || Object.hasOwn(pls, 'type') && pls.type == 'songs'
+			: (pls) => !pls.isFolder;
 	return new Promise((resolve) => {
-		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+		const playlists = list.dataAll.filter(filterFunc);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1807,11 +1812,23 @@ function findSubSongs() {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
-					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
+					// Needs a handle list for UI-only playlists, AutoPlaylists and Smart Playlists
+					// Otherwise directly extracts the path for the playlist file
+					const bNeedHandle = playlist.isAutoPlaylist || playlist.query || bUI;
+					const handleList = bNeedHandle
+						? !bUI
+							? playlist.isAutoPlaylist
+								? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(playlist.query))
+								: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true })
+							: getHandlesFromUIPlaylists([playlist.nameId], false) // Omit not found
+						: null;
+					const filePaths = bNeedHandle
+						? fb.TitleFormat(pathTF).EvalWithMetadbs(handleList)
+						: getFilePathsFromPlaylist(playlist.path);
 					const count = filePaths.reduce((total, path) => (subsongRegex.test(path) ? total + 1 : total), 0);
 					if (count) {
 						found.push(playlist);
-						report.push((playlist.extension === '.ui' ? playlist.nameId : playlist.path) + ' ' + _p(count + ' items'));
+						report.push((bUI || playlist.isAutoPlaylist ? playlist.nameId : playlist.path) + ' ' + _p(count + ' items'));
 					}
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
 					if (progress > prevProgress) { prevProgress = progress; console.log('Checking subsong items ' + progress + '%.'); }

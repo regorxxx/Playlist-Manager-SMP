@@ -2234,16 +2234,30 @@ function createMenuRight() {
 		{	// Subsong items
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Subsong items...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).\n\nAutoPlaylists are skipped since they only work within foobar2000, but beware when converting them to other formats. Use the options for AutoPlaylists in such case.', 0, window.Name, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.'); }
-					findSubSongs().then(({ found, report }) => {
+					findSubSongs('pls').then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
 						fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 						pop.disable(true);
 					});
 				}
 			});
+			if (list.dataAll.some((pls) => pls.isAutoPlaylist || pls.query)) {
+				menu.newEntry({
+					menuName: subMenuName, entryText: 'Subsong items (AutoPlaylists)...', func: () => {
+						let answer = WshShell.Popup('Scan all AutoPlaylists and Smart playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players after exporting them).', 0, window.Name, popup.question + popup.yes_no);
+						if (answer !== popup.yes) { return; }
+						if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.'); }
+						findSubSongs('autopls').then(({ found, report }) => {
+							if (found.length) { list.filter({ plsState: found }); }
+							fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+							pop.disable(true);
+						});
+					}
+				});
+			}
 		}
 		if (!list.bLiteMode) {	// Format specific errors
 			menu.newEntry({
