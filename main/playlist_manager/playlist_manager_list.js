@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/11/24
+//04/11/24
 
 /* exported _list */
 
@@ -9,7 +9,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, _gdiFont:readable, RGB:readable, blendColors:readable, getBrightness:readable, toRGB:readable, _gr:readable, CENTRE:readable, _tt:readable, LEFT:readable, RIGHT:readable, RGBA:readable, scaleDPI:readable, lightenColor:readable, removeIdFromStr:readable, _sb:readable */
+/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, _gdiFont:readable, RGB:readable, blendColors:readable, getBrightness:readable, toRGB:readable, _gr:readable, CENTRE:readable, _tt:readable, LEFT:readable, RIGHT:readable, RGBA:readable, scaleDPI:readable, lightenColor:readable, removeIdFromStr:readable, _sb:readable, isDark:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
@@ -295,7 +295,7 @@ function _list(x, y, w, h) {
 		this.index = 0;
 		this.offset = 0;
 		if (oldH > 0 && this.h > 0) { yOffset = (_scale(1) + panel.row_height / 4) * (this.h / oldH); }
-		const hOffset =  _scale(this.uiElements['Up/down buttons'].enabled
+		const hOffset = _scale(this.uiElements['Up/down buttons'].enabled
 			? (this.uiElements['Bottom toolbar'].enabled ? 24 : 12)
 			: (this.uiElements['Bottom toolbar'].enabled ? 12 : 4)
 		);
@@ -6499,7 +6499,7 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.checkConfig = ({ bSilenSorting = false } = {}) => { // Forces right settings
+	this.checkConfig = ({ bSilenSorting = false, bResetColors = false } = {}) => { // Forces right settings
 		let bDone = false;
 		// Check playlists path
 		if (!this.playlistsPath.endsWith('\\')) {
@@ -6558,6 +6558,7 @@ function _list(x, y, w, h) {
 			this.extStates = this.constExtStates().rotate(rotations[2]);
 			this.mbidStates = this.constMbidStates().rotate(rotations[3]);
 		}
+		if (bResetColors) { this.colors = convertStringToObject(this.properties['listColors'][1], 'number'); }
 		// Check colors
 		const propColorKeys = Object.keys(this.colors || {});
 		if (!propColorKeys.length) { // Sets default colors
@@ -6571,13 +6572,25 @@ function _list(x, y, w, h) {
 			});
 			this.properties['listColors'][1] = convertObjectToString(this.colors);
 			// Delete unused values and save as is, then fill with missing colors without saving to properties
-			if (!this.colors.autoPlaylist) { this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6); }
-			if (!this.colors.smartPlaylist) { this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6); }
-			if (!this.colors.selectedPlaylist) { this.colors.selectedPlaylist = RGB(...toRGB(0xFF0080C0)); } // Blue
-			if (!this.colors.uiPlaylist) { this.colors.uiPlaylist = blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8); } // Blue
-			if (!this.colors.lockedPlaylist) { this.colors.lockedPlaylist = RGB(...toRGB(0xFFDC143C)); } // Red
-			if (!this.colors.folder) { this.colors.folder = panel.colors.text; }  // Black
-			if (!this.colors.standardPlaylist) { this.colors.standardPlaylist = blendColors(panel.colors.text, panel.colors.background, 0.1); } // Grey
+			const bDark = isDark(panel.getColorBackground());
+			const colors = {
+				autoPlaylist: bDark ? RGB(255, 41, 119) : RGB(255, 66, 113),
+				smartPlaylist: bDark ? RGB(101, 204, 50) : RGB(101, 204, 50),
+				selectedPlaylist: bDark ? RGB(0, 128, 192) : RGB(0, 128, 192),
+				uiPlaylist: this.bLiteMode
+					? bDark ? invert(panel.colors.text) : panel.colors.text
+					: bDark ? RGB(174, 212, 255) : RGB(14, 190, 255),
+				lockedPlaylist: bDark ? RGB(220, 20, 60) : RGB(220, 20, 60),
+				folder: bDark ? invert(panel.colors.text) : panel.colors.text,
+				standardPlaylist: bDark ? invert(panel.colors.text) : panel.colors.text,
+			};
+			if (!this.colors.autoPlaylist) { this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(colors.autoPlaylist)), 0.8); }
+			if (!this.colors.smartPlaylist) { this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(colors.smartPlaylist)), 0.8); }
+			if (!this.colors.selectedPlaylist) { this.colors.selectedPlaylist = RGB(...toRGB(colors.selectedPlaylist)); }
+			if (!this.colors.uiPlaylist) { this.colors.uiPlaylist = blendColors(panel.colors.text, RGB(...toRGB(colors.uiPlaylist)), 0.8); }
+			if (!this.colors.lockedPlaylist) { this.colors.lockedPlaylist = RGB(...toRGB(colors.lockedPlaylist)); }
+			if (!this.colors.folder) { this.colors.folder = colors.folder; }
+			if (!this.colors.standardPlaylist) { this.colors.standardPlaylist = blendColors(colors.standardPlaylist, panel.getColorBackground(), 0.1); }
 			bDone = true;
 		}
 		if (this.searchInput) {

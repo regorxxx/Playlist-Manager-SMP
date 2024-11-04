@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/11/24
+//04/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -3508,7 +3508,7 @@ function createMenuRightTop() {
 							}
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 							window.Repaint();
 						}
 					});
@@ -3530,7 +3530,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 							window.Repaint();
 						}
 					});
@@ -3554,7 +3554,7 @@ function createMenuRightTop() {
 								// Update property to save between reloads
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 								window.Repaint();
 							}
 						});
@@ -3569,7 +3569,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 							window.Repaint();
 						}
 					});
@@ -3589,7 +3589,7 @@ function createMenuRightTop() {
 								// Update property to save between reloads
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 								window.Repaint();
 							}
 						});
@@ -3615,7 +3615,7 @@ function createMenuRightTop() {
 								}
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 								// Set defaults again
 								if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); }
 								window.Repaint();
@@ -3631,7 +3631,7 @@ function createMenuRightTop() {
 						panel.properties['bAltRowsColor'][1] = panel.colors.bAltRowsColor;
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
-						list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+						list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 						window.Repaint();
 					}
 				});
@@ -3685,7 +3685,7 @@ function createMenuRightTop() {
 							}
 							overwriteProperties(list.properties);
 							overwriteProperties(panel.properties);
-							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 							window.Repaint();
 						}
 					});
@@ -3726,8 +3726,7 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'sep' });
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Reset all to default', func: () => {
-					list.colors = {};
-					list.properties.listColors[1] = convertObjectToString(list.colors);
+					list.properties.listColors[1] = convertObjectToString({});
 					panel.properties.colorsMode[1] = panel.colors.mode = 0;
 					panel.properties.bCustomText[1] = panel.colors.bCustomText = false;
 					panel.properties.headerButtonsColor[1] = panel.colors.headerButtons = -1;
@@ -3735,7 +3734,7 @@ function createMenuRightTop() {
 					panel.setDefault({ all: true });
 					overwriteProperties(list.properties);
 					overwriteProperties(panel.properties);
-					list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 					window.Repaint();
 				}
 			});
