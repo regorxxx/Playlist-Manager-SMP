@@ -2177,8 +2177,9 @@ function _list(x, y, w, h) {
 									const name = pls.name + ' (copy ' + this.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 									const inFolder = this.isInFolder(pls) ? this.getParentFolder(pls) : null;
 									return !!this.addFolder(name, inFolder);
-								} else if (pls.isAutoPlaylist) { return cloneAsAutoPls(this, z); }
-								else if (pls.extension === '.xsp') { return cloneAsSmartPls(this, z); }
+								} else if (pls.isAutoPlaylist) {
+									return cloneAsAutoPls(this, z, pls.extension !== '.ui' ? -1 : plman.FindPlaylist(pls.nameId))
+								} else if (pls.extension === '.xsp') { return cloneAsSmartPls(this, z); }
 								else { return clonePlaylistFile(this, z, pls.extension); }
 							}
 							return false;
@@ -3340,7 +3341,7 @@ function _list(x, y, w, h) {
 	this.updateTags = (handleList, pls) => {
 		if (!this.bAutoTrackTag) { return false; }
 		if (pls.isAutoPlaylist || pls.query) {
-			if (this.bAutoTrackTagAutoPls) {
+			if (this.bAutoTrackTagAutoPls && pls.extension !== '.ui') {
 				const [handleUpdate, tagsUpdate] = this.getUpdateTrackTags(handleList, pls);
 				return this.updateTrackTags(handleUpdate, tagsUpdate);
 			}
@@ -3439,7 +3440,7 @@ function _list(x, y, w, h) {
 			const dataIndex = (bCallback) ? i : playlistIndex; // This one always point to the index of data
 			const fbPlaylistIndex = (bCallback) ? playlistIndex : i; // And this one to fb playlists... according to bCallback
 			if (playlistNameId === i_pnameId) {
-				if (bCallback && !this.isAutosave(i_pnameId)) {return false;}
+				if (bCallback && !this.isAutosave(i_pnameId)) { return false; }
 				if (bCallback && this.isRwLock() && applyRwLock) {
 					if (plman.IsUndoAvailable(fbPlaylistIndex)) {
 						console.log('Playlist Manager: Restoring overwritten playlist...');
@@ -3593,6 +3594,7 @@ function _list(x, y, w, h) {
 		else { console.log('exportJson: Invalid index argument ' + idx); return ''; }
 		if (!bArray && idx !== -1) { // Safety check
 			const pls = this.data[idx];
+			if (pls.extension === '.ui') { return ''; }
 			if (!pls.isAutoPlaylist) {
 				if (!bAllExt) { return ''; }
 				else if (bAllExt) {
@@ -3624,7 +3626,7 @@ function _list(x, y, w, h) {
 					}
 					toSave.push(pls);
 				}
-				else if (pls.isAutoPlaylist) { toSave.push(pls); }
+				else if (pls.isAutoPlaylist && pls.extension !== '.ui') { toSave.push(pls); }
 			});
 		}
 		else if (idx === -1) { toSave = bAllExt ? [...this.dataAutoPlaylists, ...this.dataFpl, ...this.dataXsp] : [...this.dataAutoPlaylists]; }
@@ -4616,7 +4618,7 @@ function _list(x, y, w, h) {
 					const diffKeys = defPlsKeys.difference(new Set(Object.keys(item)));
 					if (diffKeys.size) { diffKeys.forEach((key) => { item[key] = defPls[key]; }); }
 					// Process
-					if (item.isAutoPlaylist || item.query) {
+					if ((item.isAutoPlaylist || item.query) && item.extension !== '.ui') {
 						if (!Object.hasOwn(item, 'duration')) { item.duration = -1; }
 						if (!Object.hasOwn(item, 'trackSize')) { item.trackSize = -1; }
 						i++;
@@ -5139,14 +5141,14 @@ function _list(x, y, w, h) {
 		this.dataFolder = [];
 		if (this.dataAll && this.dataAll.length) {
 			this.dataAll.forEach((item) => {
-				if (item.isAutoPlaylist) { // Saves autoplaylists to json
+				if (item.extension === '.ui') { // Save UI creation and last modified
+					this.dataUI.push(item);
+				} else if (item.isAutoPlaylist) { // Saves autoplaylists to json
 					this.dataAutoPlaylists.push(item);
 				} else if (item.extension === '.fpl') { // Save fpl size and name ID cache too
 					this.dataFpl.push(item);
 				} else if (item.extension === '.xsp') { // Save xsp as autoplaylists
 					this.dataXsp.push(item);
-				} else if (item.extension === '.ui') { // Save UI creation and last modified
-					this.dataUI.push(item);
 				} else if (item.isFolder) { // Save folders
 					this.dataFolder.push(item);
 				}
@@ -5210,7 +5212,10 @@ function _list(x, y, w, h) {
 			}
 			return { dataIdx, dataAllIdx };
 		}
-		if (objectPlaylist.isAutoPlaylist) {
+		if (objectPlaylist.extension === '.ui') {
+			this.dataUI.push(objectPlaylist);
+			this.itemsFoobar++;
+		} else if (objectPlaylist.isAutoPlaylist) {
 			this.dataAutoPlaylists.push(objectPlaylist);
 			this.itemsAutoPlaylist++;
 		} else if (objectPlaylist.extension === '.fpl') {
@@ -5219,9 +5224,6 @@ function _list(x, y, w, h) {
 		} else if (objectPlaylist.extension === '.xsp') {
 			this.dataXsp.push(objectPlaylist);
 			this.itemsXsp++;
-		} else if (objectPlaylist.extension === '.ui') {
-			this.dataUI.push(objectPlaylist);
-			this.itemsFoobar++;
 		} else if (objectPlaylist.isFolder) {
 			this.dataFolder.push(objectPlaylist);
 			this.itemsFolder++;
@@ -5267,7 +5269,13 @@ function _list(x, y, w, h) {
 			return;
 		}
 		let index;
-		if (objectPlaylist.isAutoPlaylist) {
+		if (objectPlaylist.extension === '.ui') {
+			index = this.dataUI.indexOf(objectPlaylist);
+			if (index !== -1) {
+				this.dataUI.splice(index, 1);
+				this.itemsFoobar--;
+			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataUI\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		} else if (objectPlaylist.isAutoPlaylist) {
 			index = this.dataAutoPlaylists.indexOf(objectPlaylist);
 			if (index !== -1) {
 				this.dataAutoPlaylists.splice(index, 1);
@@ -5921,7 +5929,7 @@ function _list(x, y, w, h) {
 					path: oPlaylistPath,
 					name: newName,
 					extension: this.playlistsExtension,
-					size: bEmpty ? 0 : plman.PlaylistItemCount(plman.ActivePlaylist),
+					size: bEmpty ? 0 : handleList.Count,
 					fileSize: utils.GetFileSize(done),
 					trackSize: bEmpty ? 0 : handleList.CalcTotalSize(),
 					category: oPlaylistCategory,
@@ -6020,6 +6028,7 @@ function _list(x, y, w, h) {
 			return false;
 		}
 		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
+		if (pls.extension === '.ui') { return; }
 		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 			return;
@@ -6139,7 +6148,16 @@ function _list(x, y, w, h) {
 	this.getHandleFrom = (idx, bLog = true) => {
 		const pls = this.dataAll[idx];
 		let handleList = new FbMetadbHandleList();
-		if (pls.isAutoPlaylist) { // AutoPlaylist
+		if (pls.extension === '.ui') {
+			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
+			if (handleList) {
+				this.editData(pls, {
+					size: handleList.Count,
+					duration: handleList.CalcTotalDuration(),
+					trackSize: handleList.CalcTotalSize()
+				}, true);
+			}
+		} else if (pls.isAutoPlaylist) { // AutoPlaylist
 			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name); }
 			else {
 				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
@@ -6148,15 +6166,6 @@ function _list(x, y, w, h) {
 					duration: handleList.CalcTotalDuration(),
 					trackSize: handleList.CalcTotalSize()
 				}, true); // Update size on load
-			}
-		} else if (pls.extension === '.ui') {
-			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
-			if (handleList) {
-				this.editData(pls, {
-					size: handleList.Count,
-					duration: handleList.CalcTotalDuration(),
-					trackSize: handleList.CalcTotalSize()
-				}, true);
 			}
 		} else if (_isFile(pls.path)) { // Or file
 			// Try to load handles from library first, greatly speeds up non fpl large playlists
