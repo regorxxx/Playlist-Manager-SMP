@@ -231,7 +231,7 @@ function createMenuLeft(forcedIndex = -1) {
 						}
 					}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
-				if (pls.extension === '.xsp') {
+				if (pls.extension === '.xsp') { // Smart Playlist Limit
 					menu.newEntry({
 						entryText: 'Edit limit...', func: () => {
 							let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name + ': ' + pls.name, 50);
@@ -247,6 +247,12 @@ function createMenuLeft(forcedIndex = -1) {
 								list.filter();
 							}
 						}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
+					});
+				} else if (bIsPlsUI) { // Show AutoPlaylist UI
+					menu.newEntry({
+						entryText: 'Show AutoPlaylist properties...', func: () => {
+							plman.ShowAutoPlaylistUI(uiIdx);
+						}
 					});
 				}
 			} else if (!list.bLiteMode) {
