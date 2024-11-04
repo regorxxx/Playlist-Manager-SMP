@@ -76,6 +76,7 @@
 - Statistics: X-axis keys are now shown even when not all keys can be displayed, omitting some of the values. This ensures that charts displaying numbers at the axis at least show the initial and some middle values. This applies for bars, lines, scatter, fill and timeline charts.
 - Statistics: left scrolling button position is now adjusted following Y-Axis display (except for doughnut and pie charts).
 - Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
+- UI: general improvements to default color management. If no custom colors are set, text color is adjusted to dark/light backgrounds and they are updated immediately (not on panel reload). Also done some minor tweaks to playlist colors.
 - Readme: updated readme pdf with latest changes and tips about 'Shift + Win + R. Click' shortcut (see above).
 - Helpers: updated helpers.
 ### Removed
