@@ -7434,7 +7434,7 @@ function _list(x, y, w, h) {
 					(
 						bHighlighting
 							? 'Playlists tracked folder has new changes.\n' +
-							'Use manual refresh or enable auto-loading.'
+							'Use manual refresh or enable auto-loading.\n'
 							: ''
 					) +
 					(

@@ -92,6 +92,7 @@
 - Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
+- UI: minor new line errors on folder button tooltip.
 - Statistics: minor fixes.
 
 ## [0.19.0] - 2024-10-09
