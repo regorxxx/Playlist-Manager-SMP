@@ -87,6 +87,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
 - Statistics: minor fixes.

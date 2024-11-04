@@ -1164,8 +1164,15 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	catch (e) { return bDone; }
 	if (!newPath.length) { return bDone; }
 	// Get tracks
-	if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone; }
-	let handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
+	// For query playlists, use the UI copy if possible
+	const bUI = pls.extension === '.ui'
+		|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
+	if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone; }
+	let handleList = !bUI
+		? pls.isAutoPlaylist
+			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
+			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
+		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList) {
 		list.editData(pls, {
 			size: handleList.Count,
