@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/10/24
+//05/11/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian */
 
@@ -131,6 +131,11 @@ function roughSizeOfObject(object) {
 	const objectList = new Set([]);
 	const stack = [object];
 	let bytes = 0;
+	/**
+	 * Byte sizes are taken from ECMAScript Language Specification
+	 * http://www.ecma-international.org/ecma-262/5.1/
+	 * http://bclary.com/2004/11/07/#a-4.3.16
+	*/
 	while (stack.length) {
 		const value = stack.pop();
 		const type = typeof value;
@@ -140,6 +145,13 @@ function roughSizeOfObject(object) {
 			bytes += value.length * 2;
 		} else if (type === 'number') {
 			bytes += 8;
+		} else if (type === 'symbol' || type === 'function' || value instanceof RegExp) {
+			if (!objectList.has(value)) {
+				objectList.add(value);
+				bytes += value.toString().length * 2;
+			}
+		} else if (type === 'undefined') {
+			bytes += 'undefined'.length * 2;
 		} else if (type === 'object' && value === null) {
 			bytes += 4;
 		} else if (type === 'object' && value instanceof FbMetadbHandleList) {
@@ -175,6 +187,19 @@ function roughSizeOfObject(object) {
 				objectList.add(value);
 				bytes += value.toString().length * 2; // Obviously no way to check resolve size
 			}
+		} else if (type === 'object' && value.forEachNode && value.forEachLink) {
+			value.forEachNode((node) => {
+				if (!objectList.has(node)) {
+					objectList.add(node);
+					bytes += node.toString().length * 2;
+				}
+			});
+			value.forEachLink((link) => {
+				if (!objectList.has(link)) {
+					objectList.add(link);
+					bytes += link.toString().length * 2;
+				}
+			});
 		} else if (type === 'object') {
 			if (!objectList.has(value)) {
 				objectList.add(value);

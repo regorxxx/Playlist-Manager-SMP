@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/10/24
+//05/11/24
 
 /* exported extendGR */
 
@@ -349,6 +349,49 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		} catch (e) { /* Continue */ }
 	}).bind(window)
 });
+
+// Augment FbProfiler() constructor
+{
+	const old = FbProfiler;
+	FbProfiler = function FbProfiler() { // NOSONAR
+		const that = old(...arguments);
+		Object.defineProperty(that, 'CheckPoints', {
+			enumerable: true,
+			configurable: false,
+			writable: false,
+			value: []
+		});
+		that.CheckPoint = (function CheckPoint(name) {
+			let point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			if (point) {
+				point.time = this.Time;
+			} else {
+				point = { name, time: this.Time, acc: 0 };
+				this.CheckPoints.push(point);
+			}
+			return point;
+		}).bind(that);
+		that.CheckPointStep = (function CheckPointStep(name) {
+			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			if (point) {
+				const now = this.Time;
+				point.acc += now - point.time;
+				point.time = now;
+			}
+			return point ? point.acc : null;
+		}).bind(that);
+		that.ElapsedTimeSince = (function ElapsedTimeSince(name) {
+			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			return (point ? this.Time - point.time : null);
+		}).bind(that);
+		that.CheckPointPrint = (function CheckPointStep(name, message) {
+			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			if (point) {console.log('profiler (' + this.Name + '): ' + name + ' ' + point.acc + ' ms' +(message || '')); return true;}
+			return null;
+		}).bind(that);
+		return that;
+	};
+}
 
 /* Global */
 

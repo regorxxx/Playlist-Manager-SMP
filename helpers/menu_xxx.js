@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/24
+//07/11/24
 
 /* exported _menu, _attachedMenu */
 
@@ -62,6 +62,16 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 
 	const eTypeToStr = ['number', 'boolean', 'object']; // Variable types converted to string for menu and entry names
 
+	this.cleanEntryName = (entry) => {
+		if (entry !== null) {
+			const type = typeof entry;
+			if (type !== 'undefined') {
+				if (eTypeToStr.indexOf(type) !== -1) { entry = entry.toString(); }
+				if (type === 'string' && entry.indexOf('&') !== - 1) { entry = entry.replace(/&&/g, '&').replace(/&/g, '&&'); }
+			}
+		}
+		return entry;
+	};
 	// To retrieve elements
 	/**
 	 * Get total number of menu entries (parents and entries)
@@ -172,14 +182,11 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @returns {string}
 	 */
 	this.newMenu = (menuName = 'main', subMenuFrom = this.getMainMenuName() || 'main', flags = MF_STRING, context = null /*{type, playlistIdx}*/, main = null /*{type}*/) => { //NOSONAR
-		const mType = typeof menuName, smType = typeof subMenuFrom;
-		if (eTypeToStr.indexOf(mType) !== -1) { menuName = menuName.toString(); }
-		if (eTypeToStr.indexOf(smType) !== -1) { subMenuFrom = subMenuFrom.toString(); }
+		menuName = this.cleanEntryName(menuName);
+		subMenuFrom = this.cleanEntryName(subMenuFrom);
 		if (menuName === subMenuFrom) { subMenuFrom = ''; }
 		// Replace & with && to display it right on window, but check for && first to not duplicate!
 		// No need to define regex and reuse since it's not expected to use it a lot anyway!
-		if (smType === 'string' && subMenuFrom.indexOf('&') !== - 1) { subMenuFrom = subMenuFrom.replace(/&&/g, '&').replace(/&/g, '&&'); }
-		if (mType === 'string' && menuName.indexOf('&') !== - 1) { menuName = menuName.replace(/&&/g, '&').replace(/&/g, '&&'); }
 		if (context && main) {
 			menuError({ 'function': 'newMenu\n', menuName, subMenuFrom, flags, context, main, mesage: 'A menu can not be a contextual menu and main menu at the same time' });
 			throwError('A menu can not be a contextual menu and main menu at the same time');
@@ -230,14 +237,9 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @returns {{entryText:string, menuName:string, flags:number, bIsMenu:false, func:function, data:any}}
 	 */
 	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, data = null, bAddInvisibleIds = false }) => {
-		const eType = typeof entryText, mType = typeof menuName;
-		if (eTypeToStr.indexOf(eType) !== -1) { entryText = entryText.toString(); }
-		if (eTypeToStr.indexOf(mType) !== -1) { menuName = menuName.toString(); }
-		if (eType === 'string') {
-			if (entryText.indexOf('&') !== - 1) { entryText = entryText.replace(/&&/g, '&').replace(/&/g, '&&'); }
-			if (separator.test(entryText)) { func = null; flags = MF_GRAYED; }
-		}
-		if (mType === 'string' && menuName.indexOf('&') !== - 1) { menuName = menuName.replace(/&&/g, '&').replace(/&/g, '&&'); }
+		menuName = this.cleanEntryName(menuName);
+		entryText = this.cleanEntryName(entryText);
+		if (typeof entryText === 'string' && separator.test(entryText)) { func = null; flags = MF_GRAYED; }
 		if (bAddInvisibleIds) { entryText += invsId(true); } // At this point don't use other name than this!
 		entryArr.push({ entryText, func, menuName, flags, bIsMenu: false, data });
 		return entryArr[entryArr.length - 1];
@@ -257,15 +259,11 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 */
 	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFunc = null) => {
 		if (!isFunction(idxFunc)) { menuError({ function: 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc }); throwError('Non valid \'idxFunc\' function provided'); }
-		const mType = typeof menuName, eAType = typeof entryTextA, eBType = typeof entryTextB;
-		if (eTypeToStr.indexOf(mType) !== -1) { menuName = menuName.toString(); }
-		if (eTypeToStr.indexOf(eAType) !== -1) { entryTextA = entryTextA.toString(); }
-		if (eAType === 'string' && separator.test(entryTextA)) { return false; }
-		if (entryTextB !== null && eBType !== 'undefined' && eTypeToStr.indexOf(eBType) !== -1) { entryTextB = entryTextB.toString(); }
-		if (eAType === 'string' && entryTextA.indexOf('&') !== - 1) { entryTextA = entryTextA.replace(/&&/g, '&').replace(/&/g, '&&'); }
-		if (eBType === 'string' && entryTextB.indexOf('&') !== - 1) { entryTextB = entryTextB.replace(/&&/g, '&').replace(/&/g, '&&'); }
-		if (mType === 'string' && menuName.indexOf('&') !== - 1) { menuName = menuName.replace(/&&/g, '&').replace(/&/g, '&&'); }
-		if (mType === 'string' && !this.hasMenu(menuName)) { menuError({ function: 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc }); throwError('There is no menu with such name'); }
+		menuName = this.cleanEntryName(menuName);
+		entryTextA = this.cleanEntryName(entryTextA);
+		entryTextB = this.cleanEntryName(entryTextB);
+		if (typeof entryTextA === 'string' && separator.test(entryTextA)) { return false; }
+		if (typeof menuName === 'string' && !this.hasMenu(menuName)) { menuError({ function: 'newCheckMenu\n', menuName, entryTextA, entryTextB, idxFunc }); throwError('There is no menu with such name'); }
 		checkMenuArr.push({ menuName, entryTextA, entryTextB, idxFunc });
 		return true;
 	};
@@ -383,6 +381,26 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		entryArr.push({ entryText, condFunc });
 		return entryArr[entryArr.length - 1];
 	};
+	/**
+	 * Should only be called on .initMenu(), thus within other checkMenu entries, to check if another entry has a radious or boolean check. For ex. in a submenu with an entry to input custom values, can be used to discover if any of the predefined entries are already checked. Returns null if the entry check was not found, otherwise returns a boolean or a number (with the delta idx) for radious checks.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name newCondEntry
+	 * @param {string} menuName - To which menu/submenu the entry is associated. Uses main menu when not specified.
+	 * @param {string} entryTextA - To which menu entry the check is associated. For boolean checks.
+	 * @param {string} entryTextB - To which last menu entry the check is associated. For radious checks, you need the first and last entry.
+	 * @returns {Number|Boolean|null}
+	 */
+	this.isChecked = (menuName = this.getMainMenuName(), entryTextA, entryTextB = '') => {
+		menuName = this.cleanEntryName(menuName);
+		entryTextA = this.cleanEntryName(entryTextA);
+		entryTextB = this.cleanEntryName(entryTextB);
+		const name = entryTextA + (entryTextB.length ? ' - ' + entryTextB : '');
+		const check = (this.getCheckMenu(menuName) || []).find((check) => check.name === name);
+		console.log(check, name, entryTextA);
+		return (check ? check.val : null);
+	};
 
 	// <-- Internal
 	this.getMenu = (menuName) => !menuName ? menuMap : menuMap.get(menuName);
@@ -453,22 +471,30 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		const entryNameA = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextA : entryTextA;
 		const idxA = this.getIdx(entryNameA);
 		if (typeof idxA === 'undefined' || idxA === null) { console.log('this.checkMenu: entryA not found -> ' + entryNameA); }
+		if (!checkMenuMap.has(menuName)) { checkMenuMap.set(menuName, []); }
+		const menuChecks = checkMenuMap.get(menuName);
 		if (entryTextB) { // Radio check
 			if (isFunction(entryTextB)) { entryTextB = entryTextB(); }
 			const entryNameB = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextB : entryTextB;
-			checkMenuMap.set(menuName, () => {
-				const idxB = this.getIdx(entryNameB);
-				if (typeof idxB === 'undefined' || idxB === null) { console.log('this.checkMenu: entryB not found -> ' + entryNameB); }
-				const delta = idxFunc();
-				if (typeof delta !== 'number') { console.log('this.checkMenu: idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
-				if ((idxA + delta) > idxB) { console.log('this.checkMenu: idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
-				return menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta);
+			menuChecks.push({
+				name: entryTextA + ' - ' + entryTextB, val: null, func: () => {
+					const idxB = this.getIdx(entryNameB);
+					if (typeof idxB === 'undefined' || idxB === null) { console.log('this.checkMenu: entryB not found -> ' + entryNameB); }
+					const delta = idxFunc();
+					if (typeof delta !== 'number') { console.log('this.checkMenu: idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
+					if ((idxA + delta) > idxB) { console.log('this.checkMenu: idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
+					menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta);
+					return delta;
+				}
 			});
 		} else { // Item check
-			checkMenuMap.set(menuName + entryTextA, () => {
-				const bVal = idxFunc();
-				if (typeof bVal !== 'boolean') { console.log('this.checkMenu: idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
-				return menuMap.get(menuName).CheckMenuItem(idxA, bVal);
+			menuChecks.push({
+				name: entryTextA, val: null, func: () => {
+					const bVal = idxFunc();
+					if (typeof bVal !== 'boolean') { console.log('this.checkMenu: idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
+					menuMap.get(menuName).CheckMenuItem(idxA, bVal);
+					return bVal;
+				}
 			});
 		}
 	};
@@ -582,9 +608,9 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		checkMenuArr.forEach((check) => {
 			this.checkMenu(check.menuName, check.entryTextA, check.entryTextB, check.idxFunc);
 		});
-		this.getCheckMenu().forEach((func) => {
-			func();
-		});
+		this.getCheckMenu().forEach((checkArr) => checkArr.forEach((check) => {
+			check.val = check.func();
+		}));
 		// Call other object's menu creation manually appended items
 		if (manualMenuArr.length) {
 			let idxAcum = this.getNumEntries();
