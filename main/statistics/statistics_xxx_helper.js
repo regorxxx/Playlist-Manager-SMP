@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//07/11/24
 
 // Dummy file to load existing helpers or independent file
 {
@@ -9,6 +9,7 @@
 	if (bIncludeRel) {
 		include('..\\..\\helpers\\helpers_xxx.js');
 		include('..\\..\\helpers\\helpers_xxx_basic_js.js');
+		include('..\\..\\helpers\\helpers_xxx_input.js');
 		include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 		/* global require:readable, module:readable */
 		include('..\\..\\helpers\\helpers_xxx_prototypes_smp.js');

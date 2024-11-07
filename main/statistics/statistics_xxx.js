@@ -2106,7 +2106,7 @@ function _chart({
 		if (colors) { this.colors = colors; bCheckColors = true; }
 		if (chroma) { this.chroma = { ...this.chroma, ...chroma }; this.checkScheme(); bCheckColors = true; }
 		if (dataManipulation && dataManipulation.slice && this.chroma.scheme) { this.colors = []; bCheckColors = true; }
-		if (bCheckColors && !dataAsync && !this.dataAsync) { this.checkColors(); }
+		if (bCheckColors && !dataAsync && !this.dataAsync) { this.checkColors(); } // NOSONAR
 		if (axis) {
 			if (axis.x) { this.axis.x = { ...this.axis.x, ...axis.x }; }
 			if (axis.y) { this.axis.y = { ...this.axis.y, ...axis.y }; }
@@ -2134,7 +2134,7 @@ function _chart({
 		if (data || (dataManipulation || graph) && !dataAsync) { this.initData(); }
 		if (this.configuration.bLoadAsyncData || bForceLoadData) {
 			if (dataAsync) { this.initDataAsync(); }
-			else if (bCheckColors && this.dataAsync) { this.dataAsync.then(() => this.checkColors()); }
+			else if (bCheckColors && this.dataAsync) { this.dataAsync.then(() => this.checkColors()); } // NOSONAR
 		} // May be managed by the chart or externally
 		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(), arguments[0], callbackArgs); }
 		if (bPaint) { this.repaint(); }
@@ -2433,7 +2433,7 @@ function _chart({
 	};
 
 	this.initDataAsync = () => {
-		if (!this.dataAsync) { return null; }
+		if (!this.dataAsync) { return null; } // NOSONAR
 		this.initPopup();
 		if (isFunction(this.dataAsync)) { this.dataAsync = this.dataAsync(); }
 		return this.dataAsync.then((data) => {
@@ -2450,7 +2450,8 @@ function _chart({
 		this.checkConfig();
 		this.initData();
 		this.resizeButtons();
-		if (this.configuration.bLoadAsyncData && this.dataAsync) { this.initDataAsync(); } // May be managed by the chart or externally
+		// May be managed by the chart or externally
+		if (this.configuration.bLoadAsyncData && this.dataAsync) { this.initDataAsync(); } // NOSONAR
 	};
 
 	this.setDefaults();

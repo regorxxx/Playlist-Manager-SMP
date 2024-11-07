@@ -67,6 +67,9 @@
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
 - Playlists maintenance tools: new entry to check for subsong items in AutoPlaylists and Smart Playlists.
+- Statistics: X-Axis shown values at display menu now allows any custom value.
+- Statistics: Y-Axis filter at display menu now allows any custom value for 'greater than'/'lower than' filters.
+- Statistics: option to filter data between 2 custom values on Y-Axis at display menu.
 ### Changed
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
 - Statistics: scrolling cursor is displayed when scrolling using mouse + dragging.
@@ -79,6 +82,7 @@
 - Statistics: X-axis keys are now shown even when not all keys can be displayed, omitting some of the values. This ensures that charts displaying numbers at the axis at least show the initial and some middle values. This applies for bars, lines, scatter, fill and timeline charts.
 - Statistics: left scrolling button position is now adjusted following Y-Axis display (except for doughnut and pie charts).
 - Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
+- Statistics: multiple menu entries at 'Display settings' have been renamed for clarity's sake.
 - AutoPlaylist: UI-only AutoPlaylists are now treated as AutoPlaylists internally and not only as UI-only playlists (this involves some big changes internally so there may be some minor bugs as consequence). Thanks to these changes a lot of other improvements have been possible.
 - AutoPlaylist: new AutoPlaylists created are now automatically loaded.
 - AutoPlaylist: 'Clone in UI' menu entry or action also updates metadata now.
