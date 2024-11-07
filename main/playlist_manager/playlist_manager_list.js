@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/11/24
+//05/11/24
 
 /* exported _list */
 
@@ -2223,7 +2223,7 @@ function _list(x, y, w, h) {
 									const inFolder = this.isInFolder(pls) ? this.getParentFolder(pls) : null;
 									return !!this.addFolder(name, inFolder);
 								} else if (pls.isAutoPlaylist) {
-									return cloneAsAutoPls(this, z, pls.extension !== '.ui' ? -1 : plman.FindPlaylist(pls.nameId))
+									return cloneAsAutoPls(this, z, pls.extension !== '.ui' ? -1 : plman.FindPlaylist(pls.nameId));
 								} else if (pls.extension === '.xsp') { return cloneAsSmartPls(this, z); }
 								else { return clonePlaylistFile(this, z, pls.extension); }
 							}
@@ -2678,12 +2678,16 @@ function _list(x, y, w, h) {
 
 	this.isValidAction = (action) => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
-		if (!showMenus['File locks'] && action === 'Lock/unlock playlist file') { return false; }
-		if (!showMenus['UI playlist locks'] && action === 'Lock/unlock UI playlist') { return false; }
-		if (!showMenus['Category'] && action === 'Cycle categories') { return false; }
-		if (!showMenus['Tags'] && action === 'Cycle tags') { return false; }
-		if (this.bLiteMode && action.includes('Manual saving')) { return false; }
-		return true;
+		switch (true) {
+			case !showMenus['File locks'] && action === 'Lock/unlock playlist file':
+			case !showMenus['UI playlist locks'] && action === 'Lock/unlock UI playlist':
+			case !showMenus['Category'] && action === 'Cycle categories':
+			case !showMenus['Tags'] && action === 'Cycle tags':
+			case this.bLiteMode && action.includes('Manual saving'):
+				return false;
+			default:
+				return true;
+		}
 	};
 
 	this.executeAction = (z, x, y, shortcut, bMultiple = !!this.indexes.length) => {
@@ -6655,12 +6659,12 @@ function _list(x, y, w, h) {
 			const bDark = isDark(panel.getColorBackground());
 			const colors = {
 				autoPlaylist: bDark ? RGB(255, 41, 119) : RGB(255, 66, 113),
-				smartPlaylist: bDark ? RGB(101, 204, 50) : RGB(101, 204, 50),
-				selectedPlaylist: bDark ? RGB(0, 128, 192) : RGB(0, 128, 192),
+				smartPlaylist: RGB(101, 204, 50),
+				selectedPlaylist: RGB(0, 128, 192),
 				uiPlaylist: this.bLiteMode
 					? bDark ? invert(panel.colors.text) : panel.colors.text
 					: bDark ? RGB(174, 212, 255) : RGB(14, 190, 255),
-				lockedPlaylist: bDark ? RGB(220, 20, 60) : RGB(220, 20, 60),
+				lockedPlaylist: RGB(220, 20, 60),
 				folder: bDark ? invert(panel.colors.text) : panel.colors.text,
 				standardPlaylist: bDark ? invert(panel.colors.text) : panel.colors.text,
 			};
