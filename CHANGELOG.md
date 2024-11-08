@@ -95,7 +95,7 @@
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
 - UI: UI-only Playlists load shortcut is displayed as 'Show playlist' instead of 'Load / show playlist', since they can not be (re)loaded.
 - UI: general improvements to default color management. If no custom colors are set, text color is adjusted to dark/light backgrounds and they are updated immediately (not on panel reload). Also done some minor tweaks to playlist colors.
-- Readme: updated readme pdf with latest changes and tips about 'Shift + Win + R. Click' shortcut (see above).
+- Readme: updated readme pdf with latest changes, tips about 'Shift + Win + R. Click' shortcut (see above) and JSplitter install instructions.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
