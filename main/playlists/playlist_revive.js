@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/08/24
+//10/11/24
 
 /*
 	Playlist Revive
@@ -33,6 +33,7 @@ function playlistRevive({
 	bSimulate = false,
 	bReportAllMatches = false,
 	bSilent = false, // Probably should be false if processing only a HandleList!
+	bNotifyPlsMan = true, // Probably should be false if processing only a HandleList!
 } = {}) {
 	if (typeof selItems === 'undefined' || selItems === null || selItems.Count === 0) {
 		return null;
@@ -47,6 +48,8 @@ function playlistRevive({
 
 	let cache = new Set();
 	const streamRegEx = /^file:\/\//i;
+
+	if (bNotifyPlsMan) { window.NotifyOthers('Playlist Manager: addToSkipRwLock', { uiIdx: playlist }); }
 
 	// Filter items which already exist
 	let items = new FbMetadbHandleList();
