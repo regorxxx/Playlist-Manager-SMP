@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/11/24
+//10/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -413,7 +413,7 @@ function createMenuLeft(forcedIndex = -1) {
 						entryText: 'Export as json file...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 							const path = list.exportJson({ idx: z, bAllExt: true });
 							if (_isFile(path)) { _explorer(path); }
-						}, flags: bIsAutoPls  && !bIsPlsUI ? MF_STRING : MF_GRAYED
+						}, flags: bIsAutoPls && !bIsPlsUI ? MF_STRING : MF_GRAYED
 					});
 					if (pls.extension === '.xsp') {
 						// Copy
@@ -1704,7 +1704,7 @@ function createMenuRight() {
 						let name = opt.name;
 						let i = 0;
 						while (list.dataAll.some((pls) => pls.nameId === name)) {
-							name = name.replace(/ \((\n\))/,'') + ' ' + _p(++i);
+							name = name.replace(/ \((\n\))/, '') + ' ' + _p(++i);
 							if (i > 10) { fb.ShowPopupMessage('There are more than 10 playlists with same name: ' + opt.name, window.Name); return; }
 						}
 						const pls = list.addAutoPlaylist({ ...opt, name, sort: '' }, false, toFolder);
@@ -2297,7 +2297,8 @@ function createMenuRight() {
 				if (utils.IsKeyPressed(VK_SHIFT)) {
 					selectDeadItems(plman.ActivePlaylist);
 				} else {
-					playlistRevive({ playlist: plman.ActivePlaylist, simThreshold: 0.5, bFindAlternative: true });
+					list.addToSkipRwLock({ uiIdx: plman.ActivePlaylist, bNotify: true });
+					playlistRevive({ playlist: plman.ActivePlaylist, simThreshold: 0.5, bFindAlternative: true, bNotifyPlsMan: false });
 				}
 			}, flags: bLoad && !bLocked && deadItems ? MF_STRING : MF_GRAYED
 		});
@@ -4434,7 +4435,7 @@ function createMenuRightTop() {
 					? menu.newMenu(modifier + '\t(enable List Menu button)', subMenuNameL, MF_GRAYED)
 					: menu.newMenu(modifier, subMenuNameL);
 				actions.forEach((action) => {
-					const flags = modifier === 'Double Click' && action === 'Multiple selection' || !list.isValidAction(action) 
+					const flags = modifier === 'Double Click' && action === 'Multiple selection' || !list.isValidAction(action)
 						? MF_GRAYED
 						: MF_STRING;
 					menu.newEntry({
@@ -4547,8 +4548,8 @@ function createMenuRightTop() {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameL);
 				actions.forEach((action) => {
-					const flags = modifier === 'Double Click' && action === 'Multiple selection' || !list.isValidAction(action) 
-						? MF_GRAYED 
+					const flags = modifier === 'Double Click' && action === 'Multiple selection' || !list.isValidAction(action)
+						? MF_GRAYED
 						: MF_STRING;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
@@ -4789,7 +4790,7 @@ function createMenuRightTop() {
 					list.activePlsStartup = list.activePlsStartup === name ? '' : name;
 					list.properties.activePlsStartup[1] = list.activePlsStartup;
 					overwriteProperties(list.properties);
-					window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup);
+					window.NotifyOthers('Playlist Manager: change startup playlist', list.activePlsStartup);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => (list.activePlsStartup === name));
@@ -4800,11 +4801,29 @@ function createMenuRightTop() {
 					list.activePlsStartup = input;
 					list.properties.activePlsStartup[1] = list.activePlsStartup;
 					overwriteProperties(list.properties);
-					window.NotifyOthers('Playlist manager: change startup playlist', list.activePlsStartup);
+					window.NotifyOthers('Playlist Manager: change startup playlist', list.activePlsStartup);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name));
 		}
+	}
+	{
+		menu.newEntry({ entryText: 'sep' });
+		const subMenuName = menu.newMenu('Logging');
+		[
+			{ key: 'autoSize', entryText: 'Autoplaylists updates' },
+			{ key: 'loadPls', entryText: 'Load playlist' },
+			{ key: 'profile', entryText: 'Global profiling' },
+		].forEach((opt) => {
+			menu.newEntry({
+				menuName: subMenuName, entryText: opt.entryText, func: () => {
+					list.logOpt[opt.key] = !list.logOpt[opt.key];
+					list.properties['logOpt'][1] = JSON.stringify(list.logOpt);
+					overwriteProperties(list.properties);
+				}
+			});
+			menu.newCheckMenuLast(() => list.logOpt[opt.key]);
+		});
 	}
 	menu.newEntry({ entryText: 'sep' });
 	menu.newEntry({
@@ -5111,7 +5130,7 @@ function createMenuSearch() {
 								);
 							}
 							Promise.serial(list.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(list), 100)
-								.then(() => console.log('Playlist manager: Cached playlists for searching'));
+								.then(() => console.log('Playlist Manager: Cached playlists for searching'));
 						}
 					}
 				}

@@ -99,6 +99,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
 - Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.

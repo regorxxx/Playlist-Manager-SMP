@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/11/24
+//10/11/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -27,7 +27,7 @@ include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('helpers\\buttons_panel_xxx.js');
-/* global addButton:readable, buttonsPanel:readable, on_paint_buttn:readable, on_size_buttn:readable, on_mouse_lbtn_down_buttn:readable, on_mouse_move_buttn:readable, on_mouse_leave_buttn:readable, ThemedButton:readable, on_mouse_lbtn_up_buttn:readable */
+/* global addButton:readable, buttonsPanel:readable, on_paint_buttn:readable, on_size_buttn:readable, on_mouse_lbtn_down_buttn:readable, on_mouse_move_buttn:readable, on_mouse_leave_buttn:readable, ThemedPanelButton:readable, on_mouse_lbtn_up_buttn:readable */
 include('helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, _hasRecycleBin:readable */
 include('helpers\\helpers_xxx_tags.js');
@@ -163,7 +163,7 @@ let properties = {
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }, true],
 	bSavingXsp: ['Auto-save .xsp playlists?', false, { func: isBoolean }, false],
 	bAllPls: ['Track UI-only playlists?', false, { func: isBoolean }, false],
-	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !isNaN, range: [[0, 0], [1000, Infinity]] }, Infinity], // Safety limit 0 or > 1000
+	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !isNaN, range: [[0, 0], [1000, Infinity]] }, Infinity], // Infinity calls it on unload and playlist changes only
 	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }, 50],
 	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }, 'Playlist type,Lock state'],
 	bSavingDefExtension: ['Try to save playlists always as default format?', true, { func: isBoolean }, true],
@@ -332,6 +332,11 @@ let properties = {
 		others: ''
 	})],
 	bRwLock: ['Not overwrite playlists loading new files', false, { func: isBoolean }, false],
+	logOpt: ['Logging options', JSON.stringify({
+		autoSize: false,
+		loadPls: false,
+		profile: false,
+	})],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -352,6 +357,7 @@ properties['statusIcons'].push({ func: isJSON }, properties['statusIcons'][1]);
 properties['importPlaylistFilters'].push({ func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }, properties['importPlaylistFilters'][1]);
 properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlaylistMask'][1]);
 properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
+properties['logOpt'].push({ func: isJSON }, properties['logOpt'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -361,7 +367,7 @@ setProperties(properties, 'plm_');
 		plmInit.interval = setInterval(cacheLib, 500, true);
 	}
 	// Update default values for JSON properties (for compat with new releases)
-	const props = ['columns', 'rShortcuts', 'uiElements', 'searchMethod', 'showMenus', 'lShortcutsHeader', 'mShortcutsHeader', 'mShortcuts', 'lShortcuts', 'playlistIcons'];
+	const props = ['columns', 'rShortcuts', 'uiElements', 'searchMethod', 'showMenus', 'lShortcutsHeader', 'mShortcutsHeader', 'mShortcuts', 'lShortcuts', 'playlistIcons', 'logOpt'];
 	let bDone = false;
 	props.forEach((propKey) => {
 		const oldProp = JSON.parse(prop[propKey][1]);
@@ -528,13 +534,13 @@ let plsRwLock;
 		}
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
 		const callback = () => !pop.isEnabled() && list && list.bInit
-			? window.NotifyOthers('Playlist manager: playlistPath', null)
+			? window.NotifyOthers('Playlist Manager: playlistPath', null)
 			: setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
 		const id = addEventListener('on_notify_data', (name, info) => {
 			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
 			switch (name) { // NOSONAR
-				case 'Playlist manager: playlistPath': {
+				case 'Playlist Manager: playlistPath': {
 					if (info) {
 						if (info === list.playlistsPath) {
 							fb.ShowPopupMessage('There is another Playlist Manager panel tracking the same folder (which is usually undesired), you may want to configure this panel to track a different playlist folder.\n\nIn case you want to track the same folder with multiple panels, read the \'Advanced Tips\' section at the PDF readme first. Don\'t forget to disable auto-saving and auto-backup on all but one of the panels if needed (to not process multiple times the same files).', 'Playlist Manager: found same tracked folder');
@@ -630,7 +636,7 @@ if (!list.properties.bSetup[1]) {
 
 	// Tracking a network drive?
 	if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
-		console.log('Playlist manager: tracked folder is on a drive without Recycle Bin.');
+		console.log('Playlist Manager: tracked folder is on a drive without Recycle Bin.');
 		if (!list.properties.bNetworkPopup[1]) {
 			list.properties.bNetworkPopup[1] = true;
 			overwriteProperties(list.properties); // Updates panel
@@ -648,7 +654,7 @@ if (!list.properties.bSetup[1]) {
 			setTimeout(() => {
 				if (pop.isEnabled() || list && !list.bInit) { backupInit(); return; }
 				list.backupRestore();
-			}, 1000);
+			}, 6000);
 		};
 		backupInit();
 	}
@@ -659,7 +665,7 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_colours_changed', () => {
 		panel.colorsChanged();
-		list.checkConfigPostUpdate(list.checkConfig({bResetColors: true}));
+		list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true }));
 		window.Repaint();
 	});
 
@@ -854,28 +860,34 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_notify_data', (name, info) => {
 		if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
 		switch (name) {
-			case 'Playlist manager: playlistPath': {
-				if (!info) { window.NotifyOthers('Playlist manager: playlistPath', list.playlistsPath); } // Share paths
+			case 'Playlist Manager: playlistPath': {
+				if (!info) { window.NotifyOthers('Playlist Manager: playlistPath', list.playlistsPath); } // Share paths
 				break;
 			}
-			case 'Playlist manager: get handleList': {
+			case 'Playlist Manager: get handleList': {
 				if (info && info.length) {
 					const plsName = info;
 					if (list.hasPlaylists([plsName])) {
-						window.NotifyOthers('Playlist manager: handleList', Promise.resolve(list.getHandleFromPlaylists([plsName], false)));
+						window.NotifyOthers('Playlist Manager: handleList', Promise.resolve(list.getHandleFromPlaylists([plsName], false)));
 					}
 				} // Share paths
 				break;
 			}
-			case 'Playlist manager: switch tracking': {
+			case 'Playlist Manager: switch tracking': {
 				list.switchTracking(info);
 				break;
 			}
-			case 'Playlist manager: change startup playlist': {
+			case 'Playlist Manager: change startup playlist': {
 				if (list.activePlsStartup !== info) {
 					list.activePlsStartup = info;
 					list.properties.activePlsStartup[1] = list.activePlsStartup;
 					overwriteProperties(list.properties);
+				}
+				break;
+			}
+			case 'Playlist Manager: addToSkipRwLock': {
+				if (info && (Object.hasOwn(info, 'uiIdx') || Object.hasOwn(info, 'name'))) {
+					list.addToSkipRwLock({ uiIdx: info.uiIdx, name: info.name });
 				}
 				break;
 			}
@@ -1072,7 +1084,7 @@ if (!list.properties.bSetup[1]) {
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, newCount, name); return; }
 		if (oldName && oldName.length && name !== oldName) { return; }
-		if (list.isRwLock()) {
+		if (list.isRwLock({ uiIdx: playlistIndex })) {
 			if (newCount === 0 && !plsRwLock.isUndo) {
 				plsRwLock.idx = playlistIndex;
 				plsRwLock.date = Date.now();
@@ -1098,7 +1110,7 @@ if (!list.properties.bSetup[1]) {
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, name); return; }
 		if (oldName && oldName.length && name !== oldName) { return; }
-		if (!list.isRwLock() || plsRwLock.idx !== playlistIndex || Date.now() - plsRwLock.date > 100) {
+		if (!list.isRwLock({ uiIdx: playlistIndex }) || plsRwLock.idx !== playlistIndex || Date.now() - plsRwLock.date > 100) {
 			plsRwLock.idx = -1;
 			plsRwLock.date = -1;
 			plsRwLock.apply = false;
@@ -1137,8 +1149,8 @@ if (!list.properties.bSetup[1]) {
 						let bDone = list.data[idx[0]]
 							? renamePlaylist(list, idx[0], newName, false)
 							: false;
-						if (bDone) { console.log('Playlist manager: renamed playlist ' + oldName + ' --> ' + newName); list.showCurrPls(); }
-						else { console.log('Playlist manager: failed renaming playlist ' + oldName + ' --> ' + newName); }
+						if (bDone) { console.log('Playlist Manager: renamed playlist ' + oldName + ' --> ' + newName); list.showCurrPls(); }
+						else { console.log('Playlist Manager: failed renaming playlist ' + oldName + ' --> ' + newName); }
 					}
 					plsHistory.onPlaylistSwitch();
 				}
@@ -1237,7 +1249,7 @@ if (!list.properties.bSetup[1]) {
 		removeInstance('Playlist Manager');
 		// Backup
 		if (autoBackTimer && list.playlistsPath.length && list.itemsAll) {
-			backup(list.properties.autoBackN[1], true);
+			backup(list.properties.autoBackN[1], true, false);
 		}
 		// Clear timeouts
 		clearInterval(keyListener.fn);
