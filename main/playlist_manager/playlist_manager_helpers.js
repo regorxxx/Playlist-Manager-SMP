@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/11/24
+//09/11/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -1469,9 +1469,9 @@ function rewriteXSPLimit(pls, newLimit) {
 	return bDone;
 }
 
-function backup(n = 50, bAsync = false) { // Backup playlist and json file
+function backup(n = 50, bAsync = false, bProfile = true) { // Backup playlist and json file
 	if (!list.playlistsPath.length || list.bLiteMode) { return false; }
-	let test = new FbProfiler('Playlist manager Backup');
+	let test = bProfile ? new FbProfiler('Playlist manager Backup') : null;
 	if (n && n !== -1) {
 		const files = getFiles(list.playlistsPath + '_backup\\', new Set(['.zip'])).reverse();
 		while (files.length >= n) {
@@ -1480,7 +1480,7 @@ function backup(n = 50, bAsync = false) { // Backup playlist and json file
 	}
 	const playlistFilesMask = Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext); // Ext already has a .
 	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip', bAsync);
-	test.Print();
+	if (test) {test.Print();}
 	return true;
 }
 
