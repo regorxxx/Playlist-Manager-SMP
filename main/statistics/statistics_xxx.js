@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/10/24
+//12/11/24
 
 /* exported _chart */
 
@@ -429,6 +429,7 @@ function _chart({
 		this.dataCoords = this.dataDraw.map(() => { return []; });
 		let x, y, w, h, xOffsetKey, yOffsetKey;
 		let bHideToolbar;
+		let graphType = this.graph.type;
 		const bDynColor = this.configuration.bDynColor && this.callbacks.config.backgroundColor;
 		const bgColor = bDynColor
 			? this.configuration.bDynColorBW
@@ -469,6 +470,10 @@ function _chart({
 		const xAxisValues = getUniqueListBy(points.flat(Infinity), 'x').map((value) => value.x);
 		const xAxisValuesLen = xAxisValues.length;
 		const labelOver = { coord: [] }; // For pie Graphs
+		// Fallback graphs
+		// if (this.series === 1 && this.dataDraw[0].length === 1) {
+		// 	// if (['fill', 'lines', 'lines-hq'].includes(graphType)) { graphType = 'scatter';}
+		// }
 		/*
 			Draw for all graphs
 		*/
@@ -478,7 +483,7 @@ function _chart({
 		y = this.h - this.margin.bottom;
 		xOffsetKey = 0;
 		yOffsetKey = 0;
-		switch (this.graph.type) {
+		switch (graphType) {
 			case 'doughnut':
 			case 'pie':
 				// XY Titles
@@ -494,7 +499,7 @@ function _chart({
 				break;
 			default:
 				// XY Titles
-				if (this.axis.x.show && this.axis.x.key.length && this.axis.x.showKey || this.graph.type === 'timeline') {
+				if (this.axis.x.show && this.axis.x.key.length && this.axis.x.showKey || graphType === 'timeline') {
 					yOffsetKey = gr.CalcTextHeight(this.axis.x.key, this.gFont) + _scale(2);
 					y -= yOffsetKey;
 				}
@@ -512,7 +517,7 @@ function _chart({
 				}
 				// XY Axis
 				if (this.axis.x.show) {
-					if (this.graph.type === 'timeline') {
+					if (graphType === 'timeline') {
 						gr.DrawLine(x, (y - h) / 2 + this.margin.top + this.axis.x.width / 2, x + w - this.margin.leftAuto, (y - h) / 2 + this.margin.top + this.axis.x.width / 2, this.axis.x.width, xAxisColor);
 					} else {
 						gr.DrawLine(x, y - this.axis.x.width / 2, x + w - this.margin.leftAuto, y - this.axis.x.width / 2, this.axis.x.width, xAxisColor);
@@ -526,7 +531,8 @@ function _chart({
 		w -= this.axis.y.width / 2;
 		y -= this.axis.y.width;
 		let tickW, barW, offsetTickText = 0;
-		switch (this.graph.type) {
+		switch (graphType) {
+			case 'scatter':
 			case 'lines':
 			case 'lines-hq':
 			case 'fill': {
@@ -538,26 +544,15 @@ function _chart({
 				const last = xAxisValuesLen - 1;
 				gr.SetSmoothingMode(4); // Antialias for lines
 				this.dataDraw.forEach((serie, i) => {
-					if (this.graph.type === 'fill') {
+					if (graphType === 'scatter' || (serie.length === 1)) {
+						this.paintScatter(gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues);
+					} else if (graphType === 'fill') {
 						this.paintFill(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
-					} else if (this.graph.type === 'lines') {
+					} else if (graphType === 'lines') {
 						this.paintLines(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
-					} else if (this.graph.type === 'lines-hq') {
+					} else if (graphType === 'lines-hq') {
 						this.paintLinesHighQ(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					}
-				});
-				gr.SetSmoothingMode(0);
-				break;
-			}
-			case 'scatter': {
-				x -= this.axis.x.width * 1 / 2;
-				tickW = (w - this.margin.leftAuto) / ((xAxisValuesLen - 1) || 1);
-				barW = 0;
-				offsetTickText = - tickW / 2;
-				// Values
-				gr.SetSmoothingMode(4); // Antialias for lines
-				this.dataDraw.forEach((serie, i) => {
-					this.paintScatter(gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues);
 				});
 				gr.SetSmoothingMode(0);
 				break;
@@ -642,13 +637,13 @@ function _chart({
 		/*
 			Draw for all graphs
 		*/
-		switch (this.graph.type) {
+		switch (graphType) {
 			case 'doughnut':
 			case 'pie':
 				// Y Axis ticks
 				if (this.axis.y.show || this.axis.x.show) {
 					if (this.axis.y.labels || this.axis.x.labels) {
-						const series = this.dataDraw.length + (this.graph.type === 'doughnut' ? 1 : 0);
+						const series = this.dataDraw.length + (graphType === 'doughnut' ? 1 : 0);
 						this.dataDraw.forEach((serie, i) => {
 							const labels = labelOver.coord[i];
 							let prevLabel = labels[0];
@@ -803,7 +798,7 @@ function _chart({
 			}
 			// eslint-disable-next-line no-fallthrough
 			case 'bars': // NOSONAR [fallthrough]
-				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels && this.graph.type !== 'timeline') {
+				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels && graphType !== 'timeline') {
 					const yLabel = (y - h) / 2;
 					const minTickW = w / 30;
 					const bFitTicks = w / tickW < 30;
@@ -877,7 +872,7 @@ function _chart({
 										img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 										img.ReleaseGraphics(_gr);
 										gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-										if (this.graph.type === 'timeline') {
+										if (graphType === 'timeline') {
 											const point = this.dataCoords[i][j];
 											gr.DrawImage(img, zLabel, point.y + point.h * 2 - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
 										} else {
@@ -893,7 +888,7 @@ function _chart({
 			default: // eslint-disable-line no-fallthrough
 				// Y Axis ticks
 				if (this.axis.y.show) {
-					if (this.graph.type !== 'timeline') {
+					if (graphType !== 'timeline') {
 						ticks.forEach((tick, i) => {
 							const yTick = y - tick / maxY * (y - h) || y;
 							if (yTick < 0) { return; }
@@ -933,7 +928,7 @@ function _chart({
 				}
 				// X Axis ticks
 				if (this.axis.x.show) {
-					if (this.graph.type !== 'timeline') {
+					if (graphType !== 'timeline') {
 						const last = xAxisValuesLen - 1;
 						const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
 						const minTickW = w / 30;
@@ -950,7 +945,7 @@ function _chart({
 								if (i !== 0 && (xLabel - lastLabel) < minTickW) { return; }
 								lastLabel = xLabel;
 							}
-							if (this.axis.x.labels && (this.graph.type !== 'bars' || !this.axis.x.bAltLabels)) {
+							if (this.axis.x.labels && (graphType !== 'bars' || !this.axis.x.bAltLabels)) {
 								if (i === 0 && offsetTickText) { // Fix for first label position
 									const zeroW = xLabel + offsetTickText - this.x - this.margin.leftAuto / 2 + (bFitTicks ? tickW : drawLabelW);
 									const zeroX = this.x + this.margin.leftAuto / 2 + xOffsetKey + (bFitTicks ? 0 : tickW * 2 / 3);
@@ -961,7 +956,7 @@ function _chart({
 									const lastW = xLabel + offsetTickText + tickW > w - this.margin.right
 										? this.x + w - (xLabel + offsetTickText) + this.margin.right
 										: tickW;
-									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel + offsetTickText + xOffsetKey + (lastW / 2 - xtickW) + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel + offsetTickText + xOffsetKey + (lastW - xtickW) / 2 - _scale(1), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
 								} else {
@@ -1210,9 +1205,10 @@ function _chart({
 			this.inFocus = true;
 			if (this.pop.isEnabled()) { this.pop.move(x, y); }
 			else {
+				let bInButton = false;
 				if (this.buttons.xScroll) {
 					if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
-						bHand = true;
+						bHand = bInButton = true;
 						ttText = this.callbacks.xScroll.tooltip
 							? isFunction(this.callbacks.xScroll.tooltip)
 								? this.callbacks.xScroll.tooltip(this.rightBtn.hover)
@@ -1222,7 +1218,7 @@ function _chart({
 				}
 				if (this.buttons.settings) {
 					if (this.settingsBtn.move(x, y)) {
-						bHand = true;
+						bHand = bInButton = true;
 						ttText = this.callbacks.settings.tooltip
 							? isFunction(this.callbacks.settings.tooltip)
 								? this.callbacks.settings.tooltip()
@@ -1232,7 +1228,7 @@ function _chart({
 				}
 				if (this.buttons.display) {
 					if (this.displayBtn.move(x, y)) {
-						bHand = true;
+						bHand = bInButton = true;
 						ttText = this.callbacks.display.tooltip
 							? isFunction(this.callbacks.display.tooltip)
 								? this.callbacks.display.tooltip()
@@ -1242,7 +1238,7 @@ function _chart({
 				}
 				if (this.buttons.zoom) {
 					if (this.zoomBtn.move(x, y)) {
-						bHand = true;
+						bHand = bInButton = true;
 						ttText = this.callbacks.zoom.tooltip
 							? isFunction(this.callbacks.zoom.tooltip)
 								? this.callbacks.zoom.tooltip()
@@ -1252,7 +1248,7 @@ function _chart({
 				}
 				if (this.buttons.custom) {
 					if (this.customBtn.move(x, y)) {
-						bHand = true;
+						bHand = bInButton = true;
 						ttText = this.callbacks.custom.tooltip
 							? isFunction(this.callbacks.custom.tooltip)
 								? this.callbacks.custom.tooltip()
@@ -1260,49 +1256,58 @@ function _chart({
 							: '';
 					}
 				}
-				const [serie, idx] = this.tracePoint(x, y, true);
-				const bPoint = serie !== -1 && idx !== -1;
-				const bPaint = this.currPoint[0] !== serie || this.currPoint[1] !== idx;
-				if (bPaint) {
-					let coords;
-					// Repaint around current point
-					if (bPoint) {
-						coords = this.sizePoint(this.dataCoords[serie][idx], true);
-						this.repaint(...Object.values(coords));
+				if (!bInButton) {
+					const [serie, idx] = this.tracePoint(x, y, true);
+					const bPoint = serie !== -1 && idx !== -1;
+					const bPaint = this.currPoint[0] !== serie || this.currPoint[1] !== idx;
+					if (bPaint) {
+						let coords;
+						// Repaint around current point
+						if (bPoint) {
+							coords = this.sizePoint(this.dataCoords[serie][idx], true);
+							this.repaint(...Object.values(coords));
+						}
+						// Repaint around old point
+						if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+							coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true);
+							this.repaint(...Object.values(coords));
+						}
 					}
+					if (!bHand && !ttText) {
+						this.currPoint = [serie, idx];
+						if (bPoint) {
+							bHand = true;
+							const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
+							const refPoint = this.dataDraw[serie][idx];
+							const bShowAllPoints = this.graph.multi && ['scatter', 'lines', 'fill'].includes(this.graph.type);
+							const points = bShowAllPoints && this.dataDraw.length > 1
+								? this.dataDraw.map((s) => s.find((p) => p.x === refPoint.x)).flat(Infinity).filter(Boolean)
+								: [refPoint];
+							ttText = '';
+							const bMultiLine = points.length > 1;
+							ttText += '[X]' + this.axis.x.key + ' - [Y]' + this.axis.y.key + (this.graph.multi ? ' - [Z]' + this.axis.z.key : '') + '\n\n';
+							points.forEach((point, i) => {
+								const percent = bPercent
+									? Math.round(point.y * 100 / this.dataDraw[i].reduce((acc, point) => acc + point.y, 0))
+									: null;
+								ttText += (i === 0 || !bMultiLine ? point.x + ':' : '') + (bMultiLine ? '\n\t' : ' ');
+								ttText += round(point.y, 3)
+									+ (this.axis.y.key ? ' ' + this.axis.y.key : '') +
+									(bPercent ? ' ' + _p(percent + '%') : '') +
+									(this.graph.multi ? ' - ' + point.z : '');
+							});
+							ttText += this.tooltipText
+								? isFunction(tooltipText) ? tooltipText.call(this, refPoint, serie, mask) : tooltipText
+								: '';
+						}
+					}
+				} else {
 					// Repaint around old point
 					if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
-						coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true);
+						const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true);
 						this.repaint(...Object.values(coords));
 					}
-				}
-				if (!bHand && !ttText) {
-					this.currPoint = [serie, idx];
-					if (bPoint) {
-						bHand = true;
-						const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
-						const refPoint = this.dataDraw[serie][idx];
-						const bShowAllPoints = this.graph.multi && ['scatter', 'lines', 'fill'].includes(this.graph.type);
-						const points = bShowAllPoints && this.dataDraw.length > 1
-							? this.dataDraw.map((s) => s.find((p) => p.x === refPoint.x)).flat(Infinity).filter(Boolean)
-							: [refPoint];
-						ttText = '';
-						const bMultiLine = points.length > 1;
-						ttText += '[X]' + this.axis.x.key + ' - [Y]' + this.axis.y.key + (this.graph.multi ? ' - [Z]' + this.axis.z.key : '') + '\n\n';
-						points.forEach((point, i) => {
-							const percent = bPercent
-								? Math.round(point.y * 100 / this.dataDraw[i].reduce((acc, point) => acc + point.y, 0))
-								: null;
-							ttText += (i === 0 || !bMultiLine ? point.x + ':' : '') + (bMultiLine ? '\n\t' : ' ');
-							ttText += round(point.y, 3)
-								+ (this.axis.y.key ? ' ' + this.axis.y.key : '') +
-								(bPercent ? ' ' + _p(percent + '%') : '') +
-								(this.graph.multi ? ' - ' + point.z : '');
-						});
-						ttText += this.tooltipText
-							? isFunction(tooltipText) ? tooltipText.call(this, refPoint, serie, mask) : tooltipText
-							: '';
-					}
+					this.currPoint = [-1, -1];
 				}
 				if (ttText.length) { this.tooltip.SetValue(ttText, true); }
 				else { this.tooltip.SetValue(null); }
