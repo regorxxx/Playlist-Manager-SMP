@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/11/24
+//12/11/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -440,6 +440,7 @@ let plsRwLock;
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
+		const uiElements = JSON.parse(prop.uiElements[1]);
 		if (readme.length) { fb.ShowPopupMessage(readme, 'Playlist Manager: introduction'); }
 		{	// Lite mode
 			const answer = WshShell.Popup('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled. \n\nEnable lite mode?', 0, window.Name, popup.question + popup.yes_no);
@@ -452,7 +453,7 @@ let plsRwLock;
 			const otherFeatures = ['Advanced search tools'];
 			const answer = prop.bLiteMode[1]
 				? popup.no
-				: WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, window.Name, popup.question + popup.yes_no);
+				: WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, 'Lite mode', popup.question + popup.yes_no);
 			if (answer === popup.no) {
 				// Menus
 				const showMenus = JSON.parse(prop.showMenus[1]);
@@ -466,10 +467,17 @@ let plsRwLock;
 				prop.searchMethod[1] = JSON.stringify(searchMethod);
 			}
 		}
+		if (prop.bLiteMode[1]) {	// Bottom toolbar
+			const answer = WshShell.Popup('Show the bottom toolbar for quick acess to sorting and filtering?\nUI elements can be tweaked later at Settings menu \'UI\\UI elements\' submenu.\n\n(Click no if looking for a simple replacement of foo_plorg)', 0, 'Bottom toolbar', popup.question + popup.yes_no);
+			if (answer === popup.no) {
+				uiElements['Bottom toolbar'].enabled = false;
+				prop.uiElements[1] = JSON.stringify(uiElements);
+			}
+		}
 		{	// UI tracking
 			const answer = prop.bLiteMode[1]
 				? popup.yes
-				: WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+				: WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, 'UI-only playlists tracking', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				prop.bAllPls[1] = true;
 			}
@@ -479,7 +487,7 @@ let plsRwLock;
 			const answer = prop.bLiteMode[1]
 				? popup.yes
 				: prop.bAllPls[1]
-					? WshShell.Popup('Show native contextual menu on UI-playlists (applies to its items)?', 0, window.Name, popup.question + popup.yes_no)
+					? WshShell.Popup('Show native contextual menu on UI-playlists (applies to its items)?', 0, 'Playlist contextual menus', popup.question + popup.yes_no)
 					: popup.no;
 			if (answer === popup.yes) {
 				// Menus
@@ -493,7 +501,7 @@ let plsRwLock;
 		{	// Manual sorting
 			const answer = prop.bLiteMode[1]
 				? popup.yes
-				: WshShell.Popup('By default automatic sorting is used.\nManual sorting can be set at the sorting button at bottom. Playlists may be reordered using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+				: WshShell.Popup('By default automatic sorting by name is used.\n\nManual sorting can be set at the ' + (uiElements['Bottom toolbar'].enabled ? 'sorting button at bottom and ' : '') + 'filter and sorting menu at top.\nWith manual sorting, playlists may be reordered using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, 'Manual sorting', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				new Promise((resolve) => {
 					const timer = setInterval(() => {
@@ -507,7 +515,7 @@ let plsRwLock;
 		{	// Folders
 			const answer = prop.bLiteMode[1]
 				? popup.yes
-				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, window.Name, popup.question + popup.yes_no);
+				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, 'Folders', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				const showMenus = JSON.parse(prop.showMenus[1]);
 				showMenus['Folders'] = true;

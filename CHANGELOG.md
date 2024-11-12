@@ -73,6 +73,7 @@
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
 ### Changed
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
+- Configuration: simplified wording and popups when installing the package for the first time. In lite mode there is an additional popup suggesting to hide the bottom toolbar.
 - Statistics: scrolling cursor is displayed when scrolling using mouse + dragging.
 - Statistics: added horizontal (x) scrolling using the mouse wheel (for mouses with horizontal moves).
 - Statistics: 'fill' chart type.
