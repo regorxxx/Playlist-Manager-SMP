@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/24
+//11/11/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
 
@@ -194,6 +194,10 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { bToLowerC
 				if (bStatic && (typeof tfoVal === 'undefined' || tfoVal === null || tfoVal === '')) {
 					tfo = fb.TitleFormat(tfo.Expression.slice(1, -1));
 					tfoVal = sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : tfo.Eval(true));
+				}
+				// Another workaround for album artist, don't split
+				if(/%ALBUM ARTIST% (IS|HAS)/gi.test(query) && tagKey.toUpperCase() === 'ALBUM ARTIST') {
+					tfoVal = tfoVal.replaceAll('#', ', ');
 				}
 				if (options.bDebug) { console.log('tfoVal:', tfoVal); }
 				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!
