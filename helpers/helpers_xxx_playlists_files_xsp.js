@@ -1,11 +1,12 @@
 ﻿'use strict';
-//26/07/24
+//11/11/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 /* global XSP:readable*/
 
 XSP.isFoec = (typeof isEnhPlayCount !== 'undefined' && isEnhPlayCount) || (typeof isEnhPlayCount === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount')); // eslint-disable-line no-undef
+XSP.isFo2k3 = (typeof isPlaycount2003 !== 'undefined' && isPlaycount2003) || (typeof isPlaycount2003 === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_playcount_2003')); // eslint-disable-line no-undef
 
 XSP.getQuerySort = function (jsp) {
 	let query = this.getQuery(jsp);
@@ -22,9 +23,33 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 		console.log('There are empty or non recognized rules.');
 	}
 	const query = [];
-	const textTags = new Set(['GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '%PLAY_COUNT%', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%', '#PLAYLIST#']);
-	const numTags = new Set(['TRACKNUMBER', '%RATING%', 'DATE', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '%PLAY_COUNT%']);
-	const dateTags = new Set(['DATE', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%']);
+	const textTags = new Set([
+		'GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"','"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%)"',
+		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%)"',
+		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%)"',
+		'%PLAY_COUNT%', '%2003_PLAYCOUNT%',
+		'%2003_LAST_PLAYED%', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%',
+		'#PLAYLIST#'
+	]);
+	const numTags = new Set([
+		'TRACKNUMBER', '%RATING%', '%2003_RATING%', 'DATE',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"','"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%)"',
+		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%)"',
+		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%)"',
+		'%PLAY_COUNT%', '%2003_PLAYCOUNT%',
+	]);
+	const dateTags = new Set(['DATE', '%LAST_PLAYED_ENHANCED%', '%LAST_PLAYED%', '%2003_LAST_PLAYED%', '%ADDED_ENHANCED%', '%2003_ADDED%', '%ADDED%']);
 	for (let rule of rules) {
 		const tag = rule.field;
 		const op = rule.operator;
@@ -190,7 +215,10 @@ XSP.getFbTag = function (tag) {
 		case 'path': { fbTag = '%' + tag.toUpperCase() + '%'; break; }
 		// Are the same
 		case 'rating':
-		case 'userrating': { fbTag = '%RATING%'; break; } // Requires foo_playcount
+		case 'userrating': { // Requires foo_playcount / foo_playcount_2003
+			fbTag = XSP.isFo2k3 ? '$if2(%2003_RATING%,%RATING%)' : '%RATING%';
+			break;
+		}
 		// Others...
 		case 'noofchannels':
 		case 'channels': { fbTag = '$info(CHANNELS)'; break; }
@@ -202,10 +230,33 @@ XSP.getFbTag = function (tag) {
 		case 'themes': { fbTag = 'THEME'; break; }
 		case 'styles': { fbTag = 'STYLE'; break; }
 		case 'albumartist': { fbTag = '"ALBUM ARTIST"'; break; }
-		case 'playcount': { fbTag = XSP.isFoec ? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"' : '%PLAY_COUNT%'; break; } // Requires foo_enhanced_playcount or foo_playcount
-		case 'lastplayed': { fbTag = XSP.isFoec ? '%LAST_PLAYED_ENHANCED%' : '%LAST_PLAYED%'; break; } // Requires foo_enhanced_playcount or foo_playcount
+		case 'playcount': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
+			fbTag = XSP.isFoec
+				? XSP.isFo2k3
+					? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"'
+					: '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"'
+				: XSP.isFo2k3
+					?'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"'
+					:'%PLAY_COUNT%';
+			break;
+		}
+		case 'lastplayed': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
+			fbTag = XSP.isFoec
+				? '%LAST_PLAYED_ENHANCED%'
+				: XSP.isFo2k3
+					? '%2003_LAST_PLAYED%'
+					: '%LAST_PLAYED%';
+			break;
+		}
 		case 'datenew':
-		case 'dateadded': { fbTag = XSP.isFoec ? '%ADDED_ENHANCED%' : '%ADDED%'; break; } // Requires foo_playcount
+		case 'dateadded': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
+			fbTag = XSP.isFoec
+				? '%ADDED_ENHANCED%'
+				: XSP.isFo2k3
+					? '%2003_ADDED%'
+					: '%ADDED%';
+			break;
+		}
 		case 'datemodified': { fbTag = '%LAST_MODIFIED%'; break; }
 		// Special Tags
 		case 'virtualfolder': // Remap to playlist which is the most similar thing...
