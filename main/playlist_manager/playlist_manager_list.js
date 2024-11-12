@@ -7134,12 +7134,15 @@ function _list(x, y, w, h) {
 		if (!_isFolder(folders.data)) { _createFolder(folders.data); }
 		this.filename = folders.data + 'playlistManager_' + (this.bLiteMode ? this.uuid : this.playlistsPathDirName.replace(':', '')) + '.json'; // Replace for relative paths folder names!
 		let test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'Init') : null;
-		_recycleFile(this.filename + '.old', true); // recycle old backup
-		_copyFile(this.filename, this.filename + '.old'); // make new backup
+		// Make new backup and recycle old one
+		_renameFile(this.filename + '.old', this.filename + '.old2');
+		_copyFile(this.filename, this.filename + '.old');
+		setTimeout(() =>_recycleFile(this.filename + '.old2', true), 6000);
 		const sortingFile = this.filename.replace('.json', '_sorting.json');
 		if (_isFile(sortingFile)) {
-			_recycleFile(sortingFile + '.old', true);
+			_renameFile(sortingFile + '.old', sortingFile + '.old2');
 			_copyFile(sortingFile, sortingFile + '.old');
+			setTimeout(() =>_recycleFile(sortingFile + '.old2', true), 6000);
 		}
 		this.loadConfigFile(); // Extra json files available?
 		this.loadSortingFile();
