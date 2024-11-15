@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/24
+//15/11/24
 
 /* exported _listStatistics */
 
@@ -65,7 +65,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 
 	const createMenuOptionParent = function createMenuOptionParent(menu, key, subKey, menuName = menu.getMainMenuName(), bCheck = true, addFunc = null, postFunc = null) {
 		return function (option) {
-			if (option.entryText === 'sep' && menu.getEntries().pop().entryText !== 'sep') { menu.newEntry({ menuName, entryText: 'sep' }); return; } // Add sep only if any entry has been added
+			if (menu.isSeparator(option) && !menu.isSeparator(menu.getEntries().pop())) { menu.newSeparator(menuName); return; } // Add sep only if any entry has been added
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
 				menu.newEntry({
 					menuName, entryText: option.entryText, func: () => {
@@ -142,11 +142,11 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		const createMenuOption = createMenuOptionParent.bind(this, menu);
 		// Header
 		menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
-		menu.newEntry({ entryText: 'sep' });
+		menu.newSeparator();
 		{	// Data
 			const subMenu = menu.newMenu('Data...');
 			menu.newEntry({ menuName: subMenu, entryText: 'From playlists:', flags: MF_GRAYED });
-			menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+			menu.newSeparator(subMenu);
 			[
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
@@ -192,11 +192,11 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				);
 			}));
 		}
-		menu.newEntry({ entryText: 'sep' });
+		menu.newSeparator();
 		{
 			const subMenu = menu.newMenu('Data source...');
 			menu.newEntry({ menuName: subMenu, entryText: 'Select source for playlists:', flags: MF_GRAYED });
-			menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+			menu.newSeparator(subMenu);
 			[
 				{
 					isEq: null, key: this.data, value: null, newValue: null,
@@ -237,7 +237,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				parent.source = option.args.data.source;
 			}));
 		}
-		menu.newEntry({ entryText: 'sep' });
+		menu.newSeparator();
 		menu.newEntry({ entryText: 'Exit statistics mode', func: parent.exit });
 		return menu;
 	};
@@ -271,7 +271,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		const type = this.graph.type.toLowerCase();
 		// Header
 		menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
-		menu.newEntry({ entryText: 'sep' });
+		menu.newSeparator();
 		// Menus
 		{
 			const subMenu = menu.newMenu('Chart type...');
@@ -296,7 +296,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				{ isEq: null, key: this.dataManipulation.distribution, value: null, newValue: null, entryText: 'Standard graph' },
 				{ isEq: null, key: this.dataManipulation.distribution, value: null, newValue: 'normal', entryText: 'Normal distrib.' },
 			].forEach(createMenuOption('dataManipulation', 'distribution', subMenu));
-			menu.newEntry({ entryText: 'sep' });
+			menu.newSeparator();
 		}
 		{
 			const subMenu = menu.newMenu('Sorting...');
@@ -316,7 +316,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					{ isEq: null, key: this.dataManipulation.distribution, value: 'normal inverse', newValue: 'normal', entryText: 'Mean centered' }
 				].forEach(createMenuOption('dataManipulation', 'distribution', subMenu));
 			}
-			menu.newEntry({ entryText: 'sep' });
+			menu.newSeparator();
 		}
 		{
 			{
@@ -362,7 +362,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					{ isEq: null, key: this.dataManipulation.filter, value: null, newValue: null, entryText: 'No filter' },
 				].forEach(createMenuOption('dataManipulation', 'filter', subMenu));
 			}
-			menu.newEntry({ entryText: 'sep' });
+			menu.newSeparator();
 		}
 		{
 			const subMenu = menu.newMenu('Axis & labels...');
@@ -383,7 +383,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				[
 					{ isEq: null, key: this.axis.y.labels, value: null, newValue: { labels: !this.axis.y.labels }, entryText: (this.axis.y.labels ? 'Hide' : 'Show') + ' Y labels' }
 				].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
-				menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+				menu.newSeparator(subMenuTwo);
 				[
 					{ isEq: null, key: this.axis.x.bAltLabels, value: null, newValue: !this.axis.x.bAltLabels, entryText: 'Alt. X labels' },
 				].forEach(createMenuOption('axis', ['x', 'bAltLabels'], subMenuTwo, true));

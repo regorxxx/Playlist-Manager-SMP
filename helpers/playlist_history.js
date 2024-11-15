@@ -98,12 +98,12 @@ function PlsHistory({ size = 11, bAutoInit = true } = {}) {
 	this.menu = () => {
 		const menu = new _menu(); // To avoid collisions with other buttons and check menu
 		menu.newEntry({ entryText: 'Switch to previous playlists:', func: null, flags: MF_GRAYED });
-		menu.newEntry({ entryText: 'sep' });
+		menu.newSeparator();
 		menu.newEntry({ entryText: 'Previous playlist', func: this.goPrevPls, flags: () => { return (this.size() >= 2 ? MF_STRING : MF_GRAYED); } });
 		menu.newCondEntry({
 			entryText: 'Playlist History... (cond)', condFunc: () => {
 				const [, ...list] = this.pls;
-				menu.newEntry({ entryText: 'sep' });
+				menu.newSeparator();
 				if (!list.length) { menu.newEntry({ entryText: '-None-', func: null, flags: MF_GRAYED }); }
 				list.forEach((pls) => {
 					menu.newEntry({

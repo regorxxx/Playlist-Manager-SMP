@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/24
+//15/11/24
 
 /* exported _menu, _attachedMenu */
 
@@ -55,7 +55,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	const idxMap = new Map();
 	let idx = 0;
 
-	const separator = /^sep$|^separator$/i;
+	const separator = /(?:^|\\)(?:sep|separator)$/i;
 
 	this.properties = properties; // To simplify usage along other scripts
 	this.lastCall = '';
@@ -245,6 +245,18 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		return entryArr[entryArr.length - 1];
 	};
 	/**
+	 * Creates an separator attached to any parent menu.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name newEntry
+	 * @param {string} menuName - To which menu/submenu the sepearator is associated. Uses main menu when not specified.
+	 * @returns {{entryText:'sep', menuName:string, flags:MF_GRAYED, bIsMenu:false, func:null, data:null}}
+	 */
+	this.newSeparator = (menuName = this.getMainMenuName()) => {
+		return this.newEntry({ entryText: 'sep', menuName});
+	};
+	/**
 	 * Creates a check attached to a parent menu and menu entries (the bullet or check mark on UI).
 	 * All arguments may be variables or functions (which will be evaluated when creating the menu on UI).
 	 *
@@ -277,7 +289,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name newCheckMenuLast
-	 * @param {function} func - Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 5. For Boolean checks of a single entry, just return true/false.
+	 * @param {(options: array,len: int) => int} func - Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 5. For Boolean checks of a single entry, just return true/false. Note separator entries doesn't count. Options argument (filtered without separartors) and its length as passed as arguments to the callback.
 	 * @param {any[]|number} options - [=[]] When provided, its length is used to consider the last n entries. In case it's not provided or its length is one or zero, only a single entry is considered and the check is boolean. It may also be provided directly as a number.
 	 * @returns {boolean}
 	 */
@@ -285,10 +297,17 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		if (!isFunction(func)) { menuError({ function: 'newCheckMenuLast\n', func, options }); throwError('Non valid \'func\' function provided'); }
 		const lastEntry = this.getLastEntry();
 		if (!lastEntry) { return false; }
-		const len = options ? (Array.isArray(options) ? options.length : Number(options)) : 0;
+		let lenFilter, len;
+		if (options && Array.isArray(options)) {
+			len = options.length;
+			options = options.filter(this.isNotSeparator);
+			lenFilter = options.length;
+		} else {
+			len = options ? Number(options) : 0;
+		}
 		return (len >= 1
-			? this.newCheckMenu(lastEntry.menuName, entryArr[entryArr.length - len].entryText, lastEntry.entryText, func) /* idx check */
-			: this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void (0), func) /* boolean check */
+			? this.newCheckMenu(lastEntry.menuName, entryArr[entryArr.length - len].entryText, lastEntry.entryText, () => func(options, lenFilter)) /* idx check */
+			: this.newCheckMenu(lastEntry.menuName, lastEntry.entryText, void (0), () => func(len)) /* boolean check */
 		);
 	};
 	/**
@@ -521,7 +540,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 				if (compareKeys(this, objectMenu)) { // Another instance of this framework, just merge entries and done
 					this.concat(objectMenu);
 				} else if (typeof objectMenu === 'string' && separator.test(objectMenu)) { // Separator
-					this.newEntry({ entryText: 'sep' });
+					this.newSeparator();
 				} else if (Object.hasOwn(objectMenu, 'btn_up') && Object.hasOwn(objectMenu, 'btn_up_done')) { // Object with hard-coded methods
 					manualMenuArr.push(objectMenu);
 				} else { // Error
@@ -743,7 +762,10 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @param {{entrytext?:string, name?:string}|string} obj - Menu entry object.
 	 * @returns {boolean}
 	 */
-	this.isSeparator = (obj) => { return ((obj.entryText || obj.name || obj) === 'separator' || (obj.entryText || obj.name || obj) === 'sep'); };
+	this.isSeparator = (obj) => {
+		const str = obj ? (obj.entryText || obj.name || obj) : null;
+		return typeof str === 'string' ? separator.test(str) : false;
+	};
 	/**
 	 * Checks if a menu entry (object) is not a separator.
 	 *

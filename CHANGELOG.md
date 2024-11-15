@@ -100,6 +100,7 @@
 - Backup: delayed panel JSON backup and recycling on startup, which sometimes slowed down foobar2000 startup in old machines.
 - Readme: updated readme pdf with latest changes, tips about 'Shift + Win + R. Click' shortcut (see above) and JSplitter install instructions.
 - Helpers: updated helpers.
+- Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 ### Removed
 ### Fixed
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
