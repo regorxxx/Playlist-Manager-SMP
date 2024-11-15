@@ -85,6 +85,7 @@
 - Statistics: left scrolling button position is now adjusted following Y-Axis display (except for doughnut and pie charts).
 - Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
 - Statistics: multiple menu entries at 'Display settings' have been renamed for clarity's sake.
+- Statistics: buttons are now smoothly hidden when panel is not on focus. Transparency may be adjusted from 0 to 255 by setting buttons.alpha, timer to hide them by setting buttons.timer.
 - AutoPlaylist: UI-only AutoPlaylists are now treated as AutoPlaylists internally and not only as UI-only playlists (this involves some big changes internally so there may be some minor bugs as consequence). Thanks to these changes a lot of other improvements have been possible.
 - AutoPlaylist: new AutoPlaylists created are now automatically loaded.
 - AutoPlaylist: 'Clone in UI' menu entry or action also updates metadata now.
