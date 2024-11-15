@@ -217,14 +217,19 @@ function _list(x, y, w, h) {
 		}
 	};
 
+	this.calcRowWidthCache = null;
 	this.calcRowWidth = (gr, w, columnIdx, plsIdx) => {
-		return w === 'auto'
-			? gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]), panel.fonts[this.columns.font[columnIdx] || 'normal'])
-			: (w < 1 ? w * (this.w - this.x) : w);
+		if (!this.calcRowWidthCache) { this.calcRowWidthCache = this.columns.labels.map(() => { return {}; }); }
+		let val = this.calcRowWidthCache[columnIdx][plsIdx];
+		if (!val) {
+			val = this.calcRowWidthCache[columnIdx][plsIdx] = w === 'auto'
+				? gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]), panel.fonts[this.columns.font[columnIdx] || 'normal'])
+				: (w < 1 ? w * (this.w - this.x) : w);
+		}
+		return val;
 	};
 
 	this.calcColumnsWidth = (gr = _gr, toColumn = Infinity, current = -1) => {
-		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'calcColumnsWidth') : null;
 		let total = 0;
 		const perLabel = {};
 		if (toColumn) {
@@ -273,7 +278,6 @@ function _list(x, y, w, h) {
 			}
 			perLabel[this.columns.labels[current]] = maxVal;
 		}
-		if (test) { test.Print(); }
 		return { total, perLabel };
 	};
 
@@ -958,6 +962,7 @@ function _list(x, y, w, h) {
 			return this.colors.folder;
 		};
 		// Paint list
+		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'columns') : null;
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
 			if (i + this.offset >= this.items) {
@@ -969,6 +974,7 @@ function _list(x, y, w, h) {
 			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
 			const textY = this.y + yOffset + (i * panel.row_height);
 			// Set levels
+			if (test) { test.CheckPoint('folders'); }
 			const bLevel = level.name.length;
 			if (!this.isInFolder(pls)) {
 				level.offset = 0;
@@ -997,9 +1003,19 @@ function _list(x, y, w, h) {
 			} else {
 				playlistColor = paintPls(pls, i, currIdx, textX, textY, level.offset);
 			}
+			if (test) {
+				test.CheckPointStep('folders');
+				test.CheckPoint('paintColumn');
+			}
 			paintColumn(pls, textX, textY, playlistColor);
+			if (test) { test.CheckPointStep('paintColumn'); }
 			paintIndicators(pls, textY);
 			paintSelection(i, textY);
+		}
+		if (test) {
+			test.Print();
+			test.CheckPointPrint('folders');
+			test.CheckPointPrint('paintColumn');
 		}
 		if (panel.colors.bFontOutline && shading.img) {
 			// Paint shade
@@ -4971,6 +4987,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		// Always
+		this.calcRowWidthCache = null;
 		this.skipRwLock = new Set();
 		this.items = this.data.length;
 		this.itemsAll = this.dataAll.length;
@@ -7137,12 +7154,12 @@ function _list(x, y, w, h) {
 		// Make new backup and recycle old one
 		_renameFile(this.filename + '.old', this.filename + '.old2');
 		_copyFile(this.filename, this.filename + '.old');
-		setTimeout(() =>_recycleFile(this.filename + '.old2', true), 6000);
+		setTimeout(() => _recycleFile(this.filename + '.old2', true), 6000);
 		const sortingFile = this.filename.replace('.json', '_sorting.json');
 		if (_isFile(sortingFile)) {
 			_renameFile(sortingFile + '.old', sortingFile + '.old2');
 			_copyFile(sortingFile, sortingFile + '.old');
-			setTimeout(() =>_recycleFile(sortingFile + '.old2', true), 6000);
+			setTimeout(() => _recycleFile(sortingFile + '.old2', true), 6000);
 		}
 		this.loadConfigFile(); // Extra json files available?
 		this.loadSortingFile();
