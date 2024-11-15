@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/24
+//14/11/24
 
 /* exported _chart */
 
@@ -27,7 +27,7 @@ function _chart({
 		timeline: {/* bAxisCenteredX */ },
 	},
 	margin = {/* left, right, top, bottom */ },
-	buttons = {/* xScroll , settings, display, zoom, custom */ },
+	buttons = {/* xScroll , settings, display, zoom, customm, alpha, timer */ },
 	callbacks = {
 		point: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
 		focus: {/* onMouseWwheel, onRbtnUp */ },
@@ -67,7 +67,7 @@ function _chart({
 			timeline: { bAxisCenteredX: false },
 		};
 		this.margin = { left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20) };
-		this.buttons = { xScroll: false, settings: false, display: false, zoom: false, custom: false };
+		this.buttons = { xScroll: false, settings: false, display: false, zoom: false, custom: false, alpha: 25, timer: 1500  };
 		this.callbacks = {
 			point: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
 			focus: {
@@ -233,9 +233,7 @@ function _chart({
 						const alpha = Math.atan(m) * (m < 0 && newYPoint > yPoint ? -1 : 1);
 						const xOffset = half * Math.cos(alpha);
 						const yOffset = half * Math.sin(alpha);
-						// const lineArr = [ - half, yPoint - half, xPoint + half, yPoint + half, newXPoint + half, newYPoint + half, newXPoint - half, newYPoint - half];
 						const lineArr = [xPoint - xOffset, yPoint - yOffset, xPoint + xOffset, yPoint + yOffset, newXPoint + xOffset, newYPoint + yOffset, newXPoint - xOffset, newYPoint - yOffset];
-						// const lineArr = [xPoint, yPoint, xPoint, y, newXPoint, y, newXPoint, newYPoint];
 						gr.FillPolygon(color, 0, lineArr);
 					} else {
 						gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
@@ -994,15 +992,12 @@ function _chart({
 	this.paintButtons = (gr, bHideToolbar = false) => {
 		const color = invert(this.callbacks.config.backgroundColor ? this.callbacks.config.backgroundColor()[0] : this.background.color || this.axis.x.color, true);
 		if (this.buttons.xScroll && this.getCurrentRange() < this.getMaxRange()) {
-			this.leftBtn.paint(gr, color);
-			this.rightBtn.paint(gr, color);
+			if (this.getLeftRange() !== 0) { this.leftBtn.paint(gr, color); }
+			if (this.getRightRange() !== this.getMaxRange()) { this.rightBtn.paint(gr, color); }
 		}
 		// Toolbar
 		if (!bHideToolbar) {
-			if (this.buttons.settings) { this.settingsBtn.paint(gr, color); }
-			if (this.buttons.display) { this.displayBtn.paint(gr, color); }
-			if (this.buttons.zoom) { this.zoomBtn.paint(gr, color); }
-			if (this.buttons.custom) { this.customBtn.paint(gr, color); }
+			this.getButtonKeys(false).forEach((button) => this[button].paint(gr, color));
 		}
 	};
 
@@ -1202,7 +1197,10 @@ function _chart({
 			let ttText = '';
 			this.mx = x;
 			this.my = y;
-			this.inFocus = true;
+			if (!this.inFocus) {
+				this.getButtonKeys().forEach((button) => this[button].repaint());
+				this.inFocus = true;
+			}
 			if (this.pop.isEnabled()) { this.pop.move(x, y); }
 			else {
 				let bInButton = false;
@@ -1256,8 +1254,8 @@ function _chart({
 							: '';
 					}
 				}
+				const [serie, idx] = this.tracePoint(x, y, true); // This must be calculated always to have a point after zoom clicking
 				if (!bInButton) {
-					const [serie, idx] = this.tracePoint(x, y, true);
 					const bPoint = serie !== -1 && idx !== -1;
 					const bPaint = this.currPoint[0] !== serie || this.currPoint[1] !== idx;
 					if (bPaint) {
@@ -1323,7 +1321,7 @@ function _chart({
 		if (!window.ID) { return false; }
 		if (this.pop.isEnabled()) { return false; }
 		if (this.trace(x, y)) {
-			return this.getButtonKeys().filter(Boolean).some((button) => this[button].move(x, y));
+			return this.getButtonKeys().some((button) => this[button].move(x, y));
 		}
 		return false;
 	};
@@ -1346,22 +1344,10 @@ function _chart({
 	this.leave = () => {
 		this.mx = -1;
 		this.my = -1;
-		this.inFocus = false;
-		if (this.buttons.xScroll) {
-			this.leftBtn.hover = false;
-			this.rightBtn.hover = false;
-		}
-		if (this.buttons.settings) {
-			this.settingsBtn.hover = false;
-		}
-		if (this.buttons.display) {
-			this.displayBtn.hover = false;
-		}
-		if (this.buttons.zoom) {
-			this.zoomBtn.hover = false;
-		}
-		if (this.buttons.custom) {
-			this.customBtn.hover = false;
+		this.getButtonKeys().forEach((button) => this[button].hover = false);
+		if (this.inFocus) {
+			this.getButtonKeys().forEach((button) => this[button].repaint());
+			this.inFocus = false;
 		}
 		return this.leavePoints() || this.repaint();
 	};
@@ -1400,10 +1386,12 @@ function _chart({
 		return idx ? { ...this.dataDraw[idx[0]][idx[1]] } : null;
 	};
 
+	this.getLeftRange = () => Math.max(this.dataManipulation.slice[0], 0);
+
+	this.getRightRange = () => Math.min(this.dataManipulation.slice[1], this.getMaxRange());
+
 	this.getCurrentRange = () => {
-		const points = Math.max(...this.stats.points);
-		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
-		return Math.max(Math.min(currSlice[1] - currSlice[0], points), 1);
+		return Math.max(Math.min(this.getRightRange() - this.getLeftRange(), this.getMaxRange()), 1);
 	};
 
 	this.getMaxRange = () => {
@@ -1412,7 +1400,7 @@ function _chart({
 
 	let prevX = null;
 	const cleanPrevX = debounce((release) => { !utils.IsKeyPressed(release) && (prevX = null); }, 500);
-	this.calcScrollSlice = (x, currSlice = this.dataManipulation.slice, points = Math.max(...this.stats.points)) => {
+	this.calcScrollSlice = (x, currSlice = this.dataManipulation.slice, points = this.getMaxRange()) => {
 		if (!prevX) { prevX = x; return []; }
 		const diff = prevX - x;
 		if (Math.abs(diff) < _scale(30)) { return []; }
@@ -1422,8 +1410,8 @@ function _chart({
 	};
 	this.scrollX = ({ x, step, release = 0x01 /* VK_LBUTTON */, bThrottle = false } = {}) => {
 		if (bThrottle) { return this.scrollXThrottle({ x, step, release, bThrottle: false }); }
-		const points = Math.max(...this.stats.points);
-		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
+		const points = this.getMaxRange();
+		const currSlice = [this.getLeftRange(), this.getRightRange()];
 		let left, right;
 		if (typeof x === 'undefined') {
 			[left, right] = [currSlice[0] + step, currSlice[1] + step];
@@ -1448,9 +1436,9 @@ function _chart({
 		if (bThrottle) { return this.zoomXThrottle(step, false); }
 		const currPoint = this.getCurrentPointIndexFromFirst(true);
 		if (!currPoint) { return false; }
-		const points = Math.max(...this.stats.points);
+		const points = this.getMaxRange();
 		const pointsDraw = Math.max(...this.stats.pointsDraw);
-		const currSlice = [Math.max(this.dataManipulation.slice[0], 0), Math.min(this.dataManipulation.slice[1], points)];
+		const currSlice = [this.getLeftRange(), this.getRightRange()];
 		currPoint[1] += currSlice[0];
 		const range = Math.max(Math.min(currSlice[1] - currSlice[0], points), 1);
 		const newRange = range - step * Math.ceil(pointsDraw / 5) *
@@ -1552,22 +1540,13 @@ function _chart({
 
 	this.lbtnUp = (x, y, mask) => {
 		if (this.trace(x, y)) {
-			if (this.buttons.xScroll && (this.leftBtn.hover || this.rightBtn.hover)) {
-				if (this.leftBtn.lbtn_up(x, y, mask, this) || this.rightBtn.lbtn_up(x, y, mask, this)) { return true; }
-			}
-			if (this.buttons.settings && this.settingsBtn.hover && this.callbacks.settings.onLbtnUp) {
-				if (this.settingsBtn.lbtn_up(x, y, MK_LBUTTON, this)) { return true; }
-			}
-			if (this.buttons.display && this.displayBtn.hover && this.callbacks.display.onLbtnUp) {
-				if (this.displayBtn.lbtn_up(x, y, MK_LBUTTON, this)) { return true; }
-			}
-			if (this.buttons.zoom && this.zoomBtn.hover && this.callbacks.zoom.onLbtnUp) {
-				if (this.zoomBtn.lbtn_up(x, y, mask, this)) { return true; }
-			}
-			if (this.buttons.custom && this.customBtn.hover && this.callbacks.custom.onLbtnUp) {
-				if (this.customBtn.lbtn_up(x, y, mask, this)) { return true; }
-			}
-			if (this.callbacks.point.onLbtnUp) {
+			if (this.buttons.xScroll && this.leftBtn.hover && this.leftBtn.lbtn_up(x, y, mask, this)) {
+				return true;
+			} else if (this.buttons.xScroll && this.rightBtn.hover && this.rightBtn.lbtn_up(x, y, mask, this)) {
+				return true;
+			} else if (this.getButtonKeys(false).some((button) => this[button].hover && this.callbacks[button.replace('Btn', '')].onLbtnUp && this[button].lbtn_up(x, y, mask, this))) {
+				return true;
+			} else if (this.callbacks.point.onLbtnUp) {
 				const point = this.getCurrentPoint(false);
 				if (point) { this.callbacks.point.onLbtnUp.call(this, point, x, y, mask); }
 			}
@@ -1580,21 +1559,7 @@ function _chart({
 	this.lbtnDblClk = (x, y, mask) => {
 		mask -= MK_LBUTTON; // Remove useless mask here...
 		if (this.trace(x, y)) {
-			if (this.buttons.xScroll && (this.leftBtn.hover || this.rightBtn.hover)) {
-				if (this.leftBtn.lbtn_dblclk(x, y, mask, this) || this.rightBtn.lbtn_dblclk(x, y, mask, this)) { return true; }
-			}
-			if (this.buttons.settings && this.settingsBtn.hover) {
-				if (this.settingsBtn.lbtn_dblclk(x, y, mask, this)) { return true; }
-			}
-			if (this.buttons.display && this.displayBtn.hover) {
-				if (this.displayBtn.lbtn_dblclk(x, y, mask, this)) { return true; }
-			}
-			if (this.buttons.zoom && this.zoomBtn.hover) {
-				if (this.zoomBtn.lbtn_dblclk(x, y, mask, this)) { return true; }
-			}
-			if (this.buttons.custom && this.customBtn.hover) {
-				if (this.customBtn.lbtn_dblclk(x, y, mask, this)) { return true; }
-			}
+			this.getButtonKeys().some((button) => this[button].hover && this[button].lbtn_dblclk(x, y, mask, this));
 			return true;
 		}
 		return false;
@@ -1604,16 +1569,11 @@ function _chart({
 		if (this.trace(x, y)) {
 			if (this.pop && this.pop.isEnabled()) { return false; }
 			const point = this.getCurrentPoint(false);
-			if (point && this.callbacks.point.onRbtnUp) {
+			const button = this.getButtonKeys(false).find((button) => this[button].hover && this.callbacks[button.replace('Btn', '')].onRbtnUp);
+			if (button) {
+				this[button].onRbtnUp(x, y, mask, this);
+			} else if (point && this.callbacks.point.onRbtnUp) {
 				this.callbacks.point.onRbtnUp.call(this, point, x, y, mask);
-			} else if (this.buttons.settings && this.settingsBtn.hover && this.callbacks.settings.onRbtnUp) {
-				this.settingsBtn.rbtn_up(x, y, mask, this);
-			} else if (this.buttons.display && this.displayBtn.hover && this.callbacks.display.onRbtnUp) {
-				this.displayBtn.rbtn_up(x, y, mask, this);
-			} else if (this.buttons.zoom && this.zoomBtn.hover && this.callbacks.zoom.onRbtnUp) {
-				this.zoomBtn.rbtn_up(x, y, mask, this);
-			} else if (this.buttons.custom && this.customBtn.hover && this.callbacks.custom.onRbtnUp) {
-				this.customBtn.rbtn_up(x, y, mask, this);
 			} else if (this.callbacks.focus.onRbtnUp) {
 				this.callbacks.focus.onRbtnUp.call(this, x, y, mask);
 			}
@@ -2069,14 +2029,14 @@ function _chart({
 		Config related
 	*/
 
-	this.getButtonKeys = () => {
+	this.getButtonKeys = (includeScroll = true) => {
 		return [
-			...(this.buttons.xScroll ? ['leftBtn', 'rightBtn'] : []),
+			...(this.buttons.xScroll && includeScroll ? ['leftBtn', 'rightBtn'] : []),
 			(this.buttons.settings ? 'settingsBtn' : ''),
 			(this.buttons.display ? 'displayBtn' : ''),
 			(this.buttons.zoom ? 'zoomBtn' : ''),
 			(this.buttons.custom ? 'custom' : '')
-		];
+		].filter(Boolean);
 	};
 
 	this.changeConfig = ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, graphSpecs, margin, x, y, w, h, title, configuration, gFont, bPaint = true, bForceLoadData = false, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) => {
@@ -2524,7 +2484,7 @@ function _chart({
 		text: chars.left,
 		x: this.x, y: this.y, w: this.buttonsCoords.size / 2, h: this.buttonsCoords.size / 2,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
-		notVisibleMode: 25, bTimerOnVisible: true,
+		notVisibleMode: this.buttons.alpha, bTimerOnVisible: true, timer: this.buttons.timer,
 		scrollSteps: 1, scrollSpeed: 250,
 		lbtnFunc: (x, y, mask, parent, delta = 1) => { this.scrollX({ step: - Math.round(delta), bThrottle: false }); },
 		lbtnDblFunc: (x, y, mask, parent) => { this.scrollX({ step: - Infinity, bThrottle: false }); } // eslint-disable-line no-unused-vars
@@ -2533,7 +2493,7 @@ function _chart({
 		text: chars.right,
 		x: this.x, y: this.y, w: this.buttonsCoords.size / 2, h: this.buttonsCoords.size / 2,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
-		notVisibleMode: 25, bTimerOnVisible: true,
+		notVisibleMode: this.buttons.alpha, bTimerOnVisible: true, timer: this.buttons.timer,
 		scrollSteps: 1, scrollSpeed: 250,
 		lbtnFunc: (x, y, mask, parent, delta = 1) => { this.scrollX({ step: Math.round(delta), bThrottle: false }); },
 		lbtnDblFunc: (x, y, mask, parent) => { this.scrollX({ step: Infinity, bThrottle: false }); } // eslint-disable-line no-unused-vars
@@ -2544,7 +2504,7 @@ function _chart({
 			: chars.searchPlus,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
-		notVisibleMode: 25, bTimerOnVisible: true,
+		notVisibleMode: this.buttons.alpha, bTimerOnVisible: true, timer: this.buttons.timer,
 		lbtnFunc: (x, y, mask, parent) => { this.callbacks.zoom.onLbtnUp && this.callbacks.zoom.onLbtnUp.call(this, x, y, mask, parent); },
 		rbtnFunc: (x, y, mask, parent) => { this.callbacks.zoom.onRbtnUp && this.callbacks.zoom.onRbtnUp.call(this, x, y, mask, parent); },
 		lbtnDblFunc: (x, y, mask, parent) => { this.callbacks.zoom.onDblLbtn && this.callbacks.zoom.onDblLbtn.call(this, x, y, mask, parent); }
@@ -2553,7 +2513,7 @@ function _chart({
 		text: chars.cogs,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
-		notVisibleMode: 25, bTimerOnVisible: true,
+		notVisibleMode: this.buttons.alpha, bTimerOnVisible: true, timer: this.buttons.timer,
 		lbtnFunc: (x, y, mask, parent) => { this.callbacks.settings.onLbtnUp && this.callbacks.settings.onLbtnUp.call(this, x, y, mask, parent); },
 		rbtnFunc: (x, y, mask, parent) => { this.callbacks.settings.onRbtnUp && this.callbacks.settings.onRbtnUp.call(this, x, y, mask, parent); },
 		lbtnDblFunc: (x, y, mask, parent) => { this.callbacks.settings.onDblLbtn && this.callbacks.settings.onDblLbtn.call(this, x, y, mask, parent); }
@@ -2562,7 +2522,7 @@ function _chart({
 		text: chars.chartV2,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
-		notVisibleMode: 25, bTimerOnVisible: true,
+		notVisibleMode: this.buttons.alpha, bTimerOnVisible: true, timer: this.buttons.timer,
 		lbtnFunc: (x, y, mask, parent) => { this.callbacks.display.onLbtnUp && this.callbacks.display.onLbtnUp.call(this, x, y, mask, parent); },
 		rbtnFunc: (x, y, mask, parent) => { this.callbacks.display.onRbtnUp && this.callbacks.display.onRbtnUp.call(this, x, y, mask, parent); },
 		lbtnDblFunc: (x, y, mask, parent) => { this.callbacks.display.onDblLbtn && this.callbacks.display.onDblLbtn.call(this, x, y, mask, parent); }
@@ -2571,7 +2531,7 @@ function _chart({
 		text: chars.close,
 		x: this.x, y: this.y, w: this.buttonsCoords.size, h: this.buttonsCoords.size,
 		isVisible: (time, timer) => { return this.inFocus || (Date.now() - time < timer); },
-		notVisibleMode: 25, bTimerOnVisible: true,
+		notVisibleMode: this.buttons.alpha, bTimerOnVisible: true, timer: this.buttons.timer,
 		lbtnFunc: (x, y, mask, parent) => { this.callbacks.custom.onLbtnUp && this.callbacks.custom.onLbtnUp.call(this, x, y, mask, parent); },
 		rbtnFunc: (x, y, mask, parent) => { this.callbacks.custom.onRbtnUp && this.callbacks.custom.onRbtnUp.call(this, x, y, mask, parent); },
 		lbtnDblFunc: (x, y, mask, parent) => { this.callbacks.custom.onDblLbtn && this.callbacks.custom.onDblLbtn.call(this, x, y, mask, parent); }

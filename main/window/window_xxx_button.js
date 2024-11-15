@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/23
+//13/11/24
 
 /* exported _button */
 
@@ -30,17 +30,26 @@ function _button({
 		if (this.isVisible && !this.isVisible(this.time, this.timer)) {
 			if (this.bVisible) {
 				this.bVisible = false;
-			} else {
-				switch (this.notVisibleMode) { // NOSONAR
-					case 'invisible': return;
-					default: {
-						color = RGBA(...toRGB(color), this.notVisibleMode);
-						bLastStep = true;
-					}
+			}
+
+		} else { this.bVisible = true; }
+		if (!this.bVisible) {
+			switch (this.notVisibleMode) { // NOSONAR
+				case 'invisible': return;
+				default: {
+					color = RGBA(...toRGB(color), this.notVisibleMode);
+					bLastStep = true;
 				}
 			}
 		}
-		if (!this.hover) { color = RGBA(...toRGB(color), getBrightness(...toRGB(color)) < 50 ? 100 : 25); }
+		if (this.bVisible && !this.hover && this.notVisibleMode !== 'invisible') {
+			const hoverAlpha = this.notVisibleMode + (
+				getBrightness(...toRGB(color)) < 50
+					? (255 - this.notVisibleMode) / 2
+					: -this.notVisibleMode / 2
+			);
+			color = RGBA(...toRGB(color), Math.min(255, Math.max(0,	hoverAlpha)));
+		}
 		gr.SetTextRenderingHint(4);
 		const text = this.text && this.text.constructor && this.text.call && this.text.apply ? this.text.call(this, this) : this.text; // NOSONAR [support both this]
 		gr.DrawString(text, this.font, color, this.x, this.y, this.w, this.h, SF_CENTRE);
@@ -170,7 +179,7 @@ function _button({
 	this.isVisible = isVisible;
 	this.notVisibleMode = notVisibleMode;
 	this.bTimerOnVisible = bTimerOnVisible;
-	this.bVisible = true;
+	this.bVisible = !isVisible; // If there is a function to handle, make it hidden at startup
 	this.lbtnFunc = lbtnFunc;
 	this.lbtnDblFunc = lbtnDblFunc;
 	this.rbtnFunc = rbtnFunc;
