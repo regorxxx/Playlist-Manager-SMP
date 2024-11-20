@@ -101,7 +101,7 @@
 - UI: improved multiple elements size adjustments according to font size.
 - UI: UI-only Playlists load shortcut is displayed as 'Show playlist' instead of 'Load / show playlist', since they can not be (re)loaded.
 - UI: general improvements to default color management. If no custom colors are set, text color is adjusted to dark/light backgrounds and they are updated immediately (not on panel reload). Also done some minor tweaks to playlist colors.
-- UI: greatly improved repainting performance using columns, values are now cached when possible.
+- UI: greatly improved repainting performance using columns, values are now cached when possible. This heavily affected the mouse movement smoothness over the panel.
 - UI: improved general panel painting performance repainting only needed parts.
 - Backup: delayed panel JSON backup and recycling on startup, which sometimes slowed down foobar2000 startup in old machines.
 - Readme: updated readme pdf with latest changes, tips about 'Shift + Win + R. Click' shortcut (see above) and JSplitter install instructions.
