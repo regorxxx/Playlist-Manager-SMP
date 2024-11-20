@@ -96,9 +96,13 @@
 - Shortcuts: multiple improvements to shortcuts shown on tooltips, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
+- UI: bottom toolbar is now adjusted to the font size settings.
+- UI: improved bottom toolbar buttons size adjustment according to filter/sorting method.
+- UI: improved multiple elements size adjustments according to font size.
 - UI: UI-only Playlists load shortcut is displayed as 'Show playlist' instead of 'Load / show playlist', since they can not be (re)loaded.
 - UI: general improvements to default color management. If no custom colors are set, text color is adjusted to dark/light backgrounds and they are updated immediately (not on panel reload). Also done some minor tweaks to playlist colors.
 - UI: greatly improved repainting performance using columns, values are now cached when possible.
+- UI: improved general panel painting performance repainting only needed parts.
 - Backup: delayed panel JSON backup and recycling on startup, which sometimes slowed down foobar2000 startup in old machines.
 - Readme: updated readme pdf with latest changes, tips about 'Shift + Win + R. Click' shortcut (see above) and JSplitter install instructions.
 - Helpers: updated helpers.
@@ -110,6 +114,8 @@
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
 - UI: minor new line errors on folder button tooltip.
+- UI: bottom toolbar tag/category filters showing 'Multiple...' (instead of 'All' by default) while loading the playlists at startup.
+- UI: playlist highlighting animation was drawn over quicksearch box in some cases.
 - Statistics: minor fixes.
 
 ## [0.19.0] - 2024-10-09

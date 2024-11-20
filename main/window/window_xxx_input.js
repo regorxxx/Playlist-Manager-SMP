@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//16/11/24
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -799,9 +799,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		if (!parent) {
 			window.RepaintRect(this.x, this.y, this.w, this.h, bForce);
 		} else {
-			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce); } // NOSONAR
-			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce); }
-			else { console.log('oInputbox: parentObject has no repaint method.'); }
+			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce, 'input', {x: this.x, y: this.y, w: this.w, h: this.h}); } // NOSONAR
+			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce, 'input', {x: this.x, y: this.y, w: this.w, h: this.h}); }
+			else { console.log('oInputbox: parentObject has no repaint method.', 'input', {x: this.x, y: this.y, w: this.w, h: this.h}); }
 		}
 	};
 

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/24
+//20/11/24
 
 /* global require:readable, RGB:readable, colorBlind:readable, panel:readable, list:readable, convertObjectToString:readable,  overwriteProperties:readable */
 const Chroma = require('..\\..\\helpers-external\\chroma.js\\chroma.min');
@@ -50,7 +50,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 					overwriteProperties(panel.properties);
 					list.checkConfig();
-					window.Repaint();
+					list.repaint();
 				}
 			});
 		});

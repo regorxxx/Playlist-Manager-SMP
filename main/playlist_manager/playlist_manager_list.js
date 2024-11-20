@@ -1,9 +1,9 @@
 ﻿'use strict';
-//10/11/24
+//20/11/24
 
 /* exported _list */
 
-/* global buttonCoordinatesOne:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, buttonsPanel:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
+/* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, listenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable */
 include('..\\window\\window_xxx_input.js');
@@ -43,14 +43,21 @@ function _list(x, y, w, h) {
 	const defPls = new PlaylistObj();
 	const defPlsKeys = new Set(Object.keys(new PlaylistObj()));
 	// Icons
-	const gfontIconChar = () => { return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 8 : _scale(72) > 96 ? 6 : 4)), 0); }; // Icon may overlap on high DPI systems without this adjustment
-	const gfontIconCharAlt = () => { return _gdiFont('FontAwesome', _scale(panel.fonts.size - (_scale(72) > 120 ? 10 : _scale(72) > 96 ? 8 : 6)), 0); };
+	// May overlap on high DPI systems without this adjustment
+	const gfontIconChar = () => _gdiFont(
+		'FontAwesome',
+		_scale(Math.max(panel.fonts.size - (_scale(72) > 120 ? 8 : _scale(72) > 96 ? 6 : 4), 1)));
+	const gfontIconCharAlt = () => _gdiFont(
+		'FontAwesome',
+		_scale(Math.max(panel.fonts.size - (_scale(72) > 120 ? 10 : _scale(72) > 96 ? 8 : 6), 1)));
 	const iconCharHeader = chars.folderOpenBlack;
-	const iconCharPlaylistWidth = Object.fromEntries(Object.entries(playlistDescriptors).map((pair) => { return [pair[0], _gr.CalcTextWidth(pair[1].icon, gfontIconChar())]; }));
+	const iconCharPlaylistWidth = Object.fromEntries(
+		Object.entries(playlistDescriptors).map((pair) => [pair[0], _gr.CalcTextWidth(pair[1].icon, gfontIconChar())])
+	);
 	let maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
 
 	// UI offset
-	let yOffset = _scale(6) + panel.row_height / 4;
+	let yOffset = _scale(6) + panel.rowHeight / 4;
 	const columnOffset = Math.max(_scale(2), 3);
 
 	// Header
@@ -297,22 +304,24 @@ function _list(x, y, w, h) {
 		this.h = panel.h - this.y;
 		this.index = 0;
 		this.offset = 0;
-		if (oldH > 0 && this.h > 0) { yOffset = (_scale(1) + panel.row_height / 4) * (this.h / oldH); }
+		if (oldH > 0 && this.h > 0) { yOffset = (_scale(1) + panel.rowHeight / 4) * (this.h / oldH); }
 		const hOffset = _scale(this.uiElements['Up/down buttons'].enabled
 			? (this.uiElements['Bottom toolbar'].enabled ? 24 : 12)
 			: (this.uiElements['Bottom toolbar'].enabled ? 12 : 4)
 		);
-		this.rows = Math.floor((this.h - hOffset - yOffset) / panel.row_height); // 24
+		this.rows = Math.floor((this.h - hOffset - yOffset) / panel.rowHeight); // 24
 		this.up_btn.x = this.x + Math.round((this.w - _scale(12)) / 2);
 		this.down_btn.x = this.up_btn.x;
 		this.up_btn.y = this.y + _scale(1);
-		this.down_btn.y = this.y + this.h - _scale(12) - (this.uiElements['Bottom toolbar'].enabled ? buttonCoordinatesOne.h : 0); // Accommodate space for buttons!
+		this.down_btn.y = this.y + this.h - _scale(12) - (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0); // Accommodate space for buttons!
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
 		this.jumpLastPosition(options);
 	};
 
-	this.getHeaderSize = () => { return { h: Math.max(headerH, this.y), w: headerW }; };
+	this.getHeaderSize = (bOnlyButtons) => {
+		return { h: bOnlyButtons ? headerH : Math.max(headerH, this.y), w: headerW };
+	};
 
 	this.headerText = window.Name;
 
@@ -431,7 +440,7 @@ function _list(x, y, w, h) {
 				const offsetHeader = yOffset / 10;
 				const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.normal);
 				// Buttons
-				const gfontHeader = _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
+				const gfontHeader = _gdiFont('FontAwesome', panel.fonts.headerSize);
 				const buttons = [
 					{	// Search
 						parent: this.uiElements['Search filter'].enabled ? this.headerButtons.search : null,
@@ -572,7 +581,7 @@ function _list(x, y, w, h) {
 					buttons.forEach((button) => {
 						button.w = gr.CalcTextWidth(button.icon, gfontHeader);
 						button.h = gr.CalcTextHeight(button.icon, gfontHeader);
-						maxHeaderH = Math.max(button.h, maxHeaderH);
+						maxHeaderH = Math.max(button.h + _scale(5), maxHeaderH);
 					});
 					let currLx = this.x;
 					let currRx = this.x + this.w;
@@ -594,9 +603,17 @@ function _list(x, y, w, h) {
 							if (!parent.inFocus && !animationButton.fRepaint) {
 								if (parent.highlighting(void (0), void (0), void (0), parent)) {
 									if (animationButton.bHighlight) {
-										animationButton.fRepaint = setTimeout(() => { animationButton.fRepaint = null; animationButton.bHighlight = false; window.RepaintRect(button.x, button.y, button.x + button.w, button.y + button.h); }, 600);
+										animationButton.fRepaint = setTimeout(() => {
+											animationButton.fRepaint = null;
+											animationButton.bHighlight = false;
+											this.repaint(false, 'header', { x: button.x, y: 0, w: button.w, h: this.getHeaderSize(true).h });
+										}, 600);
 									} else {
-										animationButton.fRepaint = setTimeout(() => { animationButton.fRepaint = null; animationButton.bHighlight = true; window.RepaintRect(button.x, button.y, button.x + button.w, button.y + button.h); }, 600);
+										animationButton.fRepaint = setTimeout(() => {
+											animationButton.fRepaint = null;
+											animationButton.bHighlight = true;
+											this.repaint(false, 'header', { x: button.x, y: 0, w: button.w, h: this.getHeaderSize(true).h });
+										}, 600);
 									}
 								} else { animationButton.bHighlight = false; }
 							} else if (parent.inFocus) {
@@ -642,7 +659,7 @@ function _list(x, y, w, h) {
 						this.searchInput.autoValidation = this.searchMethod.bAutoSearch;
 					}
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
-					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.size - 5);
+					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.inputSize);
 					this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
 					if (panel.imageBackground.bTint) {
 						panel.paintImage(
@@ -673,14 +690,36 @@ function _list(x, y, w, h) {
 		return [lineY, lineColor];
 	};
 
+	this.bPaintHeader = true;
+	this.bPaintList = true;
+	this.bPaintButtons = true;
+	this.paintStack = [];
+	this.prePaint = () => {
+		// Multiple repaint calls may poin to different parts of the panel.
+		// Without this only the last one would be used which may introduce glitches
+		const keys = ['bPaintHeader', 'bPaintList', 'bPaintButtons'];
+		if (this.paintStack.length) {
+			keys.forEach((key) => this[key] = false);
+		} else {
+			keys.forEach((key) => this[key] = true);
+		}
+		this.paintStack.forEach((call) => {
+			keys.forEach((key) => {
+				if (call[key]) { this[key] = true; }
+			});
+		});
+		this.paintStack.length = 0;
+	};
+
 	this.paint = (gr) => {
 		// Bg
 		const panelBgColor = panel.getColorBackground();
 		// Header
 		const [lineY, lineColor] = this.paintHeader(gr, this.modeUI);
+		if (!this.bPaintList) { return; }
 		// Art
 		if (this.uiElements['Bottom toolbar'].enabled) {
-			panel.paintImage(gr, { w: window.Width, h: this.h - buttonCoordinatesOne.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2 });
+			panel.paintImage(gr, { w: window.Width, h: this.h - bottomToolbar.h - (lineY - this.y), x: 0, y: lineY + 1, offsetH: 2 });
 		} else {
 			panel.paintImage(gr, { w: window.Width, h: this.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2 });
 		}
@@ -707,7 +746,7 @@ function _list(x, y, w, h) {
 			const emptyTextWrapped = gr.EstimateLineWrap(emptyText, panel.fonts.normal, panel.w - (LM * 2));
 			for (let i = 0; i < emptyTextWrapped.length; i++) {
 				if (i % 2) {
-					gr.GdiDrawText(emptyTextWrapped[i - 1], panel.fonts.normal, panel.colors.text, this.x, this.y + (i * panel.row_height / 2), emptyTextWrapped[i], panel.row_height, LEFT); // Divide height by 2 since the loop is text rows * 2 !
+					gr.GdiDrawText(emptyTextWrapped[i - 1], panel.fonts.normal, panel.colors.text, this.x, this.y + (i * panel.rowHeight / 2), emptyTextWrapped[i], panel.rowHeight, LEFT); // Divide height by 2 since the loop is text rows * 2 !
 				}
 			}
 			this.rows = cache;
@@ -732,8 +771,8 @@ function _list(x, y, w, h) {
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
 			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
-			const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height);
-			const h = Math.min(panel.row_height, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? buttonCoordinatesOne.h : 0));
+			const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight);
+			const h = Math.min(panel.rowHeight, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0));
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 				// Rectangle
 				gr.DrawRect(this.x - 5, y, selWidth, h, 0, opaqueColor(this.colors.selectedPlaylist, 50));
@@ -746,7 +785,10 @@ function _list(x, y, w, h) {
 					gr.FillSolidRect(this.x - 5, y, selWidth, h, opaqueColor(this.colors.selectedPlaylist, 30));
 				}
 				animation.bHighlight = false;
-				animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
+				animation.fRepaint = setTimeout(() => {
+					animation.fRepaint = null;
+					this.repaint(false, 'list');
+				}, 600);
 			} else if (!this.lastCharsPressed.bDraw && !animation.bForce) {
 				idxHighlight = -1;
 			}
@@ -765,7 +807,7 @@ function _list(x, y, w, h) {
 		// Helpers
 		const shading = {};
 		if (panel.colors.bFontOutline && rows) {
-			shading.img = gdi.CreateImage(this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0), rows * panel.row_height);
+			shading.img = gdi.CreateImage(this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0), rows * panel.rowHeight);
 			shading.bPanelArt = panel.imageBackground.enabled && panel.imageBackground.art.image;
 			shading.outColor = shading.bPanelArt ? RGB(0, 0, 0) : invert(panelBgColor, true);
 			shading.gr = shading.img.GetGraphics();
@@ -788,8 +830,8 @@ function _list(x, y, w, h) {
 						: this.columns.color[i] === 'textColor'
 							? panel.colors.text
 							: this.columns.color[i];
-					if (this.columns.line === 'all' || i === 0 && this.columns.line === 'first') { gr.DrawLine(columnX, columnY, columnX, columnY + panel.row_height, 1, columnLineColor); }
-					gr.GdiDrawText(val, columnFont, columnColor, columnX + columnOffset, columnY, columnW, panel.row_height, align);
+					if (this.columns.line === 'all' || i === 0 && this.columns.line === 'first') { gr.DrawLine(columnX, columnY, columnX, columnY + panel.rowHeight, 1, columnLineColor); }
+					gr.GdiDrawText(val, columnFont, columnColor, columnX + columnOffset, columnY, columnW, panel.rowHeight, align);
 				});
 				this.textWidth = this.w;
 			}
@@ -810,7 +852,7 @@ function _list(x, y, w, h) {
 						if (sepLetter in nums) { sepLetter = '#'; } // Group numbers
 						else if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
 						drawDottedLine(gr, this.x, textY, this.x + this.w - this.categoryHeaderOffset, textY, 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, textY - panel.row_height / 2, iconsRightW + offsetLetter, panel.row_height, RIGHT);
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, textY - panel.rowHeight / 2, iconsRightW + offsetLetter, panel.rowHeight, RIGHT);
 					}
 					// The rest... note numbers are always at top or at bottom anyway
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
@@ -821,8 +863,8 @@ function _list(x, y, w, h) {
 						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
-							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height), 1, categoryHeaderLineColor, _scale(2));
-							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, iconsRightW + offsetLetter, panel.row_height, RIGHT);
+							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.rowHeight), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.rowHeight), 1, categoryHeaderLineColor, _scale(2));
+							gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.rowHeight) - panel.rowHeight / 2, iconsRightW + offsetLetter, panel.rowHeight, RIGHT);
 						}
 					}
 					// Show always current letter at bottom. Also shows number
@@ -831,8 +873,8 @@ function _list(x, y, w, h) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
 						if (sepLetter in nums) { sepLetter = '#'; } // Group numbers
 						else if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
-						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.row_height), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.row_height), 1, categoryHeaderLineColor, _scale(2));
-						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.row_height) - panel.row_height / 2, iconsRightW + offsetLetter, panel.row_height, RIGHT);
+						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.rowHeight), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.rowHeight), 1, categoryHeaderLineColor, _scale(2));
+						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.rowHeight) - panel.rowHeight / 2, iconsRightW + offsetLetter, panel.rowHeight, RIGHT);
 					}
 				}
 			}
@@ -895,28 +937,28 @@ function _list(x, y, w, h) {
 					}
 				}
 				if (iconBg) {
-					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(iconBg, iconFont, iconColor, this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.rowHeight, CENTRE);
 					if (icon) {
-						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.row_height, CENTRE);
+						gr.GdiDrawText(icon, iconFontAlt, blendColors(panelBgColor, iconColor, 0.2), this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.rowHeight, CENTRE);
 					}
 				} else if (icon) {
-					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.row_height, CENTRE);
+					gr.GdiDrawText(icon, iconFont, iconColor, this.text_x + 5 + levelOffset, textY, maxIconWidth, panel.rowHeight, CENTRE);
 				}
 			}
 			// Text
 			if (panel.colors.bFontOutline && shading.img) { // Outline current text
-				shading.gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, textX + levelOffset - this.x, i * panel.row_height, Math.min(shading.img.Width, this.textWidth - 30 - levelOffset), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+				shading.gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, textX + levelOffset - this.x, i * panel.rowHeight, Math.min(shading.img.Width, this.textWidth - 30 - levelOffset), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 				shading.pls.push([playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset]);
 			} else {
-				gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset, panel.row_height, LEFT);
+				gr.GdiDrawText(playlistDataText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, playlistColor, textX + levelOffset, textY, this.textWidth - 30 - levelOffset, panel.rowHeight, LEFT);
 			}
 			return playlistColor;
 		};
 		const iconChars = clone(this.statusIcons);
 		Object.keys(iconChars).forEach((k) => {
 			if (iconChars[k].offset) {
-				const sepLeterW = gr.CalcTextWidth('A', panel.fonts.small);
-				iconChars[k].offset = gr.CalcTextWidth(iconChars[k].string, panel.fonts.small) - sepLeterW;
+				const sepLetterW = gr.CalcTextWidth('A', panel.fonts.small);
+				iconChars[k].offset = gr.CalcTextWidth(iconChars[k].string, panel.fonts.small) - sepLetterW;
 			} else { iconChars[k].offset = 0; }
 		});
 		const paintIndicators = (pls, textY) => {
@@ -931,7 +973,7 @@ function _list(x, y, w, h) {
 				}
 				const icon = iconChars[label];
 				if (icon.enabled) {
-					gr.GdiDrawText(icon.string, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.row_height, RIGHT);
+					gr.GdiDrawText(icon.string, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.rowHeight, RIGHT);
 				}
 			}
 		};
@@ -939,8 +981,8 @@ function _list(x, y, w, h) {
 			// Multiple selection
 			if (this.indexes.length) {
 				if (this.indexes.indexOf(this.offset + i) !== -1) {
-					gr.DrawRect(this.x - 5, textY, selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 50));
-					gr.FillSolidRect(this.x - 5, textY, selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 30));
+					gr.DrawRect(this.x - 5, textY, selWidth, panel.rowHeight, 0, opaqueColor(this.colors.selectedPlaylist, 50));
+					gr.FillSolidRect(this.x - 5, textY, selWidth, panel.rowHeight, opaqueColor(this.colors.selectedPlaylist, 30));
 				}
 			}
 		};
@@ -950,14 +992,14 @@ function _list(x, y, w, h) {
 			const folderText = _b(folder.name) + (this.folders.bShowSize ? ' (' + (this.folders.bShowSizeDeep ? folder.pls.lengthFilteredDeep : folder.pls.lengthFiltered) + ')' : '');
 			const icon = folder.isOpen ? this.folders.icons.open : this.folders.icons.closed;
 			if (icon) {
-				gr.GdiDrawText(icon, gfontIconChar(), folderIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.row_height, CENTRE);
+				gr.GdiDrawText(icon, gfontIconChar(), folderIconColor, this.text_x + 5 + level.offset * 20, textY, maxIconWidth, panel.rowHeight, CENTRE);
 			}
 			// Text
 			if (panel.colors.bFontOutline && shading.img) { // Outline current text
-				shading.gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, maxIconWidth + level.offset * 20, i * panel.row_height, Math.min(shading.img.Width, this.textWidth - 25), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+				shading.gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, shading.outColor, maxIconWidth + level.offset * 20, i * panel.rowHeight, Math.min(shading.img.Width, this.textWidth - 25), shading.img.Height, DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 				shading.pls.push([folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folder, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25]);
 			} else {
-				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folder, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.row_height, LEFT);
+				gr.GdiDrawText(folderText, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal, this.colors.folder, this.x + maxIconWidth + level.offset * 20, textY, this.textWidth - 25, panel.rowHeight, LEFT);
 			}
 			return this.colors.folder;
 		};
@@ -972,7 +1014,7 @@ function _list(x, y, w, h) {
 			const currIdx = i + this.offset;
 			const pls = this.data[currIdx];
 			const textX = this.bShowIcons ? this.x + maxIconWidth : this.x;
-			const textY = this.y + yOffset + (i * panel.row_height);
+			const textY = this.y + yOffset + (i * panel.rowHeight);
 			// Set levels
 			if (test) { test.CheckPoint('folders'); }
 			const bLevel = level.name.length;
@@ -992,7 +1034,7 @@ function _list(x, y, w, h) {
 			}
 			// Alternate row colors
 			if (panel.colors.bAltRowsColor && currIdx % 2) {
-				gr.FillSolidRect(this.x - 5, textY, rowWidth, panel.row_height, altColorRow);
+				gr.FillSolidRect(this.x - 5, textY, rowWidth, panel.rowHeight, altColorRow);
 			}
 			// Paint folders and playlists
 			let playlistColor;
@@ -1024,7 +1066,7 @@ function _list(x, y, w, h) {
 			gr.DrawImage(shading.img, this.x, this.y + yOffset, shading.img.Width, shading.img.Height, 0, 0, shading.img.Width, shading.img.Height, 0, 100);
 			shading.img.ReleaseGraphics(shading.gr);
 			// And text
-			shading.pls.forEach((data) => { gr.GdiDrawText(...data, panel.row_height, LEFT); });
+			shading.pls.forEach((data) => { gr.GdiDrawText(...data, panel.rowHeight, LEFT); });
 		}
 		// Selection indicator
 		// Current playlist selection is also drawn when a menu is opened if related to the selected playlist (this.bSelMenu)
@@ -1034,8 +1076,8 @@ function _list(x, y, w, h) {
 			if (typeof currSelIdx !== 'undefined' && typeof this.data[currSelIdx] !== 'undefined') {
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					// Rectangle
-					const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height);
-					const h = Math.min(panel.row_height, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? buttonCoordinatesOne.h : 0));
+					const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight);
+					const h = Math.min(panel.rowHeight, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0));
 					gr.DrawRect(this.x - 5, y, selWidth, h, 0, this.colors.selectedPlaylist);
 				}
 			}
@@ -1069,10 +1111,10 @@ function _list(x, y, w, h) {
 				let level = 0;
 				if (this.index !== -1) {
 					if (this.dropUp || this.dropDown) {
-						const dropY = this.y + yOffset + (this.index - this.offset) * panel.row_height + (this.dropDown ? panel.row_height : 0);
+						const dropY = this.y + yOffset + (this.index - this.offset) * panel.rowHeight + (this.dropDown ? panel.rowHeight : 0);
 						gr.DrawLine(this.x - 5, dropY, selWidth + _scale(2), dropY, _scale(2), lineColor);
 					} else if (this.dropIn) {
-						gr.DrawRect(this.x - 5, this.y + yOffset + (this.index - this.offset) * panel.row_height, selWidth, panel.row_height, _scale(2), lineColor);
+						gr.DrawRect(this.x - 5, this.y + yOffset + (this.index - this.offset) * panel.rowHeight, selWidth, panel.rowHeight, _scale(2), lineColor);
 					}
 					// Nest folders
 					let idx = this.index;
@@ -1082,17 +1124,17 @@ function _list(x, y, w, h) {
 					}
 				}
 				const levelOffset = 20 * (level || bValid && bInFolder ? 1 : 0);
-				gr.FillSolidRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.row_height, opaqueColor(backgroundColor, bValid ? 40 : 20));
-				gr.DrawRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.row_height, 0, lineColor);
-				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, Math.max(levelOffset, this.bShowIcons ? maxIconWidth : 0) + this.x, this.my, this.textWidth - 30 - levelOffset / 2, panel.row_height, LEFT);
+				gr.FillSolidRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.rowHeight, opaqueColor(backgroundColor, bValid ? 40 : 20));
+				gr.DrawRect(this.x - 5 + levelOffset, this.my, selWidth - levelOffset, panel.rowHeight, 0, lineColor);
+				gr.GdiDrawText(playlistDataText, panel.fonts.normal, titleColor, Math.max(levelOffset, this.bShowIcons ? maxIconWidth : 0) + this.x, this.my, this.textWidth - 30 - levelOffset / 2, panel.rowHeight, LEFT);
 				if (levelOffset > 0) {
 					if (bInFolder && !bToSameFolder) {
 						const lineColor = opaqueColor(invert(this.colors.selectedPlaylist), 50);
-						gr.GdiDrawText(chars.signOut, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x, this.my, this.textWidth, panel.row_height, LEFT);
-						gr.GdiDrawText(chars.signOut, gfontIconChar(), lineColor, this.x, this.my, this.textWidth, panel.row_height, LEFT);
+						gr.GdiDrawText(chars.signOut, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x, this.my, this.textWidth, panel.rowHeight, LEFT);
+						gr.GdiDrawText(chars.signOut, gfontIconChar(), lineColor, this.x, this.my, this.textWidth, panel.rowHeight, LEFT);
 					} else {
-						gr.GdiDrawText(chars.folderOpenBlack, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
-						gr.GdiDrawText(chars.folderOpenBlack, gfontIconChar(), lineColor, this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.row_height, LEFT);
+						gr.GdiDrawText(chars.folderOpenBlack, gfontIconCharAlt(), blendColors(panelBgColor, lineColor, 0.2), this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.rowHeight, LEFT);
+						gr.GdiDrawText(chars.folderOpenBlack, gfontIconChar(), lineColor, this.x + levelOffset * (level - 1) / level, this.my, this.textWidth, panel.rowHeight, LEFT);
 					}
 				}
 				let dragDropText = '';
@@ -1106,7 +1148,7 @@ function _list(x, y, w, h) {
 					const borderCol = opaqueColor(invert(popupCol), 50);
 					const sizeX = gr.CalcTextWidth(dragDropText, panel.fonts.normal) + _scale(4);
 					const sizeY = gr.CalcTextHeight(dragDropText, panel.fonts.normal) + _scale(2);
-					const y = Math.min(this.my + panel.row_height, this.y + this.h - sizeY);
+					const y = Math.min(this.my + panel.rowHeight, this.y + this.h - sizeY);
 					const offsetX = this.x + levelOffset * (level - 1) / level;
 					const x = Math.min(offsetX, this.x + this.w - sizeX);
 					gr.FillRoundRect(x, y, sizeX, sizeY, 1, 1, popupCol);
@@ -1129,6 +1171,15 @@ function _list(x, y, w, h) {
 			const textOffset = scaleX * this.w * 1 / 20;
 			const popX = this.x + this.w / 2 - sizeX / 2;
 			const popY = this.y + this.h / 2 - sizeY / 2;
+			if (idxHighlight !== -1) {
+				// And highlight a few ms the found playlist
+				const currSelIdx = idxHighlight;
+				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
+				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
+					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight), selWidth, panel.rowHeight, 0, opaqueColor(this.colors.selectedPlaylist, 80));
+					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight), selWidth, panel.rowHeight, opaqueColor(this.colors.selectedPlaylist, 50));
+				}
+			}
 			// Draw the box
 			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
@@ -1149,16 +1200,12 @@ function _list(x, y, w, h) {
 				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, invert(opaqueColor(this.colors.selectedPlaylist, 70)));
 			} else { // when found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
-				// And highlight a few ms the found playlist
-				const currSelIdx = idxHighlight;
-				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
-				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
-					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, 0, opaqueColor(this.colors.selectedPlaylist, 80));
-					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.row_height), selWidth, panel.row_height, opaqueColor(this.colors.selectedPlaylist, 50));
-				}
 			}
 			this.lastCharsPressed.bDraw = false;
-			animation.fRepaint = setTimeout(() => { animation.fRepaint = null; window.RepaintRect(0, this.y, window.Width, this.h); }, 600);
+			animation.fRepaint = setTimeout(() => {
+				animation.fRepaint = null;
+				this.repaint(false, 'list');
+			}, 600);
 		}
 		// Draw a tooltip box on drag n drop
 		if (this.bIsDragDrop && this.dragDropText && this.dragDropText.length) {
@@ -1178,16 +1225,53 @@ function _list(x, y, w, h) {
 		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8) : panel.colors.text);
 	};
 
-	this.repaint = () => {
-		window.Repaint();
+	this.repaint = (bForce, mode = 'all', coords = null) => {
+		const call = { bPaintList: false, bPaintHeader: false, bPaintButtons: false };
+		this.paintStack.push(call);
+		switch (mode) {
+			case 'list': {
+				call.bPaintList = true;
+				if (coords) { window.RepaintRect(coords.x, coords.y, coords.w, coords.h, bForce); }
+				else { window.RepaintRect(0, this.y, window.Width, this.h, bForce); }
+				break;
+			}
+			case 'input': {
+				call.bPaintHeader = true;
+				if (this.searchInput.edit) {
+					call.bPaintList = true;
+					window.Repaint(bForce);
+				} else {
+					window.RepaintRect(coords.x, coords.y, coords.w, coords.h, bForce);
+				}
+				break;
+			}
+			case 'header': {
+				call.bPaintHeader = true;
+				if (coords) {
+					window.RepaintRect(coords.x, coords.y, coords.w, coords.h, bForce);
+				} else {
+					window.RepaintRect(0, 0, window.Width, this.getHeaderSize(true).h, bForce);
+				}
+				break;
+			}
+			case 'buttons': {
+				call.bPaintButtons = true;
+				window.RepaintRect(0, 0, window.Width, bottomToolbar.h, bForce);
+				break;
+			}
+			default: {
+				Object.keys(call).forEach((key) => call[key] = true);
+				window.Repaint(bForce);
+			}
+		}
 	};
 
 	this.trace = (x, y) => { // On panel
-		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+		return x >= this.x && x < this.x + this.w && y >= this.y && y < this.y + this.h;
 	};
 
 	this.traceHeader = (x, y) => { // On Header
-		return x > 0 && x < panel.w && y > 0 && y < headerH;
+		return x >= 0 && x < panel.w && y >= 0 && y < headerH;
 	};
 
 	this.traceHeaderButton = (x, y, button) => { // On Header
@@ -1209,13 +1293,13 @@ function _list(x, y, w, h) {
 					this.cacheLastPosition();
 					this.offset = offset;
 					if (this.trace(this.mx, this.my)) {
-						this.index = Math.floor((this.my - this.y - yOffset) / panel.row_height) + this.offset;
+						this.index = Math.floor((this.my - this.y - yOffset) / panel.rowHeight) + this.offset;
 					}
-					if (bPaint) { this.repaint(); }
+					if (bPaint) { this.repaint(false, 'list'); }
 				}
 				if (this.uiElements['Scrollbar'].enabled && scroll && scroll.bDrag) {
 					this.offset = offset;
-					this.index = Math.floor((this.my - this.y - yOffset) / panel.row_height) + this.offset;
+					this.index = Math.floor((this.my - this.y - yOffset) / panel.rowHeight) + this.offset;
 					this.inRange = true;
 					this.cacheLastPosition();
 				}
@@ -1245,7 +1329,7 @@ function _list(x, y, w, h) {
 		}
 		if (this.offset + this.rows >= this.items) { this.offset = this.items > this.rows ? this.items - this.rows : 0; }
 		if (options.bScroll) { this.index = -1; }
-		if (cache.index !== this.index || cache.offset !== this.offset) { this.repaint(); }
+		if (cache.index !== this.index || cache.offset !== this.offset) { this.repaint(false, 'list'); }
 		return this.index;
 	};
 
@@ -1276,16 +1360,16 @@ function _list(x, y, w, h) {
 		if (idx === -1) {
 			idxHighlight = -1;
 			animation.bHighlight = false;
-			window.RepaintRect(0, this.y, window.Width, this.h);
+			this.repaint(false, 'list');
 			return false;
 		} else if (idxHighlight === idx) {
 			animation.bHighlight = true;
-			window.RepaintRect(0, this.y, window.Width, this.h);
+			this.repaint(false, 'list');
 			return true;
 		} else {
 			animation.bHighlight = true;
 			idxHighlight = currentItemIndex = this.jumpToIndex(idx);
-			window.RepaintRect(0, this.y, window.Width, this.h);
+			this.repaint(false, 'list');
 			return true;
 		}
 	};
@@ -1295,7 +1379,7 @@ function _list(x, y, w, h) {
 			idxHighlight = -1;
 			animation.bForce = true;
 			animation.bHighlight = false;
-			window.RepaintRect(0, this.y, window.Width, this.h);
+			this.repaint(false, 'list');
 			return false;
 		} else if (idxHighlight === idx) {
 			animation.bForce = false;
@@ -1304,7 +1388,7 @@ function _list(x, y, w, h) {
 			animation.bForce = true;
 			animation.bHighlight = true;
 			idxHighlight = currentItemIndex = this.jumpToIndex(idx);
-			window.RepaintRect(0, this.y, window.Width, this.h);
+			this.repaint(false, 'list');
 			return true;
 		}
 	}, 500, this);
@@ -1385,7 +1469,7 @@ function _list(x, y, w, h) {
 			this.headerButtons[key].inFocus = false;
 		}
 		this.internalPlsDrop = [];
-		this.repaint();
+		this.repaint(true);
 	};
 
 	this.move = (x, y, mask, bDragDrop = false, bTooltipOverride = false) => {
@@ -1394,6 +1478,7 @@ function _list(x, y, w, h) {
 		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
 		this.my = y;
+		let paintMode = 'all';
 		if (this.traceHeader(x, y)) { // Tooltip for header
 			let bButtonTrace = false;
 			for (let key in this.headerButtons) {
@@ -1424,11 +1509,14 @@ function _list(x, y, w, h) {
 					}
 				}
 			}
+			paintMode = this.index !== -1 || this.inRange
+				? 'all'
+				: 'header';
 			this.index = -1;
 			this.inRange = false;
 			this.up_btn.hover = false;
 			this.down_btn.hover = false;
-			this.repaint(); // Removes selection indicator
+			this.repaint(false, paintMode); // Removes selection indicator
 			return true;
 		} else {
 			for (let key in this.headerButtons) {
@@ -1439,8 +1527,11 @@ function _list(x, y, w, h) {
 		}
 		if (this.trace(x, y)) {
 			this.searchInput && this.searchInput.check('move', x, y);
+			paintMode = this.index !== -1 || this.inRange
+				? 'list'
+				: 'all';
 			this.cacheLastPosition();
-			this.index = Math.floor((y - this.y - yOffset) / panel.row_height) + this.offset;
+			this.index = Math.floor((y - this.y - yOffset) / panel.rowHeight) + this.offset;
 			this.inRange = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
 			switch (true) {
 				case this.up_btn.move(x, y):
@@ -1452,7 +1543,8 @@ function _list(x, y, w, h) {
 					if (this.tooltip.Text) { this.tooltip.SetValue(null); } // Removes tt when not over a list element
 					this.index = -1;
 					this.dropUp = this.dropDown = this.dropIn = false;
-					this.repaint(); // Removes selection indicator
+					paintMode = 'all';
+					this.repaint(false, paintMode); // Removes selection indicator
 					break;
 				}
 				default: {
@@ -1461,21 +1553,21 @@ function _list(x, y, w, h) {
 							// Cursor
 							if (bMoved) { window.SetCursor(IDC_HAND); }
 							// Selection indicator
-							this.repaint();
+							this.repaint(false, paintMode);
 							// Tooltip for playlists
 							const pls = this.data[this.index];
 							if (pls) {
 								if (bDebug && bMoved && this.index !== this.lastIndex) { console.log(pls); }
 								if (this.isInternalDrop()) {
-									const currY = this.y + yOffset + (this.index - this.offset) * panel.row_height;
+									const currY = this.y + yOffset + (this.index - this.offset) * panel.rowHeight;
 									if (this.methodState !== this.manualMethodState()) {
 										this.dropUp = this.dropDown = false;
 									} else {
 										this.dropUp = pls.isFolder
-											? y < (currY + panel.row_height / 3)
-											: y < (currY + panel.row_height / 2);
+											? y < (currY + panel.rowHeight / 3)
+											: y < (currY + panel.rowHeight / 2);
 										this.dropDown = pls.isFolder
-											? y > (currY + panel.row_height * 2 / 3)
+											? y > (currY + panel.rowHeight * 2 / 3)
 											: !this.dropUp;
 									}
 									this.dropIn = !this.dropUp && !this.dropDown;
@@ -1650,7 +1742,7 @@ function _list(x, y, w, h) {
 						default: {
 							this.clearSelPlaylistCache();
 							if (this.tooltip.Text) { this.tooltip.SetValue(null); } // Removes tt when not over a list element
-							this.repaint(); // Removes selection indicator
+							this.repaint(false, paintMode); // Removes selection indicator
 							this.dropUp = this.dropDown = this.dropIn = false;
 							break;
 						}
@@ -1671,7 +1763,7 @@ function _list(x, y, w, h) {
 			this.down_btn.hover = false;
 			if (!bTooltipOverride && this.tooltip.Text) { this.tooltip.SetValue(null); } // Removes tt when not over a list element
 			this.index = -1;
-			this.repaint(); // Removes selection indicator
+			this.repaint(false, paintMode); // Removes selection indicator
 			return false;
 		}
 	};
@@ -2102,7 +2194,7 @@ function _list(x, y, w, h) {
 				let offset = 0;
 				while (true) {
 					this.wheel({ s: 1, bPaint: false });
-					if (offset === this.offset) { this.repaint(); currentItemIndex = 0; break; } else { offset = this.offset; }
+					if (offset === this.offset) { this.repaint(false, 'list'); currentItemIndex = 0; break; } else { offset = this.offset; }
 				}
 				return true;
 			}
@@ -2110,7 +2202,7 @@ function _list(x, y, w, h) {
 				let offset = 0;
 				while (true) {
 					this.wheel({ s: -1, bPaint: false });
-					if (offset === this.offset) { this.repaint(); currentItemIndex = this.items - 1; break; } else { offset = this.offset; }
+					if (offset === this.offset) { this.repaint(false, 'list'); currentItemIndex = this.items - 1; break; } else { offset = this.offset; }
 				}
 				return true;
 			}
@@ -2380,7 +2472,9 @@ function _list(x, y, w, h) {
 						return searchStr(pls);
 					});
 					// Find first possible item if cycling is active
-					const startIdx = bNext && bCycle && idx === -1 ? this.data.findIndex((pls) => { return searchStr(pls); }) : -1;
+					const startIdx = bNext && bCycle && idx === -1
+						? this.data.findIndex((pls) => searchStr(pls))
+						: -1;
 					// Highlight found item or current one if there are no more items or cycle to the first one
 					this.lastCharsPressed.bDraw = true;
 					this.showPlsByIdx(currPlsIdx !== -1 && idx === -1 ? bCycle ? startIdx : currPlsIdx : idx);
@@ -2977,7 +3071,7 @@ function _list(x, y, w, h) {
 				const bSucess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: (mask & MK_CONTROL) !== MK_CONTROL });
 				if (bSucess) {
 					// Don't reload the list but just paint with changes to avoid jumps
-					window.RepaintRect(0, this.y, window.Width, this.h);
+					this.repaint(false, 'list');
 					[this.offset, this.index] = cache;
 				}
 			}
@@ -3152,7 +3246,7 @@ function _list(x, y, w, h) {
 				this.sort();
 			} else {
 				[this.offset, this.index] = cache;
-				window.RepaintRect(0, this.y, window.Width, this.h); // Don't reload the list but just paint with changes to avoid jumps
+				this.repaint(false, 'list'); // Don't reload the list but just paint with changes to avoid jumps
 			}
 		}
 	};
@@ -4211,6 +4305,7 @@ function _list(x, y, w, h) {
 		if (!this.isFilterActive()) { return; }
 		if (this.searchInput && this.searchMethod.bResetFilters) { this.searchInput.on_key_down(VK_ESCAPE); }
 		this.filter({ autoPlaylistState: this.constAutoPlaylistStates()[0], lockState: this.constLockStates()[0], extState: this.constExtStates()[0], tagState: this.tags(), categoryState: this.categories(), mbidState: this.constMbidStates()[0], plsState: [] });
+		this.repaint(true);
 	};
 	this.availableFilters = () => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
@@ -4547,7 +4642,9 @@ function _list(x, y, w, h) {
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		}
 		if (bMaintainFocus) { this.jumpLastPosition(focusOptions); }
-		if (bPaint) { this.repaint(); }
+		if (bPaint) {
+			this.repaint(false, this.uiElements['Bottom toolbar'].enabled ? 'all' : 'list');
+		}
 	};
 
 	this.saveManualSorting = () => {
@@ -5135,7 +5232,7 @@ function _list(x, y, w, h) {
 			this.bLibraryChanged = true;
 		}
 		if (bNotify) { window.NotifyOthers('Playlist Manager: switch tracking', this.bTracking); } // TODO move to init to avoid double execution in some cases?
-		this.repaint();
+		this.repaint(false, !this.bLiteMode && this.uiElements['Header buttons'].elements['Settings menu'].enabled ? 'all' : 'list');
 		return this.bTracking;
 	};
 
@@ -6579,6 +6676,7 @@ function _list(x, y, w, h) {
 
 	this.manualRefresh = () => {
 		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'Manual refresh') : null;
+		if (test) { test.CheckPoint('Clear'); }
 		this.plsCache.clear();
 		fb.queryCache.clear();
 		this.trackedFolderChanged = false;
@@ -6586,11 +6684,14 @@ function _list(x, y, w, h) {
 		const z = this.offset + Math.round(this.rows / 2 - 1);
 		this.cacheLastPosition(z);
 		this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
+		if (test) { test.CheckPointStep('Clear'); test.CheckPoint('Update'); }
 		this.update({ bNotPaint: true, currentItemIndex: z });
+		if (test) { test.CheckPointStep('Update'); test.CheckPoint('Filter'); }
 		this.filter();
 		this.lastPlsLoaded = [];
 		this.folderStack = [];
 		this.skipRwLock = new Set();
+		if (test) { test.CheckPointStep('Filter'); }
 		if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 			const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 			const bColumns = this.isColumnsEnabled('size');
@@ -6615,7 +6716,11 @@ function _list(x, y, w, h) {
 				Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch);
 			}
 		}
-		if (test) { test.Print(); }
+		if (test) {
+			test.Print();
+			test.CheckPointPrint('Update');
+			test.CheckPointPrint('Filter');
+		}
 	};
 
 	this.initProperties = () => { // Some properties require code fired after setting them...
@@ -6859,8 +6964,8 @@ function _list(x, y, w, h) {
 			});
 			this.properties['filterMethod'][1] = filters.join(',');
 			// Update buttons
-			buttonsPanel.buttons.filterOneButton.method = filters[0];
-			buttonsPanel.buttons.filterTwoButton.method = filters[1];
+			bottomToolbar.buttons.filterOneButton.method = filters[0];
+			bottomToolbar.buttons.filterTwoButton.method = filters[1];
 			bDone = true;
 		}
 		// Check folders config
@@ -7459,7 +7564,7 @@ function _list(x, y, w, h) {
 			}, func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (getKeyboardMask() === kMask.shift) {
 					const buttonKey = 'filterOneButton';
-					buttonsPanel.buttons[buttonKey].func();
+					bottomToolbar.buttons[buttonKey].func();
 				} else {
 					return Object.keys(this.getFilter(true)).length && getKeyboardMask() !== kMask.ctrl
 						? this.resetFilter()

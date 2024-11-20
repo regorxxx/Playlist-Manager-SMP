@@ -1,9 +1,9 @@
 ﻿'use strict';
-//13/06/24
+//20/11/24
 
 /* exported _panel */
 
-/* global buttonsPanel:readable, */
+/* global bottomToolbar:readable, list:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global globFonts:readable, FontStyle:readable, InterpolationMode:readable, DLGC_WANTALLKEYS:readable, clone: readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -21,7 +21,7 @@ function _panel(customBackground = false, bSetup = false) {
 		customBackground: ['Custom background color', RGB(30, 30, 30), { func: isInt }], // Black
 		bCustomText: ['Text custom color mode', false, { func: isBoolean }],
 		customText: ['Custom text color', RGB(157, 158, 163), { func: isInt }], // Gray
-		buttonsTextColor: ['Buttons\' text color', buttonsPanel.config.textColor, { func: isInt }],
+		buttonsTextColor: ['Buttons\' text color', bottomToolbar.config.textColor, { func: isInt }],
 		bAltRowsColor: ['Alternate rows background color', true, { func: isBoolean }],
 		bToolbar: ['Use toolbar mode?', true, { func: isBoolean }],
 		bButtonsBackground: ['Use buttons background?', false, { func: isBoolean }],
@@ -62,11 +62,11 @@ function _panel(customBackground = false, bSetup = false) {
 		}
 		this.colors.header = this.colors.highlight & 0x45FFFFFF;
 		if (this.colors.headerButtons === -1) { this.colors.headerButtons = this.colors.highlight; }
-		buttonsPanel.config.bToolbar = this.colors.bToolbar; // buttons_xxx.js
-		buttonsPanel.config.partAndStateID = this.colors.bButtonsBackground ? 1 : 6; // buttons_xxx.js
-		buttonsPanel.config.textColor = this.colors.buttonsTextColor; // buttons_xxx.js
-		buttonsPanel.config.toolbarColor = this.colors.buttonsToolbarColor; // buttons_xxx.js
-		buttonsPanel.config.toolbarTransparency = this.colors.buttonsToolbarTransparency; // buttons_xxx.js
+		bottomToolbar.config.bToolbar = this.colors.bToolbar; // buttons_xxx.js
+		bottomToolbar.config.partAndStateID = this.colors.bButtonsBackground ? 1 : 6; // buttons_xxx.js
+		bottomToolbar.config.textColor = this.colors.buttonsTextColor; // buttons_xxx.js
+		bottomToolbar.config.toolbarColor = this.colors.buttonsToolbarColor; // buttons_xxx.js
+		bottomToolbar.config.toolbarTransparency = this.colors.buttonsToolbarTransparency; // buttons_xxx.js
 	};
 
 	this.fontChanged = () => {
@@ -78,15 +78,20 @@ function _panel(customBackground = false, bSetup = false) {
 			name = globFonts.standard.name;
 			console.log('Unable to use default font. Using', name, 'instead.');
 		}
-		this.fonts.title = _gdiFont(name, (this.fonts.size + 2 <= 16) ? this.fonts.size + 2 : this.fonts.size, 1);
+		if (this.fonts.size <= 0) { this.fonts.size = 6; }
+		this.fonts.inputSize = _scale(Math.max(this.fonts.size - 9, 6));
+		this.fonts.headerSize = _scale(Math.max(this.fonts.size - 7, 8));
+		this.fonts.title = _gdiFont(name, (this.fonts.size + 2) <= 16 ? this.fonts.size + 2 : this.fonts.size, FontStyle.Bold);
 		this.fonts.normal = _gdiFont(name, this.fonts.size);
 		this.fonts.normalBold = _gdiFont(name, this.fonts.size - 1, FontStyle.Bold);
+		this.fonts.buttons = _gdiFont(name, _scale(Math.max(this.fonts.size - 8, 7)));
 		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
 		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
-		this.row_height = this.fonts.normal.Height;
+		this.rowHeight = this.fonts.normal.Height;
 		this.listObjects.forEach((item) => { item.size(); });
 		this.listObjects.forEach((item) => { item.update(); });
 		this.textObjects.forEach((item) => { item.size(); });
+		bottomToolbar.on_size_buttn();
 	};
 
 	this.size = () => {
@@ -150,10 +155,10 @@ function _panel(customBackground = false, bSetup = false) {
 			if (this.imageBackground.art.image) {
 				this.imageBackground.art.colors = JSON.parse(this.imageBackground.art.image.GetColourSchemeJSON(4));
 			}
-			return window.Repaint();
+			return list.repaint();
 		}).catch(() => {
 			this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.art.id = null;
-			return window.Repaint();
+			return list.repaint();
 		});
 	}, 250);
 
@@ -188,10 +193,14 @@ function _panel(customBackground = false, bSetup = false) {
 		}
 	};
 
-	this.paint = (gr, bImage = false) => {
+	this.paint = (gr, bImage = false, coords) => {
 		const col = this.getColorBackground();
 		if (typeof col !== 'undefined') {
-			gr.FillSolidRect(0, 0, this.w, this.h, col);
+			if (coords) {
+				gr.FillSolidRect(coords.x, coords.y, coords.w, coords.h, col);
+			} else {
+				gr.FillSolidRect(0, 0, this.w, this.h, col);
+			}
 		}
 		if (bImage) { this.paintImage(gr, { y: 0, w: this.w, h: this.h, offsetH: _scale(1) }); }
 	};
@@ -228,7 +237,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.w = 0;
 	this.h = 0;
 	this.fonts.sizes = [_scale(8), _scale(9), _scale(10), _scale(11), _scale(12), _scale(14)];
-	this.fonts.size = this.properties['fontSize'][1];
+	this.fonts.size = Math.max(this.properties['fontSize'][1], 6);
 	if (customBackground) {
 		this.customBackground = true;
 		this.colors.mode = this.properties.colorsMode[1];
@@ -240,7 +249,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.customText = this.properties.customText[1];
 	this.colors.buttonsTextColor = this.properties.buttonsTextColor[1];
 	this.colors.headerButtons = this.properties.headerButtonsColor[1];
-	this.colors.default.buttonsTextColor = buttonsPanel.config.textColor; // RGB(0,0,0)
+	this.colors.default.buttonsTextColor = bottomToolbar.config.textColor; // RGB(0,0,0)
 	this.colors.bAltRowsColor = this.properties.bAltRowsColor[1];
 	this.colors.bToolbar = this.properties.bToolbar[1];
 	this.colors.bButtonsBackground = this.properties.bButtonsBackground[1];

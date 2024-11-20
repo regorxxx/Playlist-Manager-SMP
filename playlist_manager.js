@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/24
+//20/11/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -11,7 +11,7 @@
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.19.0', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
-/* global globSettings:readable, folders:readable, globFonts:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable, globQuery:readable */
+/* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable, globQuery:readable */
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
@@ -23,11 +23,9 @@ include('helpers\\helpers_xxx_playlists.js');
 include('helpers\\helpers_xxx_playlists_files.js');
 /* global libItemsAbsPaths:writable, libItemsRelPaths:writable, precacheLibraryPathsAsync:readable, precacheLibraryRelPaths:readable, writablePlaylistFormats:readable, playlistDescriptors:readable */
 include('helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, _gdiFont:readable, RGB:readable, blendColors:readable, isDark:readable, getBrightness:readable, toRGB:readable */
+/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, blendColors:readable, isDark:readable, getBrightness:readable, toRGB:readable */
 include('helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
-include('helpers\\buttons_panel_xxx.js');
-/* global addButton:readable, buttonsPanel:readable, on_paint_buttn:readable, on_size_buttn:readable, on_mouse_lbtn_down_buttn:readable, on_mouse_move_buttn:readable, on_mouse_leave_buttn:readable, ThemedPanelButton:readable, on_mouse_lbtn_up_buttn:readable */
 include('helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, _hasRecycleBin:readable */
 include('helpers\\helpers_xxx_tags.js');
@@ -45,7 +43,7 @@ include('main\\playlist_manager\\playlist_manager_list.js');
 include('main\\playlist_manager\\playlist_manager_panel.js');
 /* global _panel:readable */
 include('main\\playlist_manager\\playlist_manager_buttons.js');
-/* global createMenuRightFilter:readable, createMenuRightSort:readable, buttonCoordinatesOne:readable, recalcWidth:readable */
+/* global createMenuRightFilter:readable, createMenuRightSort:readable, _listButtons */
 include('main\\playlist_manager\\playlist_manager_menu.js');
 /* global createMenuRightTop:readable, createMenuRight:readable */
 include('main\\playlist_manager\\playlist_manager_helpers.js');
@@ -317,7 +315,7 @@ let properties = {
 		playlistCache: 6000,
 	})],
 	statusIcons: ['Playlist status icons', JSON.stringify({
-		active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: false },
+		active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: true },
 		playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
 		loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true }
 	})],
@@ -407,6 +405,7 @@ setProperties(properties, 'plm_');
 	}
 }
 // Panel
+const bottomToolbar = new _listButtons(getPropertyByKey(properties, 'bSetup', 'plm_'));
 const panel = new _panel(true, getPropertyByKey(properties, 'bSetup', 'plm_'));
 // Popups
 const pop = new _popup({
@@ -667,19 +666,19 @@ if (!list.properties.bSetup[1]) {
 		backupInit();
 	}
 
-	buttonsPanel.buttons.filterOneButton.method = list.properties.filterMethod[1].split(',')[0];
-	buttonsPanel.buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
-	recalcWidth();
+	bottomToolbar.buttons.filterOneButton.method = list.properties.filterMethod[1].split(',')[0];
+	bottomToolbar.buttons.filterTwoButton.method = list.properties.filterMethod[1].split(',')[1];
+	bottomToolbar.recalcWidth();
 
 	addEventListener('on_colours_changed', () => {
 		panel.colorsChanged();
 		list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true }));
-		window.Repaint();
+		list.repaint();
 	});
 
 	addEventListener('on_font_changed', () => {
 		panel.fontChanged();
-		window.Repaint();
+		list.repaint();
 	});
 
 	addEventListener('on_char', (code) => {
@@ -697,17 +696,17 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		if (buttonsPanel.curBtn === null) {
+		if (bottomToolbar.curBtn === null) {
 			if (scroll && scroll.btn_up(x, y)) { return; }
 			list.lbtn_up(x, y, mask);
 		}
-		on_mouse_lbtn_up_buttn(x, y);
+		bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
 	});
 
 	addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		if (buttonsPanel.curBtn === null) {
+		if (bottomToolbar.curBtn === null) {
 			list.mbtn_up(x, y, mask);
 		}
 	});
@@ -715,17 +714,17 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_lbtn_down', (x, y, mask) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		if (buttonsPanel.curBtn === null) {
+		if (bottomToolbar.curBtn === null) {
 			if (scroll && scroll.btn_down(x, y)) { return; }
 			list.lbtn_down(x, y, mask);
 		}
-		on_mouse_lbtn_down_buttn(x, y);
+		bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
 	});
 
 	addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		if (buttonsPanel.curBtn === null) {
+		if (bottomToolbar.curBtn === null) {
 			if (scroll && scroll.lbtn_dblclk(x, y)) { return; }
 			list.lbtn_dblclk(x, y);
 		}
@@ -734,9 +733,9 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
 		if (stats.bEnabled) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return; }
-		if (scroll && scroll.move(x, y)) { list.move(-1, -1); buttonsPanel.curBtn = null; return; }
-		if (!list.isInternalDrop()) { on_mouse_move_buttn(x, y, mask); }
-		if (buttonsPanel.curBtn === null) {
+		if (scroll && scroll.move(x, y)) { list.move(-1, -1); bottomToolbar.curBtn = null; return; }
+		if (!list.isInternalDrop()) { bottomToolbar.on_mouse_move_buttn(x, y, mask); }
+		if (bottomToolbar.curBtn === null) {
 			list.move(x, y, mask, bDragDrop);
 		} else {
 			list.move(-1, -1, void (0), bDragDrop, true);
@@ -748,7 +747,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_leave', () => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		on_mouse_leave_buttn();
+		bottomToolbar.on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
 		scroll && scroll.move(-1, -1);
 	});
@@ -756,22 +755,22 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
 		if (!list.bInit) { return true; }
 		if (pop.isEnabled() || stats.bEnabled) { return true; }
-		if (list.modeUI === 'traditional' && buttonsPanel.curBtn === null) {
+		if (list.modeUI === 'traditional' && bottomToolbar.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
 				return createMenuRightTop().btn_up(x, y);
 			} else { // List menu
 				return createMenuRight().btn_up(x, y);
 			}
 		} else {
-			if (buttonsPanel.curBtn === null) {
+			if (bottomToolbar.curBtn === null) {
 				if (scroll && scroll.trace(x, y)) { return scroll.rbtn_up(x, y); }
 				else { return list.rbtn_up(x, y, mask); }
 			}
-			if (buttonsPanel.curBtn === buttonsPanel.buttons.sortButton) { // Sort button menu
+			if (bottomToolbar.curBtn === bottomToolbar.buttons.sortButton) { // Sort button menu
 				return createMenuRightSort().btn_up(x, y);
-			} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterOneButton) { // Filter button menus
+			} else if (bottomToolbar.curBtn === bottomToolbar.buttons.filterOneButton) { // Filter button menus
 				return createMenuRightFilter('filterOneButton').btn_up(x, y);
-			} else if (buttonsPanel.curBtn === buttonsPanel.buttons.filterTwoButton) {
+			} else if (bottomToolbar.curBtn === bottomToolbar.buttons.filterTwoButton) {
 				return createMenuRightFilter('filterTwoButton').btn_up(x, y);
 			}
 		}
@@ -786,21 +785,24 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_paint', (gr) => {
 		if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
+		list.prePaint();
 		panel.paint(gr);
 		if (stats.bEnabled) {
 			if (window.debugPainting) { window.drawDebugRectAreas(gr); }
 			return;
 		}
-		if (panel.imageBackground.bTint && list.uiElements['Bottom toolbar'].enabled) {
-			panel.paintImage(
-				gr,
-				{ w: window.Width, h: buttonCoordinatesOne.h, x: 0, y: buttonCoordinatesOne.y(), offsetH: _scale(1) },
-				{ transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
-			);
+		if (list.bPaintList) {
+			if (panel.imageBackground.bTint && list.uiElements['Bottom toolbar'].enabled) {
+				panel.paintImage(
+					gr,
+					{ w: window.Width, h: bottomToolbar.h, x: 0, y: bottomToolbar.y, offsetH: _scale(1) },
+					{ transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
+				);
+			}
+			if (list.uiElements['Bottom toolbar'].enabled) { bottomToolbar.on_paint_buttn(gr); }
 		}
-		if (list.uiElements['Bottom toolbar'].enabled) { on_paint_buttn(gr); }
 		list.paint(gr);
-		if (scroll) {
+		if (list.bPaintList && scroll) {
 			scroll.rows = Math.max(list.items - list.rows, 0);
 			scroll.rowsPerPage = list.rows;
 			scroll.currRow = list.offset;
@@ -816,20 +818,20 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_size', () => {
 		panel.size();
 		list.size();
-		on_size_buttn();
+		bottomToolbar.on_size_buttn();
 		pop.resize();
 		if (scroll) {
 			scroll.x = window.Width - scroll.w;
 			scroll.y = list.getHeaderSize().h;
-			scroll.h = list.h - (scroll.y - list.y);
-			if (list.uiElements['Bottom toolbar'].enabled) { scroll.h -= buttonCoordinatesOne.h - _scale(1); }
+			scroll.h = list.h - (scroll.y - list.y) - 1;
+			if (list.uiElements['Bottom toolbar'].enabled) { scroll.h -= bottomToolbar.h - _scale(1); }
 			scroll.rows = Math.max(list.items - list.rows, 0);
 			scroll.rowsPerPage = list.rows;
 		}
 	});
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
-		if (list.statusIcons.playing.enabled) { list.repaint(); }
+		if (list.statusIcons.playing.enabled) { list.repaint(false, 'list'); }
 		if (panel.imageBackground.mode === 1) { panel.updateImageBg(); }
 	});
 
@@ -849,7 +851,7 @@ if (!list.properties.bSetup[1]) {
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
 		}
-		if (list.statusIcons.active.enabled) { list.repaint(); }
+		if (list.statusIcons.active.enabled) { list.repaint(false, 'list'); }
 	});
 
 	addEventListener('on_playback_stop', (/** @type {number} */ reason) => {
@@ -862,7 +864,7 @@ if (!list.properties.bSetup[1]) {
 		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
 			panel.updateImageBg();
 		}
-		if (['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(); }
+		if (['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(false, 'list'); }
 	});
 
 	addEventListener('on_notify_data', (name, info) => {
@@ -1190,7 +1192,7 @@ if (!list.properties.bSetup[1]) {
 			if (list.index !== -1) {
 				if (!list.data[list.index].isFolder) { list.index = -1; }
 				else { bToFolder = true; }
-				window.Repaint();
+				list.repaint(false, 'list');
 			}
 		}
 		// Force scrolling so the list doesn't get blocked at current view
@@ -1223,8 +1225,8 @@ if (!list.properties.bSetup[1]) {
 				action.Text = '';
 				return;
 			}
-		} else if (buttonsPanel.curBtn !== null || (scroll && scroll.trace(x, y))) { // Scrollbar or buttons
-			// else if (buttonsPanel.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
+		} else if (bottomToolbar.curBtn !== null || (scroll && scroll.trace(x, y))) { // Scrollbar or buttons
+			// else if (bottomToolbar.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
 			action.Effect = dropEffect.none;
 			action.Text = '';
 			return;
@@ -1273,6 +1275,8 @@ if (!list.properties.bSetup[1]) {
 			if (list.bTracking) {
 				list.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 				list.clearSelPlaylistCache();
+			} else if (!list.bLiteMode) {
+				if (list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
 			}
 		}
 	});
@@ -1283,6 +1287,8 @@ if (!list.properties.bSetup[1]) {
 			if (list.bTracking) {
 				list.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 				list.clearSelPlaylistCache();
+			} else if (!list.bLiteMode) {
+				if (list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
 			}
 		}
 	});
@@ -1314,33 +1320,16 @@ if (!list.properties.bSetup[1]) {
 
 	stats.attachCallbacks();
 } else {
-	buttonsPanel.buttons = {};
-	buttonsPanel.config.bToolbar = false;
-	buttonsPanel.config.toolbarTransparency = 0;
-	buttonsPanel.config.textColor = RGB(0, 0, 0); // buttons_xxx.js
-	buttonsPanel.config.buttonsToolbarColor = RGB(0, 0, 0);
-	buttonsPanel.config.partAndStateID = 1;
-	buttonsPanel.config.bUseThemeManager = false;
-	addButton({
-		setup: new ThemedPanelButton(window.Width / 3, 0, window.Width / 2, window.Height / 3, 'Setup', function () {
-			const answer = WshShell.Popup('First, before setup, be sure to close all Spider Monkey Panel windows.\nClicking ok will start the configuration of the panel. Read the popups and follow their instructions.\n\nPanel will be reloaded. Continue Setup?', 0, window.Name, popup.question + popup.yes_no);
-			if (answer === popup.yes) {
-				list.properties.bSetup[1] = false;
-				overwriteProperties(list.properties); // Updates panel
-				window.Reload();
-			}
-		}, null, _gdiFont(globFonts.button.name, globFonts.standardBig.size, 1), 'Click to start setup...'),
-	});
-	const button = buttonsPanel.buttons.setup;
+	const button = bottomToolbar.buttons.setup;
 	addEventListener('on_mouse_lbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
-		on_mouse_lbtn_up_buttn(x, y);
+		bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
 	});
 	addEventListener('on_mouse_lbtn_down', (x, y, mask) => { // eslint-disable-line no-unused-vars
-		on_mouse_lbtn_down_buttn(x, y);
+		bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
 	});
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => { // eslint-disable-line no-unused-vars
-		on_mouse_move_buttn(x, y, mask);
-		if (buttonsPanel.curBtn === null) {
+		bottomToolbar.on_mouse_move_buttn(x, y, mask);
+		if (bottomToolbar.curBtn === null) {
 			pop.move(x, y, mask);
 			window.SetCursor(IDC_ARROW);
 		} else {
@@ -1350,11 +1339,11 @@ if (!list.properties.bSetup[1]) {
 		}
 	});
 	addEventListener('on_mouse_leave', () => {
-		on_mouse_leave_buttn();
+		bottomToolbar.on_mouse_leave_buttn();
 	});
 	addEventListener('on_paint', (gr) => {
 		panel.paint(gr);
-		on_paint_buttn(gr);
+		bottomToolbar.on_paint_buttn(gr);
 	});
 	addEventListener('on_size', () => {
 		pop.resize();

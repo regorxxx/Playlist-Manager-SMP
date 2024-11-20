@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/24
+//20/11/24
 
 /* global list:readable, folders:readable */
 include('..\\window\\window_xxx.js');
@@ -161,5 +161,5 @@ options.addTab({title: 'UI', columns: 1, data: [
 // Since auto-save is disabled, data saving is done when returning to the main window. Only exception to this rule is saving at script unload
 // Using .loadAll() or .saveAll() instead of .load() / .save() will also apply for any embedded object
 const windowMenu = new _menu();
-windowMenu.newEntry({entryText: 'Show Options', func: () => {options.loadAll(); options.properties.bOptions[1] = true; options.saveAll(); window.Repaint(true);}});
-windowMenu.newEntry({entryText: 'Show Main', func: () => {options.properties.bOptions[1] = false; options.saveAll(); window.Repaint(true);}});
+windowMenu.newEntry({entryText: 'Show Options', func: () => {options.loadAll(); options.properties.bOptions[1] = true; options.saveAll(); list.repaint(true);}});
+windowMenu.newEntry({entryText: 'Show Main', func: () => {options.properties.bOptions[1] = false; options.saveAll(); list.repaint(true);}});

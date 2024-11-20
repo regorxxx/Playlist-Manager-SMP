@@ -39,7 +39,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					nCharts[i][j].changeConfig({ x, y, w, h, bPaint: false });
 				}
 			}
-			window.Repaint();
+			list.repaint();
 		});
 
 		addEventListener('on_mouse_move', (x, y, mask) => {

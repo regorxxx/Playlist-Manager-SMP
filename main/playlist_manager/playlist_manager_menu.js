@@ -1,9 +1,9 @@
 ﻿'use strict';
-//15/11/24
+//20/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
-/* global list:readable, popup:readable, delayAutoUpdate:readable, buttonsPanel:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, recalcWidth:readable, cachePlaylist:readable */
+/* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable */
@@ -2383,7 +2383,7 @@ function createMenuRightTop() {
 				list.checkConfigPostUpdate(bDone);
 				list.filter();
 				test.Print();
-				window.Repaint();
+				list.repaint();
 				window.Reload();
 			}
 		});
@@ -3412,7 +3412,7 @@ function createMenuRightTop() {
 					list.properties['playlistIcons'][1] = input;
 					overwriteProperties(list.properties);
 					list.updatePlaylistIcons();
-					window.Repaint();
+					list.repaint();
 				}
 			});
 		}
@@ -3471,34 +3471,24 @@ function createMenuRightTop() {
 		{	// Font size
 			const subMenuName = menu.newMenu('Font size', menuName);
 			if (panel.listObjects.length || panel.textObjects.length) {
-				const options = [...panel.fonts.sizes, 'sep', 'Custom...'];
+				const options = [...panel.fonts.sizes, 'sep', 'Custom...\t' + _b(panel.fonts.size)];
 				const optionsLength = options.length;
 				options.forEach((item, index) => {
 					if (menu.isSeparator(item)) { return menu.newSeparator(subMenuName); }
 					menu.newEntry({
 						menuName: subMenuName, entryText: item, func: () => {
 							if (index !== optionsLength - 1) {
-								if (panel.fonts.size !== item) {
-									panel.fonts.size = item;
-									// Update property to save between reloads
-									panel.properties['fontSize'][1] = item;
-									overwriteProperties(panel.properties);
-									panel.fontChanged();
-									window.Repaint();
-								}
+								if (panel.fonts.size === item) { return;}
+								panel.fonts.size = item;
 							} else {
-								let input;
-								try { input = Number(utils.InputBox(window.ID, 'Input a number:', window.Name, panel.fonts.size, true)); }
-								catch (e) { return; }
-								if (input === panel.fonts.size) { return; }
-								if (!Number.isSafeInteger(input)) { return; }
-								panel.fonts.size = input;
-								// Update property to save between reloads
-								panel.properties['fontSize'][1] = input;
-								overwriteProperties(panel.properties);
-								panel.fontChanged();
-								window.Repaint();
+								const input = Input.number('int positive', panel.fonts.size, 'Input a number:\n(>= 6)', 'Font size', 13, [(n) => n > 0]);
+								if (!input) { return; }
+								panel.properties['fontSize'][1] = panel.fonts.size = input;
 							}
+							panel.properties['fontSize'][1] = panel.fonts.size;
+							overwriteProperties(panel.properties);
+							panel.fontChanged();
+							list.repaint();
 						}
 					});
 				});
@@ -3512,7 +3502,7 @@ function createMenuRightTop() {
 						panel.colors.bBold = !panel.colors.bBold;
 						panel.properties.bBold[1] = panel.colors.bBold;
 						overwriteProperties(panel.properties);
-						window.Repaint();
+						list.repaint();
 					}
 				});
 				menu.newCheckMenuLast(() => panel.colors.bBold);
@@ -3545,7 +3535,7 @@ function createMenuRightTop() {
 							list.properties.listColors[1] = convertObjectToString(list.colors);
 							overwriteProperties(list.properties);
 							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
-							window.Repaint();
+							list.repaint();
 						}
 					});
 				});
@@ -3558,7 +3548,7 @@ function createMenuRightTop() {
 							fb.ShowPopupMessage('Adds font shading to improve readability (usually along art background usage).\n\nIt may heavily affect performance on some systems.', window.Name);
 						}
 						overwriteProperties(panel.properties);
-						window.Repaint();
+						list.repaint();
 					}
 				});
 				menu.newCheckMenuLast(() => panel.colors.bFontOutline);
@@ -3579,7 +3569,7 @@ function createMenuRightTop() {
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
 							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-							window.Repaint();
+							list.repaint();
 						}
 					});
 				});
@@ -3601,7 +3591,7 @@ function createMenuRightTop() {
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
 							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-							window.Repaint();
+							list.repaint();
 						}
 					});
 				});
@@ -3625,7 +3615,7 @@ function createMenuRightTop() {
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
 								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-								window.Repaint();
+								list.repaint();
 							}
 						});
 					});
@@ -3640,7 +3630,7 @@ function createMenuRightTop() {
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
 							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-							window.Repaint();
+							list.repaint();
 						}
 					});
 				}
@@ -3660,7 +3650,7 @@ function createMenuRightTop() {
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
 								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-								window.Repaint();
+								list.repaint();
 							}
 						});
 					});
@@ -3688,7 +3678,7 @@ function createMenuRightTop() {
 								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 								// Set defaults again
 								if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); }
-								window.Repaint();
+								list.repaint();
 							}
 						});
 					});
@@ -3702,7 +3692,7 @@ function createMenuRightTop() {
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
 						list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-						window.Repaint();
+						list.repaint();
 					}
 				});
 				menu.newCheckMenuLast(() => panel.colors.bAltRowsColor);
@@ -3756,7 +3746,7 @@ function createMenuRightTop() {
 							overwriteProperties(list.properties);
 							overwriteProperties(panel.properties);
 							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-							window.Repaint();
+							list.repaint();
 						}
 					});
 					menu.newCheckMenuLast(() => {
@@ -3805,7 +3795,7 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 					overwriteProperties(panel.properties);
 					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
-					window.Repaint();
+					list.repaint();
 				}
 			});
 		}
@@ -3823,7 +3813,7 @@ function createMenuRightTop() {
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
 						if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); }
-						window.Repaint();
+						list.repaint();
 					}
 				});
 			});
@@ -3847,7 +3837,7 @@ function createMenuRightTop() {
 						panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
 						overwriteProperties(panel.properties);
 						panel.updateImageBg(true);
-						window.Repaint();
+						list.repaint();
 					}
 				});
 			});
@@ -3877,7 +3867,7 @@ function createMenuRightTop() {
 							panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 							overwriteProperties(panel.properties);
 							panel.updateImageBg(true);
-							window.Repaint();
+							list.repaint();
 						}
 					});
 				});
@@ -3901,7 +3891,7 @@ function createMenuRightTop() {
 						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
 						panel.updateImageBg();
-						window.Repaint();
+						list.repaint();
 					}
 				});
 				menu.newCheckMenuLast(() => panel.imageBackground.bProportions);
@@ -3911,7 +3901,7 @@ function createMenuRightTop() {
 						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
 						panel.updateImageBg();
-						window.Repaint();
+						list.repaint();
 					}
 				});
 				menu.newCheckMenuLast(() => panel.imageBackground.bFill);
@@ -3921,7 +3911,7 @@ function createMenuRightTop() {
 						panel.imageBackground.bTint = !panel.imageBackground.bTint;
 						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						overwriteProperties(panel.properties);
-						window.Repaint();
+						list.repaint();
 					}
 				});
 				menu.newCheckMenuLast(() => panel.imageBackground.bTint);
@@ -3935,7 +3925,7 @@ function createMenuRightTop() {
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 					overwriteProperties(panel.properties);
 					panel.updateImageBg();
-					window.Repaint();
+					list.repaint();
 				}
 			});
 			menu.newEntry({
@@ -3946,7 +3936,7 @@ function createMenuRightTop() {
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 					overwriteProperties(panel.properties);
 					panel.updateImageBg(true);
-					window.Repaint();
+					list.repaint();
 				}
 			});
 		}
@@ -4998,20 +4988,20 @@ function createMenuRightFilter(buttonKey) {
 				menu.newEntry({
 					entryText: item, func: () => {
 						// Switch buttons if they are duplicated
-						const buttonsArr = Object.entries(buttonsPanel.buttons);
+						const buttonsArr = Object.entries(bottomToolbar.buttons);
 						const idx = buttonsArr.findIndex((pair) => { return pair[0] !== buttonKey && pair[1].method === item; });
-						if (idx !== -1) { buttonsPanel.buttons[buttonsArr[idx][0]].method = buttonsPanel.buttons[buttonKey].method; }
+						if (idx !== -1) { bottomToolbar.buttons[buttonsArr[idx][0]].method = bottomToolbar.buttons[buttonKey].method; }
 						// Set new one
-						buttonsPanel.buttons[buttonKey].method = item;
+						bottomToolbar.buttons[buttonKey].method = item;
 						// Resize buttons
-						recalcWidth();
+						bottomToolbar.recalcWidth();
 						// Save properties
-						list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => { return (Object.hasOwn(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
+						list.properties['filterMethod'][1] = Object.values(bottomToolbar.buttons).map((button) => { return (Object.hasOwn(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
 						overwriteProperties(list.properties);
 					}
 				});
 			});
-			menu.newCheckMenuLast(() => options.indexOf(buttonsPanel.buttons[buttonKey].method), optionsLength);
+			menu.newCheckMenuLast(() => options.indexOf(bottomToolbar.buttons[buttonKey].method), optionsLength);
 		}
 	}
 	menu.newSeparator();
@@ -5051,7 +5041,7 @@ function createMenuSearch() {
 				menu.newEntry({
 					entryText: text.length > 20 ? text.substring(0, 20) + '...' : text, func: () => {
 						list.searchCurrent = list.searchInput.text = text;
-						window.Repaint();
+						list.repaint();
 						list.search();
 					}
 				});
@@ -5279,7 +5269,7 @@ function createMenuFilterSorting() {
 		menu.newSeparator(subMenuName);
 		const options = ['Natural sorting', 'Inverse sorting'];
 		options.forEach((item) => {
-			menu.newEntry({ menuName: subMenuName, entryText: item, func: buttonsPanel.buttons.sortButton.func });
+			menu.newEntry({ menuName: subMenuName, entryText: item, func: bottomToolbar.buttons.sortButton.func });
 		});
 		menu.newCheckMenuLast(() => list.getIndexSortState(), options);
 	}
@@ -5358,25 +5348,25 @@ function createMenuFilterSorting() {
 					menuName: subMenuName,
 					entryText: item, func: () => {
 						// Switch buttons if they are duplicated
-						const buttonsArr = Object.entries(buttonsPanel.buttons);
+						const buttonsArr = Object.entries(bottomToolbar.buttons);
 						const idx = buttonsArr.findIndex((pair) => { return pair[0] !== buttonKey && pair[1].method === item; });
-						if (idx !== -1) { buttonsPanel.buttons[buttonsArr[idx][0]].method = buttonsPanel.buttons[buttonKey].method; }
+						if (idx !== -1) { bottomToolbar.buttons[buttonsArr[idx][0]].method = bottomToolbar.buttons[buttonKey].method; }
 						// Set new one
-						buttonsPanel.buttons[buttonKey].method = item;
+						bottomToolbar.buttons[buttonKey].method = item;
 						// Resize buttons
-						recalcWidth();
+						bottomToolbar.recalcWidth();
 						// Save properties
-						list.properties['filterMethod'][1] = Object.values(buttonsPanel.buttons).map((button) => { return (Object.hasOwn(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
+						list.properties['filterMethod'][1] = Object.values(bottomToolbar.buttons).map((button) => { return (Object.hasOwn(button, 'method') ? button.method : ''); }).filter(Boolean).join(',');
 						overwriteProperties(list.properties);
 					}
 				});
 			});
-			menu.newCheckMenuLast(() => options.indexOf(buttonsPanel.buttons[buttonKey].method), optionsLength);
+			menu.newCheckMenuLast(() => options.indexOf(bottomToolbar.buttons[buttonKey].method), optionsLength);
 		}
 	}
 	{	// Filter
 		const subMenuName = menu.newMenu('Current filter');
-		const options = filterEntries.call(buttonsPanel.buttons[buttonKey]);
+		const options = filterEntries.call(bottomToolbar.buttons[buttonKey]);
 		const optionsLength = options.length;
 		if (optionsLength) {
 			menu.newEntry({ menuName: subMenuName, entryText: options[0].entryText, flags: options[0].flags });
@@ -5391,7 +5381,7 @@ function createMenuFilterSorting() {
 			});
 			menu.newCheckMenuLast(() => options.slice(1).findIndex((item) => item.check), optionsLength - 1);
 			menu.newSeparator(subMenuName);
-			menu.newEntry({ menuName: subMenuName, entryText: 'Cycle filter', func: buttonsPanel.buttons[buttonKey].func.bind(buttonsPanel.buttons[buttonKey]) });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Cycle filter', func: bottomToolbar.buttons[buttonKey].func.bind(bottomToolbar.buttons[buttonKey]) });
 		}
 	}
 	{
