@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/11/24
+//21/11/24
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -116,7 +116,7 @@ function loadUserDefFile(def) {
 /* eslint-disable no-useless-escape */
 
 /**
- * Description
+ * Add calculated properties to be saved on JSON
  *
  * @function
  * @name addGlobValues
@@ -124,7 +124,7 @@ function loadUserDefFile(def) {
  * @param {('tags'|'query'|'all')} type
  * @returns {void}
  */
-function addGlobValues(type) { // Add calculated properties
+function addGlobValues(type) {
 	switch (type) {
 		case 'TF':
 			globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
@@ -133,6 +133,8 @@ function addGlobValues(type) { // Add calculated properties
 				: globTags.artistRaw;
 			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 			globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
+			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,%2003_LAST_PLAYED%)';
+			globTags.sortAdded = '$if2(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
 			globTags.isLoved = !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
 				? '$ifequal(%' + globTags.feedback + '%,1,1$not(0),0)'
 				: '$ifequal(' + globTags.feedback + ',1,1$not(0),0)';
@@ -225,7 +227,8 @@ const globQuery = {
 	live: '(' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live)',
 	hifi: globTags.style + ' IS hi-fi',
 	SACD: '(%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64)',
-	recent: '(%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS)',
+	recent: '(%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS OR %2003_LAST_PLAYED% DURING LAST 4 WEEKS)',
+	added: '(%ADDED_ENHANCED% DURING LAST 4 WEEKS OR %ADDED% DURING LAST 4 WEEKS OR %2003_ADDED% DURING LAST 4 WEEKS)',
 	loved: globTags.feedback + ' IS 1',
 	hated: globTags.feedback + ' IS -1'
 };

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/11/24
+//21/11/24
 
 /* exported _list */
 
@@ -2266,7 +2266,7 @@ function _list(x, y, w, h) {
 							return false;
 						case 'f2': // Rename
 							if (z !== -1) {
-								const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name, 'My playlist', void (0), true);
+								const input = Input.string('string', pls.name, 'Enter playlist name:', 'Playlist Manager: rename', 'My playlist', void (0), true);
 								if (input === null) { return false; }
 								return pls.isFolder
 									? renameFolder(this, z, input)
@@ -2610,7 +2610,7 @@ function _list(x, y, w, h) {
 					if (pls.playlist_mbid.length) {
 						console.log('Syncing playlist with ListenBrainz: ' + pls.name);
 						playlist_mbid = await lb.syncPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
-						if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) { bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name); }
+						if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) { bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', 'Playlist Manager: ListenBrainz'); }
 					} else {
 						console.log('Exporting playlist to ListenBrainz: ' + pls.name);
 						playlist_mbid = await lb.exportPlaylist(pls, this.playlistsPath, token, bLookupMBIDs);
@@ -3296,7 +3296,7 @@ function _list(x, y, w, h) {
 					// Warn about dead items
 					selItems.Convert().some((handle, i) => {
 						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-							fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name);
+							fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + pls.name);
 							return true;
 						}
 						return false;
@@ -3653,7 +3653,7 @@ function _list(x, y, w, h) {
 				if (bCallback && !this.bSavingXsp && plsData.extension === '.xsp') { return false; }
 				if (plsData.extension !== '.ui') {
 					if (this.bSavingWarnings && this.bSavingDefExtension && plsData.extension !== this.playlistsExtension) {
-						let answer = WshShell.Popup(playlistNameId + ':\n' + plsData.path + '\nUpdating the playlist will change the format from ' + plsData.extension + ' to ' + this.playlistsExtension + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+						let answer = WshShell.Popup(playlistNameId + ':\n' + plsData.path + '\nUpdating the playlist will change the format from ' + plsData.extension + ' to ' + this.playlistsExtension + '\nDo you want to continue?', 0, 'Playlist Manager: ' + plsData.name, popup.question + popup.yes_no);
 						if (answer === popup.no) { return false; }
 					}
 					const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
@@ -3701,7 +3701,7 @@ function _list(x, y, w, h) {
 							if (selItems && selItems.length) {
 								selItems.some((handle, i) => {
 									if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-										fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name);
+										fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + plsData.name);
 										return true;
 									}
 									return false;
@@ -3710,7 +3710,7 @@ function _list(x, y, w, h) {
 						}
 						if (this.bAutoTrackTag && this.bAutoTrackTagPls && (debouncedUpdate || !bCallback)) { this.updateTrackTags(handleUpdate, tagsUpdate); } // Apply tags from before
 					} else {
-						fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', window.Name);
+						fb.ShowPopupMessage('Playlist generation failed when overwriting original playlist file \'' + playlistPath + '\'. May be locked.', 'Playlist Manager: ' + plsData.name);
 						return false;
 					}
 					clearInterval(delay);
@@ -3780,14 +3780,14 @@ function _list(x, y, w, h) {
 				else if (bAllExt) {
 					if (pls.extension !== '.fpl' && pls.extension !== '.xsp') { return ''; }
 					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
-						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: export to JSON');
 						return '';
 					}
 				}
 			}
 		}
 		if (!path || !path.length) {
-			try { path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', window.Name, this.playlistsPath + 'Export\\' + name, true)); }
+			try { path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', 'Playlist Manager: export to JSON', this.playlistsPath + 'Export\\' + name, true)); }
 			catch (e) { return ''; }
 		}
 		if (!path.length) { return ''; }
@@ -3801,7 +3801,7 @@ function _list(x, y, w, h) {
 				const pls = this.data[i];
 				if ((pls.extension === '.fpl' || pls.extension === '.xsp') && bAllExt) {
 					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
-						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: export to JSON');
 						return;
 					}
 					toSave.push(pls);
@@ -3819,28 +3819,28 @@ function _list(x, y, w, h) {
 		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'Load json file') : null;
 		let externalPath = path;
 		if (!path || !path.length) {
-			try { externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', window.Name, _getClipboardData() || '', true); }
+			try { externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', 'Playlist Manager: JSON path', _getClipboardData() || '', true); }
 			catch (e) { return false; }
 		}
 		if (!externalPath.length) { return false; }
 		if (!_isFile(externalPath)) {
-			fb.ShowPopupMessage('File does not exist:\n\'' + externalPath + '\'', window.Name);
+			fb.ShowPopupMessage('File does not exist:\n\'' + externalPath + '\'', 'Playlist Manager: import from JSON');
 			return false;
 		}
 		if (!externalPath.endsWith('.json')) {
-			fb.ShowPopupMessage('File has not .json extension:\n\'' + externalPath + '\'', window.Name);
+			fb.ShowPopupMessage('File has not .json extension:\n\'' + externalPath + '\'', 'Playlist Manager: import from JSON');
 			return false;
 		}
-		let answer = bOldVersion === void (0) ? WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n(no = json file by this playlist manager)', 0, window.Name, popup.question + popup.yes_no) : (bOldVersion ? popup.yes : popup.no);
+		let answer = bOldVersion === void (0) ? WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n(no = json file by this playlist manager)', 0, 'Playlist Manager: import from JSON', popup.question + popup.yes_no) : (bOldVersion ? popup.yes : popup.no);
 		let dataExternalPlaylists = [];
 		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? utf8 : 0);
-		if (!data) { fb.ShowPopupMessage('No data found: ' + externalPath, window.Name); return false; }
+		if (!data) { fb.ShowPopupMessage('No data found: ' + externalPath, 'Playlist Manager: import from JSON'); return false; }
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
 			// {name,query,sort,forced} maps to {...,name,query,sort,bSortForced,...}
 			// Need to fill all the other values
 			data.forEach((item) => {
-				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage(item.name + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
+				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage(item.name + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON'); return; }
 				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
@@ -3861,16 +3861,16 @@ function _list(x, y, w, h) {
 		} else if (answer === popup.no) {
 			const importFormats = new Set(['.fpl', '.srtm', '.pls']);
 			const answerAuto = data.some((pls) => pls.query)
-				? WshShell.Popup('Import AutoPlaylists and Smart Playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Import AutoPlaylists and Smart Playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, 'Playlist Manager: AutoPlaylists', popup.question + popup.yes_no)
 				: popup.no;
 			const answerFiles = data.some((pls) => importFormats.has(pls.extension))
-				? WshShell.Popup('Import ' + [...importFormats].join(', ') + ' metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Import ' + [...importFormats].join(', ') + ' metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, 'Playlist Manager: playlists metadata', popup.question + popup.yes_no)
 				: popup.no;
 			const answerUI = data.some((pls) => pls.extension === '.ui')
-				? WshShell.Popup('Import UI-only playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Import UI-only playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, 'Playlist Manager: UI-only playlists', popup.question + popup.yes_no)
 				: popup.no;
 			const answerFolders = data.some((pls) => pls.isFolder)
-				? WshShell.Popup('Import folders?\n\nIn case a match it\'s found, a popup will ask to overwrite current folder contents.', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Import folders?\n\nIn case a match it\'s found, a popup will ask to overwrite current folder contents.', 0, 'Playlist Manager: folders', popup.question + popup.yes_no)
 				: popup.no;
 			data.forEach((item) => {
 				if (answerFiles === popup.yes && importFormats.has(item.extension)) {
@@ -3886,12 +3886,12 @@ function _list(x, y, w, h) {
 						item.path = item.path.replace(/(.*)\\(.*$)/, this.playlistsPath + '$2');
 						if (!_isFile(item.path)) { return; }
 						if (Object.hasOwn(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
-							fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+							fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: import from JSON');
 							return;
 						}
-						if (!checkQuery(item.query, false, false, true)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name); return; }
+						if (!checkQuery(item.query, false, false, true)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON'); return; }
 					} else if (!checkQuery(item.query, false, true, false)) {
-						fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, window.Name);
+						fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON');
 						return;
 					}
 					const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
@@ -3958,11 +3958,11 @@ function _list(x, y, w, h) {
 							newPls.isFolder
 								? 'Folder is duplicated: ' + name + '\n\nOverwrite?\n(It will only affect the contents)'
 								: 'Playlist is duplicated: ' + name + '\nType: ' + type + '\n\nOverwrite?'
-							, 0, window.Name, popup.question + popup.yes_no
+							, 0, 'Playlist Manager: import from JSON', popup.question + popup.yes_no
 						);
 						if (answer === popup.yes) {
 							if (oldPls.extension !== newPls.extension) {
-								fb.ShowPopupMessage('Duplicated playlist has a different extension in the JSON file and the current database.\n\nIt will not be overwritten, manually review it.\n\nJSON:\n' + JSON.stringify(newPls) + '\n\nDatabase:\n+ ' + JSON.stringify(oldPls), window.Name);
+								fb.ShowPopupMessage('Duplicated playlist has a different extension in the JSON file and the current database.\n\nIt will not be overwritten, manually review it.\n\nJSON:\n' + JSON.stringify(newPls) + '\n\nDatabase:\n+ ' + JSON.stringify(oldPls), 'Playlist Manager: import from JSON');
 							} else if (newPls.isFolder) {
 								const oldNames = new Map(oldPls.pls.map((subPls) => [subPls.nameId, subPls]));
 								const newNames = new Map(newPls.pls.map((subPls) => [subPls.nameId, subPls]));
@@ -4025,7 +4025,7 @@ function _list(x, y, w, h) {
 			if (autoPlsNames.has(newPls.name)) {
 				const pls = this.dataAutoPlaylists.find((pls) => pls.nameId === newPls.name);
 				if (pls.query !== newPls.query) {
-					const answer = WshShell.Popup('There is an AutoPlaylist on the manager with same name (' + newPls.name + ') and different query. Overwrite?\n\nCurrent: ' + pls.query + '\n\nNew: ' + newPls.query, 0, window.Name, popup.question + popup.yes_no);
+					const answer = WshShell.Popup('There is an AutoPlaylist on the manager with same name (' + newPls.name + ') and different query. Overwrite?\n\nCurrent: ' + pls.query + '\n\nNew: ' + newPls.query, 0, 'Playlist Manager: overwrite AutoPlaylist', popup.question + popup.yes_no);
 					if (answer === popup.yes) {
 						this.editData(pls, { query: newPls.query });
 						plsObJ.push(pls);
@@ -5549,11 +5549,11 @@ function _list(x, y, w, h) {
 
 	this.addFolder = (name = '', toFolder = null) => {
 		if (!name.length) {
-			try { name = utils.InputBox(window.ID, 'Enter folder name:', window.Name, name, true); }
+			try { name = utils.InputBox(window.ID, 'Enter folder name:', 'Playlist Manager: folder name', name, true); }
 			catch (e) { return null; }
 			if (!name.length) { return null; }
 			if (this.dataAll.some((pls) => pls.nameId === name)) {
-				fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', window.Name);
+				fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', 'Playlist Manager: folder name');
 				return null;
 			}
 		}
@@ -5737,7 +5737,7 @@ function _list(x, y, w, h) {
 		let input = name || '';
 		if (!name.length) {
 			let boxText = 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the UI-only playlist will be created with the new name and it will become the active playlist.';
-			try { input = utils.InputBox(window.ID, boxText, window.Name, oldName || input, true); }
+			try { input = utils.InputBox(window.ID, boxText, 'Playlist Manager: playlist name', oldName || input, true); }
 			catch (e) { return null; }
 			if (!input.length) { return null; }
 		}
@@ -5764,7 +5764,7 @@ function _list(x, y, w, h) {
 			if (oldNameId === nameId) {
 				console.log('Playlist Manager: Converting UI-only playlist into a playlist file...');
 			} else if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', 'Playlist Manager: playlist name');
 				return null;
 			}
 			// Creates the file on the folder
@@ -5803,7 +5803,7 @@ function _list(x, y, w, h) {
 				if (selItems && selItems.length) {
 					selItems.some((handle, i) => {
 						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name, bShowPopups);
+							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
 							return true;
 						}
 						return false;
@@ -5815,11 +5815,11 @@ function _list(x, y, w, h) {
 					'\n\nTrace:' +
 					'\nadd' + _p({ idx, name, bShowPopups, toFolder }.toStr()) +
 					'\n\nsavePlaylist' + _p({ playlistIndex: idx, handleList: null, playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
-					, window.Name, bShowPopups);
+					, 'Playlist Manager: ' + newName, bShowPopups);
 				return null;
 			}
 		} else {
-			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
+			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', 'Playlist Manager: ' + newName, bShowPopups);
 			return null;
 		}
 		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data
@@ -5840,7 +5840,7 @@ function _list(x, y, w, h) {
 		if (!bEmpty && plman.ActivePlaylist === -1) { return null; }
 		let input = name;
 		if (bInputName) {
-			input = Input.string('string', name, 'Enter playlist name:', 'Playlist Manager', 'New playlist');
+			input = Input.string('string', name, 'Enter playlist name:', 'Playlist Manager: playlist name', 'New playlist');
 			if (input === null) {
 				if (!Input.isLastEqual) { return null; }
 				else { input = Input.lastInput; }
@@ -5853,7 +5853,7 @@ function _list(x, y, w, h) {
 			i++;
 		}
 		if (this.dataAll.some((pls) => pls.nameId === newName)) {
-			fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', window.Name);
+			fb.ShowPopupMessage('Name already used: ' + newName + '\n\nChoose another unique name for renaming.', 'Playlist Manager: playlist name');
 			return null;
 		}
 		const handleList = bEmpty ? null : plman.GetPlaylistItems(plman.ActivePlaylist);
@@ -5905,33 +5905,33 @@ function _list(x, y, w, h) {
 		// Create PlaylistObj
 		let newName = hasName ? pls.name : '';
 		if (!newName.length || bEdit) {
-			try { newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', window.Name, newName, true); }
+			try { newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', 'Playlist Manager: AutoPlaylist name', newName, true); }
 			catch (e) { return null; }
 			if (!newName.length) { return null; }
 		}
 		const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
 		const nameId = newName + UUID;
 		if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-			fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+			fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', 'Playlist Manager: AutoPlaylist name');
 			return null;
 		}
 		let newQuery = hasQuery ? pls.query : '';
 		if (!newQuery.length || bEdit) {
-			try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', window.Name, newQuery, true); }
+			try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', 'Playlist Manager: AutoPlaylist query', newQuery, true); }
 			catch (e) { return null; }
 		}
-		if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
+		if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, 'Playlist Manager: AutoPlaylist query'); return null; }
 		const newSort = !hasSort || bEdit
-			? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '')
+			? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', 'Playlist Manager: AutoPlaylist sort', hasSort ? pls.sort : '')
 			: (hasSort ? pls.sort : '');
 		if (newSort.length && !checkSort(newSort)) {
-			fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name);
+			fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', 'Playlist Manager: AutoPlaylist sort');
 			return null;
 		}
 		const newForced = (bPls && Object.hasOwn(pls, 'bSortForced')
 			? !!pls.bSortForced
 			: newSort.length
-				? WshShell.Popup('Force sort?', 0, window.Name, popup.question + popup.yes_no)
+				? WshShell.Popup('Force sorted?', 0, 'Playlist Manager: AutoPlaylist sort', popup.question + popup.yes_no)
 				: popup.no
 		) === popup.yes;
 		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
@@ -5999,35 +5999,35 @@ function _list(x, y, w, h) {
 		// Create PlaylistObj
 		let newName = hasName ? pls.name : '';
 		if (!newName.length || bEdit) {
-			try { newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', window.Name, newName, true); }
+			try { newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', 'Playlist Manager: Smart Playlist name', newName, true); }
 			catch (e) { return null; }
 			if (!newName.length) { return null; }
 		}
 		const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
 		const nameId = newName + UUID;
 		if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-			fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+			fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', 'Playlist Manager: Smart Playlist name');
 			return null;
 		}
 		let newQuery = hasQuery ? pls.query : '';
 		if (!newQuery.length || bEdit) {
-			try { newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', window.Name, newQuery, true); }
+			try { newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', 'Playlist Manager: Smart Playlist query', newQuery, true); }
 			catch (e) { return null; }
 		}
 		const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
-		if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return null; }
+		if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, 'Playlist Manager: Smart Playlist query'); return null; }
 		const { rules, match } = XSP.getRules(newQuery);
-		if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return null; }
+		if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', 'Playlist Manager: Smart Playlist query'); return null; }
 		else {
 			const jsp = XSP.emptyJSP('songs');
 			jsp.playlist.rules = rules;
 			if (this.checkCircularXsp({ jsp, name: newName })) {
-				console.popup(newName + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
+				console.popup(newName + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', 'Playlist Manager: Smart Playlist query');
 				return null;
 			}
 		}
-		const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name, hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
-		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name); return null; }
+		const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', 'Playlist Manager: Smart Playlist sort', hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
+		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', 'Playlist Manager: Smart Playlist sort'); return null; }
 		const newForced = false;
 		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
 		const handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);
@@ -6038,7 +6038,7 @@ function _list(x, y, w, h) {
 		if (hasLimit) {
 			if (isFinite(pls.limit)) { newLimit = pls.limit; }
 		} else if (bEdit) {
-			try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', window.Name, newLimit, true)); }
+			try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', 'Playlist Manager: Smart Playlist limit', newLimit, true)); }
 			catch (e) { return null; }
 			if (Number.isNaN(newLimit)) { return null; }
 			if (!Number.isFinite(newLimit)) { newLimit = 0; }
@@ -6107,7 +6107,7 @@ function _list(x, y, w, h) {
 		let input = name || '';
 		if (bInputName) {
 			let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
-			try { input = utils.InputBox(window.ID, boxText, window.Name, (bEmpty ? '' : oldName) || input, true); }
+			try { input = utils.InputBox(window.ID, boxText, 'Playlist Manager: playlist name', (bEmpty ? '' : oldName) || input, true); }
 			catch (e) { return null; }
 			if (!input.length) { return null; }
 		}
@@ -6134,7 +6134,7 @@ function _list(x, y, w, h) {
 			if (!bEmpty && oldNameId === nameId) {
 				console.log('Playlist Manager: Converting UI-only playlist into a playlist file...');
 			} else if (this.dataAll.some((pls) => pls.nameId === nameId)) {
-				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', window.Name);
+				fb.ShowPopupMessage('Name already used: ' + nameId + '\n\nChoose another unique name for renaming.', 'Playlist Manager: playlist name');
 				return null;
 			}
 			// Creates the file on the folder
@@ -6165,7 +6165,7 @@ function _list(x, y, w, h) {
 						let new_playlist = plman.CreatePlaylist(plman.PlaylistCount, newName + UUID);
 						plman.ActivePlaylist = new_playlist;
 					} else { // If there is a playlist with the same name, ask to bind
-						let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + newName + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, window.Name, popup.question + popup.yes_no) : popup.no;
+						let answer = bShowPopups ? WshShell.Popup('Created empty playlist file \'' + newName + '\' but there is already a playlist loaded with the same name.\nWant to update playlist file with all tracks from that playlist?', 0, 'Playlist Manager: update playlist', popup.question + popup.yes_no) : popup.no;
 						if (answer === popup.yes) {
 							plman.ActivePlaylist = indexFound;
 							if (UUID.length) {
@@ -6191,7 +6191,7 @@ function _list(x, y, w, h) {
 				if (selItems && selItems.length) {
 					selItems.some((handle, i) => {
 						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, window.Name, bShowPopups);
+							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
 							return true;
 						}
 						return false;
@@ -6203,11 +6203,11 @@ function _list(x, y, w, h) {
 					'\n\nTrace:' +
 					'\nadd' + _p({ bEmpty, name, bShowPopups, bInputName }.toStr()) +
 					'\n\nsavePlaylist' + _p({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? 'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
-					, window.Name, bShowPopups);
+					, 'Playlist Manager: ' + newName, bShowPopups);
 				return null;
 			}
 		} else {
-			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', window.Name, bShowPopups);
+			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', 'Playlist Manager: ' + newName, bShowPopups);
 			return null;
 		}
 		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data
@@ -6249,7 +6249,7 @@ function _list(x, y, w, h) {
 		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
 		if (pls.extension === '.ui') { return; }
 		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
-			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: ' + pls.name);
 			return;
 		}
 		const oldNameId = pls.nameId;
@@ -6530,7 +6530,7 @@ function _list(x, y, w, h) {
 					? popup.yes
 					: this.properties['deleteBehavior'][1] === 2
 						? popup.no
-						: WshShell.Popup('Delete also the playlist loaded within foobar2000?\nPlaylist: ' + oldNameId, 0, window.Name, popup.question + popup.yes_no);
+						: WshShell.Popup('Delete also the playlist loaded within foobar2000?\nPlaylist: ' + oldNameId, 0, 'Playlist Manager: UI-only playlist', popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					plman.RemovePlaylistSwitch(duplicated);
 				}

@@ -1,12 +1,12 @@
 ﻿'use strict';
-//20/11/24
+//21/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable */
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable, globQuery:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers\\callbacks_xxx.js');
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
@@ -32,7 +32,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
 /* global XSP:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable */
+/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, queryReplaceWithCurrent:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -44,7 +44,7 @@ include('playlist_manager_listenbrainz.js');
 include('playlist_manager_youtube.js');
 /* global isYouTube:readable, youTube:readable */
 include('..\\playlists\\playlist_revive.js');
-/* global playlistRevive:readable, selectDeadItems:readable */
+/* global playlistRevive:readable, selectDeadItems:readable , getDeadItems:readable */
 include('..\\playlists\\import_text_playlist.js');
 /* global ImportTextPlaylist:readable */
 
@@ -1587,6 +1587,7 @@ function createMenuRight() {
 	const lb = listenBrainz;
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
+	const sel = fb.GetSelections(1);
 	// Entries
 	{ // New Playlists
 		list.bLiteMode && menu.newEntry({
@@ -1607,26 +1608,6 @@ function createMenuRight() {
 				list.add({ bEmpty: true, toFolder });
 			}
 		});
-		menu.newEntry({
-			entryText: 'New AutoPlaylist...', func: () => {
-				const rule = list.folderRules.others;
-				const toFolder = rule.length
-					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-					: null;
-				const pls = list.addAutoPlaylist(void (0), void (0), toFolder);
-				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls])); }
-			}
-		});
-		!list.bLiteMode && menu.newEntry({
-			entryText: 'New Smart Playlist...', func: () => {
-				const rule = list.folderRules.others;
-				const toFolder = rule.length
-					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-					: null;
-				const pls = list.addSmartplaylist(void (0), void (0), toFolder);
-				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls])); }
-			}
-		});
 		!list.bLiteMode && menu.newEntry({
 			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
 				const rule = list.folderRules.internalUi;
@@ -1636,6 +1617,127 @@ function createMenuRight() {
 				list.addUiPlaylist({ bInputName: true, toFolder });
 			}
 		});
+		menu.newSeparator();
+		menu.newEntry({
+			entryText: 'New AutoPlaylist...', func: () => {
+				const rule = list.folderRules.others;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				const pls = list.addAutoPlaylist(void (0), void (0), toFolder);
+				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
+			}
+		});
+		!list.bLiteMode && menu.newEntry({
+			entryText: 'New Smart Playlist...', func: () => {
+				const rule = list.folderRules.others;
+				const toFolder = rule.length
+					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+					: null;
+				const pls = list.addSmartplaylist(void (0), void (0), toFolder);
+				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
+			}
+		});
+		{	// Preset AutoPlaylists
+			const options = [
+				{ name: 'Media library (full)', query: 'ALL' },
+			].concat([
+				{ name: 'sep' },
+				{ name: 'Recently added', query: globQuery.added, sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortAdded), bSortForced: false, menu: 'Playcount and date' },
+				{ name: 'sep', menu: 'Playcount and date' },
+				{ name: 'Tracks never played', query: _qCond(globTags.playCount) + ' IS 0', menu: 'Playcount and date' },
+				{ name: 'Tracks played in the last 5 days', query: globQuery.recentBy('5 DAYS'), sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortLastPlayed), bSortForced: false, menu: 'Playcount and date' },
+			]).concat([
+				{ name: 'sep' },
+				{ name: 'Tracks unrated', query: globQuery.noRating, menu: 'Rating' },
+				{ name: 'sep', menu: 'Rating' },
+				{ name: 'Tracks rated 1', query: globTags.rating + ' IS 1', menu: 'Rating' },
+				{ name: 'Tracks rated 2', query: globTags.rating + ' IS 2', menu: 'Rating' },
+				{ name: 'Tracks rated 3', query: globTags.rating + ' IS 3', menu: 'Rating' },
+				{ name: 'Tracks rated 4', query: globTags.rating + ' IS 4', menu: 'Rating' },
+				{ name: 'Tracks rated 5', query: globTags.rating + ' IS 5', menu: 'Rating' },
+				{ name: 'sep', menu: 'Rating' },
+				{ name: 'Loved tracks', query: globQuery.loved, menu: 'Rating' },
+				{ name: 'Hated tracks', query: globQuery.hated, menu: 'Rating' },
+				{ name: 'sep', menu: 'Rating' },
+				{ name: 'Fav tracks', query: globQuery.fav, sort: 'SORT BY ' + _qCond(globTags.playCount), bSortForced: false, menu: 'Rating' },
+			]).concat([
+				{ name: 'sep' },
+				{
+					name: 'Same genres (any)',
+					query: globTags.genre + ' IS #' + globTags.genre + '#',
+					sort: 'SORT BY "$rand()"', bSortForced: false,
+					menu: 'From selection', expansionBy: 'OR',
+					plsName: 'Mix: ' + _t(globTags.genre)
+				},
+				{
+					name: 'Same styles (any)',
+					query: globTags.style + ' IS #' + globTags.style + '#',
+					sort: 'SORT BY "$rand()"', bSortForced: false,
+					menu: 'From selection', expansionBy: 'OR',
+					plsName: 'Mix: ' + _t(globTags.style)
+				},
+				{
+					name: 'Same genres (all)',
+					query: globTags.genre + ' IS #' + globTags.genre, sort: 'SORT BY "$rand()"',
+					bSortForced: false,
+					menu: 'From selection', expansionBy: 'AND',
+					plsName: 'Genre: ' + _t(globTags.genre)
+				},
+				{
+					name: 'Same styles (all)',
+					query: globTags.style + ' IS #' + globTags.style + '#',
+					sort: 'SORT BY "$rand()"', bSortForced: false,
+					menu: 'From selection', expansionBy: 'AND',
+					plsName: 'Style: ' + _t(globTags.style)
+				},
+				{ name: 'sep', menu: 'From selection' },
+				{
+					name: 'Rated >2 tracks (by Artist)',
+					query: globTags.rating + ' GREATER 2 AND (' + globTags.artist + ' IS #' + globTags.artistRaw + '#)',
+					sort: 'SORT BY "$rand()"', bSortForced: false,
+					menu: 'From selection', expansionBy: 'OR',
+					plsName: 'Rated >2 by ' + globTags.artist
+				},
+				{
+					name: 'Fav tracks (by Artist)',
+					query: globQuery.fav + ' AND (' + globTags.artist + ' IS #' + globTags.artistRaw + '#)',
+					sort: 'SORT BY ' + _qCond(globTags.playCount), bSortForced: false,
+					menu: 'From selection', expansionBy: 'OR',
+					plsName: 'Fav tracks by ' + globTags.artist
+				},
+			]);
+			const subMenuName = menu.newMenu('Preset AutoPlaylists');
+			options.forEach((opt) => {
+				const subMenuNameTwo = opt.menu ? menu.findOrNewMenu(opt.menu, subMenuName) : subMenuName;
+				let flags = MF_STRING;
+				let name = opt.plsName || opt.name;
+				if (opt.menu === 'From selection' && opt.query) {
+					const sel = fb.GetFocusItem(true) || fb.GetSelection();
+					if (!sel) { flags = MF_GRAYED; }
+					else { opt.query = queryReplaceWithCurrent(opt.query, sel, void(0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true }); }
+					name = fb.TitleFormat(name).EvalWithMetadb(sel).cut(50);
+					delete opt.expansionBy;
+				}
+				delete opt.menu;
+				menu.newEntry({
+					menuName: subMenuNameTwo,
+					entryText: opt.name, func: !opt.query ? null : () => {
+						const rule = list.folderRules.others;
+						const toFolder = rule.length
+							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+							: null;
+						let i = 0;
+						while (list.dataAll.some((pls) => pls.nameId === name)) {
+							name = name.replace(/ \((\n\))/, '') + ' ' + _p(++i);
+							if (i > 10) { fb.ShowPopupMessage('There are more than 10 playlists with same name: ' + opt.name, window.Name); return; }
+						}
+						const pls = list.addAutoPlaylist({ sort: '', ...opt, name }, false, toFolder);
+						if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
+					}, flags
+				});
+			});
+		}
 		if (showMenus['Folders']) {
 			menu.newSeparator();
 			menu.newEntry({ entryText: 'New Folder...' + list.getGlobalShortcut('new folder'), func: () => { list.addFolder(); } });
@@ -1674,48 +1776,42 @@ function createMenuRight() {
 					plman.ActivePlaylist = newIdx;
 					list.showCurrPls();
 				}
-			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+			}, flags: sel && sel.Count !== 0 ? MF_STRING : MF_GRAYED
 		});
-		menu.newSeparator();
-		{	// Preset AutoPlaylists
-			const options = [
-				{ name: 'Media library (full)', query: 'ALL' },
-				{ name: 'Tracks never played', query: 'NOT %LAST_PLAYED% PRESENT' },
-				{ name: 'Tracks played in the last 5 days', query: '%LAST_PLAYED% DURING LAST 5 DAYS SORT DESCENDING BY %LAST_PLAYED%' },
-				{ name: 'sep' },
-				{ name: 'Tracks unrated', query: 'NOT %RATING% PRESENT' },
-				{ name: 'Tracks rated 1', query: '%RATING% IS 1' },
-				{ name: 'Tracks rated 2', query: '%RATING% IS 2' },
-				{ name: 'Tracks rated 3', query: '%RATING% IS 3' },
-				{ name: 'Tracks rated 4', query: '%RATING% IS 4' },
-				{ name: 'Tracks rated 5', query: '%RATING% IS 5' },
-				{ name: 'sep' },
-				{ name: 'Loved tracks', query: globTags.feedback + ' IS 1' },
-			];
-			const subMenuName = menu.newMenu('Preset AutoPlaylists');
-			options.forEach((opt) => {
-				menu.newEntry({
-					menuName: subMenuName,
-					entryText: opt.name, func: !opt.query ? null : () => {
-						const rule = list.folderRules.others;
-						const toFolder = rule.length
-							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-							: null;
-						let name = opt.name;
-						let i = 0;
-						while (list.dataAll.some((pls) => pls.nameId === name)) {
-							name = name.replace(/ \((\n\))/, '') + ' ' + _p(++i);
-							if (i > 10) { fb.ShowPopupMessage('There are more than 10 playlists with same name: ' + opt.name, window.Name); return; }
-						}
-						const pls = list.addAutoPlaylist({ ...opt, name, sort: '' }, false, toFolder);
-						if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls])); }
+	}
+	{	// Find selection
+		menu.newEntry({
+			entryText: 'Find current selection...' + list.getGlobalShortcut('find'), func: () => {
+				const found = [];
+				for (let i = 0; i < list.itemsAll; i++) {
+					if (list.checkSelectionDuplicatesPlaylist({ playlistIndex: i, bAlsoHidden: true })) {
+						found.push({ name: list.dataAll[i].name, category: list.dataAll[i].category });
 					}
-				});
-			});
-		}
+				}
+				found.sort((a, b) => a.category.localeCompare(b.category));
+				for (let i = 0, prevCat = null; i < found.length; i++) {
+					if (prevCat !== found[i].category) {
+						prevCat = found[i].category;
+						found.splice(i, 0, { category: found[i].category });
+					}
+				}
+				for (let i = 0; i < found.length; i++) {
+					if (found[i].name) {
+						found[i] = '\t- ' + found[i].name;
+					} else {
+						found[i] = (found[i].category || 'No category') + ':';
+					}
+				}
+				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+			}, flags: sel && sel.Count !== 0 ? MF_STRING : MF_GRAYED
+		});
+	}
+	menu.newSeparator();
+	{	// Import Tools
+		const subMenuName = menu.newMenu('Import tools');
 		if (showMenus['Online sync']) {
-			menu.newSeparator();
 			menu.newEntry({
+				menuName: subMenuName,
 				entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 					if (!await checkLBToken()) { return Promise.resolve(false); }
 					let bDone = false;
@@ -1916,202 +2012,146 @@ function createMenuRight() {
 					} else { return Promise.resolve(true); }
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED
 			});
-			menu.newEntry({
-				entryText: 'Import from file \\ url...', func: () => {
-					const path = Input.string('file|url', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
-					if (path === null) { return; }
-					if (!/https?:\/\/|www./.test(path) && !_isFile(path)) {
-						fb.ShowPopupMessage('File not found:\n\n' + path, window.Name);
-						return;
-					}
-					// Presets
-					const maskPresets = [
-						{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), discard: '#' },
-						{ name: 'Track list', val: JSON.stringify(['%TITLE%', ' - ', globTags.artist]), discard: '#' },
-						{ name: 'M3U Extended', val: JSON.stringify(['#EXTINF:', ',', globTags.artist, ' - ', '%TITLE%']), discard: '' }
-					];
-					let bPresetUsed = false;
-					let discardMask = '';
-					let formatMask = Input.string(
-						'string',
-						list.properties.importPlaylistMask[1].replace(/"/g, '\''),
-						'Enter pattern to retrieve tracks. Mask is saved for future use.\nPresets at bottom may also be loaded by their number ([x]).\n\nTo discard a section, use \'\' or "".\nTo match a section, put the exact chars to match.\nStrings with \'%\' are considered tags to extract.\n\n[\'. \', \'%TITLE%\', \' - \', \'%ALBUM ARTIST%\'] matches something like:\n1. Respect - Aretha Franklin' + (maskPresets.length ? '\n\n' + maskPresets.map((preset, i) => { return '[' + i + ']' + (preset.name.length ? ' ' + preset.name : '') + ': ' + preset.val; }).join('\n') : ''),
-						window.Name,
-						maskPresets[0].val, void (0), true
-					) || Input.lastInput;
-					if (formatMask === null) { return; }
-					try {
-						formatMask = formatMask.replace(/'/g, '"');
-						// Load preset if possible
-						if (formatMask.search(/^\[\d*\]/g) !== -1) {
-							const idx = formatMask.slice(1, -1);
-							formatMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].val : null;
-							discardMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].discard : null;
-							bPresetUsed = true;
-							if (!formatMask) { console.log('Playlist Manager: Invalid format mask preset'); return; }
-						}
-						// Parse mask
-						formatMask = JSON.parse(formatMask);
-					}
-					catch (e) { console.log('Playlist Manager: Invalid format mask'); return; }
-					if (!formatMask) { return; }
-					if (!bPresetUsed) {
-						discardMask = Input.string(
-							'string',
-							'',
-							'Any line starting with the following string will be skipped:\n(For ex. to skip lines starting with \'#BLABLABLA...\', write \'#\')',
-							window.Name
-						) || Input.lastInput;
-						if (discardMask === null) { return; }
-					}
-					const queryFilters = JSON.parse(list.properties.importPlaylistFilters[1]);
-					if (!pop.isEnabled()) { // Display animation except for UI playlists
-						pop.enable(true, 'Importing...', 'Importing file / url...\nPanel will be disabled during the process.', 'importing');
-					}
-					ImportTextPlaylist.getHandles({ path, formatMask, discardMask, queryFilters })
-						.then((data) => {
-							if (pop.isEnabled('importing')) { pop.disable(true); }
-							let bYouTube = false;
-							const notFoundFiltered = data.notFound
-								.filter((v) => Object.hasOwn(v, 'creator') && Object.hasOwn(v, 'title'))
-								.map((v) => { return { creator: v.creator, title: capitalize(v.title), tags: v.tags }; });
-							if (data.notFound.length) {
-								const report = data.notFound.reduce((acc, line) => {
-									return acc + (acc.length ? '\n' : '') +
-										'Line ' + line.idx + '-> ' +
-										Object.keys(line.tags).map((key) => { return capitalize(key) + ': ' + line.tags[key]; }).join(', ');
-								}, '');
-								const reportPls = data.notFound.reduce((acc, line) => {
-									return acc + (acc.length ? '\n' : '') +
-										Object.keys(line.tags).map((key) => { return line.tags[key]; }).join(' - ');
-								}, '');
-								fb.ShowPopupMessage(reportPls, 'Not found list');
-								fb.ShowPopupMessage(report, 'Tracks not found at source');
-								if (notFoundFiltered.length && isYouTube) {
-									const answer = WshShell.Popup('Some imported tracks have not been found on library (see popup).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
-									if (answer === popup.yes) { bYouTube = true; }
-								}
-							}
-							if (bYouTube) {
-								if (!pop.isEnabled()) { // Display animation except for UI playlists
-									pop.enable(true, 'Searching...', 'Searching YouTube...\nPanel will be disabled during the process.', 'searching');
-								}
-								// Send request in parallel every x ms and process when all are done
-								return Promise.parallel(notFoundFiltered, youTube.searchForYoutubeTrack, 5).then((results) => {
-									let j = 0;
-									const itemsLen = data.handleArr.length;
-									let foundLinks = 0;
-									results.forEach((result) => {
-										for (void (0); j <= itemsLen; j++) {
-											if (result.status !== 'fulfilled') { break; }
-											const link = result.value;
-											if (!link || !link.length) { break; }
-											if (!data.handleArr[j]) {
-												data.handleArr[j] = link.url;
-												foundLinks++;
-												break;
-											}
-										}
-									});
-									console.log('Found ' + foundLinks + ' tracks on YouTube');
-									const idx = plman.FindOrCreatePlaylist('Import', true);
-									plman.UndoBackup(idx);
-									plman.ClearPlaylist(idx);
-									plman.ActivePlaylist = idx;
-									return plman.AddPlaylistItemsOrLocations(idx, data.handleArr.filter(Boolean), true);
-								});
-							} else if (data.handleList.Count) {
-								const idx = plman.FindOrCreatePlaylist('Import', true);
-								plman.UndoBackup(idx);
-								plman.ClearPlaylist(idx);
-								plman.InsertPlaylistItems(idx, 0, data.handleList);
-								plman.ActivePlaylist = idx;
-							}
-						})
-						.finally(() => {
-							if (pop.isEnabled('searching') || pop.isEnabled('importing')) { pop.disable(true); }
-						});
+			menu.newSeparator(subMenuName);
+		}
+		menu.newEntry({
+			menuName: subMenuName,
+			entryText: 'Import from file \\ url...', func: () => {
+				const path = Input.string('file|url', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
+				if (path === null) { return; }
+				if (!/https?:\/\/|www./.test(path) && !_isFile(path)) {
+					fb.ShowPopupMessage('File not found:\n\n' + path, window.Name);
+					return;
 				}
-			});
-		}
-	}
-	if (!menu.isLastEntry('sep')) { menu.newSeparator(); }
-	{	// File management
-		if (!list.bLiteMode) {	// Refresh
-			menu.newEntry({ entryText: 'Manual refresh', func: list.manualRefresh });
-		}
-		{	// Restore
-			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
-			const bItems = (list.deletedItems.length + plman.PlaylistRecycler.Count) > 0;
-			const subMenuName = menu.newMenu('Restore' + (!bBin ? ' [missing recycle bin]' : ''), void (0), bItems ? MF_STRING : MF_GRAYED);
-			menu.newEntry({ menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED });
-			if (list.deletedItems.length > 0 && bBin) {
-				menu.newSeparator(subMenuName);
-				list.deletedItems.slice(0, 8).forEach((item, i) => {
-					if (item.extension === '.ui') { return; }
-					menu.newEntry({
-						menuName: subMenuName, entryText: item.name + '\t(file)', func: () => {
-							list.addToData(item);
-							// Add new category to current view! (otherwise it gets filtered)
-							// Easy way: intersect current view + new one with refreshed list
-							const categoryState = [...new Set(list.categoryState.concat(item.category)).intersection(new Set(list.categories()))];
-							if (item.isAutoPlaylist) {
-								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
-							} else if (item.extension === '.ui') {
-								for (let j = 0; j < plman.PlaylistRecycler.Count; j++) { // First pls is the last one deleted
-									if (plman.PlaylistRecycler.GetName(j) === item.nameId) {
-										const size = plman.PlaylistRecycler.GetContent(j).Count;
-										if (size === item.size) { // Must match on size and name to avoid restoring another pls with same name
-											plman.PlaylistRecycler.Restore(j);
+				// Presets
+				const maskPresets = [
+					{ name: 'Numbered Track list', val: JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), discard: '#' },
+					{ name: 'Track list', val: JSON.stringify(['%TITLE%', ' - ', globTags.artist]), discard: '#' },
+					{ name: 'M3U Extended', val: JSON.stringify(['#EXTINF:', ',', globTags.artist, ' - ', '%TITLE%']), discard: '' }
+				];
+				let bPresetUsed = false;
+				let discardMask = '';
+				let formatMask = Input.string(
+					'string',
+					list.properties.importPlaylistMask[1].replace(/"/g, '\''),
+					'Enter pattern to retrieve tracks. Mask is saved for future use.\nPresets at bottom may also be loaded by their number ([x]).\n\nTo discard a section, use \'\' or "".\nTo match a section, put the exact chars to match.\nStrings with \'%\' are considered tags to extract.\n\n[\'. \', \'%TITLE%\', \' - \', \'%ALBUM ARTIST%\'] matches something like:\n1. Respect - Aretha Franklin' + (maskPresets.length ? '\n\n' + maskPresets.map((preset, i) => { return '[' + i + ']' + (preset.name.length ? ' ' + preset.name : '') + ': ' + preset.val; }).join('\n') : ''),
+					window.Name,
+					maskPresets[0].val, void (0), true
+				) || Input.lastInput;
+				if (formatMask === null) { return; }
+				try {
+					formatMask = formatMask.replace(/'/g, '"');
+					// Load preset if possible
+					if (formatMask.search(/^\[\d*\]/g) !== -1) {
+						const idx = formatMask.slice(1, -1);
+						formatMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].val : null;
+						discardMask = idx >= 0 && idx < maskPresets.length ? maskPresets[idx].discard : null;
+						bPresetUsed = true;
+						if (!formatMask) { console.log('Playlist Manager: Invalid format mask preset'); return; }
+					}
+					// Parse mask
+					formatMask = JSON.parse(formatMask);
+				}
+				catch (e) { console.log('Playlist Manager: Invalid format mask'); return; }
+				if (!formatMask) { return; }
+				if (!bPresetUsed) {
+					discardMask = Input.string(
+						'string',
+						'',
+						'Any line starting with the following string will be skipped:\n(For ex. to skip lines starting with \'#BLABLABLA...\', write \'#\')',
+						window.Name
+					) || Input.lastInput;
+					if (discardMask === null) { return; }
+				}
+				const queryFilters = JSON.parse(list.properties.importPlaylistFilters[1]);
+				if (!pop.isEnabled()) { // Display animation except for UI playlists
+					pop.enable(true, 'Importing...', 'Importing file / url...\nPanel will be disabled during the process.', 'importing');
+				}
+				ImportTextPlaylist.getHandles({ path, formatMask, discardMask, queryFilters })
+					.then((data) => {
+						if (pop.isEnabled('importing')) { pop.disable(true); }
+						let bYouTube = false;
+						const notFoundFiltered = data.notFound
+							.filter((v) => Object.hasOwn(v, 'creator') && Object.hasOwn(v, 'title'))
+							.map((v) => { return { creator: v.creator, title: capitalize(v.title), tags: v.tags }; });
+						if (data.notFound.length) {
+							const report = data.notFound.reduce((acc, line) => {
+								return acc + (acc.length ? '\n' : '') +
+									'Line ' + line.idx + '-> ' +
+									Object.keys(line.tags).map((key) => { return capitalize(key) + ': ' + line.tags[key]; }).join(', ');
+							}, '');
+							const reportPls = data.notFound.reduce((acc, line) => {
+								return acc + (acc.length ? '\n' : '') +
+									Object.keys(line.tags).map((key) => { return line.tags[key]; }).join(' - ');
+							}, '');
+							fb.ShowPopupMessage(reportPls, 'Not found list');
+							fb.ShowPopupMessage(report, 'Tracks not found at source');
+							if (notFoundFiltered.length && isYouTube) {
+								const answer = WshShell.Popup('Some imported tracks have not been found on library (see popup).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+								if (answer === popup.yes) { bYouTube = true; }
+							}
+						}
+						if (bYouTube) {
+							if (!pop.isEnabled()) { // Display animation except for UI playlists
+								pop.enable(true, 'Searching...', 'Searching YouTube...\nPanel will be disabled during the process.', 'searching');
+							}
+							// Send request in parallel every x ms and process when all are done
+							return Promise.parallel(notFoundFiltered, youTube.searchForYoutubeTrack, 5).then((results) => {
+								let j = 0;
+								const itemsLen = data.handleArr.length;
+								let foundLinks = 0;
+								results.forEach((result) => {
+									for (void (0); j <= itemsLen; j++) {
+										if (result.status !== 'fulfilled') { break; }
+										const link = result.value;
+										if (!link || !link.length) { break; }
+										if (!data.handleArr[j]) {
+											data.handleArr[j] = link.url;
+											foundLinks++;
 											break;
 										}
 									}
-								}
-								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
-							} else {
-								_restoreFile(item.path);
-								// Revert timestamps
-								let newPath = item.path.split('.').slice(0, -1).join('.').split('\\');
-								const newName = newPath.pop().split('_ts_')[0];
-								newPath = newPath.concat([newName]).join('\\') + item.extension;
-								_renameFile(item.path, newPath);
-								list.update({ bReuseData: false, bNotPaint: true }); // Updates path..
-							}
-							list.filter({ categoryState });
-							list.deletedItems.splice(i, 1);
-							if (list.bAutoRefreshXsp) {
-								list.refreshSmartPlaylists({ sources: [item.nameId] });
-								if (['By track size', 'By duration'].includes(list.getMethodState())) {
-									list.sort();
-								}
-							}
-							list.showPlsByObj(item);
+								});
+								console.log('Found ' + foundLinks + ' tracks on YouTube');
+								const idx = plman.FindOrCreatePlaylist('Import', true);
+								plman.UndoBackup(idx);
+								plman.ClearPlaylist(idx);
+								plman.ActivePlaylist = idx;
+								return plman.AddPlaylistItemsOrLocations(idx, data.handleArr.filter(Boolean), true);
+							});
+						} else if (data.handleList.Count) {
+							const idx = plman.FindOrCreatePlaylist('Import', true);
+							plman.UndoBackup(idx);
+							plman.ClearPlaylist(idx);
+							plman.InsertPlaylistItems(idx, 0, data.handleList);
+							plman.ActivePlaylist = idx;
 						}
+					})
+					.finally(() => {
+						if (pop.isEnabled('searching') || pop.isEnabled('importing')) { pop.disable(true); }
 					});
-				});
 			}
-			if (bItems && !menu.isLastEntry('sep')) { menu.newSeparator(subMenuName); }
-			if (plman.PlaylistRecycler.Count > 0) {
-				const deletedItems = [];
-				for (let i = 0; i < plman.PlaylistRecycler.Count; i++) { deletedItems.push(plman.PlaylistRecycler.GetName(i)); }
-				deletedItems.slice(0, 8).forEach((entryText, i) => {
-					menu.newEntry({
-						menuName: subMenuName, entryText: entryText + '\t(UI)', func: () => {
-							plman.PlaylistRecycler.Restore(i);
-						}
-					});
-				});
-			}
-		}
-		menu.newSeparator();
+		});
+		if (!menu.isLastEntry('sep')) { menu.newSeparator(subMenuName); }
+		menu.newEntry({
+			menuName: subMenuName,
+			entryText: 'Import AutoPlaylists from UI..', func: () => {
+				try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
+				list.importAutoPlaylistsFromFoobar({ bSelect: true });
+			},
+			flags: list.isAutoPlaylistMissing() ? MF_STRING : MF_GRAYED
+		});
+		menu.newSeparator(subMenuName);
 		{	// Import json
 			menu.newEntry({
+				menuName: subMenuName,
 				entryText: 'Add playlists from json file...', func: () => {
 					list.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update according to query and tags
 					list.importJson();
 				}
 			});
 			menu.newEntry({
+				menuName: subMenuName,
 				entryText: 'Export playlists as json file...', func: () => {
 					let answer = WshShell.Popup('Export only AutoPlaylists (yes) or both AutoPlaylists and other playlists -.fpl & .xsp- (no)?', 0, window.Name, popup.question + popup.yes_no);
 					const path = list.exportJson({ idx: -1, bAllExt: answer !== popup.yes },); // All
@@ -2120,14 +2160,6 @@ function createMenuRight() {
 			});
 		}
 	}
-	menu.newSeparator();
-	menu.newEntry({
-		entryText: 'Import AutoPlaylists from UI..', func: () => {
-			try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
-			list.importAutoPlaylistsFromFoobar({ bSelect: true });
-		},
-		flags: list.isAutoPlaylistMissing() ? MF_STRING : MF_GRAYED
-	});
 	menu.newSeparator();
 	{	// Maintenance tools
 		const subMenuName = menu.newMenu('Playlists maintenance tools');
@@ -2288,7 +2320,9 @@ function createMenuRight() {
 			});
 		}
 		menu.newSeparator(subMenuName);
-		const deadItems = selectDeadItems(plman.ActivePlaylist, false).length;
+		const deadItems = plman.PlaylistItemCount(plman.ActivePlaylist) < 20000
+			? getDeadItems(plman.ActivePlaylist).length
+			: '?';
 		const bLoad = plman.ActivePlaylist !== -1;
 		const bLocked = bLoad && new Set(plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [])
 			.intersectionSize(new Set(['AddItems', 'RemoveItems'])) > 0;
@@ -2304,32 +2338,74 @@ function createMenuRight() {
 		});
 	}
 	menu.newSeparator();
-	{	// Find selection
-		menu.newEntry({
-			entryText: 'Find current selection...' + list.getGlobalShortcut('find'), func: () => {
-				const found = [];
-				for (let i = 0; i < list.itemsAll; i++) {
-					if (list.checkSelectionDuplicatesPlaylist({ playlistIndex: i, bAlsoHidden: true })) {
-						found.push({ name: list.dataAll[i].name, category: list.dataAll[i].category });
-					}
-				}
-				found.sort((a, b) => a.category.localeCompare(b.category));
-				for (let i = 0, prevCat = null; i < found.length; i++) {
-					if (prevCat !== found[i].category) {
-						prevCat = found[i].category;
-						found.splice(i, 0, { category: found[i].category });
-					}
-				}
-				for (let i = 0; i < found.length; i++) {
-					if (found[i].name) {
-						found[i] = '\t- ' + found[i].name;
-					} else {
-						found[i] = (found[i].category || 'No category') + ':';
-					}
-				}
-				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+	{	// File management
+		{	// Restore
+			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
+			const bItems = (list.deletedItems.length + plman.PlaylistRecycler.Count) > 0;
+			const subMenuName = menu.newMenu('Restore' + (!bBin ? ' [missing recycle bin]' : ''), void (0), bItems ? MF_STRING : MF_GRAYED);
+			menu.newEntry({ menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED });
+			if (list.deletedItems.length > 0 && bBin) {
+				menu.newSeparator(subMenuName);
+				list.deletedItems.slice(0, 8).forEach((item, i) => {
+					if (item.extension === '.ui') { return; }
+					menu.newEntry({
+						menuName: subMenuName, entryText: item.name + '\t(file)', func: () => {
+							list.addToData(item);
+							// Add new category to current view! (otherwise it gets filtered)
+							// Easy way: intersect current view + new one with refreshed list
+							const categoryState = [...new Set(list.categoryState.concat(item.category)).intersection(new Set(list.categories()))];
+							if (item.isAutoPlaylist) {
+								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
+							} else if (item.extension === '.ui') {
+								for (let j = 0; j < plman.PlaylistRecycler.Count; j++) { // First pls is the last one deleted
+									if (plman.PlaylistRecycler.GetName(j) === item.nameId) {
+										const size = plman.PlaylistRecycler.GetContent(j).Count;
+										if (size === item.size) { // Must match on size and name to avoid restoring another pls with same name
+											plman.PlaylistRecycler.Restore(j);
+											break;
+										}
+									}
+								}
+								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
+							} else {
+								_restoreFile(item.path);
+								// Revert timestamps
+								let newPath = item.path.split('.').slice(0, -1).join('.').split('\\');
+								const newName = newPath.pop().split('_ts_')[0];
+								newPath = newPath.concat([newName]).join('\\') + item.extension;
+								_renameFile(item.path, newPath);
+								list.update({ bReuseData: false, bNotPaint: true }); // Updates path..
+							}
+							list.filter({ categoryState });
+							list.deletedItems.splice(i, 1);
+							if (list.bAutoRefreshXsp) {
+								list.refreshSmartPlaylists({ sources: [item.nameId] });
+								if (['By track size', 'By duration'].includes(list.getMethodState())) {
+									list.sort();
+								}
+							}
+							list.showPlsByObj(item);
+						}
+					});
+				});
 			}
-		});
+			if (bItems && !menu.isLastEntry('sep')) { menu.newSeparator(subMenuName); }
+			if (plman.PlaylistRecycler.Count > 0) {
+				const deletedItems = [];
+				for (let i = 0; i < plman.PlaylistRecycler.Count; i++) { deletedItems.push(plman.PlaylistRecycler.GetName(i)); }
+				deletedItems.slice(0, 8).forEach((entryText, i) => {
+					menu.newEntry({
+						menuName: subMenuName, entryText: entryText + '\t(UI)', func: () => {
+							plman.PlaylistRecycler.Restore(i);
+						}
+					});
+				});
+			}
+		}
+		if (!list.bLiteMode) {	// Refresh
+			menu.newSeparator();
+			menu.newEntry({ entryText: 'Manual refresh', func: list.manualRefresh });
+		}
 	}
 	return menu;
 }
@@ -3478,7 +3554,7 @@ function createMenuRightTop() {
 					menu.newEntry({
 						menuName: subMenuName, entryText: item, func: () => {
 							if (index !== optionsLength - 1) {
-								if (panel.fonts.size === item) { return;}
+								if (panel.fonts.size === item) { return; }
 								panel.fonts.size = item;
 							} else {
 								const input = Input.number('int positive', panel.fonts.size, 'Input a number:\n(>= 6)', 'Font size', 13, [(n) => n > 0]);

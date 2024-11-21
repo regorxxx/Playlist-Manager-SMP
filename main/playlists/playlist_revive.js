@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/11/24
+//21/11/24
 
 /*
 	Playlist Revive
@@ -342,9 +342,21 @@ function findDeadItems() {
 }
 
 /* exported selectDeadItems */
-function selectDeadItems(playlistIndex, bUpdateUi = true) {
+function selectDeadItems(playlistIndex) {
 	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return; }
 	plman.ClearPlaylistSelection(playlistIndex);
+	let deadItems = getDeadItems(playlistIndex);
+	if (deadItems.length) {
+		plman.ActivePlaylist = playlistIndex;
+		plman.SetPlaylistSelection(playlistIndex, deadItems.map((_) => _.idx), true);
+		plman.SetPlaylistFocusItem(playlistIndex, deadItems[0].idx);
+	}
+	return deadItems;
+}
+
+/* exported getDeadItems */
+function getDeadItems(playlistIndex) {
+	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return []; }
 	let deadItems = [];
 	let cache = new Set();
 	const streamRegEx = /^file:\/\//i;
@@ -356,11 +368,6 @@ function selectDeadItems(playlistIndex, bUpdateUi = true) {
 		if (!streamRegEx.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
 		deadItems.push({ handle, idx });
 	});
-	if (bUpdateUi && deadItems.length) {
-		plman.ActivePlaylist = playlistIndex;
-		plman.SetPlaylistSelection(playlistIndex, deadItems.map((_) => _.idx), true);
-		plman.SetPlaylistFocusItem(playlistIndex, deadItems[0].idx);
-	}
 	return deadItems;
 }
 

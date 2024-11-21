@@ -62,7 +62,7 @@
 
 ## [Unreleased][]
 ### Added
-- AutoPlaylist: new submenu with AutoPlaylists presets at 'List menu' ('+' button).
+- AutoPlaylist: new submenu with AutoPlaylists presets at 'List menu' ('+' button). It has both standard presets and some based on current selection. For ex. 'Rated >3 tracks by selected artist' which outputs a different AutoPlaylist every-time you change the selection. Both query and playlist names are dynamically adjusted. This is based on [Dynamic Queries](https://github.com/regorxxx/Playlist-Tools-SMP), but entries are not configurable (use my other scripts for that). Feel free to suggest additional default entries though.
 - AutoPlaylist: UI-only AutoPlaylists have a new menu entry to show the native AutoPlaylist properties window.
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
@@ -96,6 +96,8 @@
 - Shortcuts: multiple improvements to shortcuts shown on tooltips, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
+- Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the scrip is checking if every track exist first. 
+- UI: clean up of 'List menu' entries to improve ease of usage.
 - UI: bottom toolbar is now adjusted to the font size settings.
 - UI: improved bottom toolbar buttons size adjustment according to filter/sorting method.
 - UI: improved multiple elements size adjustments according to font size.
