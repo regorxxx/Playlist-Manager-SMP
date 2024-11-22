@@ -33,7 +33,7 @@ include('helpers\\helpers_xxx_tags.js');
 include('helpers\\popup_xxx.js');
 /* global _popup:readable */
 include('helpers\\helpers_xxx_instances.js');
-/* global getInstancesByKey:readable, addInstance:readable, removeInstance:readable */
+/* global newInstancesManager:readable */
 include('helpers\\playlist_history.js');
 /* global PlsHistory:readable */
 include('helpers\\callbacks_xxx.js');
@@ -58,12 +58,21 @@ include('main\\window\\window_xxx_scrollbar.js');
 globProfiler.Print('helpers');
 checkCompatible('1.6.1', 'smp');
 
+const instances = newInstancesManager(globSettings.instanceManager);
+
 // Cache
 let plmInit = { interval: null, lastUpdate: 0 };
 const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.', bForce = false) => {
 	if (typeof list !== 'undefined' && list && list.bLiteMode) { return null; }
-	const plmInstances = [...getInstancesByKey('Playlist Manager')]; // First look if there are other panels already loaded
-	if (plmInstances[0] === window.ID || bForce) { // Only execute once per Foobar2000 instance
+	if (instances.isWorking) {
+		if (plmInit.interval) { return null; }
+		if (!bForce) {
+			list.cacheLibTimer = debouncedCacheLib(bInit, message, tt, bForce);
+			return list.cacheLibTimer;
+		}
+	}
+	// Only execute once per Foobar2000 instance
+	if ((instances.getMain(window.ScriptInfo.Name) || {}).id === window.ID || bForce) {
 		if (plmInit.interval) { clearInterval(plmInit.interval); plmInit.interval = null; }
 		else if (bInit) { return null; } // Ensure it only runs once on startup
 		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib'); }
@@ -362,8 +371,11 @@ setProperties(properties, 'plm_');
 	let prop = getPropertiesPairs(properties, 'plm_');
 	if (prop.bFirstPopup[1] && prop.bSetup[1]) { prop.bSetup[1] = false; overwriteProperties(prop); } // Don't apply on already existing installations
 	if (!prop.bSetup[1] && !prop.bLiteMode[1]) {
-		addInstance('Playlist Manager');
+		instances.init();
+		instances.add(window.ScriptInfo.Name);
+		instances.get(window.ScriptInfo.Name, true);
 		plmInit.interval = setInterval(cacheLib, 500, true);
+		instances.getInterval(window.ScriptInfo.Name, 30000);
 	}
 	// Update default values for JSON properties (for compat with new releases)
 	const props = ['columns', 'rShortcuts', 'uiElements', 'searchMethod', 'showMenus', 'lShortcutsHeader', 'mShortcutsHeader', 'mShortcuts', 'lShortcuts', 'playlistIcons', 'logOpt'];
@@ -1257,7 +1269,7 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_script_unload', () => {
 		// Instance manager
-		removeInstance('Playlist Manager');
+		instances.remove(window.ScriptInfo.Name);
 		// Backup
 		if (autoBackTimer && list.playlistsPath.length && list.itemsAll) {
 			backup(list.properties.autoBackN[1], true, false);

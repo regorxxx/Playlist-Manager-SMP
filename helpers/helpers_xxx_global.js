@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/24
+//22/11/24
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -45,7 +45,7 @@ function loadUserDefFile(def) {
 									}
 								}
 							} else if (def._type === 'Setting') {
-								if (typeof def[key] !== 'boolean') {
+								if (key.startsWith('b') && typeof def[key] !== 'boolean') {
 									fb.ShowPopupMessage(
 										'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
 										'\n' + def[key] +
@@ -290,5 +290,6 @@ const globSettings = {
 	bProfileInit: false,
 	bDebugPaint: false,
 	bTooltip: true,
-	bLogToFile: false
+	bLogToFile: false,
+	instanceManager: 'v1'
 };

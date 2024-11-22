@@ -1,9 +1,9 @@
 ﻿'use strict';
-//21/11/24
+//22/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
-/* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, removeInstance:readable, addInstance:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
+/* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable, globQuery:readable */
@@ -4927,7 +4927,7 @@ function createMenuRightTop() {
 				// Sorting
 				list.changeSorting(list.manualMethodState());
 				// Instances
-				removeInstance('Playlist Manager');
+				instances.remove(window.ScriptInfo.Name);
 			} else {
 				list.updateMenus({ menus: list.showMenusDef, bSave: false, bOverrideDefaults: true }); // Restore default values from init
 				list.properties.autoSave[1] = list.properties.autoSave[3];
@@ -4938,7 +4938,7 @@ function createMenuRightTop() {
 				const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
 				autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null; // NOSONAR [shared on files]
 				debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
-				addInstance('Playlist Manager');
+				instances.add(window.ScriptInfo.Name);
 				list.switchTracking(true, void (0), false);
 			}
 			// Copy data

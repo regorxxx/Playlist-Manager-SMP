@@ -72,6 +72,8 @@
 - Statistics: option to filter data between 2 custom values on Y-Axis at display menu.
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
 ### Changed
+- Instances manager: simplified the way multiple panels are handled (and library cache shared); it should work better now, without the need for an external file. Old method may also be used if new one gives problems on startup (see below).
+- Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to choose the instances manager used. By default is now set to 'v1' (see above).
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
 - Configuration: simplified wording and popups when installing the package for the first time. In lite mode there is an additional popup suggesting to hide the bottom toolbar.
 - Statistics: scrolling cursor is displayed when scrolling using mouse + dragging.
