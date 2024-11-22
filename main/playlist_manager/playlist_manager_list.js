@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/24
+//22/11/24
 
 /* exported _list */
 
@@ -5222,7 +5222,7 @@ function _list(x, y, w, h) {
 		if (this.bTracking) {
 			this.clearSelPlaylistCache();
 			fb.queryCache.clear();
-			this.cacheLibTimer = cacheLib(false, 'Updating...');
+			this.cacheLibTimer = cacheLib(false, 'Updating...'); // Do it inmediately
 			if (bCachePls && this.requiresCachePlaylistSearch()) {
 				this.cachePlaylistSearch();
 			}
