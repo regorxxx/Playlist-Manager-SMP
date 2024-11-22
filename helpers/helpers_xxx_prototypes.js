@@ -435,11 +435,20 @@ String.prototype.replaceLast = function replaceLast(word, newWord) { // NOSONAR
 		: this.slice(0, n) + this.slice(n).replace(word, newWord);
 };
 
-String.prototype.replaceAll = function replaceAll(word, newWord) { // NOSONAR
-	let copy = this;
-	while (copy.indexOf(word) !== -1) { copy = copy.replace(word, newWord); }
-	return copy;
-};
+if (!String.prototype.replaceAll) {
+	String.prototype.replaceAll = function replaceAll(word, newWord) { // NOSONAR
+		const len = newWord.length;
+		let copy = this;
+		let prevIdx = copy.indexOf(word);
+		let idx = prevIdx;
+		while (idx !== -1) {
+			copy = copy.replace(word, newWord);
+			prevIdx = idx + len;
+			idx = copy.indexOf(word, prevIdx);
+		}
+		return copy;
+	};
+}
 
 String.prototype.count = function count(c) { // NOSONAR
 	let result = 0, i = 0;
