@@ -61,11 +61,11 @@ checkCompatible('1.6.1', 'smp');
 // Cache
 let plmInit = { interval: null, lastUpdate: 0 };
 const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library paths...\nPanel will be disabled during the process.', bForce = false) => {
-	if (typeof list !== 'undefined' && list && list.bLiteMode) { return false; }
+	if (typeof list !== 'undefined' && list && list.bLiteMode) { return null; }
 	const plmInstances = [...getInstancesByKey('Playlist Manager')]; // First look if there are other panels already loaded
 	if (plmInstances[0] === window.ID || bForce) { // Only execute once per Foobar2000 instance
 		if (plmInit.interval) { clearInterval(plmInit.interval); plmInit.interval = null; }
-		else if (bInit) { return; } // Ensure it only runs once on startup
+		else if (bInit) { return null; } // Ensure it only runs once on startup
 		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib'); }
 		libItemsAbsPaths = []; // NOSONAR
 		libItemsRelPaths = {}; // NOSONAR
@@ -101,6 +101,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 		else { pop.setReason('cacheLib waiting'); }
 		window.NotifyOthers('precacheLibraryPaths ask', null);
 	}
+	return null;
 };
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
@@ -1275,6 +1276,7 @@ if (!list.properties.bSetup[1]) {
 			if (list.bTracking) {
 				list.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 				list.clearSelPlaylistCache();
+				fb.queryCache.clear();
 			} else if (!list.bLiteMode) {
 				if (list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
 			}
@@ -1287,6 +1289,7 @@ if (!list.properties.bSetup[1]) {
 			if (list.bTracking) {
 				list.cacheLibTimer = debouncedCacheLib(false, 'Updating...');
 				list.clearSelPlaylistCache();
+				fb.queryCache.clear();
 			} else if (!list.bLiteMode) {
 				if (list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
 			}
