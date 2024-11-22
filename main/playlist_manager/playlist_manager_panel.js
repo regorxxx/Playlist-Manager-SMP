@@ -1,9 +1,9 @@
 ﻿'use strict';
-//20/11/24
+//23/11/24
 
 /* exported _panel */
 
-/* global bottomToolbar:readable, list:readable */
+/* global bottomToolbar:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global globFonts:readable, FontStyle:readable, InterpolationMode:readable, DLGC_WANTALLKEYS:readable, clone: readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
@@ -88,9 +88,7 @@ function _panel(customBackground = false, bSetup = false) {
 		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
 		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
 		this.rowHeight = this.fonts.normal.Height;
-		this.listObjects.forEach((item) => { item.size(); });
-		this.listObjects.forEach((item) => { item.update(); });
-		this.textObjects.forEach((item) => { item.size(); });
+		this.listObjects.forEach((item) => item.size());
 		bottomToolbar.on_size_buttn();
 	};
 
@@ -155,10 +153,10 @@ function _panel(customBackground = false, bSetup = false) {
 			if (this.imageBackground.art.image) {
 				this.imageBackground.art.colors = JSON.parse(this.imageBackground.art.image.GetColourSchemeJSON(4));
 			}
-			return list.repaint();
+			return this.listObjects.map((item) => item.repaint());
 		}).catch(() => {
 			this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.art.id = null;
-			return list.repaint();
+			return this.listObjects.map((item) => item.repaint());
 		});
 	}, 250);
 

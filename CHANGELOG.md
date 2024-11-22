@@ -120,6 +120,7 @@
 - UI: minor new line errors on folder button tooltip.
 - UI: bottom toolbar tag/category filters showing 'Multiple...' (instead of 'All' by default) while loading the playlists at startup.
 - UI: playlist highlighting animation was drawn over quicksearch box in some cases.
+- UI: unnecessary playlist refresh after changing fonts size.
 - Statistics: minor fixes.
 
 ## [0.19.0] - 2024-10-09
