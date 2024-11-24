@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/24
+//24/11/24
 
 /* exported _list */
 
@@ -3336,7 +3336,7 @@ function _list(x, y, w, h) {
 						plman.RemovePlaylistSelection(plman.ActivePlaylist);
 						const sourcePls = (bAlsoHidden ? this.dataAll : this.data)
 							.find((pls) => { return pls.nameId === plman.GetPlaylistName(plman.ActivePlaylist); });
-						if (pls !== sourcePls) {
+						if (sourcePls && pls !== sourcePls) {
 							this.editData(sourcePls, {
 								size: sourcePls.size - selItems.Count,
 								duration: (sourcePls.duration !== - 1

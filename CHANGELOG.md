@@ -112,6 +112,7 @@
 - Helpers: updated helpers.
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 ### Removed
+- UI: unnecessary playlist refresh after changing fonts size.
 ### Fixed
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
 - Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.
@@ -120,7 +121,7 @@
 - UI: minor new line errors on folder button tooltip.
 - UI: bottom toolbar tag/category filters showing 'Multiple...' (instead of 'All' by default) while loading the playlists at startup.
 - UI: playlist highlighting animation was drawn over quicksearch box in some cases.
-- UI: unnecessary playlist refresh after changing fonts size.
+- Crash using drag n' drop or actions which moved the selection to a playlist if the source playlist was not tracked by the manager.
 - Statistics: minor fixes.
 
 ## [0.19.0] - 2024-10-09
