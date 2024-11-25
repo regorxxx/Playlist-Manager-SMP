@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/24
+//25/11/24
 
 /* exported newInstancesManager*/
 
@@ -194,12 +194,12 @@ function _instancesManagerV2() {
 	this.init = function () {
 		const now = lastStartup().toString(); // Alternative to checking new startup via SDK?
 		// Create file the first time and ensure the file is up to date (avoids old Ids on file from previously crashed instances)
-		if (!_isFile(file)) { _save(file, JSON.stringify({ date: now }, null, '\t')); }
+		if (!_isFile(file)) { _save(file, JSON.stringify({ date: now }, null, '\t').replace(/\n/g, '\r\n')); }
 		else {
 			const newInstances = getInstances();
 			if (!newInstances || !Object.hasOwn(newInstances, 'date') || now !== newInstances.date) {
 				_deleteFile(file);
-				_save(file, JSON.stringify({ date: now }, null, '\t'));
+				_save(file, JSON.stringify({ date: now }, null, '\t').replace(/\n/g, '\r\n'));
 			}
 		}
 	};

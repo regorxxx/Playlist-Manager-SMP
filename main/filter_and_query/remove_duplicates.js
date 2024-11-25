@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/24
+//25/11/24
 
 /*
 	Remove duplicates
@@ -83,7 +83,7 @@ function filterDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 	}
 	let items = [];
 
-	const sep = '|‎ |'; // Contains U+200E invisible char
+	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
@@ -440,7 +440,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 	let items = [];
 	let copy = handleList.Clone();
 
-	const sep = '|‎ |'; // Contains U+200E invisible char
+	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
 	let tags = [];
 	const count = copy.Count;
@@ -592,7 +592,7 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 	let items = [];
 	let copy = handleList.Clone();
 
-	const sep = '|‎ |'; // Contains U+200E invisible char
+	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
 	let checklength = checkKeys.length;
 	let i = 0;
