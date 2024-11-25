@@ -149,7 +149,13 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 		} else { return query; }
 	}
 	if (/#NEXTKEY#|#PREVKEY#/g.test(query)) { console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return null; }
-	if (query.indexOf('#') !== -1) {
+	if (query.includes('#')) {
+		if (/%ALBUM ARTIST% (IS|HAS) #ALBUM ARTIST#/gi.test(query) && !/%?ARTIST%? (IS|HAS) #ARTIST#/gi.test(query)) {
+			query = query
+				.replaceAll('%ALBUM ARTIST% IS #ALBUM ARTIST#', '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST IS #ALBUM ARTIST#)) OR (ALBUM ARTIST MISSING AND (ARTIST IS #ARTIST#))')
+				.replaceAll('%ALBUM ARTIST% HAS #ALBUM ARTIST#', '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST HAS #ALBUM ARTIST#)) OR (ALBUM ARTIST MISSING AND (ARTIST HAS #ARTIST#))');
+			if (options.bDebug) { console.log('ALBUM ARTISt expansion:', query); }
+		}
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
 		let next = -1;
@@ -160,20 +166,31 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 			else { break; }
 		}
 		let count = idx.length;
-		const startQuery = query.startsWith('(') ? query.slice(0, query.split('').findIndex((s) => { return s !== '('; })) : '';
-		const endQuery = query.length > idx[count - 1] ? query.slice(idx[count - 1] + 1, query.length) : '';
-		if (options.bDebug) { console.log(startQuery, '-', endQuery); }
+		const startIdx = query.lastIndexOf('(', idx[0]);
+		const startQuery = startIdx !== -1
+			? query.slice(0, startIdx + 1)
+			: '';
+		const endQuery = query.length > idx[count - 1]
+			? query.slice(idx[count - 1] + 1, query.length)
+			: '';
+		if (options.bDebug) { console.log('startQuery - endQuery:', startQuery, '-', endQuery); }
 		if (count % 2 === 0) { // Must be on pairs of 2
 			let tempQuery = '';
 			let /** @type {FbTitleFormat|string} */ tfo = '', tfoVal = '';
 			for (let i = 0; i < count; i += 2) {
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
+				const bIsWildcard = tfo.endsWith('*');
+				tfo = tfo.replace(/\*$/, '');
+				if (options.bDebug) { console.log('tfo:', tfo, bIsWildcard); }
 				const tagKey = tfo;
-				const bIsFunc = tfo.indexOf('$') !== -1;
+				const bIsFunc = tfo.includes('$');
 				const prevChar = query[idx[i] - 1];
 				const nextChar = query[idx[i + 1] + 1];
 				const bIsWithinFunc = (prevChar === '(' || prevChar === ',') && (nextChar === ')' || nextChar === ',');
-				tfo = !bIsFunc ? '[$meta_sep(' + tfo + ',\'#\')]' : '[' + tfo + ']'; // Split multivalue tags if possible!
+				const sep = '|‎|';
+				tfo = !bIsFunc
+					? '[$meta_sep(' + tfo + ',\'' + sep + '\')]'
+					: '[' + tfo + ']'; // Split multivalue tags if possible!
 				// Workaround for album artist
 				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
@@ -183,10 +200,10 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 				tfoVal = bIsFunc || bIsWithinFunc
 					? sanitizeTagTfo(handle
 						? tfo.EvalWithMetadb(handle)
-						: (tags[tagKey.toLowerCase()] || []).join('#'))
+						: (tags[tagKey.toLowerCase()] || []).join(sep))
 					: handle
 						? tfo.EvalWithMetadb(handle)
-						: (tags[tagKey.toLowerCase()] || []).join('#');
+						: (tags[tagKey.toLowerCase()] || []).join(sep);
 				if (options.bToLowerCase && tfoVal && tfoVal.length) {
 					tfoVal = tfoVal.toLowerCase();
 				}
@@ -195,24 +212,37 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 					tfo = fb.TitleFormat(tfo.Expression.slice(1, -1));
 					tfoVal = sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : tfo.Eval(true));
 				}
-				// Another workaround for album artist, don't split
-				if(/%ALBUM ARTIST% (IS|HAS)/gi.test(query) && tagKey.toUpperCase() === 'ALBUM ARTIST') {
-					tfoVal = tfoVal.replaceAll('#', ', ');
-				}
 				if (options.bDebug) { console.log('tfoVal:', tfoVal); }
-				if (tfoVal.indexOf('#') !== -1 && !/G#m|Abm|D#m|A#m|F#m|C#m|F#|C#|G#|D#|A#/i.test(tfoVal)) { // Split multivalue tags if possible!
+				if (options.bDebug) { console.log('multi-tag:', tfoVal.includes(sep)); }
+				if (tfoVal.includes(sep)) { // Split multivalue tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
-					const interQueryStart = interText.startsWith(')') ? interText.slice(0, interText.split('').findIndex((s) => { return s !== ')'; })) : '';
+					const interQueryStart = interText.startsWith(')')
+						? interText.slice(0, interText.split('').findIndex((s) => s !== ')'))
+						: '';
 					const breakPoint = interText.lastIndexOf(' (');
-					const interQueryEnd = breakPoint !== -1 ? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => { return s !== '('; })) : '';
+					const interQueryEnd = breakPoint !== -1
+						? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => s !== '('))
+						: '';
 					const interQuery = interQueryStart + interQueryEnd;
-					const multiQuery = tfoVal.split('#').map((val) => {
-						return query.slice((i > 0 ? idx[i - 1] + interQuery.length + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(val) : val);
+					if (options.bDebug) { console.log('interQuery:', interQueryStart, interQueryEnd); }
+					const multiQuery = tfoVal.split(sep).map((val) => {
+						return query.slice(
+							(i > 0
+								? idx[i - 1] + interQuery.length + 1
+								: (startQuery.length ? startQuery.length : 0)
+							), idx[i]
+						) + (!bIsWithinFunc ? sanitizeQueryVal(val) : val).trim() + (bIsWildcard ? '*' : '');
 					});
+					if (options.bDebug) { console.log('multiQuery:', multiQuery); }
 					tempQuery += interQuery + queryJoin(multiQuery, options.expansionBy);
 				} else {
 					if (options.bDebug) { console.log(i > 0, startQuery.length, idx[i]); }
-					tempQuery += query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal).trim();
+					tempQuery += query.slice(
+						(i > 0
+							? idx[i - 1] + 1
+							: (startQuery.length ? startQuery.length : 0)
+						), idx[i]
+					) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal).trim() + (bIsWildcard ? '*' : '');
 				}
 			}
 			query = startQuery + tempQuery + endQuery;
@@ -240,7 +270,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
  */
 function queryJoin(queryArray, setLogic = 'AND') {
 	setLogic = (setLogic || '').toUpperCase();
-	if (logicDic.indexOf(setLogic) === -1) {
+	if (!logicDic.includes(setLogic)) {
 		console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 		return;
 	}
@@ -317,21 +347,21 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 	let query = '';
 	let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
 	if (!isArray) { //no subtagsArrays
-		if (logicDic.indexOf(tagsArrayLogic) === -1) {
+		if (!logicDic.includes(tagsArrayLogic)) {
 			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
 			return;
 		}
 		let i = 0;
 		while (i < tagsArrayLength) {
 			if (i === 0) {
-				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */ (tagsArray[0]));
+				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[0]));
 			} else {
 				query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[i]));
 			}
 			i++;
 		}
 	} else {
-		if (logicDic.indexOf(tagsArrayLogic) === -1 || logicDic.indexOf(subtagsArrayLogic) === -1) {
+		if (!logicDic.includes(tagsArrayLogic) || !logicDic.includes(subtagsArrayLogic)) {
 			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
 			return;
 		}
@@ -561,10 +591,10 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 	let i = 0;
 	let tagString = '';
 	const outputArray_length = handleList.Count;
-	const sep = '|‎ |'; // Contains U+200E invisible char
+	const sep = '|‎|'; // Contains U+200E invisible char
 	while (i < tagArray_length) {
-		const tagStr = tagsArray[i].indexOf('$') === -1
-			? tagsArray[i].indexOf('%') === -1
+		const tagStr = !tagsArray[i].includes('$')
+			? !tagsArray[i].includes('%')
 				? '%' + tagsArray[i] + '%'
 				: tagsArray[i]
 			: tagsArray[i];
@@ -618,8 +648,8 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 			continue;
 		}
 		// Tagname or TF expression, with or without empty values
-		let tagString = tagsArray[i].indexOf('$') === -1
-			? tagsArray[i].indexOf('%') === -1
+		let tagString = !tagsArray[i].includes('$')
+			? !tagsArray[i].includes('%')
 				? '%' + tagsArray[i] + '%'
 				: tagsArray[i]
 			: tagsArray[i];
@@ -674,7 +704,7 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 			i++;
 			continue;
 		}
-		let tagString = (tagName.indexOf('$') === -1) // Tagname or TF expression, with or without empty values
+		let tagString = !tagName.includes('$') // Tagname or TF expression, with or without empty values
 			? (options.bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]')
 			: (options.bEmptyVal ? tagName : '[' + tagName + ']');
 		let tfo = fb.TitleFormat(tagString);
