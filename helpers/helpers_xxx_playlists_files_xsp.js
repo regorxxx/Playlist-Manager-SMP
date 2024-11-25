@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/11/24
+//25/11/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -564,7 +564,7 @@ if (typeof queryJoin === 'undefined') {
 	// Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
 	var queryJoin = function (queryArray, setLogic = 'AND') { // NOSONAR
 		setLogic = (setLogic || '').toUpperCase();
-		if (logicDic.indexOf(setLogic) === -1) {
+		if (!logicDic.includes(setLogic)) {
 			console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 			return '';
 		}
@@ -593,10 +593,10 @@ if (typeof queryJoin === 'undefined') {
 if (typeof stripSort === 'undefined') {
 	var stripSort = function (query) { // NOSONAR
 		let queryNoSort = query;
-		if (query.indexOf('SORT') !== -1) {
-			if (query.indexOf(' SORT BY ') !== -1) { queryNoSort = query.split(' SORT BY ')[0]; }
-			else if (query.indexOf(' SORT DESCENDING BY ') !== -1) { queryNoSort = query.split(' SORT DESCENDING BY ')[0]; }
-			else if (query.indexOf(' SORT ASCENDING BY ') !== -1) { queryNoSort = query.split(' SORT ASCENDING BY ')[0]; }
+		if (query.includes('SORT')) {
+			if (query.includes(' SORT BY ')) { queryNoSort = query.split(' SORT BY ')[0]; }
+			else if (query.includes(' SORT DESCENDING BY ')) { queryNoSort = query.split(' SORT DESCENDING BY ')[0]; }
+			else if (query.includes(' SORT ASCENDING BY ')) { queryNoSort = query.split(' SORT ASCENDING BY ')[0]; }
 		}
 		return queryNoSort;
 	};

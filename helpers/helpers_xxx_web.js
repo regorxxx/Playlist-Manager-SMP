@@ -1,10 +1,10 @@
 ﻿'use strict';
-//28/10/24
+//25/11/24
 
 /* exported downloadText, paginatedFetch, abortWebRequests */
 
 function downloadText(URL) {
-	return URL.indexOf('http://') !== -1 || URL.indexOf('https://') !== -1
+	return URL.includes('http://') || URL.includes('https://')
 		? send({ method: 'GET', URL, bypassCache: true })
 		: Promise.reject(new Error('Input is not a link.'));
 }
@@ -19,10 +19,10 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 				else {
 					if (type !== null) {
 						const contentType = this.getResponseHeader('Content-Type');
-						if (contentType.indexOf(type) === -1) {
+						if (!contentType.includes(type)) {
 							reject({ status: this.status, responseText: 'Type mismatch: ' + contentType + ' is not ' + type });
 						}
-						resolve(contentType.indexOf('text') !== -1 ? this.responseText : this.response);
+						resolve(contentType.includes('text') ? this.responseText : this.response);
 					}
 					resolve(this.responseText);
 				}

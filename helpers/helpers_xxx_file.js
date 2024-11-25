@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/24
+//25/11/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
@@ -92,7 +92,7 @@ function _hasRecycleBin(drive) {
 }
 
 function _isNetwork(drive) {
-	return mappedDrives.indexOf(drive.toLowerCase()) === -1;
+	return !mappedDrives.includes(drive.toLowerCase());
 }
 
 function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which is only usable on _explorer()
@@ -501,16 +501,16 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	else if (extension === '.m3u' && plsText.length >= 2 && plsText[1].startsWith('#EXTENC:')) {
 		const codepageName = plsText[1].split(':').pop();
 		if (codepageName) { codepage = convertCharsetToCodepage(codepageName); }
-	} else if ((extension === '.xspf' || extension === '.asx' || extension === '.xsp') && plsText.length >= 2 && plsText[0].indexOf('encoding=') !== -1) {
+	} else if ((extension === '.xspf' || extension === '.asx' || extension === '.xsp') && plsText.length >= 2 && plsText[0].includes('encoding=')) {
 		const codepageName = plsText[0].match(/encoding="(\S*)"/).pop();
 		if (codepageName) { codepage = convertCharsetToCodepage(codepageName); }
 	} else if (bAdvancedCheck) {
 		if (plsText.length && plsText.some((line) => {
 			line = line.toLowerCase();
-			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1);
+			return (line.includes('ã©') || line.includes('ã¨') || line.includes('ã¼') || line.includes('ãº'));
 		})) {
 			codepage = utf8;
-		} else if (plsText.length && plsText.some((line) => { line = line.toLowerCase(); return (line.indexOf('�') !== -1); })) {
+		} else if (plsText.length && plsText.some((line) => { line = line.toLowerCase(); return (line.includes('�')); })) {
 			codepage = systemCodePage;
 		}
 	}
@@ -521,7 +521,7 @@ function findRecursivePaths(path = fb.ProfilePath) {
 	let arr = [], pathArr = [];
 	arr = utils.Glob(path + '*.*', 0x00000020); // Directory
 	arr.forEach((subPath) => {
-		if (subPath.indexOf('\\..') !== -1 || subPath.indexOf('\\.') !== -1) { return; }
+		if (subPath.includes('\\..') || subPath.includes('\\.')) { return; }
 		if (subPath === path) { return; }
 		pathArr.push(subPath);
 		pathArr = pathArr.concat(findRecursivePaths(subPath + '\\'));

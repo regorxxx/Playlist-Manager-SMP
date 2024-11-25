@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/24
+//25/11/24
 
 /* exported _menu, _attachedMenu */
 
@@ -66,8 +66,8 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		if (entry !== null) {
 			const type = typeof entry;
 			if (type !== 'undefined') {
-				if (eTypeToStr.indexOf(type) !== -1) { entry = entry.toString(); }
-				if (type === 'string' && entry.indexOf('&') !== - 1) { entry = entry.replace(/&&/g, '&').replace(/&/g, '&&'); }
+				if (eTypeToStr.includes(type)) { entry = entry.toString(); }
+				if (type === 'string' && entry.includes('&')) { entry = entry.replace(/&&/g, '&').replace(/&/g, '&&'); }
 			}
 		}
 		return entry;
@@ -396,7 +396,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @returns {{entryText:string, condFunc:function}}
 	 */
 	this.newCondEntry = ({ entryText = '', condFunc }) => {
-		if (eTypeToStr.indexOf(typeof entryText) !== -1) { entryText = entryText.toString(); }
+		if (eTypeToStr.includes(typeof entryText)) { entryText = entryText.toString(); }
 		entryArr.push({ entryText, condFunc });
 		return entryArr[entryArr.length - 1];
 	};
@@ -445,11 +445,11 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			// Safe-checks
 			const eType = typeof entryText, mType = typeof menuName;
 			if (mType === 'undefined') { menuError({ 'function': 'addToMenu\n', menuName, entryText, flags }); throwError('menuName is not defined'); }
-			else if (eTypeToStr.indexOf(mType) !== -1) { menuName = menuName.toString(); }
+			else if (eTypeToStr.includes(mType)) { menuName = menuName.toString(); }
 			else if (mType === 'function') { menuName = menuName.name; }
 			else if (mType !== 'string') { menuError({ 'function': 'addToMenu\n', menuName, entryText, flags }); throwError('menuName type is not recognized'); }
 			if (eType === 'undefined') { menuError({ 'function': 'addToMenu\n', menuName, entryText, flags }); throwError('entryText is not defined!'); }
-			else if (eTypeToStr.indexOf(eType) !== -1) { entryText = entryText.toString(); }
+			else if (eTypeToStr.includes(eType)) { entryText = entryText.toString(); }
 			else if (eType === 'function') { entryText = entryText.name; }
 			else if (eType !== 'string') { menuError({ 'function': 'addToMenu\n', menuName, entryText, flags }); throwError('entryText type is not recognized'); }
 			// Cut len
@@ -473,7 +473,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			// Add to index
 			const entryName = (menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText);
 			entryMap.set(entryName, idx);
-			if (entryName.indexOf('\t') !== -1) {
+			if (entryName.includes('\t')) {
 				const entryNameNoTabs = entryName.split('\t')[0];
 				entryMap.set(entryNameNoTabs, idx);
 				entryMapInverted.set(idx, entryNameNoTabs);

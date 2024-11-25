@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/24
+//25/11/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -1040,19 +1040,25 @@ if (!list.properties.bSetup[1]) {
 					break;
 				}
 				case 'load playlist (mult)': {
-					const idx = list.dataAll.map((pls, i) => { return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1); }).filter((idx) => { return idx !== -1; });
-					idx.forEach((i) => { list.loadPlaylistOrShow(i, true); });
+					const idx = list.dataAll
+						.map((pls, i) => (pls.tags.includes('bMultMenu') ? i : -1))
+						.filter((idx) => idx !== -1);
+					idx.forEach((i) => list.loadPlaylistOrShow(i, true));
 					bDone = true;
 					break;
 				}
 				case 'clone in ui (mult)': {
-					const idx = list.dataAll.map((pls, i) => { return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1); }).filter((idx) => { return idx !== -1; });
-					idx.forEach((i) => { clonePlaylistInUI(list, i, true); });
+					const idx = list.dataAll
+						.map((pls, i) => (pls.tags.includes('bMultMenu') ? i : -1))
+						.filter((idx) => idx !== -1);
+					idx.forEach((i) => clonePlaylistInUI(list, i, true));
 					bDone = true;
 					break;
 				}
 				case 'export convert (mult)': {
-					const idx = list.dataAll.map((pls, i) => { return (pls.tags.indexOf('bMultMenu') !== -1 ? i : -1); }).filter((idx) => { return idx !== -1; });
+					const idx = list.dataAll
+						.map((pls, i) => (pls.tags.includes('bMultMenu') ? i : -1))
+						.filter((idx) => idx !== -1);
 					idx.forEach((i) => {
 						const pls = list.dataAll[i];
 						const preset = menu.arg;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//25/11/24
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
@@ -199,7 +199,7 @@ function checkProperty(property, withValue) {
 	if (Object.hasOwn(checks, 'greaterEq') && valToCheck < checks['greaterEq']) {
 		bPass = false; report += 'Value must be greater than or equal to' + checks['greaterEQ'] + '\n';
 	}
-	if (Object.hasOwn(checks, 'eq') && checks['eq'].indexOf(valToCheck) === -1) {
+	if (Object.hasOwn(checks, 'eq') && !checks['eq'].includes(valToCheck)) {
 		bPass = false; report += 'Value must be equal to (any) ' + checks['eq'].join(', ') + '\n';
 	}
 	if (Object.hasOwn(checks, 'range') && !checks['range'].some((pair) => (valToCheck >= pair[0] && valToCheck <= pair[1]))) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/24
+//25/11/24
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -171,7 +171,7 @@ listenBrainz.joinArtistMBIDs = async function joinArtistMBIDs(artists, MBIds, to
 				? artists.map((artist) => {
 					const obj = { artist, mbids: [] };
 					results.forEach((result) => {
-						if (result.artists.indexOf(artist) !== -1) {
+						if (result.artists.includes(artist)) {
 							obj.mbids.push(result.mbid);
 						}
 					});
@@ -671,7 +671,7 @@ listenBrainz.lookupRecordingInfo = function lookupRecordingInfo(handleList, info
 			infoNames.forEach((tag) => { info[tag] = new Array(count).fill(''); });
 			if (resolve.length) {
 				infoNames.forEach((tag) => {
-					if (allInfo.indexOf(tag) !== -1) {
+					if (allInfo.includes(tag)) {
 						resolve.forEach((obj) => { info[tag][obj.index] = obj[tag]; });
 					}
 				});
@@ -768,7 +768,7 @@ listenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
 			infoNames.forEach((tag) => { info[tag] = new Array(count).fill(''); });
 			if (resolve.length) {
 				infoNames.forEach((tag) => {
-					if (allInfo.indexOf(tag) !== -1) {
+					if (allInfo.includes(tag)) {
 						resolve.forEach((obj, i) => {
 							info[tag][i] = obj[tag];
 						});
@@ -1276,7 +1276,7 @@ listenBrainz.followUser = function followUser(userToFollow, token) {
 				if (bDone && this.cache.user.has(token)) {
 					const user = this.cache.user.get(token);
 					const following = this.cache.following.get(user) || [];
-					if (following.indexOf(userToFollow) === -1) {
+					if (!following.includes(userToFollow)) {
 						following.push(userToFollow);
 						this.cache.following.set(user, following);
 					}
@@ -1319,7 +1319,7 @@ listenBrainz.retrieveFollowing = function retrieveFollowing(user, token) {
 listenBrainz.isFollowing = function isFollowing(token, toUser) {
 	const user = this.cache.user.get(token);
 	const following = user ? this.cache.following.get(user) || [] : [];
-	return following.indexOf(toUser) !== -1;
+	return following.includes(toUser);
 };
 
 /*

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/10/24
+//25/11/24
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -364,7 +364,7 @@ function _gdiFont(name, size, style) {
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}
-	if (fonts[id].Name !== name && fonts.notFound.indexOf(name) === -1) { // Display once per session, otherwise it floods the console with the same message...
+	if (fonts[id].Name !== name && !fonts.notFound.includes(name)) { // Display once per session, otherwise it floods the console with the same message...
 		fonts.notFound.push(name);
 		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install dependency found at (a restart is required):\n' + folders.xxx + '_resources', window.Name);
 		console.log('Missing font: ' + name);

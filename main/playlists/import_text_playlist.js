@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/24
+//25/11/24
 
 /* exported ImportTextPlaylist */
 
@@ -209,7 +209,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				formatMask.forEach((mask, index) => {
 					if (mask.length) { // It's a string to extract
 						const nextIdx = line.indexOf(mask, prevIdx);
-						if (mask.indexOf('%') === -1) { // It's breakpoint
+						if (!mask.includes('%')) { // It's breakpoint
 							if (nextIdx !== -1 && bPrevTag) { breakPoint.push(nextIdx); }
 							bPrevTag = false;
 						} else if (index === 0) { // Or fist value is a tag, so extract from start
@@ -230,7 +230,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 					let idx = 0;
 					formatMask.forEach((tag) => {
 						if (tag.length) { // It's a string to extract
-							if (tag.indexOf('%') !== -1) { // It's a tag to extract
+							if (tag.includes('%')) { // It's a tag to extract
 								lineTags[tag.replace(/%/g, '').toLowerCase()] = line.slice(breakPoint[idx], breakPoint[idx + 1]).toLowerCase();
 								idx += 2;
 							}
@@ -284,7 +284,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 							extraQuery.push(key + ' IS the ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
 							extraQuery.push('"$stricmp($ascii(%' + key + '%),$ascii(the ' + handleTags[key] + '))" IS 1');
 						} else if (key === 'title') {
-							if (handleTags[key].indexOf(',') !== -1) {
+							if (handleTags[key].includes(',')) {
 								const val = handleTags[key].replace(/,/g, '');
 								extraQuery.push(key + ' IS ' + val);
 								extraQuery.push('"$stricmp($ascii(%' + key + '%),$ascii(' + val + '))" IS 1');

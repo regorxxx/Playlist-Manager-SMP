@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/11/24
+//25/11/24
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -610,7 +610,7 @@ function filterTooltip() {
 			const options = list.categories();
 			const defOpt = options[0];
 			const iInherit = (list.categoryState.length === 1 && list.categoryState[0] !== defOpt ? options.indexOf(list.categoryState[0]) : -1);
-			ttText = 'Cycle through the different categories:\n' + options.map((item, i) => { return item + (list.categoryState.indexOf(item) !== -1 ? '  <--' + (i === iInherit ? '\t-inherit-' : '') : ''); }).join('\n');
+			ttText = 'Cycle through the different categories:\n' + options.map((item, i) => item + (list.categoryState.includes(item) ? '  <--' + (i === iInherit ? '\t-inherit-' : '') : '')).join('\n');
 			break;
 		}
 		case 'Extension': {
@@ -635,8 +635,8 @@ function filterTooltip() {
 		case 'Tag': {
 			const options = list.tags();
 			const defOpt = options[0];
-			const bInherit = list.tagState.indexOf(defOpt) === -1;
-			ttText = 'Cycle through the different tags:\n' + list.tags().map((item, i) => { return item + (list.tagState.indexOf(item) !== -1 ? '  <--' + (bInherit && i !== 0 ? '\t-inherit-' : '') : ''); }).join('\n');
+			const bInherit = !list.tagState.includes(defOpt);
+			ttText = 'Cycle through the different tags:\n' + list.tags().map((item, i) => item + (list.tagState.includes(item) ? '  <--' + (bInherit && i !== 0 ? '\t-inherit-' : '') : '')).join('\n');
 			break;
 		}
 	}

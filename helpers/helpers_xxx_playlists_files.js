@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/11/24
+//25/11/24
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -381,13 +381,13 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			});
 			trackText = [...newTrackText, ...trackText];
 			// Update size
-			let idx = originalText.findIndex((line) => { return line.indexOf('<meta rel="playlistSize">') !== -1; });
+			let idx = originalText.findIndex((line) => line.includes('<meta rel="playlistSize">'));
 			if (idx !== -1) {
 				const size = Number(originalText[idx].replace('<meta rel="playlistSize">', '').replace('</meta>', '').trim()) + addSize;
 				originalText[idx] = '	<meta rel="playlistSize">' + size + '</meta>';
 			}
 			// Update duration
-			idx = originalText.findIndex((line) => { return line.indexOf('<meta rel="duration">') !== -1; });
+			idx = originalText.findIndex((line) => line.includes('<meta rel="duration">'));
 			if (idx !== -1) {
 				const size = Number(originalText[idx].replace('<meta rel="duration">', '').replace('</meta>', '').trim()) + Math.round(addDuration);
 				originalText[idx] = '	<meta rel="duration">' + size + '</meta>';

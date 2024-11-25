@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/10/24
+//25/11/24
 
 /* exported clone, getNested, setNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
@@ -190,7 +190,7 @@ const throttle = (fn, delay, immediate = false, parent = this) => {
 const doOnceCache = [];
 const doOnce = (task, fn) => {
 	return (...args) => {
-		if (doOnceCache.indexOf(task) === -1) {
+		if (!doOnceCache.includes(task)) {
 			doOnceCache.push(task);
 			return fn(...args);
 		}

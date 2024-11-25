@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/24
+//25/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -204,7 +204,7 @@ function createMenuLeft(forcedIndex = -1) {
 						let newQuery = '';
 						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (pls.extension === '.xsp' ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
 						catch (e) { return; }
-						const bPlaylist = newQuery.indexOf('#PLAYLIST# IS') !== -1;
+						const bPlaylist = newQuery.includes('#PLAYLIST# IS');
 						if (!bPlaylist && !checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
 						if (pls.extension === '.xsp') {
 							const { rules } = XSP.getRules(newQuery);
@@ -356,12 +356,12 @@ function createMenuLeft(forcedIndex = -1) {
 							menuName, entryText: tag, func: () => {
 								let tags;
 								if (i === 0) { tags = []; }
-								else if (pls.tags.indexOf(tag) !== -1) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
+								else if (pls.tags.includes(tag)) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
 								else { tags = [...pls.tags, tag]; }
 								setTag(tags, list, z);
 							}, bAddInvisibleIds
 						});
-						menu.newCheckMenuLast(() => (i ? pls.tags.indexOf(tag) !== -1 : pls.tags.length === 0));
+						menu.newCheckMenuLast(() => (i ? pls.tags.includes(tag) : pls.tags.length === 0));
 					});
 				}
 				// Adds track tag(s)
@@ -543,7 +543,7 @@ function createMenuLeft(forcedIndex = -1) {
 							if (!playlist_mbid || typeof playlist_mbid !== 'string' || !playlist_mbid.length) { lb.consoleError('Playlist was not exported.'); return; }
 							if (list.properties.bSpotify[1]) {
 								lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
-									if (services.indexOf('spotify') !== -1) {
+									if (services.includes('spotify')) {
 										console.log('Exporting playlist to Spotify: ' + pls.name);
 										lb.exportPlaylistToService({ playlist_mbid }, 'spotify', token);
 									}
@@ -1273,7 +1273,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 							const pls = playlists[j];
 							if (!isLockPls(pls) && isPlsEditable(pls)) {
 								if (i === 0) { tags = []; }
-								else if (pls.tags.indexOf(tag) !== -1) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
+								else if (pls.tags.includes(tag)) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
 								else { tags = [...pls.tags, tag]; }
 								setTag(tags, list, z);
 							}
@@ -2437,7 +2437,7 @@ function createMenuRightTop() {
 				list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
 				list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 				// Tracking network drive?
-				if (mappedDrives.indexOf(list.playlistsPath.match(/^(.+?:)/g)[0]) !== -1) {
+				if (mappedDrives.includes(list.playlistsPath.match(/^(.+?:)/g)[0])) {
 					if (!list.properties['bNetworkPopup'][1]) { list.properties['bNetworkPopup'][1] = true; }
 					const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 					const readme = _open(file, utf8);
@@ -2489,12 +2489,12 @@ function createMenuRightTop() {
 						if (utils.IsKeyPressed(VK_SHIFT)) {
 							categoryState = [item];
 						} else {
-							categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
+							categoryState = list.categoryState.includes(item) ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
 						}
 						list.filter({ categoryState });
 					}
 				});
-				menu.newCheckMenuLast(() => list.categoryState.indexOf(item) !== -1);
+				menu.newCheckMenuLast(() => list.categoryState.includes(item));
 			});
 		}
 		if (showMenus['Tags']) {	// Tag Filter
@@ -2509,9 +2509,9 @@ function createMenuRightTop() {
 				}
 			});
 			menu.newSeparator(subMenuName);
-			const bDef = list.tagState.indexOf(defOpt) !== -1;
+			const bDef = list.tagState.includes(defOpt);
 			options.forEach((item, i) => {
-				const bInherit = !bDef && list.tagState.indexOf(item) !== -1;
+				const bInherit = !bDef && list.tagState.includes(item);
 				const count = list.data.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(item)) ? total + 1 : total); }, 0);
 				menu.newEntry({
 					menuName: subMenuName, entryText: item + '\t' + (bInherit && i !== 0 ? '-inherit- ' : '') + _b(count), func: () => {
@@ -2520,12 +2520,12 @@ function createMenuRightTop() {
 						if (utils.IsKeyPressed(VK_SHIFT)) {
 							tagState = [item];
 						} else {
-							tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
+							tagState = list.tagState.includes(item) ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
 						}
 						list.filter({ tagState });
 					}
 				});
-				menu.newCheckMenuLast(() => list.tagState.indexOf(item) !== -1);
+				menu.newCheckMenuLast(() => list.tagState.includes(item));
 			});
 		}
 		if (showMenus['Category'] || showMenus['Tags']) { menu.newSeparator(); }
@@ -4039,7 +4039,7 @@ function createMenuRightTop() {
 							}
 						});
 					});
-					if (options.indexOf(key) !== -1) { menu.newCheckMenuLast(() => options.indexOf(key), options.length); }
+					if (options.includes(key)) { menu.newCheckMenuLast(() => options.indexOf(key), options.length); }
 				}
 				{	// Size
 					const options = ['normal', 'small', 'title'];
@@ -4262,7 +4262,7 @@ function createMenuRightTop() {
 							subElement.enabled = !subElement.enabled;
 							list.properties.uiElements[1] = JSON.stringify(list.uiElements);
 							overwriteProperties(list.properties);
-							const bReload = ['Scrollbar'].indexOf(key) !== -1;
+							const bReload = ['Scrollbar'].includes(key);
 							list.updateUIElements(bReload);
 						}
 					});
@@ -4833,7 +4833,7 @@ function createMenuRightTop() {
 						const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
 						if (token) {
 							lb.retrieveUser(token).then((user) => listenBrainz.getUserServices(user, token)).then((services) => {
-								if (services.indexOf('spotify') === -1) {
+								if (!services.includes('spotify')) {
 									fb.ShowPopupMessage('Spotify\'s service is not connected.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
 								}
 							});
@@ -5372,12 +5372,12 @@ function createMenuFilterSorting() {
 					if (utils.IsKeyPressed(VK_SHIFT)) {
 						categoryState = [item];
 					} else {
-						categoryState = list.categoryState.indexOf(item) !== -1 ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
+						categoryState = list.categoryState.includes(item) ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
 					}
 					list.filter({ categoryState });
 				}
 			});
-			menu.newCheckMenuLast(() => list.categoryState.indexOf(item) !== -1);
+			menu.newCheckMenuLast(() => list.categoryState.includes(item));
 		});
 	}
 	if (showMenus['Tags']) {	// Tag Filter
@@ -5392,9 +5392,9 @@ function createMenuFilterSorting() {
 			}
 		});
 		menu.newSeparator(subMenuName);
-		const bDef = list.tagState.indexOf(defOpt) !== -1;
+		const bDef = list.tagState.includes(defOpt);
 		options.forEach((item, i) => {
-			const bInherit = !bDef && list.tagState.indexOf(item) !== -1;
+			const bInherit = !bDef && list.tagState.includes(item);
 			const count = list.data.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(item)) ? total + 1 : total); }, 0);
 			menu.newEntry({
 				menuName: subMenuName, entryText: item + '\t' + (bInherit && i !== 0 ? '-inherit- ' : '') + _b(count), func: () => {
@@ -5403,12 +5403,12 @@ function createMenuFilterSorting() {
 					if (utils.IsKeyPressed(VK_SHIFT)) {
 						tagState = [item];
 					} else {
-						tagState = list.tagState.indexOf(item) !== -1 ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
+						tagState = list.tagState.includes(item) ? list.tagState.filter((tag) => { return tag !== item; }) : (item === defOpt ? [defOpt, ...list.tagState] : list.tagState.concat([item]).sort());
 					}
 					list.filter({ tagState });
 				}
 			});
-			menu.newCheckMenuLast(() => list.tagState.indexOf(item) !== -1);
+			menu.newCheckMenuLast(() => list.tagState.includes(item));
 		});
 	}
 	menu.newSeparator();
@@ -5528,8 +5528,8 @@ function filterEntries(method) {
 						list.filter({ categoryState: [item] });
 					},
 					entryText: item,
-					tabText: list.categoryState.indexOf(item) !== -1 ? (i === iInherit ? '\t-inherit-' : '') : '',
-					check: list.categoryState.indexOf(item) !== -1,
+					tabText: list.categoryState.includes(item) ? (i === iInherit ? '\t-inherit-' : '') : '',
+					check: list.categoryState.includes(item),
 					flags: MF_STRING
 				});
 			});
@@ -5607,7 +5607,7 @@ function filterEntries(method) {
 		case 'Tag': {
 			const options = list.tags();
 			const defOpt = options[0];
-			const bInherit = list.tagState.indexOf(defOpt) === -1;
+			const bInherit = !list.tagState.includes(defOpt);
 			entries.push({ entryText: 'Cycle through the different tags:', flags: MF_GRAYED });
 			list.tags().map((item, i) => {
 				entries.push({
@@ -5615,8 +5615,8 @@ function filterEntries(method) {
 						list.filter({ tagState: [item] });
 					},
 					entryText: item,
-					tabText: list.tagState.indexOf(item) !== -1 ? (bInherit && i !== 0 ? '\t-inherit-' : '') : '',
-					check: list.tagState.indexOf(item) !== -1,
+					tabText: list.tagState.includes(item) ? (bInherit && i !== 0 ? '\t-inherit-' : '') : '',
+					check: list.tagState.includes(item),
 					flags: MF_STRING
 				});
 			});

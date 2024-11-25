@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//25/11/24
 
 /* exported PlsHistory */
 
@@ -31,7 +31,7 @@ function PlsHistory({ size = 11, bAutoInit = true } = {}) {
 		if (len) {
 			if (len === 1 && idx[0] !== -1) {
 				prevPls = idx[0];
-			} else if (idx.indexOf(this.pls[1].idx) !== -1) {
+			} else if (idx.includes(this.pls[1].idx)) {
 				prevPls = this.pls[1].idx;
 			}
 		}
@@ -112,7 +112,7 @@ function PlsHistory({ size = 11, bAutoInit = true } = {}) {
 							if (idx.length) {
 								if (idx.length === 1 && idx[0] !== -1) {
 									plman.ActivePlaylist = idx[0];
-								} else if (idx.indexOf(pls.idx) !== -1) {
+								} else if (idx.includes(pls.idx)) {
 									plman.ActivePlaylist = pls.idx;
 								}
 							}

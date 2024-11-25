@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/11/24
+//25/11/24
 
 /* exported _chart */
 
@@ -2115,7 +2115,7 @@ function _chart({
 				else {
 					if (Object.hasOwn(colorbrewer, schemeStr)) { return true; }
 					for (let key in colorbrewer) {
-						if (colorbrewer[key].indexOf(this.chroma.scheme) !== -1) { return true; }
+						if (colorbrewer[key].includes(this.chroma.scheme)) { return true; }
 					}
 				}
 				this.chroma.scheme = 'random'; // Use random as default for non valid values

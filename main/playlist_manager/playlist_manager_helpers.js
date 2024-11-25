@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/11/24
+//25/11/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -591,7 +591,7 @@ function rewriteHeader(list, pls) {
 		const codePage = checkCodePage(fileText, pls.extension);
 		if (codePage !== -1) { fileText = _open(pls.path, codePage); if (!fileText.length) { return false; } }
 		fileText = fileText.split(/\r\n|\n\r|\n|\r/);
-		const idx = fileText.findIndex((line) => { return line.indexOf('<trackList>') !== -1; });
+		const idx = fileText.findIndex((line) => line.includes('<trackList>'));
 		if (idx >= 2) {
 			const newHeader = [
 				'	<title>' + pls.name + '</title>',
