@@ -1,7 +1,7 @@
 ﻿'use strict';
-//12/11/24
+//28/11/24
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -116,6 +116,23 @@ function sanitizeTagValIds(val, bSpace = true) {
 }
 
 /**
+ * Creates a query replacing given tag with fallbacks in case they are missing. Currently used only for ALBUM ARTIST multi-value handling
+ *
+ * @function
+ * @name fallbackTagsQuery
+ * @kind function
+ * @param {string} tag
+ * @param {string} value
+ * @param {'IS'|'HAS'} logic
+ * @returns {string}
+ */
+function fallbackTagsQuery(tag, value, logic = 'IS') {
+	return /%?ALBUM ARTIST%?/i.test(tag)
+		? '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST ' + logic + ' ' + value + ')) OR (ALBUM ARTIST MISSING AND (ARTIST ' + logic + ' ' +  value + '))'
+		: tag + ' ' + logic + ' ' + value;
+}
+
+/**
  * Replace #strTF# with current values, where 'strTF' is a TF expression which will be evaluated on handle (or against tags).
  * Use try/catch to test validity of the query output
  *
@@ -132,6 +149,12 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 	options = { expansionBy: 'AND', bToLowerCase: false, bDebug: false, ...options };
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithCurrent(): query is empty'); return ''; }
+	if (handle && handle instanceof FbMetadbHandleList) {
+		const queryArr = [...new Set(
+			handle.Convert().map((h) => queryReplaceWithCurrent(query, h, { bToLowerCase: true }))
+		)].sort((a, b) => a.localeCompare(b));
+		return queryArr.length ? queryJoin(queryArr, 'OR') : '';
+	}
 	// global queries without handle required
 	let bStatic = false;
 	if (/#MONTH#|#YEAR#|#DAY#/g.test(query)) {

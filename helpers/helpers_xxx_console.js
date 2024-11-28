@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/10/24
+//27/11/24
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -111,6 +111,8 @@ console.formatArg = (arg) => {
 							}
 							else if (v instanceof Error) {
 								return 'Error ' + arg.toString().replace(/["\n]/g, '');
+							} else if (typeof v === 'function') {
+								return 'Function ' + v.name || 'anonymous';
 							}
 						}
 						return v;
