@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//28/11/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -854,13 +854,15 @@ function createMenuLeft(forcedIndex = -1) {
 								}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 							});
 						});
-						menu.newSeparator(subMenuName);
-						menu.newEntry({
-							menuName: subMenuName, entryText: '- no folder -', func: () => {
-								list.moveToFolder(pls, null);
-								list.showPlsByObj(pls);
-							}, flags: !pls.inFolder ? MF_GRAYED : MF_STRING
-						});
+						if (pls.inFolder) {
+							menu.newSeparator(subMenuName);
+							menu.newEntry({
+								menuName: subMenuName, entryText: '- no folder -', func: () => {
+									list.moveToFolder(pls, null);
+									list.showPlsByObj(pls);
+								}
+							});
+						}
 						menu.newSeparator(subMenuName);
 					}
 					menu.newEntry({
@@ -1067,13 +1069,15 @@ function createMenuFolder(menu, folder, z) {
 					}, flags: bSameFolder || bChild ? MF_GRAYED : MF_STRING
 				});
 			});
-			menu.newSeparator(subMenuName);
-			menu.newEntry({
-				menuName: subMenuName, entryText: '- no folder -', func: () => {
-					list.moveToFolder(folder, null);
-					list.showPlsByObj(folder);
-				}, flags: !folder.inFolder ? MF_GRAYED : MF_STRING
-			});
+			if (folder.inFolder) {
+				menu.newSeparator(subMenuName);
+				menu.newEntry({
+					menuName: subMenuName, entryText: '- no folder -', func: () => {
+						list.moveToFolder(folder, null);
+						list.showPlsByObj(folder);
+					}
+				});
+			}
 			menu.newSeparator(subMenuName);
 		}
 		menu.newEntry({
@@ -1545,13 +1549,15 @@ function createMenuLeftMult(forcedIndexes = []) {
 							}, flags: bSameFolder || bChild ? MF_GRAYED : MF_STRING
 						});
 					});
-					menu.newSeparator(subMenuName);
-					menu.newEntry({
-						menuName: subMenuName, entryText: '- no folder -', func: () => {
-							list.moveToFolder(playlists, null);
-							list.showPlsByObj(playlists[0]);
-						}, flags: !playlists.some((pls) => pls.inFolder) ? MF_GRAYED : MF_STRING
-					});
+					if (playlists.some((pls) => pls.inFolder)) {
+						menu.newSeparator(subMenuName);
+						menu.newEntry({
+							menuName: subMenuName, entryText: '- no folder -', func: () => {
+								list.moveToFolder(playlists, null);
+								list.showPlsByObj(playlists[0]);
+							}
+						});
+					}
 					menu.newSeparator(subMenuName);
 				}
 				menu.newEntry({
