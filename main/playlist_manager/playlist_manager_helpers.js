@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//03/12/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -1153,7 +1153,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	return bDone;
 }
 
-function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', remDupl = [], bAdvTitle = false, bMultiple = false } = {}) {
+function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '',  playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false } = {}) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
@@ -1167,9 +1167,31 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	const playlistNameExt = playlistName + extension;
 	// Set output
 	let newPath = '';
-	try { newPath = sanitizePath(utils.InputBox(window.ID, 'Current preset: ' + preset + ' --> ' + tf.match(/(.{1,100})/g).join('\n') + '\n\nEnter destination path:\n(root will be copied to clipboard)', window.Name, defPath.length ? defPath + playlistNameExt : list.playlistsPath + 'Export\\' + playlistNameExt, true)); }
-	catch (e) { return bDone; }
+	if (playlistOutPath) {
+		newPath = playlistOutPath;
+	} else {
+		try {
+			newPath = sanitizePath(
+				utils.InputBox(
+					window.ID,
+					'Current preset: ' + preset + ' --> ' + tf.cut(100) + '\n\n\nEnter destination path:\n(root will be copied to clipboard)\n\n#EXPORT#, #PLAYLIST# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.',
+					window.Name,
+					defPath.length
+						? defPath + playlistNameExt
+						: list.playlistsPath + 'Export\\' + playlistNameExt,
+					true
+				)
+			);
+		} catch (e) { return bDone; }
+	}
 	if (!newPath.length) { return bDone; }
+	newPath = sanitizePath(
+		newPath
+			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
+			.replace(/#PLAYLIST#/gi, playlistName)
+			.replace(/#EXT#/gi, extension)
+			.replace(/#PLAYLISTEXT#/gi, playlistNameExt)
+	);
 	// Get tracks
 	// For query playlists, use the UI copy if possible
 	const bUI = pls.extension === '.ui'

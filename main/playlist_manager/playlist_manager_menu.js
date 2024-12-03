@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/11/24
+//03/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -1343,7 +1343,12 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newSeparator(subMenuName);
 			presets.forEach((preset) => {
 				const path = preset.path;
-				let pathName = (path.length ? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1) : '(Folder)');
+				const playlistOutPath = preset.playlistOutPath || '';
+				let pathName = playlistOutPath.length
+					? '(Fixed folder)'
+					: path.length
+						? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
+						: '(Folder)';
 				const dsp = preset.dsp;
 				let dspName = (dsp !== '...' ? dsp : '(DSP)');
 				const tf = preset.tf;
@@ -1370,6 +1375,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 									tf,
 									preset: dsp,
 									defPath: path,
+									playlistOutPath,
 									ext: extension,
 									remDupl, // Include remDupl for XSP playlists
 									bAdvTitle: list.bAdvTitle,
