@@ -1631,7 +1631,11 @@ ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 		for (let condition of conditions) {
 			if (condition.every((tag) => { return lookup.hasOwnProperty(tag); })) { // eslint-disable-line no-prototype-builtins
 				query = condition.map((tag) => { return lookup[tag]; }).join(' AND ');
-				const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(libItems, query) : null);
+				const matches = queryCache.has(query)
+					? queryCache.get(query)
+					: checkQuery(query, true)
+						? fb.GetQueryItems(libItems, query)
+						: null;
 				if (!queryCache.has(query)) { queryCache.set(query, matches); }
 				if (matches && matches.Count) {
 					if (sortTF) { matches.OrderByFormat(sortTF, -1); }
