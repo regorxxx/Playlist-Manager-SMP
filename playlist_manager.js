@@ -49,7 +49,7 @@ include('main\\playlist_manager\\playlist_manager_menu.js');
 include('main\\playlist_manager\\playlist_manager_helpers.js');
 /* global backup:readable, switchLock:readable, clonePlaylistInUI:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable */
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
-/* global listenBrainz:readable */
+/* global ListenBrainz:readable */
 include('main\\playlist_manager\\playlist_manager_statistics.js');
 /* global _listStatistics:readable */
 include('main\\window\\window_xxx_scrollbar.js');
@@ -95,8 +95,8 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 					const lBrainzToken = list.properties.lBrainzToken[1];
 					const bEncrypted = list.properties.lBrainzEncrypt[1];
 					if (lBrainzToken.length && !bEncrypted) {
-						listenBrainz.validateToken(lBrainzToken, true).then((bValid) => { // Omit network errors
-							if (!bValid) { listenBrainz.consoleError('Token can not be validated.'); }
+						ListenBrainz.validateToken(lBrainzToken, true).then((bValid) => { // Omit network errors
+							if (!bValid) { ListenBrainz.consoleError('Token can not be validated.'); }
 						});
 					}
 				}

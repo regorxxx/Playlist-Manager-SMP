@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//03/12/24
 
 /* exported downloadText, paginatedFetch, abortWebRequests */
 
@@ -84,7 +84,17 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 // Send consecutive GET request, incrementing queryParams.offset or queryParams.page
 // Keys are the response object path, which point to an array, to concatenate for the final response
 function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], increment = 1, previousResponse = [] }) {
-	const urlParams = Object.keys(queryParams).length ? '?' + Object.entries(queryParams).map((pair) => pair[0] + '=' + pair[1]).join('&') : '';
+	// ListenBrainz: https://community.metabrainz.org/t/allow-getting-more-user-data-through-the-api/653689/2
+	// Use min_ts as lower limit and break there
+	let min_ts;
+	let paramsArr = Object.entries(queryParams);
+	if (Object.hasOwn(queryParams, 'max_ts') && Object.hasOwn(queryParams, 'min_ts')) {
+		min_ts = queryParams.min_ts;
+		paramsArr = paramsArr.filter((pair) => pair[0] !== 'min_ts');
+	}
+	const urlParams = paramsArr.length
+		? '?' +	 paramsArr.map((pair) => pair[0] + '=' + pair[1]).join('&')
+		: '';
 	return send({ method: 'GET', URL: URL + urlParams, requestHeader, bypassCache: true })
 		.then(
 			(resolve) => {
@@ -99,10 +109,23 @@ function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], incre
 			() => []
 		)
 		.then((newResponse) => {
+			let bBreak = false;
+			const len = newResponse.length;
+			// ListenBrainz: https://community.metabrainz.org/t/allow-getting-more-user-data-through-the-api/653689/2
+			// Use min_ts as lower limit and break there
+			if (min_ts && len) {
+				if (newResponse[len - 1].listened_at <= min_ts) {
+					newResponse = newResponse.filter((listen) => listen.listened_at > min_ts);
+					bBreak = true;
+				}
+			}
 			const response = [...previousResponse, ...newResponse];
-			if (newResponse.length !== 0) {
+			if (len !== 0 && !bBreak) {
+				// Standard pagination
 				if (Object.hasOwn(queryParams, 'offset')) { queryParams.offset += increment; }
 				else if (Object.hasOwn(queryParams, 'page')) { queryParams.page += increment; }
+				// ListenBrainz: https://community.metabrainz.org/t/allow-getting-more-user-data-through-the-api/653689/2
+				else if (Object.hasOwn(queryParams, 'max_ts') && len > 1) { queryParams.max_ts = newResponse[len - 1].listened_at; }
 				return paginatedFetch({ URL, queryParams, requestHeader, keys, increment, previousResponse: response });
 			}
 			return response;

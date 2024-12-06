@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//04/12/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -480,7 +480,7 @@ XSP.getRules = function (querySort) {
 	return { rules, match };
 };
 
-XSP.getRule = function (query) {
+XSP.getRule = function (query) { // NOSONAR
 	/** @type {{operator:string, field:string, value: any[]}|{operator:string, filed:string, value: any[]}[]} */
 	let rule = { operator: '', field: '', value: [] };
 	if (Array.isArray(query)) { rule = query.map((q) => { return this.getRule(q); }); }

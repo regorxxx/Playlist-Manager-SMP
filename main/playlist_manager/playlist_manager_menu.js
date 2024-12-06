@@ -40,7 +40,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('playlist_manager_helpers.js');
 /* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable, findDuplicates:readable, findCircularReferences:readable */
 include('playlist_manager_listenbrainz.js');
-/* global listenBrainz:readable, SimpleCrypto:readable */
+/* global ListenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
 /* global isYouTube:readable, youTube:readable */
 include('..\\playlists\\playlist_revive.js');
@@ -75,7 +75,7 @@ function createMenuLeft(forcedIndex = -1) {
 		return menu;
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
-	const lb = listenBrainz;
+	const lb = ListenBrainz;
 	// Helpers
 	const isPlsActive = (pls) => { return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId; };
 	const isAutoPls = (pls) => { return pls.isAutoPlaylist || pls.query; };
@@ -1117,7 +1117,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
-	const lb = listenBrainz;
+	const lb = ListenBrainz;
 	// Helpers
 	const isPlsLoaded = (pls) => { return plman.FindPlaylist(pls.nameId) !== -1; };
 	const isAutoPls = (pls) => { return pls.isAutoPlaylist || pls.query; };
@@ -1600,7 +1600,7 @@ function createMenuRight() {
 	const menu = menuRbtn;
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
-	const lb = listenBrainz;
+	const lb = ListenBrainz;
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	const sel = fb.GetSelections(1);
@@ -2432,7 +2432,7 @@ function createMenuRightTop() {
 	const menu = menuRbtnTop;
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
-	const lb = listenBrainz;
+	const lb = ListenBrainz;
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
@@ -4861,7 +4861,7 @@ function createMenuRightTop() {
 						fb.ShowPopupMessage('Exporting a playlist to Spotify requires the service to be connected to your user profile, and \'Play music on ListenBrainz\' enabled.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
 						const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
 						if (token) {
-							lb.retrieveUser(token).then((user) => listenBrainz.getUserServices(user, token)).then((services) => {
+							lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
 								if (!services.includes('spotify')) {
 									fb.ShowPopupMessage('Spotify\'s service is not connected.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
 								}
@@ -5514,7 +5514,7 @@ function createMenuFilterSorting() {
 
 async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 	if (!lBrainzToken.length) {
-		const lb = listenBrainz;
+		const lb = ListenBrainz;
 		const encryptToken = '********-****-****-****-************';
 		const currToken = list.properties.lBrainzEncrypt[1] ? encryptToken : list.properties.lBrainzToken[1];
 		try { lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name, currToken, true); }

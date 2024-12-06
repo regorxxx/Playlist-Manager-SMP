@@ -14,7 +14,7 @@ const youTube = {
 	key: new SimpleCrypto('xxx').decrypt('2bb4f0f02b806d21c6845503a2a7217144fd704bc2f5575c321492466bd126bbczJl0PQ45sUqh6aFpWaHzIq4SFOZiZlgCWF6n0TK2Lw1YweE7OU0/OpN358conVS56fcf54cc4120a2f24b985f5e6b496c57c24908b5a0cde72d8bda082efb3ed43')
 };
 
-// Tags object should only contain one value per tag.Multi-valued tags are encoded with '; ' as separator.
+// Tags object should only contain one value per tag. Multi-valued tags are encoded with '; ' as separator.
 youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, creator = '', tags = {}, order = 'relevance' /* relevance | views */, onAccountError = () => { return void (0); } } = {}) {
 	const creatorKey = ['ARTIST', 'artist'].find((key) => Object.hasOwn(tags, key));
 	const id = creator.toLowerCase() + ' ' + title.toLowerCase();
