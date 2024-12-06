@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/12/24
+//06/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -493,6 +493,7 @@ function createMenuLeft(forcedIndex = -1) {
 						let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 						const extensionName = extension.length ? '[' + extension + ']' : '';
+						const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
 						if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
 						if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
 						if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
@@ -513,7 +514,8 @@ function createMenuLeft(forcedIndex = -1) {
 									ext: extension,
 									remDupl, // Include remDupl for XSP playlists
 									bAdvTitle: list.bAdvTitle,
-									bMultiple: list.bMultiple
+									bMultiple: list.bMultiple,
+									bExtendedM3U
 								});
 							}, flags
 						});
@@ -1355,6 +1357,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 				const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 				const extensionName = extension.length ? '[' + extension + ']' : '';
+				const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
 				if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
 				if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
 				if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
@@ -1379,7 +1382,8 @@ function createMenuLeftMult(forcedIndexes = []) {
 									ext: extension,
 									remDupl, // Include remDupl for XSP playlists
 									bAdvTitle: list.bAdvTitle,
-									bMultiple: list.bMultiple
+									bMultiple: list.bMultiple,
+									bExtendedM3U
 								});
 							}
 						});
@@ -3266,6 +3270,19 @@ function createMenuRightTop() {
 							});
 						});
 						menu.newCheckMenuLast(() => options.indexOf(preset.extension || ''), options.length);
+						if (extension === '.m3u8' || extension === '.m3u') {
+							const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
+							menu.newSeparator(subMenuNameThree);
+							menu.newEntry({
+								menuName: subMenuNameThree, entryText: 'Extended M3U', func: () => {
+									preset.bExtendedM3U = !bExtendedM3U;
+									list.properties['converterPreset'][1] = JSON.stringify(presets);
+									overwriteProperties(list.properties);
+									if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+								}
+							});
+							menu.newCheckMenuLast(() => bExtendedM3U);
+						}
 					}
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {

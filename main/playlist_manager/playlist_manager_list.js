@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/11/24
+//03/12/24
 
 /* exported _list */
 
@@ -37,6 +37,15 @@ include('playlist_manager_panel.js');
 include('playlist_manager_helpers.js');
 /* global _getClipboardData:readable */
 
+/**
+ * Playlist Manager
+ * @name _list
+ * @constructor
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ */
 function _list(x, y, w, h) {
 	const bDebug = false;
 	// Pls Keys

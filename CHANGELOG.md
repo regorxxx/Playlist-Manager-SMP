@@ -71,6 +71,7 @@
 - Statistics: Y-Axis filter at display menu now allows any custom value for 'greater than'/'lower than' filters.
 - Statistics: option to filter data between 2 custom values on Y-Axis at display menu.
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
+- Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
 - Instances manager: simplified the way multiple panels are handled (and library cache shared); it should work better now, without the need for an external file. Old method may also be used if new one gives problems on startup (see below).
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to choose the instances manager used. By default is now set to 'v1' (see above).

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//06/12/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -47,7 +47,7 @@ include('main\\playlist_manager\\playlist_manager_buttons.js');
 include('main\\playlist_manager\\playlist_manager_menu.js');
 /* global createMenuRightTop:readable, createMenuRight:readable */
 include('main\\playlist_manager\\playlist_manager_helpers.js');
-/* global backup:readable, switchLock:readable, clonePlaylistInUI:readable, exportPlaylistFileWithTracksConvert:readable,exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable */
+/* global backup:readable, switchLock:readable, clonePlaylistInUI:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable */
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global listenBrainz:readable */
 include('main\\playlist_manager\\playlist_manager_statistics.js');
@@ -150,12 +150,12 @@ let properties = {
 	converterPreset: ['Converter Preset list', JSON.stringify([
 		{ name: '', dsp: '...', tf: '.\\%FILENAME%.mp3', path: '', playlistOutPath: '', extension: '' }, // Export all at same folder
 		{ name: '', dsp: '...', tf: '.\\' + _t(globTags.artist) + '\\%ALBUM%\\%TRACK% - %TITLE%.mp3', path: '', playlistOutPath: '', extension: '' }, // Transfer library
-		{ name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', playlistOutPath: '', extension: '.m3u' }, // Kodi-like library
-		{ name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%album%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u' }, // Kodi-like library
-		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on different folder than music
-		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on same root than music (without a folder)
-		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8' }, // Foobar2000 mobile, playlists on same folder than music
-		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\$trim($replace($ascii($replace($if($meta_test(ALBUM ARTIST),$meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,-)\\$replace(%ALBUM%,\\,-)\\%TRACK% - $replace(%TITLE%,\\,-)),:,, ?\\,,?,,¿,,/,-,\'$\',,\'%\',,# ,,#,,*,,!,,¡,,|,-,",\'\'\'\',<,,>,,^,,... ,,...,)).mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8' } // FiiO music
+		{ name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', playlistOutPath: '', extension: '.m3u', bExtendedM3U: true }, // Kodi-like library
+		{ name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%album%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u', bExtendedM3U: true }, // Kodi-like library
+		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on different folder than music
+		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same root than music (without a folder)
+		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same folder than music
+		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\$trim($replace($ascii($replace($if($meta_test(ALBUM ARTIST),$meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,-)\\$replace(%ALBUM%,\\,-)\\%TRACK% - $replace(%TITLE%,\\,-)),:,, ?\\,,?,,¿,,/,-,\'$\',,\'%\',,# ,,#,,*,,!,,¡,,|,-,",\'\'\'\',<,,>,,^,,... ,,...,)).mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8', bExtendedM3U: false } // FiiO music
 	])],
 	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }, true],
 	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }, false],
@@ -1065,6 +1065,7 @@ if (!list.properties.bSetup[1]) {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls)
 							? list.removeDuplicatesAutoPls
 							: [];
+						const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
 						const exportFunc = pls.isAutoPlaylist
 							? exportAutoPlaylistFileWithTracksConvert
 							: exportPlaylistFileWithTracksConvert;
@@ -1076,7 +1077,8 @@ if (!list.properties.bSetup[1]) {
 							ext: preset.extension,
 							remDupl, // Include remDupl for XSP playlists
 							bAdvTitle: list.bAdvTitle,
-							bMultiple: list.bMultiple
+							bMultiple: list.bMultiple,
+							bExtendedM3U
 						});
 					});
 					bDone = true;

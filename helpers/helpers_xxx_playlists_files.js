@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//06/12/24
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -81,7 +81,7 @@ const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($
 //		... (set rules) ...
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
-function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false }) {
+function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false, bExtendedM3U = true }) {
 	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) {
 		console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', handleList === false'));
 		return false;
@@ -101,43 +101,54 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
 		// -------------- m3u
 		if (extension === '.m3u8' || extension === '.m3u') {
-			// Header text
-			playlistText.push('#EXTM3U');
-			playlistText.push('#EXTENC:UTF-8');
-			playlistText.push('#PLAYLIST:' + playlistName);
-			if (!UUID) { UUID = useUUID ? nextId(useUUID) : ''; } // May be visible or invisible chars!
-			playlistText.push('#UUID:' + UUID);
-			playlistText.push('#LOCKED:' + bLocked);
-			playlistText.push('#CATEGORY:' + category);
-			playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
-			playlistText.push('#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''));
-			playlistText.push('#PLAYLISTSIZE:');
-			playlistText.push('#DURATION:');
-			playlistText.push('#PLAYLIST_MBID:' + playlist_mbid);
-			playlistText.push('#AUTHOR:' + author);
-			playlistText.push('#DESCRIPTION:' + description);
+			if (bExtendedM3U) {
+				// Header text
+				playlistText.push('#EXTM3U');
+				playlistText.push('#EXTENC:UTF-8');
+				playlistText.push('#PLAYLIST:' + playlistName);
+				if (!UUID) { UUID = useUUID ? nextId(useUUID) : ''; } // May be visible or invisible chars!
+				playlistText.push('#UUID:' + UUID);
+				playlistText.push('#LOCKED:' + bLocked);
+				playlistText.push('#CATEGORY:' + category);
+				playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
+				playlistText.push('#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''));
+				playlistText.push('#PLAYLISTSIZE:');
+				playlistText.push('#DURATION:');
+				playlistText.push('#PLAYLIST_MBID:' + playlist_mbid);
+				playlistText.push('#AUTHOR:' + author);
+				playlistText.push('#DESCRIPTION:' + description);
+			}
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
 				let trackText = [];
-				const tfo = fb.TitleFormat('#EXTINF:%_LENGTH_SECONDS%\',\'%ARTIST% - %TITLE%$crlf()' + pathTF);
+				const tfo = bExtendedM3U
+					? fb.TitleFormat('#EXTINF:%_LENGTH_SECONDS%\',\'%ARTIST% - %TITLE%$crlf()' + pathTF)
+					: fb.TitleFormat(pathTF);
 				trackText = tfo.EvalWithMetadbs(handleList);
-				if (relPath.length) { // Relative path conversion
-					let trackPath = '';
-					let trackInfo = '';
-					trackText = trackText.map((item) => {
-						[trackInfo, trackPath] = item.split(/\r\n|\n\r|\n|\r/);
-						trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
-						return trackInfo + '\n' + trackPath;
-					});
+				if (bExtendedM3U) {
+					if (relPath.length) { // Relative path conversion
+						let trackPath = '';
+						let trackInfo = '';
+						trackText = trackText.map((item) => {
+							[trackInfo, trackPath] = item.split(/\r\n|\n\r|\n|\r/);
+							trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
+							return trackInfo + '\r\n' + trackPath;
+						});
+					}
+					playlistText[8] += itemsCount.toString(); // Add number of tracks to size
+					playlistText[9] += handleList.CalcTotalDuration(); // Add time to duration
+					playlistText = playlistText.concat(trackText);
+				} else {
+					if (relPath.length) { // Relative path conversion
+						trackText = trackText.map((item) => _isLink(item) ? item : getRelPath(item, relPathSplit));
+					}
+					playlistText = playlistText.concat(trackText);
 				}
-				playlistText[8] += itemsCount.toString(); // Add number of tracks to size
-				playlistText[9] += handleList.CalcTotalDuration(); // Add time to duration
-				playlistText = playlistText.concat(trackText);
-			} else { //  Else empty playlist
+			} else if (bExtendedM3U) { //  Else empty playlist
 				playlistText[8] += '0'; // Add number of tracks to size
 				playlistText[9] += '0'; // Add time to duration
 			}
-			// ---------------- PLS
+		// ---------------- PLS
 		} else if (extension === '.pls') { // The standard doesn't allow comments... so no UUID here.
 			// Header text
 			playlistText.push('[playlist]');
@@ -153,7 +164,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					trackText = trackText.map((item) => {
 						[trackPath, ...trackInfo] = item.split(/\r\n|\n\r|\n|\r/);
 						trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
-						return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
+						return trackInfoPre + trackPath + '\r\n' + trackInfo.join('\r\n');
 					});
 				}
 				//Fix file numbering since foobar2000 doesn't output list index...
@@ -340,7 +351,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				newTrackText = newTrackText.map((item) => {
 					[trackInfo, trackPath] = item.split(/\r\n|\n\r|\n|\r/);
 					trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
-					return trackInfo + '\n' + trackPath;
+					return trackInfo + '\r\n' + trackPath;
 				});
 			}
 			trackText = [...newTrackText, ...trackText];
@@ -356,7 +367,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				newTrackText = newTrackText.map((item) => {
 					[trackPath, ...trackInfo] = item.split(/\r\n|\n\r|\n|\r/);
 					trackPath = _isLink(trackPath) ? trackPath : getRelPath(trackPath, relPathSplit);
-					return trackInfoPre + trackPath + '\n' + trackInfo.join('\n');
+					return trackInfoPre + trackPath + '\r\n' + trackInfo.join('\r\n');
 				});
 			}
 			trackText = [...newTrackText, ...trackText];
