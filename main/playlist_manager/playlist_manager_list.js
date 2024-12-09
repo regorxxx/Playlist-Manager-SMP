@@ -467,7 +467,7 @@ function _list(x, y, w, h) {
 			tooltipText += '\nCreated: ' + new Date(pls.created).toLocaleDateString();
 		}
 		if (showTt.dateModified && !pls.isFolder) {
-			tooltipText += '\nModified:' + new Date(pls.modified).toLocaleDateString();
+			tooltipText += '\nModified: ' + new Date(pls.modified).toLocaleDateString();
 		}
 		// Synced playlists with ListenBrainz
 		if (showTt.mbid && pls.playlist_mbid.length) {
