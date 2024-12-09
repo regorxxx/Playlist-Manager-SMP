@@ -135,7 +135,20 @@ let properties = {
 	bFirstPopupFpl: ['Playlist Manager fpl: Fired once', false, { func: isBoolean }, false],
 	bFirstPopupPls: ['Playlist Manager pls: Fired once', false, { func: isBoolean }, false],
 	categoryState: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowTips: ['Usage text on tooltips.', true, { func: isBoolean }, true],
+	tooltip: ['Tooltip settings', JSON.stringify({
+		bShowTips: true,
+		show: {
+			category: true,
+			dateCreated: false,
+			dateModified: true,
+			duration: true,
+			locks: true,
+			query: true,
+			mbid: true,
+			tags: true,
+			trackSize: true,
+		}
+	})],
 	bAutoLoadTag: ['Automatically add \'bAutoLoad\' to all playlists', false, { func: isBoolean }, false],
 	bAutoLockTag: ['Automatically add \'bAutoLock\' to all playlists', false, { func: isBoolean }, false],
 	bAutoCustomTag: ['Automatically add custom tags to all playlists', false, { func: isBoolean }, false],
@@ -344,20 +357,7 @@ let properties = {
 		autoSize: false,
 		loadPls: false,
 		profile: false,
-	})],
-	tooltip: ['Tooltip settings', JSON.stringify({
-		show: {
-			category: true,
-			dateCreated: false,
-			dateModified: true,
-			duration: true,
-			locks: true,
-			query: true,
-			mbid: true,
-			tags: true,
-			trackSize: true,
-		}
-	})],
+	})]
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);

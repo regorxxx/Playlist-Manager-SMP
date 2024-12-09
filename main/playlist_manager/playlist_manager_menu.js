@@ -4030,7 +4030,6 @@ function createMenuRightTop() {
 		}
 		menu.newSeparator(menuName);
 		{	// Tooltip
-			const config = JSON.parse(list.properties.tooltip[1]);
 			const subMenuName = menu.newMenu('Tooltip', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Tooltip config:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
@@ -4043,27 +4042,27 @@ function createMenuRightTop() {
 				options.forEach((item, i) => {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: item, func: () => {
-							list.bShowTips = (i === 0);
-							list.properties['bShowTips'][1] = list.bShowTips;
+							list.tooltipSettings.bShowTips = (i === 0);
+							list.properties.tooltip[1] = JSON.stringify(list.tooltipSettings);
 							overwriteProperties(list.properties);
 						}
 					});
 				});
-				menu.newCheckMenuLast(() => (list.bShowTips ? 0 : 1), optionsLength);
+				menu.newCheckMenuLast(() => (list.tooltipSettings.bShowTips ? 0 : 1), optionsLength);
 			}
 			menu.newSeparator(subMenuName);
-			Object.keys(config.show).forEach((key) => {
+			Object.keys(list.tooltipSettings.show).forEach((key) => {
 				const entryText = 'Show ' + capitalizeAll(key.split('')
 					.reduce((prev, s) => prev + (s !== s.toLowerCase() ? ' ': '') + s, ''))
 					.replace('Mbid', 'MBID');
 				menu.newEntry({
 					menuName: subMenuName, entryText, func: () => {
-						config.show[key] = !config.show[key];
-						list.properties.tooltip[1] = config;
+						list.tooltipSettings.show[key] = !list.tooltipSettings.show[key];
+						list.properties.tooltip[1] = JSON.stringify(list.tooltipSettings);
 						overwriteProperties(list.properties);
 					}
 				});
-				menu.newCheckMenuLast(() => config.show[key]);
+				menu.newCheckMenuLast(() => list.tooltipSettings.show[key]);
 			});
 		}
 		menu.newSeparator(menuName);

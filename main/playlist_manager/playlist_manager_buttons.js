@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//09/12/24
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -640,7 +640,7 @@ function filterTooltip() {
 			break;
 		}
 	}
-	if (list.bShowTips) {
+	if (list.tooltipSettings.bShowTips) {
 		ttText += '\n-----------------------------------------';
 		ttText += '\n(L. Click to cycle current filter)';
 		ttText += '\n(R. Click to configure filters)';
@@ -651,7 +651,7 @@ function filterTooltip() {
 function sortTooltip() {
 	let ttText = '';
 	ttText = !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';
-	if (list.bShowTips) {
+	if (list.tooltipSettings.bShowTips) {
 		ttText += '\n-----------------------------------------';
 		ttText += '\n(L. Click to invert sorting)';
 		ttText += '\n(R. Click to configure sorting)';

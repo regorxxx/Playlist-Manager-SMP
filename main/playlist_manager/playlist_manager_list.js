@@ -365,7 +365,7 @@ function _list(x, y, w, h) {
 			const lShortcuts = this.getShortcuts('L', 'HEADER');
 			const mShortcuts = this.getShortcuts('M', 'HEADER');
 			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
-			if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
+			if (this.tooltipSettings.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
 				tooltipText += '\n----------------------------------------------';
 			}
 			if (mask === MK_CONTROL) {
@@ -377,7 +377,7 @@ function _list(x, y, w, h) {
 			} else if (mask === MK_SHIFT + MK_CONTROL) {
 				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-			} else if (this.bShowTips || bForceActions) {
+			} else if (this.tooltipSettings.bShowTips || bForceActions) {
 				if (this.modeUI === 'traditional' || bForceActions) {
 					tooltipText += '\n(R. Click for config menus)';
 				}
@@ -491,7 +491,7 @@ function _list(x, y, w, h) {
 				}
 			}
 		});
-		if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
+		if (this.tooltipSettings.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
 			tooltipText += '\n---------------------------------------------------';
 		}
 		if (mask === MK_CONTROL) {
@@ -506,7 +506,7 @@ function _list(x, y, w, h) {
 			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-		} else if (this.bShowTips) { // All Tips
+		} else if (this.tooltipSettings.bShowTips) { // All Tips
 			tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
 			tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
 			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) { tooltipText += '\n(R. Click for other tools / new playlists)'; }
@@ -7451,10 +7451,10 @@ function _list(x, y, w, h) {
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
 	this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
 	// UI
+	this.tooltipSettings = JSON.parse(this.properties['tooltip'][1]);
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bShowSep = this.properties['bShowSep'][1];
 	this.bShowIcons = this.properties['bShowIcons'][1];
-	this.bShowTips = this.properties['bShowTips'][1];
 	this.playlistIcons = JSON.parse(this.properties['playlistIcons'][1]);
 	this.lShortcuts = JSON.parse(this.properties['lShortcuts'][1]);
 	this.mShortcuts = JSON.parse(this.properties['mShortcuts'][1]);
