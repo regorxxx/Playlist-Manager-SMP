@@ -419,21 +419,21 @@ function _list(x, y, w, h) {
 		const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath, '') + ')' : '';
 		const locks = getLocks(pls.nameId);
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
-		const config = JSON.parse(this.properties.tooltip[1]);
+		const showTt = this.tooltipSettings.show;
 		let tooltipText = (pls.isAutoPlaylist ? 'AutoPlaylist' : (pls.extension === '.xsp' ? 'Smart Playlist' : pls.isFolder ? 'Folder' : 'Playlist')) + ': ';
 		tooltipText += pls.nameId + ' - ' + (pls.isFolder ? this.calcColumnVal('size', pls, true) : pls.size) + ' Tracks ' + path;
 		if (!pls.isFolder) {
-			if (config.show.locks) {
+			if (showTt.locks) {
 				tooltipText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
 				tooltipText += locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '') + locks.name.replace('playlist', 'Playlist')) : '';
 				if (showMenus['UI playlist locks']) {
 					tooltipText += locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
 				}
 			}
-			if (showMenus['Category'] && config.show.category) {
+			if (showMenus['Category'] && showTt.category) {
 				tooltipText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
 			}
-			if (showMenus['Tags'] && config.show.tags) {
+			if (showMenus['Tags'] && showTt.tags) {
 				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
 				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => { return Object.keys(_)[0]; }).join(', ') : '-');
 			}
@@ -442,7 +442,7 @@ function _list(x, y, w, h) {
 			const totalCurrentView = pls.pls.lengthFilteredDeep;
 			tooltipText += '\n' + 'Childs: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
 		}
-		if (config.show.duration) {
+		if (showTt.duration) {
 			tooltipText += '\n' + 'Duration: ' + (pls.isFolder
 				? utils.FormatDuration(this.calcColumnVal('duration', pls, true))
 				: pls.duration !== -1
@@ -450,7 +450,7 @@ function _list(x, y, w, h) {
 					: '?'
 			);
 		}
-		if (config.show.trackSize) {
+		if (showTt.trackSize) {
 			if (pls.isFolder) {
 				tooltipText += ' (' + utils.FormatFileSize(this.calcColumnVal('trackSize', pls, true)) + ')';
 			} else if (pls.trackSize !== -1) {
@@ -458,19 +458,19 @@ function _list(x, y, w, h) {
 			}
 		}
 		// Text for AutoPlaylists
-		if (config.show.query && (pls.isAutoPlaylist || pls.query)) {
+		if (showTt.query && (pls.isAutoPlaylist || pls.query)) {
 			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
 			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
 			tooltipText += '\n' + 'Limit: ' + (pls.limit ? pls.limit : '\u221E') + ' tracks';
 		}
-		if (config.show.dateCreated && !pls.isFolder) {
+		if (showTt.dateCreated && !pls.isFolder) {
 			tooltipText += '\nCreated: ' + new Date(pls.created).toLocaleDateString();
 		}
-		if (config.show.dateModified && !pls.isFolder) {
+		if (showTt.dateModified && !pls.isFolder) {
 			tooltipText += '\nModified:' + new Date(pls.modified).toLocaleDateString();
 		}
 		// Synced playlists with ListenBrainz
-		if (config.show.mbid && pls.playlist_mbid.length) {
+		if (showTt.mbid && pls.playlist_mbid.length) {
 			tooltipText += '\n' + 'MBID: ' + pls.playlist_mbid;
 		}
 		// Show UI playlist duplicate warning
