@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/12/24
+//09/12/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -345,6 +345,19 @@ let properties = {
 		loadPls: false,
 		profile: false,
 	})],
+	tooltip: ['Tooltip settings', JSON.stringify({
+		show: {
+			category: true,
+			dateCreated: false,
+			dateModified: true,
+			duration: true,
+			locks: true,
+			query: true,
+			mbid: true,
+			tags: true,
+			trackSize: true,
+		}
+	})],
 };
 properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
@@ -366,6 +379,7 @@ properties['importPlaylistFilters'].push({ func: (x) => isJSON(x) && JSON.parse(
 properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlaylistMask'][1]);
 properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
 properties['logOpt'].push({ func: isJSON }, properties['logOpt'][1]);
+properties['tooltip'].push({ func: isJSON }, properties['tooltip'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');

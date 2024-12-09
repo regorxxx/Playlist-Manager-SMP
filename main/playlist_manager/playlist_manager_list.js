@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/12/24
+//09/12/24
 
 /* exported _list */
 
@@ -355,49 +355,49 @@ function _list(x, y, w, h) {
 	};
 
 	this.headerTooltip = (mask, bActions = true, bForceActions = false) => {
-		let headerText = this.playlistsPath;
-		headerText += '\n' + 'Categories: ' + (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)');
-		headerText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ? this.lockStates[0] : '(All)');
+		let tooltipText = this.playlistsPath;
+		tooltipText += '\n' + 'Categories: ' + (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)');
+		tooltipText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ? this.lockStates[0] : '(All)');
 		const autoPlsCount = this.data.reduce((sum, pls) => { return (pls.query.length ? sum + 1 : sum); }, 0); // Counts autoplaylists and smart playlists
-		headerText += '\n' + 'Current view: ' + this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
+		tooltipText += '\n' + 'Current view: ' + this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
 		// Tips
 		if (bActions) {
 			const lShortcuts = this.getShortcuts('L', 'HEADER');
 			const mShortcuts = this.getShortcuts('M', 'HEADER');
 			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
 			if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
-				headerText += '\n----------------------------------------------';
+				tooltipText += '\n----------------------------------------------';
 			}
 			if (mask === MK_CONTROL) {
-				headerText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-				headerText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+				tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
 			} else if (mask === MK_SHIFT) {
-				headerText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-				headerText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+				tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+				tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
 			} else if (mask === MK_SHIFT + MK_CONTROL) {
-				headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-				headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 			} else if (this.bShowTips || bForceActions) {
 				if (this.modeUI === 'traditional' || bForceActions) {
-					headerText += '\n(R. Click for config menus)';
+					tooltipText += '\n(R. Click for config menus)';
 				}
 				// L. Click
-				headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-				headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
-				headerText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-				headerText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-				headerText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
+				tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+				tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 				// Middle button
-				headerText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
-				headerText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-				headerText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-				headerText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
+				tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+				tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
 			}
-			if (headerRe.test(headerText)) { // If no shortcut was found, show default ones
-				headerText += '\n(R. Click for config menus)';
+			if (headerRe.test(tooltipText)) { // If no shortcut was found, show default ones
+				tooltipText += '\n(R. Click for config menus)';
 				// L. Click
-				headerText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-				headerText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+				tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
+				tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
 			}
 			if (this.bLiteMode) {
 				const replaceActions = [
@@ -405,14 +405,187 @@ function _list(x, y, w, h) {
 					{ from: 'Add active playlist', to: 'Clone active playlist' },
 				];
 				replaceActions.forEach((t) => {
-					headerText = headerText.replace(new RegExp('(\\n\\(.*)(' + escapeRegExp(t.from) + ')(\\))', 'gi'), '$1' + t.to + '$3');
+					tooltipText = tooltipText.replace(new RegExp('(\\n\\(.*)(' + escapeRegExp(t.from) + ')(\\))', 'gi'), '$1' + t.to + '$3');
 				});
 			}
 		}
 		let warningText = '';
 		if (this.bLibraryChanged && !this.bLiteMode) { warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
-		if (warningText.length) { headerText += '\n' + warningText; }
-		return headerText;
+		if (warningText.length) { tooltipText += '\n' + warningText; }
+		return tooltipText;
+	};
+
+	this.plsTooltip = (pls, mask) => {
+		const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath, '') + ')' : '';
+		const locks = getLocks(pls.nameId);
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		const config = JSON.parse(this.properties.tooltip[1]);
+		let tooltipText = (pls.isAutoPlaylist ? 'AutoPlaylist' : (pls.extension === '.xsp' ? 'Smart Playlist' : pls.isFolder ? 'Folder' : 'Playlist')) + ': ';
+		tooltipText += pls.nameId + ' - ' + (pls.isFolder ? this.calcColumnVal('size', pls, true) : pls.size) + ' Tracks ' + path;
+		if (!pls.isFolder) {
+			if (config.show.locks) {
+				tooltipText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
+				tooltipText += locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '') + locks.name.replace('playlist', 'Playlist')) : '';
+				if (showMenus['UI playlist locks']) {
+					tooltipText += locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
+				}
+			}
+			if (showMenus['Category'] && config.show.category) {
+				tooltipText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
+			}
+			if (showMenus['Tags'] && config.show.tags) {
+				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
+				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => { return Object.keys(_)[0]; }).join(', ') : '-');
+			}
+		} else {
+			const total = pls.pls.lengthDeep;
+			const totalCurrentView = pls.pls.lengthFilteredDeep;
+			tooltipText += '\n' + 'Childs: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
+		}
+		if (config.show.duration) {
+			tooltipText += '\n' + 'Duration: ' + (pls.isFolder
+				? utils.FormatDuration(this.calcColumnVal('duration', pls, true))
+				: pls.duration !== -1
+					? utils.FormatDuration(pls.duration)
+					: '?'
+			);
+		}
+		if (config.show.trackSize) {
+			if (pls.isFolder) {
+				tooltipText += ' (' + utils.FormatFileSize(this.calcColumnVal('trackSize', pls, true)) + ')';
+			} else if (pls.trackSize !== -1) {
+				tooltipText += ' (' + utils.FormatFileSize(pls.trackSize) + ')';
+			}
+		}
+		// Text for AutoPlaylists
+		if (config.show.query && (pls.isAutoPlaylist || pls.query)) {
+			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
+			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
+			tooltipText += '\n' + 'Limit: ' + (pls.limit ? pls.limit : '\u221E') + ' tracks';
+		}
+		if (config.show.dateCreated && !pls.isFolder) {
+			tooltipText += '\nCreated: ' + new Date(pls.created).toLocaleDateString();
+		}
+		if (config.show.dateModified && !pls.isFolder) {
+			tooltipText += '\nModified:' + new Date(pls.modified).toLocaleDateString();
+		}
+		// Synced playlists with ListenBrainz
+		if (config.show.mbid && pls.playlist_mbid.length) {
+			tooltipText += '\n' + 'MBID: ' + pls.playlist_mbid;
+		}
+		// Show UI playlist duplicate warning
+		let iDup = 0;
+		if (pls.extension === '.ui') {
+			iDup = getPlaylistIndexArray(pls.nameId).length;
+		}
+		// Show current action
+		const lShortcuts = this.getShortcuts('L');
+		const mShortcuts = this.getShortcuts('M');
+		const rShortcuts = this.getShortcuts('R');
+		const defaultAction = this.getDefaultShortcutAction('M'); // All actions are shared for M or L mouse
+		// Delete non valid actions (default is none)
+		[lShortcuts, mShortcuts, rShortcuts].forEach((shortcuts) => {
+			for (const key in shortcuts) {
+				if (!this.isValidAction(shortcuts[key].key)) {
+					shortcuts[key].key = defaultAction;
+				}
+			}
+		});
+		if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
+			tooltipText += '\n---------------------------------------------------';
+		}
+		if (mask === MK_CONTROL) {
+			tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+			tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+			tooltipText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+		} else if (mask === MK_SHIFT) {
+			tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+			tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+			tooltipText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+		} else if (mask === MK_SHIFT + MK_CONTROL) {
+			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+		} else if (this.bShowTips) { // All Tips
+			tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
+			tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) { tooltipText += '\n(R. Click for other tools / new playlists)'; }
+			tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+			tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			// Middle button
+			tooltipText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
+			tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+			tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			// R. Button
+			tooltipText += rShortcuts['SG_CLICK'].key !== defaultAction ? '\n(R. Click to ' + rShortcuts['SG_CLICK'].key + ')' : '';
+			tooltipText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')' : '';
+			tooltipText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')' : '';
+			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+		}
+		if (headerRe.test(tooltipText)) { // If no shortcut was found, show default ones
+			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+				tooltipText += '\n(L. Click to Manage playlist)';
+				tooltipText += '\n(R. Click for other tools / new playlists)';
+			} else {
+				tooltipText += '\n(L. Click to Manage playlist)';
+			}
+		}
+		if (pls.extension === '.ui') {  // Change text for UI-only playlists
+			tooltipText = tooltipText.replace(/Load \/ show/gi, 'Show');
+		}
+		if (pls.isFolder) { // Change text for folders
+			// Remove unused actions
+			const ignoreActions = ['Playlist\'s items menu'];
+			ignoreActions.forEach((t) => {
+				tooltipText = tooltipText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+			});
+			// Replace
+			if (playlistRe.test(tooltipText)) {
+				tooltipText = tooltipText.replace(playlistRe, (match) => matchCase('folder', match));
+			}
+		}
+		if (this.indexes.length) { // Change text for multiple selection
+			// Remove unused actions
+			const ignoreActions = ['Playlist\'s items menu'];
+			ignoreActions.forEach((t) => {
+				tooltipText = tooltipText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+			});
+			// Replace
+			if (playlistRe.test(tooltipText)) {
+				tooltipText = tooltipText.replace(playlistRe, (match) => matchCase('playlists', match));
+			}
+		}
+		if (pls.isAutoPlaylist && !Object.hasOwn(lShortcuts, mask)) { // Change text for AutoPlaylists
+			const ignoreActions = ['Move selection to playlist', 'Copy selection to playlist'];
+			ignoreActions.forEach((t) => {
+				tooltipText = tooltipText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+			});
+		}
+		if (pls.extension === '.ui' && !Object.hasOwn(lShortcuts, mask)) { // Change text for UI-ony playlists
+			const ignoreActions = ['Lock/unlock playlist file'];
+			ignoreActions.forEach((t) => {
+				tooltipText = tooltipText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
+			});
+		}
+		// Adding Duplicates on selection hint
+		let warningText = '';
+		if (Object.hasOwn(lShortcuts, mask) && lShortcuts[mask].key === 'Copy selection to playlist' || Object.hasOwn(mShortcuts, mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
+			if (pls.isAutoPlaylist || pls.query) { warningText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)'; }
+			else if (pls.extension === '.fpl') { warningText += '\n(.fpl playlists are non editable, convert it first)'; }
+			else if (pls.isLocked) { warningText += '\n(Locked playlists are non editable, unlock it first)'; }
+			else {
+				const selItems = fb.GetSelections(1);
+				if (!selItems || !selItems.Count) { warningText += '\n(No items on current selection)'; }
+			}
+			if (this.checkSelectionDuplicatesPlaylist({ playlistIndex: this.index })) { warningText += '\nWarning! Some track(s) already present...'; }
+		}
+		if (iDup > 1) { warningText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.'; }
+		if (this.bLibraryChanged && !this.bLiteMode && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') { warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
+		if (pls.extension === '.xsp' && pls.type !== 'songs') { warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.'; }
+		if (warningText.length) { tooltipText += '\n' + warningText; }
+		return tooltipText;
 	};
 
 	this.paintHeader = (gr, mode = 'traditional') => {
@@ -1583,162 +1756,7 @@ function _list(x, y, w, h) {
 								} else {
 									this.dropUp = this.dropDown = this.dropIn = false;
 								}
-								const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath, '') + ')' : '';
-								const locks = getLocks(pls.nameId);
-								const showMenus = JSON.parse(this.properties.showMenus[1]);
-								let playlistDataText = (pls.isAutoPlaylist ? 'AutoPlaylist' : (pls.extension === '.xsp' ? 'Smart Playlist' : pls.isFolder ? 'Folder' : 'Playlist')) + ': ';
-								playlistDataText += pls.nameId + ' - ' + (pls.isFolder ? this.calcColumnVal('size', pls, true) : pls.size) + ' Tracks ' + path;
-								if (!pls.isFolder) {
-									playlistDataText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
-									playlistDataText += locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '') + locks.name.replace('playlist', 'Playlist')) : '';
-									if (showMenus['UI playlist locks']) {
-										playlistDataText += locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
-									}
-									if (showMenus['Category']) {
-										playlistDataText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
-									}
-									if (showMenus['Tags']) {
-										playlistDataText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
-										playlistDataText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => { return Object.keys(_)[0]; }).join(', ') : '-');
-									}
-								} else {
-									const total = pls.pls.lengthDeep;
-									const totalCurrentView = pls.pls.lengthFilteredDeep;
-									playlistDataText += '\n' + 'Childs: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
-								}
-								playlistDataText += '\n' + 'Duration: ' + (pls.isFolder
-									? utils.FormatDuration(this.calcColumnVal('duration', pls, true))
-									: pls.duration !== -1
-										? utils.FormatDuration(pls.duration)
-										: '?'
-								);
-								if (pls.isFolder) {
-									playlistDataText += ' (' + utils.FormatFileSize(this.calcColumnVal('trackSize', pls, true)) + ')';
-								} else if (pls.trackSize !== -1) {
-									playlistDataText += ' (' + utils.FormatFileSize(pls.trackSize) + ')';
-								}
-								// Text for AutoPlaylists
-								if (pls.isAutoPlaylist || pls.query) {
-									playlistDataText += '\n' + 'Query: ' + (pls.query ? pls.query : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
-									playlistDataText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
-									playlistDataText += '\n' + 'Limit: ' + (pls.limit ? pls.limit : '\u221E') + ' tracks';
-								}
-								// Synced playlists with ListenBrainz
-								if (pls.playlist_mbid.length) {
-									playlistDataText += '\n' + 'MBID: ' + pls.playlist_mbid;
-								}
-								// Show UI playlist duplicate warning
-								let iDup = 0;
-								if (pls.extension === '.ui') {
-									iDup = getPlaylistIndexArray(pls.nameId).length;
-								}
-								// Show current action
-								const lShortcuts = this.getShortcuts('L');
-								const mShortcuts = this.getShortcuts('M');
-								const rShortcuts = this.getShortcuts('R');
-								const defaultAction = this.getDefaultShortcutAction('M'); // All actions are shared for M or L mouse
-								// Delete non valid actions (default is none)
-								[lShortcuts, mShortcuts, rShortcuts].forEach((shortcuts) => {
-									for (const key in shortcuts) {
-										if (!this.isValidAction(shortcuts[key].key)) {
-											shortcuts[key].key = defaultAction;
-										}
-									}
-								});
-								if (this.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
-									playlistDataText += '\n---------------------------------------------------';
-								}
-								if (mask === MK_CONTROL) {
-									playlistDataText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-									playlistDataText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-									playlistDataText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-								} else if (mask === MK_SHIFT) {
-									playlistDataText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-									playlistDataText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-									playlistDataText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-								} else if (mask === MK_SHIFT + MK_CONTROL) {
-									playlistDataText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-									playlistDataText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-								} else if (this.bShowTips) { // All Tips
-									playlistDataText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-									playlistDataText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
-									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) { playlistDataText += '\n(R. Click for other tools / new playlists)'; }
-									playlistDataText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-									playlistDataText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-									playlistDataText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-									// Middle button
-									playlistDataText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
-									playlistDataText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-									playlistDataText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-									playlistDataText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-									// R. Button
-									playlistDataText += rShortcuts['SG_CLICK'].key !== defaultAction ? '\n(R. Click to ' + rShortcuts['SG_CLICK'].key + ')' : '';
-									playlistDataText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')' : '';
-									playlistDataText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')' : '';
-									playlistDataText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-								}
-								if (headerRe.test(playlistDataText)) { // If no shortcut was found, show default ones
-									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
-										playlistDataText += '\n(L. Click to Manage playlist)';
-										playlistDataText += '\n(R. Click for other tools / new playlists)';
-									} else {
-										playlistDataText += '\n(L. Click to Manage playlist)';
-									}
-								}
-								if (pls.extension === '.ui') {  // Change text for UI-only playlists
-									playlistDataText = playlistDataText.replace(/Load \/ show/gi, 'Show');
-								}
-								if (pls.isFolder) { // Change text for folders
-									// Remove unused actions
-									const ignoreActions = ['Playlist\'s items menu'];
-									ignoreActions.forEach((t) => {
-										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
-									});
-									// Replace
-									if (playlistRe.test(playlistDataText)) {
-										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('folder', match));
-									}
-								}
-								if (this.indexes.length) { // Change text for multiple selection
-									// Remove unused actions
-									const ignoreActions = ['Playlist\'s items menu'];
-									ignoreActions.forEach((t) => {
-										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
-									});
-									// Replace
-									if (playlistRe.test(playlistDataText)) {
-										playlistDataText = playlistDataText.replace(playlistRe, (match) => matchCase('playlists', match));
-									}
-								}
-								if (pls.isAutoPlaylist && !Object.hasOwn(lShortcuts, mask)) { // Change text for AutoPlaylists
-									const ignoreActions = ['Move selection to playlist', 'Copy selection to playlist'];
-									ignoreActions.forEach((t) => {
-										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
-									});
-								}
-								if (pls.extension === '.ui' && !Object.hasOwn(lShortcuts, mask)) { // Change text for UI-ony playlists
-									const ignoreActions = ['Lock/unlock playlist file'];
-									ignoreActions.forEach((t) => {
-										playlistDataText = playlistDataText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
-									});
-								}
-								// Adding Duplicates on selection hint
-								let warningText = '';
-								if (Object.hasOwn(lShortcuts, mask) && lShortcuts[mask].key === 'Copy selection to playlist' || Object.hasOwn(mShortcuts, mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
-									if (pls.isAutoPlaylist || pls.query) { warningText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)'; }
-									else if (pls.extension === '.fpl') { warningText += '\n(.fpl playlists are non editable, convert it first)'; }
-									else if (pls.isLocked) { warningText += '\n(Locked playlists are non editable, unlock it first)'; }
-									else {
-										const selItems = fb.GetSelections(1);
-										if (!selItems || !selItems.Count) { warningText += '\n(No items on current selection)'; }
-									}
-									if (this.checkSelectionDuplicatesPlaylist({ playlistIndex: this.index })) { warningText += '\nWarning! Some track(s) already present...'; }
-								}
-								if (iDup > 1) { warningText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.'; }
-								if (this.bLibraryChanged && !this.bLiteMode && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') { warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
-								if (pls.extension === '.xsp' && pls.type !== 'songs') { warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.'; }
-								if (warningText.length) { playlistDataText += '\n' + warningText; }
+								const playlistDataText =  this.plsTooltip(pls, mask);
 								if (this.tooltip.text !== playlistDataText) {
 									if (bMoved) { this.tooltip.Deactivate(); }
 									this.tooltip.SetValue(playlistDataText, true);

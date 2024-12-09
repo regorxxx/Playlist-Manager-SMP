@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/12/24
+//09/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -1731,7 +1731,7 @@ function createMenuRight() {
 				if (opt.menu === 'From selection' && opt.query) {
 					const sel = fb.GetFocusItem(true) || fb.GetSelection();
 					if (!sel) { flags = MF_GRAYED; }
-					else { opt.query = queryReplaceWithCurrent(opt.query, sel, void(0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true }); }
+					else { opt.query = queryReplaceWithCurrent(opt.query, sel, void (0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true }); }
 					name = fb.TitleFormat(name).EvalWithMetadb(sel).cut(50);
 					delete opt.expansionBy;
 				}
@@ -3538,23 +3538,6 @@ function createMenuRightTop() {
 			});
 		}
 		menu.newSeparator(menuName);
-		{	// Tooltips
-			const subMenuName = menu.newMenu('Show usage info on tooltips', menuName);
-			const options = ['Yes: Show shortcuts', 'No: Only show basic info'];
-			const optionsLength = options.length;
-			menu.newEntry({ menuName: subMenuName, entryText: 'On playlist and header tooltips:', flags: MF_GRAYED });
-			menu.newSeparator(subMenuName);
-			options.forEach((item, i) => {
-				menu.newEntry({
-					menuName: subMenuName, entryText: item, func: () => {
-						list.bShowTips = (i === 0);
-						list.properties['bShowTips'][1] = list.bShowTips;
-						overwriteProperties(list.properties);
-					}
-				});
-			});
-			menu.newCheckMenuLast(() => (list.bShowTips ? 0 : 1), optionsLength);
-		}
 		{	// Playlist header menu
 			const subMenuName = menu.newMenu('Show playlist header on menus', menuName);
 			const options = ['Yes: Show playlist format and name', 'No: Only the contextual menu'];
@@ -4043,6 +4026,44 @@ function createMenuRightTop() {
 					panel.updateImageBg(true);
 					list.repaint();
 				}
+			});
+		}
+		menu.newSeparator(menuName);
+		{	// Tooltip
+			const config = JSON.parse(list.properties.tooltip[1]);
+			const subMenuName = menu.newMenu('Tooltip', menuName);
+			menu.newEntry({ menuName: subMenuName, entryText: 'Tooltip config:', flags: MF_GRAYED });
+			menu.newSeparator(subMenuName);
+			{
+				const subMenuNameTwo = menu.newMenu('Show usage info', subMenuName);
+				const options = ['Yes: Show shortcuts', 'No: Only show basic info'];
+				const optionsLength = options.length;
+				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'On playlist and header tooltips:', flags: MF_GRAYED });
+				menu.newSeparator(subMenuNameTwo);
+				options.forEach((item, i) => {
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: item, func: () => {
+							list.bShowTips = (i === 0);
+							list.properties['bShowTips'][1] = list.bShowTips;
+							overwriteProperties(list.properties);
+						}
+					});
+				});
+				menu.newCheckMenuLast(() => (list.bShowTips ? 0 : 1), optionsLength);
+			}
+			menu.newSeparator(subMenuName);
+			Object.keys(config.show).forEach((key) => {
+				const entryText = 'Show ' + capitalizeAll(key.split('')
+					.reduce((prev, s) => prev + (s !== s.toLowerCase() ? ' ': '') + s, ''))
+					.replace('Mbid', 'MBID');
+				menu.newEntry({
+					menuName: subMenuName, entryText, func: () => {
+						config.show[key] = !config.show[key];
+						list.properties.tooltip[1] = config;
+						overwriteProperties(list.properties);
+					}
+				});
+				menu.newCheckMenuLast(() => config.show[key]);
 			});
 		}
 		menu.newSeparator(menuName);

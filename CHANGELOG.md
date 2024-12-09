@@ -66,6 +66,8 @@
 - AutoPlaylist: UI-only AutoPlaylists have a new menu entry to show the native AutoPlaylist properties window.
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
+- UI: settings to selectively chose what playlist metadata is shown on the tooltip.
+- UI: created and last modified date can now be shown on tooltip.
 - Playlists maintenance tools: new entry to check for subsong items in AutoPlaylists and Smart Playlists.
 - Statistics: X-Axis shown values at display menu now allows any custom value.
 - Statistics: Y-Axis filter at display menu now allows any custom value for 'greater than'/'lower than' filters.
