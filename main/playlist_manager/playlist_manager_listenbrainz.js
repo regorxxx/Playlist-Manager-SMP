@@ -2038,10 +2038,9 @@ ListenBrainz.retrieveListensForHandleList = function retrieveListensForHandleLis
 	if (!bForce && (!user || !user.length || !token || !token.length)) { console.log('retrieveListensForHandleList: no user/token provided'); return Promise.resolve(null); }
 	if (bForce && (!user || !user.length)) { console.log('retrieveListensForHandleList: no user provided'); return Promise.resolve(null); }
 	if (!Object.hasOwn(params, 'count')) { params.count = this.MAX_ITEMS_PER_GET; }
-	const test = fb.CreateProfiler('retrieveListensForHandleList');
 	return this.retrieveListens(user, params, token, bPaginated, bForce)
 		.then((listens) => {
-			return this.getMBIDs(handleList).then((mbids) => {
+			return this.getMBIDs(handleList, token, false).then((mbids) => {
 				const map = new Map();
 				for (const mbid of mbids) { map.set(mbid, []); }
 				listens.forEach((listen) => {
@@ -2061,7 +2060,6 @@ ListenBrainz.retrieveListensForHandleList = function retrieveListensForHandleLis
 						}
 					}
 				});
-				test.Print();
 				return mbids.map((mbid) => [...(map.get(mbid) || [])]);
 			});
 		});
