@@ -1,5 +1,7 @@
 ﻿'use strict';
-//05/12/24
+//08/12/24
+
+/* exported ListenBrainz */
 
 /* global list:readable, delayAutoUpdate:readable, checkLBToken:readable,  */
 include('..\\..\\helpers\\helpers_xxx.js');
@@ -104,19 +106,55 @@ ListenBrainz.listensCache = {
 	getFile: function (user) {
 		return folders.data + 'listenbrainz_listens_' + this.sanitizeUser(user) + '.json';
 	},
-	validate: function (user, maxDate = Date.now() / 1000, minDate = ListenBrainz.LISTEN_MINIMUM_TS) {
+	validate: async function (user, token, maxDate = Math.round(Date.now() / 1000), minDate = ListenBrainz.LISTEN_MINIMUM_TS) {
+		minDate = Math.max(minDate, ListenBrainz.LISTEN_MINIMUM_TS);
+		let bPass = true;
 		if (_isFile(folders.data + 'listenbrainz_listens.json')) {
 			const data = this.getValidate();
 			user = this.sanitizeUser(user);
 			if (data) {
-				return data[user].maxRetrievalDate >= maxDate && data[user].minRetrievalDate <= minDate && (Date.now() / 1000 - data[user].retrievalDate) < 10 * 24 * 60 * 60;
-			}
-			return false;
-		}
-		return false;
+				if (data[user].maxRetrievalDate < maxDate) {
+					const queryParams = '?max_ts=' + maxDate + '&count=1';
+					const listen = await send({
+						method: 'GET',
+						URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + queryParams,
+						requestHeader: [['Authorization', 'Token ' + token]],
+						bypassCache: true
+					}).then(
+						(resolve) => {
+							const response = JSON.parse(resolve);
+							return Object.hasOwn(response, 'payload') ? response.payload.listens[0] : null;
+						},
+						(reject) => null // eslint-disable-line no-unused-vars
+					);
+					if (listen && listen.listened_at > maxDate) { bPass = false; }
+				}
+				if (data[user].minRetrievalDate > minDate) {
+					const queryParams = '?max_ts=' + data[user].minRetrievalDate + '&count=1';
+					const listen = await send({
+						method: 'GET',
+						URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + queryParams,
+						requestHeader: [['Authorization', 'Token ' + token]],
+						bypassCache: true
+					}).then(
+						(resolve) => {
+							const response = JSON.parse(resolve);
+							return Object.hasOwn(response, 'payload') ? response.payload.listens[0] : null;
+						},
+						(reject) => null // eslint-disable-line no-unused-vars
+					);
+					if (listen && listen.listened_at < data[user].minRetrievalDate) { bPass = false; }
+				}
+				if ((Math.round(Date.now() / 1000) - data[user].retrievalDate) > 10 * 24 * 60 * 60) {
+					bPass = false;
+				}
+			} else { bPass = false; }
+		} else { bPass = false; }
+		return bPass;
 	},
 	set: function (user, listensData, maxRetrievalDate, minRetrievalDate) {
 		if (!listensData.length) { return; }
+		minRetrievalDate = Math.max(minRetrievalDate, ListenBrainz.LISTEN_MINIMUM_TS);
 		user = this.sanitizeUser(user);
 		let validationData = {};
 		if (_isFile(folders.data + 'listenbrainz_listens.json')) {
@@ -127,16 +165,17 @@ ListenBrainz.listensCache = {
 			minDate: listensData[listensData.length - 1].listened_at,
 			minRetrievalDate,
 			maxRetrievalDate,
-			retrievalDate: Date.now() / 1000
+			retrievalDate: Math.round(Date.now() / 1000)
 		};
 		_save(folders.data + 'listenbrainz_listens.json', JSON.stringify(validationData, null, '\t').replace(/\n/g, '\r\n'));
 		_save(this.getFile(user), JSON.stringify(listensData, null, '\t').replace(/\n/g, '\r\n'));
 	},
-	get: function (user, maxDate = Date.now(), minDate = ListenBrainz.LISTEN_MINIMUM_TS) {
-		user = this.sanitizeUser(user);
-		if (this.validate(user, maxDate, minDate)) {
+	get: async function (user, token, maxDate = Math.round(Date.now() / 1000), minDate = ListenBrainz.LISTEN_MINIMUM_TS, bForce) {
+		minDate = Math.max(minDate, ListenBrainz.LISTEN_MINIMUM_TS);
+		if (bForce || (await this.validate(user, token, maxDate, minDate))) {
 			const data = _jsonParseFileCheck(this.getFile(user), 'ListenBrainz listens cache file', 'ListenBrainz', utf8);
 			if (data) {
+				console.log('ListenBrainz: retrieving listening history from ' + new Date(minDate * 1000).toDateString() + ' to ' + new Date(maxDate * 1000).toDateString());
 				return data.filter((listen) => listen.listened_at > minDate && listen.listened_at < maxDate);
 			}
 		}
@@ -148,8 +187,8 @@ ListenBrainz.listensCache = {
  * @see {@link https://listenbrainz.readthedocs.io/en/latest/users/api/core.html#constants}
  * @see {@link https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/webserver/views/api_tools.py}
 */
-ListenBrainz.MAX_ITEMS_PER_GET = 1000;
-ListenBrainz.MAX_LISTENS_PER_REQUEST = 1000;
+ListenBrainz.MAX_ITEMS_PER_GET = 300; // Uses smaller than max number to avoid errors due to size data
+ListenBrainz.MAX_LISTENS_PER_REQUEST = 300; // Uses smaller than max number to avoid errors due to size data
 ListenBrainz.DEFAULT_ITEMS_PER_GET = 25;
 ListenBrainz.LISTEN_MINIMUM_TS = 1033430400;
 ListenBrainz.MAX_RECORDINGS_PER_ADD = 100;
@@ -757,7 +796,7 @@ ListenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 			(reject) => {
 				if (!bRetry) { console.log('sendFeedback: ' + reject.status + ' ' + reject.responseText); }
 				else { console.log('sendFeedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...'); }
-				return bRetry ? Promise.wait(retryMs).then(() => this.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, true, false)) : false;
+				return bRetry ? Promise.wait(retryMs).then(() => this.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, false)) : false;
 			}
 		)
 		, rate)
@@ -1235,7 +1274,6 @@ ListenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type =
 						}
 						console.log('getEntitiesByTag: type not found - ' + type);
 					} else {
-						console.log('getEntitiesByTag: [all types] found items');
 						return response; // [{recording_mbid}, ...]
 					}
 				}
@@ -1760,6 +1798,7 @@ ListenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = 
  * @memberof ListenBrainz
  * @param {string} token
  * @param {Boolean} [bLog=true] - Log errors
+ * @param {Boolean} [bFallback=false] - Uses fallback on network error
  * @returns {Promise.<string>}
  */
 ListenBrainz.retrieveUser = async function retrieveUser(token, bLog = true) {
@@ -1927,13 +1966,17 @@ ListenBrainz.isFollowing = function isFollowing(toUser, token) {
  * @param {{max_ts:number, count?:number, min_ts?:number}} params - If no count is specified, it defaults to {@link ListenBrainz.MAX_ITEMS_PER_GET}
  * @param {string} token
  * @param {boolean} [bPaginated=true]
+ * @param {boolean} [bForce=true] - Force using cache even if its non valid (outdated)
  * @returns {Promise.<{listened_at:number, track_metadata: {additional_info: {release_mbid?:string, artist_mbids?:string[],recording_mbid?:string, tags?:string[]}, artist_name:string, track_name:string, release_name?:string}}>}
  */
-ListenBrainz.retrieveListens = function retrieveListens(user, params = { max_ts: Date.now() }, token = '', bPaginated = true) {
-	if (!user || !user.length || !token || !token.length) { console.log('retrieveListens: no user/token provided'); return Promise.resolve(null); }
+ListenBrainz.retrieveListens = async function retrieveListens(user, params = { max_ts: Math.round(Date.now() / 1000) }, token = '', bPaginated = true, bForce = false) {
+	if (!bForce && (!user || !user.length || !token || !token.length)) { console.log('retrieveListens: no user/token provided'); return Promise.resolve(null); }
+	if (bForce && (!user || !user.length)) { console.log('retrieveListens: no user provided'); return Promise.resolve(null); }
 	if (!Object.hasOwn(params, 'count')) { params.count = this.MAX_ITEMS_PER_GET; }
-	const cache = this.listensCache.get(user, params.max_ts, params.min_ts || this.LISTEN_MINIMUM_TS);
+	params.min_ts = Math.max(params.min_ts || this.LISTEN_MINIMUM_TS, this.LISTEN_MINIMUM_TS);
+	const cache = await this.listensCache.get(user, token, params.max_ts, params.min_ts, bForce);
 	if (cache) { return Promise.resolve(cache); }
+	console.log('ListenBrainz: retrieving listening history from ' + new Date(params.max_ts * 1000).toDateString() + ' to ' + new Date(params.min_ts * 1000).toDateString());
 	if (bPaginated) {
 		return paginatedFetch({
 			URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens',
@@ -1942,7 +1985,8 @@ ListenBrainz.retrieveListens = function retrieveListens(user, params = { max_ts:
 			requestHeader: [['Authorization', 'Token ' + token]]
 		}).then(
 			(response) => {
-				this.listensCache.set(user, response, params.max_ts, params.min_ts || this.LISTEN_MINIMUM_TS);
+				this.listensCache.set(user, response, params.max_ts, params.min_ts);
+				console.log('ListenBrainz: retrieved ' + response.length + ' listens.');
 				return response;
 			},
 			(reject) => {
@@ -1961,7 +2005,8 @@ ListenBrainz.retrieveListens = function retrieveListens(user, params = { max_ts:
 			(resolve) => {
 				const response = JSON.parse(resolve);
 				if (Object.hasOwn(response, 'payload')) {
-					this.listensCache.set(user, response.payload.listens, params.max_ts, params.min_ts || this.LISTEN_MINIMUM_TS);
+					this.listensCache.set(user, response.payload.listens, params.max_ts, params.min_ts);
+					console.log('ListenBrainz: retrieved ' + response.payload.listens.length + ' listens.');
 					return response.payload.listens;
 				}
 				return [];
@@ -1985,19 +2030,39 @@ ListenBrainz.retrieveListens = function retrieveListens(user, params = { max_ts:
  * @param {{max_ts:number, count?:number, min_ts?:number}} params - If no count is specified, it defaults to {@link ListenBrainz.MAX_ITEMS_PER_GET}
  * @param {string} token
  * @param {boolean} [bPaginated=true]
+ * @param {boolean} [bForce=true] - Force using cache even if its non valid (outdated)
+ * @param {boolean} [bFilterFoobar=true] - Filter listens if media player matches 'foobar2000'
  * @returns {Promise.<string[][]>}
  */
-ListenBrainz.retrieveListensForHandleList = function retrieveListensForHandleList(handleList, user, params = { max_ts: Date.now() }, token = '', bPaginated = true) {
-	if (!user || !user.length || !token || !token.length) { console.log('retrieveListensForHandleList: no user/token provided'); return Promise.resolve(null); }
+ListenBrainz.retrieveListensForHandleList = function retrieveListensForHandleList(handleList, user, params = { max_ts: Math.round(Date.now() / 1000) }, token = '', bPaginated = true, bForce = false, bFilterFoobar = true) {
+	if (!bForce && (!user || !user.length || !token || !token.length)) { console.log('retrieveListensForHandleList: no user/token provided'); return Promise.resolve(null); }
+	if (bForce && (!user || !user.length)) { console.log('retrieveListensForHandleList: no user provided'); return Promise.resolve(null); }
 	if (!Object.hasOwn(params, 'count')) { params.count = this.MAX_ITEMS_PER_GET; }
-	return this.retrieveListens(user, params, token, bPaginated)
+	const test = fb.CreateProfiler('retrieveListensForHandleList');
+	return this.retrieveListens(user, params, token, bPaginated, bForce)
 		.then((listens) => {
-			return this.getMBIDs(handleList, token, false).then((mbids) => {
-				// Filter once entire list with all MBIDs to not iterate over entire listening history too many times
-				listens = listens.filter((listen) => mbids.some((mbid) => listen.track_metadata.additional_info.recording_mbid === mbid));
-				return listens.length
-					? mbids.map((mbid) => listens.filter((listen) => listen.track_metadata.additional_info.recording_mbid === mbid))
-					: mbids.map(() => []);
+			return this.getMBIDs(handleList).then((mbids) => {
+				const map = new Map();
+				for (const mbid of mbids) { map.set(mbid, []); }
+				listens.forEach((listen) => {
+					const meta = listen.track_metadata;
+					if (meta) {
+						let mbid;
+						if (meta.additional_info) {
+							if (bFilterFoobar && meta.additional_info.media_player === 'foobar2000') { return; }
+							mbid = meta.additional_info.recording_mbid;
+						}
+						if (!mbid && meta.mbid_mapping) { mbid = meta.mbid_mapping.recording_mbid; }
+						if (!mbid) { return; }
+						const listenArr = map.get(mbid);
+						if (listenArr) {
+							listen.listened_at = listen.listened_at * 1000;
+							listenArr.push(listen);
+						}
+					}
+				});
+				test.Print();
+				return mbids.map((mbid) => [...(map.get(mbid) || [])]);
 			});
 		});
 };
