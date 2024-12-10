@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/12/24
+//10/12/24
 
 /* exported ListenBrainz */
 
@@ -88,6 +88,7 @@ ListenBrainz.algorithm = {
 ListenBrainz.jspfExt = 'https://musicbrainz.org/doc/jspf#playlist';
 /** Listens cache related methods. Listens are saved into a persistent database in JSON. */
 ListenBrainz.listensCache = {
+	volatileCache: null,
 	/**
 	 * Gets validation file data
 	 * @name getValidate
@@ -167,15 +168,26 @@ ListenBrainz.listensCache = {
 			maxRetrievalDate,
 			retrievalDate: Math.round(Date.now() / 1000)
 		};
+		if (!this.volatileCache) {
+			this.volatileCache = JSON.stringify(listensData);
+			setTimeout(() => this.volatileCache = null, 30000);
+		}
 		_save(folders.data + 'listenbrainz_listens.json', JSON.stringify(validationData, null, '\t').replace(/\n/g, '\r\n'));
 		_save(this.getFile(user), JSON.stringify(listensData, null, '\t').replace(/\n/g, '\r\n'));
 	},
-	get: async function (user, token, maxDate = Math.round(Date.now() / 1000), minDate = ListenBrainz.LISTEN_MINIMUM_TS, bForce) {
+	get: async function (user, token, maxDate = Math.round(Date.now() / 1000), minDate = ListenBrainz.LISTEN_MINIMUM_TS, bForce = false) {
 		minDate = Math.max(minDate, ListenBrainz.LISTEN_MINIMUM_TS);
 		if (bForce || (await this.validate(user, token, maxDate, minDate))) {
-			const data = _jsonParseFileCheck(this.getFile(user), 'ListenBrainz listens cache file', 'ListenBrainz', utf8);
+			// Try to reuse data without loading file, caching the string is faster than cloning entire object on every call
+			const data = this.volatileCache
+				? JSON.parse(this.volatileCache)
+				: _jsonParseFileCheck(this.getFile(user), 'ListenBrainz listens cache file', 'ListenBrainz', utf8);
 			if (data) {
 				console.log('ListenBrainz: retrieving listening history from ' + new Date(minDate * 1000).toDateString() + ' to ' + new Date(maxDate * 1000).toDateString());
+				if (!this.volatileCache) {
+					this.volatileCache = JSON.stringify(data);
+					setTimeout(() => this.volatileCache = null, 30000);
+				}
 				return data.filter((listen) => listen.listened_at > minDate && listen.listened_at < maxDate);
 			}
 		}
@@ -2041,8 +2053,7 @@ ListenBrainz.retrieveListensForHandleList = function retrieveListensForHandleLis
 	return this.retrieveListens(user, params, token, bPaginated, bForce)
 		.then((listens) => {
 			return this.getMBIDs(handleList, token, false).then((mbids) => {
-				const map = new Map();
-				for (const mbid of mbids) { map.set(mbid, []); }
+				const map = new Map(mbids.map((m) => [m, []]));
 				listens.forEach((listen) => {
 					const meta = listen.track_metadata;
 					if (meta) {
