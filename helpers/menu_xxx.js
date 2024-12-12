@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//11/12/24
 
 /* exported _menu, _attachedMenu */
 
@@ -116,7 +116,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 *
 	 * @kind method
 	 * @memberof _menu
-	 * @name getLastEntry
+	 * @name isLastEntry
 	 * @param {string} name - Entry name for lookup
 	 * @param {('entry'|'cond'|'menu')} type - [='entry'] Entry type.
 	 * @returns {boolean}
@@ -125,6 +125,16 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		const last = this.getLastEntry();
 		return last && ((type === 'entry' || type === 'cond' && last.condFunc) && last.entryText === name || type === 'menu' && last.bIsMenu && last.menuName === name);
 	};
+	/**
+	 * Returns if last entry is a separator
+	 *
+	 * @kind propgerty
+	 * @memberof _menu
+	 * @type {boolean}
+	 * @name isLastEntrySep
+	 */
+	this.isLastEntrySep = void(0); // Defined so JSDOC works properly
+	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry('sep'); } });
 	this.getMenus = () => [...menuArr];
 	/**
 	 * Gets the key of the main menu (root). Useful to concatenate multiple menus.
@@ -254,7 +264,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @returns {{entryText:'sep', menuName:string, flags:MF_GRAYED, bIsMenu:false, func:null, data:null}}
 	 */
 	this.newSeparator = (menuName = this.getMainMenuName()) => {
-		return this.newEntry({ entryText: 'sep', menuName});
+		return this.newEntry({ entryText: 'sep', menuName });
 	};
 	/**
 	 * Creates a check attached to a parent menu and menu entries (the bullet or check mark on UI).

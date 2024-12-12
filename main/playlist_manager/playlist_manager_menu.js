@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/12/24
+//11/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -2148,7 +2148,7 @@ function createMenuRight() {
 					});
 			}
 		});
-		if (!menu.isLastEntry('sep')) { menu.newSeparator(subMenuName); }
+		if (!menu.isLastEntrySep) { menu.newSeparator(subMenuName); }
 		menu.newEntry({
 			menuName: subMenuName,
 			entryText: 'Import AutoPlaylists from UI..', func: () => {
@@ -2405,7 +2405,7 @@ function createMenuRight() {
 					});
 				});
 			}
-			if (bItems && !menu.isLastEntry('sep')) { menu.newSeparator(subMenuName); }
+			if (bItems && !menu.isLastEntrySep) { menu.newSeparator(subMenuName); }
 			if (plman.PlaylistRecycler.Count > 0) {
 				const deletedItems = [];
 				for (let i = 0; i < plman.PlaylistRecycler.Count; i++) { deletedItems.push(plman.PlaylistRecycler.GetName(i)); }
