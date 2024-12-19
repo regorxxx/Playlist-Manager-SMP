@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/12/24
+//16/12/24
 
 /* exported _menu, _attachedMenu */
 
@@ -299,7 +299,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name newCheckMenuLast
-	 * @param {(options: array,len: int) => int} func - Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 5. For Boolean checks of a single entry, just return true/false. Note separator entries doesn't count. Options argument (filtered without separartors) and its length as passed as arguments to the callback.
+	 * @param {(options: array,len: int) => int} func - Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 4. For Boolean checks of a single entry, just return true/false. Note separator entries doesn't count. Options argument (filtered without separators) and its length as passed as arguments to the callback.
 	 * @param {any[]|number} options - [=[]] When provided, its length is used to consider the last n entries. In case it's not provided or its length is one or zero, only a single entry is considered and the check is boolean. It may also be provided directly as a number.
 	 * @returns {boolean}
 	 */

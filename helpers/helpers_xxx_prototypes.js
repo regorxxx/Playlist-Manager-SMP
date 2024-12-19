@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/11/24
+//15/12/24
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian */
 
@@ -627,6 +627,10 @@ Array.prototype.chunk = function (chunkSize) { // NOSONAR
 
 Array.prototype.joinLast = function joinLast(separator, lastSeparator) { // NOSONAR
 	return this.join(separator || '').replaceLast(separator, lastSeparator);
+};
+
+Array.prototype.average = function (fn) { // NOSONAR
+	return (fn ? this.map(fn) : this).reduce((prev, curr, i) => prev + (curr - prev) / (i + 1), 0);
 };
 
 function zeroOrVal(e) {
