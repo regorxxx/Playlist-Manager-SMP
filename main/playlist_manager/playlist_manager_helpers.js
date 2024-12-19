@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/12/24
+//19/12/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
 
@@ -317,6 +317,7 @@ function setTrackTags(trackTags, list, z) {
 				let reason = -1;
 				if (extension === '.m3u' || extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#TRACKTAGS:' + oldTags, '#TRACKTAGS:' + newTags, list.bBOM); }
 				else if (extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="tags">' + oldTags, '<meta rel="tags">' + newTags, list.bBOM); }
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setTag(trackTags, list, z); return; }
@@ -363,6 +364,7 @@ function setTag(tags, list, z) {
 				let reason = -1;
 				if (extension === '.m3u' || extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#TAGS:' + pls.tags.join(';'), '#TAGS:' + tags.join(';'), list.bBOM); }
 				else if (extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="tags">' + pls.tags.join(';'), '<meta rel="tags">' + tags.join(';'), list.bBOM); }
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setTag(tags, list, z); return; }
@@ -416,6 +418,7 @@ function setCategory(category, list, z) {
 				let reason = -1;
 				if (extension === '.m3u' || extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#CATEGORY:' + pls.category, '#CATEGORY:' + category, list.bBOM); }
 				else if (extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="category">' + pls.category, '<meta rel="category">' + category, list.bBOM); }
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setCategory(category, list, z); return; }
@@ -472,6 +475,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 						[bDone, reason] = editTextFile(path, '<identifier>' + pls.playlist_mbid, '<identifier>' + 'https://listenbrainz.org/playlist/' + playlist_mbid, list.bBOM);
 					}
 				}
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setPlaylist_mbid(playlist_mbid, list, pls); return; }
@@ -519,6 +523,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 			let reason = -1;
 			if (pls.extension === '.m3u' || pls.extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#LOCKED:' + boolText[0], '#LOCKED:' + boolText[1], list.bBOM); }
 			else if (pls.extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="locked">' + boolText[0], '<meta rel="locked">' + boolText[1], list.bBOM); }
+			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
 			if (!bDone && reason === 1) {
 				bDone = rewriteHeader(list, pls);
 				if (bDone) { switchLock(list, z, bAlsoHidden); return; }
@@ -609,6 +614,7 @@ function rewriteHeader(list, pls) {
 			bDone = _save(pls.path, fileText.join('\r\n'));
 		}
 	}
+	if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path)});}
 	return bDone;
 }
 
@@ -635,14 +641,12 @@ function convertToRelPaths(list, z) {
 		} else { bDeleted = true; }
 		if (bDeleted) {
 			bDone = _save(playlistPath, file, list.bBOM); // No BOM
-			if (!bDone) {
+			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path)});}
+			else {
 				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 				_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
 				return bDone;
 			}
-			list.editData(pls, {
-				fileSize: utils.GetFileSize(playlistPath),
-			});
 			console.log('Playlist Manager: done.');
 			list.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
 			list.filter();
@@ -1132,7 +1136,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 				file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 				paths.forEach((path, i) => { file = file.replace(path, fileNames[i]); });
 				if ((extension === '.m3u8' || extension === '.m3u') && !bExtendedM3U) {
-					file = file.replace(/^#(?:EXT.*|.*:.*)[\r\n]*/gm,'');
+					file = file.replace(/^#(?:EXT.*|.*:.*)[\r\n]*/gm, '');
 				}
 			} else { // Or create new playlist file when translating between different formats
 				savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
@@ -1156,7 +1160,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	return bDone;
 }
 
-function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '',  playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true } = {}) {
+function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true } = {}) {
 	const bOpenOnExport = list.properties.bOpenOnExport[1];
 	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.Name); }
 	let bDone = false;
@@ -1505,7 +1509,7 @@ function backup(n = 50, bAsync = false, bProfile = true) { // Backup playlist an
 	}
 	const playlistFilesMask = Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext); // Ext already has a .
 	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip', bAsync);
-	if (test) {test.Print();}
+	if (test) { test.Print(); }
 	return true;
 }
 
