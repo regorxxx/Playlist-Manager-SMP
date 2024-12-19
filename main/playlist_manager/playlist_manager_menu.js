@@ -1275,13 +1275,19 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({
 					menuName, entryText: tag + '\t' + _b(count), func: () => {
 						let tags;
+						const bAll = indexes.every((z, j) => {
+							const pls = playlists[j];
+							return isLockPls(pls) || !isPlsEditable(pls) || pls.tags.includes(tag);
+						});
 						indexes.forEach((z, j) => {
 							const pls = playlists[j];
 							if (!isLockPls(pls) && isPlsEditable(pls)) {
 								if (i === 0) { tags = []; }
-								else if (pls.tags.includes(tag)) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
-								else { tags = [...pls.tags, tag]; }
-								setTag(tags, list, z);
+								else if (pls.tags.includes(tag)) {
+									if (bAll) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
+									else { return; }
+								} else { tags = [...pls.tags, tag]; }
+								if (!isArrayEqual(pls.tags, tags)) { setTag(tags, list, z); }
 							}
 						});
 					}, bAddInvisibleIds
@@ -4055,7 +4061,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuName);
 			Object.keys(list.tooltipSettings.show).forEach((key) => {
 				const entryText = 'Show ' + capitalizeAll(key.split('')
-					.reduce((prev, s) => prev + (s !== s.toLowerCase() ? ' ': '') + s, ''))
+					.reduce((prev, s) => prev + (s !== s.toLowerCase() ? ' ' : '') + s, ''))
 					.replace('Mbid', 'MBID');
 				menu.newEntry({
 					menuName: subMenuName, entryText, func: () => {
