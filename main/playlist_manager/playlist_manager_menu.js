@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/12/24
+//19/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -1731,8 +1731,10 @@ function createMenuRight() {
 				if (opt.menu === 'From selection' && opt.query) {
 					const sel = fb.GetFocusItem(true) || fb.GetSelection();
 					if (!sel) { flags = MF_GRAYED; }
-					else { opt.query = queryReplaceWithCurrent(opt.query, sel, void (0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true }); }
-					name = fb.TitleFormat(name).EvalWithMetadb(sel).cut(50);
+					else {
+						opt.query = queryReplaceWithCurrent(opt.query, sel, void (0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true });
+						name = fb.TitleFormat(name).EvalWithMetadb(sel).cut(50);
+					}
 					delete opt.expansionBy;
 				}
 				delete opt.menu;
