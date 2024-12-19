@@ -4985,9 +4985,13 @@ function createMenuRightTop() {
 				list.properties.delays[1] = list.properties.delays[3];
 				overwriteProperties(list.properties);
 				const autoBackTimer = Number(list.properties.autoBack[1]);
-				autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null; // NOSONAR [shared on files]
+				autoBackRepeat = autoBackTimer && isFinite(autoBackTimer) // NOSONAR [shared on files]
+					? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1])
+					: null;
 				const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
-				autoUpdateRepeat = (autoUpdateTimer) ? repeatFn(debouncedAutoUpdate, autoUpdateTimer)() : null; // NOSONAR [shared on files]
+				autoUpdateRepeat = autoUpdateTimer && isFinite(autoUpdateTimer) // NOSONAR [shared on files]
+					? repeatFn(debouncedAutoUpdate, autoUpdateTimer)()
+					: null;
 				debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 				instances.add(window.ScriptInfo.Name);
 				list.switchTracking(true, void (0), false);

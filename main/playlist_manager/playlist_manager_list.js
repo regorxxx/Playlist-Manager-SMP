@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/12/24
+//19/12/24
 
 /* exported _list */
 
@@ -7380,7 +7380,13 @@ function _list(x, y, w, h) {
 			if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
 			if (test) { test.Print('Post startup'); test = null; }
 			globProfiler.Print('list.init.post');
-			setInterval(() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); }, Number(this.properties.autoUpdate[1]));
+			const autoUpdateTimer = Number(this.properties.autoUpdate[1]);
+			if (autoUpdateTimer !== 0 && isFinite(autoUpdateTimer)) {
+				setInterval(
+					() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); },
+					autoUpdateTimer
+				);
+			}
 		});
 	};
 
@@ -7520,7 +7526,12 @@ function _list(x, y, w, h) {
 	this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
 	this.selPaths = { pls: new Set(), sel: [] };
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
-	this.autoUpdateDelayTimer = Number(this.properties.autoUpdate[1]) !== 0 ? Number(this.properties.autoUpdate[1]) / 100 : 1; // Timer should be at least 1/100 autoupdate timer to work reliably
+	this.autoUpdateDelayTimer = (() => { // Timer should be at least 1/100 autoupdate timer to work reliably
+		const autoUpdateTimer = Number(this.properties.autoUpdate[1]);
+		return autoUpdateTimer !== 0 && isFinite(autoUpdateTimer)
+			? Math.max(autoUpdateTimer / 100, 1)
+			: 1;
+	})();
 	this.up_btn = new _sb(chars.up, this.x, this.y, _scale(12), _scale(12), () => { return this.offset > 0 && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop || this.isInternalDrop()); }, () => { this.wheel({ s: 1 }); });
 	this.down_btn = new _sb(chars.down, this.x, this.y, _scale(12), _scale(12), () => { return (this.offset < this.items - this.rows) && (this.uiElements['Up/down buttons'].enabled || this.bIsDragDrop || this.isInternalDrop()); }, () => { this.wheel({ s: -1 }); });
 	this.headerButtonsDef = {};
