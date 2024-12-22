@@ -1,12 +1,12 @@
 ﻿'use strict';
-//19/12/24
+//21/12/24
 
-/* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicates, findDead, findCircularReferences */
+/* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
 /* global list:readable, delayAutoUpdate:readable */
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, clone:readable, globQuery:readable, iDelayPlaylists:readable */
+/* global popup:readable, clone:readable, globQuery:readable, iDelayPlaylists:readable, globTags:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, getFiles:readable, checkCodePage:readable, getFileMeta:readable, editTextFile:readable, _renameFile:readable, _deleteFile:readable, _save:readable, _restoreFile:readable, _isLink:readable, sanitizePath:readable, findRelPathInAbsPath:readable, testPath:readable, absPathRegExp:readable */
@@ -29,7 +29,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global checkQuery:readable, getSortObj:readable, stripSort:readable */
 include('..\\filter_and_query\\remove_duplicates.js');
-/* global removeDuplicates:readable */
+/* global removeDuplicates:readable, showDuplicates:readable */
 
 function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = '', tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1, trackSize = -1 } = {}) {
 	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
@@ -1518,7 +1518,7 @@ function findMixedPaths() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.ui' && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.ui' && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1547,7 +1547,7 @@ function findExternal() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1588,7 +1588,7 @@ function findDead() {
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1618,12 +1618,12 @@ function findDead() {
 	});
 }
 
-function findDuplicates() {
+function findDuplicatesByPath() {
 	const found = [];
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
-			.filter((pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type == 'songs') && !pls.isFolder);
+			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
@@ -1641,6 +1641,48 @@ function findDuplicates() {
 		});
 		Promise.all(promises).then(() => {
 			if (found.length && !report.length) { found.forEach((pls) => { report.push(pls.extension === '.ui' ? pls.nameId : pls.path); }); }
+			resolve({ found, report });
+		});
+	});
+}
+
+function findDuplicatesByTF(checkKeys = globTags.remDupl, mode = 'all' /* all|pls|autopls */) {
+	const found = [];
+	const report = [];
+	return new Promise((resolve) => {
+		const playlists = list.dataAll
+			.filter(
+				mode === 'all'
+					? (pls) => !pls.isFolder
+					: mode === 'pls'
+						? (pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder
+						: (pls) => pls.isAutoPlaylist || (pls.extension === '.xsp' && pls.type === 'songs')
+			);
+		const total = playlists.length - 1;
+		const promises = [];
+		let prevProgress = -1;
+		playlists.forEach((playlist, i) => {
+			promises.push(new Promise((resolve) => {
+				setTimeout(() => {
+					const handleList = playlist.extension === '.ui'
+						? getHandlesFromUIPlaylists([playlist.nameId], false)
+						: playlist.isAutoPlaylist
+							? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(playlist.query))
+							: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true });
+					if (handleList) {
+						const duplicates = showDuplicates({handleList, checkKeys, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+						const count = duplicates && duplicates.Count;
+						let bDone = false;
+						if (count) { report.push((playlist.path || playlist.name) + ' (' + count + ' duplicates)'); bDone = true; }
+						if (bDone) { found.push(playlist); }
+					}
+					const progress = total ? Math.round(i / total * 10) * 10 : 100;
+					if (progress > prevProgress) { prevProgress = progress; console.log('Checking duplicates ' + progress + '%.'); }
+					resolve('done');
+				}, iDelayPlaylists * i);
+			}));
+		});
+		Promise.all(promises).then(() => {
 			resolve({ found, report });
 		});
 	});
@@ -1840,9 +1882,9 @@ function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 	const report = [];
 	mode = mode.toLowerCase();
 	const filterFunc = mode === 'pls'
-		? (pls) => !pls.isAutoPlaylist && (!Object.hasOwn(pls, 'type') || pls.type === 'songs') && !pls.isFolder
+		? (pls) => !pls.isAutoPlaylist && pls.extension === '.xsp' && !pls.isFolder
 		: mode === 'autopls'
-			? (pls) => pls.isAutoPlaylist || Object.hasOwn(pls, 'type') && pls.type == 'songs'
+			? (pls) => pls.isAutoPlaylist || (Object.hasOwn(pls, 'type') && pls.type === 'songs')
 			: (pls) => !pls.isFolder;
 	return new Promise((resolve) => {
 		const playlists = list.dataAll.filter(filterFunc);
@@ -1953,7 +1995,7 @@ function findCircularReferences() {
 	const found = [];
 	const report = [];
 	return new Promise((resolve) => {
-		const playlists = list.dataAll.filter((pls) => pls.extension === '.xsp' && pls.type == 'songs');
+		const playlists = list.dataAll.filter((pls) => pls.extension === '.xsp' && pls.type === 'songs');
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;

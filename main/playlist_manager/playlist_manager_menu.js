@@ -38,7 +38,7 @@ include('..\\..\\helpers\\helpers_xxx_UI.js');
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('playlist_manager_helpers.js');
-/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable, findDuplicates:readable, findCircularReferences:readable */
+/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable, findDuplicatesByPath:readable, findCircularReferences:readable, findDuplicatesByTF:readable */
 include('playlist_manager_listenbrainz.js');
 /* global ListenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
@@ -2233,11 +2233,37 @@ function createMenuRight() {
 		}
 		{	// Duplicates
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Duplicated items...', func: () => {
+				menuName: subMenuName, entryText: 'Duplicated items by Path...', func: () => {
 					let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
-					findDuplicates().then(({ found, report }) => {
+					findDuplicatesByPath().then(({ found, report }) => {
+						if (found.length) { list.filter({ plsState: found }); }
+						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						pop.disable(true);
+					});
+				}
+			});
+		}
+		{	// Duplicates by TF
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Duplicated items by TF...', func: () => {
+					let answer = WshShell.Popup('Scan all playlists to check for duplicated items by TF:\n'+ list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					if (answer !== popup.yes) { return; }
+					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
+					findDuplicatesByTF(list.removeDuplicatesAutoPls, 'pls').then(({ found, report }) => {
+						if (found.length) { list.filter({ plsState: found }); }
+						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						pop.disable(true);
+					});
+				}
+			});
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Duplicated items by TF (AutoPlaylists)...', func: () => {
+					let answer = WshShell.Popup('Scan all AutoPlaylists to check for duplicated items by TF:\n'+ list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					if (answer !== popup.yes) { return; }
+					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
+					findDuplicatesByTF(list.removeDuplicatesAutoPls, 'autopls').then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
 						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
 						pop.disable(true);
