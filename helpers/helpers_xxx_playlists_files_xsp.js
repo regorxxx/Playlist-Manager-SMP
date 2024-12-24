@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/12/24
+//23/12/24
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -568,19 +568,17 @@ if (typeof queryJoin === 'undefined') {
 			console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 			return '';
 		}
-		let arrayLength = queryArray.length;
+		let arrayLen = queryArray.length;
 		// Wrong array
-		let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
-		if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
+		if (!Array.isArray(queryArray) || typeof queryArray === 'undefined' || queryArray === null || arrayLen === null || arrayLen === 0) {
 			console.log('queryJoin(): queryArray [' + queryArray + '] was null, empty or not an array.');
 			return ''; //Array was null or not an array
 		}
-
 		let query = '';
 		let i = 0;
-		while (i < arrayLength) {
+		while (i < arrayLen) {
 			if (i === 0) {
-				query += (arrayLength > 1 ? '(' : '') + queryArray[i] + (arrayLength > 1 ? ')' : '');
+				query += (arrayLen > 1 ? '(' : '') + queryArray[i] + (arrayLen > 1 ? ')' : '');
 			} else {
 				query += ' ' + setLogic + ' (' + queryArray[i] + ')';
 			}

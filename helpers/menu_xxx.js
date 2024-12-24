@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/12/24
+//23/12/24
 
 /* exported _menu, _attachedMenu */
 
@@ -544,7 +544,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		let objectArr = [];
 		const manualMenuArr = [];
 		if (object) {
-			if (isArray(object)) { objectArr = object; }
+			if (Array.isArray(object)) { objectArr = object; }
 			else { objectArr = [object]; }
 			for (const objectMenu of objectArr) {
 				if (compareKeys(this, objectMenu)) { // Another instance of this framework, just merge entries and done
@@ -830,10 +830,6 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		const aKeys = Object.keys(a).sort((a, b) => a.localeCompare(b));
 		const bKeys = Object.keys(b).sort((a, b) => a.localeCompare(b));
 		return JSON.stringify(aKeys) === JSON.stringify(bKeys);
-	}
-
-	function isArray(checkKeys) {
-		return !(checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0);
 	}
 
 	// eslint-disable-next-line no-empty-pattern

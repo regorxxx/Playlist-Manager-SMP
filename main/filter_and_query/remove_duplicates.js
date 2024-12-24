@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//22/12/24
 
 /*
 	Remove duplicates
@@ -624,8 +624,8 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 				const combs = cartesian(...strArr);
 				for (let str of combs) {
 					const id = str.join(sep);
-					if (!idxMap.has(id)) { idxMap.set(id, [i]); }
-					else { idxMap.set(id, idxMap.get(id).concat([i])); break; }
+					if (!idxMap.has(id)) { idxMap.set(id, new Set([i])); }
+					else { idxMap.set(id, idxMap.get(id).add(i)); break; }
 				}
 				i++;
 			}
@@ -639,8 +639,8 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 				const combs = cartesian(...strArr);
 				for (let str of combs) {
 					const id = str.join(sep);
-					if (!idxMap.has(id)) { idxMap.set(id, [i]); }
-					else { idxMap.set(id, idxMap.get(id).concat([i])); break; }
+					if (!idxMap.has(id)) { idxMap.set(id, new Set([i])); }
+					else { idxMap.set(id, idxMap.get(id).add(i)); break; }
 				}
 				i++;
 			}
@@ -654,22 +654,22 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 				const str = tfoCopy[i]
 					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
 					.trim();
-				if (!idxMap.has(str)) { idxMap.set(str, [i]); }
-				else { idxMap.set(str, idxMap.get(str).concat([i])); }
+				if (!idxMap.has(str)) { idxMap.set(str, new Set([i])); }
+				else { idxMap.set(str, idxMap.get(str).add(i)); }
 				i++;
 			}
 		} else {
 			while (i < count) {
 				const str = tfoCopy[i];
-				if (!idxMap.has(str)) { idxMap.set(str, [i]); }
-				else { idxMap.set(str, idxMap.get(str).concat([i])); }
+				if (!idxMap.has(str)) { idxMap.set(str, new Set([i])); }
+				else { idxMap.set(str, idxMap.get(str).add(i)); }
 				i++;
 			}
 		}
 	}
 	const idxSet = new Set(); 	// With multi-value tags idx may be duplicated at multiple maps
 	idxMap.forEach((idxArr) => {
-		if (idxArr.length > 1) {
+		if (idxArr.size > 1) {
 			idxArr.forEach((idx) => {
 				if (!bMultiple || !idxSet.has(idx)) {
 					items.push(copy[idx]);

@@ -435,7 +435,7 @@ function _list(x, y, w, h) {
 			}
 			if (showMenus['Tags'] && showTt.tags) {
 				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
-				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => { return Object.keys(_)[0]; }).join(', ') : '-');
+				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => Object.keys(_)[0]).join(', ') : '-');
 			}
 		} else {
 			const total = pls.pls.lengthDeep;
@@ -1026,7 +1026,7 @@ function _list(x, y, w, h) {
 				else if (this.methodState.split('\t')[0] === 'By name') { dataKey = 'name'; }
 				else if (this.methodState.split('\t')[0] === 'By tags') { dataKey = 'tags'; }
 				if (dataKey.length) {
-					const data = isArray(pls[dataKey]) ? pls[dataKey][0] : pls[dataKey]; // If it's an array get first value
+					const data = Array.isArray(pls[dataKey]) ? pls[dataKey][0] : pls[dataKey]; // If it's an array get first value
 					let offsetLetter = 0;
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
@@ -1040,7 +1040,7 @@ function _list(x, y, w, h) {
 					if (i < (Math.min(this.items, this.rows) - indexSortStateOffset) && i + indexSortStateOffset >= 0) {
 						const sepLetter = data.length ? data[0].toUpperCase() : '-';
 						const nextIdx = currIdx + indexSortStateOffset;
-						const nextData = isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
+						const nextData = Array.isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
 						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
 						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
@@ -2473,7 +2473,7 @@ function _list(x, y, w, h) {
 					// Helper
 					const searchStr = (pls) => {
 						if (Object.hasOwn(pls, method) && pls[method] !== null && pls[method] !== void (0)) {
-							const bArray = isArray(pls[method]);
+							const bArray = Array.isArray(pls[method]);
 							if (bArray && !pls[method].length) { return false; }
 							const val = bArray ? pls[method][0] : pls[method];
 							const type = typeof val;
@@ -2614,8 +2614,8 @@ function _list(x, y, w, h) {
 	};
 
 	this.exportToListenbrainz = (plsArr) => {
-		if (!plsArr && !isArray(plsArr)) { return Promise.resolve(false); }
-		if (isArray(plsArr) && plsArr.some((pls) => pls.isFolder) || plsArr.isFolder) {
+		if (!plsArr) { return Promise.resolve(false); }
+		if (Array.isArray(plsArr) && plsArr.some((pls) => pls.isFolder) || plsArr.isFolder) {
 			if (plsArr.isFolder) { plsArr = plsArr.pls.filtered; }
 			const expand = (pls) => {
 				if (pls.isFolder) {
@@ -2631,7 +2631,7 @@ function _list(x, y, w, h) {
 				const bLookupMBIDs = this.properties.bLookupMBIDs[1];
 				const token = this.properties.lBrainzToken[1].length > 0 ? lb.decryptToken({ lBrainzToken: this.properties.lBrainzToken[1], bEncrypted: this.properties.lBrainzEncrypt[1] }) : null;
 				if (!token) { return false; }
-				return Promise.serial(isArray(plsArr) ? plsArr : [plsArr], async (pls) => {
+				return Promise.serial(Array.isArray(plsArr) ? plsArr : [plsArr], async (pls) => {
 					let bUpdateMBID = false;
 					let playlist_mbid = '';
 					if (pls.playlist_mbid.length) {
@@ -3795,7 +3795,7 @@ function _list(x, y, w, h) {
 	this.exportJson = ({ idx, bAllExt = false, path = '' } = {}) => { // idx may be -1 (export all), int (single pls) or array (set of pls)
 		let name = '';
 		let bArray = false;
-		if (isArray(idx)) { name = sanitize(this.playlistsPathDisk + '_' + this.playlistsPathDirName) + '.json'; bArray = true; }
+		if (Array.isArray(idx)) { name = sanitize(this.playlistsPathDisk + '_' + this.playlistsPathDirName) + '.json'; bArray = true; }
 		else if (idx === -1) { name = sanitize(this.playlistsPathDisk + '_' + this.playlistsPathDirName) + '.json'; }
 		else if (isInt(idx)) { name = sanitize(this.data[idx].name) + '.json'; }
 		else { console.log('exportJson: Invalid index argument ' + idx); return ''; }
@@ -5444,7 +5444,7 @@ function _list(x, y, w, h) {
 
 	this.addToData = (objectPlaylist) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-		if (isArray(objectPlaylist)) {
+		if (Array.isArray(objectPlaylist)) {
 			const dataIdx = [];
 			const dataAllIdx = [];
 			for (const objectPlaylist_i of objectPlaylist) {
@@ -5480,7 +5480,7 @@ function _list(x, y, w, h) {
 
 	this.editData = (objectPlaylist, properties, bSave = false) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-		if (isArray(objectPlaylist)) {
+		if (Array.isArray(objectPlaylist)) {
 			const bSucess = [];
 			for (const objectPlaylist_i of objectPlaylist) { bSucess.push(this.editData(objectPlaylist_i)); }
 			return bSucess.every(Boolean);
@@ -5506,7 +5506,7 @@ function _list(x, y, w, h) {
 
 	this.removeFromData = (objectPlaylist) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
-		if (isArray(objectPlaylist)) {
+		if (Array.isArray(objectPlaylist)) {
 			for (const objectPlaylist_i of objectPlaylist) { this.removeFromData(objectPlaylist_i); }
 			return;
 		}
@@ -5648,14 +5648,14 @@ function _list(x, y, w, h) {
 	};
 
 	this.moveToFolderStack = (item, toFolder) => {
-		const itemsArr = isArray(item) ? item : [item];
+		const itemsArr = Array.isArray(item) ? item : [item];
 		itemsArr.forEach((subItem) => { this.folderStack.push([subItem, toFolder]); });
 	};
 
 	// Use isUpperFolder() first to check if the item is not a parent of toFolder,
 	//  otherwise it will crash due to infinite recursion
 	this.moveToFolder = (item, toFolder) => {
-		const itemsArr = isArray(item) ? item : [item];
+		const itemsArr = Array.isArray(item) ? item : [item];
 		if (toFolder === null) {
 			itemsArr.forEach((subItem) => this.removeFromFolder(subItem));
 		} else {

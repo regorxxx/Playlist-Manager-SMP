@@ -1,7 +1,7 @@
 ﻿'use strict';
-//15/12/24
+//23/12/24
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable */
@@ -489,7 +489,7 @@ function capitalizePartial(s) {
 
 function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
 	if (!isString(s)) { return typeof s === 'number' ? s.toString() : ''; }
-	if (isArray(sep)) {
+	if (Array.isArray(sep)) {
 		const copy = [...s.toLowerCase()];
 		const len = s.length;
 		for (const sep_i of sep) {
@@ -646,7 +646,7 @@ Array.shuffle = function () {
 	let last = 0;
 	const argsLength = arguments.length;
 	for (let idx = 0; idx < argsLength; idx++) {
-		if (!isArray(arguments[idx])) { throw new TypeError('Argument is not an array.'); }
+		if (!Array.isArray(arguments[idx])) { throw new TypeError('Argument is not an array.'); }
 		if (idx === 0) { last = arguments[0].length; }
 		if (last !== arguments[idx].length) { throw new RangeError('Array lengths do not match.'); }
 	}

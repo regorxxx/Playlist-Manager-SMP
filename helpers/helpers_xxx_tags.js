@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/11/24
+//23/12/24
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery */
 
@@ -299,8 +299,7 @@ function queryJoin(queryArray, setLogic = 'AND') {
 	}
 	let arrayLength = queryArray.length;
 	// Wrong array
-	let isArray = Object.prototype.toString.call(queryArray) === '[object Array]' ? 1 : 0; //queryArray
-	if (!isArray || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
+	if (!Array.isArray(queryArray) || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
 		console.log('queryJoin(): queryArray [' + queryArray + '] was null, empty or not an array.');
 		return; //Array was null or not an array
 	}
@@ -368,8 +367,7 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 	let tagsArrayLength = tagsArray.length;
 	/** @type {string|string[]} */
 	let query = '';
-	let isArray = Object.prototype.toString.call(tagsArray[0]) === '[object Array]'; //subtagsArray
-	if (!isArray) { //no subtagsArrays
+	if (!Array.isArray(tagsArray[0])) { //no subtagsArrays
 		if (!logicDic.includes(tagsArrayLogic)) {
 			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
 			return;

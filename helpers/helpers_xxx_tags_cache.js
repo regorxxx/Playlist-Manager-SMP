@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//23/12/24
 
 include('callbacks_xxx.js');
 include('helpers_xxx.js');
@@ -30,7 +30,7 @@ _createFolder(tagsCache.folder);
 _save(tagsCache.folder + '_XXX-SCRIPTS_CACHE_FILES', null); // Add info files
 
 tagsCache.cacheTags = function (tagNames, iSteps, iDelay, libItems = fb.GetLibraryItems().Convert(), bForce = false) {
-	if (!isArray(libItems) || !libItems.length) { return null; }
+	if (!isArray(libItems)) { return null; }
 	return new Promise((resolve) => {
 		let items = [];
 		// Filter only items not cached before

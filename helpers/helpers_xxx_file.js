@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//23/12/24
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
@@ -496,7 +496,7 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 
 function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	let codepage = -1;
-	const plsText = isArray(originalText) ? originalText : originalText.split(/\r\n|\n\r|\n|\r/);
+	const plsText = Array.isArray(originalText) ? originalText : originalText.split(/\r\n|\n\r|\n|\r/);
 	if (extension === '.m3u8') { codepage = utf8; }
 	else if (extension === '.m3u' && plsText.length >= 2 && plsText[1].startsWith('#EXTENC:')) {
 		const codepageName = plsText[1].split(':').pop();

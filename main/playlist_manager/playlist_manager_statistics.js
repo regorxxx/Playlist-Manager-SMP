@@ -1,9 +1,9 @@
 ﻿'use strict';
-//15/11/24
+//23/12/24
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, isArray:readable, _b:readable, MF_STRING: readable */
+/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING: readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -553,7 +553,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						}
 						default: val = pls[arg];
 					}
-					(isArray(val) ? val : [val]).forEach((subVal) => {
+					(Array.isArray(val) ? val : [val]).forEach((subVal) => {
 						if (subVal === null) { return; }
 						if (!count.has(subVal)) { count.set(subVal, 1); }
 						else { count.set(subVal, count.get(subVal) + 1); }
