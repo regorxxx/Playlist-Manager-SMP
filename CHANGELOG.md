@@ -77,6 +77,7 @@
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
 - Folders: added support for 'External UI-only playlists' on destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
+- Folders: 'Move to folder' submenus now also display the entire folder tree instead of a plain list with all folders. i.e. a folder containing folders will have its own submenu, etc. In any case folders are still sorted by name.
 - Instances manager: simplified the way multiple panels are handled (and library cache shared); it should work better now, without the need for an external file. Old method may also be used if new one gives problems on startup (see below).
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to choose the instances manager used. By default is now set to 'v1' (see above).
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.
@@ -125,6 +126,7 @@
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
 - Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.
 - Exporting Playlists: fixed output path option (without a popup asking for it) and filename presets introduced on [0.17.0](#0170---2024-07-24) not working for AutoPlaylists and Smart Playlists.
+- Folders: 'Move to folder' submenu was missing nested folders if they were not expanded. Now they are shown, although folders not present in current view/filter state, are still hidden.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
 - UI: minor new line errors on folder button tooltip.

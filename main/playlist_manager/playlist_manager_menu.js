@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/24
+//30/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -839,22 +839,46 @@ function createMenuLeft(forcedIndex = -1) {
 					const subMenuName = menu.newMenu('Move to folder');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
-					const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
-						.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-					if (options.length) {
-						options.forEach((opt, i) => {
-							if (i && i % 5 === 0) {
-								menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
-								menu.newSeparator(subMenuName);
-							}
+					const { tree, folders, count } = list.getFolderTree(true);
+					if (folders.length) {
+						tree[subMenuName] = tree.none;
+						delete tree.none;
+						// Create submenus in order
+						for (const from in tree) {
+							tree[from].forEach((subMenu) => {
+								if (tree[subMenu].size) {
+									menu.findOrNewMenu(subMenu, from);
+								}
+							});
+						}
+						// Populate
+						folders.forEach((opt) => {
+							const menuName = opt.parents.length && !tree[opt.name].size
+								? opt.parents.pop()
+								: tree[opt.name].size
+									? opt.name
+									: subMenuName;
 							const bSameFolder = opt.name === pls.inFolder;
+							const bParent = opt.name === menuName;
+							const entryText = (bParent
+								? _b(opt.name)
+								: opt.name
+							) + '\t' + _b(opt.folder.pls.lengthFilteredDeep);
+							const entriesCount = count.get(tree[menuName]) + 1;
+							count.set(tree[menuName], entriesCount);
+							if (entriesCount && entriesCount % 5 === 0) {
+								menu.newEntry({ menuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
+								menu.newSeparator(menuName);
+							}
+							if (bParent && [...tree[menuName]].some((sub) => tree[sub].size)) { menu.newSeparator(menuName); }
 							menu.newEntry({
-								menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+								menuName, entryText, func: () => {
 									list.moveToFolder(pls, opt.folder);
 									if (opt.folder.isOpen) { list.showPlsByObj(pls); }
 									else { list.showPlsByObj(opt.folder); }
 								}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 							});
+							if (bParent && tree[menuName].size && [...tree[menuName]].every((sub) => !tree[sub].size)) { menu.newSeparator(menuName); }
 						});
 						if (pls.inFolder) {
 							menu.newSeparator(subMenuName);
@@ -902,9 +926,9 @@ function createMenuFolder(menu, folder, z) {
 	const playlists = folder.pls.filtered;
 	const indexes = playlists.map((p) => list.getIndex(p, true)); // When delaying menu, the mouse may move to other index...
 	// Helpers
-	const isPlsLoaded = (pls) => { return plman.FindPlaylist(pls.nameId) !== -1; };
-	const isPlsUI = (pls) => { return pls.extension === '.ui'; };
-	const isFolder = (pls) => { return pls.isFolder; };
+	const isPlsLoaded = (pls) => plman.FindPlaylist(pls.nameId) !== -1;
+	const isPlsUI = (pls) => pls.extension === '.ui';
+	const isFolder = (pls) => pls.isFolder;
 	// Evaluate
 	const bIsPlsLoadedEvery = playlists.every((pls) => { return isPlsLoaded(pls); });
 	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true; });
@@ -1053,23 +1077,46 @@ function createMenuFolder(menu, folder, z) {
 		const subMenuName = menu.newMenu('Move to folder');
 		menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
-		const options = list.data.filter(isFolder).filter((f) => f !== folder).sort((a, b) => a.nameId.localeCompare(b.nameId))
-			.map((f) => Object.fromEntries([['name', f.nameId], ['folder', f]]));
-		if (options.length) {
-			options.forEach((opt, i) => {
-				if (i && i % 5 === 0) {
-					menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
-					menu.newSeparator(subMenuName);
-				}
+		const { tree, folders, count } = list.getFolderTree(true);
+		if (folders.length) {
+			tree[subMenuName] = tree.none;
+			delete tree.none;
+			// Create submenus in order
+			for (const from in tree) {
+				tree[from].forEach((subMenu) => {
+					if (tree[subMenu].size) {
+						menu.findOrNewMenu(subMenu, from);
+					}
+				});
+			}
+			// Populate
+			folders.forEach((opt) => {
+				const menuName = opt.parents.length && !tree[opt.name].size
+					? opt.parents.pop()
+					: tree[opt.name].size
+						? opt.name
+						: subMenuName;
 				const bSameFolder = opt.name === folder.inFolder;
-				const bChild = list.isUpperFolder(folder, opt.folder);
+				const bParent = opt.name === menuName;
+				const entryText = (bParent
+					? _b(opt.name)
+					: opt.name
+				) + '\t' + _b(opt.folder.pls.lengthFilteredDeep);
+				const entriesCount = count.get(tree[menuName]) + 1;
+				count.set(tree[menuName], entriesCount);
+				if (entriesCount && entriesCount % 5 === 0) {
+					menu.newEntry({ menuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
+					menu.newSeparator(menuName);
+				}
+				if (bParent && [...tree[menuName]].some((sub) => tree[sub].size)) { menu.newSeparator(menuName); }
 				menu.newEntry({
-					menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+					menuName, entryText, func: () => {
 						list.moveToFolder(folder, opt.folder);
 						if (opt.folder.isOpen) { list.showPlsByObj(folder); }
 						else { list.showPlsByObj(opt.folder); }
-					}, flags: bSameFolder || bChild ? MF_GRAYED : MF_STRING
+					}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 				});
+				if (bParent && tree[menuName].size && [...tree[menuName]].every((sub) => !tree[sub].size)) { menu.newSeparator(menuName); }
 			});
 			if (folder.inFolder) {
 				menu.newSeparator(subMenuName);
@@ -1545,18 +1592,42 @@ function createMenuLeftMult(forcedIndexes = []) {
 				const subMenuName = menu.newMenu('Move to folder');
 				menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 				menu.newSeparator(subMenuName);
-				const options = list.data.filter(isFolder).sort((a, b) => a.nameId.localeCompare(b.nameId))
-					.map((folder) => Object.fromEntries([['name', folder.nameId], ['folder', folder]]));
-				if (options.length) {
-					options.forEach((opt, i) => {
-						if (i && i % 5 === 0) {
-							menu.newEntry({ menuName: subMenuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
-							menu.newSeparator(subMenuName);
-						}
+
+				const { tree, folders, count } = list.getFolderTree(true);
+				if (folders.length) {
+					tree[subMenuName] = tree.none;
+					delete tree.none;
+					// Create submenus in order
+					for (const from in tree) {
+						tree[from].forEach((subMenu) => {
+							if (tree[subMenu].size) {
+								menu.findOrNewMenu(subMenu, from);
+							}
+						});
+					}
+					// Populate
+					folders.forEach((opt) => {
+						const menuName = opt.parents.length && !tree[opt.name].size
+							? opt.parents.pop()
+							: tree[opt.name].size
+								? opt.name
+								: subMenuName;
 						const bSameFolder = playlists.every((pls) => opt.name === pls.inFolder);
 						const bChild = playlists.every((pls) => list.isUpperFolder(pls, opt.folder));
+						const bParent = opt.name === menuName;
+						const entryText = (bParent
+							? _b(opt.name)
+							: opt.name
+						) + '\t' + _b(opt.folder.pls.lengthFilteredDeep);
+						const entriesCount = count.get(tree[menuName]) + 1;
+						count.set(tree[menuName], entriesCount);
+						if (entriesCount && entriesCount % 5 === 0) {
+							menu.newEntry({ menuName, entryText: '', flags: MF_MENUBARBREAK | MF_GRAYED });
+							menu.newSeparator(menuName);
+						}
+						if (bParent && [...tree[menuName]].some((sub) => tree[sub].size)) { menu.newSeparator(menuName); }
 						menu.newEntry({
-							menuName: subMenuName, entryText: opt.name + '\t' + _b(opt.folder.pls.lengthFilteredDeep), func: () => {
+							menuName, entryText, func: () => {
 								const items = playlists
 									.filter((item) => !list.isUpperFolder(item, opt.folder));
 								list.moveToFolder(items, opt.folder);
@@ -1564,6 +1635,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								else { list.showPlsByObj(opt.folder); }
 							}, flags: bSameFolder || bChild ? MF_GRAYED : MF_STRING
 						});
+						if (bParent && tree[menuName].size && [...tree[menuName]].every((sub) => !tree[sub].size)) { menu.newSeparator(menuName); }
 					});
 					if (playlists.some((pls) => pls.inFolder)) {
 						menu.newSeparator(subMenuName);
@@ -2248,7 +2320,7 @@ function createMenuRight() {
 		{	// Duplicates by TF
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Duplicated items by TF...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for duplicated items by TF:\n'+ list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for duplicated items by TF:\n' + list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
 					findDuplicatesByTF(list.removeDuplicatesAutoPls, 'pls').then(({ found, report }) => {
@@ -2260,7 +2332,7 @@ function createMenuRight() {
 			});
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Duplicated items by TF (AutoPlaylists)...', func: () => {
-					let answer = WshShell.Popup('Scan all AutoPlaylists to check for duplicated items by TF:\n'+ list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all AutoPlaylists to check for duplicated items by TF:\n' + list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
 					findDuplicatesByTF(list.removeDuplicatesAutoPls, 'autopls').then(({ found, report }) => {
@@ -3055,7 +3127,7 @@ function createMenuRightTop() {
 			});
 			menu.newCheckMenuLast(() => list.bAdvTitle);
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Partial Multi-value tag matching', func: () => {
+				menuName: subMenuName, entryText: 'Partial multi-value tag matching', func: () => {
 					list.bMultiple = !list.bMultiple;
 					list.properties.bMultiple[1] = list.bMultiple;
 					fb.ShowPopupMessage(

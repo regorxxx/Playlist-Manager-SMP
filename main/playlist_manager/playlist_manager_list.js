@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/24
+//30/12/24
 
 /* exported _list */
 
@@ -1756,7 +1756,7 @@ function _list(x, y, w, h) {
 								} else {
 									this.dropUp = this.dropDown = this.dropIn = false;
 								}
-								const playlistDataText =  this.plsTooltip(pls, mask);
+								const playlistDataText = this.plsTooltip(pls, mask);
 								if (this.tooltip.text !== playlistDataText) {
 									if (bMoved) { this.tooltip.Deactivate(); }
 									this.tooltip.SetValue(playlistDataText, true);
@@ -5716,6 +5716,40 @@ function _list(x, y, w, h) {
 		if (!item.isFolder || !fromFolder.inFolder) { return false; }
 		const levels = new Set(this.getUpperFoldersNames(fromFolder));
 		return levels.has(item.nameId);
+	};
+
+	this.getFolderTree = (bCurrentView) => {
+		const tree = {};
+		const count = new WeakMap();
+		const folders = (bCurrentView
+			? this.dataAll.filter((pls) => pls.isFolder)
+				.filter((folder) => this.data.includes(folder) || this.data.includes(this.getTopFolder(folder)))
+			: this.dataAll.filter((pls) => pls.isFolder)
+		)
+			.sort((a, b) => a.nameId.localeCompare(b.nameId))
+			.map((folder) => {
+				return {
+					name: folder.nameId,
+					folder: folder,
+					parents: this.getUpperFoldersNames(folder).reverse()
+				};
+			});
+		if (folders.length) {
+			tree.none = new Set();
+			folders.forEach((folder) => tree[folder.name] = new Set());
+			folders.forEach((folder) => {
+				if (folder.parents.length) {
+					const last = folder.parents.reduce((prev, curr) => {
+						tree[prev].add(curr);
+						return curr;
+					}, 'none');
+					tree[last].add(folder.name);
+
+				}
+			});
+			Object.values(tree).forEach((val) => count.set(val, 0));
+		}
+		return { tree, folders, count };
 	};
 
 	this.checkCircularXsp = ({ jsp, name, pls }) => {
