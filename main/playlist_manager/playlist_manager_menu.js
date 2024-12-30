@@ -839,7 +839,9 @@ function createMenuLeft(forcedIndex = -1) {
 					const subMenuName = menu.newMenu('Move to folder');
 					menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
-					const { tree, folders, count } = list.getFolderTree(true);
+					const { tree, folders } = list.getFolderTree(true);
+					const count = new WeakMap;
+					Object.values(tree).forEach((val) => count.set(val, 0));
 					if (folders.length) {
 						tree[subMenuName] = tree.none;
 						delete tree.none;
@@ -878,7 +880,6 @@ function createMenuLeft(forcedIndex = -1) {
 									else { list.showPlsByObj(opt.folder); }
 								}, flags: bSameFolder ? MF_GRAYED : MF_STRING
 							});
-							if (bParent && tree[menuName].size && [...tree[menuName]].every((sub) => !tree[sub].size)) { menu.newSeparator(menuName); }
 						});
 						if (pls.inFolder) {
 							menu.newSeparator(subMenuName);
@@ -1077,7 +1078,9 @@ function createMenuFolder(menu, folder, z) {
 		const subMenuName = menu.newMenu('Move to folder');
 		menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
-		const { tree, folders, count } = list.getFolderTree(true);
+		const { tree, folders } = list.getFolderTree(true);
+		const count = new WeakMap;
+		Object.values(tree).forEach((val) => count.set(val, 0));
 		if (folders.length) {
 			tree[subMenuName] = tree.none;
 			delete tree.none;
@@ -1593,7 +1596,9 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({ menuName: subMenuName, entryText: 'Select folder:', flags: MF_GRAYED });
 				menu.newSeparator(subMenuName);
 
-				const { tree, folders, count } = list.getFolderTree(true);
+				const { tree, folders } = list.getFolderTree(true);
+				const count = new WeakMap;
+				Object.values(tree).forEach((val) => count.set(val, 0));
 				if (folders.length) {
 					tree[subMenuName] = tree.none;
 					delete tree.none;

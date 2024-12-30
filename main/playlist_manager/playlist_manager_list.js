@@ -5747,7 +5747,7 @@ function _list(x, y, w, h) {
 
 				}
 			});
-			Object.values(tree).forEach((val) => count.set(val, 0));
+			Object.values(tree).forEach((val) => count.set(val, val.size));
 		}
 		return { tree, folders, count };
 	};
