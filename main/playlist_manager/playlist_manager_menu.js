@@ -2476,7 +2476,7 @@ function createMenuRight() {
 				list.deletedItems.slice(0, 8).forEach((item, i) => {
 					if (item.extension === '.ui') { return; }
 					menu.newEntry({
-						menuName: subMenuName, entryText: item.name + '\t(file)', func: () => {
+						menuName: subMenuName, entryText: item.name + '\t' + _p(item.isFolder ? 'folder' : 'file'), func: () => {
 							list.addToData(item);
 							// Add new category to current view! (otherwise it gets filtered)
 							// Easy way: intersect current view + new one with refreshed list
@@ -2493,6 +2493,8 @@ function createMenuRight() {
 										}
 									}
 								}
+								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
+							} else if (item.isFolder) {
 								list.update({ bReuseData: true, bNotPaint: true }); // Only paint and save to json
 							} else {
 								_restoreFile(item.path);
