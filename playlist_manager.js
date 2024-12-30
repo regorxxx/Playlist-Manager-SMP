@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/12/24
+//30/12/24
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -15,7 +15,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable */
+/* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_playlists.js');
@@ -345,7 +345,7 @@ let properties = {
 	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }, false],
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone])],
 	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist])],
-	bMultiple: ['Partial Multi-value tag matching', true, { func: isBoolean }, true],
+	bMultiple: ['Partial multi-value tag matching', true, { func: isBoolean }, true],
 	folderRules: ['Send new playlists to folders', JSON.stringify({
 		externalUi: '',
 		internalUi: '',
@@ -1179,8 +1179,31 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlists_changed', () => {
 		if (!list.bInit) { return; }
 		if (list.bAllPls) { // For UI only playlists
+			const moveToFolder = [];
+			if (list.folderRules.externalUi.length) {
+				const notTracked = range(0, plman.PlaylistCount - 1)
+					.map((uiIdx) => {
+						const name = plman.GetPlaylistName(uiIdx);
+						return { uiIdx, dataIdx: list.getPlaylistIdxByUI({ name }), name };
+					})
+					.filter((pls) => pls.dataIdx === -1);
+				if (notTracked.length) {
+					const toFolder = list.dataFolder.find((f) => f.name === list.folderRules.externalUi) || list.addFolder(list.folderRules.externalUi);
+					notTracked.forEach((pls) => {
+						moveToFolder.push({ ...pls, toFolder });
+					});
+				}
+			}
 			list.update({ bReuseData: true, bNotPaint: true });
 			const categoryState = [...new Set(list.categoryState).intersection(new Set(list.categories()))];
+			if (moveToFolder.length) {
+				moveToFolder.forEach((move) => {
+					const idx = list.getPlaylistIdxByUI({ name: move.name });
+					if (idx !== -1) {
+						list.moveToFolder(list.dataAll[idx], move.toFolder);
+					}
+				});
+			}
 			list.filter({ categoryState });
 		}
 		if (!list.bUseUUID && plman.ActivePlaylist !== -1) {
