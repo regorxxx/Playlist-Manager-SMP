@@ -132,6 +132,7 @@
 - UI: minor new line errors on folder button tooltip.
 - UI: bottom toolbar tag/category filters showing 'Multiple...' (instead of 'All' by default) while loading the playlists at startup.
 - UI: playlist highlighting animation was drawn over quicksearch box in some cases.
+- UI: fix to nesting level of items within folders when parent folder was outside the view range.
 - Crash using drag n' drop or actions which moved the selection to a playlist if the source playlist was not tracked by the manager.
 - Statistics: minor fixes.
 

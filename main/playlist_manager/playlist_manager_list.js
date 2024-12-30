@@ -1199,20 +1199,30 @@ function _list(x, y, w, h) {
 			const textY = this.y + yOffset + (i * panel.rowHeight);
 			// Set levels
 			if (test) { test.CheckPoint('folders'); }
-			const bLevel = level.name.length;
+			const bLevel = !!level.name.length;
 			if (!this.isInFolder(pls)) {
 				level.offset = 0;
 				level.name = '';
-			} else if (bLevel && level.name !== pls.inFolder && this.data.findIndex((f) => f.name === level.name) >= this.offset) {
-				level.offset -= 1;
-				level.name = pls.inFolder;
+			} else if (bLevel && level.name !== pls.inFolder) {
+				let folder = this.data.find((item) => level.name === item.nameId);
+				while (folder) {
+					if (!level.offset) { break; }
+					level.offset -= 1;
+					level.name = folder.inFolder;
+					folder = level.name === pls.inFolder
+						? null
+						: this.data.find((item) => level.name === item.nameId);
+				}
 			} else if (!bLevel) {
 				let folder = this.data.find((item) => pls.inFolder === item.nameId);
+				const cache = folder.nameId;
+				const bOverflow = this.data.indexOf(folder) < this.offset;
 				while (folder) {
 					level.offset += 1;
-					level.name = folder.name;
+					level.name = folder.nameId;
 					folder = this.data.find((item) => folder.inFolder === item.nameId);
 				}
+				if (bOverflow) {level.name = cache;}
 			}
 			// Alternate row colors
 			if (panel.colors.bAltRowsColor && currIdx % 2) {
@@ -1222,8 +1232,10 @@ function _list(x, y, w, h) {
 			let playlistColor;
 			if (pls.isFolder) {
 				playlistColor = paintFolder(pls, i, textY);
-				level.offset += 1;
-				level.name = pls.name;
+				if (pls.isOpen) {
+					level.offset += 1;
+					level.name = pls.nameId;
+				}
 			} else {
 				playlistColor = paintPls(pls, i, currIdx, textX, textY, level.offset);
 			}
