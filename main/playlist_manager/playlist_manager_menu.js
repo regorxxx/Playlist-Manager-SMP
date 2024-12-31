@@ -1443,6 +1443,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({
 					menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						const bShift = utils.IsKeyPressed(VK_SHIFT);
+						const toConvertHandleList = new FbMetadbHandleList();
 						indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
 							const pls = playlists[i];
 							if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
@@ -1453,10 +1454,10 @@ function createMenuLeftMult(forcedIndexes = []) {
 								const exportFunc = pls.isAutoPlaylist
 									? exportAutoPlaylistFileWithTracksConvert
 									: exportPlaylistFileWithTracksConvert;
-								exportFunc({
+								const {bDone, handleList} = exportFunc({
 									list, z,
 									tf,
-									preset: bShift ? null : dsp,
+									preset: null,
 									defPath: path,
 									playlistOutPath,
 									ext: extension,
@@ -1465,8 +1466,16 @@ function createMenuLeftMult(forcedIndexes = []) {
 									bMultiple: list.bMultiple,
 									bExtendedM3U
 								});
+								if (bDone && handleList) {
+									handleList.Sort();
+									toConvertHandleList.MakeUnion(handleList);
+								}
 							}
 						});
+						if (!bShift && dsp) {
+							console.log('Playlist Manager: ' + toConvertHandleList.Count + ' tracks to convert.');
+							fb.RunContextCommandWithMetadb('Convert/' + dsp, toConvertHandleList, 8);
+						}
 					}, flags
 				});
 			});

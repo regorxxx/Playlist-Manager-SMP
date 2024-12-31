@@ -78,6 +78,7 @@
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
 - Exporting Playlists: pressing SHIFT when clicking on any of the 'Export and convert' menu entries will skip tracks conversion and exporting and only process the playlist file. The submenu shows now this tip at the header. [Issue 86](https://github.com/regorxxx/Playlist-Manager-SMP/issues/86).
+- Exporting Playlists: 'Export and convert' action on folders or multi-selection will now collect all tracks first and fire a single converter thread for them, instead of one converter window per playlist. Total number of tracks which will be converted is shown on console.
 - Folders: added support for 'External UI-only playlists' on destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Folders: 'Move to folder' submenus now also display the entire folder tree instead of a plain list with all folders. i.e. a folder containing folders will have its own submenu, etc. In any case folders are still sorted by name.
 - Instances manager: simplified the way multiple panels are handled (and library cache shared); it should work better now, without the need for an external file. Old method may also be used if new one gives problems on startup (see below).
@@ -136,6 +137,7 @@
 - UI: bottom toolbar tag/category filters showing 'Multiple...' (instead of 'All' by default) while loading the playlists at startup.
 - UI: playlist highlighting animation was drawn over quicksearch box in some cases.
 - UI: fix to nesting level of items within folders when parent folder was outside the view range.
+- UI: fix to 'Export and convert' entry being grayed-out on multi-selection which only contains AutoPlaylists.
 - Crash using drag n' drop or actions which moved the selection to a playlist if the source playlist was not tracked by the manager.
 - Statistics: minor fixes.
 

@@ -1048,7 +1048,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-		return bDone;
+		return {bDone, handleList: null};
 	}
 	const playlistPath = pls.path;
 	const bUI = pls.extension === '.ui';
@@ -1075,9 +1075,9 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 					true
 				)
 			);
-		} catch (e) { return bDone; }
+		} catch (e) { return {bDone, handleList: null}; }
 	}
-	if (!newPath.length) { return bDone; }
+	if (!newPath.length) { return {bDone, handleList: null}; }
 	newPath = sanitizePath(
 		newPath
 			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
@@ -1085,7 +1085,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			.replace(/#EXT#/gi, extension.length ? extension : playlistExt)
 			.replace(/#PLAYLISTEXT#/gi, playlistNameExt)
 	);
-	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
+	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return {bDone, handleList: null}; }
 	// Get tracks
 	const handleList = !bUI
 		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle, bMultiple })
@@ -1125,7 +1125,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 			if (!isArrayStrings(fileNames)) {
 				fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
-				return bDone;
+				return {bDone, handleList};
 			}
 			// Copy playlist file when original extension and output extension are the same or both share same format (M3U)
 			let file = '';
@@ -1151,13 +1151,13 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-				return bDone;
+				return {bDone, handleList};
 			}
 			if (bOpenOnExport) { _explorer(newPath); }
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 		}
 	}
-	return bDone;
+	return {bDone, handleList};
 }
 
 function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true } = {}) {
@@ -1167,7 +1167,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-		return bDone;
+		return {bDone, handleList: null};
 	}
 	const playlistName = pls.name;
 	const extension = ext.length ? ext.toLowerCase() : list.playlistsExtension;
@@ -1189,9 +1189,9 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 					true
 				)
 			);
-		} catch (e) { return bDone; }
+		} catch (e) { return {bDone, handleList: null}; }
 	}
-	if (!newPath.length) { return bDone; }
+	if (!newPath.length) { return {bDone, handleList:null }; }
 	newPath = sanitizePath(
 		newPath
 			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
@@ -1203,7 +1203,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	// For query playlists, use the UI copy if possible
 	const bUI = pls.extension === '.ui'
 		|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
-	if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return bDone; }
+	if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return {bDone, handleList: null}; }
 	let handleList = !bUI
 		? pls.isAutoPlaylist
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
@@ -1234,7 +1234,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 			if (!isArrayStrings(fileNames)) {
 				fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
-				return bDone;
+				return {bDone, handleList};
 			}
 			let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
 			if (_isFile(newPath)) { bDeleted = _recycleFile(newPath, true); }
@@ -1250,13 +1250,13 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-				return bDone;
+				return {bDone, handleList};
 			}
 			if (bOpenOnExport) { _explorer(newPath); }
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 		}
 	}
-	return bDone;
+	return {bDone, handleList};
 }
 
 function renamePlaylist(list, z, newName, bUpdatePlman = true) {
