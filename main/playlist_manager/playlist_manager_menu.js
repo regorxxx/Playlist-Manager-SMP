@@ -934,9 +934,9 @@ function createMenuFolder(menu, folder, z) {
 	const isPlsUI = (pls) => pls.extension === '.ui';
 	const isFolder = (pls) => pls.isFolder;
 	// Evaluate
-	const bIsPlsLoadedEvery = playlists.every((pls) => { return isPlsLoaded(pls); });
-	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true; });
-	const bIsFolderEvery = playlists.every((pls) => { return isFolder(pls); });
+	const bIsPlsLoadedEvery = playlists.every((pls) => isPlsLoaded(pls));
+	const bIsValidXSPEveryOnly = playlists.every((pls) => (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true);
+	const bIsFolderEvery = playlists.every((pls) => isFolder(pls));
 	const bManualSorting = list.methodState === list.manualMethodState();
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
@@ -1182,38 +1182,38 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const lb = ListenBrainz;
 	// Helpers
-	const isPlsLoaded = (pls) => { return plman.FindPlaylist(pls.nameId) !== -1; };
-	const isAutoPls = (pls) => { return pls.isAutoPlaylist || pls.query; };
-	const isLockPls = (pls) => { return pls.isLocked; };
-	const isPlsEditable = (pls) => { return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl' || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui' || pls.isFolder; };
-	const isPlsLockable = (pls) => { return isPlsEditable(pls) || pls.extension === '.strm'; };
-	const isPlsUI = (pls) => { return pls.extension === '.ui'; };
-	const nonPlsUI = playlists.filter((pls) => { return pls.extension !== '.ui'; });
-	const isFolder = (pls) => { return pls.isFolder; };
+	const isPlsLoaded = (pls) => plman.FindPlaylist(pls.nameId) !== -1;
+	const isAutoPls = (pls) => pls.isAutoPlaylist || pls.query;
+	const isLockPls = (pls) => pls.isLocked;
+	const isPlsEditable = (pls) => pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl' || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui' || pls.isFolder;
+	const isPlsLockable = (pls) => isPlsEditable(pls) || pls.extension === '.strm';
+	const isPlsUI = (pls) => pls.extension === '.ui';
+	const nonPlsUI = playlists.filter((pls) => pls.extension !== '.ui');
+	const isFolder = (pls) => pls.isFolder;
 	// Pls
-	const playlistsUI = playlists.filter((pls) => { return pls.extension === '.ui'; });
-	const playlistsLoaded = playlists.filter((pls) => { return !isFolder(pls) && isPlsLoaded(pls); });
+	const playlistsUI = playlists.filter((pls) => pls.extension === '.ui');
+	const playlistsLoaded = playlists.filter((pls) => !isFolder(pls) && isPlsLoaded(pls));
 	// Evaluate
-	const bIsPlsLoadedEvery = playlists.every((pls) => { return isPlsLoaded(pls); });
-	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => { return isPlsLoaded(pls); });
-	const bIsAutoPlsEvery = playlists.every((pls) => { return isAutoPls(pls); });
-	const bIsValidXSPEveryOnly = playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true; });
-	const bIsValidXSPEvery = !bIsAutoPlsEvery || playlists.every((pls) => { return (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs'); });
-	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => { return isAutoPls(pls); });
-	const bIsLockPlsEvery = nonPlsUI.length && nonPlsUI.every((pls) => { return isLockPls(pls); });
-	const bIsFolderEvery = playlists.every((pls) => { return isFolder(pls); });
-	const bIsPlsEditable = playlists.some((pls) => { return isPlsEditable(pls); });
-	const bIsPlsLockable = playlists.some((pls) => { return isPlsLockable(pls); });
+	const bIsPlsLoadedEvery = playlists.every((pls) => isPlsLoaded(pls));
+	const bIsPlsLoadedSome = bIsPlsLoadedEvery || playlists.some((pls) => isPlsLoaded(pls));
+	const bIsAutoPlsEvery = playlists.every((pls) => isAutoPls(pls));
+	const bIsValidXSPEveryOnly = playlists.every((pls) => (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type === 'songs') || true);
+	const bIsValidXSPEvery = playlists.every((pls) => pls.extension !== '.xsp' || (Object.hasOwn(pls, 'type') && pls.type === 'songs'));
+	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => isAutoPls(pls));
+	const bIsLockPlsEvery = nonPlsUI.length && nonPlsUI.every((pls) => isLockPls(pls));
+	const bIsFolderEvery = playlists.every((pls) => isFolder(pls));
+	const bIsPlsEditable = playlists.some((pls) => isPlsEditable(pls));
+	const bIsPlsLockable = playlists.some((pls) => isPlsLockable(pls));
 	const bIsPlsUIEvery = playlistsUI.length === playlists.length;
 	const bIsPlsUISome = playlistsUI.length !== 0;
-	const bWritableFormat = playlists.some((pls) => { return writablePlaylistFormats.has(pls.extension); });
+	const bWritableFormat = playlists.some((pls) => writablePlaylistFormats.has(pls.extension));
 	const bManualSorting = list.methodState === list.manualMethodState();
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
 	if (list.bShowMenuHeader) {
-		menu.newEntry({ entryText: '--- ' + playlists.length + ' playlists: ' + playlists.map((pls) => { return pls.name; }).joinUpToChars(', ', 20) + ' ---', flags: MF_GRAYED });
+		menu.newEntry({ entryText: '--- ' + playlists.length + ' playlists: ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 20) + ' ---', flags: MF_GRAYED });
 		menu.newSeparator();
 	}
 	// Entries
@@ -1397,7 +1397,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newEntry({
 				entryText: 'Copy playlist files to...', func: () => {
 					exportPlaylistFiles(list, indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder));
-				}, flags
+				}, flags: bIsAutoPlsEvery ? MF_GRAYED : flags
 			});
 		}
 		{	// Export and copy
@@ -1414,7 +1414,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						exportPlaylistFileWithTracks({ list, z, bAsync: list.properties.bCopyAsync[1], bNoInput: true, defPath: plsPath, bOpenOnExport: false });
 					});
 					if (list.properties.bOpenOnExport[1]) { _explorer(path); }
-				}, flags
+				}, flags: bIsAutoPlsEvery ? MF_GRAYED : flags
 			});
 		}
 		{	// Export
