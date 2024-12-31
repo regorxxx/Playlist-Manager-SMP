@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/24
+//31/12/24
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -317,7 +317,7 @@ function setTrackTags(trackTags, list, z) {
 				let reason = -1;
 				if (extension === '.m3u' || extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#TRACKTAGS:' + oldTags, '#TRACKTAGS:' + newTags, list.bBOM); }
 				else if (extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="tags">' + oldTags, '<meta rel="tags">' + newTags, list.bBOM); }
-				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path) }); }
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setTag(trackTags, list, z); return; }
@@ -364,7 +364,7 @@ function setTag(tags, list, z) {
 				let reason = -1;
 				if (extension === '.m3u' || extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#TAGS:' + pls.tags.join(';'), '#TAGS:' + tags.join(';'), list.bBOM); }
 				else if (extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="tags">' + pls.tags.join(';'), '<meta rel="tags">' + tags.join(';'), list.bBOM); }
-				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path) }); }
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setTag(tags, list, z); return; }
@@ -418,7 +418,7 @@ function setCategory(category, list, z) {
 				let reason = -1;
 				if (extension === '.m3u' || extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#CATEGORY:' + pls.category, '#CATEGORY:' + category, list.bBOM); }
 				else if (extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="category">' + pls.category, '<meta rel="category">' + category, list.bBOM); }
-				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path) }); }
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setCategory(category, list, z); return; }
@@ -475,7 +475,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 						[bDone, reason] = editTextFile(path, '<identifier>' + pls.playlist_mbid, '<identifier>' + 'https://listenbrainz.org/playlist/' + playlist_mbid, list.bBOM);
 					}
 				}
-				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
+				if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path) }); }
 				if (!bDone && reason === 1) {
 					bDone = rewriteHeader(list, pls);
 					if (bDone) { setPlaylist_mbid(playlist_mbid, list, pls); return; }
@@ -523,7 +523,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 			let reason = -1;
 			if (pls.extension === '.m3u' || pls.extension === '.m3u8') { [bDone, reason] = editTextFile(path, '#LOCKED:' + boolText[0], '#LOCKED:' + boolText[1], list.bBOM); }
 			else if (pls.extension === '.xspf') { [bDone, reason] = editTextFile(path, '<meta rel="locked">' + boolText[0], '<meta rel="locked">' + boolText[1], list.bBOM); }
-			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path)});}
+			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(path) }); }
 			if (!bDone && reason === 1) {
 				bDone = rewriteHeader(list, pls);
 				if (bDone) { switchLock(list, z, bAlsoHidden); return; }
@@ -614,7 +614,7 @@ function rewriteHeader(list, pls) {
 			bDone = _save(pls.path, fileText.join('\r\n'));
 		}
 	}
-	if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path)});}
+	if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path) }); }
 	return bDone;
 }
 
@@ -641,7 +641,7 @@ function convertToRelPaths(list, z) {
 		} else { bDeleted = true; }
 		if (bDeleted) {
 			bDone = _save(playlistPath, file, list.bBOM); // No BOM
-			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path)});}
+			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path) }); }
 			else {
 				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 				_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -1120,7 +1120,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 		}
 		if (handleList.Count) {
 			// Convert tracks
-			fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
+			if (preset) { fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8); }
 			// Retrieve new paths
 			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 			if (!isArrayStrings(fileNames)) {
@@ -1229,7 +1229,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 				fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
 			}
 			// Convert tracks
-			fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8);
+			if (preset) { fb.RunContextCommandWithMetadb('Convert/' + preset, handleList, 8); }
 			// Retrieve new paths
 			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 			if (!isArrayStrings(fileNames)) {
@@ -1670,7 +1670,7 @@ function findDuplicatesByTF(checkKeys = globTags.remDupl, mode = 'all' /* all|pl
 							? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(playlist.query))
 							: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true });
 					if (handleList) {
-						const duplicates = showDuplicates({handleList, checkKeys, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+						const duplicates = showDuplicates({ handleList, checkKeys, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
 						const count = duplicates && duplicates.Count;
 						let bDone = false;
 						if (count) { report.push((playlist.path || playlist.name) + ' (' + count + ' duplicates)'); bDone = true; }

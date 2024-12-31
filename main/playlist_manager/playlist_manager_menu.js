@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/24
+//31/12/24
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -477,7 +477,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const presets = JSON.parse(list.properties.converterPreset[1]);
 					const flags = bWritableFormat || bIsPlsUI || bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED;
 					const subMenuName = menu.newMenu('Export and Convert Tracks to...', void (0), presets.length ? flags : MF_GRAYED);
-					menu.newEntry({ menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED });
+					menu.newEntry({ menuName: subMenuName, entryText: 'Shift + Click to skip tracks conversion:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
 					presets.forEach((preset) => {
 						const path = preset.path;
@@ -499,6 +499,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 						menu.newEntry({
 							menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+								const bShift = utils.IsKeyPressed(VK_SHIFT);
 								const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls)
 									? list.removeDuplicatesAutoPls
 									: [];
@@ -508,7 +509,7 @@ function createMenuLeft(forcedIndex = -1) {
 								exportFunc({
 									list, z,
 									tf,
-									preset: dsp,
+									preset: bShift ? null : dsp,
 									defPath: path,
 									playlistOutPath,
 									ext: extension,
@@ -1397,7 +1398,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		{	// Export
 			const presets = JSON.parse(list.properties.converterPreset[1]);
 			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void (0), presets.length ? flags : MF_GRAYED);
-			menu.newEntry({ menuName: subMenuName, entryText: 'Select a preset:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Shift + Click to skip tracks conversion:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			presets.forEach((preset) => {
 				const path = preset.path;
@@ -1419,6 +1420,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
 				menu.newEntry({
 					menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+						const bShift = utils.IsKeyPressed(VK_SHIFT);
 						indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
 							const pls = playlists[i];
 							if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
@@ -1432,7 +1434,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								exportFunc({
 									list, z,
 									tf,
-									preset: dsp,
+									preset: bShift ? null : dsp,
 									defPath: path,
 									playlistOutPath,
 									ext: extension,
