@@ -143,7 +143,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newMenu('Items...', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
 				}
 				menu.newSeparator();
-				menu.newEntry({ entryText: 'Add playlist contents to queue', func: () => { list.queuePlaylist(pls, true); }});
+				menu.newEntry({ entryText: 'Add playlist contents to queue', func: () => { list.queuePlaylist(pls, true); } });
 				menu.newSeparator();
 				const selItems = fb.GetSelections(1);
 				menu.newEntry({
@@ -1058,15 +1058,17 @@ function createMenuFolder(menu, folder, z) {
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
 		menu.newSeparator();
-		menu.newEntry({ entryText: 'Add folder contents to queue', func: () => {
-			if (!bOpen) { list.switchFolder(z); }
-			const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
-			zArr.forEach((z) => {
-				const pls = list.data[z];
-				list.queuePlaylist(pls, true);
-			});
-			if (!bOpen) { list.switchFolder(z); }
-		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+		menu.newEntry({
+			entryText: 'Add folder contents to queue', func: () => {
+				if (!bOpen) { list.switchFolder(z); }
+				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
+				zArr.forEach((z) => {
+					const pls = list.data[z];
+					list.queuePlaylist(pls, true);
+				});
+				if (!bOpen) { list.switchFolder(z); }
+			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+		});
 	}
 	if (showMenus['Sorting'] && bManualSorting) {
 		menu.newSeparator();
@@ -1262,14 +1264,16 @@ function createMenuLeftMult(forcedIndexes = []) {
 			}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
 		menu.newSeparator();
-		menu.newEntry({ entryText: 'Add playlists contents to queue', func: () => {
-			indexes.forEach((z, i) => {
-				const pls = playlists[i];
-				if (!isFolder(pls)) {
-					list.queuePlaylist(pls, true);
-				}
-			});
-		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+		menu.newEntry({
+			entryText: 'Add playlists contents to queue', func: () => {
+				indexes.forEach((z, i) => {
+					const pls = playlists[i];
+					if (!isFolder(pls)) {
+						list.queuePlaylist(pls, true);
+					}
+				});
+			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+		});
 		menu.newSeparator();
 		// Convert UI playlists
 		menu.newEntry({
@@ -1444,7 +1448,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 					menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						const bShift = utils.IsKeyPressed(VK_SHIFT);
 						const toConvertHandleList = new FbMetadbHandleList();
-						indexes.filter((idx, i) => !playlists[i].isFolder).forEach((z, i) => {
+						Promise.serial(indexes.filter((idx, i) => !playlists[i].isFolder), (z, i) => {
 							const pls = playlists[i];
 							if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
 							if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
@@ -1454,7 +1458,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								const exportFunc = pls.isAutoPlaylist
 									? exportAutoPlaylistFileWithTracksConvert
 									: exportPlaylistFileWithTracksConvert;
-								const {bDone, handleList} = exportFunc({
+								const { bDone, handleList } = exportFunc({
 									list, z,
 									tf,
 									preset: null,
@@ -1471,11 +1475,12 @@ function createMenuLeftMult(forcedIndexes = []) {
 									toConvertHandleList.MakeUnion(handleList);
 								}
 							}
+						}, 20).then(() => {
+							if (!bShift && dsp) {
+								console.log('Playlist Manager: ' + toConvertHandleList.Count + ' tracks to convert.');
+								fb.RunContextCommandWithMetadb('Convert/' + dsp, toConvertHandleList, 8);
+							}
 						});
-						if (!bShift && dsp) {
-							console.log('Playlist Manager: ' + toConvertHandleList.Count + ' tracks to convert.');
-							fb.RunContextCommandWithMetadb('Convert/' + dsp, toConvertHandleList, 8);
-						}
 					}, flags
 				});
 			});
