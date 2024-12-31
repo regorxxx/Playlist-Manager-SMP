@@ -143,6 +143,8 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newMenu('Items...', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
 				}
 				menu.newSeparator();
+				menu.newEntry({ entryText: 'Add playlist contents to queue', func: () => { list.queuePlaylist(pls, true); }});
+				menu.newSeparator();
 				const selItems = fb.GetSelections(1);
 				menu.newEntry({
 					entryText: 'Copy selection to playlist', func: () => {
@@ -1055,6 +1057,16 @@ function createMenuFolder(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
+		menu.newSeparator();
+		menu.newEntry({ entryText: 'Add folder contents to queue', func: () => {
+			if (!bOpen) { list.switchFolder(z); }
+			const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
+			zArr.forEach((z) => {
+				const pls = list.data[z];
+				list.queuePlaylist(pls, true);
+			});
+			if (!bOpen) { list.switchFolder(z); }
+		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
 	}
 	if (showMenus['Sorting'] && bManualSorting) {
 		menu.newSeparator();
@@ -1249,6 +1261,16 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 			}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
+		menu.newSeparator();
+		menu.newEntry({ entryText: 'Add playlists contents to queue', func: () => {
+			indexes.forEach((z, i) => {
+				const pls = playlists[i];
+				if (!isFolder(pls)) {
+					list.queuePlaylist(pls, true);
+				}
+			});
+		}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING});
+		menu.newSeparator();
 		// Convert UI playlists
 		menu.newEntry({
 			entryText: 'Convert to playlist files', func: () => {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/24
+//31/12/24
 
 /* exported _list */
 
@@ -1222,7 +1222,7 @@ function _list(x, y, w, h) {
 					level.name = folder.nameId;
 					folder = this.data.find((item) => folder.inFolder === item.nameId);
 				}
-				if (bOverflow) {level.name = cache;}
+				if (bOverflow) { level.name = cache; }
 			}
 			// Alternate row colors
 			if (panel.colors.bAltRowsColor && currIdx % 2) {
@@ -6389,6 +6389,54 @@ function _list(x, y, w, h) {
 		return true;
 	};
 
+	this.queuePlaylist = (idxOrPls, bAsync = false) => {
+		let idx, pls;
+		if (typeof idxOrPls === 'number') {
+			if (idx < 0 || idx >= this.itemsAll) {
+				console.log('Playlist Manager: Error adding playlist to queue. Index ' + _p(idx) + ' out of bounds. (queuePlaylist)');
+				return false;
+			}
+			idx = idxOrPls;
+			pls = this.dataAll[idx];
+		} else {
+			idx = this.getPlaylistsIdxByObj([idxOrPls])[0];
+			if (typeof idx === 'undefined') { return false; }
+			pls = idxOrPls;
+		}
+		const uiIdx = plman.FindPlaylist(pls.nameId);
+		const bLoaded = uiIdx !== -1 && plman.IsAutoPlaylist(uiIdx) === !!pls.isAutoPlaylist;
+		if (bLoaded) {
+			const count = plman.PlaylistItemCount(uiIdx);
+			if (count) {
+				if (bAsync) {
+					Promise.serial(
+						range(0, count - 1, 1),
+						(trackIdx) => plman.AddPlaylistItemToPlaybackQueue(uiIdx, trackIdx),
+						20
+					);
+				} else {
+					for (let i = 0; i < count; i++) { plman.AddPlaylistItemToPlaybackQueue(uiIdx, i); }
+				}
+				return true;
+			}
+		} else {
+			const handleList = this.getHandleFrom(idx, false);
+			if (handleList.Count) {
+				if (bAsync) {
+					Promise.serial(
+						handleList.Convert(),
+						(handle) => plman.AddItemToPlaybackQueue(handle),
+						20
+					);
+				} else {
+					handleList.Convert().forEach((handle) => plman.AddItemToPlaybackQueue(handle));
+				}
+				return true;
+			}
+		}
+		return false;
+	};
+
 	this.hasPlaylists = (names = []) => {
 		const namesSet = new Set(names);
 		this.dataAll.forEach((pls) => {
@@ -6457,7 +6505,9 @@ function _list(x, y, w, h) {
 	this.getHandleFrom = (idx, bLog = true) => {
 		const pls = this.dataAll[idx];
 		let handleList = new FbMetadbHandleList();
-		if (pls.extension === '.ui') {
+		const findPlsIdx = plman.FindPlaylist(pls.nameId);
+		const bLoaded = findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoPlaylist;
+		if (pls.extension === '.ui' || bLoaded) {
 			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
 			if (handleList) {
 				this.editData(pls, {
