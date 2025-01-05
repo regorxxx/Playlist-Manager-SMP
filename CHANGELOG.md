@@ -77,6 +77,7 @@
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
+- Search: searching by tracks' paths now includes AutoPlaylists.
 - Exporting Playlists: pressing SHIFT when clicking on any of the 'Export and convert' menu entries will skip tracks conversion and exporting and only process the playlist file. The submenu shows now this tip at the header. [Issue 86](https://github.com/regorxxx/Playlist-Manager-SMP/issues/86).
 - Exporting Playlists: 'Export and convert' action on folders or multi-selection will now collect all tracks first and fire a single converter thread for them, instead of one converter window per playlist. Total number of tracks which will be converted is shown on console.
 - Folders: added support for 'External UI-only playlists' on destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
@@ -125,6 +126,7 @@
 ### Removed
 - UI: unnecessary playlist refresh after changing fonts size.
 ### Fixed
+- Search: last search not being applied on startup in some cases.
 - Auto-loading: manager kept reloading playlist files (auto-load) when tags, categories, etc. where changed via menus due to physical file changes.
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
 - Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.

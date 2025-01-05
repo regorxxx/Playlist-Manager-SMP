@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/12/24
+//05/01/25
 
 /* exported _list */
 
@@ -2689,19 +2689,21 @@ function _list(x, y, w, h) {
 			const bIsQuery = !bFuzzy && isQuery(str, false, false, false);
 			const term = bFuzzy ? str.replace(/(^~)|(~$)/g, '') : str;
 			const threshold = 0.75;
+			const library = fb.GetLibraryItems();
 			let match;
 			const getHandleList = (pls) => {
 				let handleList;
-				if (pls.extension === '.ui') {
-					const idx = plman.FindPlaylist(pls.nameId);
-					handleList = idx !== -1 ? plman.GetPlaylistItems(idx) : null;
-				} else if (pls.isAutoPlaylist) {
-					handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true); // Cached
-				} else if (pls.path.length) {
-					handleList = this.plsCache.get(pls.path);
-					if (!handleList) {
-						handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
-						this.plsCache.set(pls.path, handleList);
+				const idx = plman.FindPlaylist(pls.nameId);
+				handleList = idx !== -1 ? plman.GetPlaylistItems(idx) : null;
+				if (handleList === null) {
+					if (pls.isAutoPlaylist) {
+						handleList = fb.GetQueryItemsCheck(library, stripSort(pls.query), true); // Cached
+					} else if (pls.path.length) {
+						handleList = this.plsCache.get(pls.path);
+						if (!handleList) {
+							handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
+							this.plsCache.set(pls.path, handleList);
+						}
 					}
 				}
 				return handleList;
@@ -2749,13 +2751,18 @@ function _list(x, y, w, h) {
 				if (this.searchMethod.bName && match(pls.name)) { return true; }
 				else if (this.searchMethod.bTags && match(pls.tags)) { return true; } // NOSONAR [explicit branches]
 				else if (this.searchMethod.bCategory && match(pls.category)) { return true; } // NOSONAR [explicit branches]
-				if (this.searchMethod.bPath && (pls.path.length || pls.extension === '.ui')) {
+				if (this.searchMethod.bPath) {
 					let paths;
-					if (pls.extension === '.ui') {
-						const idx = plman.FindPlaylist(pls.nameId);
-						paths = idx !== -1 ? plman.GetPlaylistItems(idx).GetLibraryRelativePaths() : [];
+					const idx = plman.FindPlaylist(pls.nameId);
+					if (idx !== -1) {
+						paths = plman.GetPlaylistItems(idx).GetLibraryRelativePaths();
 					} else {
-						paths = getFilePathsFromPlaylist(pls.path);
+						if (pls.isAutoPlaylist) {
+							const handleList = getHandleList(pls);
+							paths = handleList.GetLibraryRelativePaths();
+						} else {
+							paths = getFilePathsFromPlaylist(pls.path);
+						}
 					}
 					paths = paths.map((path) => path.split('\\').slice(- (this.searchMethod.pathLevel || Infinity)));
 					if (match(paths)) { return true; }
@@ -7420,9 +7427,7 @@ function _list(x, y, w, h) {
 			this.checkConfigPostUpdate(bDone);
 			this.updatePlaylistIcons();
 			// Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-			if (!this.uiElements['Search filter'].enabled || !this.searchMethod.text.length || this.searchMethod.bResetStartup) {
-				this.filter();
-			}
+			this.filter();
 			if (test) { test.Print('Load playlists'); }
 			globProfiler.Print('list.init.playlists');
 		}).then(() => {
@@ -7470,7 +7475,12 @@ function _list(x, y, w, h) {
 					}
 				} else { this.deleteExportInfo(); }
 				if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-					Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch);
+					Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch)
+						.then(() => {
+							if (this.uiElements['Search filter'].enabled && this.searchMethod.text.length && !this.searchMethod.bResetStartup) {
+								this.search();
+							}
+						});
 				}
 			}
 			if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
