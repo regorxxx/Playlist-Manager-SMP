@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/12/24
+//07/01/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -13,7 +13,7 @@ include('..\\..\\helpers\\helpers_xxx_file.js');
 include('..\\..\\helpers\\helpers_xxx_file_zip.js');
 /* global _zip:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, isArray:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable */
+/* global isArrayStrings:readable, isArray:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, round:readable */
 include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 /* global _setClipboardData:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -44,7 +44,7 @@ function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '
 	this.path = path || '';
 	this.size = size;
 	this.fileSize = fileSize;
-	this.trackSize = trackSize;
+	this.trackSize = round(trackSize, 2);
 	this.isLocked = bLocked;
 	this.isAutoPlaylist = bAutoPlaylist;
 	this.query = queryObj['query'];
@@ -54,7 +54,7 @@ function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '
 	this.tags = isArrayStrings(tags) ? tags : [];
 	this.trackTags = isArray(trackTags) ? trackTags : [];
 	this.limit = Number.isFinite(limit) ? limit : 0;
-	this.duration = Number.isFinite(duration) ? duration : -1;
+	this.duration = Number.isFinite(duration) ? round(duration, 2) : -1;
 	this.playlist_mbid = playlist_mbid;
 	this.author = author;
 	this.description = description;
@@ -145,7 +145,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 						}
 						if (lineText.startsWith('#DURATION:')) {
 							iFound++;
-							duration = Number(lineText.split(':')[1]);
+							duration = round(Number(lineText.split(':')[1]), 2);
 						}
 						if (lineText.startsWith('#PLAYLIST_MBID:')) {
 							iFound++;
@@ -180,7 +180,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 						if (Object.hasOwn(metaData, 'tags')) { tags = metaData.tags ? metaData.tags.split(';') : []; }
 						if (Object.hasOwn(metaData, 'trackTags')) { trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : []; }
 						if (Object.hasOwn(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
-						if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? Number(metaData.duration) : null; }
+						if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? round(Number(metaData.duration), 2) : null; }
 						if (Object.hasOwn(metaData, 'playlist_mbid')) { playlist_mbid = metaData.playlist_mbid ? metaData.playlist_mbid : ''; }
 					}
 				}
@@ -226,7 +226,7 @@ function loadPlaylistsFromFolder(folderPath = '', bProfile = true) {
 							if (Object.hasOwn(metaData, 'tags')) { tags = metaData.tags ? metaData.tags.split(';') : []; }
 							if (Object.hasOwn(metaData, 'trackTags')) { trackTags = metaData.trackTags ? JSON.parse(metaData.trackTags) : []; }
 							if (Object.hasOwn(metaData, 'playlistSize')) { size = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.playlistSize) : null; }
-							if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? Number(metaData.duration) : null; }
+							if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.duration !== 'undefined' ? round(Number(metaData.duration), 2) : null; }
 							if (Object.hasOwn(metaData, 'playlist_mbid')) { playlist_mbid = metaData.playlist_mbid ? metaData.playlist_mbid : ''; }
 						}
 						if (!bLockedFound) { bLocked = true; } // Locked by default if meta not present
@@ -302,7 +302,7 @@ function setTrackTags(trackTags, list, z) {
 		if (pls.extension === '.ui' || pls.extension === '.strm' || pls.extension === '.pls') {
 			console.log('Playlist Manager: Playlist\'s track tags can not be edited due to format ' + pls.extension);
 		} else if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
-			list.editData(pls, { trackTags });
+			list.editData(pls, { trackTags, modified: Date.now() });
 			list.update({ bReuseData: true, bNotPaint: true });
 			list.filter();
 			bDone = true;
@@ -328,7 +328,7 @@ function setTrackTags(trackTags, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
-					list.editData(pls, { trackTags });
+					list.editData(pls, { trackTags, modified: Date.now() });
 					list.update({ bReuseData: true, bNotPaint: true });
 					list.filter();
 				}
@@ -346,7 +346,7 @@ function setTag(tags, list, z) {
 	const extension = pls.extension;
 	if (!new Set(tags).isEqual(new Set(pls.tags))) { // Compares arrays
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui' || pls.isFolder) {
-			list.editData(pls, { tags });
+			list.editData(pls, { tags, modified: Date.now() });
 			list.update({ bReuseData: true, bNotPaint: true });
 			const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 			list.filter({ tagState });
@@ -375,7 +375,7 @@ function setTag(tags, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
-					list.editData(pls, { tags });
+					list.editData(pls, { tags, modified: Date.now() });
 					list.update({ bReuseData: true, bNotPaint: true });
 					const tagState = [...new Set(list.tagState.concat(tags)).intersection(new Set(list.tags()))];
 					list.filter({ tagState });
@@ -398,7 +398,7 @@ function setCategory(category, list, z) {
 	if (extension === '.strm') { return bDone; }
 	if (pls.category !== category) {
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || extension === '.ui' || pls.isFolder) {
-			list.editData(pls, { category });
+			list.editData(pls, { category, modified: Date.now() });
 			// Add new category to current view! (otherwise it gets filtered)
 			// Easy way: intersect current view + new one with refreshed list
 			list.update({ bReuseData: true, bNotPaint: true });
@@ -429,7 +429,7 @@ function setCategory(category, list, z) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
-					list.editData(pls, { category });
+					list.editData(pls, { category, modified: Date.now() });
 					list.update({ bReuseData: true, bNotPaint: true });
 					// Add new category to current view! (otherwise it gets filtered)
 					// Easy way: intersect current view + new one with refreshed list
@@ -456,7 +456,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
 				return bDone;
 			}
-			list.editData(pls, { playlist_mbid });
+			list.editData(pls, { playlist_mbid, modified: Date.now() });
 			list.update({ bReuseData: true, bNotPaint: true });
 			bDone = true;
 		} else {
@@ -486,7 +486,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 					console.log('Playlist manager: Restoring backup...');
 				} else {
 					if (_isFile(backPath)) { _deleteFile(backPath); }
-					list.editData(pls, { playlist_mbid });
+					list.editData(pls, { playlist_mbid, modified: Date.now() });
 					list.update({ bReuseData: true, bNotPaint: true });
 				}
 			} else {
@@ -508,7 +508,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 	if (pls.extension === '.ui' || pls.extension === '.pls') {
 		console.log('Playlist Manager: Playlist can not be locked due to format ' + pls.extension);
 	} else if (pls.isAutoPlaylist || pls.extension === '.fpl' || pls.extension === '.strm' || pls.extension === '.xsp') {
-		list.editData(pls, { isLocked: !pls.isLocked });
+		list.editData(pls, { isLocked: !pls.isLocked, modified: Date.now() });
 		list.update({ bReuseData: true, bNotPaint: true });
 		list.filter();
 		bDone = true;
@@ -534,7 +534,7 @@ function switchLock(list, z, bAlsoHidden = false) {
 				console.log('Playlist manager: Restoring backup...');
 			} else {
 				if (_isFile(backPath)) { _deleteFile(backPath); }
-				list.editData(pls, { isLocked: !pls.isLocked });
+				list.editData(pls, { isLocked: !pls.isLocked, modified: Date.now() });
 				list.update({ bReuseData: true, bNotPaint: true });
 				list.filter();
 			}
@@ -560,7 +560,7 @@ function switchLockUI(list, z, bAlsoHidden = false) {
 	const bLocked = !bSMPLock || playlistLockTypes.size;
 	const newLock = bLocked ? [] : lockTypes; // This filters blank values
 	plman.SetPlaylistLockedActions(index, newLock);
-	list.editData(pls, { isLocked: !pls.isLocked });
+	list.editData(pls, { isLocked: !pls.isLocked, modified: Date.now() });
 	list.update({ bReuseData: true, bNotPaint: true });
 	list.filter();
 	return true;
@@ -641,7 +641,7 @@ function convertToRelPaths(list, z) {
 		} else { bDeleted = true; }
 		if (bDeleted) {
 			bDone = _save(playlistPath, file, list.bBOM); // No BOM
-			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path) }); }
+			if (bDone) { list.editData(pls, { fileSize: utils.GetFileSize(pls.path), modified: Date.now() }); }
 			else {
 				fb.ShowPopupMessage('Playlist generation failed while writing file \'' + playlistPath + '\'.', window.Name);
 				_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
@@ -766,7 +766,7 @@ function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMult
 			size: handleList.Count,
 			duration: handleList.CalcTotalDuration(),
 			trackSize: handleList.CalcTotalSize()
-		}, true); // Update size on load
+		}, true, true); // Update size on load
 		if (handleList.Count) {
 			if (pls.sort && pls.sort.length) {
 				const sort = getSortObj(pls.sort);
@@ -1048,7 +1048,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-		return {bDone, handleList: null};
+		return { bDone, handleList: null };
 	}
 	const playlistPath = pls.path;
 	const bUI = pls.extension === '.ui';
@@ -1075,9 +1075,9 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 					true
 				)
 			);
-		} catch (e) { return {bDone, handleList: null}; }
+		} catch (e) { return { bDone, handleList: null }; }
 	}
-	if (!newPath.length) { return {bDone, handleList: null}; }
+	if (!newPath.length) { return { bDone, handleList: null }; }
 	newPath = sanitizePath(
 		newPath
 			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
@@ -1085,7 +1085,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			.replace(/#EXT#/gi, extension.length ? extension : playlistExt)
 			.replace(/#PLAYLISTEXT#/gi, playlistNameExt)
 	);
-	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return {bDone, handleList: null}; }
+	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return { bDone, handleList: null }; }
 	// Get tracks
 	const handleList = !bUI
 		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle, bMultiple })
@@ -1116,7 +1116,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 				size: handleList.Count,
 				duration: handleList.CalcTotalDuration(),
 				trackSize: handleList.CalcTotalSize()
-			}, true); // Update size on load
+			}, true, true); // Update size on load
 		}
 		if (handleList.Count) {
 			// Convert tracks
@@ -1125,7 +1125,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 			if (!isArrayStrings(fileNames)) {
 				fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
-				return {bDone, handleList};
+				return { bDone, handleList };
 			}
 			// Copy playlist file when original extension and output extension are the same or both share same format (M3U)
 			let file = '';
@@ -1151,13 +1151,13 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-				return {bDone, handleList};
+				return { bDone, handleList };
 			}
 			if (bOpenOnExport) { _explorer(newPath); }
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 		}
 	}
-	return {bDone, handleList};
+	return { bDone, handleList };
 }
 
 function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true } = {}) {
@@ -1167,7 +1167,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);
-		return {bDone, handleList: null};
+		return { bDone, handleList: null };
 	}
 	const playlistName = pls.name;
 	const extension = ext.length ? ext.toLowerCase() : list.playlistsExtension;
@@ -1189,9 +1189,9 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 					true
 				)
 			);
-		} catch (e) { return {bDone, handleList: null}; }
+		} catch (e) { return { bDone, handleList: null }; }
 	}
-	if (!newPath.length) { return {bDone, handleList:null }; }
+	if (!newPath.length) { return { bDone, handleList: null }; }
 	newPath = sanitizePath(
 		newPath
 			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
@@ -1203,7 +1203,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	// For query playlists, use the UI copy if possible
 	const bUI = pls.extension === '.ui'
 		|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
-	if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return {bDone, handleList: null}; }
+	if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return { bDone, handleList: null }; }
 	let handleList = !bUI
 		? pls.isAutoPlaylist
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
@@ -1214,7 +1214,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			size: handleList.Count,
 			duration: handleList.CalcTotalDuration(),
 			trackSize: handleList.CalcTotalSize()
-		}, true); // Update size on load
+		}, true, true); // Update size on load
 		if (handleList.Count) {
 			const sortObj = pls.sort && pls.sort.length ? getSortObj(pls.sort) : null;
 			if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }
@@ -1234,7 +1234,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			const fileNames = fb.TitleFormat(tf).EvalWithMetadbs(handleList);
 			if (!isArrayStrings(fileNames)) {
 				fb.ShowPopupMessage('Playlist generation failed while guessing new filenames:\n\n' + fileNames.join('\n'), window.Name);
-				return {bDone, handleList};
+				return { bDone, handleList };
 			}
 			let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
 			if (_isFile(newPath)) { bDeleted = _recycleFile(newPath, true); }
@@ -1250,13 +1250,13 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 				}
 			} else {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.Name);
-				return {bDone, handleList};
+				return { bDone, handleList };
 			}
 			if (bOpenOnExport) { _explorer(newPath); }
 			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
 		}
 	}
-	return {bDone, handleList};
+	return { bDone, handleList };
 }
 
 function renamePlaylist(list, z, newName, bUpdatePlman = true) {
@@ -1280,6 +1280,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 					name: newName,
 					id: list.bUseUUID ? newId : '', // May have enabled/disabled UUIDs just before renaming
 					nameId: list.bUseUUID && pls.extension !== '.ui' ? newName + newId : newName,
+					modified: Date.now()
 				});
 				list.editSortingFile(oldNameId, newNameId);
 				if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
@@ -1297,7 +1298,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 					bRenamedSucessfully = oldPath !== newPath ? _renameFile(oldPath, newPath) : true;
 					if (bRenamedSucessfully) {
 						list.editData(pls, {
-							path: newPath,
+							path: newPath
 						});
 						list.editSortingFile(oldNameId, newNameId);
 						if (!pls.isLocked) {
@@ -1333,6 +1334,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 									name: newName,
 									id: list.bUseUUID ? newId : '', // May have enabled/disabled UUIDs just before renaming
 									nameId: list.bUseUUID ? newName + newId : newName,
+									modified: Date.now()
 								});
 								if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
 								list.update({ bReuseData: true, bNotPaint: true });
@@ -1367,7 +1369,7 @@ function renameFolder(list, z, newName) {
 		list.editData(folder, {
 			name: newName,
 			id: '',
-			nameId: newName,
+			nameId: newName
 		});
 		list.update({ bReuseData: true, bNotPaint: true });
 		list.filter();
@@ -1784,7 +1786,7 @@ function findDurationMismatch() {
 					const handleList = getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath });
 					if (handleList) {
 						const bFpl = playlist.extension === '.fpl';
-						const calcDuration = handleList.CalcTotalDuration();
+						const calcDuration = round(handleList.CalcTotalDuration(), 2);
 						let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
 						let duration;
 						if (!bFpl && typeof text !== 'undefined' && text.length) {

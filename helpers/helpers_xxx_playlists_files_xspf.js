@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//07/01/25
 
 // https://wiki.xiph.org/XSPF_v1_Notes_and_Errata
 // https://wiki.xiph.org/XSPF_Examples_in_the_wild
@@ -99,7 +99,7 @@ XSPF.toXSPF = function (jspf) {
 						bWrite = (typeVal === 'number' && Number.isInteger(value) && value > 0);
 						break;
 					case 'duration':
-						bWrite = (typeVal === 'number' && Number.isInteger(value) && value > 0);
+						bWrite = (typeVal === 'number' && Number.isFinite(value) && value > 0);
 						break;
 					case 'meta':
 						value.forEach((subValObj) => {

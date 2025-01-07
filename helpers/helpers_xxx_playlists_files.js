@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/12/24
+//07/01/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -7,7 +7,7 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
 /* global globQuery:readable, iStepsLibrary:readable, iDelayLibraryPLM:readable */
 include('helpers_xxx_prototypes.js');
-/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable */
+/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable, round:readable */
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
 include('helpers_xxx_tags.js');
@@ -136,7 +136,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 						});
 					}
 					playlistText[8] += itemsCount.toString(); // Add number of tracks to size
-					playlistText[9] += handleList.CalcTotalDuration(); // Add time to duration
+					playlistText[9] += round(handleList.CalcTotalDuration(), 2); // Add time to duration
 					playlistText = playlistText.concat(trackText);
 				} else {
 					if (relPath.length) { // Relative path conversion
@@ -300,7 +300,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				while (j < lines) { // Changes duration Line
 					if (originalText[j].startsWith('#DURATION:')) {
 						duration = Number(originalText[j].split(':')[1]);
-						const newDuration = duration + addDuration;
+						const newDuration = round(duration + addDuration, 2);
 						originalText[j] = '#DURATION:' + newDuration;
 						break;
 					}
