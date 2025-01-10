@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//09/01/25
 
 /* exported _menu, _attachedMenu */
 
@@ -133,7 +133,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @type {boolean}
 	 * @name isLastEntrySep
 	 */
-	this.isLastEntrySep = void(0); // Defined so JSDOC works properly
+	this.isLastEntrySep = void (0); // Defined so JSDOC works properly
 	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry('sep'); } });
 	this.getMenus = () => [...menuArr];
 	/**
@@ -484,7 +484,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			const entryName = (menuName !== this.getMainMenuName() ? menuName + '\\' + entryText : entryText);
 			entryMap.set(entryName, idx);
 			if (entryName.includes('\t')) {
-				const entryNameNoTabs = entryName.split('\t')[0];
+				const entryNameNoTabs = entryName.replace(/\t[^\\]*/gi, '');
 				entryMap.set(entryNameNoTabs, idx);
 				entryMapInverted.set(idx, entryNameNoTabs);
 			} else {
@@ -512,7 +512,10 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 					const delta = idxFunc();
 					if (typeof delta !== 'number') { console.log('this.checkMenu: idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
 					if ((idxA + delta) > idxB) { console.log('this.checkMenu: idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
-					menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta);
+					try { menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta); }
+					catch (e) {
+						throw new Error(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tentryTextB:\t' + entryTextB + '\n\tentryNameB:\t' + entryNameB + '\n\tmenuName:\t' + menuName);
+					}
 					return delta;
 				}
 			});
@@ -521,7 +524,10 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 				name: entryTextA, val: null, func: () => {
 					const bVal = idxFunc();
 					if (typeof bVal !== 'boolean') { console.log('this.checkMenu: idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
-					menuMap.get(menuName).CheckMenuItem(idxA, bVal);
+					try { menuMap.get(menuName).CheckMenuItem(idxA, bVal); }
+					catch (e) {
+						throw new Error(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tmenuName:\t' + menuName);
+					}
 					return bVal;
 				}
 			});
