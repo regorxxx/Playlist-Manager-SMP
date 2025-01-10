@@ -1,10 +1,12 @@
 ﻿'use strict';
-//30/10/24
+//10/01/25
 
-/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast */
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS */
 
 include('helpers_xxx_prototypes.js');
 /* global range:readable, isArrayNumbers:readable */
+
+const MAX_QUEUE_ITEMS = 256;
 
 /*
 	Playlist manipulation
@@ -211,4 +213,15 @@ function getPlaylistSelectedIndexLast(playlistIndex) {
 	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return -1; }
 	return range(plman.PlaylistItemCount(playlistIndex) - 1, 0, -1)
 		.findIndex((idx) => plman.IsPlaylistItemSelected(playlistIndex, idx));
+}
+
+function getSource(type, arg) {
+	switch (type) {
+		case 'playlist': return getHandlesFromUIPlaylists(arg, false); // [playlist names]
+		case 'playingPlaylist': return (plman.PlayingPlaylist !== -1 && fb.IsPlaying ? plman.GetPlaylistItems(plman.PlayingPlaylist) : getSource('activePlaylist'));
+		case 'activePlaylist': return (plman.ActivePlaylist !== -1 ? plman.GetPlaylistItems(plman.ActivePlaylist) : new FbMetadbHandleList());
+		case 'handleList': return arg;
+		case 'library':
+		default: return fb.GetLibraryItems();
+	}
 }

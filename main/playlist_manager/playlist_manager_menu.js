@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/12/24
+//10/01/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -24,7 +24,7 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getPlaylistIndexArray:readable, sendToPlaylist:readable */
+/* global getPlaylistIndexArray:readable, sendToPlaylist:readable, MAX_QUEUE_ITEMS:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
@@ -140,10 +140,19 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({ entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show bound playlist' : (bIsPlsLoaded ? 'Show bound playlist (active playlist)' : 'Show bound playlist (not loaded)'), func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED });
 				// Contextual menu
 				if (bIsPlsLoaded && showMenus['Playlist\'s items menu']) {
-					menu.newMenu('Items...', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
+					menu.newMenu('Items (contextual menu)', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
 				}
-				menu.newSeparator();
-				menu.newEntry({ entryText: 'Add playlist contents to queue', func: () => { list.queuePlaylist(pls, true); } });
+				if (showMenus['Queue handling']) {
+					menu.newSeparator();
+					menu.newEntry({
+						entryText: 'Add tracks to queue',
+						func: () => list.queuePlaylist(pls, { bAsync: true })
+					});
+					menu.newEntry({
+						entryText: 'Add tracks to queue (random)',
+						func: () => list.queuePlaylist(pls, { bAsync: true, bRandom: true, bDedup: true })
+					});
+				}
 				menu.newSeparator();
 				const selItems = fb.GetSelections(1);
 				menu.newEntry({
@@ -1057,18 +1066,33 @@ function createMenuFolder(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
-		menu.newSeparator();
-		menu.newEntry({
-			entryText: 'Add folder contents to queue', func: () => {
-				if (!bOpen) { list.switchFolder(z); }
-				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
-				zArr.forEach((z) => {
-					const pls = list.data[z];
-					list.queuePlaylist(pls, true);
-				});
-				if (!bOpen) { list.switchFolder(z); }
-			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
-		});
+		if (showMenus['Queue handling']) {
+			menu.newSeparator();
+			menu.newEntry({
+				entryText: 'Add contents to queue', func: () => {
+					if (!bOpen) { list.switchFolder(z); }
+					const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
+					zArr.forEach((z) => {
+						if (plman.GetPlaybackQueueHandles().Count >= MAX_QUEUE_ITEMS) { return; }
+						const pls = list.data[z];
+						list.queuePlaylist(pls, { bAsync: true });
+					});
+					if (!bOpen) { list.switchFolder(z); }
+				}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+			});
+			menu.newEntry({
+				entryText: 'Add contents to queue (random)', func: () => {
+					if (!bOpen) { list.switchFolder(z); }
+					const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
+					zArr.shuffle().forEach((z) => {
+						if (plman.GetPlaybackQueueHandles().Count >= MAX_QUEUE_ITEMS) { return; }
+						const pls = list.data[z];
+						list.queuePlaylist(pls, { bAsync: true, bRandom: true, bDedup: true });
+					});
+					if (!bOpen) { list.switchFolder(z); }
+				}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+			});
+		}
 	}
 	if (showMenus['Sorting'] && bManualSorting) {
 		menu.newSeparator();
@@ -1263,23 +1287,32 @@ function createMenuLeftMult(forcedIndexes = []) {
 				});
 			}, flags: bIsPlsLoadedEvery || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
-		menu.newSeparator();
-		menu.newEntry({
-			entryText: 'Add playlists contents to queue', func: () => {
-				indexes.forEach((z, i) => {
-					const pls = playlists[i];
-					if (!isFolder(pls)) {
-						list.queuePlaylist(pls, true);
-					}
-				});
-			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
-		});
+		if (showMenus['Queue handling']) {
+			menu.newSeparator();
+			menu.newEntry({
+				entryText: 'Add tracks to queue', func: () => {
+					playlists.forEach((pls) => {
+						if (!isFolder(pls)) {
+							list.queuePlaylist(pls, { bAsync: true });
+						}
+					});
+				}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+			});
+			menu.newEntry({
+				entryText: 'Add tracks to queue (random)', func: () => {
+					[...playlists].shuffle().forEach((pls) => {
+						if (!isFolder(pls)) {
+							list.queuePlaylist(pls, { bAsync: true, bRandom: true, bDedup: true });
+						}
+					});
+				}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
+			});
+		}
 		menu.newSeparator();
 		// Convert UI playlists
 		menu.newEntry({
 			entryText: 'Convert to playlist files', func: () => {
-				indexes.forEach((z, i) => {
-					const pls = playlists[i];
+				playlists.forEach((pls) => {
 					if (isPlsUI(pls)) {
 						const idx = plman.FindPlaylist(pls.nameId);
 						list.converUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
@@ -1352,10 +1385,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menu.newEntry({
 					menuName, entryText: tag + '\t' + _b(count), func: () => {
 						let tags;
-						const bAll = indexes.every((z, j) => {
-							const pls = playlists[j];
-							return isLockPls(pls) || !isPlsEditable(pls) || pls.tags.includes(tag);
-						});
+						const bAll = playlists.every((pls) => isLockPls(pls) || !isPlsEditable(pls) || pls.tags.includes(tag));
 						indexes.forEach((z, j) => {
 							const pls = playlists[j];
 							if (!isLockPls(pls) && isPlsEditable(pls)) {

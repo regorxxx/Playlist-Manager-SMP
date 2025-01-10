@@ -1,11 +1,11 @@
 ﻿'use strict';
-//07/01/25
+//10/01/25
 
 /* exported _list */
 
 /* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -19,7 +19,7 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable */
+/* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable, MAX_QUEUE_ITEMS:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
@@ -35,7 +35,7 @@ include('..\\..\\helpers-external\\keycode-2.2.0\\index.js');
 include('playlist_manager_panel.js');
 /* global panel:readable */
 include('playlist_manager_helpers.js');
-/* global _getClipboardData:readable */
+/* global _getClipboardData:readable, removeDuplicates:readable */
 
 /**
  * Playlist Manager
@@ -2156,7 +2156,7 @@ function _list(x, y, w, h) {
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
 					this.bDoubleclick = true;
-					if (this.data[z].isFolder) { break; }
+					if (!this.data[z] || this.data[z].isFolder) { break; }
 					this.executeAction(z, x, y, shortcuts[mask]);
 					break;
 				}
@@ -6430,7 +6430,12 @@ function _list(x, y, w, h) {
 		return true;
 	};
 
-	this.queuePlaylist = (idxOrPls, bAsync = false) => {
+	this.queuePlaylist = (idxOrPls, options = { bAsync: false, bRandom: false, bDedup: false }) => {
+		options = { bAsync: false, bRandom: false, bDedup: false, ...options };
+		if (plman.GetPlaybackQueueHandles().Count >= MAX_QUEUE_ITEMS) {
+			console.log('Playlist Manager: Queue is full (' + MAX_QUEUE_ITEMS + ' items). Skip queueing playlist.');
+			return false;
+		}
 		let idx, pls;
 		if (typeof idxOrPls === 'number') {
 			if (idx < 0 || idx >= this.itemsAll) {
@@ -6446,24 +6451,54 @@ function _list(x, y, w, h) {
 		}
 		const uiIdx = plman.FindPlaylist(pls.nameId);
 		const bLoaded = uiIdx !== -1 && plman.IsAutoPlaylist(uiIdx) === !!pls.isAutoPlaylist;
+		let handleList;
+		let count;
 		if (bLoaded) {
-			const count = plman.PlaylistItemCount(uiIdx);
+			count = plman.PlaylistItemCount(uiIdx);
 			if (count) {
-				if (bAsync) {
+				const itemIdx = options.bDedup
+					? []
+					: range(0, count - 1, 1);
+				if (options.bDedup) {
+					const plsItems = plman.GetPlaylistItems(uiIdx);
+					handleList = removeDuplicates({ handleList: plsItems, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
+					handleList.Convert().forEach((handle) => itemIdx.push(plsItems.Find(handle)));
+				}
+				if (options.bRandom) {
+					itemIdx.shuffle();
+				}
+				count = itemIdx.length;
+				if (count > MAX_QUEUE_ITEMS) {
+					console.log('Playlist Manager: Queue is full (' + MAX_QUEUE_ITEMS + ' items). Skip queueing ' + (count - MAX_QUEUE_ITEMS) + ' items.');
+					itemIdx.length = MAX_QUEUE_ITEMS;
+				}
+				if (options.bAsync) {
 					Promise.serial(
-						range(0, count - 1, 1),
+						itemIdx,
 						(trackIdx) => plman.AddPlaylistItemToPlaybackQueue(uiIdx, trackIdx),
 						20
 					);
 				} else {
-					for (let i = 0; i < count; i++) { plman.AddPlaylistItemToPlaybackQueue(uiIdx, i); }
+					itemIdx.forEach((trackIdx) => plman.AddPlaylistItemToPlaybackQueue(uiIdx, trackIdx));
 				}
 				return true;
 			}
 		} else {
-			const handleList = this.getHandleFrom(idx, false);
-			if (handleList.Count) {
-				if (bAsync) {
+			handleList = this.getHandleFrom(idx, false);
+			if (options.bDedup) {
+				handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
+			}
+			if (options.bRandom) {
+				handleList.OrderByFormat(fb.TitleFormat('$rand()'), 1);
+			}
+			count = handleList.Count;
+			if (count > MAX_QUEUE_ITEMS) {
+				console.log('Playlist Manager: Queue is full (' + MAX_QUEUE_ITEMS + ' items). Skip queueing ' + (count - MAX_QUEUE_ITEMS) + ' items.');
+				handleList.RemoveRange(MAX_QUEUE_ITEMS, count);
+				count = handleList.Count;
+			}
+			if (count) {
+				if (options.bAsync) {
 					Promise.serial(
 						handleList.Convert(),
 						(handle) => plman.AddItemToPlaybackQueue(handle),
