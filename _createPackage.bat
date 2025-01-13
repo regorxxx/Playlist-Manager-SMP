@@ -440,6 +440,7 @@ CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
 CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_input.js
+CALL :copy_file helpers\helpers_xxx_math.js
 CALL :copy_file helpers\helpers_xxx_playlists.js
 CALL :copy_file helpers\helpers_xxx_properties.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
