@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/25
+//13/01/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -2304,7 +2304,7 @@ function createMenuRight() {
 		if (!menu.isLastEntrySep) { menu.newSeparator(subMenuName); }
 		menu.newEntry({
 			menuName: subMenuName,
-			entryText: 'Import AutoPlaylists from UI..', func: () => {
+			entryText: 'Import AutoPlaylists from UI...', func: () => {
 				try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
 				list.importAutoPlaylistsFromFoobar({ bSelect: true });
 			},
