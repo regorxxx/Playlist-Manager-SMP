@@ -2,13 +2,13 @@ name: Pull Request builds (automatic)
 
 on:
   pull_request:
-  
+
 jobs:
   # Build and attach package
   package:
     name: 'Build Package'
     runs-on: windows-latest
-    
+
     steps:
       - name: 'Debounce 5 minutes'
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -32,7 +32,7 @@ jobs:
         run: ./_createPackage.bat ${{ steps.package.outputs.match }}
       - name: 'Upload Artifact'
         if: ${{ steps.package.outputs.match != '0' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: file
           path: 'packages/*.zip'
