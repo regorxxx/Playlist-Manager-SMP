@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/24
+//18/01/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -125,28 +125,21 @@ function loadUserDefFile(def) {
  * @returns {void}
  */
 function addGlobValues(type) {
+	const _t = (tag) => !tag.includes('%') && !tag.includes('$') ? '%' + tag+ '%' : tag;
 	switch (type) {
 		case 'TF':
-			globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
-			globTags.artist = !globTags.artistRaw.includes('%') && !globTags.artistRaw.includes('$')
-				? '%' + globTags.artistRaw + '%'
-				: globTags.artistRaw;
+			globTags.title = '$ascii($lower($trim($replace(' + _t(globTags.titleRaw) + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
+			globTags.artist = _t(globTags.artistRaw);
 			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
-			globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
+			globTags.sortPlayCount = '$sub(99999,' + _t(globTags.playCount) + ')';
 			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,%2003_LAST_PLAYED%)';
 			globTags.sortAdded = '$if2(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
-			globTags.isLoved = !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
-				? '$ifequal(%' + globTags.feedback + '%,1,1$not(0),0)'
-				: '$ifequal(' + globTags.feedback + ',1,1$not(0),0)';
-			globTags.isHated = !globTags.feedback.includes('%') && !globTags.feedback.includes('$')
-				? '$ifequal(%' + globTags.feedback + '%,-1,1$not(0),0)'
-				: '$ifequal(' + globTags.feedback + ',-1,1$not(0),0)';
-			globTags.isRatedTop = !globTags.rating.includes('%') && !globTags.rating.includes('$')
-				? '$ifequal(%' + globTags.rating + '%,5,1$not(0),0)'
-				: '$ifequal(' + globTags.rating + ',5,1$not(0),0)';
+			globTags.isLoved = '$ifequal(' + _t(globTags.feedback) + ',1,1$not(0),0)';
+			globTags.isHated = '$ifequal(' + _t(globTags.feedback) + ',-1,1$not(0),0)';
+			globTags.isRatedTop = '$ifequal(' + _t(globTags.rating) + ',5,1$not(0),0)';
 			globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 			globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
-			globQuery.compareTitle = '"$stricmp(' + (!globTags.title.includes('$') ? '%' + globTags.title + '%' : globTags.title) + ',#' + globTags.title + '#)" IS 1';
+			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
 			break;
 		case 'Query':
 			globQuery.noFemale = 'NOT (' + globQuery.female + ')';
@@ -157,9 +150,9 @@ function addGlobValues(type) {
 			globQuery.noLive = globQuery.noLiveNone + ' OR (' + globQuery.liveHifi + ')';
 			globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
 			globQuery.remDuplBias = globTags.rating +
-				'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)' +
-				'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
-				'|$add(1,' + globTags.feedback + ')' +
+				'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => _t(t)).join('\', \'') + '),live),0,0,1)' +
+				'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => _t(t)).join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
+				'|$add(1,' + _t(globTags.feedback) + ')' +
 				'|$if($strstr($lower(%TRACKDSP%),best),1,0)' +
 				'|$ifgreater(%__CHANNELS%,2,0,1)' +
 				'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +

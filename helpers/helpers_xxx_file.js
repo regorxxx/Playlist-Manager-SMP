@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//19/01/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
@@ -124,7 +124,7 @@ function _isFolder(folder) {
 
 function _isLink(path) {
 	path = path.toLowerCase().replace(/\\\\/g, '//');
-	return ['http://', 'http://', 'https://', 'fy+', '3dydfy:', 'youtube.', 'www.'].some((prefix) => path.startsWith(prefix));
+	return ['http://', 'https://', 'fy+', '3dydfy:', 'youtube.', 'www.'].some((prefix) => path.startsWith(prefix));
 }
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
