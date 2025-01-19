@@ -99,6 +99,7 @@
 - Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
 - Statistics: multiple menu entries at 'Display settings' have been renamed for clarity's sake.
 - Statistics: buttons are now smoothly hidden when panel is not on focus. Transparency may be adjusted from 0 to 255 by setting buttons.alpha, timer to hide them by setting buttons.timer.
+- Search: timeout for autosearch changed to 700 ms (previously 500 ms).
 - Tags: contextual menu on multiple selection to set tags now doesn't switch the presence of the tag value but first tries to add the value to all items and when it's already present, tries to delete it. This should simplify usage, since items already having the tag will not remove it when trying to also add it to those missing it.
 - AutoPlaylist: UI-only AutoPlaylists are now treated as AutoPlaylists internally and not only as UI-only playlists (this involves some big changes internally so there may be some minor bugs as consequence). Thanks to these changes a lot of other improvements have been possible.
 - AutoPlaylist: new AutoPlaylists created are now automatically loaded.

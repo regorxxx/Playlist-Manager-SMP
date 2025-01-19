@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/11/24
+//16/01/25
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -671,7 +671,7 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
 // Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
-function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null) {
+function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null, timeout = 500) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.fontItalic = _gdiFont('Segoe UI', _scale(10), 2);
@@ -699,6 +699,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	this.drag = false;
 	this.active = false;
 	this.helpFile = helpFile;
+	this.timeout = timeout;
 
 	this.setSize = function (w, h, fontSize = 10) {
 		this.w = w;
@@ -1595,20 +1596,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 				}
 			}
 		}
-
-		// autosearch: has text changed after on_key or on_char ?
-		if (this.autoValidation && this.func) {
-			if (this.text !== this.prevText) {
-				// launch timer to process the search
-				timer && window.ClearTimeout(timer);
-				timer = window.SetTimeout(() => {
-					this.func();
-					timer && window.ClearTimeout(timer);
-					timer = false;
-				}, 500);
-				this.prevText = this.text;
-			}
-		}
+		this.autoValidate(); // autosearch: has text changed after on_key or on_char ?
 	};
 
 	this.on_char = function (code, mask = getKeyboardMask()) { // callback doesn't provide mask
@@ -1644,8 +1632,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 			}
 			this.repaint();
 		}
+		this.autoValidate(); // autosearch: has text changed after on_key or on_char ?
+	};
 
-		// autosearch: has text changed after on_key or on_char ?
+	this.autoValidate = () => {
 		if (this.autoValidation && this.func) {
 			if (this.text !== this.prevText) {
 				// launch timer to process the search
@@ -1654,7 +1644,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					this.func();
 					timer && window.ClearTimeout(timer);
 					timer = false;
-				}, 500);
+				}, this.timeout);
 				this.prevText = this.text;
 			}
 		}

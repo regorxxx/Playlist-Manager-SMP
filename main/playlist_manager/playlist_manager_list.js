@@ -831,7 +831,7 @@ function _list(x, y, w, h) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt');
+						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
 						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
 							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
 							if (this.searchMethod.text.length) {
@@ -7771,7 +7771,7 @@ function _list(x, y, w, h) {
 					? 'Active:\t' + filterKeys.joinEvery(', ', 3, '\n\t')
 					: 'No active filters.';
 				if (filters.Search && !this.searchMethod.bResetFilters) {
-					info += '\nSearch filter set to be ommited.';
+					info += '\nSearch filter set to be omitted.';
 				}
 				return info;
 			}, func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
