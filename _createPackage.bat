@@ -34,21 +34,23 @@ ECHO (1) World-Map-SMP
 ECHO (2) Playlist-Manager-SMP
 ECHO (3) Not-a-Waveform-Seekbar-SMP
 ECHO (4) Timeline-SMP
+ECHO (5) Volume-Slider-SMP
 ECHO.
 IF [%~1]==[] (
-	CHOICE /C 1234 /N /M "CHOOSE PACKAGE TO BUILD (1-4): "
+	CHOICE /C 12345 /N /M "CHOOSE PACKAGE TO BUILD (1-5): "
 ) ELSE (
 	IF [%1] EQU [0] (
 		ECHO 9| CHOICE /C 123456789 /N >NUL
 	) ELSE (
-		ECHO %1| CHOICE /C 123456789 /N /M "CHOOSE PACKAGE TO BUILD (1-4): "
+		ECHO %1| CHOICE /C 123456789 /N /M "CHOOSE PACKAGE TO BUILD (1-5): "
 	)
 )
 IF %ERRORLEVEL% EQU 1 GOTO world_map
 IF %ERRORLEVEL% EQU 2 GOTO playlist_manager
 IF %ERRORLEVEL% EQU 3 GOTO not_a_waveform_seekbar
 IF %ERRORLEVEL% EQU 4 GOTO timeline
-IF ERRORLEVEL 5 (
+IF %ERRORLEVEL% EQU 5 GOTO volume_slider
+IF ERRORLEVEL 6 (
 	ECHO Package ^(%1^) not recognized.
 	GOTO:EOF
 )
@@ -364,6 +366,8 @@ CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_web.js
 CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
+CALL :check_folder helpers\readme
+CALL :copy_file helpers\readme\seekbar.txt
 REM helpers external
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\bitmasksorterjs
@@ -394,7 +398,7 @@ SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Ti
 SET version=%version:', features: { drag_n_drop: false, grab_focus: true } }); }=%
 REM features
 SET enableDragDrop=false
-SET shouldGrabFocus=false
+SET shouldGrabFocus=true
 REM global variable
 SET root=%packagesFolder%\%name: =-%
 REM package folder and file
@@ -457,6 +461,9 @@ CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\menu_xxx_extras.js
 CALL :copy_file helpers\popup_xxx.js
+CALL :check_folder helpers\readme
+CALL :copy_file helpers\readme\timeline_dynamic_query.txt
+CALL :copy_file helpers\readme\timeline.txt
 REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\natsort
@@ -468,6 +475,67 @@ CALL :copy_file helpers-external\ngraph\README_xxx.txt
 CALL :copy_file helpers-external\ngraph\README.md
 CALL :copy_file helpers-external\ngraph\ngraph.graph.js
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM package info, zip and report
+CALL :finish
+GOTO:EOF
+
+:volume_slider
+REM package variables
+REM version is automatically retrieved from main js file
+REM any text must be JSON encoded
+SET name=Volume-Slider-SMP
+SET id=82303AA1-3DA0-4817-BE47-85A4AE09D5CD
+SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume.\r\n• Double L. Click on button to mute\\set full volume.\r\n• Configurable layout and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" volume_slider.js`) DO (SET version=%%F)
+IF "%version%"=="" (
+	ECHO Main file not found or wrong version string
+	PAUSE>NUL
+	EXIT /B 1
+)
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Volume-Slider-SMP', { author: 'regorxxx', version: '=%
+SET version=%version:' }); }=%
+REM features
+SET enableDragDrop=false
+SET shouldGrabFocus=false
+REM global variable
+SET root=%packagesFolder%\%name: =-%
+REM package folder and file
+CALL :check_root
+CALL :copy_main volume_slider.js
+REM main
+CALL :copy_folder main\volume
+CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_slider.js
+CALL :copy_file main\window\window_xxx_helpers.js
+REM helpers
+CALL :check_folder helpers
+CALL :copy_file helpers\callbacks_xxx.js
+CALL :copy_file helpers\helpers_xxx.js
+CALL :copy_file helpers\helpers_xxx_basic_js.js
+CALL :copy_file helpers\helpers_xxx_console.js
+CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_flags.js
+CALL :copy_file helpers\helpers_xxx_foobar.js
+CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
+CALL :copy_file helpers\helpers_xxx_input.js
+CALL :copy_file helpers\helpers_xxx_properties.js
+CALL :copy_file helpers\helpers_xxx_prototypes.js
+CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
+CALL :copy_file helpers\helpers_xxx_so.js
+CALL :copy_file helpers\helpers_xxx_UI.js
+CALL :copy_file helpers\helpers_xxx_UI_chars.js
+CALL :copy_file helpers\helpers_xxx_web.js
+CALL :copy_file helpers\helpers_xxx_web_update.js
+CALL :copy_file helpers\menu_xxx.js
+CALL :check_folder helpers\readme
+CALL :copy_file helpers\readme\volume_slider.txt
+REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\chroma.js
+CALL :copy_folder helpers-external\namethatcolor
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -484,6 +552,7 @@ GOTO:EOF
 REM Copy functions are Async, so put these at the end
 IF EXIST %1 (
 	DEL /Q /F /S %1\*.* >NUL
+	timeout 2 > NUL
 	RD /Q /S %1 >NUL
 )
 GOTO:EOF
