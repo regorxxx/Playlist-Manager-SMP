@@ -1,0 +1,73 @@
+REQUISITES: (CHOOSE ONE)
+-----------
+Spider Monkey Panel 1.6.1 or greater (only stable releases supported):
+https://theqwertiest.github.io/foo_spider_monkey_panel/
+
+JSplitter 3.6.1.0 or greater (splitter + SMP x64 alternative)
+https://hydrogenaud.io/index.php/topic,126743.0.html
+https://foobar2000.ru/forum/viewtopic.php?t=6378
+
+Note SMP is only available as x32 release, but JSplitter supports both architectures.
+
+WINE USERS:
+-----------
+All scripts try to use wine-friendly methods, focusing on config settings that can be changed via
+menus or the UI panel, instead of using HTML (which only works on Windows), known working fonts, etc.
+
+Please read this page and feel free to report (me) any problems with these scripts:
+https://theqwertiest.github.io/foo_spider_monkey_panel/docs/wine/
+
+INSTALLATION AS PACKAGE:
+------------------------
+If the script is provided as package file, use the JSplitter\SMP 'Package Manager' to install it.
+Press Shift + Win + R. click on the JSplitter\SMP panel to show the panel menu (note this combination
+always work even if a script is already installed) and click on 'Configure panel...'. The package
+manager can be found at the shown window. Look at the wiki for a guide. For ex:
+
+https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation#as-package-recommended
+
+YOU CAN SKIP ANYTHING BELOW IN THAT CASE.
+
+INSTALLATION AS FILE:
+---------------------
+Copy all files from the zip into YOUR_FOOBAR_PROFILE_PATH\scripts\SMP\xxx-scripts
+If there is no such path, create all the required folders and subfolders on it.
+Any other path WILL NOT work without editing the scripts. (see images\_Installation_*jpg) (*)
+For ex: mine is 			c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\...
+For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\...  (**)
+For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...
+Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
+
+Then load any script found on the root folder into a SMP panel within foobar ('File' as
+script source). Check 'INFO' section (at bottom) for usage.
+
+Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section
+for more details, the github page or the related pdf documentation at 'readmes' folder (if available).
+
+(*) To change the hardcoded installation part of the path, go to .\helpers\helpers_xxx.js
+and change the variable named 'folders.xxxName'. This is a workaround for some SMP limitations
+when working with relative paths. Its use is at your own responsibility but feel free to report
+any problem with it.
+
+(**) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile'
+folder does not exist. In such case you have to create it and move all the config folders/files to it,
+where they should reside (instead of the root of the foobar2000 installation path). Some native folders
+and files which must be moved include:
+	index-data, js_data, component-updates, configuration, crash reports, user-components,
+	foo_spider_monkey_panel, library, playlists, theme.fth, LargeFieldsConfig.txt, version.txt
+Some extra folders from other components which must be moved include (non extensive list):
+	autobackup, dvda_metabase, foo_httpcontrol_data, foo_youtube, images, lastfm, python, sacd_metabase,
+	vst-presets, yttm,minibar.db, playlist-tree-0.pts, playlist-tree-1.pts,
+If you don't move all the config folders/files then on startup default values will be used for things
+not found, probably "losing" the theme or other config. You may "fix" it later moving the missing files
+which still reside in the root. May take some tries to do them all.
+
+SMP 1.5.2+ WINE BUG (crash when installing scripts):
+----------------------------------------------------
+After loading a script into a panel, Foobar2000 may crash (not only the panel). See below.
+
+SMP 1.5.2+ BUG (crash when installing scripts):
+-----------------------------------------------
+After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files',
+check '_switchPaths.zip'. Follow its instructions to fix it. Then report it at
+https://hydrogenaud.io/index.php?topic=116669.0
