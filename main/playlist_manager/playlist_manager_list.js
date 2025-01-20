@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/25
+//20/01/25
 
 /* exported _list */
 
@@ -1974,7 +1974,7 @@ function _list(x, y, w, h) {
 								const currItem = this.data[currIdx];
 								if (!this.internalPlsDrop.includes(z) && this.internalPlsDrop.every((idx) => this.data[idx])) {
 									if (this.methodState === this.manualMethodState() && !this.dropIn) {
-										const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]) : [];
+										const plsSel = this.indexes.map((idx) => this.data[idx]);
 										const name = currItem.nameId;
 										const cache = [...this.sortingFile];
 										const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
@@ -2007,7 +2007,7 @@ function _list(x, y, w, h) {
 											this.sort();
 											if (plsSel.length) { // Restore multiple selection
 												this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
-											}
+											} else { this.indexes.length = 0; }
 										} else { this.sortingFile = cache; }
 									} else if (currItem.isFolder) {
 										this.internalPlsDrop.forEach((idx) => {
@@ -4177,7 +4177,8 @@ function _list(x, y, w, h) {
 	this.isFilterActive = (filter = null) => {
 		return filter ? this.getFilter()[filter] : Object.values(this.getFilter()).some(Boolean);
 	};
-	this.filter = ({ autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false, bRepaint = true, focusOptions = {} } = {}) => {
+	this.filter = ({ autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSel = false, bSkipSearch = false, bRepaint = true, focusOptions = {} } = {}) => {
+		const plsSel = !bSkipSel ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		// Apply current search
 		const bPlsFilter = plsState.length;
 		if (this.searchInput && this.searchInput.text.length && !bSkipSearch) {
@@ -4339,6 +4340,10 @@ function _list(x, y, w, h) {
 			// Save
 			overwriteProperties(this.properties);
 		}
+		// Update multiple selection
+		if (plsSel.length) {
+			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
+		} else if (!bSkipSel) { this.indexes.length = 0; }
 		// Update header whenever it's needed
 		this.headerTextUpdate();
 		// Update offset!
@@ -4635,7 +4640,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions = void (0)) => {
-		const plsSel = !bSkipSel && this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
+		const plsSel = !bSkipSel ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		if (showMenus['Folders']) { this.collapseFolders(); }
 		const bManual = this.methodState === this.manualMethodState();
@@ -4685,9 +4690,10 @@ function _list(x, y, w, h) {
 			}
 		}
 		if (showMenus['Folders']) { this.processFolders(); }
+		// Update multiple selection
 		if (plsSel.length) {
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
-		}
+		} else if (!bSkipSel) { this.indexes.length = 0; }
 		if (bMaintainFocus) { this.jumpLastPosition(focusOptions); }
 		if (bPaint) {
 			this.repaint(false, this.uiElements['Bottom toolbar'].enabled ? 'all' : 'list');
@@ -4818,7 +4824,7 @@ function _list(x, y, w, h) {
 
 	this.update = ({ bReuseData = false, bNotPaint = false, currentItemIndex = -1, bInit = false, focusOptions = { bCenter: false, bOmitType: false }, bLog = true } = {}) => {
 		focusOptions = { bCenter: false, bOmitType: false, ...focusOptions };
-		const plsSel = this.indexes.length ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
+		const plsSel = this.indexes.map((idx) => this.data[idx]).filter(Boolean);
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		const oldCategories = this.categories();
 		const oldTags = this.tags();
@@ -5145,9 +5151,9 @@ function _list(x, y, w, h) {
 		}
 		this.totalFileSize = totalFileSize; // Better to set it on one step to not call autoupdate in the middle of this update!
 		this.sort(void (0), void (0), true, focusOptions); // Sorts data according to current sort state
-		if (plsSel.length) {
+		if (plsSel.length) { // Update multiple selection
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
-		}
+		} else { this.indexes.length = 0; }
 		if (!bMaintainFocus) { this.offset = 0; } // Don't move the list focus...
 		else { this.jumpLastPosition(focusOptions); }
 		this.save(bInit); // Updates this.dataAutoPlaylists

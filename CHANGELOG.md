@@ -138,6 +138,7 @@
 - Exporting Playlists: fixed output path option (without a popup asking for it) and filename presets introduced on [0.17.0](#0170---2024-07-24) not working for AutoPlaylists and Smart Playlists.
 - Folders: 'Move to folder' submenu was missing nested folders if they were not expanded. Now they are shown, although folders not present in current view/filter state, are still hidden.
 - Folders: error restoring a deleted folder.
+- UI: fixed multiple selection behavior when using filters, where random items where being selected after filtering by Idx, even if they were not the original ones. Now it tries to maintain items only when they are also present after filtering, reducing the selection otherwise.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
 - UI: minor new line errors on folder button tooltip.
