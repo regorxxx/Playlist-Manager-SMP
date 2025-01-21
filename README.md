@@ -172,7 +172,7 @@ Tracking playlists within a network drive requires additional steps to make use 
 ## Requirements
  1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon. Only x32.
  2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): Component required to install this javaScript addon. Both x32 and x64.
- 3. FontAwesome: found at ’.\ resources\fontawesome-webfont.ttf’. See [wiki]([./wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation))
+ 3. FontAwesome: found at ’.\ resources\fontawesome-webfont.ttf’. See installation notes.
  
 ## Installation
 See the [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation). There are more extensive instructions at the [Readme (pdf)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/readmes/playlist_manager.pdf) or [_INSTALLATION (txt)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/_INSTALLATION.txt) file.
