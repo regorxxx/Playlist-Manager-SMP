@@ -1,12 +1,12 @@
 ﻿'use strict';
-//13/01/25
+//22/01/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable, globQuery:readable */
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers\\callbacks_xxx.js');
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
@@ -5584,6 +5584,57 @@ function createMenuFilterSorting() {
 		menu.newCheckMenuLast(() => list.getIndexSortState(), options);
 	}
 	menu.newSeparator();
+	{
+		const subMenuName = menu.newMenu('Other sorting tools');
+		menu.newEntry({
+			menuName: subMenuName,
+			entryText: 'Apply current sorting to playlist tabs', func: () => {
+				const plsNames = range(0, plman.PlaylistCount - 1).map((i) => plman.GetPlaylistName(i));
+				const bHasFolders = list.itemsFolder !== 0 && showMenus['Folders'];
+				if (list.getMethodState() === 'By name' && !bHasFolders) {
+					plman.SortPlaylistsByName(list.getSortState() === 'Az' ? 1 : -1);
+				} else {
+					let data = clone(list.dataAll).map((item) => {
+						if (item.isFolder) { item.isOpen = true; }
+						return item;
+					});
+					data = list.processFolders({ data })
+						.filter((item) => !item.isFolder);
+					const plsDataNames = data.map((pls) => pls.nameId).filter((name) => plsNames.includes(name));
+					console.log(plsDataNames);
+					for (let i = plman.PlaylistCount - 1; i >= 0; i--) {
+						const idx = plsDataNames.indexOf(plsNames[i]);
+						if (idx !== -1) {
+							if (idx === i) { continue; }
+							const lookFor = plsDataNames[i];
+							if (typeof lookFor !== 'undefined') {
+								const lookForIdx = plsNames.indexOf(lookFor);
+								plman.MovePlaylist(lookForIdx, i);
+								plsNames.splice(i, 0, plsNames.splice(lookForIdx, 1)[0]);
+							}
+						}
+					}
+				}
+				console.log(
+					'Playlist Manager: sorted playlist tabs in U. ' + list.getMethodState() + ' ' + _p(list.getSortState()) +
+					(bHasFolders ? ' following folder tree' : '') + '.\n\t' +
+					plsNames.map((name, i) => _b(i) + ' ' + name).join(', ')
+				);
+			}, flags: list.bAllPls ? MF_STRING : MF_GRAYED
+		});
+		menu.newEntry({
+			menuName: subMenuName,
+			entryText: 'Alphabetically sort playlist tabs', func: () => {
+				const bShift = utils.IsKeyPressed(VK_SHIFT);
+				plman.SortPlaylistsByName(bShift ? -1 : 1);
+				console.log(
+					'Playlist Manager: sorted playlist tabs in UI. By name ' + _p(bShift ? 'Za' : 'Az') + '.\n\t' +
+					range(0, plman.PlaylistCount - 1).map((i) => _b(i) + ' ' + plman.GetPlaylistName(i)).join(', ')
+				);
+			}
+		});
+	}
+	menu.newSeparator();
 	if (showMenus['Category']) {	// Category Filter
 		const subMenuName = menu.newMenu('Categories shown');
 		const options = list.categories();
@@ -5694,8 +5745,9 @@ function createMenuFilterSorting() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'Cycle filter', func: bottomToolbar.buttons[buttonKey].func.bind(bottomToolbar.buttons[buttonKey]) });
 		}
 	}
+	menu.newSeparator();
 	{
-		const subMenuName = menu.newMenu('Other settings');
+		const subMenuName = menu.newMenu('Other filter settings');
 		menu.newEntry({
 			menuName: subMenuName,
 			entryText: 'Also reset search filter', func: () => {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/01/25
+//22/01/25
 
 /* exported _list */
 
@@ -4776,9 +4776,11 @@ function _list(x, y, w, h) {
 		return true;
 	};
 
-	this.processFolders = ({ plsState = [] } = {}) => {
-		if (this.data.some((item) => item.isFolder)) {
-			const expandedData = this.data.filter((item) => !this.isInFolder(item));
+	this.processFolders = ({ plsState = [], data = null } = {}) => {
+		const bThisData = data === null;
+		if (bThisData) { data = this.data; }
+		if (data.some((item) => item.isFolder)) {
+			const expandedData = data.filter((item) => !this.isInFolder(item));
 			let item;
 			for (let i = 0; i < expandedData.length; i++) { // Reuse the same object
 				item = expandedData[i];
@@ -4786,9 +4788,13 @@ function _list(x, y, w, h) {
 					this.processFolder(item, i, expandedData, plsState);
 				}
 			}
-			this.data = [...new Set(expandedData)]; // Deduplicate
-			this.items = this.data.length;
+			data = [...new Set(expandedData)]; // Deduplicate
+			if (bThisData) {
+				this.data = data;
+				this.items = this.data.length;
+			}
 		}
+		return data;
 	};
 
 	this.processFolder = (item, i, expandedData, plsState = []) => {
