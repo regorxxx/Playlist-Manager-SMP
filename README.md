@@ -181,6 +181,11 @@ Not properly following the installation instructions will result in scripts not 
 ## Documentation
 Full documentation notes can be found at the <a href="https://github.com/regorxxx/Playlist-Manager-SMP/raw/main/readmes/playlist_manager.pdf" target="_blank" class="image fit" type="application/pdf">PDF Manual.</a>
 
+## Support
+ 1. [Issues tracker](https://github.com/regorxxx/Playlist-Manager-SMP/issues).
+ 2. [Hydrogenaudio forum](https://hydrogenaud.io/index.php/topic,120979.0.html).
+ 3. [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki).
+
 ## Nightly releases
 Automatic package [built from GitHub](https://nightly.link/regorxxx/Playlist-Manager-SMP/workflows/build/main/file.zip) (using the latest commit).
 
