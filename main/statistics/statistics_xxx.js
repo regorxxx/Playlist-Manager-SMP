@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/11/24
+//21/01/25
 
 /* exported _chart */
 
@@ -113,13 +113,13 @@ function _chart({
 
 	this.paintScatter = (gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
-		const selBar = this.graph.borderWidth * 2;
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const pointType = (this.graph.point || 'circle').toLowerCase();
+		const selBar = this.graph.borderWidth * 2;
 		serie.forEach((value, j) => {
-			valH = value.y / maxY * (y - h);
+			valH = value.y / (maxY || 1) * (y - h);
 			const xPoint = x + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = y - valH;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
@@ -127,41 +127,41 @@ function _chart({
 				gr.FillSolidRect(xPoint - selBar / 2, yPoint, selBar, valH, borderColor);
 			}
 			if (pointType === 'circumference') {
-				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth / 2, w: selBar, h: valH };
+				this.dataCoords[i][j] = { x: xPoint - selBar / 3, y: yPoint - selBar / 3, w: selBar, h: valH + selBar / 3 };
 				const paintPoint = (color) => {
-					gr.DrawEllipse(xPoint - this.graph.borderWidth * 2 / 3, yPoint - this.graph.borderWidth * 2 / 3, this.graph.borderWidth * 4 / 3, this.graph.borderWidth * 4 / 3, this.graph.borderWidth / 2, color);
+					gr.DrawEllipse(xPoint - selBar / 3, yPoint - selBar / 3, selBar * 2 / 3, selBar * 2 / 3, selBar / 4, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
 			} else if (pointType === 'cross') {
-				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth, w: selBar, h: valH };
+				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + selBar / 2 };
 				const paintPoint = (color) => {
-					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint - this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, this.graph.borderWidth / 2, color);
-					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
+					gr.DrawLine(xPoint - selBar / 2, yPoint - selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 4, color);
+					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint - selBar / 2, selBar / 4, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
 			} else if (pointType === 'plus') {
-				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth, w: selBar, h: valH };
+				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + + selBar / 2 };
 				const paintPoint = (color) => {
-					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint, xPoint + this.graph.borderWidth, yPoint, this.graph.borderWidth / 2, color);
-					gr.DrawLine(xPoint, yPoint + this.graph.borderWidth, xPoint, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
+					gr.DrawLine(xPoint - selBar / 2, yPoint, xPoint + selBar / 2, yPoint, selBar / 4, color);
+					gr.DrawLine(xPoint, yPoint + selBar / 2, xPoint, yPoint - selBar / 2, selBar / 4, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
 			} else if (pointType === 'triangle') {
-				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth, w: selBar, h: valH };
+				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + + selBar / 2 };
 				const paintPoint = (color) => {
-					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, this.graph.borderWidth / 2, color);
-					gr.DrawLine(xPoint - this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint + this.graph.borderWidth / 8, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
-					gr.DrawLine(xPoint + this.graph.borderWidth, yPoint + this.graph.borderWidth, xPoint - this.graph.borderWidth / 8, yPoint - this.graph.borderWidth, this.graph.borderWidth / 2, color);
+					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 2 / 2, color);
+					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color);
+					gr.DrawLine(xPoint + selBar / 2, yPoint + selBar / 2, xPoint - selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
 			} else { // circle
-				this.dataCoords[i][j] = { x: xPoint, y: yPoint - this.graph.borderWidth / 2, w: selBar, h: valH };
+				this.dataCoords[i][j] = { x: xPoint - selBar / 4, y: yPoint - selBar / 4, w: selBar, h: valH + selBar / 4 };
 				const paintPoint = (color) => {
-					gr.DrawEllipse(xPoint - this.graph.borderWidth / 2, yPoint - this.graph.borderWidth / 2, this.graph.borderWidth, this.graph.borderWidth, this.graph.borderWidth, color);
+					gr.DrawEllipse(xPoint - selBar / 4, yPoint - selBar / 4, selBar / 2, selBar / 2, selBar / 2, color);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
@@ -177,7 +177,7 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
-			valH = value.y / maxY * (y - h);
+			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
 			const xPoint = x + idx * tickW;
 			const yPoint = y - valH;
@@ -208,7 +208,7 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
-			valH = value.y / maxY * (y - h);
+			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
 			const xPoint = x + idx * tickW;
 			const yPoint = y - valH;
@@ -253,7 +253,7 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
-			valH = value.y / maxY * (y - h);
+			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
 			const xPoint = x + idx * tickW;
 			const yPoint = y - valH;
@@ -288,7 +288,7 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
-			valH = value.y / maxY * (y - h);
+			valH = value.y / (maxY || 1) * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = y - valH;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
@@ -311,7 +311,7 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		serie.forEach((value, j) => {
-			valH = value.y / maxY / 2 * (y - h);
+			valH = value.y / (maxY || 1) / 2 * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = (y - h) / 2 - valH + this.margin.top;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
@@ -355,7 +355,9 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [...Object.values(c)];
 			const sumY = thisSerie.reduce((acc, val) => acc + val.y, 0);
-			const perc = value.y / sumY;
+			const perc = sumY !== 0
+				? value.y / sumY
+				: 1 / thisSerie.length;
 			const sliceTicks = perc * ticks;
 			const iAlpha = 2 * Math.PI * perc;
 			for (let h = 0; h < sliceTicks; h++) {
@@ -371,7 +373,7 @@ function _chart({
 					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
 				}
 			}
-			circleArr.push(...Object.values(c));
+			circleArr = [...Object.values(c)];
 			alpha += iAlpha;
 			this.dataCoords[i][j] = { c: { ...c }, r1: 0, r2: r, alpha1: alpha - iAlpha, alpha2: alpha };
 			labelCoord.push({ from: { ...c }, to: { x: c.x + iX, y: c.y + iY }, val: perc * 100, alpha });
@@ -394,7 +396,9 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [];
 			const sumY = thisSerie.reduce((acc, val) => acc + val.y, 0);
-			const perc = value.y / sumY;
+			const perc = sumY !== 0
+				? value.y / sumY
+				: 1 / thisSerie.length;
 			const sliceTicks = perc * ticks;
 			const iAlpha = 2 * Math.PI * perc;
 			for (let h = 0; h < sliceTicks; h++) {
@@ -491,7 +495,6 @@ function _chart({
 				}
 				if (this.axis.y.show && this.axis.y.key.length && this.axis.y.showKey) {
 					xOffsetKey = gr.CalcTextHeight(this.axis.y.key, this.gFont) + _scale(2);
-					// x += xOffsetKey;
 					w -= xOffsetKey;
 				}
 				break;
@@ -646,7 +649,7 @@ function _chart({
 							const labels = labelOver.coord[i];
 							let prevLabel = labels[0];
 							labels.slice(1).forEach((label, j) => {
-								const tetha = (label.alpha - prevLabel.alpha) / 2 + prevLabel.alpha;
+								const tetha = label.tetha = (label.alpha - prevLabel.alpha) / 2 + prevLabel.alpha;
 								if (this.axis.y.labels) { // Value labels
 									const labelText = round(label.val, 0) + '%';
 									const tickH = gr.CalcTextHeight(labelText, this.gFont);
@@ -658,16 +661,18 @@ function _chart({
 									gr.GdiDrawText(labelText, this.gFont, yAxisColor, xTickText, yTickText, tickW, tickH, flags);
 								}
 								if (this.axis.x.labels && i === 0 || !this.axis.x.bSingleLabels) { // keys
+									label.xAxis = { x: 0, y: 0, w: 0, h: 0 };
 									const labelText = xAxisValues[j];
-									const tickH = gr.CalcTextHeight(labelText, this.gFont);
-									const tickW = gr.CalcTextWidth(labelText, this.gFont);
+									const tickH = label.xAxis.h = gr.CalcTextHeight(labelText, this.gFont);
+									const tickW = label.xAxis.w = gr.CalcTextWidth(labelText, this.gFont);
 									const border = labelOver.r / series * (series - i);
-									const yTickText = label.from.y + (border + tickH / 2) * Math.sin(tetha) - tickH / 2;
-									const xTickText = label.from.x + (border + tickW) * Math.cos(tetha) - tickW / 2;
+									const yTickText = label.xAxis.y = label.from.y + (border + tickH / 2) * Math.sin(tetha) - tickH / 2;
+									const xTickText = label.xAxis.x = label.from.x + (border + tickW) * Math.cos(tetha) - tickW / 2;
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+									const bestBgCol = this.mostContrastColor(this.colors[i][j]).color;
 									const borderColor = bgColor
-										? RGBA(...Chroma.average([invert(this.colors[i][j], true), bgColor], void (0), [0.9, 0.1]).rgb(), 150)
-										: RGBA(...toRGB(invert(this.colors[i][j], true)), 150);
+										? RGBA(...Chroma.average([bestBgCol, bgColor], void (0), [0.9, 0.1]).rgb(), 150)
+										: RGBA(...toRGB(bestBgCol), 150);
 									const offsetR = Math.max(Math.max(xTickText + tickW + _scale(2) + this.margin.right / 3, w) - w - x, 0);
 									const offsetL = Math.max(Math.max(xTickText, this.x + _scale(2) + this.margin.left / 3) - xTickText, 0);
 									// Lines to labels
@@ -711,7 +716,19 @@ function _chart({
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-							gr.DrawImage(img, labelOver.coord[0][0].from.x - labelOver.r - keyH * 2, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, keyH, keyW, 0, 0, img.Width, img.Height);
+							const yTitle = this.y + (this.h - this.y) / 2 - keyW * 2 / 3;
+							// Check if labels are drawn in the region to the left overlapping the axis title
+							const offsetLabels = labelOver.coord.reduce((prev, serie) => {
+								return Math.max(prev, serie.slice(1).reduce((prev, point) => {
+									return point.tetha > Math.PI / 2 && point.tetha <= Math.PI * 3 / 2 && point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y <= yTitle + keyW
+										? prev !== 0 ? Math.min(point.xAxis.x, prev) : point.xAxis.x
+										: prev;
+								}, 0));
+							}, 0);
+							const xImg = offsetLabels !== 0
+								? offsetLabels - keyH * 3/2
+								: labelOver.coord[0][0].from.x - labelOver.r - keyH * 2;
+							gr.DrawImage(img, xImg, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
 						}
 					}
@@ -720,7 +737,7 @@ function _chart({
 				if (this.axis.x.show) {
 					if (this.axis.x.key.length && this.axis.x.showKey && labelOver.coord.length) {
 						const keyW = gr.CalcTextWidth(this.axis.x.key, this.gFont);
-						gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColorInverted, labelOver.coord[0][0].from.x - keyW / 2, y + this.axis.x.width, keyW, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
+						gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColorInverted, labelOver.coord[0][0].from.x - keyW / 2, y + this.axis.x.width + _scale(2), keyW, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					}
 				}
 				break;
@@ -765,7 +782,7 @@ function _chart({
 							}
 							if (this.axis.x.labels) {
 								const tickH = gr.CalcTextHeight(valueX, this.gFont);
-								const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+								const borderColor = RGBA(...toRGB(this.mostContrastColor(xAxisColor).color), 150);
 								const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 								const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 								gr.FillSolidRect(xLabel + tickW / 2 + offsetTickText - _scale(3) - xTickW / 2, yPos + tickH / 6, xTickW + _scale(4), tickH, borderColor);
@@ -789,7 +806,7 @@ function _chart({
 						});
 					}
 					if (this.axis.x.key.length && this.axis.x.showKey) {
-						const offsetH = this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0;
+						const offsetH = (this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0) - _scale(1);
 						gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColorInverted, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 					}
 				}
@@ -813,7 +830,7 @@ function _chart({
 						const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 						const xtickH = gr.CalcTextHeight(valueX, this.gFont);
 						// Draw line and rectangle
-						const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+						const borderColor = RGBA(...toRGB(this.mostContrastColor(xAxisColor).color), 150);
 						gr.DrawLine(xLabel, y, xLabel, yLabel, this.axis.x.width / 2, xAxisColor);
 						xLabel -= (i === 0 ? 0 : xtickH / 2);
 						gr.FillSolidRect(xLabel, yLabel - xTickW - _scale(5), xtickH, xTickW + _scale(5), borderColor);
@@ -928,7 +945,7 @@ function _chart({
 				if (this.axis.x.show) {
 					if (graphType !== 'timeline') {
 						const last = xAxisValuesLen - 1;
-						const borderColor = RGBA(...toRGB(invert(xAxisColor, true)), 150);
+						const borderColor = RGBA(...toRGB(this.mostContrastColor(xAxisColor).color), 150);
 						const minTickW = w / 30;
 						const bFitTicks = w / tickW < 30;
 						const drawLabelW = bFitTicks ? tickW : tickW * 3;
@@ -947,16 +964,19 @@ function _chart({
 								if (i === 0 && offsetTickText) { // Fix for first label position
 									const zeroW = xLabel + offsetTickText - this.x - this.margin.leftAuto / 2 + (bFitTicks ? tickW : drawLabelW);
 									const zeroX = this.x + this.margin.leftAuto / 2 + xOffsetKey + (bFitTicks ? 0 : tickW * 2 / 3);
-									if (this.axis.x.bAltLabels) { gr.FillSolidRect(this.x + this.margin.leftAuto + xOffsetKey - xtickW / 2 + _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(zeroX, y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
 									const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									gr.GdiDrawText(valueX, this.gFont, xAxisColor, zeroX, y + this.axis.y.width, zeroW, this.h, flags);
 								} else if (i === last) { // Fix for last label position
-									const lastW = xLabel + offsetTickText + tickW > w - this.margin.right
-										? this.x + w - (xLabel + offsetTickText) + this.margin.right
+									const lastW = (xLabel + offsetTickText + tickW) > (w - this.margin.right)
+										? this.x + w - (xLabel + offsetTickText)
 										: tickW;
-									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel + offsetTickText + xOffsetKey + (lastW - xtickW) / 2 - _scale(1), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
-									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-									gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText + xOffsetKey, y + this.axis.y.width, lastW - xOffsetKey, this.h, flags);
+									const lastX = xLabel + offsetTickText + Math.min(Math.max((minTickW - 30) / 30 * tickW / 2, 0), tickW / 8);
+									if (lastW > 0) {
+										if (this.axis.x.bAltLabels) { gr.FillSolidRect(lastX, y + this.axis.y.width * 3 / 2, xtickW, xtickH, borderColor); }
+										const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+										gr.GdiDrawText(valueX, this.gFont, xAxisColor, lastX, y + this.axis.y.width, xtickW, this.h, flags);
+									}
 								} else {
 									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel - xtickW / 2 - _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -967,7 +987,7 @@ function _chart({
 							gr.DrawLine(xLine, y + this.axis.x.width * 2, xLine, y - this.axis.x.width, this.axis.x.width / 2, xAxisColor);
 						});
 						if (this.axis.x.key.length && this.axis.x.showKey) {
-							const offsetH = this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0;
+							const offsetH = (this.axis.x.labels ? gr.CalcTextHeight('A', this.gFont) : 0) - _scale(1);
 							gr.GdiDrawText(this.axis.x.key, this.gFont, xAxisColor, x, y + this.axis.x.width + offsetH, w, this.h, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 						}
 					}
@@ -1034,6 +1054,15 @@ function _chart({
 
 	this.chromaColor = (scheme = this.chroma.scheme, len = this.series, mode = this.chroma.interpolation) => {
 		return Chroma.scale(scheme).mode(mode || 'lrgb').colors(len, 'rgb').map((arr) => RGB(...arr));
+	};
+
+	this.mostContrastColor = (refColor, palette = [RGB(255, 255, 255), RGB(0, 0, 0)]) => {
+		return palette.reduce((prev, color) => {
+			const contrast = Chroma.contrast(color, refColor);
+			return prev.contrast <= contrast
+				? { color, contrast }
+				: prev;
+		}, { contrast: 0 });
 	};
 
 	this.nFormatter = (num) => { // Y axis formatter
