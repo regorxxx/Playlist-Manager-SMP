@@ -3,7 +3,7 @@
 [![CodeFactor][codefactor_badge]](https://www.codefactor.io/repository/github/regorxxx/Playlist-Manager-SMP/overview/main)
 [![CodacyBadge][codacy_badge]](https://www.codacy.com/gh/regorxxx/Playlist-Manager-SMP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=regorxxx/Playlist-Manager-SMP&amp;utm_campaign=Badge_Grade)
 ![GitHub](https://img.shields.io/github/license/regorxxx/Playlist-Manager-SMP)  
-A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
+A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel)/[JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
 
 <p align="center">
 <img src="https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/cc22416b-734f-4751-b6df-6e10ecc83573">
@@ -170,10 +170,12 @@ Tracking playlists within a network drive requires additional steps to make use 
  1. [Menu-Framework-SMP](https://github.com/regorxxx/Menu-Framework-SMP): Helper which allows to easily create customizable and dynamic menus.
  
 ## Requirements
- 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon.
+ 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon. Only x32.
+ 2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): Component required to install this javaScript addon. Both x32 and x64.
+ 3. FontAwesome: found at ’.\ resources\fontawesome-webfont.ttf’. See installation notes.
  
 ## Installation
-See [Readme (pdf)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/readmes/playlist_manager.pdf), [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation).
+See the [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation). There are more extensive instructions at the [Readme (pdf)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/readmes/playlist_manager.pdf) or [_INSTALLATION (txt)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/_INSTALLATION.txt) file.
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
 ## Documentation
