@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/01/25
+//25/01/25
 
 /* exported _menu, _attachedMenu */
 
@@ -19,60 +19,125 @@ include(fb.ComponentPath + 'docs\\Flags.js');
  * @name _menu
  * @param {object} [o] - arguments
  * @param {boolean?} o.bInit - [=true] Creates a main menu object at init. Set to false to directly replace with a contextual/main menu obj.
- * @param {boolean?} o.bSupressDefaultMenu - [=true] Suppress the default context menu. left shift + left windows key will bypass it.
+ * @param {boolean?} o.bSuppressDefaultMenu - [=true] Suppress the default context menu. left shift + left windows key will bypass it.
  * @param {boolean?} o.bAddInvisibleIds - [=true] When trying to add multiple (sub)menus with same name (and different parent), an invisible Id may be added to allow it. .newMenu() and .findOrNewMenu() will return the final name in such case. Entries may be duplicated without conflicts though.
  * @param {function?} o.onBtnUp - [=null] Callback called after processing mouse btn_up. Respects the value of this inside the function, if any.
  * @param {number?} o.contextIdxInitial - [=10000] Initial id for Context Menu manager.
  * @param {number?} o.mainIdxInitial - [=100000] Initial id for Main Menu manager.
- * @param {number?} o.idxInitialOffset - [=1000] Every new context/main menu will be set at initial id + offset (i.e. by default 10 context menus are allowed without clashing).
+ * @param {number?} o.idxInitialOffset - [=1000] Every new context/main menu will be set at initial id + offset (i.e. by default 10 context menus are allowed without collisions).
  * @param {boolean} o.bLogEntries - [=false] Log entry calls into console.
  * @param {boolean} o.bThrowErrors - [=true] Throws an error when passing malformed arguments on any method. It may conflict with web requests if they are active when the panel crashes (although a workarounds is implemented).
  * @returns {void}
  */
-function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false, bThrowErrors = true } = {}) {
-	// Checks
+function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false, bThrowErrors = true } = {}) {
+	/* Checks */
 	if (onBtnUp && !isFunction(onBtnUp)) { throwError('onBtnUp is not a function'); }
 	if (iMaxEntryLen <= 0) { throwError('iMaxEntryLen can not be <= 0'); }
 	if (iMaxTabLen <= 0) { throwError('iMaxTabLen can not be <= 0'); }
 
-	// Globals
+	/* Globals (private) */
+	/** @typedef {object} Menu
+	 * @property  {String|() => String} menuName
+	 * @property  {String|() => String} subMenuFrom
+	 */
+	/** @type {Menu[]} - Temporal list of menus/submenus entries, reset on every call */
 	let menuArrTemp = [];
+	/** @type {Menu[]} - List of menus/submenus entries */
 	let menuArr = [];
+	/** @type {Map<string,MenuObject>} - Map for standard menus */
 	const menuMap = new Map();
-
+	/** @type {Map<string,MenuObject>} - Map for contextual menus (handle lists) */
 	const contextMenuMap = new Map();
+	/** @type {Map<string,MenuObject>} - Map for main menus */
 	const mainMenuMap = new Map();
-
+	/** @typedef {object} MenuEntry
+	 * @property  {String|() => String} [entryText]
+	 * @property  {String|() => String} menuName
+	 * @property  {String|() => String} [subMenuFrom]
+	 * @property  {Number|() => Number} flags
+	 * @property  {boolean} bIsMenu
+	 * @property  {Function?} [func]
+	 * @property  {Function?} [condFunc]
+	 * @property  {any?} [data]
+	 * @property  {{type:String, playlistIdx:Number}} [context]
+	 * @property  {{type:String}} [main]
+	 */
+	/** @typedef {object} MenuEntryCond
+	 * @property  {String} entryText
+	 * @property  {Function} condFunc
+	 */
+	/** @typedef {object} MenuSeparator
+	 * @property  {Separator} entryText
+	 * @property  {String|() => String} menuName
+	 * @property  {0x00000001} flags - MF_GRAYED
+	 * @property  {false} bIsMenu
+	 * @property  {null} [func]
+	 * @property  {null} [data]
+	 */
+	/** @type {MenuEntry[]} - Temporal list of all menu entries, including menus/submenus, reset on every call */
 	let entryArrTemp = [];
+	/** @type {MenuEntry[]} - List of all menu entries, including menus/submenus */
 	let entryArr = [];
-
-	let checkMenuArr = [];
+	/** @typedef {object} MenuCheck
+	 * @property  {String|() => String} menuName
+	 * @property  {String|() => String} entryTextA
+	 * @property  {String|() => String} entryTextB
+	 * @property  {Number|() => (Boolean|Number)} idxFunc
+	 */
+	/** @type {MenuCheck[]} - Temporal list of all menu checks  entries, reset on every call */
 	let checkMenuArrTemp = [];
-
+	/** @type {MenuCheck[]} - List of all menu checks entries */
+	let checkMenuArr = [];
+	/** @typedef {object} CheckFuncEntry
+	 * @property  {String} name
+	 * @property  {Boolean|Number|null} val
+	 * @property  {Function} func
+	 */
+	/** @type {Map<string,CheckFuncEntry[]>} - Map for menu names and associated menu checks */
 	const checkMenuMap = new Map();
+	/** @type {Map<string,number>} - Map for entry names and associated idx */
 	const entryMap = new Map();
+	/** @type {Map<number,string>} - Map for idx and associated entry name */
 	const entryMapInverted = new Map();
+	/** @type {Map<number,function>} - Map for idx entries and associated functions */
 	const idxMap = new Map();
+	/** @type {number} - Internal menu idx count */
 	let idx = 0;
-
+	/** @typedef {'sep'|'separator'} Separator - Allowed separator strings. Case insensitive. */
+	/** @type {RegExp} - Expression to check for separator entries */
 	const separator = /(?:^|\\)(?:sep|separator)$/i;
-
-	this.properties = properties; // To simplify usage along other scripts
+	/** @type {object} - Properties object to simplify usage along other scripts */
+	this.properties = properties;
+	/** @type {string} - Last menu entry called */
 	this.lastCall = '';
+	/** @typedef {number|boolean|Object.<string, (string|number)>|string} stringLike - Allowed name entries types */
+	/** @type {string[]} - Variable types converted to string for menu and entry names */
+	const eTypeToStr = ['number', 'boolean', 'object'];
+	/** @typedef {object} MenuLikeObject
+	 * @property  {(number) => number} btn_up
+	 * @property  {(number) => void} btn_up_done
+	 */
 
-	const eTypeToStr = ['number', 'boolean', 'object']; // Variable types converted to string for menu and entry names
-
+	/* Methods (public) */
+	/**
+	 * Get total number of menu entries (parents and entries)
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @param {stringLike|() => String} entry - Entry name
+	 * @returns {String|() => String}
+	 */
 	this.cleanEntryName = (entry) => {
 		if (entry !== null) {
 			const type = typeof entry;
 			if (type !== 'undefined') {
-				if (eTypeToStr.includes(type)) { entry = entry.toString(); }
+				if (eTypeToStr.includes(type)) { entry = entry.toString(); } // NOSONAR
 				if (type === 'string' && entry.includes('&')) { entry = entry.replace(/&&/g, '&').replace(/&/g, '&&'); }
 			}
 		}
 		return entry;
 	};
-	// To retrieve elements
+	/* -> To retrieve elements */
 	/**
 	 * Get total number of menu entries (parents and entries)
 	 *
@@ -88,7 +153,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name getEntries
-	 * @returns {{entryText?:string, menuName:string, subMenuFrom?:string, flags:number, bIsMenu:boolean, func?:function, data?:any, context?:{type:string, playlistIdx:number}, main?:{type:string}}[]}
+	 * @returns {MenuEntry[]}
 	 */
 	this.getEntries = () => [...entryArr];
 	/**
@@ -98,17 +163,22 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @memberof _menu
 	 * @name getEntriesAll
 	 * @param {Object} object - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
-	 * @param {{pos:number, args?:any}} bindArgs - Arguments to pass -as is- to conditional menus on init. 'pos' >=1 may be set to specify the position of the argument.
-	 * @returns {{entryText?:string, menuName:string, subMenuFrom?:string, flags:number, bIsMenu:boolean, func?:function, data?:any, context?:{type:string, playlistIdx:number}, main?:{type:string}}[]}
+	 * @param {{pos:number, args?:any?}?} [bindArgs] - [=null] Arguments to pass -as is- to conditional menus on init. 'pos' >=1 may be set to specify the position of the argument.
+	 * @returns {MenuEntry[]}
 	 */
-	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => { this.initMenu(object, bindArgs); const copy = [...entryArr]; this.clear(); return copy; };
+	this.getEntriesAll = (object, bindArgs = null /*{pos: -1, args: null}*/) => {
+		this.initMenu(object, bindArgs);
+		const copy = [...entryArr];
+		this.clear();
+		return copy;
+	};
 	/**
 	 * Gets last menu entry created.
 	 *
 	 * @kind method
 	 * @memberof _menu
 	 * @name getLastEntry
-	 * @returns {{entryText?:string, menuName:string, subMenuFrom?:string, flags:number, bIsMenu:boolean, func?:function, data?:any, context?:{type:string, playlistIdx:number}, main?:{type:string}}?}
+	 * @returns {MenuEntry?}
 	 */
 	this.getLastEntry = () => { return (entryArr.length !== 0 ? entryArr[entryArr.length - 1] : null); };
 	/**
@@ -118,53 +188,68 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @memberof _menu
 	 * @name isLastEntry
 	 * @param {string} name - Entry name for lookup
-	 * @param {('entry'|'cond'|'menu')} type - [='entry'] Entry type.
+	 * @param {('entry'|'cond'|'menu')} [type] - [='entry'] Entry type.
 	 * @returns {boolean}
 	 */
-	this.isLastEntry = (name, type = 'entry' /* entry, cond, menu*/) => {
+	this.isLastEntry = (name, type = 'entry') => {
 		const last = this.getLastEntry();
 		return last && ((type === 'entry' || type === 'cond' && last.condFunc) && last.entryText === name || type === 'menu' && last.bIsMenu && last.menuName === name);
 	};
 	/**
 	 * Returns if last entry is a separator
 	 *
-	 * @kind propgerty
+	 * @kind property
 	 * @memberof _menu
 	 * @type {boolean}
 	 * @name isLastEntrySep
 	 */
 	this.isLastEntrySep = void (0); // Defined so JSDOC works properly
 	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry('sep'); } });
+	/**
+	 * Checks if last entry matches a name by type
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name isLastEntry
+	 * @param {string} name - Entry name for lookup
+	 * @param {('entry'|'cond'|'menu')} [type] - [='entry'] Entry type.
+	 * @returns {Menu[]}
+	 */
 	this.getMenus = () => [...menuArr];
 	/**
 	 * Gets the key of the main menu (root). Useful to concatenate multiple menus.
 	 *
-	 * @Function
+	 * @kind method
+	 * @memberof _menu
 	 * @name getMainMenuName
-	 * @returns {string|null}
+	 * @returns {string?}
 	 */
 	this.getMainMenuName = () => menuArr.length ? menuArr[0].menuName : null;
 	/**
 	 * Checks if a menu name exists at an specific parent or globally.
 	 *
-	 * @Function
+	 * @kind method
+	 * @memberof _menu
 	 * @name hasMenu
 	 * @param {string} menuName - Name for lookup
-	 * @param {string} subMenuFrom - If not set, performs a global lookup.
+	 * @param {string} [subMenuFrom] - If not set, performs a global lookup.
 	 * @returns {boolean}
 	 */
 	this.hasMenu = (menuName, subMenuFrom = '') => menuArr.find((menu) => menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true));
 	/**
 	 * Gets the key of the main menu (root). Useful to concatenate multiple menus.
 	 *
-	 * @Function
+	 * @kind method
+	 * @memberof _menu
 	 * @name getMenuNameFrom
 	 * @param {string} menuName - Menu name for lookup.
-	 * @param {string} subMenuFrom - Parent menu. Uses the main menu, unless provided another value.
+	 * @param {string} [subMenuFrom] - [=this.getMainMenuName()] Parent menu. Uses the main menu, unless provided another value.
 	 * @returns {string}
 	 */
 	this.getMenuNameFrom = (menuName, subMenuFrom = this.getMainMenuName() || '') => {
-		const found = menuArr.find((menu) => menu.menuName.replace(hiddenCharsRegEx, '') === menuName && menu.subMenuFrom.replace(hiddenCharsRegEx, '') === subMenuFrom);
+		menuName = menuName.replace(hiddenCharsRegEx, '');
+		subMenuFrom = subMenuFrom.replace(hiddenCharsRegEx, '');
+		const found = menuArr.find((entry) => entry.menuName.replace(hiddenCharsRegEx, '') === menuName && entry.subMenuFrom.replace(hiddenCharsRegEx, '') === subMenuFrom);
 		return found ? found.menuName : null;
 	};
 	/**
@@ -173,23 +258,23 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name getCheckMenus
-	 * @returns {{menuName:string, entryTextA:string, entryTextB:string, idxFunc:function}[]}
+	 * @returns {MenuCheck[]}
 	 */
 	this.getCheckMenus = () => [...checkMenuArr];
-
-	// To create new elements
+	/* -> To create new elements */
 	/**
 	 * Creates a parent menu which will contain any entries.
 	 *
+	 * @property
 	 * @kind method
 	 * @memberof _menu
 	 * @name newMenu
-	 * @param {string} menuName - [='main'] Menu name.
-	 * @param {string} subMenuFrom - Every menu created will be appended to the main menu, unless provided another value.
-	 * @param {number} flags - Flags for the text
-	 * @param {{type:string, playlistIdx:number}?} context - [=null] Use to create contextual menus
-	 * @param {{type:string}?} main - [=null] Use to create main foobar2000 menus
-	 * @returns {string}
+	 * @param {stringLike|() => String} [menuName] - [='main'] Menu name.
+	 * @param {stringLike|() => String} [subMenuFrom] - [=this.getMainMenuName()] Every menu created will be appended to the main menu, unless provided another value.
+	 * @param {number} [flags] - [=MF_STRING] Flags for the text
+	 * @param {{type:string, playlistIdx:number}?} [context] - [=null] Use to create contextual menus
+	 * @param {{type:string}?} [main] - [=null] Use to create main foobar2000 menus
+	 * @returns {string|() => String}
 	 */
 	this.newMenu = (menuName = 'main', subMenuFrom = this.getMainMenuName() || 'main', flags = MF_STRING, context = null /*{type, playlistIdx}*/, main = null /*{type}*/) => { //NOSONAR
 		menuName = this.cleanEntryName(menuName);
@@ -223,9 +308,9 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name findOrNewMenu
-	 * @param {string} menuName - [='main'] Menu name.
-	 * @param {string} subMenuFrom - Every menu created will be appended to the main menu, unless provided another value.
-	 * @param {number} flags - Flags for the text
+	 * @param {string} [menuName] - [='main'] Menu name.
+	 * @param {string} [subMenuFrom] - [=this.getMainMenuName()] Every menu created will be appended to the main menu, unless provided another value.
+	 * @param {number} [flags] - [=MF_STRING] Flags for the text
 	 * @returns {string}
 	 */
 	this.findOrNewMenu = (menuName = 'main', subMenuFrom = this.getMainMenuName() || 'main', flags = MF_STRING) => {
@@ -238,13 +323,14 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name newEntry
-	 * @param {string} entryText - [=''] Entry name. Using 'sep' or 'separator' adds a dummy separator.
-	 * @param {function?} func - [=null] function associated to entry and called on l. click.
-	 * @param {string} menuName - To which menu/submenu the entry is associated. Uses main menu when not specified.
-	 * @param {number} flags - Flags for the text
-	 * @param {any?} data - [=null] Arbitrary data attached to the entry
-	 * @param {boolean?} bAddInvisibleIds - Entries can have duplicate names without problems, but it may be difficult to use duplicate names for lookup. Invisible Ids may be automatically added to the entry name in such case setting this to true.
-	 * @returns {{entryText:string, menuName:string, flags:number, bIsMenu:false, func:function, data:any}}
+	 * @param {object} o - Arguments
+	 * @param {stringlike|() => String} [o.entryText] - [=''] Entry name. Using 'sep' or 'separator' adds a dummy separator.
+	 * @param {Function?} [o.func] - [=null] Function associated to entry and called on l. click.
+	 * @param {stringlike|() => String} [o.menuName] - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
+	 * @param {Number|() => Number} [o.flags] - [=MF_STRING] Flags for the text
+	 * @param {any?} [o.data] - [=null] Arbitrary data attached to the entry
+	 * @param {Boolean} [o.bAddInvisibleIds] -  [=false] Entries can have duplicate names without problems, but it may be difficult to use duplicate names for lookup. Invisible Ids may be automatically added to the entry name in such case setting this to true.
+	 * @returns {MenuEntry}
 	 */
 	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, data = null, bAddInvisibleIds = false }) => {
 		menuName = this.cleanEntryName(menuName);
@@ -260,8 +346,8 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name newEntry
-	 * @param {string} menuName - To which menu/submenu the sepearator is associated. Uses main menu when not specified.
-	 * @returns {{entryText:'sep', menuName:string, flags:MF_GRAYED, bIsMenu:false, func:null, data:null}}
+	 * @param {stringLike|() => String} menuName - To which menu/submenu the sepearator is associated. Uses main menu when not specified.
+	 * @returns {MenuSeparator}
 	 */
 	this.newSeparator = (menuName = this.getMainMenuName()) => {
 		return this.newEntry({ entryText: 'sep', menuName });
@@ -273,10 +359,10 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name newCheckMenu
-	 * @param {string} menuName - To which menu/submenu the check is associated. Uses main menu when not specified.
-	 * @param {string} entryTextA - [=''] From entry A (idx gets calculated automatically)
-	 * @param {string?} entryTextB - [=null] To entry B (idx gets calculated automatically). For boolean checks, omit it.
-	 * @param {function?} idxFunc - [=null] Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 5. For Boolean checks of a single entry, just return true/false.
+	 * @param {stringLike|() => String} [menuName] - To which menu/submenu the check is associated. Uses main menu when not specified.
+	 * @param {stringLike|() => String} [entryTextA] - [=''] From entry A (idx gets calculated automatically)
+	 * @param {(stringLike|() => String)?} [entryTextB] - [=null] To entry B (idx gets calculated automatically). For boolean checks, omit it.
+	 * @param {() =>(Boolean|Number)} [idxFunc] - [=null] Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 5. For Boolean checks of a single entry, just return true/false.
 	 * @returns {boolean}
 	 */
 	this.newCheckMenu = (menuName = this.getMainMenuName(), entryTextA = '', entryTextB = null, idxFunc = null) => {
@@ -300,7 +386,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @memberof _menu
 	 * @name newCheckMenuLast
 	 * @param {(options: array,len: int) => int} func - Logic to calculate the offset. i.e. EntryA and EntryB differ by 5 options, this function must return values between 0 and 4. For Boolean checks of a single entry, just return true/false. Note separator entries doesn't count. Options argument (filtered without separators) and its length as passed as arguments to the callback.
-	 * @param {any[]|number} options - [=[]] When provided, its length is used to consider the last n entries. In case it's not provided or its length is one or zero, only a single entry is considered and the check is boolean. It may also be provided directly as a number.
+	 * @param {any[]|number} [options] - [=[]] When provided, its length is used to consider the last n entries. In case it's not provided or its length is one or zero, only a single entry is considered and the check is boolean. It may also be provided directly as a number.
 	 * @returns {boolean}
 	 */
 	this.newCheckMenuLast = (func, options = []) => {
@@ -326,7 +412,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name appendToLast
-	 * @param {string|function} text - String to append. May also be a function returning a text.
+	 * @param {String|() => String} text - String to append. May also be a function returning a text.
 	 * @returns {boolean}
 	 */
 	this.appendToLast = (text) => {
@@ -360,8 +446,8 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name addIndicatorNameLast
-	 * @param {function} boolFunc - [=() => true] Function which must return a boolean to set wether the indicator must be added or not. If not provided, the indicator is always added.
-	 * @param {string} indicator - [='⬅'] String to append if 'boolFunc' returns true. It's appended by adding '\t' first.
+	 * @param {Function} [boolFunc] - [=() => true] Function which must return a boolean to set wether the indicator must be added or not. If not provided, the indicator is always added.
+	 * @param {String} [indicator] - [='⬅'] String to append if 'boolFunc' returns true. It's appended by adding '\t' first.
 	 * @returns {boolean}
 	 */
 	this.addIndicatorNameLast = (boolFunc = () => true, indicator = '⬅') => this.appendToLast(() => boolFunc() ? '\t' + indicator : '');
@@ -371,7 +457,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name tip
-	 * @param {...string} args - Strings to join.
+	 * @param {...stringLike} args - Strings to join.
 	 * @returns {string}
 	 */
 	this.tip = (...args) => {
@@ -391,7 +477,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name addTipLast
-	 * @param {...string} args - Strings to join.
+	 * @param {...stringLike} args - Strings to join.
 	 * @returns {boolean}
 	 */
 	this.addTipLast = (...args) => this.appendToLast(this.tip(...args));
@@ -401,9 +487,9 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name newCondEntry
-	 * @param {string} entryText - [=''] Just for identification, not used anywhere.
-	 * @param {function} condFunc - Function called on .btn_up().
-	 * @returns {{entryText:string, condFunc:function}}
+	 * @param {stringLike} [entryText] - [=''] Just for identification, not used anywhere.
+	 * @param {Function} condFunc - Function called on .btn_up().
+	 * @returns {MenuEntryCond}
 	 */
 	this.newCondEntry = ({ entryText = '', condFunc }) => {
 		if (eTypeToStr.includes(typeof entryText)) { entryText = entryText.toString(); }
@@ -415,37 +501,107 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 *
 	 * @kind method
 	 * @memberof _menu
-	 * @name newCondEntry
-	 * @param {string} menuName - To which menu/submenu the entry is associated. Uses main menu when not specified.
-	 * @param {string} entryTextA - To which menu entry the check is associated. For boolean checks.
-	 * @param {string} entryTextB - To which last menu entry the check is associated. For radious checks, you need the first and last entry.
+	 * @name isChecked
+	 * @param {stringLike} [menuName] - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
+	 * @param {stringLike} entryTextA - To which menu entry the check is associated. For boolean checks.
+	 * @param {stringLike} [entryTextB] - [=''] To which last menu entry the check is associated. For radious checks, you need the first and last entry.
 	 * @returns {Number|Boolean|null}
 	 */
-	this.isChecked = (menuName = this.getMainMenuName(), entryTextA, entryTextB = '') => {
+	this.isChecked = (menuName = this.getMainMenuName(), entryTextA, entryTextB = '') => { // NOSONAR
 		menuName = this.cleanEntryName(menuName);
 		entryTextA = this.cleanEntryName(entryTextA);
 		entryTextB = this.cleanEntryName(entryTextB);
-		const name = entryTextA + (entryTextB.length ? ' - ' + entryTextB : '');
+		const name = entryTextA + (entryTextB.length ? ' - ' + entryTextB : ''); // NOSONAR
 		const check = (this.getCheckMenu(menuName) || []).find((check) => check.name === name);
-		console.log(check, name, entryTextA);
 		return (check ? check.val : null);
 	};
-
-	// <-- Internal
+	/* Internal methods (private) */
+	/**
+	 * Retrieves menu object by mapping or entire map.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name getMenu
+	 * @param {String} menuName - Menu name
+	 * @returns {Map<String, MenuObject>|MenuObject}
+	 */
 	this.getMenu = (menuName) => !menuName ? menuMap : menuMap.get(menuName);
+	/**
+	 * Retrieves menu entry idx by name or entire map.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name getIdx
+	 * @param {string} menuNameEntryText - Menu/entry name
+	 * @returns {Map<String,Number>|number}
+	 */
 	this.getIdx = (menuNameEntryText) => !menuNameEntryText ? entryMap : entryMap.get(menuNameEntryText);
+	/**
+	 * Retrieves menu entry name by idx or entire map.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name getEntry
+	 * @param {Number} idx - entry idx
+	 * @returns {Map<Number,String>|String}
+	 */
 	this.getEntry = (idx) => (typeof idx === 'undefined' || idx === -1) ? entryMapInverted : entryMapInverted.get(idx);
+	/**
+	 * Retrieves menu entry function by idx or entire map.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name getEntryFunc
+	 * @param {number} idx - entry idx
+	 * @returns {Map<number,Function>|Function}
+	 */
 	this.getEntryFunc = (idx) => (typeof idx === 'undefined' || idx === -1) ? idxMap : idxMap.get(idx);
+	/**
+	 * Retrieves menu checks by name or entire map.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name getCheckMenu
+	 * @param {String} menuName - Menu name
+	 * @returns {Map<string,CheckFuncEntry[]>|CheckFuncEntry[]}
+	 */
 	this.getCheckMenu = (menuName) => !menuName ? checkMenuMap : checkMenuMap.get(menuName);
+	/**
+	 * Resets invisible ids added to entry/menus
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name resetIds
+	 * @returns {void}
+	 */
 	this.resetIds = () => invsId(void (0), true);
-
-	this.createMenu = (menuName = menuArr[0].menuName) => {
+	/**
+	 * Creates SMP menu object with associated name.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name createMenu
+	 * @param {(String|()=>String)?} [menuName] - [=this.getMainMenuName()] Menu name. Uses Main menu if ommited.
+	 * @returns {MenuObject}
+	 */
+	this.createMenu = (menuName = this.getMainMenuName()) => {
 		if (isFunction(menuName)) { menuName = menuName(); }
 		menuMap.set(menuName, window.CreatePopupMenu());
 		return menuMap.get(menuName);
 	};
-
-	this.addToMenu = ({ entryText = null, func = null, menuName = menuArr[0].menuName, flags = MF_STRING }) => {
+	/**
+	 * Adds a menu entry to a parent menu.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name addToMenu
+	 * @param {(String|()=>String)?} [entryText] - Entry name.
+	 * @param {Function} [func] - [=null] Associated function to execute on click.
+	 * @param {String|()=>String} [menuName] - [=this.getMainMenuName()] Parent menu name. Uses Main menu if ommited.
+	 * @param {Number} [flags] - [= MF_STRING] Entry flags.
+	 * @returns {MenuObject}
+	 */
+	this.addToMenu = ({ entryText = null, func = null, menuName = this.getMainMenuName(), flags = MF_STRING }) => {
 		if (separator.test(entryText)) { menuMap.get(menuName).AppendMenuSeparator(); }
 		else {
 			idx++;
@@ -493,25 +649,36 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			idxMap.set(idx, func);
 		}
 	};
-
+	/**
+	 * Process a check menu entry and creates a check ready to be executed on menu call
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name checkMenu
+	 * @param {(String|()=>String)?} menuName - Parent menu name.
+	 * @param {(String|()=>String)?} entryTextA - First entry name.
+	 * @param {(String|()=>String)?} entryTextB - Second entry name.
+	 * @param {Number|() => (Boolean|Number)} idxFunc - Associated check function which must return either a boolean or number
+	 * @returns {void}
+	 */
 	this.checkMenu = (menuName, entryTextA, entryTextB, idxFunc) => {
 		if (isFunction(menuName)) { menuName = menuName(); }
 		if (isFunction(entryTextA)) { entryTextA = entryTextA(); }
 		const entryNameA = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextA : entryTextA;
 		const idxA = this.getIdx(entryNameA);
-		if (typeof idxA === 'undefined' || idxA === null) { console.log('this.checkMenu: entryA not found -> ' + entryNameA); }
+		if (typeof idxA === 'undefined' || idxA === null) { console.log('Menu-Framework-SMP: .checkMenu() - entryA not found -> ' + entryNameA); }
 		if (!checkMenuMap.has(menuName)) { checkMenuMap.set(menuName, []); }
-		const menuChecks = checkMenuMap.get(menuName);
+		const menuChecks = this.getCheckMenu(menuName);
 		if (entryTextB) { // Radio check
 			if (isFunction(entryTextB)) { entryTextB = entryTextB(); }
 			const entryNameB = menuName !== this.getMainMenuName() ? menuName + '\\' + entryTextB : entryTextB;
 			menuChecks.push({
 				name: entryTextA + ' - ' + entryTextB, val: null, func: () => {
 					const idxB = this.getIdx(entryNameB);
-					if (typeof idxB === 'undefined' || idxB === null) { console.log('this.checkMenu: entryB not found -> ' + entryNameB); }
+					if (typeof idxB === 'undefined' || idxB === null) { console.log('Menu-Framework-SMP: .checkMenu() - entryB not found -> ' + entryNameB); }
 					const delta = idxFunc();
-					if (typeof delta !== 'number') { console.log('this.checkMenu: idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
-					if ((idxA + delta) > idxB) { console.log('this.checkMenu: idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
+					if (typeof delta !== 'number') { console.log('Menu-Framework-SMP: .checkMenu() - idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
+					if ((idxA + delta) > idxB) { console.log('Menu-Framework-SMP: .checkMenu() - idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
 					try { menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta); }
 					catch (e) {
 						throw new Error(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tentryTextB:\t' + entryTextB + '\n\tentryNameB:\t' + entryNameB + '\n\tmenuName:\t' + menuName);
@@ -523,7 +690,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			menuChecks.push({
 				name: entryTextA, val: null, func: () => {
 					const bVal = idxFunc();
-					if (typeof bVal !== 'boolean') { console.log('this.checkMenu: idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
+					if (typeof bVal !== 'boolean') { console.log('Menu-Framework-SMP: .checkMenu() - idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
 					try { menuMap.get(menuName).CheckMenuItem(idxA, bVal); }
 					catch (e) {
 						throw new Error(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tmenuName:\t' + menuName);
@@ -533,14 +700,31 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			});
 		}
 	};
-
+	/**
+	 * Merges another _menu object to this one
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name concat
+	 * @param {_menu} menuObj - Another instance of this constructor
+	 * @returns {void}
+	 */
 	this.concat = (menuObj) => {
 		entryArr = entryArr.concat(menuObj.getEntries());
 		menuArr = menuArr.concat(menuObj.getMenus());
 		checkMenuArr = checkMenuArr.concat(menuObj.getCheckMenus());
 	};
-
-	this.initMenu = (object, bindArgs = null /*{pos: -1, args: null}*/) => {
+	/**
+	 * Process a check menu entry and creates a check ready to be executed on menu call
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name initMenu
+	 * @param {(_menu|Separator|MenuLikeObject)} object? - Another instance of this constructor, a separator string or any object which has a btn_up() and btn_up_done() methods
+	 * @param {{pos:number, args:any}?} [bindArgs] - [=null] Arguments passed to conditional entries, which are only executed at menu call. If pos is 0 or not present, then it's passed directly as first argument; otherwise, the conditional entry function is executed with arguments set to undefined -so it will use default variables- up to pos (where args is used).
+	 * @returns {void}
+	 */
+	this.initMenu = (object, bindArgs = null) => {
 		entryArrTemp = [...entryArr]; // Create backup to restore later
 		menuArrTemp = [...menuArr];
 		checkMenuArrTemp = [...checkMenuArr];
@@ -560,7 +744,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 				} else if (Object.hasOwn(objectMenu, 'btn_up') && Object.hasOwn(objectMenu, 'btn_up_done')) { // Object with hard-coded methods
 					manualMenuArr.push(objectMenu);
 				} else { // Error
-					console.log('menu_xxx: Tried to merge an external menu without known methods (\'' + (typeof objectMenu === 'object' ? JSON.stringify(Object.keys(objectMenu)) : objectMenu) + '\').');
+					console.log('Menu-Framework-SMP: tried to merge an external menu without known methods (\'' + (typeof objectMenu === 'object' ? JSON.stringify(Object.keys(objectMenu)) : objectMenu) + '\').');
 				}
 			}
 		}
@@ -655,8 +839,8 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		}
 		return manualMenuArr;
 	};
-	// -->
 
+	/* Callback methods (public) */
 	/**
 	 * Used to call the menu element on UI within callbacks. Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
 	 *
@@ -665,15 +849,15 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @name btn_up
 	 * @param {number} x - X position in px
 	 * @param {number} y - Y position in px
-	 * @param {Object} object - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
-	 * @param {string} forcedEntry - [=''] Call an specific menu entry by name and ommit creation of menu on UI.
-	 * @param {boolean} bExecute - [=True] Wether to execute the entry function or not. May be used to simulate calls.
-	 * @param {function} replaceFunc - [=null] Function to execute instead of the entry function if 'bExecute' is set to false. The entry name is passed as argument.
-	 * @param {number} TrackPopupMenu - [=0] Flags for .TrackPopupMenu() SMP method.
-	 * @param {{pos:number, args?:any}} bindArgs - Arguments to pass -as is- to conditional menus on init. 'pos' >=1 may be set to specify the position of the argument.
-	 * @returns {boolean}
+	 * @param {(_menu|Separator|MenuLikeObject)[]} [object] - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
+	 * @param {string} [forcedEntry] - [=''] Call an specific menu entry by name and omit creation of menu on UI.
+	 * @param {boolean} [bExecute] - [=true] Wether to execute the entry function or not. May be used to simulate calls.
+	 * @param {function} [replaceFunc] - [=null] Function to execute instead of the entry function if 'bExecute' is set to false. The entry name is passed as argument.
+	 * @param {number} [flag] - [=0] Flags for .TrackPopupMenu() SMP method.
+	 * @param {{pos:number, args?:any}} [bindArgs] - [=null] Arguments passed to conditional entries, which are only executed at menu call. If pos is 0 or not present, then it's passed directly as first argument; otherwise, the conditional entry function is executed with arguments set to undefined -so it will use default variables- up to pos (where args is used).
+	 * @returns {boolean} Flag to suppress default panel menu
 	 */
-	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0, bindArgs = null /*{pos: -1, args: null}*/) => {
+	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0, bindArgs = null) => {
 		// Recreate menu(s)
 		const manualMenuArr = this.initMenu(object);
 		// Find currently selected item
@@ -721,14 +905,22 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 				});
 			}
 		} else if (forcedEntry.length) {
-			console.log('menu_xxx: Tried to call a menu with forced entry (\'' + forcedEntry + '\') but it doesn\'t exist. It may point to a bug or error.');
+			console.log('Menu-Framework-SMP: tried to call a menu with forced entry (\'' + forcedEntry + '\') but it doesn\'t exist. It may point to a bug or error.');
 		}
 		if (onBtnUp) { onBtnUp(x, y, object, bExecute, replaceFunc, flag, bindArgs); }
 		// Clear all
 		this.clear();
-		return bSupressDefaultMenu;
+		return bSuppressDefaultMenu;
 	};
-
+	/**
+	 * Cleans all temporal data after the menu has been called on UI. Called everytime .btn_up() is fired. It may also be used to completely clean all cached entries by ussing the flag.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name clear
+	 * @param {boolean} [bForce] - [=false] Wether to execute the entry function or not. May be used to simulate calls.
+	 * @returns {boolean}
+	 */
 	this.clear = (bForce = false) => {
 		// These should be always cleared and created again on every call
 		menuMap.clear();
@@ -752,30 +944,29 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		checkMenuArrTemp = [];
 		idx = 0;
 	};
-
 	/**
-	 * Recreates menu element with last entry executed.
+	 * Recreates the menu caññ with last entry executed.
 	 *
 	 * Shorthand for menu.btn_up(void (0), void (0), void (0), menu.lastCall, true, void (0), void (0), bindArgs);
 	 *
 	 * @kind method
 	 * @memberof _menu
 	 * @name retry
-	 * @param {{pos:number, args?:any}} bindArgs - Arguments to pass -as is- to conditional menus on init. 'pos' >=1 may be set to specify the position of the argument.
-	 * @returns {boolean}
+	 * @param {{pos:number, args:any}?} [bindArgs] - [=null] Arguments passed to conditional entries, which are only executed at menu call. If pos is 0 or not present, then it's passed directly as first argument; otherwise, the conditional entry function is executed with arguments set to undefined -so it will use default variables- up to pos (where args is used).
+	 * @returns {boolean} Flag to suppress default panel menu
 	 */
-	this.retry = (bindArgs = null /*{pos: -1, args: null}*/) => {
-		this.btn_up(void (0), void (0), void (0), this.lastCall, true, void (0), void (0), bindArgs);
+	this.retry = (bindArgs = null) => {
+		return this.btn_up(void (0), void (0), void (0), this.lastCall, true, void (0), void (0), bindArgs);
 	};
 
-	// Helpers
+	/* Helpers (public) */
 	/**
 	 * Checks if a menu entry (object) is a separator.
 	 *
 	 * @kind method
 	 * @memberof _menu
 	 * @name isSeparator
-	 * @param {{entrytext?:string, name?:string}|string} obj - Menu entry object.
+	 * @param {MenuEntry|String} obj - Menu entry-like object or string.
 	 * @returns {boolean}
 	 */
 	this.isSeparator = (obj) => {
@@ -788,15 +979,41 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @kind method
 	 * @memberof _menu
 	 * @name isNotSeparator
-	 * @param {{entrytext:string, name?:string} obj - Menu entry object.
-	* @returns {boolean}
+	 * @param {MenuEntry|String} obj - Menu entry-like object or string.
+	 * @returns {boolean}
 	*/
 	this.isNotSeparator = (obj) => !this.isSeparator(obj);
+	/**
+	 * Returns an instance to the (private) RegExp used for hidden chars.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name getHiddenCharsRegEx
+	 * @returns {RegExp}
+	*/
 	this.getHiddenCharsRegEx = () => hiddenCharsRegEx;
+	/**
+	 * Returns the next invisible ID to avoid menu entries collisions.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name getNextId
+	 * @returns {String}
+	*/
 	this.getNextId = () => invsId(true);
+	/** @type {String[]} - Unicode invisible chars used for IDs */
 	const hiddenChars = ['\u200b', '\u200c', '\u200d', '\u200e'];
+	/** @type {RegExp} - Regexp to check for invisible chars on strings */
 	// eslint-disable-next-line no-misleading-character-class
 	const hiddenCharsRegEx = /[\u200b\u200c\u200d\u200e]{1,5}$/g; // NOSONAR
+	/**
+	 * Helper to compute invisible IDs
+	 *
+	 * @name invsId
+	 * @param {Boolean} [bNext] - [=true] Flag to retrieve the next item or last one
+	 * @param {Boolean} [bReset] - [=false] Flag to reset Ids
+	 * @returns {String}
+	*/
 	const invsId = ((() => {
 		let nextIndex = [0, 0, 0, 0, 0];
 		const chars = hiddenChars;
@@ -827,17 +1044,35 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 			return id;
 		};
 	})());
-
+	/**
+	 * Helper to check if argument is a function
+	 *
+	 * @name isFunction
+	 * @param {any} obj
+	 * @returns {Boolean}
+	*/
 	function isFunction(obj) {
 		return !!(obj && obj.constructor && obj.call && obj.apply);
 	}
-
+	/**
+	 * Helper to compare keys of 2 objects
+	 *
+	 * @name compareKeys
+	 * @param {object} a
+ 	 * @param {object} b
+	 * @returns {Boolean}
+	*/
 	function compareKeys(a, b) {
 		const aKeys = Object.keys(a).sort((a, b) => a.localeCompare(b));
 		const bKeys = Object.keys(b).sort((a, b) => a.localeCompare(b));
 		return JSON.stringify(aKeys) === JSON.stringify(bKeys);
 	}
-
+	/**
+	 * Helper to output menu details on errors. Passes all arguments.
+	 *
+	 * @name menuError
+	 * @returns {void}
+	*/
 	// eslint-disable-next-line no-empty-pattern
 	function menuError({ } = {}) { // NOSONAR
 		if (console.popup) {
@@ -853,8 +1088,14 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 				.forEach((arg) => { console.log(arg); }); // DEBUG
 		}
 	}
-	// Crashing the panel when web requests are active may crash the entire foobar2000 instance
-	// As a workaround, the script tries to abort all request first and then throws the error after some ms
+	/**
+	 * Crashing the panel when web requests are active may crash the entire foobar2000 instance
+	 * As a workaround, the script tries to abort all request first and then throws the error after some ms
+	 *
+	 * @name throwError
+ 	 * @param {String} message
+	 * @returns {void}
+	*/
 	function throwError(message) {
 		if (!bThrowErrors) { return; }
 		const requests = window.WebRequests;
@@ -867,8 +1108,18 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	}
 }
 
-// Adds a created menu to an already existing object (which is supposed to have a this.trace function
-// Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
+/**
+ * Attaches a created menu to an already existing object (which is supposed to have a this.trace function
+ * Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
+ *
+ * @function
+ * @name _attachedMenu
+ * @param {object} [o] - Arguments
+ * @param {_menu} [0.rMenu] - Right click menu object
+ * @param {_menu} [0.lMenu] - Left click menu object
+ * @param {_popup} [0.popup] - Popup object, which stops menu processing if active
+ * @returns {void}
+ */
 function _attachedMenu({
 	rMenu = null,
 	lMenu = null,
