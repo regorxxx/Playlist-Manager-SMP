@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.20/01/2025
+REM Create packages (zip file) from js files v.25/01/2025
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -345,6 +345,7 @@ CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_helpers.js
+CALL :copy_file main\window\window_xxx_dynamic_colors.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
@@ -375,7 +376,7 @@ CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
 CALL :copy_folder helpers-external\namethatcolor
-CALL :delete_file helpers-external\chroma.js\chroma.min.js
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -508,6 +509,9 @@ CALL :copy_folder main\volume
 CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_slider.js
 CALL :copy_file main\window\window_xxx_helpers.js
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
+CALL :copy_file main\window\window_xxx_dynamic_colors.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
@@ -536,6 +540,7 @@ REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\namethatcolor
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
