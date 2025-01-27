@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/25
+//27/01/25
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -235,6 +235,7 @@ function _colorPicker({ x, y, size = 10, color = 0xFF4354AF, hoverColor = 0xFF43
 	this.btn_up = (x, y) => {
 		if (this.trackCheck(x, y)) {
 			this.color = utils.ColourPicker(0, this.color);
+			console.log('Window (' + window.Name + '): Selected color ->\n\t Android: ' + this.color + ' - RGB: ' + toRGB(this.color));
 			this.repaint(true);
 			return true;
 		}
@@ -800,9 +801,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		if (!parent) {
 			window.RepaintRect(this.x, this.y, this.w, this.h, bForce);
 		} else {
-			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce, 'input', {x: this.x, y: this.y, w: this.w, h: this.h}); } // NOSONAR
-			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce, 'input', {x: this.x, y: this.y, w: this.w, h: this.h}); }
-			else { console.log('oInputbox: parentObject has no repaint method.', 'input', {x: this.x, y: this.y, w: this.w, h: this.h}); }
+			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce, 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); } // NOSONAR
+			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce, 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
+			else { console.log('oInputbox: parentObject has no repaint method.', 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
 		}
 	};
 

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/01/25
+//27/01/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -546,7 +546,7 @@ function createMenuLeft(forcedIndex = -1) {
 							const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
 							if (!token) { return false; }
 							if (pls.playlist_mbid.length) {
-								console.log('Syncing playlist with ListenBrainz: ' + pls.name);
+								console.log('Playlist Manager: Syncing playlist with ListenBrainz -> ' + pls.name);
 								playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
 								if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) { bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name); }
 							} else {
@@ -558,7 +558,7 @@ function createMenuLeft(forcedIndex = -1) {
 							if (list.properties.bSpotify[1]) {
 								lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
 									if (services.includes('spotify')) {
-										console.log('Exporting playlist to Spotify: ' + pls.name);
+										console.log('Playlist manager: Exporting playlist to Spotify -> ' + pls.name);
 										lb.exportPlaylistToService({ playlist_mbid }, 'spotify', token);
 									}
 								});
@@ -624,12 +624,12 @@ function createMenuLeft(forcedIndex = -1) {
 															.then(() => {
 																plman.ActivePlaylist = idx;
 																const handleList = plman.GetPlaylistItems(idx);
-																console.log('Found ' + foundLinks + ' tracks on YouTube');
+																console.log('Playlist Manager: Found ' + foundLinks + ' tracks on YouTube');
 																const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 																if (_isFile(pls.path)) { _renameFile(pls.path, backPath); }
 																bDone = savePlaylist({ handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 																// Restore backup in case something goes wrong
-																if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
+																if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 																else if (_isFile(backPath)) { _deleteFile(backPath); }
 																if (bDone) {
 																	list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
@@ -649,7 +649,7 @@ function createMenuLeft(forcedIndex = -1) {
 													if (_isFile(pls.path)) { _renameFile(pls.path, backPath); }
 													bDone = savePlaylist({ handleList, playlistPath: pls.path, ext: pls.extension, playlistName: pls.name, UUID: (pls.id || null), bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 													// Restore backup in case something goes wrong
-													if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
+													if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 													else if (_isFile(backPath)) { _deleteFile(backPath); }
 													const bLoaded = plman.FindPlaylist(pls.nameId) !== -1;
 													if (bDone && bLoaded) {
@@ -724,7 +724,7 @@ function createMenuLeft(forcedIndex = -1) {
 												// Check
 												if (_isFile(pls.path) && bDone) { bDone = (_open(pls.path, utf8) === xspf); }
 												// Restore backup in case something goes wrong
-												if (!bDone) { console.log('Failed saving playlist: ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
+												if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
 												else if (_isFile(backPath)) { _deleteFile(backPath); }
 												if (bDone && plman.FindPlaylist(pls.nameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), pls.nameId); }
 												if (bDone) {
@@ -741,7 +741,7 @@ function createMenuLeft(forcedIndex = -1) {
 										return bDone;
 									});
 							} else {
-								console.log('Playlist file not found: ' + pls.path);
+								console.log('Playlist Manager: Playlist file not found\n\t ' + pls.path);
 								return Promise.resolve(bDone);
 							}
 						}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED
@@ -2052,7 +2052,7 @@ function createMenuRight() {
 													.finally(() => {
 														plman.ActivePlaylist = idx;
 														const handleList = plman.GetPlaylistItems(idx);
-														console.log('Found ' + foundLinks + ' tracks on YouTube');
+														console.log('Playlist Manager: Found ' + foundLinks + ' tracks on YouTube');
 														const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 														if (_isFile(playlistPath)) {
 															let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
@@ -2061,7 +2061,7 @@ function createMenuRight() {
 														}
 														bDone = savePlaylist({ handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 														// Restore backup in case something goes wrong
-														if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
+														if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 														else if (_isFile(backPath)) { _deleteFile(backPath); }
 														if (bDone) {
 															list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
@@ -2083,7 +2083,7 @@ function createMenuRight() {
 											}
 											bDone = savePlaylist({ handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 											// Restore backup in case something goes wrong
-											if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
+											if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 											else if (_isFile(backPath)) { _deleteFile(backPath); }
 											list.disableAutosaveForPls(playlistNameId);
 											const idx = bDone ? plman.FindOrCreatePlaylist(playlistNameId, true) : -1;
@@ -2161,7 +2161,7 @@ function createMenuRight() {
 										if (_isFile(playlistPath) && bDone) { bDone = (_open(playlistPath, utf8) === xspf); }
 										// Restore backup in case something goes wrong
 										const backPath = playlistPath + '.back';
-										if (!bDone) { console.log('Failed saving playlist: ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
+										if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 										else if (_isFile(backPath)) { _deleteFile(backPath); }
 										if (bDone && plman.FindPlaylist(playlistNameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId); }
 										if (bDone) {
@@ -2281,7 +2281,7 @@ function createMenuRight() {
 										}
 									}
 								});
-								console.log('Found ' + foundLinks + ' tracks on YouTube');
+								console.log('Playlist Manager: Found ' + foundLinks + ' tracks on YouTube');
 								const idx = plman.FindOrCreatePlaylist('Import', true);
 								plman.UndoBackup(idx);
 								plman.ClearPlaylist(idx);
@@ -3800,6 +3800,7 @@ function createMenuRightTop() {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: item + '\t' + _b(getColorName(list.colors[key])), func: () => {
 							list.colors[key] = utils.ColourPicker(window.ID, list.colors[key]);
+							console.log('Playlist Manager: Selected color ->\n\t Android: ' + list.colors[key] + ' - RGB: ' + Chroma(list.colors[key]).rgb());
 							// Update property to save between reloads
 							list.properties.listColors[1] = convertObjectToString(list.colors);
 							overwriteProperties(list.properties);
@@ -3833,6 +3834,7 @@ function createMenuRightTop() {
 							panel.properties.bCustomText[1] = panel.colors.bCustomText;
 							if (panel.colors.bCustomText) {
 								panel.colors.customText = utils.ColourPicker(window.ID, panel.colors.customText);
+								console.log('Playlist Manager: Selected color ->\n\t Android: ' + panel.colors.customText + ' - RGB: ' + Chroma(panel.colors.customText).rgb());
 								panel.properties.customText[1] = panel.colors.customText;
 							}
 							overwriteProperties(panel.properties);
@@ -3855,6 +3857,7 @@ function createMenuRightTop() {
 							panel.colors.headerButtons = i
 								? utils.ColourPicker(window.ID, panel.colors.headerButtons)
 								: -1;
+							if (i) { console.log('Playlist Manager: Selected color ->\n\t Android: ' + panel.colors.headerButtons + ' - RGB: ' + Chroma(panel.colors.headerButtons).rgb()); }
 							panel.properties.headerButtonsColor[1] = panel.colors.headerButtons;
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
@@ -3879,6 +3882,7 @@ function createMenuRightTop() {
 								panel.colors.buttonsToolbarColor = i
 									? utils.ColourPicker(window.ID, panel.colors.buttonsToolbarColor)
 									: defaultCol;
+								if (i) { console.log('Playlist Manager: Selected color ->\n\t Android: ' + panel.colors.buttonsToolbarColor + ' - RGB: ' + Chroma(panel.colors.buttonsToolbarColor).rgb()); }
 								panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor;
 								// Update property to save between reloads
 								overwriteProperties(panel.properties);
@@ -3914,6 +3918,7 @@ function createMenuRightTop() {
 								panel.colors.buttonsTextColor = i
 									? utils.ColourPicker(window.ID, panel.colors.buttonsTextColor)
 									: defaultCol;
+								if (i) { console.log('Playlist Manager: Selected color ->\n\t Android: ' + panel.colors.buttonsTextColor + ' - RGB: ' + Chroma(panel.colors.buttonsTextColor).rgb()); }
 								panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor;
 								// Update property to save between reloads
 								overwriteProperties(panel.properties);
@@ -3940,6 +3945,7 @@ function createMenuRightTop() {
 								panel.properties.colorsMode[1] = panel.colors.mode;
 								if (panel.colors.mode === 2) {
 									panel.colors.customBackground = utils.ColourPicker(window.ID, panel.colors.customBackground);
+									console.log('Playlist Manager: Selected color ->\n\t Android: ' + panel.colors.customBackground + ' - RGB: ' + Chroma(panel.colors.customBackground).rgb());
 									panel.properties.customBackground[1] = panel.colors.customBackground;
 								}
 								overwriteProperties(panel.properties);
@@ -4316,6 +4322,7 @@ function createMenuRightTop() {
 								list.columns.color[i] = opt === 'custom'
 									? utils.ColourPicker(window.ID, list.columns.color[i])
 									: opt;
+								if (opt === 'custom') { console.log('Playlist Manager: Selected color ->\n\t Android: ' + list.columns.color[i] + ' - RGB: ' + Chroma(list.columns.color[i]).rgb()); }
 								list.properties.columns[1] = JSON.stringify(list.columns);
 								overwriteProperties(list.properties);
 								list.repaint();
@@ -5254,7 +5261,7 @@ function createMenuRightTop() {
 				if (_isFile(path)) {
 					const bDone = _run(path);
 					if (!bDone) { _explorer(path); }
-				} else { console.log('Readme not found: ' + path); }
+				} else { console.log('Playlist Manager: Readme not foundd\n\t ' + path); }
 			}
 		});
 	}
@@ -5601,7 +5608,6 @@ function createMenuFilterSorting() {
 					data = list.processFolders({ data })
 						.filter((item) => !item.isFolder);
 					const plsDataNames = data.map((pls) => pls.nameId).filter((name) => plsNames.includes(name));
-					console.log(plsDataNames);
 					for (let i = plman.PlaylistCount - 1; i >= 0; i--) {
 						const idx = plsDataNames.indexOf(plsNames[i]);
 						if (idx !== -1) {
