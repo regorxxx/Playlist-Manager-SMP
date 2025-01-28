@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/01/25
+//28/01/25
 
 /* exported _chart */
 
@@ -36,9 +36,9 @@ function _chart({
 		zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
 		custom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
 		xScroll: {/* tooltip */ },
-		config: {/* change, backgroundColor */ }
+		config: {/* change, backgroundColor, artColors */ }
 	},
-	configuration = {/* bLoadAsyncData: true , bAltVerticalText: false, bPopupBackground: false, bDebug: false, bProfile: false, bSlicePerKey: true*, bDynColor: true, bDynColorBW: true , maxSliceOnDataChange: 100 */ },
+	configuration = {/* bLoadAsyncData: true, bAltVerticalText: false, bPopupBackground: false, bDebug: false, bProfile: false, bSlicePerKey: true, bDynLabelColor: true, bDynLabelColorBW: true, bDynSerieColor: false, bDynBgColor: false, maxSliceOnDataChange: 100 */ },
 	x = 0,
 	y = 0,
 	w = window.Width,
@@ -84,7 +84,7 @@ function _chart({
 			},
 			custom: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
 			xScroll: { tooltip: null },
-			config: { change: null, backgroundColor: null }
+			config: { change: null, backgroundColor: null, artColors: null }
 		};
 		this.configuration = {
 			bLoadAsyncData: true,
@@ -93,7 +93,7 @@ function _chart({
 			bDebug: false,
 			bProfile: false,
 			bSlicePerKey: true,
-			bDynColor: true, bDynColorBW: true,
+			bDynLabelColor: true, bDynLabelColorBW: true,
 			maxSliceOnDataChange: 50,
 		};
 		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
@@ -340,9 +340,9 @@ function _chart({
 			iX = r * Math.cos(2 * Math.PI / ticks * j);
 			circleArr.push(c.x + iX, c.y + iY);
 		}
-		if (this.background.color !== null || this.configuration.bDynColor && this.callbacks.config.backgroundColor) {
-			const bgColor = this.configuration.bDynColor && !!this.callbacks.config.backgroundColor
-				? this.configuration.bDynColorBW
+		if (this.background.color !== null || this.configuration.bDynLabelColor && this.callbacks.config.backgroundColor) {
+			const bgColor = this.configuration.bDynLabelColor && !!this.callbacks.config.backgroundColor
+				? this.configuration.bDynLabelColorBW
 					? Chroma(invert(this.callbacks.config.backgroundColor()[0], true)).alpha(0.3).android()
 					: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
 				: this.background.color;
@@ -432,21 +432,21 @@ function _chart({
 		let x, y, w, h, xOffsetKey, yOffsetKey;
 		let bHideToolbar;
 		let graphType = this.graph.type;
-		const bDynColor = this.configuration.bDynColor && this.callbacks.config.backgroundColor;
-		const bgColor = bDynColor
-			? this.configuration.bDynColorBW
+		const bDynLabelColor = this.configuration.bDynLabelColor && this.callbacks.config.backgroundColor;
+		const bgColor = bDynLabelColor
+			? this.configuration.bDynLabelColorBW
 				? invert(this.callbacks.config.backgroundColor()[0], true)
 				: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
 			: this.background.color;
-		const xAxisColor = bDynColor ? bgColor : this.axis.x.color || bgColor;
+		const xAxisColor = bDynLabelColor ? bgColor : this.axis.x.color || bgColor;
 		const xAxisColorInverted = xAxisColor === this.axis.x.color
 			? xAxisColor
-			: this.configuration.bDynColorBW
+			: this.configuration.bDynLabelColorBW
 				? bgColor
 				: invert(xAxisColor, true);
-		const yAxisColor = bDynColor ? bgColor : this.axis.y.color || bgColor;
-		const xGridColor = bDynColor ? bgColor : this.grid.x.color || bgColor;
-		const yGridColor = bDynColor ? bgColor : this.grid.y.color || bgColor;
+		const yAxisColor = bDynLabelColor ? bgColor : this.axis.y.color || bgColor;
+		const xGridColor = bDynLabelColor ? bgColor : this.grid.x.color || bgColor;
+		const yGridColor = bDynLabelColor ? bgColor : this.grid.y.color || bgColor;
 		// Max Y value for all series
 		let maxY = 0, minY = 0;
 		this.dataDraw.forEach((serie) => {
@@ -726,7 +726,7 @@ function _chart({
 								}, 0));
 							}, 0);
 							const xImg = offsetLabels !== 0
-								? offsetLabels - keyH * 3/2
+								? offsetLabels - keyH * 3 / 2
 								: labelOver.coord[0][0].from.x - labelOver.r - keyH * 2;
 							gr.DrawImage(img, xImg, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
@@ -2144,7 +2144,7 @@ function _chart({
 		].filter(Boolean);
 	};
 
-	this.changeConfig = ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, graphSpecs, margin, x, y, w, h, title, configuration, gFont, bPaint = true, bForceLoadData = false, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) => {
+	this.changeConfig = function ({ data, dataAsync = null, colors, chroma, graph, dataManipulation, background, grid, axis, graphSpecs, margin, x, y, w, h, title, configuration, gFont, bPaint = true, bForceLoadData = false, callback = this.callbacks.config.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null }) {
 		let bCheckColors = false;
 		if (gFont) { this.gFont = gFont; }
 		if (this.data && this.data.length) {
@@ -2580,7 +2580,12 @@ function _chart({
 		if (callbacks.display) { this.callbacks.display = { ...this.callbacks.display, ...callbacks.display }; }
 		if (callbacks.zoom) { this.callbacks.zoom = { ...this.callbacks.zoom, ...callbacks.zoom }; }
 		if (callbacks.custom) { this.callbacks.custom = { ...this.callbacks.custom, ...callbacks.custom }; }
-		if (callbacks.config) { this.callbacks.config = { ...this.callbacks.config, ...callbacks.config }; }
+		if (callbacks.config) {
+			this.callbacks.config = { ...this.callbacks.config, ...callbacks.config };
+			for (const key in this.callbacks.config) {
+				if (this.callbacks.config[key]) { this.callbacks.config[key] = this.callbacks.config[key].bind(this); }
+			}
+		}
 	}
 	this.currPoint = [-1, -1];
 	/** @type {[number, number]} */
