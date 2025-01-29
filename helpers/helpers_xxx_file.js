@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/01/25
+//29/01/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
@@ -534,7 +534,7 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 	if (isArrayStrings(inPaths)) {
 		let pathArr = inPaths; // Add itself
 		inPaths.forEach((path) => { pathArr = pathArr.concat(findRecursivePaths(path)); });
-		pathArr.forEach((path) => { fileArr = fileArr.concat(utils.Glob(path + '\\' + fileMask)); });
+		pathArr.forEach((path) => { fileArr = fileArr.concat(utils.Glob(path + (path.endsWith('\\') ? '' : '\\') + fileMask)); });
 	}
 	return fileArr;
 }
