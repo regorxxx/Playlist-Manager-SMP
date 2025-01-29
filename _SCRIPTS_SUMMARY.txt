@@ -40,6 +40,8 @@ The root folder (with this readme) contains these scripts which can be loaded in
 		- May use any of the buttons \ tools listed below. Missing buttons are skipped.
 		- Every button and tool has a readme which will be shown when you add them.
 		- Future scripts may be added and will be fully compatible with it.
+		- The buttons may be loaded individually, without the toolbar, but you loose
+		  many UI related settings and QOL features that way. Not recommended.
 		- Requires some fonts.
 			- _resources\fontawesome-webfont.ttf (optional)
 	+ Draw Graph.html
@@ -48,7 +50,9 @@ The root folder (with this readme) contains these scripts which can be loaded in
 		- NOT meant to be used within foobar.
 		- Load the file in any browser to use it.
 
-The buttons folder (the one named 'buttons') contains buttons to be loaded by the toolbar (above):
+The buttons folder (the one named 'buttons') contains buttons which can be be loaded by the toolbar file
+named 'buttons_toolbar.js' as a parent host, so multiple scripts are loaded into a single panel in a
+unified toolbar wih special UI related settings (see above):
 	+ Playlist Tools:
 		- .\buttons\buttons_playlist_tools.js (below 3 buttons require this one to be loaded too)
 			- .\buttons\buttons_playlist_tools_macro_custom.js
@@ -89,8 +93,9 @@ The buttons folder (the one named 'buttons') contains buttons to be loaded by th
 		- .\buttons\buttons_others_main_menu.js
 
 These buttons may be loaded as standalone scripts without problems but such configuration
-is not supported. Only loading them via the toolbar script. The buttons folder contains multiple
-example files in case anyone wants to create their own buttons using the existing framework.
+is not supported. Only supported layout is loading them via the toolbar script
+('buttons_toolbar.js'). The buttons folder contains multiple example files in case anyone
+wants to create their own buttons using the existing framework.
 
 The 'helpers' and 'main' folder contains common files used by most of the scripts. Don't touch
 or load these alone. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js'

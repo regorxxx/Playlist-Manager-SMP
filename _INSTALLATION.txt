@@ -15,7 +15,7 @@ All scripts try to use wine-friendly methods, focusing on config settings that c
 menus or the UI panel, instead of using HTML (which only works on Windows), known working fonts, etc.
 
 Please read this page and feel free to report (me) any problems with these scripts:
-https://theqwertiest.github.io/foo_spider_monkey_panel/docs/wine/
+https://theqwertiest.github.io/foo_spider_monkey_panel/docs/faq/wine/
 
 INSTALLATION AS PACKAGE:
 ------------------------
@@ -38,16 +38,18 @@ For portable installations >= 1.6: .\foobar2000\profile\scripts\SMP\xxx-scripts\
 For portable installations <= 1.5: .\foobar2000\scripts\SMP\xxx-scripts\...
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
 
-Then load any script found on the root folder into a SMP panel within foobar ('File' as
-script source). Check 'INFO' section (at bottom) for usage.
+Then load any script found on the root folder into a JSplitter\SMP panel within foobar ('File'
+as script source). For example 'playlist_manager.js' or 'buttons_toolbar.js' files. Check 'INFO'
+section (at '_SCRIPTS_SUMMARY.tx') for usage.
 
 Some scripts may require additional files or dependencies (like fonts). Check the 'INFO' section
-for more details, the github page or the related pdf documentation at 'readmes' folder (if available).
+(at '_SCRIPTS_SUMMARY.tx') for more details, the github page or the related pdf documentation at
+'readmes' folder (if available).
 
 (*) To change the hardcoded installation part of the path, go to .\helpers\helpers_xxx.js
-and change the variable named 'folders.xxxName'. This is a workaround for some SMP limitations
-when working with relative paths. Its use is at your own responsibility but feel free to report
-any problem with it.
+and change the variable named 'folders.xxxName'. This is a workaround for some JSplitter\SMP
+limitations when working with relative paths. Its use is at your own responsibility but feel free
+to report any problem with it.
 
 (**) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile'
 folder does not exist. In such case you have to create it and move all the config folders/files to it,
@@ -65,9 +67,11 @@ which still reside in the root. May take some tries to do them all.
 SMP 1.5.2+ WINE BUG (crash when installing scripts):
 ----------------------------------------------------
 After loading a script into a panel, Foobar2000 may crash (not only the panel). See below.
+There have been no reports about this bug being present on JSplitter.
 
 SMP 1.5.2+ BUG (crash when installing scripts):
 -----------------------------------------------
 After properly installing the files, if Foobar2000 SMP panels keep crashing due to 'missing files',
 check '_switchPaths.zip'. Follow its instructions to fix it. Then report it at
 https://hydrogenaud.io/index.php?topic=116669.0
+There have been no reports about this bug being present on JSplitter.

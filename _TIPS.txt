@@ -5,9 +5,9 @@ the properties panel. Instead of using the menus and adding an absolute path, it
 to edit them manually to ensure they are relative too:
 For ex. for the playlist manager, the tracked folder:
 H:\MySoftware\foobar2000\profile\playlist_manager\	--> .\profile\playlist_manager\	(>= 1.6:)
-							--> .\playlist_manager\		(<= 1.5:)
+													--> .\playlist_manager\			(<= 1.5:)
 
-When an script finds it's being loaded within a portable installation, will set the default paths using
+When an script is being loaded within a portable installation, it will set the default paths using
 relative paths. It will also warn with popups and/or the console about the -non recommended- use of
 absolute paths on portable installations. If you are using a portable installation on fixed discs with
 absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it in a
@@ -22,7 +22,7 @@ recommended to add 'js_data' and 'playlist_manager' folders at
 'js_data' contains config json data for most of these scripts, while 'playlist_manager' folder is the
 default folder to save playlists files for the playlist manager (*).
 
-Note the same tip applies if using the SMP script replacement Autobackup-SMP: 
+Note the same tip applies if using the JSplitter\SMP script replacement Autobackup-SMP:
 https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/autobackup-smp/
 
 (*) When the default path is changed or when using multiple playlist manager panels (and thus different
@@ -34,14 +34,14 @@ For ex: C:\Foobar2000\profile\my_external_folder\ -> symlink -> H:\Music\
 
 Presets TIP:
 -------------
-There are multiple useful presets for components, the UI or these SMP scripts at the folder named
-'Presets'. Further documentation can be found there. Some of them are meant to be loaded automatically
-(recipes and themes for Search By Distance) to then be set at buttons, others are meant to be loaded 
-on demand to modify the panel behavior (Playlist Tools). Masstagger presets can be loaded at its panel,
-while UI TF scripts are meant to be used at different places of UI config (columns, library view, etc.)
-if desired. In both cases their use is in line with these SMP scripts, so they make it easier to tag or
-visualize most commonly used tags, variables, etc. (for ex. a CUI script which displays keys in Camelot
-Wheel notation with colors).
+There are multiple useful presets for components, the UI or these JSplitter\SMP scripts at the folder
+named 'Presets'. Further documentation can be found there. Some of them are meant to be loaded
+automatically (recipes and themes for Search By Distance) to then be set at buttons, others are meant
+to be loaded on demand to modify the panel behavior (Playlist Tools). Masstagger presets can be loaded
+at its panel, while UI TF scripts are meant to be used at different places of UI config (columns,
+library view, etc.) if desired. In both cases their use is in line with these SMP scripts, so they make
+it easier to tag or visualize most commonly used tags, variables, etc. (for ex. a CUI script which
+displays keys in Camelot Wheel notation with colors).
 	- AutoHotkey: for world map script automatic tagging
 	- Masstagger: general tagging scripts which may be useful
 	- Network: for playlist manager script and network drives without recycle bin
@@ -53,108 +53,3 @@ Wheel notation with colors).
 		- DUI
 		- CUI
 	- World Map: pre-filled database with artist/country tags
-
-INFO:
------
-This is general info for all the scripts. Within all files you will find 6 [+] big scripts: Playlist
-Manager, Timeline, World Map, Not a Waveform Seekbar, Search by Distance (button) and Playlist Tools
-(button). And a collection of other small utilities and/or buttons (quicksearch, top tracks,
-duplicates, device priority, etc.). All files have extensive comments and descriptions at the header
-and all along the code, so you can check specific info about what everything does in its own file.
-
-Every script has a github page with images, descriptions, etc. and updates must be get from there.
-
-The root folder (with this readme) contains these scripts which can be loaded in any panel directly:
-	+ playlist_manager.js [+]
-		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-manager-smp/
-		- Full documentation available on PDF. See '.\readmes' folder.
-		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf
-	+ world_map.js [+]
-		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/world-map-smp/
-		- May be used along Biography 1.1.X or 1.2.X+
-		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf
-		- A pre-built artist-country database is provided:
-			presets\World Map\worldMap.json\worldMap.json
-	+ timeline.js [+]
-		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/timeline-smp/
-		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf
-	+ seekbar.js [+]
-		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/not-a-waveform-seekbar-smp/
-	+ buttons_toolbar.js [+]
-		- Compatible with:
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-tools-smp/ [+]
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/search-by-distance-smp/ [+]
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/device-priority-smp/
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/autobackup-smp/
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/listenbrainz-smp/
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/lastfm-smp/
-			- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/fingerprint-tools-smp/
-		- Toolbar with fully configurable buttons using menus.
-		- May use any of the buttons \ tools listed below. Missing buttons are skipped.
-		- Every button and tool has a readme which will be shown when you add them.
-		- Future scripts may be added and will be fully compatible with it.
-		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf (optional)
-	+ Draw Graph.html
-		- ALSO READ: helpers\music_graph_descriptors_xxx.js
-		- ALSO SEE: search_by_distance.js
-		- NOT meant to be used within foobar.
-		- Load the file in any browser to use it.
-
-The buttons folder (the one named 'buttons') contains buttons to be loaded by the toolbar (above):
-	+ Playlist Tools:
-		- .\buttons\buttons_playlist_tools.js (below 3 buttons require this one to be loaded too)
-			- .\buttons\buttons_playlist_tools_macro_custom.js
-			- .\buttons\buttons_playlist_tools_macros.js
-			- .\buttons\buttons_playlist_tools_pool.js
-			- .\buttons\buttons_playlist_tools_submenu_custom.js.js
-	+ Search by Distance:
-		- .\buttons\buttons_search_by_distance_customizable.js (configurable with menus)
-		- .\buttons\buttons_search_by_distance.js
-		- .\buttons\buttons_search_by_distance_info.js
-	+ Playlist manipulation:
-		- .\buttons\buttons_playlist_remove_duplicates.js
-		- .\buttons\buttons_playlist_filter.js
-		- .\buttons\buttons_playlist_show_duplicates.js
-		- .\buttons\buttons_playlist_history.js
-	+ Output devices:
-		- .\buttons\buttons_others_device_priority.js
-		- .\buttons\buttons_others_device_selector
-	+ Library search:
-		- .\buttons\buttons_search_top_tracks.js
-		- .\buttons\buttons_search_top_tracks_from_date.js
-		- .\buttons\buttons_search_by_tags_combinations.js
-		- .\buttons\buttons_search_by_tags_queries.js
-		- .\buttons\buttons_search_quicksearch.js
-		- .\buttons\buttons_search_quickmatch.js
-	+ Fingerprinting:
-		- .\buttons\buttons_fingerprint_tools.js
-	+ ListenBrainz:
-		- .\buttons\buttons_listenbrainz_tools.js
-	+ Last.fm:
-		- .\buttons\buttons_lastfm_tools.js
-	+ Tagging:
-		- .\buttons\buttons_tags_tagger.js
-		- .\buttons\buttons_tags_save_tags.js
-	+ Autobackup:
-		- .\buttons\buttons_others_autobackup.js
-	+ Macros:
-		- .\buttons\buttons_others_main_menu.js
-
-These buttons may be loaded as standalone scripts without problems but such configuration
-is not supported. Only loading them via the toolbar script. The buttons folder contains multiple
-example files in case anyone wants to create their own buttons using the existing framework.
-
-The 'helpers' and 'main' folder contains common files used by most of the scripts. Don't touch
-or load these alone. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js'
-and 'dyngenre_map_xxx.js' files, are related to 'Search by Distance' scripts. Look at those
-files to understand what they do. Some users may want to add their own genres/styles at
-'music_graph_descriptors_xxx_user.js', to do so a copy of the file must be placed at
-(profile folder) '.\\js_data\\helpers\\' (this can be done with the customizable button).
-
-The 'helpers-external' folder is another helper folder. Don't touch these. They are required to create
-graphs within foobar or for html rendering. Read 'music_graph_descriptors_xxx.js' and check
-'Draw Graph.html' in your browser (drag n drop) to see what they do.
