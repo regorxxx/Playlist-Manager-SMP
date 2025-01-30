@@ -1,16 +1,112 @@
 ﻿'use strict';
-//28/01/25
+//30/01/25
 
 /* exported _chart */
 
 include('statistics_xxx_helper.js');
 /* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable */
 
+/**
+ * @typedef {'timeline'|'bars'|'lines'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
+ */
+
+/**
+ * @typedef {'circle'|'circle'|'circumference'|'cross'|'plus'|'triangle'} _chartGraphPoint
+ */
+
+/**
+ * @typedef {'lrgb'|'rgb'|'lab'|'hsl'|'lch'} _chartChromaInterpolation
+ */
+
+/**
+ * @typedef {'natural'|'natural num'|'reverse num'|'string natural'|'string reverse'|'random'|'radix'|'radix reverse'|'radix int'|'radix int reverse'|'natural total'|'reverse total'} _chartSorting
+ */
+
+/**
+ * @typedef {'normal'|'normal inverse'|'none'|''} _chartDistrPlot
+ */
+
+/**
+ * @typedef {'cdf plot'|'cumulative distribution plot'|'distribution plot'|'p-p plot'|'q-q plot'|'none'|''} _chartProbPlot
+ */
+
+/**
+ * Framework to render 2D/3D data using charts.
+ *
+ * @name _chart
+ * @constructor
+ * @param {object} o - argument
+ * @param {{x:string, y:number}[][]} o.data - Array of series. Every serie is an array of points.
+ * @param {() => Promise<{x:string, y:number}[][]>|Promise<{x:string, y:number}[][]>} [o.dataAsync] - [=null] function returning a promise or a promise which must resolve to an array of series.
+ * @param {number[]} [o.colors] - [=[]] Array of android colors, one per serie. If not specified, it will be automatically chosen according to o.chroma.scheme
+ * @param {object} [o.chroma] - Color palette settings
+ * @param {'diverging'|'qualitative'|'sequential'|'random'|number[]} [o.chroma.scheme] - Scheme by name or array of colors. See https://vis4.net/chromajs/#color-scales
+ * @param {boolean} [o.chroma.colorBlindSafe] - Flag to use only palettes which are colorblind safe
+ * @param {_chartChromaInterpolation} [o.chroma.interpolation] - How the gradient of color is calculated. See https://gka.github.io/chroma.js/#scale-mode
+ * @param {object} [o.graph] - Chart layout settings
+ * @param {_chartGraphType} [o.graph.type] - [='bars'] Chart type for display purposes
+ * @param {boolean} [o.graph.multi] - [=false] Flag to expand {x,y,z} data into multiple {x,y} series to draw 3D data.
+ * @param {number} [o.graph.borderWidth] - [=_scale(1)] Point size (scatter) or point border size
+ * @param {_chartGraphPoint} [o.graph.point] - [=null] Point type for display (scatter only). If invalid, fallbacks to 'circle'
+ * @param {number} [o.graph.pointAlpha] - [=255] Point transparency [0-255]
+ * @param {object} [o.dataManipulation] - Data manipulation settings
+ * @param {object} [o.dataManipulation.sort] - Sort settings
+ * @param {_chartSorting} [o.dataManipulation.sort.x] - [='natural'] Sorts the serie by X-value
+ * @param {_chartSorting} [o.dataManipulation.sort.y] - [=null] Sorts the serie by y-value
+ * @param {_chartSorting} [o.dataManipulation.sort.z] - [=null] Sorts the serie by Z-value, used when o.graph.multi is true
+ * @param {_chartSorting} [o.dataManipulation.sort.my] - [='reverse num'] Sorts every Z-group by Y-value, used when o.graph.multi is true
+ * @param {_chartSorting} [o.dataManipulation.sort.mz] - [='reverse num'] Sorts every Z-group by Z-value, used when o.graph.multi is true
+ * @param {(point: {x: string, y: number, total: number}, idx: number, serie: any[]) => boolean} [o.dataManipulation.filter] - [=null]
+ * @param {boolean} [o.dataManipulation.mFilter] - [=true]
+ * @param {[number, number]} [o.dataManipulation.slice] - [=[0,10]] Displays only these range of values (by pos) of every serie
+ * @param {_chartDistrPlot} [o.dataManipulation.distribution] - [=null] Fits the data into a distribution function
+ * @param {_chartProbPlot} [o.dataManipulation.probabilityPlot] - [=null] Fits the data into a probability function
+ * @param {number} [o.dataManipulation.group] - [=4] How many Z-groups are displayed, used when o.graph.multi is true
+ * @param {object} [o.background] - Background settings
+ * @param {number} [o.background.color] - [=RGB(255, 255, 255)]
+ * @param {GdiBitmap} [o.background.image] - [=null]
+ * @param {object} [o.grid] - Grid settings
+ * @param {{show:boolean, color:number, width:number}} [o.grid.x] - [={show: false, color: RGB(0,0,0), width: _scale(1)}] X-axis grid settings
+ * @param {{show:boolean, color:number, width:number}} [o.grid.y] - [={show: false, color: RGB(0,0,0), width: _scale(1)}] Y-Axis Grid settings
+ * @param {object} [o.axis] - Axis settings (and its sub-elements)
+ * @param {{show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string, bSingleLabels:boolean, bAltLabels:boolean}} [o.axis.x] - X-Axis settings. Key sets the displayed title. When bAltLabels is true, it uses a different method to display labels.
+ * @param {{show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}} [o.axis.y] - Y-Axis settings. Key sets the displayed title.
+ * @param {{show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}} [o.axis.z] - Z-Axis settings. Key sets the displayed title.
+ * @param {object} [o.graphSpecs] - Graph type specific configuration
+ * @param {{bAxisCenteredX:boolean}} [o.graphSpecs.timeline] - Timeline specific settings. bAxisCenteredX controls if ticks must be centered on the point or at the left.
+ * @param {object} [o.buttons] - Buttons settings
+ * @param {boolean} [o.buttons.xScroll] - [=false] X-axis scroll buttons at sides
+ * @param {boolean} [o.buttons.settings] - [=false] Settings button at right
+ * @param {boolean} [o.buttons.display] - [=false] Display settings button at right
+ * @param {boolean} [o.buttons.zoom] - [=false] Zoom button at right
+ * @param {boolean} [o.buttons.custom] - [=false] Custom button at right
+ * @param {number} [o.buttons.alpha] - [=25] Transparency [0-255]
+ * @param {number} [o.buttons.timer] - [=1500] Timer to hide buttons in ms
+ * @param {object} [o.callbacks] - Callback functions
+ * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask)}} [o.callbacks.point] - Point related functions
+ * @param {{onMouseWwheel:function(step), onRbtnUp:function(x, y, mask)}} [o.callbacks.focus] - On panel focus functions
+ * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.settings] - Settings button functions
+ * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.display] - Display button functions
+ * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.zoom] - Zoom button functions
+ * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.custom] - Custom button functions
+ * @param {tooltip:((boolean) => string)|string}} [o.callbacks.xScroll] - X-axis scroll buttons functions
+ * @param {object} [o.callbacks.config] - Config related callbacks
+ * @param {function(config, arguments, callbackArgs)} [o.callbacks.config.change] - Called when changing any setting via this.changeConfig().
+ * @param {() => [number, number]} [o.callbacks.config.backgroundColor] - Called when using dynamic colors to adjust axis/label colors
+ * @param {(number[]) => void} [o.callbacks.config.artColors] - Placeholder for callback which should be called by bakground methods when using dynamic colors to adjust series colors
+ * @param {number} [o.x] - [=0] X panel position
+ * @param {number} [o.y] - [=0] Y panel position
+ * @param {number} [o.w] - [=window.Width] W panel position
+ * @param {number} [o.w] - [=window.Height] H panel position
+ * @param {string} [o.title] - Chart title
+ * @param {GdiFont} [o.gFont] - [=_gdiFont('Segoe UI', _scale(10))] Chart font
+ * @param {((refPoint, serie, mask) => string)|string} [o.tooltipText] - [='']
+ */
 function _chart({
-	data /* [[{x, y}, ...]]*/,
-	dataAsync = null, /* function returning a promise or promise, resolving to data, see above*/
+	data,
+	dataAsync = null,
 	colors = [/* rgbSerie1, ... */],
-	chroma = {/* scheme, colorBlindSafe, interpolation */ }, // diverging, qualitative, sequential, random or [color, ...] see https://vis4.net/chromajs/#color-scales
+	chroma = {/* scheme, colorBlindSafe, interpolation */ },
 	graph = {/* type, multi, borderWidth, point, pointAlpha */ },
 	dataManipulation = {/* sort, filter, mFilter, slice, distribution , probabilityPlot, group */ },
 	background = {/* color, image*/ },
@@ -27,7 +123,7 @@ function _chart({
 		timeline: {/* bAxisCenteredX */ },
 	},
 	margin = {/* left, right, top, bottom */ },
-	buttons = {/* xScroll , settings, display, zoom, customm, alpha, timer */ },
+	buttons = {/* xScroll, settings, display, zoom, custom, alpha, timer */ },
 	callbacks = {
 		point: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
 		focus: {/* onMouseWwheel, onRbtnUp */ },
@@ -189,7 +285,7 @@ function _chart({
 			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
-					const newValH = serie[j - 1].y / maxY * (y - h);
+					const newValH = serie[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
 					gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
@@ -224,7 +320,7 @@ function _chart({
 			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
-					const newValH = serie[j - 1].y / maxY * (y - h);
+					const newValH = serie[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
 					if (this.graph.borderWidth > 1) {
@@ -269,7 +365,7 @@ function _chart({
 			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
-					const newValH = serie[j - 1].y / maxY * (y - h);
+					const newValH = serie[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
 					const lineArr = [xPoint, yPoint, xPoint, y, newXPoint + 0.25, y, newXPoint + 0.25, newYPoint];
@@ -616,6 +712,7 @@ function _chart({
 				break;
 			}
 			case 'timeline': {
+				x -= this.axis.x.width * 1 / 2;
 				tickW = (w - this.margin.leftAuto) / xAxisValuesLen;
 				barW = tickW / this.series;
 				// Values
@@ -626,6 +723,7 @@ function _chart({
 			}
 			case 'bars':
 			default: {
+				x -= this.axis.x.width * 1 / 2;
 				tickW = (w - this.margin.leftAuto) / xAxisValuesLen;
 				barW = tickW / this.series;
 				// Values
@@ -744,7 +842,7 @@ function _chart({
 			case 'timeline': { // NOSONAR [fallthrough]
 				if (this.axis.y.show) {
 					ticks.reverse().forEach((tick, i) => {
-						const yTick = y - tick / maxY * (y - h) / 2 || y;
+						const yTick = y - tick / (maxY || 1) * (y - h) / 2 || y;
 						if (yTick < 0) { return; }
 						const tickH = gr.CalcTextHeight(tickText[i], this.gFont);
 						const yTickText = yTick - tickH / 2;
@@ -872,7 +970,7 @@ function _chart({
 										const _gr = img.GetGraphics();
 										let topMax = xTickW;
 										if (this.currPoint[0] !== i || this.currPoint[1] !== j) {
-											topMax = Math.min(xTickW, value.y / maxY * (y - h));
+											topMax = Math.min(xTickW, value.y / (maxY || 1) * (y - h));
 											if (valueZ.length > 3 && topMax > 30) {
 												if (xTickW > (topMax - this.axis.x.width - _scale(2))) {
 													const wPerChar = (xTickW / valueZ.length);
@@ -905,7 +1003,7 @@ function _chart({
 				if (this.axis.y.show) {
 					if (graphType !== 'timeline') {
 						ticks.forEach((tick, i) => {
-							const yTick = y - tick / maxY * (y - h) || y;
+							const yTick = y - tick / (maxY || 1) * (y - h) || y;
 							if (yTick < 0) { return; }
 							const tickH = gr.CalcTextHeight(tickText[i], this.gFont);
 							const yTickText = yTick - tickH / 2;
@@ -995,8 +1093,9 @@ function _chart({
 				// Grid
 				if (this.grid.y.show) {
 					ticks.forEach((tick) => {
-						const yTick = y - tick / maxY * (y - h);
-						gr.DrawLine(x, yTick, w, yTick, this.grid.y.width, this.callbacks.config.backgroundColor ? invert(this.callbacks.config.backgroundColor()[0], true) : yGridColor);
+						const yTick = y - tick / (maxY || 1) * (y - h);
+						const lineW = w + (this.axis.y.show ? this.margin.leftAuto / 2 + this.axis.y.width : 0);
+						gr.DrawLine(x, yTick, lineW, yTick, this.grid.y.width, this.callbacks.config.backgroundColor ? invert(this.callbacks.config.backgroundColor()[0], true) : yGridColor);
 					});
 				}
 				if (this.grid.x.show) {
@@ -1700,7 +1799,7 @@ function _chart({
 		this.dataDraw = this.dataDraw
 			.map((serie) => {
 				return serie.filter((point) => {
-					return (Object.hasOwn(point, 'x') && point.x !== null && point.x !== '' && Object.hasOwn(point, 'y') && Number.isFinite(point.y));
+					return point && (Object.hasOwn(point, 'x') && point.x !== null && point.x !== '' && Object.hasOwn(point, 'y') && Number.isFinite(point.y));
 				});
 			});
 		if (this.configuration.bProfile) { this.profile.CheckPointStep('Clean data'); }
