@@ -166,7 +166,7 @@
 - Helpers: in case saving a file throws an error due to long paths (+255 chars) a warning popup will be shown.
 - Helpers: updated helpers.
 ### Removed
-- UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionalit
+- UI: categories and tags submenu on settings menu is now hidden if there is a 'Filter and sorting' button on UI, since both offer the same functionality.
 ### Fixed
 - Auto-saving: fix for playlist update debouncing while panel was busy and tracks were deleted.
 
