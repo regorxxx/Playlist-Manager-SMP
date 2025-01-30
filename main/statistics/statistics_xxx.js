@@ -2239,7 +2239,7 @@ function _chart({
 			(this.buttons.settings ? 'settingsBtn' : ''),
 			(this.buttons.display ? 'displayBtn' : ''),
 			(this.buttons.zoom ? 'zoomBtn' : ''),
-			(this.buttons.custom ? 'custom' : '')
+			(this.buttons.custom ? 'customBtn' : '')
 		].filter(Boolean);
 	};
 

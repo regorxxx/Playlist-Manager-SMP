@@ -1,9 +1,9 @@
 ﻿'use strict';
-//23/12/24
+//30/01/25
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING: readable */
+/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, MF_CHECKED:readable, _b:readable, MF_STRING:readable, isArrayEqual:readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -91,12 +91,17 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				});
 				if (bCheck) {
 					menu.newCheckMenu(menuName, option.entryText, void (0), () => {
+						if (key === 'dataManipulation' && subKey.includes('sort')) {
+							return Array.isArray(subKey)
+								? !!this.sortKey && option.newValue === this.sortKey[subKey[1]]
+								: option.newValue === this.sortKey || ['x', 'y', this.graph.multi ? 'z' : '']
+									.filter(Boolean).every((k) => option.newValue === this.sortKey[k]);
+						}
 						const val = subKey
 							? Array.isArray(subKey)
 								? subKey.reduce((acc, curr) => acc[curr], this[key])
 								: this[key][subKey]
 							: this[key];
-						if (key === 'dataManipulation' && subKey === 'sort' && option.newValue === this.convertSortLabel(this.sortKey)) { return true; }
 						if ((key === 'data' || key === 'dataAsync') && Object.keys(option.args[key]).every((val) => parent[val] === option.args[key][val])) { return true; }
 						if (option.newValue && typeof option.newValue === 'function') { return !!(val && val.name === option.newValue.name); }
 						if (option.newValue && typeof option.newValue === 'object') {
@@ -264,9 +269,10 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		if (bClear) { menu.clear(true); } // Reset on every call
 		// helper
 		const createMenuOption = createMenuOptionParent.bind(this, menu);
-		const filtGreat = (num) => { return (a) => { return a.y > num; }; };
-		const filtLow = (num) => { return (a) => { return a.y < num; }; };
-		const fineGraphs = new Set(['bars', 'doughnut', 'pie']);
+		const filtGreat = (num) => ((a) => a.y > num);
+		const filtLow = (num) => ((a) => a.y < num);
+		const filtBetween = (lim) => ((a) => a.y > lim[0] && a.y < lim[1]);
+		const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie']);
 		const sizeGraphs = new Set(['scatter', 'lines']);
 		const type = this.graph.type.toLowerCase();
 		// Header
@@ -278,6 +284,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			[
 				{ isEq: null, key: this.graph.type, value: null, newValue: 'scatter', entryText: 'Scatter' },
 				{ isEq: null, key: this.graph.type, value: null, newValue: 'bars', entryText: 'Bars' },
+				{ isEq: null, key: this.graph.type, value: null, newValue: 'fill', entryText: 'Fill' },
 				{ isEq: null, key: this.graph.type, value: null, newValue: 'lines', entryText: 'Lines' },
 				{ isEq: null, key: this.graph.type, value: null, newValue: 'doughnut', entryText: 'Doughnut' },
 				{ isEq: null, key: this.graph.type, value: null, newValue: 'pie', entryText: 'Pie' },
@@ -299,16 +306,24 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			menu.newSeparator();
 		}
 		{
-			const subMenu = menu.newMenu('Sorting...');
+			const subMenu = menu.newMenu('Sorting');
 			if (this.dataManipulation.distribution === null) {
+				menu.newEntry({ menuName: subMenu, entryText: 'Applied in ' + (this.graph.multi ? 'Z-' : '') + 'Y-X order:', flags: MF_GRAYED });
+				menu.newSeparator(subMenu);
+				['x', 'y', this.graph.multi ? 'z' : ''].filter(Boolean).forEach((axis) => {
+					const subMenuTwo = menu.newMenu('By ' + axis.toUpperCase() + ' axis', subMenu, this.dataManipulation.sort[axis] ? MF_CHECKED : void (0));
+					[
+						{ isEq: null, key: null, value: null, newValue: 'natural' + (axis === 'y' ? ' num' : ''), entryText: 'Natural sorting' },
+						{ isEq: null, key: null, value: null, newValue: 'reverse' + (axis === 'y' ? ' num' : ''), entryText: 'Reverse sorting' },
+						{ entryText: 'sep' },
+					].forEach(createMenuOption('dataManipulation', ['sort', axis], subMenuTwo));
+					[
+						{ isEq: null, key: null, value: null, newValue: null, entryText: 'No sorting' }
+					].forEach(createMenuOption('dataManipulation', ['sort', axis], subMenuTwo));
+				});
+				menu.newSeparator(subMenu);
 				[
-					{ isEq: null, key: this.dataManipulation.sort, value: null, newValue: 'natural|x', entryText: 'Natural sorting (x)' },
-					{ isEq: null, key: this.dataManipulation.sort, value: null, newValue: 'reverse|x', entryText: 'Inverse sorting (x)' },
-					{ entryText: 'sep' },
-					{ isEq: null, key: this.dataManipulation.sort, value: null, newValue: 'natural|y', entryText: 'Natural sorting (Y)' },
-					{ isEq: null, key: this.dataManipulation.sort, value: null, newValue: 'reverse|y', entryText: 'Reverse sorting (Y)' },
-					{ entryText: 'sep' },
-					{ isEq: null, key: this.dataManipulation.sort, value: null, newValue: null, entryText: 'No sorting' }
+					{ isEq: null, key: null, value: null, newValue: null, entryText: 'No sorting' }
 				].forEach(createMenuOption('dataManipulation', 'sort', subMenu));
 			} else {
 				[
@@ -318,45 +333,145 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			}
 			menu.newSeparator();
 		}
-		{
+		{ // NOSONAR
 			{
-				const subMenu = menu.newMenu('Values shown...');
+				const subMenu = menu.newMenu('Show (X-axis)');
+				if (this.buttons.zoom) {
+					menu.newEntry({ menuName: subMenu, entryText: 'Changed with zoom:', flags: MF_GRAYED });
+					menu.newSeparator(subMenu);
+				}
+				const options = [
+					{ isEq: false, key: this.dataManipulation.slice, value: [0, 4], newValue: [0, 4], entryText: '4 items' + (this.dataManipulation.distribution ? ' per tail' : '') },
+					{ isEq: false, key: this.dataManipulation.slice, value: [0, 10], newValue: [0, 10], entryText: '10 items' + (this.dataManipulation.distribution ? ' per tail' : '') },
+					{ isEq: false, key: this.dataManipulation.slice, value: [0, 20], newValue: [0, 20], entryText: '20 items' + (this.dataManipulation.distribution ? ' per tail' : '') },
+					{ isEq: false, key: this.dataManipulation.slice, value: [0, 50], newValue: [0, 50], entryText: '50 items' + (this.dataManipulation.distribution ? ' per tail' : '') }
+				];
+				options.forEach(createMenuOption('dataManipulation', 'slice', subMenu));
+				menu.newSeparator(subMenu);
+				menu.newEntry({
+					menuName: subMenu, entryText: 'Custom range...' + '\t[' + this.dataManipulation.slice + ']', func: () => {
+						const slice = [0, Infinity];
+						slice[0] = Input.number('int positive', this.dataManipulation.slice[0], 'Input number:', 'Show X-points from', 40);
+						if (slice[0] === null) {
+							if (!Input.isLastEqual) { return; }
+							slice[0] = Input.previousInput;
+						}
+						slice[1] = Input.number('int positive', this.dataManipulation.slice[1], 'Input number:\n(must be greater than previous one: ' + slice[0] + ')', 'Show X-points up to', slice[0] + 1, [(n) => n > slice[0]]);
+						if (slice[1] === null) {
+							if (!Input.isLastEqual) { return; }
+							slice[1] = Input.previousInput;
+						}
+						if (isArrayEqual(this.dataManipulation.slice, slice)) { return; }
+						this.changeConfig({ dataManipulation: { slice }, callbackArgs: { bSaveProperties: true } });
+					}
+				});
+				menu.newCheckMenuLast(() => !options.some((opt) => isArrayEqual(this.dataManipulation.slice, opt.value)));
 				[
-					{ isEq: false, key: this.dataManipulation.slice, value: [0, 4], newValue: [0, 4], entryText: '4 values' + (this.dataManipulation.distribution ? ' per tail' : '') },
-					{ isEq: false, key: this.dataManipulation.slice, value: [0, 10], newValue: [0, 10], entryText: '10 values' + (this.dataManipulation.distribution ? ' per tail' : '') },
-					{ isEq: false, key: this.dataManipulation.slice, value: [0, 20], newValue: [0, 20], entryText: '20 values' + (this.dataManipulation.distribution ? ' per tail' : '') },
-					{ isEq: false, key: this.dataManipulation.slice, value: [0, 50], newValue: [0, 50], entryText: '50 values' + (this.dataManipulation.distribution ? ' per tail' : '') },
 					{ entryText: 'sep' },
-					{ isEq: false, key: this.dataManipulation.slice, value: [0, Infinity], newValue: [0, Infinity], entryText: 'Show all values' },
+					{ isEq: false, key: this.dataManipulation.slice, value: [0, Infinity], newValue: [0, Infinity], entryText: 'Show entire X-axis' },
 				].forEach(createMenuOption('dataManipulation', 'slice', subMenu));
 			}
 			{
-				const subMenu = menu.newMenu('Filter...');
-				const subMenuGreat = menu.newMenu('Greater than...', subMenu);
-				const subMenuLow = menu.newMenu('Lower than...', subMenu);
+				const subMenu = menu.newMenu('Filter (Y-axis)');
+				const subMenuGreat = menu.newMenu('Greater than', subMenu);
+				const subMenuLow = menu.newMenu('Lower than', subMenu);
 				// Create a filter entry for each fraction of the max value (duplicates filtered)
 				const parent = this;
 				const options = [...new Set([this.stats.maxY, 1000, 100, 10, 10 / 2, 10 / 3, 10 / 5, 10 / 7].map((frac) => {
 					return Math.round(this.stats.maxY / frac) || 1; // Don't allow zero
 				}))];
-				options.map((val) => {
-					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtGreat(val), entryText: val };
-				}).forEach(function (option, i) {
-					createMenuOption('dataManipulation', 'filter', subMenuGreat, false)(option);
-					menu.newCheckMenu(subMenuGreat, option.entryText, void (0), () => {
-						const filter = this.dataManipulation.filter;
-						return !!(filter && filter({ y: options[i] + 1 }) && !filter({ y: options[i] })); // Just a hack to check the current value is the filter
+				{
+					options.map((val) => {
+						return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtGreat(val), entryText: val };
+					}).forEach(function (option, i) {
+						createMenuOption('dataManipulation', 'filter', subMenuGreat, false)(option);
+						menu.newCheckMenu(subMenuGreat, option.entryText, void (0), () => {
+							const filter = this.dataManipulation.filter;
+							const filterStr = (filter || '').toString();
+							return !!filter && filterStr.includes(' > ') && filter({ y: options[i] + 1 }) && !filter({ y: options[i] }); // Just a hack to check the current value is the filter
+						});
+					}.bind(parent));
+					menu.newSeparator(subMenuGreat);
+					menu.newEntry({
+						menuName: subMenuGreat, entryText: 'Custom value...', func: () => {
+							let val = Input.number('real', -Infinity, 'Input real number:', 'Allow only Y-Value greater than', 40);
+							if (val === null) {
+								if (!Input.isLastEqual) { return; }
+								val = Input.previousInput;
+							}
+							this.changeConfig({
+								dataManipulation: {
+									filter: val === -Infinity ? null : filtGreat(val)
+								}, callbackArgs: { bSaveProperties: true }
+							});
+						}
 					});
-				}.bind(parent));
-				options.map((val) => {
-					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtLow(val), entryText: val };
-				}).forEach(function (option, i) {
-					createMenuOption('dataManipulation', 'filter', subMenuLow, false)(option);
-					menu.newCheckMenu(subMenuLow, option.entryText, void (0), () => {
+					menu.newCheckMenuLast(() => {
 						const filter = this.dataManipulation.filter;
-						return !!(filter && filter({ y: options[i] + 1 }) && !filter({ y: options[i] })); // Just a hack to check the current value is the filter
+						const filterStr = (filter || '').toString();
+						return !!filter && filterStr.includes(' > ') && options.every((val) => !menu.isChecked(subMenuGreat, val));
 					});
-				}.bind(parent));
+				}
+				{
+					options.map((val) => {
+						return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtLow(val), entryText: val };
+					}).forEach(function (option, i) {
+						createMenuOption('dataManipulation', 'filter', subMenuLow, false)(option);
+						menu.newCheckMenu(subMenuLow, option.entryText, void (0), () => {
+							const filter = this.dataManipulation.filter;
+							const filterStr = (filter || '').toString();
+							return !!filter && filterStr.includes(' < ') && filter({ y: options[i] + 1 }) && !filter({ y: options[i] }); // Just a hack to check the current value is the filter
+						});
+					}.bind(parent));
+					menu.newSeparator(subMenuLow);
+					menu.newEntry({
+						menuName: subMenuLow, entryText: 'Custom value...', func: () => {
+							let val = Input.number('real', Infinity, 'Input real number:', 'Allow only Y-Value lower than', 40);
+							if (val === null) {
+								if (!Input.isLastEqual) { return; }
+								val = Input.previousInput;
+							}
+							this.changeConfig({
+								dataManipulation: {
+									filter: val === Infinity ? null : filtLow(val)
+								}, callbackArgs: { bSaveProperties: true }
+							});
+						}
+					});
+					menu.newCheckMenuLast(() => {
+						const filter = this.dataManipulation.filter;
+						const filterStr = (filter || '').toString();
+						return !!filter && filterStr.includes(' < ') && options.every((val) => !menu.isChecked(subMenuLow, val));
+					});
+				}
+				{
+					menu.newSeparator(subMenu);
+					menu.newEntry({
+						menuName: subMenu, entryText: 'Between 2 values...', func: () => {
+							const limits = [-Infinity, Infinity];
+							limits[0] = Input.number('real', -Infinity, 'Input real number:', 'Allow only Y-Value greater than', 40);
+							if (limits[0] === null) {
+								if (!Input.isLastEqual) { return; }
+								limits[0] = Input.previousInput;
+							}
+							limits[1] = Input.number('real', Infinity, 'Input real number:', 'Allow only Y-Value lower than', 40);
+							if (limits[1] === null) {
+								if (!Input.isLastEqual) { return; }
+								limits[1] = Input.previousInput;
+							}
+							this.changeConfig({
+								dataManipulation: {
+									filter: limits.every((n) => !Number.isFinite(n)) ? null : filtBetween(limits)
+								}, callbackArgs: { bSaveProperties: true }
+							});
+						}
+					});
+					menu.newCheckMenuLast(() => {
+						const filter = this.dataManipulation.filter;
+						const filterStr = (filter || '').toString();
+						return !!filter && filterStr.includes(' < ') && filterStr.includes(' > ');
+					});
+				}
 				[
 					{ entryText: 'sep' },
 					{ isEq: null, key: this.dataManipulation.filter, value: null, newValue: null, entryText: 'No filter' },
@@ -365,9 +480,18 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			menu.newSeparator();
 		}
 		{
-			const subMenu = menu.newMenu('Axis & labels...');
+			const subMenu = menu.newMenu('Axis & labels');
 			{
-				const subMenuTwo = menu.newMenu('Axis...', subMenu);
+				const subMenuTwo = menu.newMenu('Grid', subMenu);
+				[
+					{ isEq: null, key: this.grid.x.show, value: null, newValue: { show: !this.grid.x.show }, entryText: (this.grid.x.show ? 'Hide' : 'Show') + ' X grid' }
+				].forEach(createMenuOption('grid', 'x', subMenuTwo, false));
+				[
+					{ isEq: null, key: this.grid.y.show, value: null, newValue: { show: !this.grid.y.show }, entryText: (this.grid.y.show ? 'Hide' : 'Show') + ' Y grid' }
+				].forEach(createMenuOption('grid', 'y', subMenuTwo, false));
+			}
+			{
+				const subMenuTwo = menu.newMenu('Axis', subMenu);
 				[
 					{ isEq: null, key: this.axis.x.show, value: null, newValue: { show: !this.axis.x.show }, entryText: (this.axis.x.show ? 'Hide' : 'Show') + ' X axis' }
 				].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
@@ -376,7 +500,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
 			}
 			{
-				const subMenuTwo = menu.newMenu('Labels...', subMenu);
+				const subMenuTwo = menu.newMenu('Labels', subMenu);
 				[
 					{ isEq: null, key: this.axis.x.labels, value: null, newValue: { labels: !this.axis.x.labels }, entryText: (this.axis.x.labels ? 'Hide' : 'Show') + ' X labels' }
 				].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
@@ -389,7 +513,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				].forEach(createMenuOption('axis', ['x', 'bAltLabels'], subMenuTwo, true));
 			}
 			{
-				const subMenuTwo = menu.newMenu('Titles...', subMenu);
+				const subMenuTwo = menu.newMenu('Titles', subMenu);
 				[
 					{ isEq: null, key: this.axis.x.showKey, value: null, newValue: { showKey: !this.axis.x.showKey }, entryText: (this.axis.x.showKey ? 'Hide' : 'Show') + ' X title' }
 				].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
