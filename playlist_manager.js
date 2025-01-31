@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/25
+//31/01/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -815,28 +815,26 @@ if (!list.properties.bSetup[1]) {
 		if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
 		list.prePaint();
 		panel.paint(gr);
-		if (stats.bEnabled) {
-			if (window.debugPainting) { window.drawDebugRectAreas(gr); }
-			return;
-		}
-		if (list.bPaintList) {
-			if (panel.imageBackground.bTint && list.uiElements['Bottom toolbar'].enabled) {
-				panel.paintImage(
-					gr,
-					{ w: window.Width, h: bottomToolbar.h, x: 0, y: bottomToolbar.y, offsetH: _scale(1) },
-					{ transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
-				);
+		if (!stats.bEnabled) {
+			if (list.bPaintList) {
+				if (panel.imageBackground.bTint && list.uiElements['Bottom toolbar'].enabled) {
+					panel.paintImage(
+						gr,
+						{ w: window.Width, h: bottomToolbar.h, x: 0, y: bottomToolbar.y, offsetH: _scale(1) },
+						{ transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
+					);
+				}
+				if (list.uiElements['Bottom toolbar'].enabled) { bottomToolbar.on_paint_buttn(gr); }
 			}
-			if (list.uiElements['Bottom toolbar'].enabled) { bottomToolbar.on_paint_buttn(gr); }
-		}
-		list.paint(gr);
-		if (list.bPaintList && scroll) {
-			scroll.rows = Math.max(list.items - list.rows, 0);
-			scroll.rowsPerPage = list.rows;
-			scroll.currRow = list.offset;
-			if (scroll.rows >= 1) {
-				scroll.size = Math.max(Math.round(scroll.h / (scroll.rows === 1 ? 2 : scroll.rows)), _scale(14));
-				scroll.paint(gr);
+			list.paint(gr);
+			if (list.bPaintList && scroll) {
+				scroll.rows = Math.max(list.items - list.rows, 0);
+				scroll.rowsPerPage = list.rows;
+				scroll.currRow = list.offset;
+				if (scroll.rows >= 1) {
+					scroll.size = Math.max(Math.round(scroll.h / (scroll.rows === 1 ? 2 : scroll.rows)), _scale(14));
+					scroll.paint(gr);
+				}
 			}
 		}
 		pop.paint(gr);

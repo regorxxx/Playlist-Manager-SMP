@@ -94,6 +94,7 @@ CALL :copy_folder main\world_map
 CALL :check_folder main\statistics
 CALL :copy_file main\statistics\statistics_xxx.js
 CALL :copy_file main\statistics\statistics_xxx_helper.js
+CALL :copy_file main\statistics\statistics_xxx_menu.js
 CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
@@ -222,6 +223,7 @@ CALL :copy_file main\window\window_xxx_scrollbar.js
 CALL :check_folder main\statistics
 CALL :copy_file main\statistics\statistics_xxx.js
 CALL :copy_file main\statistics\statistics_xxx_helper.js
+CALL :copy_file main\statistics\statistics_xxx_menu.js
 CALL :delete_file main\playlist_manager\playlist_manager_listenbrainz_extra.js
 REM readmes
 CALL :check_folder readmes

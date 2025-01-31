@@ -148,6 +148,8 @@
 - UI: playlist highlighting animation was drawn over quicksearch box in some cases.
 - UI: fix to nesting level of items within folders when parent folder was outside the view range.
 - UI: fix to 'Export and convert' entry being grayed-out on multi-selection which only contains AutoPlaylists.
+- Statistics: chart not properly updating after the manager initializes all playlists on startup.
+- Statistics: loading popup not being shown while the manager initializes all playlists on startup.
 - Crash using drag n' drop or actions which moved the selection to a playlist if the source playlist was not tracked by the manager.
 - Statistics: minor fixes.
 

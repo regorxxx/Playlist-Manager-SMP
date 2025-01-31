@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/01/25
+//31/01/25
 
-/* exported _menu, _attachedMenu */
+/* exported _menu */
 
 /*
 	Contextual Menu helper v2.6.0
@@ -30,6 +30,7 @@ include(fb.ComponentPath + 'docs\\Flags.js');
  * @returns {void}
  */
 function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false, bThrowErrors = true } = {}) {
+	const isFunction = _menu.isFunction;
 	/* Checks */
 	if (onBtnUp && !isFunction(onBtnUp)) { throwError('onBtnUp is not a function'); }
 	if (iMaxEntryLen <= 0) { throwError('iMaxEntryLen can not be <= 0'); }
@@ -1045,21 +1046,11 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		};
 	})());
 	/**
-	 * Helper to check if argument is a function
-	 *
-	 * @name isFunction
-	 * @param {any} obj
-	 * @returns {Boolean}
-	*/
-	function isFunction(obj) {
-		return !!(obj && obj.constructor && obj.call && obj.apply);
-	}
-	/**
 	 * Helper to compare keys of 2 objects
 	 *
 	 * @name compareKeys
 	 * @param {object} a
- 	 * @param {object} b
+	   * @param {object} b
 	 * @returns {Boolean}
 	*/
 	function compareKeys(a, b) {
@@ -1093,7 +1084,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * As a workaround, the script tries to abort all request first and then throws the error after some ms
 	 *
 	 * @name throwError
- 	 * @param {String} message
+	   * @param {String} message
 	 * @returns {void}
 	*/
 	function throwError(message) {
@@ -1109,37 +1100,81 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 }
 
 /**
- * Attaches a created menu to an already existing object (which is supposed to have a this.trace function
- * Usage: _attachedMenu.call(parent, {rMenu: createStatisticsMenu.bind(parent)}
+ * Attaches menu instances to an already existing object (which is supposed to have a this.trace method)
+ * overriding this.rbtn_up and this.lbtn_up
  *
- * @function
- * @name _attachedMenu
+ * @kind method
+ * @memberof _menu
+ * @static
+ * @name attachInstance
  * @param {object} [o] - Arguments
- * @param {_menu} [0.rMenu] - Right click menu object
- * @param {_menu} [0.lMenu] - Left click menu object
- * @param {_popup} [0.popup] - Popup object, which stops menu processing if active
- * @returns {void}
+ * @param {object} parent - Parent object
+ * @param {_menu} [o.rMenu] - Right click menu object
+ * @param {_menu} [o.lMenu] - Left click menu object
+ * @param {_popup} [o.popup] - Popup object, which stops menu processing if active
+ * @returns {object} Parent object
  */
-function _attachedMenu({
+_menu.attachInstance = function attach({
+	parent,
 	rMenu = null,
 	lMenu = null,
 	popup = null
 } = {}) {
-	this.rMmenu = rMenu;
-	this.lMmenu = lMenu;
-	this.rbtn_up = (x, y, ...rest) => {
+	if (!parent) { throw new Error('No parent object was provided'); }
+	parent.rMmenu = rMenu;
+	parent.lMmenu = lMenu;
+	parent.rbtn_up = (function rbtn_up(x, y, ...rest) {
 		if (this.trace(x, y) && rMenu) {
-			return popup && popup.isEnabled() ? false : this.rMmenu().btn_up(x, y, ...rest);
+			return popup && popup.isEnabled()
+				? false
+				: (_menu.isFunction(this.rMmenu) ? this.rMmenu() : this.rMmenu).btn_up(x, y, ...rest);
 		}
 		return false;
-	};
-	this.lbtn_up = (x, y, ...rest) => {
+	}).bind(parent);
+	this.lbtn_up = (function lbtn_up(x, y, ...rest) {
 		if (this.trace(x, y) && lMenu) {
-			return popup && popup.isEnabled() ? false : this.lMmenu().btn_up(x, y, ...rest);
+			return popup && popup.isEnabled()
+				? false
+				: (_menu.isFunction(this.lMenu) ? this.lMenu() : this.lMenu).btn_up(x, y, ...rest);
 		}
 		return false;
-	};
-}
+	}).bind(parent);
+	return parent;
+};
+
+/**
+ * Binds the menu to an already existing object (which is supposed to have a this.trace function)
+ *
+ * @kind method
+ * @memberof _menu
+ * @static
+ * @name bindInstance
+ * @param {object} parent
+ * @param {_menu|() => _menu} menu
+ * @param {'l'|'r'} mouse - Left or right click menu
+ * @returns {object} Parent object
+ */
+_menu.bindInstance = function bindInstance(parent, menu, mouse = 'r') {
+	return _menu.attachInstance({
+		parent,
+		[mouse === 'r' ? 'rMenu' : 'lMenu']: _menu.isFunction(menu) ? menu.bind(parent) : menu,
+		popup: parent.pop || null
+	});
+};
+
+/**
+ * Helper to check if  is a function
+ *
+ * @kind method
+ * @memberof _menu
+ * @static
+ * @name isFunction
+ * @param {any} obj
+ * @returns {Boolean}
+*/
+_menu.isFunction = function isFunction(obj) {
+	return !!(obj && obj.constructor && obj.call && obj.apply);
+};
 
 // Add ES2022 method
 // https://github.com/tc39/proposal-accessible-object-hasownproperty

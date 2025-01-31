@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/01/25
+//31/01/25
 
 /* exported _list */
 
@@ -7510,6 +7510,7 @@ function _list(x, y, w, h) {
 		return promise.then(() => {
 			if (pop.isEnabled('loading')) { pop.disable(true); }
 			if (intId !== -1) { clearInterval(intId); }
+			if (stats.bEnabled) { stats.init(); }
 			this.checkConfigPostUpdate(bDone);
 			this.updatePlaylistIcons();
 			// Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
@@ -7563,6 +7564,7 @@ function _list(x, y, w, h) {
 				if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
 					Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch)
 						.then(() => {
+							if (stats.bEnabled) { stats.init(); }
 							if (this.uiElements['Search filter'].enabled && this.searchMethod.text.length && !this.searchMethod.bResetStartup) {
 								this.search();
 							}
