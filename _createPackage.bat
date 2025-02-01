@@ -34,7 +34,7 @@ ECHO (1) World-Map-SMP
 ECHO (2) Playlist-Manager-SMP
 ECHO (3) Not-a-Waveform-Seekbar-SMP
 ECHO (4) Timeline-SMP
-ECHO (5) Volume-Slider-SMP
+ECHO (5) Volume-Seekbar-Slider-SMP
 ECHO.
 IF [%~1]==[] (
 	CHOICE /C 12345 /N /M "CHOOSE PACKAGE TO BUILD (1-5): "
@@ -49,7 +49,7 @@ IF %ERRORLEVEL% EQU 1 GOTO world_map
 IF %ERRORLEVEL% EQU 2 GOTO playlist_manager
 IF %ERRORLEVEL% EQU 3 GOTO not_a_waveform_seekbar
 IF %ERRORLEVEL% EQU 4 GOTO timeline
-IF %ERRORLEVEL% EQU 5 GOTO volume_slider
+IF %ERRORLEVEL% EQU 5 GOTO volume_seekbar_slider
 IF ERRORLEVEL 6 (
 	ECHO Package ^(%1^) not recognized.
 	GOTO:EOF
@@ -179,6 +179,9 @@ CALL :copy_file presets\AutoHotkey\foobar_preview_play.ahk
 CALL :copy_file presets\AutoHotkey\foobar_preview_sel.ahk
 CALL :copy_file presets\AutoHotkey\readme.txt
 CALL :copy_folder presets\"World Map"
+REM others
+CALL :check_folder _resources
+CALL :copy_folder _resources\fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -305,7 +308,7 @@ CALL :copy_file _images\playlist_manager_08.JPG
 CALL :copy_file _images\playlist_manager_09.JPG
 CALL :copy_file _images\buttons_wine.png
 CALL :check_folder _resources
-CALL :copy_file _resources\fontawesome-webfont.ttf
+CALL :copy_folder _resources\fonts
 CALL :check_folder examples
 CALL :copy_file examples\playlistManager_playlists_config.json
 CALL :copy_file examples\playlist_xsp_example.xsp
@@ -380,6 +383,9 @@ CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
 CALL :copy_folder helpers-external\namethatcolor
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :check_folder _resources
+CALL :copy_folder _resources\fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -480,25 +486,28 @@ CALL :copy_file helpers-external\ngraph\README_xxx.txt
 CALL :copy_file helpers-external\ngraph\README.md
 CALL :copy_file helpers-external\ngraph\ngraph.graph.js
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :check_folder _resources
+CALL :copy_folder _resources\fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
 
-:volume_slider
+:volume_seekbar_slider
 REM package variables
 REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
-SET name=Volume-Slider-SMP
+SET name=Volume-Seekbar-Slider-SMP
 SET id=82303AA1-3DA0-4817-BE47-85A4AE09D5CD
-SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume.\r\n• Double L. Click on button to mute\\set full volume.\r\n• Configurable layout and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
+SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume\\time.\r\n• Double L. Click on button to mute\\set full volume (volume).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Configurable layout and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
 REM version
-FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" volume_slider.js`) DO (SET version=%%F)
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" volume_seekbar_slider.js`) DO (SET version=%%F)
 IF "%version%"=="" (
 	ECHO Main file not found or wrong version string
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Volume-Slider-SMP', { author: 'regorxxx', version: '=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Volume-Seekbar-Slider-SMP', { author: 'regorxxx', version: '=%
 SET version=%version:' }); }=%
 REM features
 SET enableDragDrop=false
@@ -507,9 +516,9 @@ REM global variable
 SET root=%packagesFolder%\%name: =-%
 REM package folder and file
 CALL :check_root
-CALL :copy_main volume_slider.js
+CALL :copy_main volume_seekbar_slider.js
 REM main
-CALL :copy_folder main\volume
+CALL :copy_folder main\volume_seekbar
 CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
@@ -539,12 +548,15 @@ CALL :copy_file helpers\helpers_xxx_web.js
 CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
-CALL :copy_file helpers\readme\volume_slider.txt
+CALL :copy_file helpers\readme\volume_seekbar_slider.txt
 REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\namethatcolor
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :check_folder _resources
+CALL :copy_folder _resources\fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF

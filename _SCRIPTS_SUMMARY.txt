@@ -13,18 +13,18 @@ The root folder (with this readme) contains these scripts which can be loaded in
 		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-manager-smp/
 		- Full documentation available on PDF. See '.\readmes' folder.
 		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf
+			- _resources\Font Awesome 4.ttf
 	+ world_map.js [+]
 		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/world-map-smp/
 		- May be used along Biography 1.1.X or 1.2.X+
 		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf
+			- _resources\Font Awesome 4.ttf
 		- A pre-built artist-country database is provided:
 			presets\World Map\worldMap.json\worldMap.json
 	+ timeline.js [+]
 		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/timeline-smp/
 		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf
+			- _resources\Font Awesome 4.ttf
 	+ seekbar.js [+]
 		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/not-a-waveform-seekbar-smp/
 	+ buttons_toolbar.js [+]
@@ -43,7 +43,7 @@ The root folder (with this readme) contains these scripts which can be loaded in
 		- The buttons may be loaded individually, without the toolbar, but you loose
 		  many UI related settings and QOL features that way. Not recommended.
 		- Requires some fonts.
-			- _resources\fontawesome-webfont.ttf (optional)
+			- _resources\Font Awesome 4.ttf (optional)
 	+ Draw Graph.html
 		- ALSO READ: helpers\music_graph_descriptors_xxx.js
 		- ALSO SEE: search_by_distance.js

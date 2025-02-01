@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/01/25
+//01/02/25
 
 /**
  * Global folders setting
@@ -154,8 +154,10 @@ Object.keys(globFonts).forEach((key) => {
 	if (!key.startsWith('_') && !utils.CheckFont(globFonts[key].name)) {
 		fb.ShowPopupMessage(
 			'Missing font set at:' +
-			'\n' + globFonts._file +
-			'\n\n\t-' + key + ':\t' + globFonts[key].name
+			'\n\t' + globFonts._file +
+			'\n\n\t-' + key + ':\t' + globFonts[key].name +
+			'\n\n\nEither change the font at the file to one available in your system or install it. Note default fonts are bundled at:' +
+			'\n\t' + folders.xxx + '_resources\\fonts\\'
 			, 'Global fonts'
 		);
 	}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/01/25
+//01/02/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -257,7 +257,7 @@ Object.keys(globRegExp).filter((k) => !k.startsWith('_')).forEach((k) => globReg
 const globFonts = {
 	_type: 'Font',
 	_file: folders.userPresetsGlobal + 'globFonts.json',
-	_description: 'Fonts used by scripts at multiple places on UI. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values). The fallback font can not be changed, is forced by SMP/foobar2000.',
+	_description: 'Fonts used by scripts at multiple places on UI. File is loaded on the fly at startup, so no hard-saving on properties is involved (thus only requiring a panel reload to use the new values). The fallback font can not be changed, is forced by SMP/foobar2000. Default fonts may be found within scripts/packages folders at \'_resources\\fonts\'.',
 	_usage: 'Most users will probably not need to touch these. Adding a not-installed font should fallback into the default one (Segoe UI). Special characters like single quotes (\') or backslash (\\) must be properly escaped.',
 	_fallback: { name: 'Segoe UI', size: 10 },
 	button: { name: 'Segoe UI', size: 12 },
