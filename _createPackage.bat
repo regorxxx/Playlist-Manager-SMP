@@ -499,7 +499,7 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Volume-Seekbar-Slider-SMP
 SET id=82303AA1-3DA0-4817-BE47-85A4AE09D5CD
-SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume\\time.\r\n• Double L. Click on button to mute\\set full volume (volume).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Configurable layout and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
+SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume\\time.\r\n• Double L. Click on button to mute\\set full volume (volume).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "version:" volume_seekbar_slider.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -525,6 +525,7 @@ CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_dynamic_colors.js
 CALL :copy_file main\window\window_xxx_helpers.js
 CALL :copy_file main\window\window_xxx_slider.js
+CALL :copy_file main\window\window_xxx_wheel.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
