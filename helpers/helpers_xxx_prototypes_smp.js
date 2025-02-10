@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/11/24
+//01/02/25
 
 /* exported extendGR */
 
@@ -44,7 +44,7 @@ if (!RegExp.prototype.toSource) {
 	FbTitleFormat
 */
 // Add async calculation
-FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(handleList, slice = 1000) {
+FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(handleList, slice = 1000, bLog = false) {
 	const size = handleList.Count;
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => { // NOSONAR
@@ -59,7 +59,10 @@ FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(han
 					const iItems = new FbMetadbHandleList(items.slice((i - 1) * slice, i === total ? count : i * slice));
 					tags.push(...this.EvalWithMetadbs(iItems));
 					const progress = Math.round(i / total * 100);
-					if (progress % 25 === 0 && progress > prevProgress) { prevProgress = progress; console.log('EvalWithMetadbsAsync (' + this.Expression + ') ' + progress + '%.'); }
+					if (progress % 25 === 0 && progress > prevProgress) {
+						prevProgress = progress;
+						if (bLog) { console.log('EvalWithMetadbsAsync (' + this.Expression + ') ' + progress + '%.'); }
+					}
 					resolve('done');
 				}, 25);
 			});
@@ -386,7 +389,7 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		}).bind(that);
 		that.CheckPointPrint = (function CheckPointStep(name, message) {
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
-			if (point) {console.log('profiler (' + this.Name + '): ' + name + ' ' + point.acc + ' ms' +(message || '')); return true;}
+			if (point) { console.log('profiler (' + this.Name + '): ' + name + ' ' + point.acc + ' ms' + (message || '')); return true; }
 			return null;
 		}).bind(that);
 		return that;
