@@ -1,10 +1,10 @@
 ﻿'use strict';
-//27/01/25
+//12/02/25
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
 include('window_xxx_helpers.js');
-/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _gr:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable */
+/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _gr:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable, FontStyle:readable */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, IDC_HAND:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_SINGLELINE:readable, DT_END_ELLIPSIS:readable, IDC_IBEAM:readable, IDC_ARROW:readable, DT_END_ELLIPSIS:readable, MF_STRING:readable, MF_GRAYED:readable, MF_DISABLED:readable, VK_DELETE:readable, VK_HOME:readable, VK_SHIFT:readable, VK_ESCAPE:readable, VK_BACK:readable, VK_RETURN:readable, VK_LEFT:readable, VK_END:readable , VK_RIGHT:readable */
 
@@ -675,7 +675,7 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null, timeout = 500) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
-	this.fontItalic = _gdiFont('Segoe UI', _scale(10), 2);
+	this.fontItalic = _gdiFont('Segoe UI', _scale(10), FontStyle.Italic);
 	this.w = w;
 	this.h = h;
 	this.textColor = textColor;
@@ -706,7 +706,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		this.w = w;
 		this.h = h;
 		this.font = _gdiFont('Segoe UI', _scale(fontSize));
-		this.fontItalic = _gdiFont('Segoe UI', _scale(fontSize), 2);
+		this.fontItalic = _gdiFont('Segoe UI', _scale(fontSize), FontStyle.Italic);
 	};
 
 	this.paint = function (gr, x, y) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/25
+//12/02/25
 
 /* exported _list */
 
@@ -598,7 +598,10 @@ function _list(x, y, w, h) {
 				const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.hasOwn(this.configFile.ui.icons.category, this.categoryState[0]);
 				const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
 				const offsetHeader = yOffset / 10;
-				const gfontHeader = _gdiFont('FontAwesome', _scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7), 0);
+				const gfontHeader = _gdiFont(
+					'FontAwesome',
+					_scale((panel.fonts.size <= 14) ? panel.fonts.size - 3 : panel.fonts.size - 7)
+				);
 				const iconHeaderColor = this.headerButtons.folder.inFocus
 					? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8)
 					: blendColors(panel.colors.headerButtons, panelBgColor, 0.1);
