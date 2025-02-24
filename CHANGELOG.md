@@ -108,6 +108,7 @@
 - AutoPlaylist: 'Clone in UI' menu entry or action also updates metadata now.
 - AutoPlaylist: UI-only AutoPlaylists use the AutoPlaylist icon when using Lite mode, otherwise use the locked icon.
 - AutoPlaylist: last modified date is now changed whenever the num of tracks (size), tracks file size or duration doesn't match the last saved value (rounded to 2 decimals).
+- AutoPlaylist: sorting expressions at end of queries are now recognized at multiple input popups as the desired sorting, instead of asking for sorting again with another popup. For ex. at AutoPlaylist or Smart playlist (.xsp) creation, or when editing an existing playlist's query (in this case, the sorting will be replaced with the new one).
 - XSP: new Smart Playlists created are now automatically loaded.
 - XSP: 'Clone in UI' menu entry or action also updates metadata now.
 - XSP: improved console logging for Smart Playlists loading, now the query part associated to playlists is also shown.
@@ -116,6 +117,7 @@
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
 - Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the scrip is checking if every track exist first.
+- UI: playlist metadata (like size) is now updated when using the search tool if data was not cached.
 - UI: modified and created date on tooltip is now shown as DD/MM/YYYY HH:SS.
 - UI: clean up of 'List menu' entries to improve ease of usage.
 - UI: bottom toolbar is now adjusted to the font size settings.
@@ -140,6 +142,9 @@
 - Exporting Playlists: fixed output path option (without a popup asking for it) and filename presets introduced on [0.17.0](#0170---2024-07-24) not working for AutoPlaylists and Smart Playlists.
 - Folders: 'Move to folder' submenu was missing nested folders if they were not expanded. Now they are shown, although folders not present in current view/filter state, are still hidden.
 - Folders: error restoring a deleted folder.
+- XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
+- XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
+- UI: wrong column size in some cases -on auto mode- after using the search tool.
 - UI: fixed multiple selection behavior when using filters, where random items where being selected after filtering by Idx, even if they were not the original ones. Now it tries to maintain items only when they are also present after filtering, reducing the selection otherwise.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
