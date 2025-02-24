@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//24/02/25
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -26,11 +26,11 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 	const textTags = new Set([
 		'GENRE', 'ALBUM', 'ARTIST', 'TITLE', 'COMMENT', 'TRACKNUMBER', '%FILENAME%', '%PATH%', '%RATING%', 'DATE', 'MOOD', 'THEME', 'STYLE', '"ALBUM ARTIST"',
 		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%)"',
-		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"','"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,0)"',
 		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%)"',
-		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,0)"',
 		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%)"',
-		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%,0)"',
+		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%,0)"',
 		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"',
 		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%)"',
 		'%PLAY_COUNT%', '%2003_PLAYCOUNT%',
@@ -40,11 +40,11 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 	const numTags = new Set([
 		'TRACKNUMBER', '%RATING%', '%2003_RATING%', 'DATE',
 		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%)"',
-		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"','"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,0)"',
 		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%)"',
-		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,0)"',
+		'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,0)"',
 		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%)"',
-		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"','"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%,0)"',
+		'"$max(%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%LASTFM_PLAY_COUNT%,0)"',
 		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"',
 		'"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%)"', '"$max(%2003_PLAYCOUNT%,%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)"', '"$max(%LASTFM_PLAY_COUNT%,%PLAY_COUNT%,%2003_PLAYCOUNT%)"',
 		'%PLAY_COUNT%', '%2003_PLAYCOUNT%',
@@ -137,7 +137,7 @@ XSP.getQuery = function (jsp, bOmitPlaylist = false) {
 		}
 		if (queryRule.length) { query.push(queryRule); }
 	}
-	return (query.length ? queryJoin(query, match) || '' : '');
+	return (query.length ? this.queryJoin(query, match) || '' : '');
 };
 
 XSP.hasQueryPlaylists = function (jsp) {
@@ -151,12 +151,14 @@ XSP.hasQueryPlaylists = function (jsp) {
 XSP.getQueryPlaylists = function (jsp) {
 	const playlist = jsp.playlist;
 	const rules = playlist.rules;
+	const fields = new Set(rules.map((rule) => rule.field));
+	if (fields.has('playlist') && fields.size > 1) { console.log('Warning: XSP Playlist with mixed standard queries and playlists as sources.'); }
 	const query = { is: [], isnot: [] };
 	for (let rule of rules) {
 		const tag = rule.field;
 		const op = rule.operator;
 		const valueArr = rule.value;
-		if (tag !== 'playlist') { console.log('Warning: XSP Playlist with mixed standard queries and playlists as sources.'); continue; }
+		if (tag !== 'playlist') { continue; }
 		switch (op) {
 			case 'is': {
 				query.is = query.is.concat(valueArr);
@@ -236,8 +238,8 @@ XSP.getFbTag = function (tag) {
 					? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"'
 					: '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"'
 				: XSP.isFo2k3
-					?'"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"'
-					:'%PLAY_COUNT%';
+					? '"$max(%PLAY_COUNT%,%2003_PLAYCOUNT%,0)"'
+					: '%PLAY_COUNT%';
 			break;
 		}
 		case 'lastplayed': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
@@ -344,7 +346,7 @@ XSP.getRules = function (querySort) {
 	const bDebug = false;
 	let rules = [];
 	let match = '';
-	let query = stripSort(querySort); // Ensure there is no sort clause
+	let query = this.stripSort(querySort); // Ensure there is no sort clause
 	if (query.length) {
 		const searches = [
 			{ regexp: /\) AND /g, split: [')', 'AND'] },
@@ -359,7 +361,7 @@ XSP.getRules = function (querySort) {
 		const opposites = new Map([['is', 'isnot'], ['contains', 'doesnotcontain'], ['inthelast', 'notinthelast']]);
 		let querySplit = [query];
 		for (let search of searches) {
-			querySplit = recursiveSplit(querySplit, search.regexp, search.split).flat(Infinity);
+			querySplit = this.recursiveSplit(querySplit, search.regexp, search.split).flat(Infinity);
 		}
 
 		let idx = [];
@@ -559,10 +561,11 @@ XSP.getRule = function (query) { // NOSONAR
 	return rule;
 };
 
-if (typeof queryJoin === 'undefined') {
-	const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
-	// Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
-	var queryJoin = function (queryArray, setLogic = 'AND') { // NOSONAR
+// Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
+XSP.queryJoin = typeof queryJoin !== 'undefined'
+	? queryJoin // eslint-disable-line no-undef
+	: function (queryArray, setLogic = 'AND') {
+		const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
 		setLogic = (setLogic || '').toUpperCase();
 		if (!logicDic.includes(setLogic)) {
 			console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
@@ -586,26 +589,28 @@ if (typeof queryJoin === 'undefined') {
 		}
 		return query;
 	};
-}
 
-if (typeof stripSort === 'undefined') {
-	var stripSort = function (query) { // NOSONAR
+XSP.stripSort = typeof stripSort !== 'undefined'
+	? stripSort // eslint-disable-line no-undef
+	: function (query) { // NOSONAR
 		let queryNoSort = query;
-		if (query.includes('SORT')) {
-			if (query.includes(' SORT BY ')) { queryNoSort = query.split(' SORT BY ')[0]; }
-			else if (query.includes(' SORT DESCENDING BY ')) { queryNoSort = query.split(' SORT DESCENDING BY ')[0]; }
-			else if (query.includes(' SORT ASCENDING BY ')) { queryNoSort = query.split(' SORT ASCENDING BY ')[0]; }
+		if (RegExp(/ *SORT .*$/).exec(query)) {
+			if (RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
+			else if (RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
+			else if (RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
+			else { queryNoSort = ''; }
 		}
 		return queryNoSort;
 	};
-}
 
-function recursiveSplit(arr, regExp, split) {
+XSP.recursiveSplit = function recursiveSplit(arr, regExp, split) {
 	let copy;
 	if (Array.isArray(arr)) {
-		copy = arr.map((newArr) => { return recursiveSplit(newArr, regExp, split); });
+		copy = arr.map((newArr) => this.recursiveSplit(newArr, regExp, split));
 	} else {
-		copy = arr.split(regExp).map((item, i, ori) => { return i === ori.length - 1 ? (item.length ? [item] : []) : (item.length ? [item, split] : [split]); }).flat(Infinity);
+		copy = arr.split(regExp)
+			.map((item, i, ori) => i === ori.length - 1 ? (item.length ? [item] : []) : (item.length ? [item, split] : [split]))
+			.flat(Infinity);
 	}
 	return copy;
-}
+};
