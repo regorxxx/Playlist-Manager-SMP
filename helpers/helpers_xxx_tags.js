@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//24/02/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery */
 
@@ -415,9 +415,9 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
  * @name checkQuery
  * @kind function
  * @param {string} query
- * @param {boolean} bAllowEmpty - If false, empty queries are non-valid
- * @param {boolean} bAllowSort? - If false, queries with 'SORT BY' expressions are non-valid
- * @param {boolean} bAllowPlaylist? - If false, queries with '#PLAYLIST#' expressions are non-valid
+ * @param {boolean} bAllowEmpty - [=false] If false, empty queries are non-valid
+ * @param {boolean} bAllowSort - [=false] If false, queries with 'SORT BY' expressions are non-valid
+ * @param {boolean} bAllowPlaylist - [=false] If false, queries with '#PLAYLIST#' expressions are non-valid
  * @returns {boolean}
  */
 function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist = false) {
@@ -488,7 +488,7 @@ function stripSort(query) {
  */
 function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIST'}
 	const query = stripSort(queryOrSort);
-	const sort = query && query.length ? queryOrSort.replace(query, '') : queryOrSort;
+	const sort = ((query && query.length ? queryOrSort.replace(query, '') : queryOrSort) || '').trimStart();
 	/** @type {{direction?:number|string, tf?:FbTitleFormat, tag?:string}} */
 	let sortObj = null;
 	if (sort.length) {
