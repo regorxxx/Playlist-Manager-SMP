@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/01/25
+//24/02/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -69,6 +69,7 @@ function createMenuLeft(forcedIndex = -1) {
 		fb.ShowPopupMessage('Selected index was -1 on createMenuLeft() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
+	/** @type {PlaylistObj} */
 	const pls = list.data[z];
 	if (!pls) {
 		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
@@ -216,7 +217,10 @@ function createMenuLeft(forcedIndex = -1) {
 						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (pls.extension === '.xsp' ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
 						catch (e) { return; }
 						const bPlaylist = newQuery.includes('#PLAYLIST# IS');
-						if (!bPlaylist && !checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
+						let sortFromQuery = newQuery;
+						newQuery = stripSort(newQuery);
+						sortFromQuery = sortFromQuery.replace(newQuery, '').trimStart();
+						if (!bPlaylist && !checkQuery(newQuery)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
 						if (pls.extension === '.xsp') {
 							const { rules } = XSP.getRules(newQuery);
 							if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return; }
@@ -226,14 +230,15 @@ function createMenuLeft(forcedIndex = -1) {
 								console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
 							}
 						}
-						if (newQuery !== pls.query) {
+						if (newQuery !== pls.query || (sortFromQuery && sortFromQuery !== pls.sort)) {
 							const bDone = pls.extension === '.xsp' ? rewriteXSPQuery(pls, newQuery) : true;
 							if (bDone) {
 								list.editData(pls, {
 									query: newQuery,
+									sort: sortFromQuery || pls.sort || '',
 									size: bPlaylist
 										? '?'
-										: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)).Count,
+										: fb.GetQueryItems(fb.GetLibraryItems(), newQuery).Count,
 									modified: Date.now()
 								});
 								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
@@ -2614,6 +2619,9 @@ function createMenuRightTop() {
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = list.properties.lBrainzToken[1].length > 0;
 	const lb = ListenBrainz;
+	const getColorName = (val) => val !== -1 && val !== null && typeof val !== 'undefined'
+		? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown'
+		: '-none-';
 	// Enabled menus
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Entries
@@ -3778,9 +3786,6 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
-			const getColorName = (val = -1) => {
-				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
-			}; // From statistics
 			const subMenuName = menu.newMenu('Set custom colors', menuName);
 			{
 				const subMenuNameTwo = menu.newMenu('List items', subMenuName);
@@ -4715,9 +4720,6 @@ function createMenuRightTop() {
 			}, optionsLength);
 		}
 		{	// Colors
-			const getColorName = (val = -1) => {
-				return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
-			}; // From statistics
 			menu.newEntry({ menuName, entryText: 'Set color...' + '\t' + _b(getColorName(list.colors.folder)), func: () => createMenuRightTop().btn_up(void (0), void (0), void (0), 'List items\\Folders...') });
 		}
 		menu.newSeparator();
