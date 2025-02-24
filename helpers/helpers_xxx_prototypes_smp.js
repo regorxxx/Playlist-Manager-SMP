@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/02/25
+//24/02/25
 
 /* exported extendGR */
 
@@ -230,10 +230,17 @@ Object.defineProperty(fb, 'queryCache', {
 	value: new Map()
 });
 
+Object.defineProperty(fb, 'queryCacheUsed', {
+	enumerable: true,
+	configurable: false,
+	writable: true,
+	value: false
+});
+
 fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query = 'ALL', bCache = false) => {
 	let outputHandleList;
 	const id = handleList.Count + ' - ' + query;
-	bCache = bCache && fb.queryCache.has(id); // eslint-disable-line no-prototype-builtins
+	fb.queryCacheUsed = bCache = bCache && fb.queryCache.has(id); // eslint-disable-line no-prototype-builtins
 	if (bCache) {
 		outputHandleList = fb.queryCache.get(id);
 	} else {

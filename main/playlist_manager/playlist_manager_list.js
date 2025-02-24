@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/02/25
+//24/02/25
 
 /* exported _list */
 
@@ -276,7 +276,7 @@ function _list(x, y, w, h) {
 				});
 			}
 		}
-		if (current === -1) {
+		if (current !== -1) {
 			let maxVal = 0;
 			if (this.columns.bShown[current]) {
 				const val = this.columns.width[current];
@@ -2700,6 +2700,7 @@ function _list(x, y, w, h) {
 			const threshold = 0.75;
 			const library = fb.GetLibraryItems();
 			let match;
+			let bUpdateMeta;
 			const getHandleList = (pls) => {
 				let handleList;
 				const idx = plman.FindPlaylist(pls.nameId);
@@ -2707,13 +2708,23 @@ function _list(x, y, w, h) {
 				if (handleList === null) {
 					if (pls.isAutoPlaylist) {
 						handleList = fb.GetQueryItemsCheck(library, stripSort(pls.query), true); // Cached
+						if (fb.queryCacheUsed) {bUpdateMeta = true;}
 					} else if (pls.path.length) {
 						handleList = this.plsCache.get(pls.path);
 						if (!handleList) {
-							handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
+							const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+							handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
 							this.plsCache.set(pls.path, handleList);
+							bUpdateMeta = true;
 						}
 					}
+				}
+				if (handleList && bUpdateMeta) {
+					this.editData(pls, {
+						size: handleList.Count,
+						duration: handleList.CalcTotalDuration(),
+						trackSize: handleList.CalcTotalSize()
+					}, false, true);
 				}
 				return handleList;
 			};
@@ -3949,7 +3960,10 @@ function _list(x, y, w, h) {
 						fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON');
 						return;
 					}
-					const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+					let handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+					if (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) {
+						handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
+					}
 					item.size = handleList.Count;
 					item.duration = round(handleList.CalcTotalDuration(), 2);
 					item.trackSize = round(handleList.CalcTotalSize(), 2);
@@ -4358,6 +4372,7 @@ function _list(x, y, w, h) {
 		if (currentItemIndex === -1) { this.offset = 0; }
 		if (bRepaint) {
 			if (this.offset + this.rows >= this.items) { this.offset = Math.max(this.items - this.rows, 0); }
+			this.calcRowWidthCache = null;
 			this.repaint();
 		}
 	};
@@ -4704,6 +4719,7 @@ function _list(x, y, w, h) {
 		} else if (!bSkipSel) { this.indexes.length = 0; }
 		if (bMaintainFocus) { this.jumpLastPosition(focusOptions); }
 		if (bPaint) {
+			this.calcRowWidthCache = null;
 			this.repaint(false, this.uiElements['Bottom toolbar'].enabled ? 'all' : 'list');
 		}
 	};
@@ -4890,7 +4906,7 @@ function _list(x, y, w, h) {
 									clearInterval(id);
 									Promise.wait(200 * i).then(() => {
 										const test = this.logOpt.profile ? new FbProfiler('Refresh AutoPlaylist') : null;
-										const handleList = cacheAutoPlaylists(item);
+										const handleList = getQueryPlaylistHandles.call(this, item);
 										if (test) { test.Print(item.nameId); }
 										const size = handleList ? handleList.Count : 0;
 										const duration = handleList ? round(handleList.CalcTotalDuration(), 2) : 0;
@@ -6054,10 +6070,15 @@ function _list(x, y, w, h) {
 			try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', 'Playlist Manager: AutoPlaylist query', newQuery, true); }
 			catch (e) { return null; }
 		}
-		if (!checkQuery(newQuery, false, true)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, 'Playlist Manager: AutoPlaylist query'); return null; }
-		const newSort = !hasSort || bEdit
+		let sortFromQuery = newQuery;
+		newQuery = stripSort(newQuery);
+		sortFromQuery = sortFromQuery.replace(newQuery, '').trimStart();
+		if (!checkQuery(newQuery)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, 'Playlist Manager: AutoPlaylist query'); return null; }
+		const newSort = !sortFromQuery && (!hasSort || bEdit)
 			? utils.InputBox(window.ID, 'Enter sort pattern:\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', 'Playlist Manager: AutoPlaylist sort', hasSort ? pls.sort : '')
-			: (hasSort ? pls.sort : '');
+			: hasSort
+				? pls.sort
+				: sortFromQuery || '';
 		if (newSort.length && !checkSort(newSort)) {
 			fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', 'Playlist Manager: AutoPlaylist sort');
 			return null;
@@ -6071,7 +6092,7 @@ function _list(x, y, w, h) {
 		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
 		const handleList = hasSize && hasQuery && pls.query === newQuery
 			? null
-			: fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery));
+			: fb.GetQueryItems(fb.GetLibraryItems(), newQuery);
 		const queryCount = hasSize && hasQuery && pls.query === newQuery
 			? pls.size
 			: handleList.Count;
@@ -6160,11 +6181,21 @@ function _list(x, y, w, h) {
 				return null;
 			}
 		}
-		const newSort = !hasSort || bEdit ? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', 'Playlist Manager: Smart Playlist sort', hasSort ? pls.sort : '') : (hasSort ? pls.sort : '');
+		let sortFromQuery = newQuery;
+		newQuery = stripSort(newQuery);
+		sortFromQuery = sortFromQuery.replace(newQuery, '').trimStart();
+		const newSort = !sortFromQuery && (!hasSort || bEdit)
+			? utils.InputBox(window.ID, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', 'Playlist Manager: Smart Playlist sort', hasSort ? pls.sort : '')
+			: hasSort
+				? pls.sort
+				: sortFromQuery || '';
 		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', 'Playlist Manager: Smart Playlist sort'); return null; }
 		const newForced = false;
 		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
-		const handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(newQuery)) : null);
+		let handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), newQuery) : null);
+		if (this.bRemoveDuplicatesSmartPls) {
+			handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
+		}
 		const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (!bPlaylist ? handleList.Count : '?');
 		const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (!bPlaylist ? handleList.CalcTotalDuration() : -1);
 		const trackSize = hasSize && hasQuery && pls.query === newQuery ? pls.trackSize : (!bPlaylist ? handleList.CalcTotalSize() : -1);
@@ -6436,6 +6467,7 @@ function _list(x, y, w, h) {
 					} else {
 						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
 						this.editData(pls, {
+							size: handleList.Count,
 							duration: handleList.CalcTotalDuration(),
 							trackSize: handleList.CalcTotalSize()
 						}, false);
@@ -8027,12 +8059,15 @@ function _list(x, y, w, h) {
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process
-function cacheAutoPlaylists(pls) {
+function getQueryPlaylistHandles(pls) {
 	let handleList = null;
 	if (!checkQuery(pls.query, false, true)) {
 		if (!pls.query.includes('#PLAYLIST# IS')) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); }
 	} else {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true); // Cache output
+		if (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) {
+			handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
+		}
 	}
 	return handleList;
 }
@@ -8042,16 +8077,19 @@ function cachePlaylist(pls) {
 	if (pls.isAutoPlaylist && pls.extension !== '.ui') {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true);
 	} else if (pls.path.length) {
-		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
+		const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl,bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
 		this.plsCache.set(pls.path, handleList);
 	}
 	if (handleList) {
 		this.editData(pls, {
+			size: handleList.Count,
 			duration: handleList.CalcTotalDuration(),
 			trackSize: handleList.CalcTotalSize()
 		}, false, true);
 	} else if (handleList === null) {
 		this.editData(pls, {
+			size: 0,
 			duration: 0,
 			trackSize: 0
 		}, false, true);
