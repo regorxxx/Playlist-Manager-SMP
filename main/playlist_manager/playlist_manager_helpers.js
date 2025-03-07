@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/25
+//07/03/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -864,7 +864,7 @@ function clonePlaylistFile(list, z, ext, toFolder) {
 		: fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
-	const subsongRegex = /,\d*$/g;
+	const subsongRegex = /,\d*$/;
 	paths.forEach((trackPath) => {
 		if (!testPath(trackPath.replace(subsongRegex, ''), list.playlistsPath) && !_isLink(trackPath)) { report.push(trackPath); }
 	});
@@ -1090,7 +1090,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	const handleList = !bUI
 		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle, bMultiple })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
-	const subsongRegex = /,\d*$/g;
+	const subsongRegex = /,\d*$/;
 	const paths = !bUI && !bXSP
 		? getFilePathsFromPlaylist(playlistPath)
 		: fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
@@ -1219,7 +1219,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			const sortObj = pls.sort && pls.sort.length ? getSortObj(pls.sort) : null;
 			if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }
 			if (sortObj) { handleList.OrderByFormat(sortObj.tf, sortObj.direction); }
-			const subsongRegex = /,\d*$/g;
+			const subsongRegex = /,\d*$/;
 			const paths = fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
 			const root = utils.SplitFilePath(newPath)[0];
 			_setClipboardData(root);
@@ -1553,7 +1553,7 @@ function findExternal() {
 		const total = playlists.length - 1;
 		const promises = [];
 		let prevProgress = -1;
-		const subsongRegex = /,\d*$/g;
+		const subsongRegex = /,\d*$/;
 		playlists.forEach((playlist, i) => {
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
@@ -1595,13 +1595,16 @@ function findDead() {
 		const promises = [];
 		let prevProgress = -1;
 		let iDelay = 0;
-		const subsongRegex = /,\d*$/g;
+		const subsongRegex = /,\d*$/;
 		playlists.forEach((playlist, i) => {
 			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise((resolve) => {
 				setTimeout(() => {
 					const bUI = playlist.extension === '.ui';
-					const filePaths = (!bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))).map((path) => { return path.replace(subsongRegex, ''); });
+					const filePaths = (!bUI
+						? getFilePathsFromPlaylist(playlist.path)
+						: fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))
+					).map((path) => path.replace(subsongRegex, ''));
 					// Skip streams & look for absolute and relative paths (with and without .\)
 					const bDead = filePaths.some((path) => {
 						return !testPath(path, list.playlistsPath) && !_isLink(path);
@@ -1884,7 +1887,7 @@ function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 	const report = [];
 	mode = mode.toLowerCase();
 	const filterFunc = mode === 'pls'
-		? (pls) => !pls.isAutoPlaylist && pls.extension === '.xsp' && !pls.isFolder
+		? (pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder
 		: mode === 'autopls'
 			? (pls) => pls.isAutoPlaylist || (Object.hasOwn(pls, 'type') && pls.type === 'songs')
 			: (pls) => !pls.isFolder;
@@ -1894,7 +1897,7 @@ function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 		const promises = [];
 		let prevProgress = -1;
 		let iDelay = 0;
-		const subsongRegex = /,\d*$/g;
+		const subsongRegex = /,\d*$/;
 		playlists.forEach((playlist, i) => {
 			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
 			promises.push(new Promise((resolve) => {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/25
+//07/03/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -70,7 +70,7 @@ const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
-const pathTF = '$put(path,$replace(%_PATH_RAW%,\'file://\',))$if($stricmp($ext($get(path)),iso),\',\'%SUBSONG%,)';
+const pathTF = '$puts(ext,$lower($ext(%_PATH_RAW%)))$replace(%_PATH_RAW%,\'file://\',)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
 
 /*
 	Playlist file manipulation
@@ -788,7 +788,9 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 		handlePlaylist = [...Array(playlistLength)];
 		const poolItems = fb.GetLibraryItems();
 		const poolItemsCount = poolItems.Count;
-		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
+		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count
+			? libItemsAbsPaths
+			: fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
 		const newLibItemsRelPaths = relPath.length
 			? (Object.hasOwn(libItemsRelPaths, relPath) && libItemsRelPaths[relPath].length === poolItems.Count
 				? libItemsRelPaths[relPath]
@@ -967,7 +969,9 @@ function arePathsInMediaLibrary(filePaths, relPath = '') {
 	const playlistLength = filePaths.length;
 	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
-	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItemsCount ? libItemsAbsPaths : fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
+	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItemsCount
+		? libItemsAbsPaths
+		: fb.TitleFormat(pathTF).EvalWithMetadbs(poolItems);
 	const poolItemsAbsPaths = new Set(newLibItemsAbsPaths.map((path) => { return path.toLowerCase(); }));
 	const newLibItemsRelPaths = relPath.length ? (Object.hasOwn(libItemsRelPaths, relPath) && libItemsRelPaths[relPath].length === poolItemsCount ? libItemsRelPaths[relPath] : getRelPaths(newLibItemsAbsPaths, relPath)) : null; // Faster than tf again
 	const poolItemsRelPaths = newLibItemsRelPaths ? new Set(newLibItemsRelPaths.map((path) => { return path.toLowerCase(); })) : null;

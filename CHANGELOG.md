@@ -135,6 +135,7 @@
 ### Removed
 - UI: unnecessary playlist refresh after changing fonts size.
 ### Fixed
+- Subsongs: fixed path handling for tracks with subsongs for any source different than ISO files (it was broken due to an un-tested change on previous versions). It should now properly handle all cases, even DSD files in .DSF and .WV formats (which report wrong 1 idx value).
 - Search: last search not being applied on startup in some cases.
 - Auto-loading: manager kept reloading playlist files (auto-load) when tags, categories, etc. where changed via menus due to physical file changes.
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
