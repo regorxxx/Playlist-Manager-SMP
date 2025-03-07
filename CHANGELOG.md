@@ -139,6 +139,7 @@
 - Search: last search not being applied on startup in some cases.
 - Auto-loading: manager kept reloading playlist files (auto-load) when tags, categories, etc. where changed via menus due to physical file changes.
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
+- Playlists maintenance tools: fixed 'Subsong items' maintenance tool report, which did output a wrong number of found items.
 - Exporting Playlists: 'Export and convert' not working properly with UI-only AutoPlaylists and Smart Playlists.
 - Exporting Playlists: fixed output path option (without a popup asking for it) and filename presets introduced on [0.17.0](#0170---2024-07-24) not working for AutoPlaylists and Smart Playlists.
 - Folders: 'Move to folder' submenu was missing nested folders if they were not expanded. Now they are shown, although folders not present in current view/filter state, are still hidden.
