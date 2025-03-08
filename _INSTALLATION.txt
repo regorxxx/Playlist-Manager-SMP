@@ -45,11 +45,12 @@ Some scripts may require additional files or dependencies (like fonts). Check th
 (at '_SCRIPTS_SUMMARY.tx') for more details, the github page or the related pdf documentation at
 'readmes' folder (if available).
 
-(*) If you upgraded to >1.6 from an older portable version then it may be possible that the 'profile'
-folder does not exist. Ask at foobar forums for further support.
+(*) If you upgraded to >1.6 from an older portable version then it may be possible that the ’profile’
+folder does not exist. In such case you have to create it and move all the configuration folders/files
+to it (ask for support at the forum in this case).
 
-SMP 1.5.2+ WIN 11 BUG (crash loading scripts):
-----------------------------------------------------
+SMP 1.5.2+ WIN 11 BUG (crash loading scripts on portable installs):
+-------------------------------------------------------------------
 After loading a script into a panel, the panel may crash if foobar does not has the required [full]
 access to the folder where the scripts reside. This may happen in portable installations since Win 11
 restrict permissions to folders outside 'Program Files' or 'Users'. Ask at foobar forums for support.
