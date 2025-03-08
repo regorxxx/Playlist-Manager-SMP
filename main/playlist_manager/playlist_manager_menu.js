@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/02/25
+//08/03/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -2668,7 +2668,6 @@ function createMenuRightTop() {
 				window.Reload();
 			}
 		});
-		menu.newEntry({ entryText: 'Open playlists folder', func: () => { _explorer(list.playlistsPath); } });
 		menu.newSeparator();
 	}
 	if (!list.uiElements['Header buttons'].elements['Filter and sorting'].enabled) {
@@ -3257,7 +3256,7 @@ function createMenuRightTop() {
 				}
 			});
 		}
-		if (showMenus['Tags']) { menu.newSeparator(menuName); }
+		if (showMenus['Tags'] || showMenus['Folders']) { menu.newSeparator(menuName); }
 		if (showMenus['Tags']) {	// Playlist AutoTags & Actions
 			const subMenuName = menu.newMenu('Playlist AutoTags and actions', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file\'s Tags relatad actions:', flags: MF_GRAYED });
@@ -3385,9 +3384,67 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTagAlways);
 			}
 		}
+		if (showMenus['Folders']) {	// Folder destination
+			{
+				const subMenuName = menu.newMenu('Auto-add playlists to folder', menuName);
+				menu.newEntry({ menuName: subMenuName, entryText: 'Set destination of new playlists:', flags: MF_GRAYED });
+				menu.newSeparator(subMenuName);
+				const options = [
+					list.bAllPls ? { name: 'External UI-only playlists', rule: 'externalUi' } : null,
+					list.bAllPls ? { name: 'UI-only playlists from panel', rule: 'internalUi' } : null,
+					{ name: 'Any playlist from selection', rule: 'plsFromSel' },
+					{ name: 'Any other case', rule: 'others' }
+				].filter(Boolean);
+				options.forEach((opt) => {
+					const folder = list.folderRules[opt.rule];
+					menu.newEntry({
+						menuName: subMenuName, entryText: opt.name + (folder.length ? '\t' + _p(folder) : ''), func: () => {
+							const input = Input.string(
+								'string',
+								folder,
+								'Set destination folder:\n(if it does not exist, a new one will be created)',
+								window.Name,
+								'My new playlists'
+							);
+							if (input === null) { return; }
+							list.folderRules[opt.rule] = input;
+							list.properties['folderRules'][1] = JSON.stringify(list.folderRules);
+							overwriteProperties(list.properties);
+						}
+					});
+					menu.newCheckMenuLast(() => !!list.folderRules[opt.rule].length);
+				});
+			}
+		}
+		{	// File deletion
+			menu.newSeparator(menuName);
+			{
+				const subMenuName = menu.newMenu('Playlist deletion', menuName);
+				menu.newEntry({ menuName: subMenuName, entryText: 'Bound UI-only playlist:', flags: MF_GRAYED });
+				menu.newSeparator(subMenuName);
+				const options = [
+					'Always ask with popups',
+					'Delete both (file and bound playlist)',
+					'Only delete the playlist file'
+				];
+				options.forEach((entryText, i) => {
+					menu.newEntry({
+						menuName: subMenuName, entryText, func: () => {
+							list.properties['deleteBehavior'][1] = i;
+							overwriteProperties(list.properties);
+						}
+					});
+				});
+				menu.newCheckMenuLast(() => list.properties['deleteBehavior'][1], options.length);
+			}
+		}
+	}
+	menu.newSeparator();
+	{	// Export/Import settings
+		const menuName = menu.newMenu('File import/export');
 		if (!list.bLiteMode) {	// Export and Converter settings
 			menu.newSeparator(menuName);
-			{	//Export and copy
+			{	// Export and copy
 				const subMenuName = menu.newMenu('Export and copy', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED });
 				menu.newSeparator(subMenuName);
@@ -3399,7 +3456,7 @@ function createMenuRightTop() {
 				});
 				menu.newCheckMenuLast(() => list.properties['bCopyAsync'][1]);
 			}
-			{	//Export and convert
+			{	// Export and convert
 				const subMenuName = menu.newMenu('Export and convert', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of exporting presets:', flags: MF_GRAYED });
 				menu.newSeparator(subMenuName);
@@ -3560,9 +3617,9 @@ function createMenuRightTop() {
 				});
 			}
 		}
-		{
+		{	// Import from file
 			menu.newSeparator(menuName);
-			{	//Export and copy
+			{
 				const subMenuName = menu.newMenu('Import from file \\ url', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of import tool:', flags: MF_GRAYED });
 				menu.newSeparator(subMenuName);
@@ -3583,65 +3640,10 @@ function createMenuRightTop() {
 				});
 			}
 		}
-		{	// File deletion
-			menu.newSeparator(menuName);
-			{
-				const subMenuName = menu.newMenu('Playlist deletion', menuName);
-				menu.newEntry({ menuName: subMenuName, entryText: 'Bound UI-only playlist:', flags: MF_GRAYED });
-				menu.newSeparator(subMenuName);
-				const options = [
-					'Always ask with popups',
-					'Delete both (file and bound playlist)',
-					'Only delete the playlist file'
-				];
-				options.forEach((entryText, i) => {
-					menu.newEntry({
-						menuName: subMenuName, entryText, func: () => {
-							list.properties['deleteBehavior'][1] = i;
-							overwriteProperties(list.properties);
-						}
-					});
-				});
-				menu.newCheckMenuLast(() => list.properties['deleteBehavior'][1], options.length);
-			}
-		}
-		if (showMenus['Folders']) {	// Folder destination
-			menu.newSeparator(menuName);
-			{
-				const subMenuName = menu.newMenu('Auto-add playlists to folder', menuName);
-				menu.newEntry({ menuName: subMenuName, entryText: 'Set destination of new playlists:', flags: MF_GRAYED });
-				menu.newSeparator(subMenuName);
-				const options = [
-					list.bAllPls ? { name: 'External UI-only playlists', rule: 'externalUi' } : null,
-					list.bAllPls ? { name: 'UI-only playlists from panel', rule: 'internalUi' } : null,
-					{ name: 'Any playlist from selection', rule: 'plsFromSel' },
-					{ name: 'Any other case', rule: 'others' }
-				].filter(Boolean);
-				options.forEach((opt) => {
-					const folder = list.folderRules[opt.rule];
-					menu.newEntry({
-						menuName: subMenuName, entryText: opt.name + (folder.length ? '\t' + _p(folder) : ''), func: () => {
-							const input = Input.string(
-								'string',
-								folder,
-								'Set destination folder:\n(if it does not exist, a new one will be created)',
-								window.Name,
-								'My new playlists'
-							);
-							if (input === null) { return; }
-							list.folderRules[opt.rule] = input;
-							list.properties['folderRules'][1] = JSON.stringify(list.folderRules);
-							overwriteProperties(list.properties);
-						}
-					});
-					menu.newCheckMenuLast(() => !!list.folderRules[opt.rule].length);
-				});
-			}
-		}
 	}
 	menu.newSeparator();
 	{	// UI
-		const menuName = menu.newMenu('UI');
+		const menuName = menu.newMenu('Panel UI');
 		{	// Playlist Size
 			const subMenuName = menu.newMenu('Show Playlist size', menuName);
 			const options = ['Yes: Shown along the playlist name', 'No: Only shown on tooltip/columns'];
@@ -5256,6 +5258,7 @@ function createMenuRightTop() {
 		}
 	});
 	menu.newSeparator();
+	menu.newEntry({ entryText: 'Open playlists folder...', func: () => { _explorer(list.playlistsPath); } });
 	{	// Readme
 		const path = folders.xxx + 'readmes\\playlist_manager.pdf';
 		menu.newEntry({

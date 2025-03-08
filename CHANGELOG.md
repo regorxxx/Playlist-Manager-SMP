@@ -85,6 +85,7 @@
 - Search: searching by tracks' paths now includes AutoPlaylists.
 - Exporting Playlists: pressing SHIFT when clicking on any of the 'Export and convert' menu entries will skip tracks conversion and exporting and only process the playlist file. The submenu shows now this tip at the header. [Issue 86](https://github.com/regorxxx/Playlist-Manager-SMP/issues/86).
 - Exporting Playlists: 'Export and convert' action on folders or multi-selection will now collect all tracks first and fire a single converter thread for them, instead of one converter window per playlist. Total number of tracks which will be converted is shown on console.
+- Exporting Playlists: updated preset for FiiO devices to handle Cyrillic and other special chars.
 - Folders: added support for 'External UI-only playlists' on destination folder for newly created playlists according to their format or action. [Issue 83](https://github.com/regorxxx/Playlist-Manager-SMP/issues/83).
 - Folders: 'Move to folder' submenus now also display the entire folder tree instead of a plain list with all folders. i.e. a folder containing folders will have its own submenu, etc. In any case folders are still sorted by name.
 - Instances manager: simplified the way multiple panels are handled (and library cache shared); it should work better now, without the need for an external file. Old method may also be used if new one gives problems on startup (see below).
@@ -122,6 +123,7 @@
 - UI: playlist metadata (like size) is now updated when using the search tool if data was not cached.
 - UI: modified and created date on tooltip is now shown as DD/MM/YYYY HH:SS.
 - UI: clean up of 'List menu' entries to improve ease of usage.
+- UI: clean up of 'Settings menu' entries to improve ease of usage. Import/export settings are now moved to its own submenu and renamed/moved a few other entries.
 - UI: bottom toolbar is now adjusted to the font size settings.
 - UI: improved bottom toolbar buttons size adjustment according to filter/sorting method.
 - UI: improved multiple elements size adjustments according to font size.
