@@ -79,6 +79,8 @@
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
+- Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
+- Installation: multiple improvements to path handling for portable and non-portable installations. By default scripts will always try to use only relative paths to the profile folder, so scripts will work without any change when exporting the profile to any other installation. This change obviously doesn't apply to already existing installations unless restoring defaults.
 - Playlist formats: already saved tracks file size and duration values will be rounded to 2 decimals on first init (after updating).
 - Search: searching by tracks' paths now includes AutoPlaylists.
 - Exporting Playlists: pressing SHIFT when clicking on any of the 'Export and convert' menu entries will skip tracks conversion and exporting and only process the playlist file. The submenu shows now this tip at the header. [Issue 86](https://github.com/regorxxx/Playlist-Manager-SMP/issues/86).

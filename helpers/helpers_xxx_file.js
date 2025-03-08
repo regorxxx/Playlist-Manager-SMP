@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/01/25
+//07/03/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
 
@@ -106,20 +106,22 @@ function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which
 	return '';
 }
 
+function _resolvePath(path) {
+	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
+	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
+	return path;
+}
+
 function _isFile(file) {
+	file = _resolvePath(file);
 	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsFile(file); } catch (e) { return false; } }
-	else {
-		if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
-		return isString(file) ? fso.FileExists(file) : false;
-	}
+	else { return isString(file) ? fso.FileExists(file) : false; }
 }
 
 function _isFolder(folder) {
+	folder = _resolvePath(folder);
 	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsDirectory(folder); } catch (e) { return false; } }
-	else {
-		if (folder.startsWith('.\\')) { folder = fb.FoobarPath + folder.replace('.\\', ''); }
-		return isString(folder) ? fso.FolderExists(folder) : false;
-	}
+	else { return isString(folder) ? fso.FolderExists(folder) : false; }
 }
 
 function _isLink(path) {
@@ -129,9 +131,11 @@ function _isLink(path) {
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
 	if (!folder.length) { return false; }
+	folder = _resolvePath(folder);
 	if (!_isFolder(folder)) {
-		if (folder.startsWith('.\\')) { folder = fb.FoobarPath + folder.replace('.\\', ''); }
-		const subFolders = folder.split('\\').map((_, i, arr) => { return i ? arr.slice(0, i).reduce((path, name) => { return path + '\\' + name; }) : _; });
+		const subFolders = folder.split('\\').map((_, i, arr) => {
+			return i ? arr.slice(0, i).reduce((path, name) => { return path + '\\' + name; }) : _;
+		});
 		subFolders.forEach((path) => {
 			try {
 				fso.CreateFolder(path);
@@ -146,8 +150,8 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 
 // Delete. Can not be undone.
 function _deleteFile(file, bForce = true) {
+	file = _resolvePath(file);
 	if (_isFile(file)) {
-		if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
 		try {
 			fso.DeleteFile(file, bForce);
 		} catch (e) {
@@ -160,8 +164,8 @@ function _deleteFile(file, bForce = true) {
 
 // Delete. Can not be undone.
 function _deleteFolder(folder, bForce = true) {
+	folder = _resolvePath(folder);
 	if (_isFolder(folder)) {
-		if (folder.startsWith('.\\')) { folder = fb.FoobarPath + folder.replace('.\\', ''); }
 		if (folder.endsWith('\\')) { folder = folder.slice(0, -1); }
 		try {
 			fso.DeleteFolder(folder, bForce);
@@ -176,11 +180,11 @@ function _deleteFolder(folder, bForce = true) {
 // Rename/move
 function _renameFile(oldFilePath, newFilePath) {
 	if (!newFilePath.length) { return; }
+	oldFilePath = _resolvePath(oldFilePath);
+	newFilePath = _resolvePath(newFilePath);
 	if (oldFilePath === newFilePath) { return true; }
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
-			if (oldFilePath.startsWith('.\\')) { oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\', ''); }
-			if (newFilePath.startsWith('.\\')) { newFilePath = fb.FoobarPath + newFilePath.replace('.\\', ''); }
 			const filePath = utils.SplitFilePath(newFilePath)[0];
 			if (!_isFolder(filePath)) { _createFolder(filePath); }
 			try {
@@ -198,11 +202,11 @@ function _renameFile(oldFilePath, newFilePath) {
 // Copy
 function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 	if (!newFilePath.length) { return; }
+	oldFilePath = _resolvePath(oldFilePath);
+	newFilePath = _resolvePath(newFilePath);
 	if (oldFilePath === newFilePath) { return true; }
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
-			if (oldFilePath.startsWith('.\\')) { oldFilePath = fb.FoobarPath + oldFilePath.replace('.\\', ''); }
-			if (newFilePath.startsWith('.\\')) { newFilePath = fb.FoobarPath + newFilePath.replace('.\\', ''); }
 			const filePath = utils.SplitFilePath(newFilePath)[0];
 			if (!_isFolder(filePath)) { _createFolder(filePath); }
 			try {
@@ -222,8 +226,8 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 // Otherwise file would be removed without sending to recycle bin!
 // Use utils.IsKeyPressed(VK_SHIFT) and debouncing as workaround when external exe must not be run
 function _recycleFile(file, bCheckBin = false) {
+	file = _resolvePath(file);
 	if (_isFile(file)) {
-		if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
 		let bIsBin = true;
 		if (bCheckBin && !_hasRecycleBin(file.match(/^(.+?:)/g)[0])) { bIsBin = false; }
 		if (bIsBin) {
@@ -249,8 +253,8 @@ function _recycleFile(file, bCheckBin = false) {
 // Restores file from the recycle Bin, you must pass the original path.
 // Beware of collisions... same file deleted 2 times has the same virtual name on bin...
 function _restoreFile(file) {
+	file = _resolvePath(file);
 	if (!_isFile(file)) {
-		if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
 		const arr = utils.SplitFilePath(file);
 		const OriginalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let numItems, items;
@@ -274,6 +278,7 @@ function _restoreFile(file) {
 }
 
 function _getAttrFile(file) {
+	file = _resolvePath(file);
 	if (!_isFile(file)) { return null; }
 	const fileObj = fso.GetFile(file);
 	if (!fileObj) { return null; }
@@ -281,6 +286,7 @@ function _getAttrFile(file) {
 }
 
 function _parseAttrFile(file) {
+	file = _resolvePath(file);
 	let attr = _getAttrFile(file);
 	if (!attr) { return null; }
 	const attrObj = Object.fromEntries(Object.keys(fileAttr).map((_) => [_, false]));
@@ -290,8 +296,8 @@ function _parseAttrFile(file) {
 }
 
 function _open(file, codePage = 0) {
+	file = _resolvePath(file);
 	if (_isFile(file)) {
-		if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
 		return tryMethod('ReadTextFile', utils)(file, codePage) || '';  // Bypasses crash on file locked by other process
 	} else {
 		return '';
@@ -299,7 +305,7 @@ function _open(file, codePage = 0) {
 }
 
 function _save(file, value, bBOM = false) {
-	if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
+	file = _resolvePath(file);
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) { _createFolder(filePath); }
 	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.Name + ': JSON saving'); }
@@ -313,7 +319,7 @@ function _save(file, value, bBOM = false) {
 }
 
 function _saveFSO(file, value, bUTF16) {
-	if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
+	file = _resolvePath(file);
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) { _createFolder(filePath); }
 	if (_isFolder(filePath)) {
@@ -329,7 +335,7 @@ function _saveFSO(file, value, bUTF16) {
 }
 
 function _saveSplitJson(file, value, replacer = void (0), space = void (0), splitBy = 50000, bBOM = false) {
-	if (file.startsWith('.\\')) { file = fb.FoobarPath + file.replace('.\\', ''); }
+	file = _resolvePath(file);
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) { _createFolder(filePath); }
 	if (_isFolder(filePath)) {
@@ -362,6 +368,7 @@ function _jsonParseFile(file, codePage = 0) {
 }
 
 function _jsonParseFileSplit(filePath, codePage = 0) {
+	filePath = _resolvePath(filePath);
 	const [path, fileName, extension] = utils.SplitFilePath(filePath);
 	const files = utils.Glob(path + '\\' + fileName + '*' + extension);
 	let result = [];
@@ -377,6 +384,7 @@ function _jsonParseFileSplit(filePath, codePage = 0) {
 }
 
 function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name, codePage = 0) {
+	file = _resolvePath(file);
 	let data = null;
 	if (_isFile(file)) {
 		data = _jsonParseFile(file, codePage);
@@ -393,7 +401,7 @@ function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name, c
 
 // Opens explorer on file (and selects it) or folder
 function _explorer(fileOrFolder) {
-	if (fileOrFolder.startsWith('.\\')) { fileOrFolder = fb.FoobarPath + fileOrFolder.replace('.\\', ''); }
+	fileOrFolder = _resolvePath(fileOrFolder);
 	if (fileOrFolder.startsWith('::{')) { // Virtual folder
 		WshShell.Run('explorer /e, ' + fileOrFolder);
 		return true; // There is no way to know if the explorer window got opened at the right path...
@@ -412,6 +420,7 @@ function _explorer(fileOrFolder) {
 
 // Workaround for bug on win 7 on utils.Glob(), matching extensions with same chars: utils.Glob(*.m3u) returns *.m3u8 files too
 function getFiles(folderPath, extensionSet) {
+	folderPath = _resolvePath(folderPath);
 	return utils.Glob(folderPath + '*.*').filter((item) => {
 		return extensionSet.has('.' + item.split('.').pop().toLowerCase());
 	});
@@ -463,6 +472,7 @@ function _exec(command) {
 function editTextFile(filePath, originalString, newString, bBOM = false) {
 	let bDone = false;
 	let reason = -1;
+	filePath = _resolvePath(filePath);
 	if (_isFile(filePath)) {
 		let fileText = _open(filePath);
 		const extension = utils.SplitFilePath(filePath)[2];
@@ -518,6 +528,7 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 }
 
 function findRecursivePaths(path = fb.ProfilePath) {
+	path = _resolvePath(path);
 	let arr = [], pathArr = [];
 	arr = utils.Glob(path + '*.*', 0x00000020); // Directory
 	arr.forEach((subPath) => {
@@ -529,9 +540,14 @@ function findRecursivePaths(path = fb.ProfilePath) {
 	return pathArr;
 }
 
+function findRecursiveDirs(path = fb.ProfilePath) {
+	return findRecursivePaths(path).map((dir) => dir.replace(path, ''));
+}
+
 function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath]) {
 	let fileArr = [];
 	if (isArrayStrings(inPaths)) {
+		inPaths = inPaths.map((path) => _resolvePath(path));
 		let pathArr = inPaths; // Add itself
 		inPaths.forEach((path) => { pathArr = pathArr.concat(findRecursivePaths(path)); });
 		pathArr.forEach((path) => { fileArr = fileArr.concat(utils.Glob(path + (path.endsWith('\\') ? '' : '\\') + fileMask)); });
@@ -541,7 +557,8 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 
 function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 	let finalPath = '';
-	if (relPath.startsWith('.\\') && absPath === fb.FoobarPath) { finalPath = fb.FoobarPath + relPath.replace('.\\', ''); }
+	if (relPath.startsWith('.\\profile\\') && absPath === fb.ProfilePath) { finalPath = relPath.replace('.\\profile\\', absPath); }
+	else if (relPath.startsWith('.\\') && absPath === fb.FoobarPath) { finalPath = relPath.replace('.\\', absPath); }
 	else {
 		const relPathArr = relPath.split('\\').filter(Boolean);
 		const absPathArr = absPath.split('\\').filter(Boolean);
@@ -599,16 +616,19 @@ function UUID() {
 }
 
 function lastModified(file, bParse = false) {
+	file = _resolvePath(file);
 	if (!_isFile(file)) { return -1; }
 	return bParse ? Date.parse(fso.GetFile(file).DateLastModified) : fso.GetFile(file).DateLastModified;
 }
 
 function created(file, bParse = false) {
+	file = _resolvePath(file);
 	if (!_isFile(file)) { return -1; }
 	return bParse ? Date.parse(fso.GetFile(file).DateCreated) : fso.GetFile(file).DateCreated;
 }
 
 function getFileMeta(file, bParse = false) {
+	file = _resolvePath(file);
 	if (!_isFile(file)) { return null; }
 	const fileObj = fso.GetFile(file);
 	return {
@@ -641,6 +661,7 @@ function formatFileSize(val) {
 }
 
 function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
+	path = _resolvePath(path);
 	const driveName = fso.GetDriveName(path);
 	if (!driveName) { return null; }
 	const drive = fso.GetDrive(driveName);

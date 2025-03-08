@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/02/25
+//07/03/25
 
 /* exported _list */
 
@@ -7673,7 +7673,9 @@ function _list(x, y, w, h) {
 	// Properties
 	this.defaultProperties = clone(properties); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.properties = getPropertiesPairs(properties, 'plm_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
-	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.') ? findRelPathInAbsPath(this.properties['playlistPath'][1]) : this.properties['playlistPath'][1];
+	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.')
+		? findRelPathInAbsPath(this.properties['playlistPath'][1], fb.ProfilePath)
+		: this.properties['playlistPath'][1];
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1].toLowerCase();

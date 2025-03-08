@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/25
+//07/03/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -115,7 +115,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
 let properties = {
-	playlistPath: ['Path to the folder containing the playlists', (_isFile(fb.FoobarPath + 'portable_mode_enabled') ? '.\\profile\\' : fb.ProfilePath) + 'playlist_manager\\'],
+	playlistPath: ['Path to the folder containing the playlists', '.\\profile\\playlist_manager\\', { func: isString, portable: true }, '.\\profile\\playlist_manager\\'],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }, 3000], // Safety limit 0 or > 1000
 	bFplLock: ['Load .fpl native playlists as read only?', true, { func: isBoolean }, true],
 	extension: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8', { func: (val) => { return writablePlaylistFormats.has(val); } }, '.m3u8'],
@@ -360,7 +360,6 @@ let properties = {
 		profile: false,
 	})]
 };
-properties['playlistPath'].push({ func: isString, portable: true }, properties['playlistPath'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
 properties['playlistIcons'].push({ func: isJSON }, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({ func: isJSON }, properties['mShortcuts'][1]);

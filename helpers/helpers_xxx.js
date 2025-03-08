@@ -1,10 +1,21 @@
 ﻿'use strict';
-//01/02/25
+//06/03/25
 
 /**
  * Global folders setting
  */
 const folders = {};
+/**
+ * Retrieves scripts root at profile folder using this helper path as reference
+ * @type {(boolean) => string} - Ex: scripts\\SMP\\xxx-scripts\\
+ */
+folders.getRoot = (bRelative = true) => {
+	try { include(''); }
+	catch (e) {
+		return e.message.replace('include failed:\nPath does not point to a valid file: ' + (bRelative ? fb.ProfilePath : ''), '')
+			.replace(/helpers\\$/, ''); // Required since include() points to this file (not the main one)
+	}
+}
 /**
  * Package directories (only available if script is a package)
  * @type {{Root: string, Assets: string, Scripts: string, Storage: string}|null}
@@ -15,7 +26,7 @@ if (folders.JsPackageDirs) { for (const key in folders.JsPackageDirs) { folders.
  * Scripts installation root
  * @type {string} - Ex: scripts\\SMP\\xxx-scripts\\
  */
-folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install path (this is relative to the profile path)
+folders.xxxName = folders.getRoot(); // Edit here to change install path (this is relative to the profile path)
 /**
  * JS data folder
  * @type {string} - Ex: js_data\\
