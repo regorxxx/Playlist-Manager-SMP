@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/02/25
+//28/02/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -2870,7 +2870,7 @@ function createMenuRightTop() {
 						});
 					});
 				}
-				menu.newCheckMenuLast(() => (list.bRwLock ? 0 : 1), optionsLength);
+				menu.newCheckMenuLast(() => (list.properties.bRwLock[1] ? 0 : 1), optionsLength);
 			}
 		}
 	}
