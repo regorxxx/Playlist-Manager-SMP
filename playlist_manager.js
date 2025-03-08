@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/03/25
+//08/03/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -168,7 +168,7 @@ let properties = {
 		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on different folder than music
 		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same root than music (without a folder)
 		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same folder than music
-		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\$trim($replace($ascii($replace($if($meta_test(ALBUM ARTIST),$meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,-)\\$replace(%ALBUM%,\\,-)\\%TRACK% - $replace(%TITLE%,\\,-)),:,, ?\\,,?,,¿,,/,-,\'$\',,\'%\',,# ,,#,,*,,!,,¡,,|,-,",\'\'\'\',<,,>,,^,,... ,,...,)).mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8', bExtendedM3U: false } // FiiO music
+		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\' + globTags.artistAlbumTrackTitleSanitize + '.mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8', bExtendedM3U: false } // FiiO music
 	])],
 	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }, true],
 	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }, false],
