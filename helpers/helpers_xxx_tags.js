@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/02/25
+//08/03/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery */
 
@@ -128,7 +128,7 @@ function sanitizeTagValIds(val, bSpace = true) {
  */
 function fallbackTagsQuery(tag, value, logic = 'IS') {
 	return /%?ALBUM ARTIST%?/i.test(tag)
-		? '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST ' + logic + ' ' + value + ')) OR (ALBUM ARTIST MISSING AND (ARTIST ' + logic + ' ' +  value + '))'
+		? '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST ' + logic + ' ' + value + ')) OR (ALBUM ARTIST MISSING AND (ARTIST ' + logic + ' ' + value + '))'
 		: tag + ' ' + logic + ' ' + value;
 }
 
@@ -142,12 +142,13 @@ function fallbackTagsQuery(tag, value, logic = 'IS') {
  * @param {string} query
  * @param {FbMetadbHandle} handle
  * @param {{string?: string}} tags - If no handle is provided, evaluates TF expression looking for 'strTF' property at the object
- * @param {{ bToLowerCase: boolean, bDebug: boolean }} options - bToLowerCase: value from #strTF# will use lowercase
+ * @param {{ expansionBy: ('AND'|'OR'|'AND NOT'|'OR NOT'), bToLowerCase: boolean, bDebug: boolean }} options - bToLowerCase: value from #strTF# will use lowercase
  * @returns {?string}
  */
 function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansionBy: 'AND', bToLowerCase: false, bDebug: false }) {
 	options = { expansionBy: 'AND', bToLowerCase: false, bDebug: false, ...options };
-	if (options.bDebug) { console.log('Initial query:', query); }
+	const oriQuery = query;
+	if (options.bDebug) { console.log('Initial query:', oriQuery); }
 	if (!query.length) { console.log('queryReplaceWithCurrent(): query is empty'); return ''; }
 	if (handle && handle instanceof FbMetadbHandleList) {
 		const queryArr = [...new Set(
@@ -156,14 +157,8 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 		return queryArr.length ? queryJoin(queryArr, 'OR') : '';
 	}
 	// global queries without handle required
-	let bStatic = false;
-	if (/#MONTH#|#YEAR#|#DAY#/g.test(query)) {
-		const date = new Date();
-		query = query.replace(/#MONTH#/g, (date.getMonth() + 1).toString());
-		query = query.replace(/#YEAR#/g, date.getFullYear().toString());
-		query = query.replace(/#DAY#/g, date.getDate().toString());
-		bStatic = true;
-	}
+	query = queryReplaceWithStatic(query, options);
+	const bStatic = query !== oriQuery;
 	// With handle
 	if (!handle) {
 		if ((query.match(/#/g) || []).length >= 2) {
@@ -171,9 +166,9 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 			if (!tags) { console.log('queryReplaceWithCurrent(): handle is null'); return null; }
 		} else { return query; }
 	}
-	if (/#NEXTKEY#|#PREVKEY#/g.test(query)) { console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return null; }
+	if (/#NEXTKEY#|#PREVKEY#/i.test(query)) { console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return null; }
 	if (query.includes('#')) {
-		if (/%ALBUM ARTIST% (IS|HAS) #ALBUM ARTIST#/gi.test(query) && !/%?ARTIST%? (IS|HAS) #ARTIST#/gi.test(query)) {
+		if (/%ALBUM ARTIST% (IS|HAS) #ALBUM ARTIST#/i.test(query) && !/%?ARTIST%? (IS|HAS) #ARTIST#/i.test(query)) {
 			query = query
 				.replaceAll('%ALBUM ARTIST% IS #ALBUM ARTIST#', '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST IS #ALBUM ARTIST#)) OR (ALBUM ARTIST MISSING AND (ARTIST IS #ARTIST#))')
 				.replaceAll('%ALBUM ARTIST% HAS #ALBUM ARTIST#', '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST HAS #ALBUM ARTIST#)) OR (ALBUM ARTIST MISSING AND (ARTIST HAS #ARTIST#))');
@@ -271,6 +266,70 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 			query = startQuery + tempQuery + endQuery;
 			if (options.bDebug) { console.log(startQuery, '-', tempQuery, '-', endQuery); }
 		}
+	}
+	return query;
+}
+
+/**
+ * Replace #strTF# with static values, where 'strTF' is a TF expression which will be evaluated against a list of special variables.
+ * Use try/catch to test validity of the query output
+ *
+ * @function
+ * @name queryReplaceWithStatic
+ * @kind function
+ * @param {string} query
+ * @param {{ bDebug: boolean }} options
+ * @returns {?string}
+ */
+function queryReplaceWithStatic(query, options = {bDebug: false }) {
+	options = { bDebug: false, ...options };
+	if (options.bDebug) { console.log('Initial query:', query); }
+	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
+	// Dates
+	if (/#(MONTH|YEAR|DAY|NOW)#/i.test(query)) {
+		const date = new Date();
+		query = query.replace(/#YEAR#/gi, date.getFullYear().toString());
+		query = query.replace(/#MONTH#/gi, (date.getMonth() + 1).toString());
+		query = query.replace(/#DAY#/gi, date.getDate().toString());
+		query = query.replace(/#NOW#/gi, date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString() + '-' + date.getDate().toString());
+	}
+	// System
+	if (/#(VOLUME|VOLUMEDB|VERSION)#/i.test(query)) {
+		query = query.replace(/#VOLUME#/g, Math.round(100 + fb.Volume));
+		query = query.replace(/#VOLUMEDB#/g, fb.Volume.toFixed(2) + 'dB');
+		query = query.replace(/#VERSION#/g, fb.Version);
+		const selTypes = [
+			'undefined (no item)',
+			'active playlist',
+			'caller active playlist',
+			'playlist manager',
+			'now playing',
+			'keyboard shortcut list',
+			'media library viewer'
+		];
+		query = query.replace(/#SELTYPE#/g, selTypes[fb.GetSelectionType()]);
+	}
+	// Selection
+	if (/#(SELTRACKS|SELDURATION|SELSIZE)#/i.test(query)) {
+		const sel = fb.GetSelections(1);
+		query = query.replace(/#SELTRACKS#/g, sel ? sel.Count : 0);
+		query = query.replace(/#SELDURATION#/g, sel ? utils.FormatDuration(sel.CalcTotalDuration()): '0:00');
+		query = query.replace(/#SELSIZE#/g, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
+	}
+	// Playlist
+	if (/#(PLSNAME|PLSTRACKS|PLSISAUTOPLS|PLSISLOCKED)#/i.test(query)) {
+		const pls = plman.ActivePlaylist;
+		query = query.replace(/#PLSNAME#/g, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
+		query = query.replace(/#PLSTRACKS#/g, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
+		query = query.replace(/#PLSISAUTOPLS#/g, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 : 0) : 0);
+		query = query.replace(/#PLSISLOCKED#/g, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 : 0) : 0);
+	}
+	// Playlist items
+	if (/#(PLSDURATION|PLSSIZE)#/i.test(query)) {
+		const pls = plman.ActivePlaylist;
+		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
+		query = query.replace(/#PLSDURATION#/g, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#PLSSIZE#/g, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
 	return query;
 }

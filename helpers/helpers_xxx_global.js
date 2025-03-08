@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/02/25
+//07/03/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -35,7 +35,7 @@ function loadUserDefFile(def) {
 									try {
 										fb.GetQueryItems(handleList, def[key]);
 										fb.GetQueryItems(handleList, '* HAS \'\' AND (' + def[key] + ')');
-									} catch (e) {
+									} catch (e) { // eslint-disable-line no-unused-vars
 										fb.ShowPopupMessage(
 											'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
 											'\n' + def[key] +
@@ -84,7 +84,7 @@ function loadUserDefFile(def) {
 							try {
 								[, re, flag] = def[key].re.match(/\/(.*)\/([a-z]+)?/);
 								def[key].re = new RegExp(re, flag);
-							} catch (e) {
+							} catch (e) { // eslint-disable-line no-unused-vars
 								fb.ShowPopupMessage(
 									'There has been an error trying to parse the RegExp expression:\n' + def[key].re +
 									'\n\nParsed as:\n' + def[key].re +
@@ -132,14 +132,22 @@ function addGlobValues(type) {
 			globTags.artist = _t(globTags.artistRaw);
 			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 			globTags.sortPlayCount = '$sub(99999,' + _t(globTags.playCount) + ')';
+			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%FIRST_PLAYED%,%2003_FIRST_PLAYED%)';
 			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,%2003_LAST_PLAYED%)';
-			globTags.sortAdded = '$if2(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
+			globTags.sortAdded = '$if3(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
 			globTags.isLoved = '$ifequal(' + _t(globTags.feedback) + ',1,1$not(0),0)';
 			globTags.isHated = '$ifequal(' + _t(globTags.feedback) + ',-1,1$not(0),0)';
 			globTags.isRatedTop = '$ifequal(' + _t(globTags.rating) + ',5,1$not(0),0)';
 			globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 			globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
-			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
+			globTags.playCountRateSinceAdded = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub($year(' + globTags.sortLastPlayed + '),$year(' + globTags.sortAdded + ')),365),$mul($sub($month(' + globTags.sortLastPlayed + '),$month(' + globTags.sortAdded + ')),30),$sub($day_of_month(' + globTags.sortLastPlayed + '),$day_of_month(' + globTags.sortAdded + ')))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4))$get(val)$iflonger($get(val),1,,.00)';
+			globTags.playCountRateSincePlayed = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub($year(' + globTags.sortLastPlayed + '),$year(' + globTags.sortFirstPlayed + ')),365),$mul($sub($month(' + globTags.sortLastPlayed + '),$month(' + globTags.sortFirstPlayed + ')),30),$sub($day_of_month(' + globTags.sortLastPlayed + '),$day_of_month(' + globTags.sortFirstPlayed + ')))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4)$get(val)$iflonger($get(val),1,,.00)';
+			globTags.playCountRateGlobalDay = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub(#YEAR#,$year(' + globTags.sortAdded + ')),365),$mul($sub(#MONTH#,$month(' + globTags.sortAdded + ')),30),$sub(#DAY#,$day_of_month(' + globTags.sortAdded + ')))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4))$get(val)$iflonger($get(val),1,,.00)';
+			globTags.playCountRateGlobalWeek = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub(#YEAR#,$year(' + globTags.sortAdded + ')),52),$mul($sub(#MONTH#,$month(' + globTags.sortAdded + ')),4),$div($sub(#DAY#,$day_of_month(' + globTags.sortAdded + ')),7))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4))$get(val)$iflonger($get(val),1,,.00)';
+			globTags.playCountRateGlobalMonth = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub(#YEAR#,$year(' + globTags.sortAdded + ')),12),$sub(#MONTH#,$month(' + globTags.sortAdded + ')))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4))$puts(dec,$muldiv($sub(#DAY#,$day_of_month(' + globTags.sortAdded + ')),100,30))$puts(dec,$ifgreater($get(dec),0,$get(dec),00))$puts(val,$get(val)$iflonger($get(val),1,,.$get(dec)))$get(val)$iflonger($get(val),3,,0)';
+			globTags.playCountRateGlobalYear = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$sub(#YEAR#,$year(' + globTags.sortAdded + '))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4))$puts(dec,$muldiv($sub(#MONTH#,$month(' + globTags.sortAdded + ')),100,12))$puts(dec,$ifgreater($get(dec),0,$get(dec),00))$puts(val,$get(val)$iflonger($get(val),1,,.$get(dec)))$get(val)$iflonger($get(val),3,,0)';
+			globTags.playCountExpectedSinceAdded = '$div($mul($div($mul(' + globTags.playCount + ',100000),$add($mul($sub($year(' + globTags.sortLastPlayed + '),$year(' + globTags.sortAdded + ')),365),$mul($sub($month(' + globTags.sortLastPlayed + '),$month(' + globTags.sortAdded + ')),30),$sub($day_of_month(' + globTags.sortLastPlayed + '),$day_of_month(' + globTags.sortAdded + ')))),$add($mul($sub(#YEAR#,$year(' + globTags.sortAdded + ')),365),$mul($sub(#MONTH#,$month(' + globTags.sortFirstPlayed + ')),30),$sub(#DAY#,$day_of_month(' + globTags.sortAdded + ')))),100000)';
+			globTags.playCountExpectedSincePlayed = '$div($mul($div($mul(' + globTags.playCount + ',100000),$add($mul($sub($year(' + globTags.sortLastPlayed + '),$year(' + globTags.sortFirstPlayed + ')),365),$mul($sub($month(' + globTags.sortLastPlayed + '),$month(' + globTags.sortFirstPlayed + ')),30),$sub($day_of_month(' + globTags.sortLastPlayed + '),$day_of_month(' + globTags.sortFirstPlayed + ')))),$add($mul($sub(#YEAR#,$year(' + globTags.sortFirstPlayed + ')),365),$mul($sub(#MONTH#,$month(' + globTags.sortFirstPlayed + ')),30),$sub(#DAY#,$day_of_month(' + globTags.sortFirstPlayed + ')))),100000)';
 			break;
 		case 'Query':
 			globQuery.noFemale = 'NOT (' + globQuery.female + ')';
@@ -159,6 +167,7 @@ function addGlobValues(type) {
 				'|%DYNAMIC RANGE%' +
 				'|' + globTags.playCount;
 			globQuery.fav = '((' + globQuery.loved + ') OR (' + globQuery.ratingTop + '))';
+			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
 			break;
 		case 'All':
 			addGlobValues('tags');
