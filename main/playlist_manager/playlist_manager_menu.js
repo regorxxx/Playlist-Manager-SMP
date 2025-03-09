@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/25
+//09/03/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -3255,6 +3255,35 @@ function createMenuRightTop() {
 					overwriteProperties(list.properties);
 				}
 			});
+		}
+		if (!list.bLiteMode) {	// XSPF playlists
+			menu.newSeparator(menuName);
+			const subMenuName = menu.newMenu('XSPF behavior', menuName);
+			{
+				const subMenuNameTwo = menu.newMenu('Non-tracked files on library', subMenuName);
+				menu.newEntry({
+					menuName: subMenuNameTwo, entryText: 'Load them if found on disk', func: () => {
+						list.xspfRules.bLoadNotTrackedItems = !list.xspfRules.bLoadNotTrackedItems;
+						list.properties['xspfRules'][1] = JSON.stringify(list.xspfRules);
+						overwriteProperties(list.properties);
+						if (list.xspfRules.bLoadNotTrackedItems) {
+							fb.ShowPopupMessage('Non-tracked files on library are omitted by default. Enabling this setting, it will try to load the files if they exist outside the library (breaking the XSPF specs).', window.Name);
+						}
+					}
+				});
+				menu.newCheckMenuLast(() => list.xspfRules.bLoadNotTrackedItems);
+				menu.newEntry({
+					menuName: subMenuNameTwo, entryText: 'Use foo_xspf_1 component', func: () => {
+						list.xspfRules.bFallbackComponentXSPF = !list.xspfRules.bFallbackComponentXSPF;
+						list.properties['xspfRules'][1] = JSON.stringify(list.xspfRules);
+						overwriteProperties(list.properties);
+						if (list.xspfRules.bFallbackComponentXSPF) {
+							fb.ShowPopupMessage('Additional support for non-tracked files with subsongs (.cue, .iso, etc.) can be added by installing foo_xspf_1 (*) and using appropriate settings (**). For files with subsongs which are tracked on library, it is not needed.\n\nEnabling this setting, it will try to load the files if they exist outside the library using the component as fallback (breaking the XSPF specs).\n\n\n(*) https://github.com/Chocobo1/foo_xspf_1\n(**)https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', window.Name);
+						}
+					}, flags: list.xspfRules.bLoadNotTrackedItems ? MF_STRING : MF_GRAYED
+				});
+				menu.newCheckMenuLast(() => list.xspfRules.bFallbackComponentXSPF && list.xspfRules.bLoadNotTrackedItems);
+			}
 		}
 		if (showMenus['Tags'] || showMenus['Folders']) { menu.newSeparator(menuName); }
 		if (showMenus['Tags']) {	// Playlist AutoTags & Actions

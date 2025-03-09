@@ -81,6 +81,7 @@
 ### Changed
 - Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
 - Installation: multiple improvements to path handling for portable and non-portable installations. By default scripts will always try to use only relative paths to the profile folder, so scripts will work without any change when exporting the profile to any other installation. This change obviously doesn't apply to already existing installations unless restoring defaults.
+- XSPF: revamped .xspf playlist loading for links and non-tracked files. It will now filter dead items and also there are multiple settings to control if non-tracked files should be loaded (they must exist) and how it's done. Added compatibility with [foo_xspf1](https://github.com/Chocobo1/foo_xspf_1) as fallback loader, which may be specially useful to [load single tracks from non-tracked cue files or other containers](https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843); without the component is not possible to do so, unless the container file is tracked (the manager handles it) since native foobar2000 is unable to load tracks by subsongs from external files.
 - Playlist formats: already saved tracks file size and duration values will be rounded to 2 decimals on first init (after updating).
 - Search: searching by tracks' paths now includes AutoPlaylists.
 - Exporting Playlists: pressing SHIFT when clicking on any of the 'Export and convert' menu entries will skip tracks conversion and exporting and only process the playlist file. The submenu shows now this tip at the header. [Issue 86](https://github.com/regorxxx/Playlist-Manager-SMP/issues/86).
@@ -148,6 +149,8 @@
 - Exporting Playlists: fixed output path option (without a popup asking for it) and filename presets introduced on [0.17.0](#0170---2024-07-24) not working for AutoPlaylists and Smart Playlists.
 - Folders: 'Move to folder' submenu was missing nested folders if they were not expanded. Now they are shown, although folders not present in current view/filter state, are still hidden.
 - Folders: error restoring a deleted folder.
+- XSPF: malformed file paths when adding tracks to a .xspf playlist directly by mouse shortcut or drag n' dropping, which broke compatibility with other software.
+- XSPF: URLS not being loaded properly in some cases due to forced lower casing. Now they are loaded with original casing. This error was heavily dependent on exotic servers being case sensitive.
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
 - UI: wrong column size in some cases -on auto mode- after using the search tool.

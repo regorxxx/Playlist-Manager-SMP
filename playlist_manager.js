@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/25
+//09/03/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -358,12 +358,17 @@ let properties = {
 		autoSize: false,
 		loadPls: false,
 		profile: false,
-	})]
+	})],
+	xspfRules: ['XSPF playlists behavior', JSON.stringify({
+		bFallbackComponentXSPF: false,
+		bLoadNotTrackedItems: false,
+	})],
 };
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
 properties['playlistIcons'].push({ func: isJSON }, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({ func: isJSON }, properties['mShortcuts'][1]);
 properties['lShortcuts'].push({ func: isJSON }, properties['lShortcuts'][1]);
+properties['tooltip'].push({ func: isJSON }, properties['tooltip'][1]);
 properties['rShortcuts'].push({ func: isJSON }, properties['rShortcuts'][1]);
 properties['lShortcutsHeader'].push({ func: isJSON }, properties['lShortcutsHeader'][1]);
 properties['mShortcutsHeader'].push({ func: isJSON }, properties['mShortcutsHeader'][1]);
@@ -379,7 +384,7 @@ properties['importPlaylistFilters'].push({ func: (x) => isJSON(x) && JSON.parse(
 properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlaylistMask'][1]);
 properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
 properties['logOpt'].push({ func: isJSON }, properties['logOpt'][1]);
-properties['tooltip'].push({ func: isJSON }, properties['tooltip'][1]);
+properties['xspfRules'].push({ func: isJSON }, properties['xspfRules'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -494,7 +499,7 @@ let plsRwLock;
 			}
 		}
 		if (prop.bLiteMode[1]) {	// Bottom toolbar
-			const answer = WshShell.Popup('Show the bottom toolbar for quick acess to sorting and filtering?\nUI elements can be tweaked later at Settings menu \'UI\\UI elements\' submenu.\n\n(Click no if looking for a simple replacement of foo_plorg)', 0, 'Bottom toolbar', popup.question + popup.yes_no);
+			const answer = WshShell.Popup('Show the bottom toolbar for quick access to sorting and filtering?\nUI elements can be tweaked later at Settings menu \'UI\\UI elements\' submenu.\n\n(Click no if looking for a simple replacement of foo_plorg)', 0, 'Bottom toolbar', popup.question + popup.yes_no);
 			if (answer === popup.no) {
 				uiElements['Bottom toolbar'].enabled = false;
 				prop.uiElements[1] = JSON.stringify(uiElements);

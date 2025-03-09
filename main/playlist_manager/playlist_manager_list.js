@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/03/25
+//09/03/25
 
 /* exported _list */
 
@@ -2708,7 +2708,7 @@ function _list(x, y, w, h) {
 				if (handleList === null) {
 					if (pls.isAutoPlaylist) {
 						handleList = fb.GetQueryItemsCheck(library, stripSort(pls.query), true); // Cached
-						if (fb.queryCacheUsed) {bUpdateMeta = true;}
+						if (fb.queryCacheUsed) { bUpdateMeta = true; }
 					} else if (pls.path.length) {
 						handleList = this.plsCache.get(pls.path);
 						if (!handleList) {
@@ -6449,7 +6449,7 @@ function _list(x, y, w, h) {
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-					let bDone = loadTracksFromPlaylist(pls.path, plman.ActivePlaylist, this.playlistsPath, remDupl, this.bAdvTitle, this.bMultiple);
+					let bDone = loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } });
 					if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
 					else if (pls.query) { // Update size on load for smart playlists
 						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
@@ -6888,6 +6888,10 @@ function _list(x, y, w, h) {
 		this.methodState = this.properties['methodState'][1];
 		this.sortState = this.properties['sortState'][1];
 		this.optionUUID = this.properties['optionUUID'][1];
+		this.bFplLock = this.properties['bFplLock'][1];
+		this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
+		this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
+		this.xspfRules = JSON.parse(this.properties['xspfRules'][1]);
 		this.bShowSep = this.properties['bShowSep'][1];
 		this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 		this.bRelativePath = this.properties['bRelativePath'][1];
@@ -7252,6 +7256,15 @@ function _list(x, y, w, h) {
 				}
 			});
 		});
+		// Check XSPF rules
+		const xspfRulesDef = JSON.parse(this.properties['xspfRules'][3]);
+		if (!isArrayEqual(Object.keys(this.xspfRules), Object.keys(xspfRulesDef))) {
+			for (let key in xspfRulesDef) {
+				this.xspfRules[key] = xspfRulesDef[key];
+			}
+			this.properties['xspfRules'][1] = JSON.stringify(this.xspfRules);
+			bDone = true;
+		}
 		return bDone;
 	};
 
@@ -7679,7 +7692,7 @@ function _list(x, y, w, h) {
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1].toLowerCase();
-	// Playlist behavour
+	// Playlist behavior
 	this.bUpdateAutoPlaylist = this.properties['bUpdateAutoPlaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
 	this.bUseUUID = this.properties['bUseUUID'][1];
 	this.optionsUUID = () => { return ['Yes: Using invisible chars plus (*) indicator (experimental)', 'Yes: Using a-f chars', 'Yes: Using only (*) indicator', 'No: Only the name']; };
@@ -7687,6 +7700,7 @@ function _list(x, y, w, h) {
 	this.bFplLock = this.properties['bFplLock'][1];
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
 	this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
+	this.xspfRules = JSON.parse(this.properties['xspfRules'][1]);
 	// UI
 	this.tooltipSettings = JSON.parse(this.properties['tooltip'][1]);
 	this.bShowSize = this.properties['bShowSize'][1];
@@ -8080,7 +8094,7 @@ function cachePlaylist(pls) {
 		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true);
 	} else if (pls.path.length) {
 		const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl,bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
+		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
 		this.plsCache.set(pls.path, handleList);
 	}
 	if (handleList) {
