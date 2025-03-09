@@ -1,7 +1,7 @@
 ﻿'use strict';
-//08/03/25
+//09/03/25
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -16,6 +16,8 @@ include('callbacks_xxx.js');
 */
 const tagsVolatileCache = new VolatileCache(1000); // Deleted every 1000 ms
 addEventListener('on_metadb_changed', () => tagsVolatileCache.clear());
+
+const subsongRegex = /,\d*$/;
 
 // Tags descriptors:
 // Always use .toLowerCase first before checking if the set has the string. For ex
@@ -281,7 +283,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
  * @param {{ bDebug: boolean }} options
  * @returns {?string}
  */
-function queryReplaceWithStatic(query, options = {bDebug: false }) {
+function queryReplaceWithStatic(query, options = { bDebug: false }) {
 	options = { bDebug: false, ...options };
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
@@ -313,7 +315,7 @@ function queryReplaceWithStatic(query, options = {bDebug: false }) {
 	if (/#(SELTRACKS|SELDURATION|SELSIZE)#/i.test(query)) {
 		const sel = fb.GetSelections(1);
 		query = query.replace(/#SELTRACKS#/g, sel ? sel.Count : 0);
-		query = query.replace(/#SELDURATION#/g, sel ? utils.FormatDuration(sel.CalcTotalDuration()): '0:00');
+		query = query.replace(/#SELDURATION#/g, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#SELSIZE#/g, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
 	}
 	// Playlist
@@ -817,4 +819,35 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 	}
 	if (options.bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
+}
+
+/**
+ * Checks wether a handle references a container or not.
+ *
+ * @function
+ * @name function isSubsong
+ * @kind function
+ * @param {FbMetadbHandle} handle
+ * @param {string} extension
+ * @returns {boolean}
+ */
+function isSubsong(handle, ext = '') {
+	const blackList = new Set(['dsf']);
+	return handle.SubSong !== 0 && !blackList.has(ext || handle.Path.split('.').pop());
+}
+
+/**
+ * Checks wether a path references a container or not.
+ *
+ * @function
+ * @name function isSubsongPath
+ * @kind function
+ * @param {string} path
+ * @param {string} extension
+ * @returns {boolean}
+ */
+function isSubsongPath(path, ext = '') {
+	const blackList = new Set(['dsf']);
+	const subsong = path.split(',').pop();
+	return subsongRegex.test(path) && subsong !== 0 && !blackList.has(ext || path.split('.').pop().replace(',' + subsong,''));
 }

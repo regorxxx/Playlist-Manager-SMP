@@ -152,6 +152,7 @@
 - Folders: error restoring a deleted folder.
 - XSPF: malformed file paths when adding tracks to a .xspf playlist directly by mouse shortcut or drag n' dropping, which broke compatibility with other software.
 - XSPF: URLS not being loaded properly in some cases due to forced lower casing. Now they are loaded with original casing. This error was heavily dependent on exotic servers being case sensitive.
+- XSPF: container files different to .iso files did not had their subsong index saved.
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
 - UI: wrong column size in some cases -on auto mode- after using the search tool.

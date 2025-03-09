@@ -32,7 +32,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
 /* global XSP:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, queryReplaceWithCurrent:readable */
+/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, queryReplaceWithCurrent:readable, isSubsongPath:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -697,7 +697,7 @@ function createMenuLeft(forcedIndex = -1) {
 															return encodeURI(path.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26'));
 														});
 													const subSong = Number(tags[6][0][0]);
-													const meta = location[0].endsWith('.iso') ? [{ subSong }] : [];
+													const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
 													const identifier = [tags[7][0][0]];
 													playlist.track[i] = {
 														location,
@@ -2132,7 +2132,7 @@ function createMenuRight() {
 													return encodeURI(path.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26'));
 												});
 											const subSong = Number(tags[6][0][0]);
-											const meta = location[0].endsWith('.iso') ? [{ subSong }] : [];
+											const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
 											const identifier = [tags[7][0][0]];
 											playlist.track[i] = {
 												location,

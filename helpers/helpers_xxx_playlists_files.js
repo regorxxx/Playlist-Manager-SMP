@@ -11,7 +11,7 @@ include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
 include('helpers_xxx_tags.js');
-/* global checkQuery:readable, getSortObj:readable, getHandleListTagsV2:readable, queryCombinations:readable */
+/* global checkQuery:readable, getSortObj:readable, getHandleListTagsV2:readable, queryCombinations:readable, isSubsongPath:readable */
 include('helpers_xxx_playlists.js');
 /* global getHandlesFromUIPlaylists:readable */
 include('helpers_xxx_playlists_files_xspf.js');
@@ -225,7 +225,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 						return encodeURI((bLink ? '' : 'file:///') + path.replace(/\\/g, '/').replace(/&/g, '%26'));
 					});
 					const subSong = Number(tags[6][i][0]);
-					const meta = location[0].endsWith('.iso') ? [{ subSong }] : [];
+					const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
 					const identifier = [tags[7][i][0]];
 					playlist.track.push({
 						location,
