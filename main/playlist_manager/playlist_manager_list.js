@@ -23,7 +23,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable */
+/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursivefile:readable, _open:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
@@ -3474,6 +3474,7 @@ function _list(x, y, w, h) {
 			_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 			return false;
 		} else if (_isFile(backPath)) { _deleteFile(backPath); }
+		this.checkLibraryWarnings(handleList);
 		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 		pls = this.getPls(pls, true);
 		this.editData(pls, {
@@ -3745,6 +3746,7 @@ function _list(x, y, w, h) {
 						// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 						const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate(), false) : ''; // Last UUID or nothing for .pls playlists...
 						if (!handleList) { handleList = plman.GetPlaylistItems(fbPlaylistIndex); }
+						this.checkLibraryWarnings(handleList);
 						this.editData(plsData, {
 							size: plman.PlaylistItemCount(fbPlaylistIndex),
 							nameId: plsData.name + UUID,
@@ -6821,32 +6823,60 @@ function _list(x, y, w, h) {
 		}
 	};
 
+	this.checkLibraryWarnings = (handleList) => {
+		if (!this.infoPopups.noLibTracked || !this.infoPopups.subsongItem) {
+			handleList.Convert().forEach((handle) => {
+				if (!this.infoPopups.noLibTracked && !fb.IsMetadbInMediaLibrary(handle)) {
+					this.noLibPopup();
+				}
+				if (!this.infoPopups.subsongItem && isSubsong(handle)) {
+					this.subsongPopup();
+				}
+			});
+		}
+	};
+
+	this.setInfoPopup = (key, val = true) => {
+		this.infoPopups[key] = val;
+		this.properties.infoPopups[1] = JSON.stringify(this.infoPopups);
+		overwriteProperties(this.properties); // Updates panel
+	};
+
 	this.xspPopup = (bForce = false) => {
-		if (!this.properties['bFirstPopupXsp'][1] || bForce) {
-			this.properties['bFirstPopupXsp'][1] = true;
-			overwriteProperties(this.properties); // Updates panel
-			fb.ShowPopupMessage('Playlist manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager');
+		if (!this.infoPopups.xspFormat || bForce) {
+			this.setInfoPopup('xspFormat');
+			fb.ShowPopupMessage('Playlist Manager has loaded a .xsp playlist (Smart Playlist) for the first time. This is an informative popup.\n\n-.xsp playlists, despite being a writable format, can not store extra metadata. Size and other data (UUID, category, lock status or tags) will be cached between sessions, as soon as it\'s set for the first time, on the panel.\n-By default they are set as locked files (so they will never be autosaved), since they behave like AutoPlaylists.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions. Note size may change on subsequent loads if the query retrieves a different number of tacks.\n-Query, sort and limit of tracks may be edited following the same procedure done on AutoPlaylists.\n-Note not all queries and TF functions are allowed on Smart Playlists, due to compatibility reasons with Kodi and XBMC systems.\n-Queries will be translated into XBMC\'s format after editing them via popups, you can check the result on the tooltip.', 'Playlist Manager: Smart playlists (.xsp)');
 		}
 	};
 	this.xspfPopup = (bForce = false) => {
-		if (!this.properties['bFirstPopupXspf'][1] || bForce) {
-			this.properties['bFirstPopupXspf'][1] = true;
-			overwriteProperties(this.properties); // Updates panel
-			fb.ShowPopupMessage('Playlist manager has loaded a .xspf playlist for the first time. This is an informative popup.\n\n-.pls playlists format allow all extra data like UUID, category, lock status or tags, ... on file (like M3U format).\n-Items on these playlists are matched against the library by path like any other format.\n-In case files are not found by path, then it will try to match by tags using queries. Therefore .xspf playlists are shareable between different users/libraries, since they will work no matter the media structure.\n-Note query matching involves much more processing time, so it\'s much faster to use them as an \'standard\' playlist.\n-If you are using default another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
+		if (!this.infoPopups.xspfFormat || bForce) {
+			this.setInfoPopup('xspFormat');
+			fb.ShowPopupMessage('Playlist Manager has loaded a .xspf playlist for the first time. This is an informative popup.\n\n-.pls playlists format allow all extra data like UUID, category, lock status or tags, ... on file (like M3U format).\n-Items on these playlists are matched against the library by path like any other format.\n-In case files are not found by path, then it will try to match by tags using queries. Therefore .xspf playlists are shareable between different users/libraries, since they will work no matter the media structure.\n-Note query matching involves much more processing time, so it\'s much faster to use them as an \'standard\' playlist.\n-You may tweak some features of this format at \'Playlist behavior\\XSPF behavior\'\n-Additional support for non-tracked files with subsongs (.cue, .iso, etc.) can be added by installing foo_xspf_1 (*), appropriate settings (**) and tweaking the XSPF behavior settings (see above). For files tracked on library, it is not needed.\n-If you are using default another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format (auto-save or forcing update). This can be avoided by locking the file or changing the auto-saving settings.\n\n(*) https://github.com/Chocobo1/foo_xspf_1\n\n(*) https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', 'Playlist Manager: .xspf playlists');
 		}
 	};
 	this.plsPopup = (bForce = false) => {
-		if (!this.properties['bFirstPopupPls'][1] || bForce) {
-			this.properties['bFirstPopupPls'][1] = true;
+		if (!this.infoPopups.plsFormat || bForce) {
+			this.setInfoPopup('plsFormat');
 			overwriteProperties(this.properties); // Updates panel
-			fb.ShowPopupMessage('Playlist manager has loaded a .pls playlist for the first time. This is an informative popup.\n\n-.pls playlists format doesn\'t allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.\n-The related menu entries to set that data (or lock status) are disabled (greyed).\n-If you are using another default format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format  (auto-save or forcing update). This can be avoided by locking the file.', 'Playlist Manager');
+			fb.ShowPopupMessage('Playlist Manager has loaded a .pls playlist for the first time. This is an informative popup.\n\n-.pls playlists format doesn\'t allow extra data like UUID, category, lock status or tags, ... use .m3u or .m3u8 for full data support.\n-The related menu entries to set that data (or lock status) are disabled (greyed).\n-If you are using another default format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format  (auto-save or forcing update). This can be avoided by locking the file or changing the auto-saving settings.', 'Playlist Manager: .pls playlists');
 		}
 	};
 	this.fplPopup = (bForce = false) => {
-		if (!this.properties['bFirstPopupFpl'][1] || bForce) {
-			this.properties['bFirstPopupFpl'][1] = true;
-			overwriteProperties(this.properties); // Updates panel
-			fb.ShowPopupMessage('Playlist manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager');
+		if (!this.infoPopups.fplFormat || bForce) {
+			this.setInfoPopup('fplFormat');
+			fb.ShowPopupMessage('Playlist Manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager: .fpl playlists');
+		}
+	};
+	this.noLibPopup = (bForce = false) => {
+		if (!this.infoPopups.noLibTracked || bForce) {
+			this.setInfoPopup('noLibTracked');
+			fb.ShowPopupMessage('Playlist Manager has detected that no files are being tracked on library by foobar2000 or that you added a non-tracked file\\URL to a playlist.\n\nWhile this usage is supported, note loading playlists with non-tracked items is much slower and fallbacks to foobar2000 own file loading implementation (which shows a loading popup window).\n\nURLs work fine, with the speed penalty mentioned.\n\nContainer files with subsongs, like .cue or .iso files, are not supported. Native foobar2000 implementation will load all tracks from those files instead of only the desired tracks (*), so if you add 2 tracks from a .cue file to a playlist, foobar2000 will load the entire .cue file 2 times in such places (**). To avoid this limitation, either use the media library to track files or use .xspf playlists (no other playlist format can reference subsong tracks without media library tracking). If you choose to use .xspf playlists, foo_xspf_1 (***) will be needed along appropriate settings (****)\n\n(*) https://hydrogenaud.io/index.php/topic,127554.new.html#info_1060475\n(**) https://github.com/regorxxx/Playlist-Manager-SMP/issues/87\n(***) https://github.com/Chocobo1/foo_xspf_1\n(****) https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', 'Playlist Manager: non-tracked items');
+		}
+	};
+	this.subsongPopup = (bForce = false) => {
+		if (!this.infoPopups.subsongItem || bForce) {
+			this.setInfoPopup('subsongItem');
+			fb.ShowPopupMessage('Playlist Manager has detected that you are adding a track which is a subsong from a container file (like .cue or .iso).\n\nWhile this usage is supported (for tracked files on library), note these playlists will not work on any other software out there (not even foobar2000 outside the Playlist Manager context).\n\nNon-tracked files on library will not work properly when loading playlist files referencing them due to a limitation of foobar2000 (*).\n\nAdditionally this is also a problem with most playlist formats which can not be avoided. Either avoid using this kind of files or use the \'Export and convert\' tools to properly export single tracks and compatible playlist files to other devices.\n\nAlternatively, .xspf format allows references by subsong in its specs. But this playlist format is not as universally compatible like .m3u8 for example. To load .xspf playlists natively on foobar2000, install foo_xspf_1 (**) with appropriate settings (***). The manager can handle them too, but they will work only with tracked files on library. You need the component to properly load non-tracked .cue or .iso files. This behavior can be tweaked at \'Playlist behavior\\XSPF behavior\'.\n\n(*) https://hydrogenaud.io/index.php/topic,127554.new.html#info_1060475\n(**) https://github.com/Chocobo1/foo_xspf_1\n(***) https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', 'Playlist Manager: subsong items');
 		}
 	};
 
@@ -6926,6 +6956,7 @@ function _list(x, y, w, h) {
 		this.statusIcons = JSON.parse(this.properties['statusIcons'][1]);
 		this.bTracking = true;
 		this.trackedFolderChanged = false;
+		this.infoPopups = JSON.parse(this.properties['infoPopups'][1]);
 		this.plsCache = new Map();
 	};
 
@@ -7620,6 +7651,7 @@ function _list(x, y, w, h) {
 				}
 			}
 			if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
+			if (!fb.IsLibraryEnabled()) { this.noLibPopup(); }
 			if (test) { test.Print('Post startup'); test = null; }
 			globProfiler.Print('list.init.post');
 			const autoUpdateTimer = Number(this.properties.autoUpdate[1]);
@@ -7757,6 +7789,7 @@ function _list(x, y, w, h) {
 	this.bLibraryChanged = false;
 	this.cacheLibTimer = null;
 	this.bLiteMode = this.properties['bLiteMode'][1];
+	this.infoPopups = JSON.parse(this.properties['infoPopups'][1]);
 	/** @type {{playlistLoading:number, dynamicMenus:number, playlistCache:number, startupPlaylist:number}} */
 	this.delays = JSON.parse(this.properties.delays[1]);
 	this.folderRules = JSON.parse(this.properties.folderRules[1]);

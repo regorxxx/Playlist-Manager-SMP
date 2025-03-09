@@ -130,10 +130,19 @@ let properties = {
 	filterStates: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
 	bShowSep: ['Show name/category separators: ', true, { func: isBoolean }, true],
 	listColors: ['List items color codes', '', { func: isStringWeak }, ''],
-	bFirstPopup: ['Playlist Manager: Fired once', false, { func: isBoolean }, false],
+	infoPopups: ['Info popups fired once', JSON.stringify({
+		firstInit: false,
+		fplFormat: false,
+		plsFormat: false,
+		xspFormat: false,
+		xspfFormat: false,
+		noLibTracked: false,
+		subsongItem: false,
+		networkDrive: false,
+	})],
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }, false],
-	bFirstPopupFpl: ['Playlist Manager fpl: Fired once', false, { func: isBoolean }, false],
-	bFirstPopupPls: ['Playlist Manager pls: Fired once', false, { func: isBoolean }, false],
+	_placeholder0_: ['', false, { func: isBoolean }, false],
+	_placeholder1_: ['', false, { func: isBoolean }, false],
 	categoryState: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
 	tooltip: ['Tooltip settings', JSON.stringify({
 		bShowTips: true,
@@ -179,8 +188,8 @@ let properties = {
 	bCopyAsync: ['Copy tracks asynchronously on export?', true, { func: isBoolean }, true],
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }, true],
 	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }, true],
-	bFirstPopupXsp: ['Playlist Manager xsp: Fired once', false, { func: isBoolean }, false],
-	bFirstPopupXspf: ['Playlist Manager xspf: Fired once', false, { func: isBoolean }, false],
+	_placeholder2_: ['', false, { func: isBoolean }, false],
+	_placeholder3_: ['', false, { func: isBoolean }, false],
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }, true],
 	bSavingXsp: ['Auto-save .xsp playlists?', false, { func: isBoolean }, false],
 	bAllPls: ['Track UI-only playlists?', false, { func: isBoolean }, false],
@@ -188,7 +197,7 @@ let properties = {
 	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }, 50],
 	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }, 'Playlist type,Lock state'],
 	bSavingDefExtension: ['Try to save playlists always as default format?', true, { func: isBoolean }, true],
-	bNetworkPopup: ['Playlist Manager on network drive: Fired once', false, { func: isBoolean }, false],
+	_placeholder4_: ['', false, { func: isBoolean }, false],
 	bOpenOnExport: ['Open folder on export actions?', true, { func: isBoolean }, true],
 	bShowIcons: ['Show playlist icons?', true, { func: isBoolean }, true],
 	playlistIcons: ['Playlist icons codes (Font Awesome)', JSON.stringify(
@@ -385,10 +394,12 @@ properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlayli
 properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
 properties['logOpt'].push({ func: isJSON }, properties['logOpt'][1]);
 properties['xspfRules'].push({ func: isJSON }, properties['xspfRules'][1]);
+properties['infoPopups'].push({ func: isJSON }, properties['infoPopups'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
-	if (prop.bFirstPopup[1] && prop.bSetup[1]) { prop.bSetup[1] = false; overwriteProperties(prop); } // Don't apply on already existing installations
+	const infoPopups = JSON.parse(prop.infoPopups[1]);
+	if (infoPopups.firstInit && prop.bSetup[1]) { prop.bSetup[1] = false; overwriteProperties(prop); } // Don't apply on already existing installations
 	if (!prop.bSetup[1] && !prop.bLiteMode[1]) {
 		instances.init();
 		instances.add(window.ScriptInfo.Name);
@@ -415,6 +426,26 @@ setProperties(properties, 'plm_');
 			console.log('Playlist Manager: Rewriting default values for property ' + _p(propKey));
 		}
 	});
+	// Update default info popup values (for compat with new releases)
+	if (!infoPopups.firstInit) {
+		[	// xspf popup is left to fire again on purpose
+			{property: 'plm_16.Playlist Manager: Fired once', key: 'firstInit'},
+			{property: 'plm_18.Playlist Manager fpl: Fired once', key: 'fplFormat'},
+			{property: 'plm_19.Playlist Manager pls: Fired once', key: 'plsFormat'},
+			{property: 'plm_43.Playlist Manager xsp: Fired once', key: 'xspFormat'},
+			{property: 'plm_52.Playlist Manager on network drive: Fired once', key: 'networkDrive'},
+		].map((o) => {
+			if (window.GetProperty(o.property, false)) {
+				infoPopups[o.key] = true;
+				return true;
+			}
+		}).some((val) => {
+			if (val) {
+				bDone = true;
+				prop.infoPopups[1] = JSON.stringify(infoPopups);
+			}
+		});
+	}
 	if (bDone) { overwriteProperties(prop); }
 	if (prop.bAutoUpdateCheck[1]) {
 		include('helpers\\helpers_xxx_web_update.js');
@@ -457,17 +488,19 @@ let plsRwLock;
 
 {	// Info Popup and setup
 	let prop = getPropertiesPairs(properties, 'plm_');
+	const infoPopups = JSON.parse(prop.infoPopups[1]);
 	// Disable panel on init until it's done
 	if (prop.bSetup[1]) {
 		pop.enable(true, 'Setup', 'Setup required.\nPanel will be disabled during the process.');
-	} else if (!prop.bFirstPopup[1]) {
+	} else if (!infoPopups.firstInit) {
 		if (folders.JsPackageDirs) { // Workaround for https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210
-			WshShell.Popup('This script has been installed as a package.\nBefore closing the \'Spider Monkey Panel configuration window\' all popups must be closed, take your time reading them and following their instructions.\nAfterwards, close the SMP window. Panel will be reloaded.', 0, window.Name, popup.info + popup.ok);
+			WshShell.Popup('This script has been installed as a package.\nBefore closing the \'Spider Monkey Panel\\JSplitter configuration window\' all popups must be closed, take your time reading them and following their instructions.\nAfterwards, close the window. Panel will be reloaded.', 0, window.Name, popup.info + popup.ok);
 			if (getPropertiesValues(properties, 'plm_').filter(Boolean).length === 0) { // At this point nothing works properly so just throw
 				throw new Error('READ THE POPUPS AND STOP CLICKING ON BUTTONS WITHOUT READING!!!\nOtherwise TT, aka GeoRrGiA-ReBorN\'s master, will try\nto kill you with their good jokes.\n\nReally, read the popups and make our lives easier. Try reinstalling the script.\n\nThanks :)');
 			}
 		}
-		prop['bFirstPopup'][1] = true;
+		infoPopups.firstInit = true;
+		prop.infoPopups[1] = JSON.stringify(infoPopups);
 		isPortable(prop['playlistPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
@@ -676,16 +709,14 @@ if (!list.properties.bSetup[1]) {
 	// Tracking a network drive?
 	if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
 		console.log('Playlist Manager: tracked folder is on a drive without Recycle Bin.');
-		if (!list.properties.bNetworkPopup[1]) {
-			list.properties.bNetworkPopup[1] = true;
-			overwriteProperties(list.properties); // Updates panel
+		if (!list.infoPopups.networkDrive) {
+			list.setInfoPopup('networkDrive');
 			const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 			const readme = _open(file, utf8);
 			fb.ShowPopupMessage(readme, window.Name);
 		}
-	} else if (list.properties.bNetworkPopup[1]) {
-		list.properties.bNetworkPopup[1] = false;
-		overwriteProperties(list.properties); // Updates panel
+	} else if (list.infoPopups.networkDrive) {
+		list.setInfoPopup('networkDrive', false);
 	}
 
 	{	// Check backup files after crash

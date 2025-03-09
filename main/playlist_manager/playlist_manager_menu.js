@@ -2643,11 +2643,11 @@ function createMenuRightTop() {
 				list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 				// Tracking network drive?
 				if (mappedDrives.includes(list.playlistsPath.match(/^(.+?:)/g)[0])) {
-					if (!list.properties['bNetworkPopup'][1]) { list.properties['bNetworkPopup'][1] = true; }
+					if (!list.infoPopups.networkDrive) { list.setInfoPopup('networkDrive'); }
 					const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 					const readme = _open(file, utf8);
 					fb.ShowPopupMessage(readme, window.Name);
-				} else { list.properties['bNetworkPopup'][1] = false; }
+				} else { list.setInfoPopup('networkDrive', false); }
 				// Related features
 				const answer = list.bLiteMode
 					? popup.no
