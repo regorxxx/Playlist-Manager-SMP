@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/25
+//11/03/25
 
 /* exported _list */
 
@@ -2682,7 +2682,7 @@ function _list(x, y, w, h) {
 	this.validateSearch = (str = this.searchInput ? this.searchInput.text : '') => {
 		if (!isStringWeak(str)) {
 			console.popup('Search term is not a string:\n' + JSON.stringify(str), 'Playlist Manager: search');
-			try { str = str.toString(); } catch (e) { str = ''; }
+			try { str = str.toString(); } catch (e) { str = ''; } // eslint-disable-line no-unused-vars
 		}
 		return str;
 	};
@@ -2751,7 +2751,7 @@ function _list(x, y, w, h) {
 					try {
 						[, re, flag] = term.match(/\/(.*)\/([a-z]+)?/);
 						rgExp = re ? new RegExp(re, flag) : null;
-					} catch (e) { /* empty */ }
+					} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
 				}
 				if (!rgExp) { rgExp = new RegExp(escapeRegExp(term), 'gi'); }
 				match = (val) => {
@@ -3510,13 +3510,13 @@ function _list(x, y, w, h) {
 					if (typeof expression === 'number') { value = [expression.toString()]; }
 					else if (expression.includes('$') || expression.includes('%')) { // TF or Tag remapping
 						try { value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]).split(', '); }
-						catch (e) { fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name); }
+						catch (e) { fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name); } // eslint-disable-line no-unused-vars
 					} else if (expression.includes('JS:')) { // JS expression by function name at 'helpers_xxx_utils.js'
 						bFunc = true;
 						let funcName = expression.replace('JS:', '');
 						if (Object.hasOwn(funcDict, funcName)) {
 							try { ({ value, bOverWrite, bMultiple } = funcDict[funcName](pls)); }
-							catch (e) { fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name); }
+							catch (e) { fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name); } // eslint-disable-line no-unused-vars
 						} else { fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name); }
 					} else if (expression.includes(',')) { // Array (list sep by comma)
 						value = expression.split(',');
@@ -3856,7 +3856,7 @@ function _list(x, y, w, h) {
 		}
 		if (!path || !path.length) {
 			try { path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', 'Playlist Manager: export to JSON', this.playlistsPath + 'Export\\' + name, true)); }
-			catch (e) { return ''; }
+			catch (e) { return ''; } // eslint-disable-line no-unused-vars
 		}
 		if (!path.length) { return ''; }
 		if (_isFile(path)) {
@@ -3888,7 +3888,7 @@ function _list(x, y, w, h) {
 		let externalPath = path;
 		if (!path || !path.length) {
 			try { externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', 'Playlist Manager: JSON path', _getClipboardData() || '', true); }
-			catch (e) { return false; }
+			catch (e) { return false; } // eslint-disable-line no-unused-vars
 		}
 		if (!externalPath.length) { return false; }
 		if (!_isFile(externalPath)) {
@@ -5668,7 +5668,7 @@ function _list(x, y, w, h) {
 	this.addFolder = (name = '', toFolder = null) => {
 		if (!name.length) {
 			try { name = utils.InputBox(window.ID, 'Enter folder name:', 'Playlist Manager: folder name', name, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 			if (!name.length) { return null; }
 			if (this.dataAll.some((pls) => pls.nameId === name)) {
 				fb.ShowPopupMessage('Name already used: ' + name + '\n' + 'Choose an unique name for new folder.', 'Playlist Manager: folder name');
@@ -5890,7 +5890,7 @@ function _list(x, y, w, h) {
 		if (!name.length) {
 			let boxText = 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the UI-only playlist will be created with the new name and it will become the active playlist.';
 			try { input = utils.InputBox(window.ID, boxText, 'Playlist Manager: playlist name', oldName || input, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 			if (!input.length) { return null; }
 		}
 		const newName = input;
@@ -6058,7 +6058,7 @@ function _list(x, y, w, h) {
 		let newName = hasName ? pls.name : '';
 		if (!newName.length || bEdit) {
 			try { newName = utils.InputBox(window.ID, 'Enter AutoPlaylist name:', 'Playlist Manager: AutoPlaylist name', newName, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 			if (!newName.length) { return null; }
 		}
 		const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
@@ -6070,7 +6070,7 @@ function _list(x, y, w, h) {
 		let newQuery = hasQuery ? pls.query : '';
 		if (!newQuery.length || bEdit) {
 			try { newQuery = utils.InputBox(window.ID, 'Enter AutoPlaylist query:', 'Playlist Manager: AutoPlaylist query', newQuery, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 		}
 		let sortFromQuery = newQuery;
 		newQuery = stripSort(newQuery);
@@ -6157,7 +6157,7 @@ function _list(x, y, w, h) {
 		let newName = hasName ? pls.name : '';
 		if (!newName.length || bEdit) {
 			try { newName = utils.InputBox(window.ID, 'Enter Smart Playlist name', 'Playlist Manager: Smart Playlist name', newName, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 			if (!newName.length) { return null; }
 		}
 		const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : '';
@@ -6169,7 +6169,7 @@ function _list(x, y, w, h) {
 		let newQuery = hasQuery ? pls.query : '';
 		if (!newQuery.length || bEdit) {
 			try { newQuery = utils.InputBox(window.ID, 'Enter Smart Playlist query\n(#PLAYLIST# may be used as "source" too)', 'Playlist Manager: Smart Playlist query', newQuery, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 		}
 		const bPlaylist = newQuery.includes('#PLAYLIST# IS');
 		if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, 'Playlist Manager: Smart Playlist query'); return null; }
@@ -6206,7 +6206,7 @@ function _list(x, y, w, h) {
 			if (isFinite(pls.limit)) { newLimit = pls.limit; }
 		} else if (bEdit) {
 			try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', 'Playlist Manager: Smart Playlist limit', newLimit, true)); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 			if (Number.isNaN(newLimit)) { return null; }
 			if (!Number.isFinite(newLimit)) { newLimit = 0; }
 		}
@@ -6275,7 +6275,7 @@ function _list(x, y, w, h) {
 		if (bInputName) {
 			let boxText = bEmpty ? 'Enter playlist name:' : 'Enter playlist name:\n(cancel to skip playlist file creation)\n\nIf you change the current name, then a duplicate of the active playlist will be created with the new name and it will become the active playlist.';
 			try { input = utils.InputBox(window.ID, boxText, 'Playlist Manager: playlist name', (bEmpty ? '' : oldName) || input, true); }
-			catch (e) { return null; }
+			catch (e) { return null; } // eslint-disable-line no-unused-vars
 			if (!input.length) { return null; }
 		}
 		const newName = input;
@@ -7475,7 +7475,7 @@ function _list(x, y, w, h) {
 
 	this.deleteMainMenuDynamic = () => {
 		this.mainMenuDynamic.forEach((pls, i) => {
-			try { fb.UnregisterMainMenuCommand(i); } catch (e) { /* empty */ }
+			try { fb.UnregisterMainMenuCommand(i); } catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
 		});
 		this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 	};
@@ -7522,7 +7522,7 @@ function _list(x, y, w, h) {
 				name = new RegExp(re, flag);
 				bRegExp = true;
 			}
-		} catch (e) { /* empty */ }
+		} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
 		if (bRegExp) {
 			const playlists = getPlaylistNames();
 			const pls = (playlists.find((pls) => { return name.test(pls.name); }) || { idx: -1 }).idx;

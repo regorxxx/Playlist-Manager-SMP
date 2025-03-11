@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/25
+//11/03/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -215,7 +215,7 @@ function createMenuLeft(forcedIndex = -1) {
 					entryText: 'Edit query...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let newQuery = '';
 						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (pls.extension === '.xsp' ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
-						catch (e) { return; }
+						catch (e) { return; } // eslint-disable-line no-unused-vars
 						const bPlaylist = newQuery.includes('#PLAYLIST# IS');
 						let sortFromQuery = newQuery;
 						newQuery = stripSort(newQuery);
@@ -386,11 +386,11 @@ function createMenuLeft(forcedIndex = -1) {
 						let tags = '';
 						const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
 						try { tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true); }
-						catch (e) { return; }
+						catch (e) { return; } // eslint-disable-line no-unused-vars
 						const tagsString = tags;
 						if (tags.length) {
 							tags = tags.replaceAll('\'\'', '"'); // Replace quotes
-							try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; }
+							try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; } // eslint-disable-line no-unused-vars
 						}
 						if (tagsString !== currValue) { setTrackTags(tags, list, z); }
 					}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP && !bIsPlsUI ? MF_STRING : MF_GRAYED
@@ -1334,7 +1334,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				menuName, entryText: 'New category...', func: () => {
 					let category = '';
 					try { category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, playlists[0].category !== null ? playlists[0].category : '', true); }
-					catch (e) { return; }
+					catch (e) { return; } // eslint-disable-line no-unused-vars
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
 						if (!isLockPls(pls) && isPlsEditable(pls)) {
@@ -1413,11 +1413,11 @@ function createMenuLeftMult(forcedIndexes = []) {
 					let tags = '';
 					const currValue = playlists[0].trackTags && playlists[0].trackTags.length ? JSON.stringify(playlists[0].trackTags) : '';
 					try { tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true); }
-					catch (e) { return; }
+					catch (e) { return; } // eslint-disable-line no-unused-vars
 					const tagsString = tags;
 					if (tags.length) {
 						tags = tags.replaceAll('\'\'', '"'); // Replace quotes
-						try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; }
+						try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; } // eslint-disable-line no-unused-vars
 					}
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
@@ -1444,7 +1444,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				entryText: 'Export and Copy Tracks to...', func: () => {
 					let path = '';
 					try { path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, list.playlistsPath + 'Export\\', true)); }
-					catch (e) { return; }
+					catch (e) { return; } // eslint-disable-line no-unused-vars
 					if (!path.length) { return; }
 					if (path === list.playlistsPath) { console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return; }
 					const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
@@ -1956,6 +1956,7 @@ function createMenuRight() {
 	{	// Find selection
 		menu.newEntry({
 			entryText: 'Find current selection...' + list.getGlobalShortcut('find'), func: () => {
+				/** @type {string[]|| {{name:string, category:string}[]}} */
 				const found = [];
 				for (let i = 0; i < list.itemsAll; i++) {
 					if (list.checkSelectionDuplicatesPlaylist({ playlistIndex: i, bAlsoHidden: true })) {
@@ -1976,7 +1977,8 @@ function createMenuRight() {
 						found[i] = (found[i].category || 'No category') + ':';
 					}
 				}
-				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + (found.length ? found.join('\n') : 'None.'), window.Name);
+				const results = found.length ? found.join('\n') : 'None.';
+				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + results, window.Name);
 			}, flags: sel && sel.Count !== 0 ? MF_STRING : MF_GRAYED
 		});
 	}
@@ -2226,7 +2228,7 @@ function createMenuRight() {
 					// Parse mask
 					formatMask = JSON.parse(formatMask);
 				}
-				catch (e) { console.log('Playlist Manager: Invalid format mask'); return; }
+				catch (e) { console.log('Playlist Manager: Invalid format mask'); return; } // eslint-disable-line no-unused-vars
 				if (!formatMask) { return; }
 				if (!bPresetUsed) {
 					discardMask = Input.string(
@@ -3729,10 +3731,10 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Personalize playlist icons...', func: () => {
 					let input;
 					try { input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name, list.properties['playlistIcons'][1], true); }
-					catch (e) { return; }
+					catch (e) { return; } // eslint-disable-line no-unused-vars
 					if (!input.length) { input = '{}'; }
 					if (input === list.properties['playlistIcons'][1]) { return; }
-					try { JSON.parse(input); } catch (e) { return; }
+					try { JSON.parse(input); } catch (e) { return; } // eslint-disable-line no-unused-vars
 					list.playlistIcons = JSON.parse(input);
 					list.properties['playlistIcons'][1] = input;
 					overwriteProperties(list.properties);
@@ -5815,7 +5817,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 		const encryptToken = '********-****-****-****-************';
 		const currToken = list.properties.lBrainzEncrypt[1] ? encryptToken : list.properties.lBrainzToken[1];
 		try { lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name, currToken, true); }
-		catch (e) { return false; }
+		catch (e) { return false; } // eslint-disable-line no-unused-vars
 		if (lBrainzToken === currToken || lBrainzToken === encryptToken) { return false; }
 		if (lBrainzToken.length) {
 			if (!(await lb.validateToken(lBrainzToken))) {
@@ -5826,7 +5828,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 			if (answer === popup.yes) {
 				let pass = '';
 				try { pass = utils.InputBox(window.ID, 'Enter a password:\n(will be required on every use)', window.Name, pass, true); }
-				catch (e) { return false; }
+				catch (e) { return false; } // eslint-disable-line no-unused-vars
 				if (!pass.length) { return false; }
 				lBrainzToken = new SimpleCrypto(pass).encrypt(lBrainzToken);
 			}
