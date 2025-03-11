@@ -6850,7 +6850,7 @@ function _list(x, y, w, h) {
 	};
 	this.xspfPopup = (bForce = false) => {
 		if (!this.infoPopups.xspfFormat || bForce) {
-			this.setInfoPopup('xspFormat');
+			this.setInfoPopup('xspfFormat');
 			fb.ShowPopupMessage('Playlist Manager has loaded a .xspf playlist for the first time. This is an informative popup.\n\n-.pls playlists format allow all extra data like UUID, category, lock status or tags, ... on file (like M3U format).\n-Items on these playlists are matched against the library by path like any other format.\n-In case files are not found by path, then it will try to match by tags using queries. Therefore .xspf playlists are shareable between different users/libraries, since they will work no matter the media structure.\n-Note query matching involves much more processing time, so it\'s much faster to use them as an \'standard\' playlist.\n-You may tweak some features of this format at \'Playlist behavior\\XSPF behavior\'\n-Additional support for non-tracked files with subsongs (.cue, .iso, etc.) can be added by installing foo_xspf_1 (*), appropriate settings (**) and tweaking the XSPF behavior settings (see above). For files tracked on library, it is not needed.\n-If you are using default another format (extension) on the panel, as soon as a playlist update is required on the file, it will be converted to the new format (auto-save or forcing update). This can be avoided by locking the file or changing the auto-saving settings.\n\n(*) https://github.com/Chocobo1/foo_xspf_1\n\n(*) https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', 'Playlist Manager: .xspf playlists');
 		}
 	};
