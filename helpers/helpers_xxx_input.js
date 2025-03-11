@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/09/24
+//11/03/25
 
 /* exported Input */
 
@@ -156,7 +156,7 @@ const Input = Object.seal(Object.freeze({
 	number: function (type, oldVal, message, title, example, checks = []) {
 		const types = new Set(['int', 'int positive', 'int negative', 'float', 'float positive', 'float negative', 'real', 'real positive', 'real negative']);
 		this.data.last = oldVal; this.data.lastInput = null;
-		if (type && type.length) { type.replace('/integer/gi', 'int'); }
+		if (type && type.length) { type = type.replace('/integer/gi', 'int'); }
 		if (!types.has(type)) { throw new Error('Invalid type: ' + type); }
 		let input, newVal;
 		try {
@@ -300,7 +300,7 @@ const Input = Object.seal(Object.freeze({
 			try { // Sanity check
 				fb.GetQueryItems(new FbMetadbHandleList(), newVal);
 				fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND (' + newVal + ')');
-			} catch (e) { throw new Error('Invalid query'); }
+			} catch (e) { throw new Error('Invalid query'); } // eslint-disable-line no-unused-vars
 			if (bFilterEmpty && fb.GetQueryItems(fb.GetLibraryItems(), newVal).Count === 0) { throw new Error('Zero items query'); }
 			if (checks && checks.length && !checks.some((check) => check.call(this, newVal))) {
 				throw new Error('Invalid checks');

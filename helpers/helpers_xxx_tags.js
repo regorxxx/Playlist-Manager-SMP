@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/25
+//11/03/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath */
 
@@ -17,7 +17,7 @@ include('callbacks_xxx.js');
 const tagsVolatileCache = new VolatileCache(1000); // Deleted every 1000 ms
 addEventListener('on_metadb_changed', () => tagsVolatileCache.clear());
 
-const subsongRegex = /,\d*$/;
+const subsongRegex = /,\d+$/;
 
 // Tags descriptors:
 // Always use .toLowerCase first before checking if the set has the string. For ex
@@ -490,12 +490,12 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 		if (!queryNoSort.length || queryNoSort !== query && !checkSort(query.replace(queryNoSort, ''))) { return false; }
 	}
 	try { fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort); }  // Test query against empty handle list since it's much faster!
-	catch (e) { bPass = false; }
+	catch (e) { bPass = false; } // eslint-disable-line no-unused-vars
 	if (bPass) {
 		// Allow simple search like 'rock' but don't allow single TF expressions
 		if (hasQueryExpression(queryNoSort)) {
 			try { fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort)); }  // Some expressions only throw inside parentheses!
-			catch (e) { bPass = false; }
+			catch (e) { bPass = false; } // eslint-disable-line no-unused-vars
 		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
 	}
 	if (!bAllowPlaylist && queryNoSort && RegExp(/.*#(PLAYLIST|playlist)# IS.*/).exec(queryNoSort)) { bPass = false; }
@@ -822,13 +822,13 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 }
 
 /**
- * Checks wether a handle references a container or not.
+ * Checks if a track references a container with subsongs
  *
  * @function
  * @name function isSubsong
  * @kind function
- * @param {FbMetadbHandle} handle
- * @param {string} extension
+ * @param {FbMetadbHandle} handle - Track
+ * @param {string} ext - [=''] Track extension (provide it if already known)
  * @returns {boolean}
  */
 function isSubsong(handle, ext = '') {
@@ -849,5 +849,5 @@ function isSubsong(handle, ext = '') {
 function isSubsongPath(path, ext = '') {
 	const blackList = new Set(['dsf']);
 	const subsong = path.split(',').pop();
-	return subsongRegex.test(path) && subsong !== 0 && !blackList.has(ext || path.split('.').pop().replace(',' + subsong,''));
+	return subsongRegex.test(path) && subsong !== '0' && !blackList.has(ext || path.split('.').pop().replace(',' + subsong,''));
 }
