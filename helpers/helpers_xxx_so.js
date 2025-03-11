@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/24
+//11/03/25
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -17,23 +17,24 @@ function getSoFeatures() {
 	let doc;
 	globProfiler.Print('getSoFeatures.vars');
 	// Internals
-	try { doc = new ActiveXObject('htmlfile'); } catch (e) { soFeat.gecko = false; }
+	try { doc = new ActiveXObject('htmlfile'); } catch (e) { soFeat.gecko = false; } // eslint-disable-line no-unused-vars
 	if (typeof doc !== 'undefined' && doc && soFeat.gecko) {
 		let clText = 'test', cache = null;
-		try { cache = doc.parentWindow.clipboardData.getData('Text'); } catch (e) { /* continue */ }
+		try { cache = doc.parentWindow.clipboardData.getData('Text'); } catch (e) { /* continue */ } // eslint-disable-line no-unused-vars
 		try {
 			doc.parentWindow.clipboardData.setData('Text', clText);
 			clText = doc.parentWindow.clipboardData.getData('Text');
-		} catch (e) { soFeat.clipboard = false; }
-		if (cache) { try { doc.parentWindow.clipboardData.setData('Text', cache); } catch (e) { /* continue */ } } // Just in case previous clipboard data is needed
+		} catch (e) { soFeat.clipboard = false; } // eslint-disable-line no-unused-vars
+		// Just in case previous clipboard data is needed
+		if (cache) { try { doc.parentWindow.clipboardData.setData('Text', cache); } catch (e) { /* continue */ } } // eslint-disable-line no-unused-vars
 		if (clText !== 'test') { soFeat.clipboard = false; }
 	} else { soFeat.clipboard = false; }
 	if (!soFeat.gecko || !soFeat.clipboard) { soFeat.popup = false; }
 	globProfiler.Print('getSoFeatures.internals');
 	// File system
 	if (typeof app !== 'undefined') {
-		try { app.NameSpace(10).MoveHere(null); } catch (e) {
-			try { app.NameSpace(0).ParseName(null).InvokeVerb('delete'); } catch (e) { soFeat.recycle = false; }
+		try { app.NameSpace(10).MoveHere(null); } catch (e) { // eslint-disable-line no-unused-vars
+			try { app.NameSpace(0).ParseName(null).InvokeVerb('delete'); } catch (e) { soFeat.recycle = false; } // eslint-disable-line no-unused-vars
 		}
 	} else { soFeat.recycle = false; }
 	globProfiler.Print('getSoFeatures.fileSystem');
@@ -43,12 +44,12 @@ function getSoFeatures() {
 			new ActiveXObject('Scripting.FileSystemObject');
 			new ActiveXObject('MSXML2.XMLHTTP');
 			new ActiveXObject('ADODB.Stream');
-		} catch (e) { soFeat.bio = false; }
+		} catch (e) { soFeat.bio = false; } // eslint-disable-line no-unused-vars
 	}
 	globProfiler.Print('getSoFeatures.scripting');
 	// UI
 	if (typeof WshShell !== 'undefined') {
-		try { WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); } catch (e) { soFeat.dpi = false; }
+		try { WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); } catch (e) { soFeat.dpi = false; } // eslint-disable-line no-unused-vars
 	} else { soFeat.dpi = false; }
 	if (!utils.CheckFont('Arial')) {
 		soFeat.gdiplus = false;
@@ -61,7 +62,7 @@ function getSoFeatures() {
 	const soArchFile = folders.temp + 'soArch.txt';
 	if (!utils.IsFile(soArchFile)) {
 		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
-		const run = function () { try { WshShell.Run(Array.from(arguments, (arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } };
+		const run = function () { try { WshShell.Run(Array.from(arguments, (arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } }; // eslint-disable-line no-unused-vars
 		run(soBat, soArchFile);
 	}
 	if (utils.IsFile(soArchFile) && !(utils.ReadTextFile(soArchFile) || '').startsWith('x64')) { soFeat.x64 = false; }
@@ -115,7 +116,7 @@ function initCheckFeatures(soFeat, bPopup = true) {
 	const bPrevFile = utils.IsFile(soFeatFile);
 	let bCheck = false;
 	if (bPrevFile) {
-		try { data = utils.ReadTextFile(soFeatFile, 65001); } catch (e) {/* continue regardless of error */ }
+		try { data = utils.ReadTextFile(soFeatFile, 65001); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
 		data = data ? JSON.parse(data) : null;
 	}
 	if (!bPrevFile || !data) {

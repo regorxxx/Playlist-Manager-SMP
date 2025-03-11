@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/23
+//11/03/25
 
 /* exported checkUpdate */
 
@@ -59,25 +59,4 @@ function checkUpdate({
 			console.log('downloadText(): ' + reason + '\n\t' + versionURL);
 			return false;
 		});
-}
-
-if (typeof compareVersions === 'undefined') {
-	this.compareVersions = function compareVersions(from, to, bNum = true) {
-		if (typeof from === 'string') { from = from.split('.'); }
-		if (typeof to === 'string') { to = to.split('.'); }
-		if (bNum) {
-			if (to.length > 3) { to.length = 3; }
-			if (from.length > 3) { from.length = 3; }
-		}
-		for (let i = 0; i < to.length; ++i) {
-			if (to[i] !== from[i]) {
-				return to[i].localeCompare(from[i], void (0), { numeric: true }) < 0;
-			}
-		}
-		return true;
-	};
-}
-
-if (typeof WshShell === 'undefined') {
-	this.WshShell = new ActiveXObject('WScript.Shell');
 }

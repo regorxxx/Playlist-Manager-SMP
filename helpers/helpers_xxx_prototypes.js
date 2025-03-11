@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//11/03/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
 
@@ -123,7 +123,7 @@ function compareKeys(a, b) {
 function isJSON(str) {
 	let bDone = true;
 	try { JSON.parse(str); }
-	catch (e) { bDone = false; }
+	catch (e) { bDone = false; } // eslint-disable-line no-unused-vars
 	return bDone;
 }
 
@@ -526,7 +526,7 @@ function _bt(tag) {
 }
 
 function _qCond(tag, bUnquote = false) {
-	return bUnquote
+	return bUnquote //NOSONAR
 		? tag.replace(/(^")(.*\$+.*)("$)/g, '$2')
 		: tag.includes('$')
 			? _q(tag)
@@ -721,10 +721,14 @@ Array.prototype.schwartzianSort = function (processFunc, sortFunc = (a, b) => a[
 // https://github.com/aldo-gutierrez/bitmasksorterJS
 const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
 Array.prototype.radixSort = function (bReverse = false, start, end) { // NOSONAR
-	return bReverse ? bitmask.sortNumber.call(this, this, start, end).reverse() : bitmask.sortNumber.call(this, this, start, end);
+	return bReverse //NOSONAR
+		? bitmask.sortNumber.call(this, this, start, end).reverse()
+		: bitmask.sortNumber.call(this, this, start, end);
 };
 Array.prototype.radixSortInt = function (bReverse = false, start, end) { // NOSONAR
-	return bReverse ? bitmask.sortInt.call(this, this, start, end).reverse() : bitmask.sortInt.call(this, this, start, end);
+	return bReverse //NOSONAR
+		? bitmask.sortInt.call(this, this, start, end).reverse()
+		: bitmask.sortInt.call(this, this, start, end);
 };
 
 function cartesian(...args) {
@@ -894,4 +898,4 @@ const regExBool = /^b[A-Z]\w*/;
 	Maps
 */
 // Allows forward and backward iteration
-try { include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js'); } catch (e) {/* continue regardless of error */ }
+try { include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js'); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
