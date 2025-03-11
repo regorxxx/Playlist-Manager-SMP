@@ -1,7 +1,7 @@
 ﻿'use strict';
-//07/03/25
+//11/03/25
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -108,19 +108,20 @@ function _getNameSpacePath(name) { // bin nameSpace returns a virtual path which
 
 function _resolvePath(path) {
 	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
+	else if (path.startsWith(folders.xxxRootName)) { path = path.replace(folders.xxxRootName, folders.xxx); }
 	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
 	return path;
 }
 
 function _isFile(file) {
 	file = _resolvePath(file);
-	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsFile(file); } catch (e) { return false; } }
+	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsFile(file); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
 	else { return isString(file) ? fso.FileExists(file) : false; }
 }
 
 function _isFolder(folder) {
 	folder = _resolvePath(folder);
-	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsDirectory(folder); } catch (e) { return false; } }
+	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsDirectory(folder); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
 	else { return isString(folder) ? fso.FolderExists(folder) : false; }
 }
 
@@ -139,7 +140,7 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 		subFolders.forEach((path) => {
 			try {
 				fso.CreateFolder(path);
-			} catch (e) {
+			} catch (e) { // eslint-disable-line no-unused-vars
 				return false;
 			}
 		});
@@ -154,7 +155,7 @@ function _deleteFile(file, bForce = true) {
 	if (_isFile(file)) {
 		try {
 			fso.DeleteFile(file, bForce);
-		} catch (e) {
+		} catch (e) { // eslint-disable-line no-unused-vars
 			return false;
 		}
 		return !(_isFile(file));
@@ -169,7 +170,7 @@ function _deleteFolder(folder, bForce = true) {
 		if (folder.endsWith('\\')) { folder = folder.slice(0, -1); }
 		try {
 			fso.DeleteFolder(folder, bForce);
-		} catch (e) {
+		} catch (e) { // eslint-disable-line no-unused-vars
 			return false;
 		}
 		return !(_isFolder(folder));
@@ -189,7 +190,7 @@ function _renameFile(oldFilePath, newFilePath) {
 			if (!_isFolder(filePath)) { _createFolder(filePath); }
 			try {
 				fso.MoveFile(oldFilePath, newFilePath);
-			} catch (e) {
+			} catch (e) { // eslint-disable-line no-unused-vars
 				return false;
 			}
 			return _isFile(newFilePath);
@@ -211,7 +212,7 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 			if (!_isFolder(filePath)) { _createFolder(filePath); }
 			try {
 				bAsync ? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
-			} catch (e) {
+			} catch (e) { // eslint-disable-line no-unused-vars
 				return false;
 			}
 			return (bAsync ? true : _isFile(newFilePath) && _isFile(oldFilePath)); // Must check afterwards for Async
@@ -234,14 +235,14 @@ function _recycleFile(file, bCheckBin = false) {
 			try {
 				if (utils.IsKeyPressed(VK_SHIFT)) { throw new Error('Shift'); }
 				app.NameSpace(spaces.bin).MoveHere(file); // First nameSpace method (may not work on Unix systems)
-			} catch (e) {
+			} catch (e) { // eslint-disable-line no-unused-vars
 				try {
 					if (utils.IsKeyPressed(VK_SHIFT)) { throw new Error('Shift'); }
 					app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
 					// fso.GetFile(file).Delete(true);
-				} catch (e) {
+				} catch (e) { // eslint-disable-line no-unused-vars
 					try { _runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true); } // cmdUtils as fallback
-					catch (e) { return false; }
+					catch (e) { return false; } // eslint-disable-line no-unused-vars
 				}
 			}
 		} else { return _deleteFile(file, true); }
@@ -261,7 +262,7 @@ function _restoreFile(file) {
 		try {
 			items = app.NameSpace(10).Items();
 			numItems = items.Count;
-		} catch (e) { return false; }
+		} catch (e) { return false; } // eslint-disable-line no-unused-vars
 		for (let i = 0; i < numItems; i++) {
 			if (items.Item(i).Name === OriginalFileName) {
 				_renameFile(items.Item(i).Path, file);
@@ -328,7 +329,7 @@ function _saveFSO(file, value, bUTF16) {
 			fileObj.Write(value);
 			fileObj.Close();
 			return true;
-		} catch (e) { /* log error later */ }
+		} catch (e) { /* log error later */ } // eslint-disable-line no-unused-vars
 	}
 	console.log('Error saving to ' + file);
 	return false;
@@ -358,7 +359,7 @@ function _jsonParse(value) {
 	try {
 		const data = JSON.parse(value);
 		return data;
-	} catch (e) {
+	} catch (e) { // eslint-disable-line no-unused-vars
 		return null;
 	}
 }
@@ -430,7 +431,7 @@ function _run() {
 	try {
 		WshShell.Run(Array.from(arguments, (arg) => /^(CMD |")/gi.test(arg) ? arg : _q(arg)).join(' '));
 		return true;
-	} catch (e) {
+	} catch (e) { // eslint-disable-line no-unused-vars
 		return false;
 	}
 }
@@ -439,7 +440,7 @@ function _runHidden() {
 	try {
 		WshShell.Run(Array.from(arguments, (arg) => /^(CMD |")/gi.test(arg) ? arg : _q(arg)).join(' '), 0, true);
 		return true;
-	} catch (e) {
+	} catch (e) { // eslint-disable-line no-unused-vars
 		return false;
 	}
 }
@@ -541,7 +542,7 @@ function findRecursivePaths(path = fb.ProfilePath) {
 }
 
 function findRecursiveDirs(path = fb.ProfilePath) {
-	return findRecursivePaths(path).map((dir) => dir.replace(path, ''));
+	return findRecursivePaths(path).map((dir) => dir.replace(_resolvePath(path), ''));
 }
 
 function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath]) {
@@ -558,6 +559,7 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 	let finalPath = '';
 	if (relPath.startsWith('.\\profile\\') && absPath === fb.ProfilePath) { finalPath = relPath.replace('.\\profile\\', absPath); }
+	else if (relPath.startsWith(folders.xxxRootName) && absPath === folders.xxx) { finalPath = relPath.replace(folders.xxxRootName, absPath); }
 	else if (relPath.startsWith('.\\') && absPath === fb.FoobarPath) { finalPath = relPath.replace('.\\', absPath); }
 	else {
 		const relPathArr = relPath.split('\\').filter(Boolean);
@@ -692,7 +694,7 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 				try {
 					out.folder.size = round(folder.Size, 2);
 					out.folder.sizePercent = round(out.folder.size / out.size.total * 100, 1);
-				} catch (e) { /* fso fails on large folders */ }
+				} catch (e) { /* fso fails on large folders */ } // eslint-disable-line no-unused-vars
 			}
 			out.folder.dateCreated = folder.DateCreated; // .toString()
 			out.folder.dateModified = folder.DateLastModified;

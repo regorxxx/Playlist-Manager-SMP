@@ -1,21 +1,10 @@
 ﻿'use strict';
-//06/03/25
+//11/03/25
 
 /**
  * Global folders setting
  */
 const folders = {};
-/**
- * Retrieves scripts root at profile folder using this helper path as reference
- * @type {(boolean) => string} - Ex: scripts\\SMP\\xxx-scripts\\
- */
-folders.getRoot = (bRelative = true) => {
-	try { include(''); }
-	catch (e) {
-		return e.message.replace('include failed:\nPath does not point to a valid file: ' + (bRelative ? fb.ProfilePath : ''), '')
-			.replace(/helpers\\$/, ''); // Required since include() points to this file (not the main one)
-	}
-}
 /**
  * Package directories (only available if script is a package)
  * @type {{Root: string, Assets: string, Scripts: string, Storage: string}|null}
@@ -23,20 +12,37 @@ folders.getRoot = (bRelative = true) => {
 folders.JsPackageDirs = (utils.GetPackageInfo(window.ScriptInfo.PackageId || -1) || { Directories: null }).Directories;
 if (folders.JsPackageDirs) { for (const key in folders.JsPackageDirs) { folders.JsPackageDirs[key] += '\\'; } }
 /**
- * Scripts installation root
+ * Retrieves scripts root at profile folder using this helper path as reference
+ * @type {(boolean) => string} - Ex: scripts\\SMP\\xxx-scripts\\
+ */
+folders.getRoot = (bRelative = true) => {
+	if (folders.JsPackageDirs) { return folders.JsPackageDirs.Root.replace(fb.ProfilePath, ''); }
+	try { include(''); }
+	catch (e) {
+		return e.message.replace('include failed:\nPath does not point to a valid file: ' + (bRelative ? fb.ProfilePath : ''), '')
+			.replace(/helpers\\$/, ''); // Required since include() points to this file (not the main one)
+	}
+};
+/**
+ * Scripts virtual root to be replaced on execution by real path
+ * @type {string} - Ex: .\\xxx-scripts\\
+ */
+folders.xxxRootName = '.\\xxx-scripts\\';
+/**
+ * Scripts installation root relative to profile path
  * @type {string} - Ex: scripts\\SMP\\xxx-scripts\\
  */
-folders.xxxName = folders.getRoot(); // Edit here to change install path (this is relative to the profile path)
+folders.xxxName = folders.getRoot();
 /**
  * JS data folder
  * @type {string} - Ex: js_data\\
  */
 folders.dataName = 'js_data\\';
 /**
- * Path to scripts installation root (adjusted for packages or script files)
+ * Absolute path to scripts installation root (adjusted for packages or script files)
  * @type {string} - Ex: [foobar profile]\\scripts\\SMP\\xxx-scripts\\ or [foobar profile]\\foo_spider_monkey_panel\\packages\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
  */
-folders.xxx = folders.JsPackageDirs ? folders.JsPackageDirs.Root : fb.ProfilePath + folders.xxxName;
+folders.xxx = fb.ProfilePath + folders.xxxName;
 /**
  * Path to global JS data folder
  * @type {string}- Ex: [foobar profile]\\js_data\\
