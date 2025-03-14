@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//14/03/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath */
 
@@ -298,10 +298,17 @@ function queryReplaceWithStatic(query, options = { bDebug: false }) {
 	// System
 	if (/#(VOLUME|VOLUMEDB|VERSION)#/i.test(query)) {
 		query = query.replace(/#VOLUME#/g, Math.round(100 + fb.Volume));
-		query = query.replace(/#VOLUMEDB#/g, fb.Volume.toFixed(2) + 'dB');
+		query = query.replace(/#VOLUMEDB#/g, fb.Volume.toFixed(2) + ' dB');
 		query = query.replace(/#VERSION#/g, fb.Version);
+	}
+	// Selection
+	if (/#(SELTRACKS|SELDURATION|SELSIZE|SELTYPE)#/i.test(query)) {
+		const sel = fb.GetSelections(1);
+		query = query.replace(/#SELTRACKS#/g, sel ? sel.Count : 0);
+		query = query.replace(/#SELDURATION#/g, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#SELSIZE#/g, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
 		const selTypes = [
-			'undefined (no item)',
+			'undefined $char(40)no item$char(41)',
 			'active playlist',
 			'caller active playlist',
 			'playlist manager',
@@ -310,13 +317,6 @@ function queryReplaceWithStatic(query, options = { bDebug: false }) {
 			'media library viewer'
 		];
 		query = query.replace(/#SELTYPE#/g, selTypes[fb.GetSelectionType()]);
-	}
-	// Selection
-	if (/#(SELTRACKS|SELDURATION|SELSIZE)#/i.test(query)) {
-		const sel = fb.GetSelections(1);
-		query = query.replace(/#SELTRACKS#/g, sel ? sel.Count : 0);
-		query = query.replace(/#SELDURATION#/g, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
-		query = query.replace(/#SELSIZE#/g, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
 	}
 	// Playlist
 	if (/#(PLSNAME|PLSTRACKS|PLSISAUTOPLS|PLSISLOCKED)#/i.test(query)) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//14/03/25
 
 /* exported clone, getNested, setNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
@@ -200,7 +200,7 @@ const doOnce = (task, fn) => {
 function tryFunc(fn) {
 	return (...args) => {
 		let cache;
-		try { cache = fn(...args); } catch (e) {/* continue regardless of error */ }
+		try { cache = fn(...args); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
 		return cache;
 	};
 }
@@ -208,7 +208,7 @@ function tryFunc(fn) {
 function tryMethod(fn, parent, returnOnError) {
 	return (...args) => {
 		let cache;
-		try { cache = parent[fn](...args); } catch (e) { return returnOnError; }
+		try { cache = parent[fn](...args); } catch (e) { return returnOnError; } // eslint-disable-line no-unused-vars
 		return cache;
 	};
 }

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/24
+//13/03/24
 
 /* global VK_CONTROL:readable, VK_ALT:readable, VK_SHIFT:readable, MK_LBUTTON:readable, MK_CONTROL:readable, MK_SHIFT:readable */
 /* exported buttonStates, getKeyboardMask, dropEffect, dropMask, VK_LWIN, VK_RWIN, Flag */
@@ -22,9 +22,9 @@ const buttonStates = {
 };
 
 function getKeyboardMask() {
-	const c = utils.IsKeyPressed(VK_CONTROL) ? true : false;
-	const a = utils.IsKeyPressed(VK_ALT) ? true : false;
-	const s = utils.IsKeyPressed(VK_SHIFT) ? true : false;
+	const c = utils.IsKeyPressed(VK_CONTROL);
+	const a = utils.IsKeyPressed(VK_ALT);
+	const s = utils.IsKeyPressed(VK_SHIFT);
 	let ret = kMask.none;
 	if (c && !a && !s) { ret = kMask.ctrl; }
 	if (!c && !a && s) { ret = kMask.shift; }

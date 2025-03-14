@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//14/03/25
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -62,7 +62,7 @@ const hiddenChars = ['\u200b', '\u200c', '\u200d', '\u200e'];
 function _scale(size, bRound = true) {
 	if (scaleDPI.factor === -1) {
 		try { scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference; }
-		catch (e) { scaleDPI.factor = 1; }
+		catch (e) { scaleDPI.factor = 1; } // eslint-disable-line no-unused-vars
 	}
 	return (bRound ? Math.round(size * scaleDPI.factor) : size * scaleDPI.factor);
 }

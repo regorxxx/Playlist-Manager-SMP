@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//14/03/25
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
@@ -209,7 +209,7 @@ function checkProperty(property, withValue) {
 		bPass = false; report += 'Value obey this condition: ' + checks['func'] + '\n';
 	}
 	if (Object.hasOwn(checks, 'portable') && checks['portable'] && valToCheck !== property[3] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
-		console.log(window.Name + ' - Portable installation: property \'' + property[0] + '\'\nReplacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
+		console.log(window.Name + ' - Portable installation: property \'' + property[0] + '\'\n\t Replacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
 	}
 	if (!bPass) {
 		doOnce(
