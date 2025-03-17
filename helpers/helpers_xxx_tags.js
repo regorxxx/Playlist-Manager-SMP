@@ -283,7 +283,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
  * @param {{ bDebug: boolean }} options
  * @returns {?string}
  */
-function queryReplaceWithStatic(query, options = { bDebug: false }) {
+function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce: true }) {
 	options = { bDebug: false, ...options };
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
@@ -296,17 +296,22 @@ function queryReplaceWithStatic(query, options = { bDebug: false }) {
 		query = query.replace(/#NOW#/gi, date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString() + '-' + date.getDate().toString());
 	}
 	// System
-	if (/#(VOLUME|VOLUMEDB|VERSION)#/i.test(query)) {
-		query = query.replace(/#VOLUME#/g, Math.round(100 + fb.Volume));
-		query = query.replace(/#VOLUMEDB#/g, fb.Volume.toFixed(2) + ' dB');
-		query = query.replace(/#VERSION#/g, fb.Version);
+	if (/#(VOLUME|VOLUMEDB|VERSION|ISPLAYING|ISPAUSED)#/i.test(query)) {
+		query = query.replace(/#VOLUME#/gi, Math.round(100 + fb.Volume));
+		query = query.replace(/#VOLUMEDB#/gi, fb.Volume.toFixed(2) + ' dB');
+		query = query.replace(/#VERSION#/gi, fb.Version);
+		query = query.replace(/#ISPLAYING#/gi, fb.IsPlaying ? '1' + (options.bBooleanForce ? '$not(0)' : ''): '');
+		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : ''): '');
 	}
 	// Selection
-	if (/#(SELTRACKS|SELDURATION|SELSIZE|SELTYPE)#/i.test(query)) {
+	if (/#(SELTRACKS|SELDURATION|SELSIZE)#/i.test(query)) {
 		const sel = fb.GetSelections(1);
-		query = query.replace(/#SELTRACKS#/g, sel ? sel.Count : 0);
-		query = query.replace(/#SELDURATION#/g, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
-		query = query.replace(/#SELSIZE#/g, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
+		query = query.replace(/#SELTRACKS#/gi, sel ? sel.Count : 0);
+		query = query.replace(/#SELDURATION#/gi, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#SELSIZE#/gi, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
+	}
+	// Selection (system)
+	if (/#(SELTYPE)#/i.test(query)) {
 		const selTypes = [
 			'undefined $char(40)no item$char(41)',
 			'active playlist',
@@ -316,22 +321,33 @@ function queryReplaceWithStatic(query, options = { bDebug: false }) {
 			'keyboard shortcut list',
 			'media library viewer'
 		];
-		query = query.replace(/#SELTYPE#/g, selTypes[fb.GetSelectionType()]);
+		query = query.replace(/#SELTYPE#/gi, selTypes[fb.GetSelectionType()]);
+	}
+	// Selection (focus)
+	if (/#(SELPLAYING)#/i.test(query)) {
+		const sel = fb.GetFocusItem(true);
+		query = query.replace(/#SELPLAYING#/gi, sel ? (() => {
+			const np = fb.GetNowPlaying();
+			const compare = (a, b) => a.SubSong === b.SubSong && a.RawPath === b.RawPath;
+			return np && compare(sel, np)
+				? '1' + (options.bBooleanForce ? '$not(0)' : '')
+				: '';
+		})() : '');
 	}
 	// Playlist
 	if (/#(PLSNAME|PLSTRACKS|PLSISAUTOPLS|PLSISLOCKED)#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
-		query = query.replace(/#PLSNAME#/g, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
-		query = query.replace(/#PLSTRACKS#/g, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
-		query = query.replace(/#PLSISAUTOPLS#/g, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 : 0) : 0);
-		query = query.replace(/#PLSISLOCKED#/g, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 : 0) : 0);
+		query = query.replace(/#PLSNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
+		query = query.replace(/#PLSTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
+		query = query.replace(/#PLSISAUTOPLS#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
+		query = query.replace(/#PLSISLOCKED#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
 	}
 	// Playlist items
 	if (/#(PLSDURATION|PLSSIZE)#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
 		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
-		query = query.replace(/#PLSDURATION#/g, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
-		query = query.replace(/#PLSSIZE#/g, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
+		query = query.replace(/#PLSDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#PLSSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
 	return query;
 }
@@ -849,5 +865,5 @@ function isSubsong(handle, ext = '') {
 function isSubsongPath(path, ext = '') {
 	const blackList = new Set(['dsf']);
 	const subsong = path.split(',').pop();
-	return subsongRegex.test(path) && subsong !== '0' && !blackList.has(ext || path.split('.').pop().replace(',' + subsong,''));
+	return subsongRegex.test(path) && subsong !== '0' && !blackList.has(ext || path.split('.').pop().replace(',' + subsong, ''));
 }

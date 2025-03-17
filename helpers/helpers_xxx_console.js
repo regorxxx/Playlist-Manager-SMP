@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/02/25
+//17/03/25
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -30,7 +30,7 @@ function consoleLog() {
 	// Load previous log
 	console.checkSize();
 	if (utils.IsFile(console.File)) {
-		try { log += utils.ReadTextFile(console.File, convertCharsetToCodepage('UTF-8')); } catch (e) {/* continue regardless of error */ }
+		try { log += utils.ReadTextFile(console.File, convertCharsetToCodepage('UTF-8')); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
 		lastMod = new Date(fsoCL.GetFile(console.File).DateLastModified).toLocaleDateString();
 	}
 	// Add dd/mm/yyyy
@@ -51,7 +51,7 @@ function consoleLog() {
 		});
 	});
 	// Write
-	try { utils.WriteTextFile(console.File, log, false); } catch (e) {/* continue regardless of error */ }
+	try { utils.WriteTextFile(console.File, log, false); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
 }
 
 console.formatArg = (arg) => {
@@ -123,7 +123,9 @@ console.formatArg = (arg) => {
 						console.logUI('Console.log: ' + e.message + ': ', type);
 					} else {
 						// eslint-disable-next-line no-sparse-arrays
-						try { val = arg.constructor.name || (arg.constructor.toString().match(/function (\w*)/) || [,])[1]; } catch (e) { /* empty */ } //NOSONAR
+						try { val = arg.constructor.name || (arg.constructor.toString().match(/function (\w*)/) || [,])[1]; }
+						// eslint-disable-next-line no-unused-vars
+						catch (e) { /* empty */ } //NOSONAR
 						if (!val) { val = '--unknown type--'; }
 						console.logUI('Console.log: argument type not recognized: ', type, val);
 					}
@@ -138,7 +140,7 @@ console.formatArg = (arg) => {
 // Check file size doesn't exceed threshold or reset it
 console.checkSize = () => {
 	if (utils.IsFile(console.File) && utils.GetFileSize(console.File) > console.MaxSize) {
-		try { utils.WriteTextFile(console.File, '', false); } catch (e) {/* continue regardless of error */ }
+		try { utils.WriteTextFile(console.File, '', false); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
 		console.log('helpers_xxx: console log file size exceeds ' + (console.MaxSize / 1e7) + ' MB, creating new file: ' + console.File);
 		return true;
 	}
