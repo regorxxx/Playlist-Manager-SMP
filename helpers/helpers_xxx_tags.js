@@ -296,12 +296,42 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#NOW#/gi, date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString() + '-' + date.getDate().toString());
 	}
 	// System
-	if (/#(VOLUME|VOLUMEDB|VERSION|ISPLAYING|ISPAUSED)#/i.test(query)) {
+	if (/#(VOLUME|VOLUMEDB|VERSION|ISPLAYING|ISPAUSED|SAC|PLSCOUNT)#/i.test(query)) {
 		query = query.replace(/#VOLUME#/gi, Math.round(100 + fb.Volume));
 		query = query.replace(/#VOLUMEDB#/gi, fb.Volume.toFixed(2) + ' dB');
 		query = query.replace(/#VERSION#/gi, fb.Version);
-		query = query.replace(/#ISPLAYING#/gi, fb.IsPlaying ? '1' + (options.bBooleanForce ? '$not(0)' : ''): '');
-		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : ''): '');
+		query = query.replace(/#ISPLAYING#/gi, fb.IsPlaying ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#SAC#/gi, fb.StopAfterCurrent  ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#PLSCOUNT#/gi, plman.PlaylistCount);
+	}
+	if (/#(DEVICE|DEVICEID)#/i.test(query)) {
+		let device;
+		try { device = JSON.parse(fb.GetOutputDevices()).find((d) => d.active); } catch { } // eslint-disable-line no-empty
+		query = query.replace(/#DEVICE#/gi, device ? device.name : '?');
+		query = query.replace(/#DEVICEID#/gi, device ? device.device_id : '?');
+	}
+	if (/#(RGMODE)#/i.test(query)) {
+		const rgModes = [
+			'disabled',
+			'track',
+			'album',
+			'by Playback Order',
+		];
+		query = query.replace(/#RGMODE#/gi, rgModes[fb.ReplaygainMode]);
+	}
+	if (/#(PLAYMODE)#/i.test(query)) {
+		const playModes = [
+			'default',
+			'repeat (playlist)',
+			'repeat (track)',
+			'random',
+			'shuffle (tracks)',
+			'shuffle (albums',
+			'shuffle (folders)'
+		];
+		query = query.replace(/#PLAYMODE#/gi, playModes[plman.PlaybackOrder]);
 	}
 	// Selection
 	if (/#(SELTRACKS|SELDURATION|SELSIZE)#/i.test(query)) {
@@ -324,7 +354,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#SELTYPE#/gi, selTypes[fb.GetSelectionType()]);
 	}
 	// Selection (focus)
-	if (/#(SELPLAYING)#/i.test(query)) {
+	if (/#(SELPLAYING|SELINLIBRARY)#/i.test(query)) {
 		const sel = fb.GetFocusItem(true);
 		query = query.replace(/#SELPLAYING#/gi, sel ? (() => {
 			const np = fb.GetNowPlaying();
@@ -333,14 +363,24 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 				? '1' + (options.bBooleanForce ? '$not(0)' : '')
 				: '';
 		})() : '');
+		query = query.replace(/#SELINLIBRARY#/gi, sel ? fb.IsMetadbInMediaLibrary(sel) + (options.bBooleanForce ? '$not(0)' : '') : '');
 	}
 	// Playlist
-	if (/#(PLSNAME|PLSTRACKS|PLSISAUTOPLS|PLSISLOCKED)#/i.test(query)) {
+	if (/#(PLSIDX|PLSNAME|PLSTRACKS|PLSISAUTOPLS|PLSISLOCKED|PLSLOCKS|PLSLOCKNAME)#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
+		query = query.replace(/#PLSIDX#/gi, pls !== -1 ? pls : '?');
 		query = query.replace(/#PLSNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
 		query = query.replace(/#PLSTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
 		query = query.replace(/#PLSISAUTOPLS#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
 		query = query.replace(/#PLSISLOCKED#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
+		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b)).join(', ') : '');
+		query = query.replace(/#PLSLOCKNAME#/gi, pls !== -1 ? plman.GetPlaylistLockName(pls) || '' : '');
+	}
+	if (/#(PLSPLAYIDX|PLSPLAYNAME|PLSPLAYTRACKS)#/i.test(query)) {
+		const pls = plman.PlayingPlaylist;
+		query = query.replace(/#PLSPLAYIDX#/gi, pls !== -1 ? pls : '?');
+		query = query.replace(/#PLSPLAYNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
+		query = query.replace(/#PLSPLAYTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
 	}
 	// Playlist items
 	if (/#(PLSDURATION|PLSSIZE)#/i.test(query)) {
@@ -348,6 +388,12 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
 		query = query.replace(/#PLSDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#PLSSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
+	}
+	if (/#(PLSPLAYDURATION|PLSPLAYSIZE)#/i.test(query)) {
+		const pls = plman.PlayingPlaylist;
+		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
+		query = query.replace(/#PLSPLAYDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#PLSPLAYSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
 	return query;
 }
