@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//20/03/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, isInt:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
@@ -2985,7 +2985,7 @@ function createMenuRightTop() {
 						if (list.bLiteMode) { return; }
 						break;
 					case 'autoBack':
-						entryText = 'Auto-backup interval...\t(' + (isInt(prop[1]) ? prop[1] : '\u221E') + ' ms)';
+						entryText = 'Auto-backup interval...\t(' + (Number.isFinite(prop[1]) ? prop[1] : '\u221E') + ' ms)';
 						text = 'Backup to zip periodically the tracked folder.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)';
 						if (list.bLiteMode) { return; }
 						break;
@@ -4681,7 +4681,7 @@ function createMenuRightTop() {
 		const menuName = menu.newMenu('Folders');
 		{	// Max Depth
 			menu.newEntry({
-				menuName, entryText: 'Max level depth...\t(' + (isInt(list.folders.maxDepth) ? list.folders.maxDepth : '\u221E') + ')', func: () => {
+				menuName, entryText: 'Max level depth...\t(' + (Number.isFinite(list.folders.maxDepth) ? list.folders.maxDepth : '\u221E') + ')', func: () => {
 					const input = Input.number('int positive', list.folders.maxDepth, 'Enter positive integer value:', window.Name, 3);
 					if (input === null) { return; }
 					list.folders.maxDepth = input;

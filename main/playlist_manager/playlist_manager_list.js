@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//20/03/25
 
 /* exported _list */
 
@@ -461,7 +461,7 @@ function _list(x, y, w, h) {
 		if (showTt.query && (pls.isAutoPlaylist || pls.query)) {
 			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
 			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
-			tooltipText += '\n' + 'Limit: ' + (pls.limit ? pls.limit : '\u221E') + ' tracks';
+			tooltipText += '\n' + 'Limit: ' + (pls.limit && Number.isFinite(pls.limit) ? pls.limit : '\u221E') + ' tracks';
 		}
 		const timeFormat = { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
 		if (showTt.dateCreated && !pls.isFolder) {

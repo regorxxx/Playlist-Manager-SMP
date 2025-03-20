@@ -1,12 +1,12 @@
 ﻿'use strict';
-//31/01/25
+//20/03/25
 
 /* exported createStatisticsMenu */
 
 // Don't load this helper unless menu framework is also present
 // https://github.com/regorxxx/Menu-Framework-SMP
-try { include('..\\..\\helpers\\menu_xxx.js'); } catch (e) {
-	try { include('..\\..\\examples\\_statistics\\menu_xxx.js'); } catch (e) { fb.ShowPopupMessage('Missing menu framework file', window.Name); }
+try { include('..\\..\\helpers\\menu_xxx.js'); } catch (e) { // eslint-disable-line no-unused-vars
+	try { include('..\\..\\examples\\_statistics\\menu_xxx.js'); } catch (e) { fb.ShowPopupMessage('Missing menu framework file', window.Name); } // eslint-disable-line no-unused-vars
 }
 
 /* global _menu:readable */
