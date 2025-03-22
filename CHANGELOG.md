@@ -140,6 +140,7 @@
 - Readme: updated readme pdf with latest changes, tips about 'Shift + Win + R. Click' shortcut (see above) and JSplitter install instructions.
 - Helpers: updated helpers.
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
+- helpers: performance improvements caching library items at multiple places.
 ### Removed
 - UI: unnecessary playlist refresh after changing fonts size.
 ### Fixed
