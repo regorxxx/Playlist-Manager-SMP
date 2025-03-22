@@ -68,6 +68,7 @@
 - AutoPlaylist: UI-only AutoPlaylists have a new menu entry to show the native AutoPlaylist properties window.
 - Playlists maintenance tools: new entries to check for duplicates by TF for AutoPlaylists and standard playlists.
 - Queue: new entry for folders, multiple and single selection to add playlist(s) contents to queue. See related [thread](https://hydrogenaud.io/index.php/topic,127153.msg1056916/). If any of the playlist is already present on UI, the tracks are sent from them, thus having queue idx associated (which may be used via TF on playlist viewers).
+- UI: new setting to force quick-searching by name instead of being associated current sorting method (by category, size, etc.). It's enabled by default.
 - UI: added multiple popups and info related to the use of non-tracked items on library and files with subsongs (.cue, .iso, etc.).
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
 - UI: quick help popup also shows the 'Shift + Win + R. Click' shortcut (see above).
@@ -122,6 +123,7 @@
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
 - Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the scrip is checking if every track exist first.
+- UI: quick-search settings menu is now duplicated at the search button's settings submenu.
 - UI: playlist metadata (like size) is now updated when using the search tool if data was not cached.
 - UI: modified and created date on tooltip is now shown as DD/MM/YYYY HH:SS.
 - UI: clean up of 'List menu' entries to improve ease of usage.

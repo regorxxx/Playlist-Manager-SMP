@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/25
+//22/03/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -4651,29 +4651,7 @@ function createMenuRightTop() {
 		}
 		if (showMenus['Quick-search']) {	// QuickSearch
 			menu.newSeparator(menuName);
-			const subMenuName = menu.newMenu('Quick-search', menuName);
-			{
-				menu.newEntry({ menuName: subMenuName, entryText: 'Quick-search configuration:', flags: MF_GRAYED });
-				menu.newSeparator(subMenuName);
-				menu.newEntry({
-					menuName: subMenuName, entryText: 'Jump to next item on multiple presses', func: () => {
-						list.properties.bQuicSearchNext[1] = !list.properties.bQuicSearchNext[1];
-						overwriteProperties(list.properties);
-						fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name);
-					}
-				});
-				menu.newCheckMenuLast(() => list.properties.bQuicSearchNext[1]);
-				menu.newEntry({
-					menuName: subMenuName, entryText: 'Cycle on last result?', func: () => {
-						list.properties.bQuicSearchCycle[1] = !list.properties.bQuicSearchCycle[1];
-						overwriteProperties(list.properties);
-						if (list.properties.bQuicSearchCycle[1]) {
-							fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name);
-						}
-					}, flags: list.properties.bQuicSearchNext[1] ? MF_STRING : MF_GRAYED
-				});
-				menu.newCheckMenuLast(() => list.properties.bQuicSearchCycle[1]);
-			}
+			quickSearchMenu(menu, menuName);
 		}
 	}
 	menu.newSeparator();
@@ -5499,6 +5477,10 @@ function createMenuSearch() {
 				});
 			});
 		}
+		if (showMenus['Quick-search']) {	// QuickSearch
+			menu.newSeparator();
+			quickSearchMenu(menu, subMenu);
+		}
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Path level matching...' + '\t' + _b(list.searchMethod.pathLevel), func: () => {
@@ -5952,4 +5934,41 @@ function filterEntries(method) {
 		}
 	}
 	return entries;
+}
+
+function quickSearchMenu(menu, menuName) {
+	const subMenuName = menu.newMenu('Quick-search', menuName);
+	{
+		menu.newEntry({ menuName: subMenuName, entryText: 'Quick-search configuration:', flags: MF_GRAYED });
+		menu.newSeparator(subMenuName);
+		menu.newEntry({
+			menuName: subMenuName, entryText: 'Force searching by name', func: () => {
+				list.properties.bQuicSearchName[1] = !list.properties.bQuicSearchName[1];
+				overwriteProperties(list.properties);
+				if (list.properties.bQuicSearchName[1]) {
+					fb.ShowPopupMessage('Enabling this option will force searching by nane, without considering the current sorting method.\n\nIf searching by date, size, etc. is desired according to current sorting, disable it.', window.Name);
+				}
+			}
+		});
+		menu.newCheckMenuLast(() => list.properties.bQuicSearchName[1]);
+		menu.newSeparator(subMenuName);
+		menu.newEntry({
+			menuName: subMenuName, entryText: 'Jump to next item on multiple presses', func: () => {
+				list.properties.bQuicSearchNext[1] = !list.properties.bQuicSearchNext[1];
+				overwriteProperties(list.properties);
+				fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name);
+			}
+		});
+		menu.newCheckMenuLast(() => list.properties.bQuicSearchNext[1]);
+		menu.newEntry({
+			menuName: subMenuName, entryText: 'Cycle on last result', func: () => {
+				list.properties.bQuicSearchCycle[1] = !list.properties.bQuicSearchCycle[1];
+				overwriteProperties(list.properties);
+				if (list.properties.bQuicSearchCycle[1]) {
+					fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name);
+				}
+			}, flags: list.properties.bQuicSearchNext[1] ? MF_STRING : MF_GRAYED
+		});
+		menu.newCheckMenuLast(() => list.properties.bQuicSearchCycle[1]);
+	}
 }

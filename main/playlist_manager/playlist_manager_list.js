@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/25
+//22/03/25
 
 /* exported _list */
 
@@ -2482,7 +2482,7 @@ function _list(x, y, w, h) {
 					if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
 					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
 					let method = this.methodState.split('\t')[0].replace('By ', '');
-					if (method === 'name' || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
+					if (method === 'name' || this.properties.bQuicSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 					let bNext = false;
 					const bCycle = this.properties.bQuicSearchCycle[1];
 					if (!this.properties.bQuicSearchNext[1]) {
@@ -8039,8 +8039,12 @@ function _list(x, y, w, h) {
 						(showMenus['Quick-search']
 							? '\nQuick-search:' +
 							'\n-------------------' +
-							'\nPress any letter / number to jump to items matched by current sorting' +
-							'\n(i.e. sorting by category jumps by it instead of item name).' +
+							(this.properties.bQuicSearchName[1]
+								? '\nPress any letter / number to jump to items matched by name' +
+								'\n(there is also a switch setting to use current sorting method).'
+								: '\nPress any letter / number to jump to items matched by current sorting' +
+								'\n(i.e. sorting by category jumps by it instead of item name).'
+							) +
 							'\nPressing Shift/Ctrl matches at any position, not only from the beggining.' +
 							'\n'
 							: '') +

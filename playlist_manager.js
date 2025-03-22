@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/25
+//22/03/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -188,7 +188,7 @@ let properties = {
 	bCopyAsync: ['Copy tracks asynchronously on export?', true, { func: isBoolean }, true],
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }, true],
 	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }, true],
-	_placeholder2_: ['', false, { func: isBoolean }, false],
+	bQuicSearchName: ['Quick-search forced by name', true, { func: isBoolean }, true],
 	_placeholder3_: ['', false, { func: isBoolean }, false],
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }, true],
 	bSavingXsp: ['Auto-save .xsp playlists?', false, { func: isBoolean }, false],
