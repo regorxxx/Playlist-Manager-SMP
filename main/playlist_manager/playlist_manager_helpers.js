@@ -6,7 +6,7 @@
 /* global list:readable, delayAutoUpdate:readable */
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, clone:readable, globQuery:readable, iDelayPlaylists:readable, globTags:readable */
+/* global popup:readable, clone:readable, globQuery:readable,globTags:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _copyFile:readable, _recycleFile:readable, WshShell:readable, _open:readable, utf8:readable, getFiles:readable, checkCodePage:readable, getFileMeta:readable, editTextFile:readable, _renameFile:readable, _deleteFile:readable, _save:readable, _restoreFile:readable, _isLink:readable, sanitizePath:readable, findRelPathInAbsPath:readable, testPath:readable, absPathRegExp:readable */
@@ -1526,48 +1526,73 @@ function findMixedPaths() {
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.ui' && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const filePaths = getFilePathsFromPlaylist(playlist.path);
-					if (filePaths.some((path) => { return !(absPathRegExp.test(path)); }) && filePaths.some((path) => { return (absPathRegExp.test(path)); })) {
-						found.push(playlist);
+		console.log('Playlist Manager: Retrieving file paths.');
+		Promise.serial(
+			playlists,
+			(playlist) => getFilePathsFromPlaylist(playlist.path),
+			60
+		).then((filePathsArr) => {
+			return Promise.serial(
+				filePathsArr,
+				(filePaths, i) => {
+					if (filePaths.some((path) => !absPathRegExp.test(path)) && filePaths.some((path) => absPathRegExp.test(path))) {
+						found.push(playlists[i]);
 					}
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking paths ' + progress + '%.'); }
-					resolve('done');
-				}, 10 * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+					if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking paths ' + progress + '%.'); }
+				},
+				60
+			);
+		}).then(() => {
 			if (found.length && !report.length) { found.forEach((pls) => { report.push(pls.extension === '.ui' ? pls.nameId : pls.path); }); }
 			resolve({ found, report });
 		});
 	});
 }
 
-function findExternal() {
+// 5 files per chunk seems to be the sweet spot for slow HDDs
+function findExternal(chunks = 5) {
 	const found = [];
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder);
+		const libItems = fb.GetLibraryItems();
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
 		const subsongRe = subsongRegex;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const bUI = playlist.extension === '.ui';
-					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
-					if (!arePathsInMediaLibrary(filePaths, list.playlistsPath)) {
+		const tf = fb.TitleFormat(pathTF);
+		console.log('Playlist Manager: Retrieving file paths.');
+		Promise.serial(
+			playlists,
+			(playlist) => {
+				return (playlist.extension === '.ui'
+					? tf.EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))
+					: getFilePathsFromPlaylist(playlist.path)
+				);
+			},
+			60
+		).then((filePathsArr) => {
+			return Promise.serial(
+				filePathsArr,
+				async (filePaths, i) => {
+					if (!arePathsInMediaLibrary(filePaths, list.playlistsPath, libItems)) {
+						const playlist = playlists[i];
+						const bUI = playlist.extension === '.ui';
 						// Skip streams & look for absolute and relative paths (with and without .\)
-						const bDead = filePaths
-							.map((path) => path.replace(subsongRe, ''))
-							.some((path) => !testPath(path, list.playlistsPath) && !_isLink(path));
+						let bDead;
+						await Promise.serial(
+							filePaths.chunk(chunks),
+							(filePathsChunk) => {
+								if (!bDead) {
+									bDead = filePathsChunk
+										.map((path) => path.replace(subsongRe, ''))
+										.some((path) => !testPath(path, list.playlistsPath) && !_isLink(path));
+								}
+							},
+							15
+						);
 						if (bDead) {
 							report.push((bUI ? playlist.nameId : playlist.path) + ' (contains dead items)');
 						} else {
@@ -1576,49 +1601,60 @@ function findExternal() {
 						found.push(playlist);
 					}
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking external items ' + progress + '%.'); }
-					resolve('done');
-				}, iDelayPlaylists * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+					if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking external items ' + progress + '%.'); }
+				},
+				60
+			);
+		}).then(() => {
 			resolve({ found, report });
 		});
 	});
 }
 
-function findDead() {
+function findDead(chunks = 5) {
 	const found = [];
 	const report = [];
 	return new Promise((resolve) => {
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		let iDelay = 0;
 		const subsongRe = subsongRegex;
-		playlists.forEach((playlist, i) => {
-			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const bUI = playlist.extension === '.ui';
-					const filePaths = (!bUI
-						? getFilePathsFromPlaylist(playlist.path)
-						: fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))
-					).map((path) => path.replace(subsongRe, ''));
+		const tf = fb.TitleFormat(pathTF);
+		console.log('Playlist Manager: Retrieving file paths.');
+		Promise.serial(
+			playlists,
+			(playlist) => {
+				return (playlist.extension === '.ui'
+					? tf.EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))
+					: getFilePathsFromPlaylist(playlist.path)
+				).map((path) => path.replace(subsongRe, ''));
+			},
+			60
+		).then((filePathsArr) => {
+			return Promise.serial(
+				filePathsArr,
+				async (filePaths, i) => {
 					// Skip streams & look for absolute and relative paths (with and without .\)
-					const bDead = filePaths.some((path) => {
-						return !testPath(path, list.playlistsPath) && !_isLink(path);
-					});
-					if (bDead) { found.push(playlist); }
+					let bDead;
+					await Promise.serial(
+						filePaths.chunk(chunks),
+						(filePathsChunk) => {
+							if (!bDead) {
+								bDead = filePathsChunk.some((path) => {
+									return !testPath(path, list.playlistsPath) && !_isLink(path);
+								});
+							}
+						},
+						15
+					);
+					if (bDead) { found.push(playlists[i]); }
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking dead items ' + progress + '%.'); }
-					resolve('done');
-				}, iDelay);
-			}));
-		});
-		Promise.all(promises).then(() => {
+					if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking dead items ' + progress + '%.'); }
+				},
+				30
+			);
+		}).then(() => {
 			if (found.length && !report.length) { found.forEach((pls) => { report.push(pls.extension === '.ui' ? pls.nameId : pls.path); }); }
 			resolve({ found, report });
 		});
@@ -1632,21 +1668,29 @@ function findDuplicatesByPath() {
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder);
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const bUI = playlist.extension === '.ui';
-					const filePaths = !bUI ? getFilePathsFromPlaylist(playlist.path) : fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false));
-					if (new Set(filePaths).size !== filePaths.length) { found.push(playlist); }
+		const tf = fb.TitleFormat(pathTF);
+		console.log('Playlist Manager: Retrieving file paths.');
+		Promise.serial(
+			playlists,
+			(playlist) => {
+				return (playlist.extension === '.ui'
+					? tf.EvalWithMetadbs(getHandlesFromUIPlaylists([playlist.nameId], false))
+					: getFilePathsFromPlaylist(playlist.path)
+				);
+			},
+			60
+		).then((filePathsArr) => {
+			return Promise.serial(
+				filePathsArr,
+				(filePaths, i) => {
+					if (new Set(filePaths).size !== filePaths.length) { found.push(playlists[i]); }
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking duplicates ' + progress + '%.'); }
-					resolve('done');
-				}, iDelayPlaylists / 5 * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+					if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking duplicates ' + progress + '%.'); }
+				},
+				60
+			);
+		}).then(() => {
 			if (found.length && !report.length) { found.forEach((pls) => { report.push(pls.extension === '.ui' ? pls.nameId : pls.path); }); }
 			resolve({ found, report });
 		});
@@ -1665,31 +1709,36 @@ function findDuplicatesByTF(checkKeys = globTags.remDupl, mode = 'all' /* all|pl
 						? (pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && !pls.isFolder
 						: (pls) => pls.isAutoPlaylist || (pls.extension === '.xsp' && pls.type === 'songs')
 			);
+		const libItems = fb.GetLibraryItems();
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const handleList = playlist.extension === '.ui'
+		// Handle lists require a lot of memory, so every playlist is processed serially, instead of caching all handles first
+		console.log('Playlist Manager: Retrieving handles (serial).');
+		Promise.serial(
+			playlists,
+			(playlist, i) => {
+				return Promise.resolve(
+					playlist.extension === '.ui'
 						? getHandlesFromUIPlaylists([playlist.nameId], false)
 						: playlist.isAutoPlaylist
-							? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(playlist.query))
-							: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true });
-					if (handleList) {
-						const duplicates = showDuplicates({ handleList, checkKeys, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
-						const count = duplicates && duplicates.Count;
-						let bDone = false;
-						if (count) { report.push((playlist.path || playlist.name) + ' (' + count + ' duplicates)'); bDone = true; }
-						if (bDone) { found.push(playlist); }
-					}
-					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking duplicates ' + progress + '%.'); }
-					resolve('done');
-				}, iDelayPlaylists * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+							? fb.GetQueryItems(libItems, stripSort(playlist.query))
+							: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true, poolItems: libItems })
+				)
+					.then((handleList) => Promise.wait(15).then(() => handleList))
+					.then((handleList) => {
+						if (handleList) {
+							const duplicates = showDuplicates({ handleList, checkKeys, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+							const count = duplicates && duplicates.Count;
+							let bDone = false;
+							if (count) { report.push((playlist.path || playlist.name) + ' (' + count + ' duplicates)'); bDone = true; }
+							if (bDone) { found.push(playlist); }
+						}
+						const progress = total ? Math.round(i / total * 10) * 10 : 100;
+						if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking duplicates ' + progress + '%.'); }
+					});
+			},
+			60
+		).then(() => {
 			resolve({ found, report });
 		});
 	});
@@ -1702,14 +1751,19 @@ function findSizeMismatch() {
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && pls.extension !== '.ui' && !pls.isFolder);
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
 		const newLineRegex = /\r\n|\n\r|\n|\r/;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
+		console.log('Playlist Manager: Retrieving file paths.');
+		Promise.serial(
+			playlists,
+			(playlist) => getFilePathsFromPlaylist(playlist.path).length,
+			60
+		).then((filePathsArr) => {
+			return Promise.serial(
+				filePathsArr,
+				(filePathsNum, i) => {
+					const playlist = playlists[i];
 					const bFpl = playlist.extension === '.fpl';
-					const filePathsNum = getFilePathsFromPlaylist(playlist.path).length;
 					if (bFpl) { console.log(filePathsNum, playlist.path); }
 					let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
 					let size;
@@ -1763,12 +1817,11 @@ function findSizeMismatch() {
 					}
 					if (bDone) { found.push(playlist); }
 					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking size ' + progress + '%.'); }
-					resolve('done');
-				}, iDelayPlaylists / 5 * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+					if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking size ' + progress + '%.'); }
+				},
+				60
+			);
+		}).then(() => {
 			resolve({ found, report });
 		});
 	});
@@ -1781,65 +1834,70 @@ function findDurationMismatch() {
 		let bSave = false;
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.xsp' && pls.extension !== '.ui' && !pls.isFolder);
+		const libItems = fb.GetLibraryItems();
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
 		const newLineRegex = /\r\n|\n\r|\n|\r/;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const handleList = getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath });
-					if (handleList) {
-						const bFpl = playlist.extension === '.fpl';
-						const calcDuration = round(handleList.CalcTotalDuration(), 2);
-						let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
-						let duration;
-						if (!bFpl && typeof text !== 'undefined' && text.length) {
-							const codePage = checkCodePage(text, playlist.extension);
-							if (codePage !== -1) { text = _open(playlist.path, codePage, true); }
-							if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
-								text = text.split(newLineRegex);
-								const lines = text.length;
-								let j = 0;
-								while (j < lines) { // Changes duration Line
-									if (text[j].startsWith('#DURATION:')) {
-										duration = Number(text[j].split(':')[1]);
-										break;
+		// Handle lists require a lot of memory, so every playlist is processed serially, instead of caching all handles first
+		console.log('Playlist Manager: Retrieving handles (serial).');
+		Promise.serial(
+			playlists,
+			(playlist, i) => {
+				return Promise.resolve(
+					getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, poolItems: libItems })
+				)
+					.then((handleList) => Promise.wait(15).then(() => handleList))
+					.then((handleList) => {
+						if (handleList) {
+							const bFpl = playlist.extension === '.fpl';
+							const calcDuration = round(handleList.CalcTotalDuration(), 2);
+							let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
+							let duration;
+							if (!bFpl && typeof text !== 'undefined' && text.length) {
+								const codePage = checkCodePage(text, playlist.extension);
+								if (codePage !== -1) { text = _open(playlist.path, codePage, true); }
+								if (playlist.extension === '.m3u8' || playlist.extension === '.m3u') {
+									text = text.split(newLineRegex);
+									const lines = text.length;
+									let j = 0;
+									while (j < lines) { // Changes duration Line
+										if (text[j].startsWith('#DURATION:')) {
+											duration = Number(text[j].split(':')[1]);
+											break;
+										}
+										j++;
 									}
-									j++;
-								}
-							} else if (playlist.extension === '.xspf') {
-								const bCache = xspfCache.has(playlist.path);
-								const xmldom = bCache ? null : xmlDomCache.get(playlist.path) || XSPF.XMLfromString(text);
-								const jspf = bCache ? xspfCache.get(playlist.path) : XSPF.toJSPF(xmldom, false);
-								if (Object.hasOwn(jspf, 'playlist') && jspf.playlist) {
-									const jPls = jspf.playlist;
-									if (Object.hasOwn(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
-										for (let metaData of jPls.meta) {
-											if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null; }
+								} else if (playlist.extension === '.xspf') {
+									const bCache = xspfCache.has(playlist.path);
+									const xmldom = bCache ? null : xmlDomCache.get(playlist.path) || XSPF.XMLfromString(text);
+									const jspf = bCache ? xspfCache.get(playlist.path) : XSPF.toJSPF(xmldom, false);
+									if (Object.hasOwn(jspf, 'playlist') && jspf.playlist) {
+										const jPls = jspf.playlist;
+										if (Object.hasOwn(jPls, 'meta') && Array.isArray(jPls.meta) && jPls.meta.length) {
+											for (let metaData of jPls.meta) {
+												if (Object.hasOwn(metaData, 'duration')) { duration = typeof metaData.playlistSize !== 'undefined' ? Number(metaData.duration) : null; }
+											}
 										}
 									}
 								}
+							} else if (bFpl) { // Cached value
+								duration = playlist.duration;
+								if (calcDuration !== duration) { // Also update value for future usage
+									playlist.duration = calcDuration;
+									bSave = true;
+								}
 							}
-						} else if (bFpl) { // Cached value
-							duration = playlist.duration;
-							if (calcDuration !== duration) { // Also update value for future usage
-								playlist.duration = calcDuration;
-								bSave = true;
-							}
+							let bDone = false;
+							if (typeof duration === 'undefined') { report.push(playlist.path + ' (no duration tag found)'); bDone = true; }
+							else if (calcDuration !== duration) { report.push(playlist.path + ' (tag: ' + duration + ', calculated: ' + calcDuration + ')'); bDone = true; }
+							if (bDone) { found.push(playlist); }
 						}
-						let bDone = false;
-						if (typeof duration === 'undefined') { report.push(playlist.path + ' (no duration tag found)'); bDone = true; }
-						else if (calcDuration !== duration) { report.push(playlist.path + ' (tag: ' + duration + ', calculated: ' + calcDuration + ')'); bDone = true; }
-						if (bDone) { found.push(playlist); }
-					}
-					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking duration ' + progress + '%.'); }
-					resolve('done');
-				}, iDelayPlaylists * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+						const progress = total ? Math.round(i / total * 10) * 10 : 100;
+						if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking duration ' + progress + '%.'); }
+					});
+			},
+			60
+		).then(() => {
 			if (bSave) { list.save(); }
 			resolve({ found, report });
 		});
@@ -1853,32 +1911,29 @@ function findBlank() {
 		const playlists = list.dataAll
 			.filter((pls) => !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui' && !pls.isFolder);
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
 		const newLineRegex = /\r\n|\n\r|\n|\r/;
-		playlists.forEach((playlist, i) => {
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
-					let size, lines;
-					if (typeof text !== 'undefined' && text.length) {
-						const codePage = checkCodePage(text, playlist.extension);
-						if (codePage !== -1) { text = _open(playlist.path, codePage, true); }
-						lines = text.split(newLineRegex);
-						size = lines.filter(Boolean).length;
-						lines = lines.length;
-					}
-					let bDone = false;
-					if (typeof text === 'undefined' || typeof size === 'undefined') { report.push(playlist.path + ' (blank)'); bDone = true; }
-					else if (size !== lines) { report.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')'); bDone = true; }
-					if (bDone) { found.push(playlist); }
-					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking blank lines ' + progress + '%.'); }
-					resolve('done');
-				}, iDelayPlaylists / 5 * i);
-			}));
-		});
-		Promise.all(promises).then(() => {
+		Promise.serial(
+			playlists,
+			(playlist, i) => {
+				let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
+				let size, lines;
+				if (typeof text !== 'undefined' && text.length) {
+					const codePage = checkCodePage(text, playlist.extension);
+					if (codePage !== -1) { text = _open(playlist.path, codePage, true); }
+					lines = text.split(newLineRegex);
+					size = lines.filter(Boolean).length;
+					lines = lines.length;
+				}
+				let bDone = false;
+				if (typeof text === 'undefined' || typeof size === 'undefined') { report.push(playlist.path + ' (blank)'); bDone = true; }
+				else if (size !== lines) { report.push(playlist.path + ' (Blank: ' + (lines - size) + ', lines: ' + lines + ')'); bDone = true; }
+				if (bDone) { found.push(playlist); }
+				const progress = total ? Math.round(i / total * 10) * 10 : 100;
+				if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking blank lines ' + progress + '%.'); }
+			},
+			60
+		).then(() => {
 			resolve({ found, report });
 		});
 	});
@@ -1895,40 +1950,44 @@ function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 			: (pls) => !pls.isFolder;
 	return new Promise((resolve) => {
 		const playlists = list.dataAll.filter(filterFunc);
+		const libItems = fb.GetLibraryItems();
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		let iDelay = 0;
-		playlists.forEach((playlist, i) => {
-			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					const bUI = playlist.extension === '.ui';
+		const tf = fb.TitleFormat(pathTF);
+		console.log('Playlist Manager: Retrieving handles and paths (serial).');
+		Promise.serial(
+			playlists,
+			(playlist, i) => {
+				const bUI = playlist.extension === '.ui';
+				return Promise.resolve(
 					// Needs a handle list for UI-only playlists, AutoPlaylists and Smart Playlists
 					// Otherwise directly extracts the path for the playlist file
-					const bNeedHandle = playlist.isAutoPlaylist || playlist.query || bUI;
-					const handleList = bNeedHandle
+					playlist.isAutoPlaylist || playlist.query || !bUI
 						? !bUI
 							? playlist.isAutoPlaylist
-								? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(playlist.query))
-								: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true })
+								? fb.GetQueryItems(libItems, stripSort(playlist.query))
+								: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true, poolItems: libItems })
 							: getHandlesFromUIPlaylists([playlist.nameId], false) // Omit not found
-						: null;
-					const filePaths = bNeedHandle
-						? fb.TitleFormat(pathTF).EvalWithMetadbs(handleList)
-						: getFilePathsFromPlaylist(playlist.path);
-					const count = filePaths.reduce((total, path) => (isSubsongPath(path) ? total + 1 : total), 0);
-					if (count) {
-						found.push(playlist);
-						report.push((bUI || playlist.isAutoPlaylist ? playlist.nameId : playlist.path) + ' ' + _p(count + ' items'));
-					}
-					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking subsong items ' + progress + '%.'); }
-					resolve('done');
-				}, iDelay);
-			}));
-		});
-		Promise.all(promises).then(() => {
+						: null
+				)
+					.then((handleList) => Promise.wait(15).then(() => handleList))
+					.then((handleList) => handleList
+						? tf.EvalWithMetadbs(handleList)
+						: getFilePathsFromPlaylist(playlist.path)
+					)
+					.then((filePaths) => Promise.wait(15).then(() => filePaths))
+					.then((filePaths) => {
+						const count = filePaths.reduce((total, path) => (isSubsongPath(path) ? total + 1 : total), 0);
+						if (count) {
+							found.push(playlist);
+							report.push((bUI || playlist.isAutoPlaylist ? playlist.nameId : playlist.path) + ' ' + _p(count + ' items'));
+						}
+						const progress = total ? Math.round(i / total * 10) * 10 : 100;
+						if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking subsong items ' + progress + '%.'); }
+					});
+			},
+			60
+		).then(() => {
 			resolve({ found, report });
 		});
 	});
@@ -1940,58 +1999,53 @@ function findFormatErrors() {
 	return new Promise((resolve) => {
 		const playlists = list.dataAll.filter((pls) => !pls.isFolder);
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		let iDelay = 0;
 		const newLineRegex = /\r\n|\n\r|\n|\r/;
-		playlists.forEach((playlist, i) => {
-			iDelay = iDelay + iDelayPlaylists / 6;
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					let bDone = false;
-					const errors = [];
-					if ((playlist.isAutoPlaylist || playlist.query) && playlist.extension !== '.ui') { // Invalid queries
-						if (!checkQuery(playlist.query, true, true, playlist.extension === '.xsp')) { // Allow #PLAYLIST# on XSP
-							bDone = true;
-							errors.push('Invalid query');
-						}
+		Promise.serial(
+			playlists,
+			(playlist, i) => {
+				let bDone = false;
+				const errors = [];
+				if ((playlist.isAutoPlaylist || playlist.query) && playlist.extension !== '.ui') { // Invalid queries
+					if (!checkQuery(playlist.query, true, true, playlist.extension === '.xsp')) { // Allow #PLAYLIST# on XSP
+						bDone = true;
+						errors.push('Invalid query');
 					}
-					if (playlist.extension === '.xsp') {
-						if (Object.hasOwn(playlist, 'type') && playlist.type !== 'songs') { // Type on XSP playlists
-							bDone = true;
-							errors.push('Invalid type');
-						}
-					} else if (playlist.extension === '.strm') { // STRM with multiple lines
-						let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
-						let lines;
-						if (typeof text !== 'undefined' && text.length) {
-							const codePage = checkCodePage(text, playlist.extension);
-							if (codePage !== -1) { text = _open(playlist.path, codePage, true); }
-							lines = text.split(newLineRegex).filter(Boolean).length;
-						}
-						if (lines > 1) {
-							bDone = true;
-							errors.push('Multiple tracks');
-						}
-					} else if (playlist.extension === '.fpl') { // FPL not saved via 'Save playlist'
-						const jspf = fplCache.get(playlist.path) || FPL.parseFile(playlist.path);
-						if (jspf.playlist.meta.some((m) => Object.hasOwn(m, 'magic') && m.magic !== FPL.MAGIC)) {
-							bDone = true;
-							errors.push('Non recognized magic number');
-						}
-						if (!fplCache.has(playlist.path)) { fplCache.set(playlist.path, jspf); }
+				}
+				if (playlist.extension === '.xsp') {
+					if (Object.hasOwn(playlist, 'type') && playlist.type !== 'songs') { // Type on XSP playlists
+						bDone = true;
+						errors.push('Invalid type');
 					}
-					if (bDone) {
-						found.push(playlist);
-						report.push((playlist.extension === '.ui' || playlist.isAutoPlaylist ? playlist.nameId : playlist.path) + ' ' + _p(errors.join(', ')));
+				} else if (playlist.extension === '.strm') { // STRM with multiple lines
+					let text = _isFile(playlist.path) ? _open(playlist.path) : void (0);
+					let lines;
+					if (typeof text !== 'undefined' && text.length) {
+						const codePage = checkCodePage(text, playlist.extension);
+						if (codePage !== -1) { text = _open(playlist.path, codePage, true); }
+						lines = text.split(newLineRegex).filter(Boolean).length;
 					}
-					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking format errors ' + progress + '%.'); }
-					resolve('done');
-				}, iDelay);
-			}));
-		});
-		Promise.all(promises).then(() => {
+					if (lines > 1) {
+						bDone = true;
+						errors.push('Multiple tracks');
+					}
+				} else if (playlist.extension === '.fpl') { // FPL not saved via 'Save playlist'
+					const jspf = fplCache.get(playlist.path) || FPL.parseFile(playlist.path);
+					if (jspf.playlist.meta.some((m) => Object.hasOwn(m, 'magic') && m.magic !== FPL.MAGIC)) {
+						bDone = true;
+						errors.push('Non recognized magic number');
+					}
+					if (!fplCache.has(playlist.path)) { fplCache.set(playlist.path, jspf); }
+				}
+				if (bDone) {
+					found.push(playlist);
+					report.push((playlist.extension === '.ui' || playlist.isAutoPlaylist ? playlist.nameId : playlist.path) + ' ' + _p(errors.join(', ')));
+				}
+				const progress = total ? Math.round(i / total * 10) * 10 : 100;
+				if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking format errors ' + progress + '%.'); }
+			},
+			60
+		).then(() => {
 			resolve({ found, report });
 		});
 	});
@@ -2003,24 +2057,19 @@ function findCircularReferences() {
 	return new Promise((resolve) => {
 		const playlists = list.dataAll.filter((pls) => pls.extension === '.xsp' && pls.type === 'songs');
 		const total = playlists.length - 1;
-		const promises = [];
 		let prevProgress = -1;
-		let iDelay = 0;
-		playlists.forEach((playlist, i) => {
-			iDelay = playlist.size === '?' ? iDelay + iDelayPlaylists : iDelay + iDelayPlaylists * (1 + Math.floor(playlist.size / 100));
-			promises.push(new Promise((resolve) => {
-				setTimeout(() => {
-					if (list.checkCircularXsp({ pls: playlist })) {
-						found.push(playlist);
-						report.push(playlist.path);
-					}
-					const progress = total ? Math.round(i / total * 10) * 10 : 100;
-					if (progress > prevProgress) { prevProgress = progress; console.log('Checking circular references ' + progress + '%.'); }
-					resolve('done');
-				}, iDelay);
-			}));
-		});
-		Promise.all(promises).then(() => {
+		Promise.serial(
+			playlists,
+			(playlist, i) => {
+				if (list.checkCircularXsp({ pls: playlist })) {
+					found.push(playlist);
+					report.push(playlist.path);
+				}
+				const progress = total ? Math.round(i / total * 10) * 10 : 100;
+				if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking circular references ' + progress + '%.'); }
+			},
+			60
+		).then(() => {
 			resolve({ found, report });
 		});
 	});
