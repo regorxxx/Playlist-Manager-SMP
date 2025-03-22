@@ -3904,13 +3904,14 @@ function _list(x, y, w, h) {
 		let dataExternalPlaylists = [];
 		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? utf8 : 0);
 		if (!data) { fb.ShowPopupMessage('No data found: ' + externalPath, 'Playlist Manager: import from JSON'); return false; }
+		const libItems = fb.GetLibraryItems();
 		if (answer === popup.yes) {
 			// Then all playlist are AutoPlaylists and all need size updating...
 			// {name,query,sort,forced} maps to {...,name,query,sort,bSortForced,...}
 			// Need to fill all the other values
 			data.forEach((item) => {
 				if (!checkQuery(item.query, false, true)) { fb.ShowPopupMessage(item.name + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON'); return; }
-				const handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+				const handleList = fb.GetQueryItems(libItems, stripSort(item.query));
 				const size = handleList.Count;
 				const duration = handleList.CalcTotalDuration();
 				const trackSize = handleList.CalcTotalSize();
@@ -3963,7 +3964,7 @@ function _list(x, y, w, h) {
 						fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON');
 						return;
 					}
-					let handleList = fb.GetQueryItems(fb.GetLibraryItems(), stripSort(item.query));
+					let handleList = fb.GetQueryItems(libItems, stripSort(item.query));
 					if (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) {
 						handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 					}
@@ -4873,6 +4874,7 @@ function _list(x, y, w, h) {
 			this.dataUI = [];
 			this.dataFolder = [];
 			this.indexes = [];
+			let libItems;
 			if (_isFile(this.filename)) {
 				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoPlaylist || this.bAutoTrackTagAutoPlsInit && bInit);
 				const bColumns = this.isColumnsEnabled('size');
@@ -4897,6 +4899,7 @@ function _list(x, y, w, h) {
 						i++;
 						// Updates size or track tags for AutoPlaylists. Warning takes a lot of time! Only when required...
 						if (bUpdateSize || bUpdateTags && Object.hasOwn(item, 'trackTags') && item.trackTags && item.trackTags.length) {
+							if (!libItems) { libItems = fb.GetLibraryItems(); }
 							// Only re-checks query when forcing update of size for performance reasons
 							// Note the query is checked on user input, external json loading and just before loading the playlist
 							// So checking it every time the panel is painted is totally useless...
@@ -4909,7 +4912,7 @@ function _list(x, y, w, h) {
 									clearInterval(id);
 									Promise.wait(200 * i).then(() => {
 										const test = this.logOpt.profile ? new FbProfiler('Refresh AutoPlaylist') : null;
-										const handleList = getQueryPlaylistHandles.call(this, item);
+										const handleList = getQueryPlaylistHandles.call(this, item, libItems);
 										if (test) { test.Print(item.nameId); }
 										const size = handleList ? handleList.Count : 0;
 										const duration = handleList ? round(handleList.CalcTotalDuration(), 2) : 0;
@@ -5007,7 +5010,8 @@ function _list(x, y, w, h) {
 						if (!this.properties.bSetup[1]) { this.xspPopup(); }
 					}
 					if (!bInit && bCache && new Set(['.m3u8', '.m3u', '.xspf', '.pls']).has(item.extension)) {
-						const handleList = getHandlesFromPlaylist({ playlistPath: item.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false });
+						if (!libItems) { libItems = fb.GetLibraryItems(); }
+						const handleList = getHandlesFromPlaylist({ playlistPath: item.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl: [], bLog: false, poolItems: libItems });
 						this.plsCache.set(item.path, handleList);
 						item.duration = handleList ? round(handleList.CalcTotalDuration(), 2) : 0;
 						item.trackSize = handleList ? round(handleList.CalcTotalSize(), 2) : 0;
@@ -8117,12 +8121,12 @@ function _list(x, y, w, h) {
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process
-function getQueryPlaylistHandles(pls) {
+function getQueryPlaylistHandles(pls, libItems = fb.GetLibraryItems()) {
 	let handleList = null;
 	if (!checkQuery(pls.query, false, true)) {
 		if (!pls.query.includes('#PLAYLIST# IS')) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); }
 	} else {
-		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true); // Cache output
+		handleList = fb.GetQueryItemsCheck(libItems, stripSort(pls.query), true); // Cache output
 		if (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) {
 			handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 		}
