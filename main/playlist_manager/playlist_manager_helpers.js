@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/25
+//22/03/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -899,7 +899,7 @@ function exportPlaylistFile(list, z, defPath = '') {
 	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
 	let path = '';
 	try { path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name, defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true)); }
-	catch (e) { return bDone; }
+	catch (e) { return bDone; } // eslint-disable-line no-unused-vars
 	if (!path.length) { return bDone; }
 	if (path === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
 	if (_isFile(path)) {
@@ -928,7 +928,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 	})) { return bDone; }  // Don't load incompatible files
 	let path = '';
 	try { path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, defPath || list.playlistsPath + 'Export\\', true)); }
-	catch (e) { return bDone; }
+	catch (e) { return bDone; } // eslint-disable-line no-unused-vars
 	if (!path.length) { return bDone; }
 	if (path === list.playlistsPath) { console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return bDone; }
 	const bCopy = playlists.map((pls) => {
@@ -964,7 +964,7 @@ function exportPlaylistFileWithRelPaths({ list, z, ext = '', defPath = '', bNoIn
 		newPath = defPath + playlistName;
 	} else {
 		try { newPath = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.Name, defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true)); }
-		catch (e) { return { bDone, newPath }; }
+		catch (e) { return { bDone, newPath }; } // eslint-disable-line no-unused-vars
 	}
 	if (!newPath.length) { return { bDone, newPath }; }
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return { bDone, newPath }; }
@@ -1075,7 +1075,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 					true
 				)
 			);
-		} catch (e) { return { bDone, handleList: null }; }
+		} catch (e) { return { bDone, handleList: null }; } // eslint-disable-line no-unused-vars
 	}
 	if (!newPath.length) { return { bDone, handleList: null }; }
 	newPath = sanitizePath(
@@ -1189,7 +1189,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 					true
 				)
 			);
-		} catch (e) { return { bDone, handleList: null }; }
+		} catch (e) { return { bDone, handleList: null }; } // eslint-disable-line no-unused-vars
 	}
 	if (!newPath.length) { return { bDone, handleList: null }; }
 	newPath = sanitizePath(
@@ -1510,7 +1510,11 @@ function backup(n = 50, bAsync = false, bProfile = true) { // Backup playlist an
 		}
 	}
 	const playlistFilesMask = Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext); // Ext already has a .
-	_zip([...playlistFilesMask, list.filename, list.filename + '.old'], list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip', bAsync);
+	_zip(
+		[...playlistFilesMask, list.filename, list.filename + '.old'],
+		list.playlistsPath + '_backup\\' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip',
+		bAsync
+	);
 	if (test) { test.Print(); }
 	return true;
 }
