@@ -2713,7 +2713,7 @@ function _list(x, y, w, h) {
 						handleList = this.plsCache.get(pls.path);
 						if (!handleList) {
 							const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-							handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
+							handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false, poolItems: library });
 							this.plsCache.set(pls.path, handleList);
 							bUpdateMeta = true;
 						}
@@ -3807,9 +3807,10 @@ function _list(x, y, w, h) {
 					return plsXsp.query.includes('#PLAYLIST# IS ' + playlistNameId);
 				});
 			});
+			const libItems = fb.GetLibraryItems();
 			this.dataXsp.forEach((plsXsp, i) => {
 				if (update[i]) {
-					const handlePlaylist = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });
+					const handlePlaylist = getHandlesFromPlaylist({ playlistPath: plsXsp.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false, poolItems: libItems });
 					if (!handlePlaylist) { return; }
 					const duplicated = getPlaylistIndexArray(plsXsp.nameId);
 					if (duplicated.length === 1) {
@@ -5331,11 +5332,15 @@ function _list(x, y, w, h) {
 			if (pop.isEnabled('cacheLib') || pop.isEnabled('cacheLib waiting')) { return; }
 			this.plsCache.clear();
 			clearInterval(id);
+			const libItems = fb.GetLibraryItems();
 			Promise.serial(
 				bIncludeAutoPls
 					? this.dataAll.filter((pls) => !pls.isFolder)
 					: this.dataAll.filter((pls) => !pls.isAutoPlaylist && !pls.isFolder)
-				, cachePlaylist.bind(this), 200)
+				,
+				(pls) => cachePlaylist.call(this, pls, libItems),
+				200
+			)
 				.then(() => {
 					console.log('Playlist Manager: Cached playlists for searching ' + _p(bIncludeAutoPls ? 'all' : 'files'));
 					// Refresh sorting with new data
@@ -8125,10 +8130,10 @@ function getQueryPlaylistHandles(pls) {
 	return handleList;
 }
 
-function cachePlaylist(pls) {
+function cachePlaylist(pls, libItems = fb.GetLibraryItems()) {
 	let handleList;
 	if (pls.isAutoPlaylist && pls.extension !== '.ui') {
-		handleList = fb.GetQueryItemsCheck(fb.GetLibraryItems(), stripSort(pls.query), true);
+		handleList = fb.GetQueryItemsCheck(libItems, stripSort(pls.query), true);
 	} else if (pls.path.length) {
 		const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 		handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, bOmitNotFound: true, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog: false });

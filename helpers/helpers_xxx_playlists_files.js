@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/25
+//22/03/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -761,7 +761,7 @@ function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', rem
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bMultiple = false, bLog = true, xspfRules = { bFallbackComponentXSPF: false } } = {}) {
+function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bMultiple = false, bLog = true, xspfRules = { bFallbackComponentXSPF: false }, poolItems = fb.GetLibraryItems() } = {}) {
 	const test = bLog ? new FbProfiler('getHandlesFromPlaylist') : null;
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	let handlePlaylist = null, pathsNotFound = null, locationsByOrder = [];
@@ -787,7 +787,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				// Filter if needed
 				handlePlaylist = toIncludeHandle;
 				if (query.length) { handlePlaylist = checkQuery(query, false) ? fb.GetQueryItems(handlePlaylist, query) : null; }
-			} else if (checkQuery(query, false)) { handlePlaylist = fb.GetQueryItems(fb.GetLibraryItems(), query); }
+			} else if (checkQuery(query, false)) { handlePlaylist = fb.GetQueryItems(poolItems, query); }
 			else { console.log('Error on XSP Playlist: ' + query); }
 			if (handlePlaylist) {
 				handlePlaylist.Sort();
@@ -809,7 +809,6 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 		if (!filePaths.some((path) => { return !/[A-Z]*:\\/.test(path); })) { relPath = ''; } // No need to check rel paths if they are all absolute
 		const playlistLength = filePaths.length;
 		handlePlaylist = [...Array(playlistLength)];
-		const poolItems = fb.GetLibraryItems();
 		const poolItemsCount = poolItems.Count;
 		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count
 			? libItemsAbsPaths
@@ -1007,10 +1006,9 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
-function arePathsInMediaLibrary(filePaths, relPath = '') {
+function arePathsInMediaLibrary(filePaths, relPath = '', poolItems = fb.GetLibraryItems()) {
 	if (!filePaths.some((path) => { return !/[A-Z]*:\\/.test(path); })) { relPath = ''; } // No need to check rel paths if they are all absolute
 	const playlistLength = filePaths.length;
-	const poolItems = fb.GetLibraryItems();
 	const poolItemsCount = poolItems.Count;
 	const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItemsCount
 		? libItemsAbsPaths
