@@ -2221,11 +2221,19 @@ function _list(x, y, w, h) {
 		switch (k) {
 			// Scroll wheel
 			case VK_UP: {
-				this.wheel({ s: 1, bForce: true });
+				if (this.lastCharsPressed.str.length) {
+					this.quickSearch(void (0), -1);
+				} else {
+					this.wheel({ s: 1, bForce: true });
+				}
 				return true;
 			}
 			case VK_DOWN: {
-				this.wheel({ s: -1, bForce: true });
+				if (this.lastCharsPressed.str.length) {
+					this.quickSearch(void (0), 1);
+				} else {
+					this.wheel({ s: -1, bForce: true });
+				}
 				return true;
 			}
 			// Scroll entire pages
@@ -2482,60 +2490,81 @@ function _list(x, y, w, h) {
 				// Quick-search
 				// Search by key according to the current sort method: it extracts the property to check against from the method name 'By + [playlist property]'
 				if (showMenus['Quick-search'] && keyChar && keyChar.length === 1 && quickSearchRe.test(keyChar)) {
-					if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
-					if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
-					let method = this.methodState.split('\t')[0].replace('By ', '');
-					if (method === 'name' || this.properties.bQuicSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
-					let bNext = false;
-					const bCycle = this.properties.bQuicSearchCycle[1];
-					if (!this.properties.bQuicSearchNext[1]) {
-						this.lastCharsPressed.str += keyChar;
-					} else { // Jump to next item with same char
-						if (this.lastCharsPressed.str !== keyChar) { this.lastCharsPressed.str += keyChar; } // NOSONAR
-						else { bNext = true; }
-					}
-					// Helper
-					const searchStr = (pls) => {
-						if (Object.hasOwn(pls, method) && pls[method] !== null && pls[method] !== void (0)) {
-							const bArray = Array.isArray(pls[method]);
-							if (bArray && !pls[method].length) { return false; }
-							const val = bArray ? pls[method][0] : pls[method];
-							const type = typeof val;
-							this.lastCharsPressed.mask = getKeyboardMask();
-							const bAnyPosition = this.lastCharsPressed.mask === kMask.shift || this.lastCharsPressed.mask === kMask.ctrl;
-							if (type === 'string' && val.length || type === 'number') {
-								return (bAnyPosition
-									? val.toString().toLowerCase().includes(this.lastCharsPressed.str)
-									: val.toString().toLowerCase().startsWith(this.lastCharsPressed.str)
-								);
-							} else { return false; }
-						} else { return false; }
-					};
-					// Check the current playlist is a valid result when looking for next item
-					let currPlsIdx = -1;
-					if (bNext && this.index !== -1) {
-						const pls = this.data[this.index];
-						currPlsIdx = searchStr(pls) ? this.index : -1;
-					}
-					// Look for pls
-					const idx = this.data.findIndex((pls, idx) => {
-						if (bNext && currPlsIdx >= idx) { return false; }
-						return searchStr(pls);
-					});
-					// Find first possible item if cycling is active
-					const startIdx = bNext && bCycle && idx === -1
-						? this.data.findIndex((pls) => searchStr(pls))
-						: -1;
-					// Highlight found item or current one if there are no more items or cycle to the first one
-					this.lastCharsPressed.bDraw = true;
-					this.showPlsByIdx(currPlsIdx !== -1 && idx === -1 ? bCycle ? startIdx : currPlsIdx : idx);
-					this.lastCharsPressed.ms = Date.now();
+					this.quickSearch(keyChar);
 				} else {
 					this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
 					return false;
 				}
 			}
 		}
+	};
+
+	this.quickSearch = (keyChar, next = 0) => {
+		if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
+		if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
+		let method = this.methodState.split('\t')[0].replace('By ', '');
+		if (method === 'name' || this.properties.bQuicSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
+		let bNext = false;
+		let bPrev = false;
+		const bCycle = this.properties.bQuicSearchCycle[1];
+		if (next !== 0) {
+			if (next > 0) { bNext = true; }
+			else if (next < 0) { bPrev = true; }
+		} else {
+			if (!this.properties.bQuicSearchNext[1]) {
+				this.lastCharsPressed.str += keyChar;
+			} else { // Jump to next item with same char
+				if (this.lastCharsPressed.str !== keyChar) { this.lastCharsPressed.str += keyChar; } // NOSONAR
+				else { bNext = true; }
+			}
+		}
+		// Helper
+		const searchStr = (pls) => {
+			if (Object.hasOwn(pls, method) && pls[method] !== null && pls[method] !== void (0)) {
+				const bArray = Array.isArray(pls[method]);
+				if (bArray && !pls[method].length) { return false; }
+				const val = bArray ? pls[method][0] : pls[method];
+				const type = typeof val;
+				this.lastCharsPressed.mask = getKeyboardMask();
+				const bAnyPosition = this.lastCharsPressed.mask === kMask.shift || this.lastCharsPressed.mask === kMask.ctrl;
+				if (type === 'string' && val.length || type === 'number') {
+					return (bAnyPosition
+						? val.toString().toLowerCase().includes(this.lastCharsPressed.str)
+						: val.toString().toLowerCase().startsWith(this.lastCharsPressed.str)
+					);
+				} else { return false; }
+			} else { return false; }
+		};
+		// Check the current playlist is a valid result when looking for next item
+		let currPlsIdx = -1;
+		if ((bNext || bPrev) && this.index !== -1) {
+			const pls = this.data[this.index];
+			currPlsIdx = searchStr(pls) ? this.index : -1;
+		}
+		// Look for pls
+		const idx = (bPrev ? [...this.data].reverse() : this.data).findIndex((pls, idx) => {
+			if (bNext && currPlsIdx >= idx) { return false; }
+			else if (bPrev && (this.items - 1 - currPlsIdx) >= idx) { return false; }
+			return searchStr(pls);
+		});
+		// Find first possible item if cycling is active
+		const startIdx = (bNext || bPrev) && bCycle && idx === -1
+			? (bPrev ? [...this.data].reverse() : this.data).findIndex((pls) => searchStr(pls))
+			: -1;
+		// Highlight found item or current one if there are no more items or cycle to the first one
+		this.lastCharsPressed.bDraw = true;
+		this.showPlsByIdx(
+			currPlsIdx !== -1 && idx === -1
+				? bCycle
+					? bPrev
+						? this.items - 1 - startIdx
+						: startIdx
+					: currPlsIdx
+				: bPrev
+					? this.items - 1 - idx
+					: idx
+		);
+		this.lastCharsPressed.ms = Date.now();
 	};
 
 	this.listGlobalShortcuts = (bForce = false, bTips = true) => {
@@ -2587,9 +2616,10 @@ function _list(x, y, w, h) {
 			case 'list menu': shortcut = bEnabled ? 'Shift + F10' : ''; break;
 			case 'documentation': shortcut = bEnabled ? 'F11' : ''; break;
 			case 'tracked folder': shortcut = bEnabled && !this.bLiteMode ? 'F12' : ''; break;
-			case 'columns': shortcut = 'º or /'; break;
+			case 'columns': shortcut = 'º, \\ or Numpad /'; break;
 			case 'delete': shortcut = 'Del'; break;
 			case 'search': shortcut = 'Ctrl + E'; break;
+			case 'flat view': shortcut = 'Ctrl + B'; break;
 		}
 		if (shortcut.length) {
 			if (options.bParen) { shortcut = _p(shortcut); }
@@ -8042,10 +8072,10 @@ function _list(x, y, w, h) {
 						'Global shortcuts:' +
 						'\n-------------------' +
 						this.listGlobalShortcuts(void (0), false) +
-						'\n- º, \\ or Numpad /: hide/show the playlist\'s metadata columns.' +
-						'\n- Ctrl + B: flat/folders view' +
-						'\n- DEL: delete playlist.' +
-						(this.searchInput ? '\n- Ctrl + E: focus on search box.' : '') +
+						'\n- ' + this.getGlobalShortcut('columns', { bTab: false, bParen: false }) + ': hide/show the playlist\'s metadata columns.' +
+						'\n- ' + this.getGlobalShortcut('flat view', { bTab: false, bParen: false }) + ': flat/folders view' +
+						'\n- ' + this.getGlobalShortcut('delete', { bTab: false, bParen: false }) + ': delete playlist.' +
+						(this.searchInput ? '\n- ' + this.getGlobalShortcut('search', { bTab: false, bParen: false }) + ': focus on search box.' : '') +
 						'\n(*) Also apply to multiple selection and recursively to folders.' +
 						'\n' +
 						(showMenus['Quick-search']

@@ -125,6 +125,7 @@
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
 - Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the scrip is checking if every track exist first.
 - UI: quick-search settings menu is now duplicated at the search button's settings submenu.
+- UI: pressing Up/Down arrow keys while quick-searching will jump to next/previous result.
 - UI: playlist metadata (like size) is now updated when using the search tool if data was not cached.
 - UI: modified and created date on tooltip is now shown as DD/MM/YYYY HH:SS.
 - UI: clean up of 'List menu' entries to improve ease of usage.
