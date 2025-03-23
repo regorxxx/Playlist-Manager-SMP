@@ -2446,13 +2446,16 @@ function _list(x, y, w, h) {
 					case 'numpad /': // Show hide columns
 					case '\\':
 					case 'º':
-						this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
-						this.properties.uiElements[1] = JSON.stringify(this.uiElements);
-						overwriteProperties(this.properties);
-						this.updateUIElements(void (0), { bScroll: true });
-						return true;
+						if (!this.lastCharsPressed.str.length) {
+							this.uiElements['Columns'].enabled = !this.uiElements['Columns'].enabled;
+							this.properties.uiElements[1] = JSON.stringify(this.uiElements);
+							overwriteProperties(this.properties);
+							this.updateUIElements(void (0), { bScroll: true });
+							return true;
+						}
+						break;
 					case 'b':
-						if (getKeyboardMask() === kMask.ctrl) {
+						if (getKeyboardMask() === kMask.ctrl && !this.lastCharsPressed.str.length) {
 							const showMenus = JSON.parse(this.properties.showMenus[1]);
 							this.updateMenus({ menus: { Folders: !showMenus['Folders'] } });
 							return true;
@@ -2471,7 +2474,7 @@ function _list(x, y, w, h) {
 						break; // Don't process when not over playlist
 				}
 				// Focus on search box
-				if (this.searchInput && keyChar === 'e' && getKeyboardMask() === kMask.ctrl) {
+				if (this.searchInput && keyChar === 'e' && getKeyboardMask() === kMask.ctrl && !this.lastCharsPressed.str.length) {
 					this.searchInput.check('down', this.searchInput.x + 1, this.searchInput.y + 1);
 					this.searchInput.check('up', this.searchInput.x + 1, this.searchInput.y + 1);
 					return true;

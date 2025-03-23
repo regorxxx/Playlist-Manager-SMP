@@ -159,6 +159,7 @@
 - XSPF: container files different to .iso files did not had their subsong index saved.
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
+- UI: panel shortcuts like focus on search (Ctrl + E) conflict with quick-searching while pressing Ctrl/Shift (to look at any position).
 - UI: wrong column size in some cases -on auto mode- after using the search tool.
 - UI: fixed multiple selection behavior when using filters, where random items where being selected after filtering by Idx, even if they were not the original ones. Now it tries to maintain items only when they are also present after filtering, reducing the selection otherwise.
 - UI: minor fixes to available actions on playlist menus.
