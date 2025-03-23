@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/25
+//23/03/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -98,6 +98,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		playlistPath = playlistPath.replaceLast(arr[2], extension);
 		if (!playlistName.length) { playlistName = (arr[1].endsWith(arr[2])) ? arr[1].replace(arr[2], '') : arr[1]; } // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let playlistText = [];
+		let jspfCache;
 		const relPathSplit = relPath.length ? relPath.split('\\').filter(Boolean) : null;
 		// -------------- m3u
 		if (extension === '.m3u8' || extension === '.m3u') {
@@ -248,6 +249,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 				playlist.meta.find((obj) => { return Object.hasOwn(obj, 'playlistSize'); }).playlistSize = itemsCount;
 			}
 			playlistText = XSPF.toXSPF(jspf);
+			jspfCache = jspf;
 		}
 		// Write to file
 		playlistText = playlistText.join('\r\n');
@@ -256,6 +258,11 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		if (_isFile(playlistPath) && bDone) {
 			let check = _open(playlistPath, utf8);
 			bDone = (check === playlistText);
+			// Delete cache after edit
+			if (bDone && extension === '.xspf') {
+				xmlDomCache.delete(playlistPath); // NOSONAR [cache filled elsewhere]
+				xspfCache.set(playlistPath, jspfCache);
+			}
 		}
 		return bDone ? playlistPath : false;
 	}

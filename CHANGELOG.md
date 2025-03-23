@@ -158,6 +158,7 @@
 - XSPF: malformed file paths when adding tracks to a .xspf playlist directly by mouse shortcut or drag n' dropping, which broke compatibility with other software.
 - XSPF: URLS not being loaded properly in some cases due to forced lower casing. Now they are loaded with original casing. This error was heavily dependent on exotic servers being case sensitive.
 - XSPF: container files different to .iso files did not had their subsong index saved.
+- XSPF: cache not being cleared after using 'Update playlist' menu entry (or auto-updating), resulting on latest changes not being loaded without a manual panel refresh. It worked fine with other methods for sending tracks (like drag n' drop) though.
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
 - UI: panel shortcuts like focus on search (Ctrl + E) conflict with quick-searching while pressing Ctrl/Shift (to look at any position).
