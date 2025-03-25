@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/25
+//25/03/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -77,23 +77,24 @@ function createMenuLeft(forcedIndex = -1) {
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const lb = ListenBrainz;
-	// Helpers
-	const isPlsActive = (pls) => { return plman.GetPlaylistName(plman.ActivePlaylist) !== pls.nameId; };
-	const isAutoPls = (pls) => { return pls.isAutoPlaylist || pls.query; };
-	const isLockPls = (pls) => { return pls.isLocked; };
-	const isPlsEditable = (pls) => { return pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl' || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui'; };
-	const isPlsLockable = (pls) => { return isPlsEditable(pls) || pls.extension === '.strm'; };
-	const isPlsUI = (pls) => { return pls.extension === '.ui'; };
-	const isFolder = (pls) => { return pls.isFolder; };
-	// Evaluate
 	const uiIdx = plman.FindPlaylist(pls.nameId);
 	const bIsPlsLoaded = uiIdx !== -1;
+	// Helpers
+	const isPlsActive = (pls) => plman.GetPlaylistName(plman.ActivePlaylist) === pls.nameId;
+	const isAutoPls = (pls) => pls.isAutoPlaylist || pls.query;
+	const isLockPls = (pls) => pls.isLocked;
+	const isPlsEditable = (pls) => pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf' || pls.extension === '.fpl' || pls.extension === '.xsp' || pls.isAutoPlaylist || pls.extension === '.ui';
+	const isPlsLockable = (pls) => isPlsEditable(pls) || pls.extension === '.strm';
+	const isPlsUI = (pls) => pls.extension === '.ui';
+	const isFolder = (pls) => pls.isFolder;
+	const locks = bIsPlsLoaded ? (plman.GetPlaylistLockedActions(uiIdx) || []) : [];
+	// Evaluate
 	const bIsPlsActive = isPlsActive(pls);
 	const bIsAutoPls = isAutoPls(pls);
 	const bIsFolder = isFolder(pls);
 	const bIsValidXSP = pls.extension !== '.xsp' || Object.hasOwn(pls, 'type') && pls.type === 'songs';
 	const bIsLockPls = isLockPls(pls);
-	const bIsLockPlsRename = bIsPlsLoaded && (plman.GetPlaylistLockedActions(uiIdx) || []).includes('RenamePlaylist');
+	const bIsLockPlsRename = bIsPlsLoaded && locks.includes('RenamePlaylist');
 	const bIsPlsEditable = isPlsEditable(pls);
 	const bIsPlsLockable = isPlsLockable(pls);
 	const bIsPlsUI = isPlsUI(pls);
@@ -126,7 +127,7 @@ function createMenuLeft(forcedIndex = -1) {
 		{	// Load
 			{	// Load
 				// Load playlist within foobar2000. Only 1 instance allowed
-				(!list.bLiteMode || pls.isAutoPlaylist) && menu.newEntry({
+				((!list.bLiteMode || pls.isAutoPlaylist) && !bIsPlsUI) && menu.newEntry({
 					entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist' + list.getGlobalShortcut('load'), func: () => {
 						if (pls.isAutoPlaylist) {
 							const idx = getPlaylistIndexArray(pls.nameId);
@@ -138,9 +139,19 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING
 				});
 				// Show bound playlist
-				menu.newEntry({ entryText: (bIsPlsLoaded && bIsPlsActive) ? 'Show bound playlist' : (bIsPlsLoaded ? 'Show bound playlist (active playlist)' : 'Show bound playlist (not loaded)'), func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && bIsPlsActive ? MF_STRING : MF_GRAYED });
+				menu.newEntry({
+					entryText: bIsPlsUI
+						? 'Show playlist'
+						: 'Show bound playlist' + (bIsPlsLoaded && bIsPlsActive	? (bIsPlsLoaded ? ' (active playlist)' : ' (not loaded)') : ''),
+					func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && !bIsPlsActive ? MF_STRING : MF_GRAYED });
+				menu.newEntry({
+					entryText: 'Close playlist' + (bIsPlsLoaded ? (locks.includes('RemovePlaylist') ? ' (locked)' : '') : ' (not loaded)'),
+					func: () => { plman.RemovePlaylistSwitch(uiIdx); },
+					flags: bIsPlsLoaded && !locks.includes('RemovePlaylist') ? MF_STRING : MF_GRAYED
+				});
 				// Contextual menu
 				if (bIsPlsLoaded && showMenus['Playlist\'s items menu']) {
+					menu.newSeparator();
 					menu.newMenu('Items (contextual menu)', void (0), void (0), { type: 'handlelist', playlistIdx: plman.FindPlaylist(pls.nameId) });
 				}
 				if (showMenus['Queue handling']) {
@@ -302,7 +313,7 @@ function createMenuLeft(forcedIndex = -1) {
 					});
 					// Updates active playlist name to the name set on the playlist file so they get bound and saves playlist content to the file.
 					menu.newEntry({
-						entryText: bIsPlsActive ? 'Bind active playlist to this file' : 'Already bound to active playlist', func: () => {
+						entryText: !bIsPlsActive ? 'Bind active playlist to this file' : 'Already bound to active playlist', func: () => {
 							if (_isFile(pls.path)) {
 								const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 								const newNameId = pls.nameId;
@@ -316,7 +327,7 @@ function createMenuLeft(forcedIndex = -1) {
 									if (!bDone) { list.updatePlman(oldNameId, newNameId); } // Reset change
 								}
 							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
-						}, flags: bIsPlsActive && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED
+						}, flags: !bIsPlsActive && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED
 					});
 				}
 			}

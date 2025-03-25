@@ -68,6 +68,7 @@
 - AutoPlaylist: UI-only AutoPlaylists have a new menu entry to show the native AutoPlaylist properties window.
 - Playlists maintenance tools: new entries to check for duplicates by TF for AutoPlaylists and standard playlists.
 - Queue: new entry for folders, multiple and single selection to add playlist(s) contents to queue. See related [thread](https://hydrogenaud.io/index.php/topic,127153.msg1056916/). If any of the playlist is already present on UI, the tracks are sent from them, thus having queue idx associated (which may be used via TF on playlist viewers).
+- UI: new menu entry to close a playlist on the contextual menu.
 - UI: new setting to force quick-searching by name instead of being associated current sorting method (by category, size, etc.). It's enabled by default.
 - UI: added multiple popups and info related to the use of non-tracked items on library and files with subsongs (.cue, .iso, etc.).
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
