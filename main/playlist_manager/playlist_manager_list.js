@@ -3651,6 +3651,16 @@ function _list(x, y, w, h) {
 		}
 	};
 
+	this.updatePlaylistHandleMeta = (pls, playlistIndex, bSave, bDate) => {
+		const handleList = plman.GetPlaylistItems(playlistIndex);
+		this.editData(pls, {
+			size: handleList.Count,
+			duration: handleList.CalcTotalDuration(),
+			trackSize: handleList.CalcTotalSize()
+		}, bSave, bDate);
+		return handleList;
+	};
+
 	this.updateAll = (bForceLocked = false) => {
 		const current = getPlaylistNames();
 		let count = 0;
@@ -6474,14 +6484,8 @@ function _list(x, y, w, h) {
 				if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
 				if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return; }
 				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
-
 				plman.ActivePlaylist = fbPlaylistIndex;
-				const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
-				this.editData(pls, {
-					size: handleList.Count,
-					duration: handleList.CalcTotalDuration(),
-					trackSize: handleList.CalcTotalSize()
-				}, true, true); // Update size on load
+				const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true); // Update size on load
 				if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 					this.updateTags(handleList, pls);
 				}
@@ -6493,32 +6497,25 @@ function _list(x, y, w, h) {
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
-					let bDone = loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } });
-					if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
-					else if (pls.query) { // Update size on load for smart playlists
-						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
-						this.editData(pls, {
-							size: handleList.Count,
-							duration: handleList.CalcTotalDuration(),
-							trackSize: handleList.CalcTotalSize()
-						}, true, true);
-						if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
-							this.updateTags(handleList, pls);
-						}
-						if (pls.extension === '.xsp') {
-							setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
-						}
-					} else {
-						const handleList = plman.GetPlaylistItems(fbPlaylistIndex);
-						this.editData(pls, {
-							size: handleList.Count,
-							duration: handleList.CalcTotalDuration(),
-							trackSize: handleList.CalcTotalSize()
-						}, false);
-					}
-					if (pls.extension === '.fpl') { // Workaround for fpl playlist limitations...
-						setTimeout(() => { this.updatePlaylistFpl(fbPlaylistIndex); }, 2000);
-					}
+					loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } })
+						.then((bDone) => {
+							if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
+							else if (pls.query) { // Update size on load for smart playlists
+								const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true);
+								if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
+									this.updateTags(handleList, pls);
+								}
+								if (pls.extension === '.xsp') {
+									setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
+								}
+							} else {
+								this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, false);
+							}
+							// Workaround for XSPF and FPL playlist limitations...
+							if (pls.extension === '.fpl') {
+								setTimeout(() => this.updatePlaylistFpl(fbPlaylistIndex), 2000);
+							}
+						});
 				} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false; }
 			}
 		}

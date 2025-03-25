@@ -707,7 +707,7 @@ function getRelPath(itemPath, relPathSplit) {
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', remDupl = []/*['title','artist','date']*/, bAdvTitle = true, bMultiple = true, xspfRules = { bFallbackComponentXSPF: false, bLoadNotTrackedItems: false } } = {}) {
-	let bDone = false;
+	let bDone = Promise.resolve(false);
 	if (!playlistPath || !playlistPath.length) {
 		console.log('loadTracksFromPlaylist(): no playlist path was provided');
 		return bDone;
@@ -723,11 +723,9 @@ function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', rem
 	}
 	if (extension === '.strm') {
 		const stream = getFilePathsFromPlaylist(playlistPath);
-		plman.AddLocations(playlistIndex, stream, true);
-		bDone = true;
+		bDone = plman.AddPlaylistItemsOrLocations(playlistIndex, stream, true);
 	} else if (extension === '.fpl') { // Don't load by path since this also loads tags...
-		plman.AddLocations(playlistIndex, [playlistPath], true);
-		bDone = true;
+		bDone = plman.AddPlaylistItemsOrLocations(playlistIndex, [playlistPath], true);
 	} else {
 		const bFallbackComponentXSPF = xspfRules.bFallbackComponentXSPF && extension === '.xspf' && utils.CheckComponent('foo_xspf_1');
 		const { handlePlaylist, pathsNotFound, locationsByOrder } = getHandlesFromPlaylist({ playlistPath, relPath, remDupl, bReturnNotFound: true, bAdvTitle, bMultiple, xspfRules: { ...xspfRules, bFallbackComponentXSPF } });
@@ -737,10 +735,10 @@ function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', rem
 					if (xspfRules.bLoadNotTrackedItems) {
 						if (bFallbackComponentXSPF) {
 							console.log(playlistPath.split('\\').pop() + ': retrying playlist load using foo_xspf_1 component.');
-							plman.AddLocations(playlistIndex, [playlistPath], true);
+							bDone = plman.AddPlaylistItemsOrLocations(playlistIndex, [playlistPath], true);
 						} else if (pathsNotFound.some((path) => _isLink(path) || _isFile(path))) {
 							console.log(playlistPath.split('\\').pop() + ': retrying playlist load using locations and links.');
-							plman.AddPlaylistItemsOrLocations(
+							bDone = plman.AddPlaylistItemsOrLocations(
 								playlistIndex,
 								locationsByOrder.filter((item) => toType(item) === 'FbMetadbHandle' || _isLink(item) || _isFile(item)),
 								true
@@ -748,20 +746,20 @@ function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', rem
 						}
 					} else if (pathsNotFound.some((path) => _isLink(path))) {
 						console.log(playlistPath.split('\\').pop() + ': retrying playlist load using links.');
-						plman.AddPlaylistItemsOrLocations(
+						bDone = plman.AddPlaylistItemsOrLocations(
 							playlistIndex,
 							locationsByOrder.filter((item) => toType(item) === 'FbMetadbHandle' || _isLink(item)), true
 						);
 					} else {
 						plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
+						bDone = Promise.resolve(true);
 					}
-					bDone = true;
 				} else {
 					// Do nothing, handle this error
 				}
 			} else {
 				plman.InsertPlaylistItems(playlistIndex, 0, handlePlaylist);
-				bDone = true;
+				bDone = Promise.resolve(true);
 			}
 		}
 	}
