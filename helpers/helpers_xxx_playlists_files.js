@@ -979,9 +979,9 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 								' not found items on library (' + countNotFound + ').' +
 								'\n\t ' + pathsNotFound.filter((path) => !_isLink(path)).join('\n\t ')
 							); // DEBUG
-							if (count !== countNotFound) {
+							if ((playlistLength - count - countNotFound) !== 0) {
 								console.log(
-									playlistPath.split('\\').pop() + ': found links (' + (count - countNotFound) + ').' +
+									playlistPath.split('\\').pop() + ': found links (' + (playlistLength - count - countNotFound) + ').' +
 									'\n\t ' + pathsNotFound.filter((path) => _isLink(path)).join('\n\t ')
 								); // DEBUG
 							}
