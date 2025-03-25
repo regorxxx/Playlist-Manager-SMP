@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/03/25
+//25/03/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -223,7 +223,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 							? getRelPath(trackPath, relPathSplit)
 							: trackPath
 					].map((path) => {
-						return encodeURI((bLink ? '' : 'file:///') + path.replace(/\\/g, '/').replace(/&/g, '%26'));
+						return (bLink ? '' : 'file:///') + encodeURIComponent(path.replace(/\\/g, '/'));
 					});
 					const subSong = Number(tags[6][i][0]);
 					const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
@@ -394,10 +394,12 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			let pre = '', post = '';
 			newTrackText = newTrackText.map((item) => { // Encode file paths as URI
 				[pre, trackPath, post] = item.split(/<location>|<\/location>/);
-				trackPath = bRel && !_isLink(trackPath)
+				const bLink = _isLink(trackPath);
+				trackPath = trackPath.replace(/^file:\/+/, '');
+				trackPath = bRel && !bLink
 					? getRelPath(trackPath, relPathSplit)
 					: trackPath; // Relative path conversion
-				return pre + '<location>' + encodeURI(trackPath.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26')) + '</location>' + post;
+				return pre + '<location>' + (bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/')) + '</location>' + post;
 			});
 			trackText = [...newTrackText, ...trackText];
 			// Update size
@@ -499,7 +501,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 						for (const loc of row.location) {
 							let path;
 							try {
-								path = decodeURI(loc).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+								path = decodeURIComponent(loc).replace('file:///', ''); // file:///PATH/SUBPATH/...
 							} catch (e) {
 								path = loc;
 							}

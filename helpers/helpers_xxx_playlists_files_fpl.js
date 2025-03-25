@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/01/24
+//25/03/25
 
 /* exported FPL */
 
@@ -61,7 +61,7 @@ const FPL = {
 		if (tracksLen) { // Tracks from playlist
 			for (let i = 0; i < tracksLen; i++) {
 				playlist.track.push({
-					location: encodeURI(tracks[i].replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26')),
+					location: 'file:///' + encodeURIComponent(tracks[i].replace(/\\/g, '/')),
 					annotation: void (0),
 					title: void (0),
 					creator: void (0),

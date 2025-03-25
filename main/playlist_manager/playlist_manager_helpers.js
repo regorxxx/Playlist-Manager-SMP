@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/25
+//25/03/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -626,12 +626,12 @@ function convertToRelPaths(list, z) {
 	const pls = list.data[z];
 	const playlistPath = pls.path;
 	const paths = getFilePathsFromPlaylist(playlistPath);
-	const relPaths = paths.map((path) => { return '.\\' + path.split('\\').pop(); });
+	const relPaths = paths.map((path) => '.\\' + path.split('\\').pop());
 	const codePage = checkCodePage(_open(playlistPath), pls.extension);
 	let file = _open(playlistPath, codePage !== -1 ? codePage : 0);
 	if (file.length) {
 		if (pls.extension === '.xspf') { // Paths must be URI encoded...
-			paths.forEach((path, i) => { file = file.replace(encodeURI(path.replace(/\\/g, '/')), encodeURI(relPaths[i].replace(/\\/g, '/'))); });
+			paths.forEach((path, i) => { file = file.replace(encodeURIComponent(path.replace(/\\/g, '/')), encodeURIComponent(relPaths[i].replace(/\\/g, '/'))); });
 		} else {
 			paths.forEach((path, i) => { file = file.replace(path, relPaths[i]); });
 		}
