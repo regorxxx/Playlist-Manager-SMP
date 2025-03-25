@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/25
+//25/03/25
 
 /* exported _list */
 
@@ -5393,6 +5393,8 @@ function _list(x, y, w, h) {
 					// Refresh sorting with new data
 					if (['By track size', 'By duration', 'By date\t-last modified-'].includes(this.getMethodState())) {
 						this.sort();
+					} else {
+						this.repaint(false, 'list');
 					}
 				});
 		}, 250);
@@ -6515,6 +6517,7 @@ function _list(x, y, w, h) {
 							if (pls.extension === '.fpl') {
 								setTimeout(() => this.updatePlaylistFpl(fbPlaylistIndex), 2000);
 							}
+							this.repaint(false, 'list');
 						});
 				} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false; }
 			}
