@@ -259,15 +259,26 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 	if (plsIdx === -1) { return bSync ? Promise.resolve(false) : false; }
 	let lastType = typeof items[0].RawPath !== 'undefined' ? 'handle' : typeof items[0].Count !== 'undefined' ? 'handleList' : 'path';
 	let queue = lastType === 'path' ? [] : new FbMetadbHandleList();
-	const timer = (item) => bSync
-		? item && (item.endsWith('.xspf') || item.endsWith('.fpl')) ? 1000 : 25
-		: 0;
+	const timer = (item, type) => {
+		if (!bSync) { return 0; }
+		else if (type === 'path') {
+			if (item.endsWith('.xspf')) {
+				try {
+					const text = utils.ReadTextFile(item);
+					return (text.match(/<track>/gi) || [void (0)]).length * 50;
+				} catch { return 1000; }
+			}
+			else if (item.endsWith('.fpl')) { return 1000; }
+			else if (item.startsWith('www.') || item.startsWith('http')) { return 500; }
+		}
+		return 50;
+	};
 	const sendQueue = (item, type) => {
 		switch (type) {
 			case 'path': {
 				plman.AddLocations(plsIdx, queue);
 				queue = new FbMetadbHandleList();
-				return bSync ? Promise.wait(timer(item)) : true;
+				return bSync ? Promise.wait(timer(item, type)) : true;
 			}
 			case 'handle':
 			case 'handleList': {
@@ -315,7 +326,10 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 			// Add last items
 			if (lastType === 'path') {
 				plman.AddLocations(plsIdx, queue);
-				return Promise.wait(timer());
+				return Promise.wait(
+					queue.reduce((prev, curr) => prev + timer(curr, lastType), 50) +
+					(queue.some((item) => item.startsWith('www.') || item.startsWith('http')) ? 1000 : 0)
+				);
 			} else {
 				plman.InsertPlaylistItems(plsIdx, plman.PlaylistItemCount(plsIdx), queue);
 				return true;
