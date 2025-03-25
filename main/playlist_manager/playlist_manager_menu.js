@@ -145,7 +145,7 @@ function createMenuLeft(forcedIndex = -1) {
 						: 'Show bound playlist' + (bIsPlsLoaded && bIsPlsActive	? (bIsPlsLoaded ? ' (active playlist)' : ' (not loaded)') : ''),
 					func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && !bIsPlsActive ? MF_STRING : MF_GRAYED });
 				menu.newEntry({
-					entryText: 'Close playlist' + (bIsPlsLoaded ? (locks.includes('RemovePlaylist') ? ' (locked)' : '') : ' (not loaded)'),
+					entryText: 'Close playlist' + (bIsPlsLoaded ? (locks.includes('RemovePlaylist') ? ' (locked)' : '') : ' (not loaded)') + (bIsPlsUI ? list.getGlobalShortcut('delete') : ''),
 					func: () => { plman.RemovePlaylistSwitch(uiIdx); },
 					flags: bIsPlsLoaded && !locks.includes('RemovePlaylist') ? MF_STRING : MF_GRAYED
 				});
