@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/03/25
+//26/03/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -762,11 +762,7 @@ function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMult
 			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList) {
-		list.editData(pls, {
-			size: handleList.Count,
-			duration: handleList.CalcTotalDuration(),
-			trackSize: handleList.CalcTotalSize()
-		}, true, true); // Update size on load
+		list.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
 		if (handleList.Count) {
 			if (pls.sort && pls.sort.length) {
 				const sort = getSortObj(pls.sort);
@@ -1112,11 +1108,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			fb.ShowPopupMessage('Failed when converting tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name);
 		}
 		if (bXSP) {
-			list.editData(pls, {
-				size: handleList.Count,
-				duration: handleList.CalcTotalDuration(),
-				trackSize: handleList.CalcTotalSize()
-			}, true, true); // Update size on load
+			list.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
 		}
 		if (handleList.Count) {
 			// Convert tracks
@@ -1210,11 +1202,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList) {
-		list.editData(pls, {
-			size: handleList.Count,
-			duration: handleList.CalcTotalDuration(),
-			trackSize: handleList.CalcTotalSize()
-		}, true, true); // Update size on load
+		list.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
 		if (handleList.Count) {
 			const sortObj = pls.sort && pls.sort.length ? getSortObj(pls.sort) : null;
 			if (remDupl && remDupl.length && removeDuplicates) { handleList = removeDuplicates({ handleList, checkKeys: remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: !sortObj, bAdvTitle, bMultiple }); }

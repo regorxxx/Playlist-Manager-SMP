@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/03/25
+//26/03/25
 
 /* exported _list */
 
@@ -2753,11 +2753,7 @@ function _list(x, y, w, h) {
 					}
 				}
 				if (handleList && bUpdateMeta) {
-					this.editData(pls, {
-						size: handleList.Count,
-						duration: handleList.CalcTotalDuration(),
-						trackSize: handleList.CalcTotalSize()
-					}, false, true);
+					this.updatePlaylistHandleMeta(pls, handleList, false, true, true);
 				}
 				return handleList;
 			};
@@ -3651,10 +3647,12 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.updatePlaylistHandleMeta = (pls, playlistIndex, bSave, bDate) => {
-		const handleList = plman.GetPlaylistItems(playlistIndex);
+	this.updatePlaylistHandleMeta = (pls, idxOrHandleList, bSave, bDate, bSize = true) => {
+		const handleList = idxOrHandleList instanceof FbMetadbHandleList
+			? idxOrHandleList
+			: plman.GetPlaylistItems(idxOrHandleList);
 		this.editData(pls, {
-			size: handleList.Count,
+			...(bSize ? { size: handleList.Count } : {}),
 			duration: handleList.CalcTotalDuration(),
 			trackSize: handleList.CalcTotalSize()
 		}, bSave, bDate);
@@ -3863,11 +3861,7 @@ function _list(x, y, w, h) {
 						plman.InsertPlaylistItems(duplicated[0], 0, handlePlaylist);
 						setLocks(duplicated[0], ['AddItems', 'RemoveItems'], 'add');
 					}
-					this.editData(plsXsp, {
-						size: handlePlaylist.Count,
-						duration: handlePlaylist.CalcTotalDuration(),
-						trackSize: handlePlaylist.CalcTotalSize()
-					}, true, true);
+					this.updatePlaylistHandleMeta(plsXsp, handlePlaylist, true, true);
 					if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handlePlaylist.Count) {
 						this.updateTags(handlePlaylist, plsXsp);
 					}
@@ -5393,9 +5387,8 @@ function _list(x, y, w, h) {
 					// Refresh sorting with new data
 					if (['By track size', 'By duration', 'By date\t-last modified-'].includes(this.getMethodState())) {
 						this.sort();
-					} else {
-						this.repaint(false, 'list');
 					}
+					this.repaint(false, !this.bLiteMode && this.uiElements['Header buttons'].elements['Settings menu'].enabled ? 'all' : 'list');
 				});
 		}, 250);
 	};
@@ -6511,7 +6504,7 @@ function _list(x, y, w, h) {
 									setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
 								}
 							} else {
-								this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, false);
+								this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, void (0), void (0), ['.xspf'].includes(pls.extension));
 							}
 							// Workaround for XSPF and FPL playlist limitations...
 							if (pls.extension === '.fpl') {
@@ -6681,22 +6674,12 @@ function _list(x, y, w, h) {
 		const bLoaded = findPlsIdx !== -1 && plman.IsAutoPlaylist(findPlsIdx) === !!pls.isAutoPlaylist;
 		if (pls.extension === '.ui' || bLoaded) {
 			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
-			if (handleList) {
-				this.editData(pls, {
-					size: handleList.Count,
-					duration: handleList.CalcTotalDuration(),
-					trackSize: handleList.CalcTotalSize()
-				}, true, true);
-			}
+			if (handleList) { this.updatePlaylistHandleMeta(pls, handleList, true, true); }
 		} else if (pls.isAutoPlaylist) { // AutoPlaylist
 			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name); }
 			else {
 				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
-				this.editData(pls, {
-					size: handleList.Count,
-					duration: handleList.CalcTotalDuration(),
-					trackSize: handleList.CalcTotalSize()
-				}, true, true); // Update size on load
+				this.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
 			}
 		} else if (_isFile(pls.path)) { // Or file
 			// Try to load handles from library first, greatly speeds up non fpl large playlists
@@ -6708,13 +6691,8 @@ function _list(x, y, w, h) {
 			} else {
 				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog });
 			}
-			if (handleList) {
-				this.editData(pls, {
-					size: handleList.Count,
-					duration: handleList.CalcTotalDuration(),
-					trackSize: handleList.CalcTotalSize()
-				}, true, true);
-			}  // Update size on load for smart playlists
+			// Update size on load for smart playlists
+			if (handleList) { this.updatePlaylistHandleMeta(pls, handleList, true, true); }
 		} else {
 			console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
 		}
@@ -8177,17 +8155,9 @@ function cachePlaylist(pls, libItems = fb.GetLibraryItems()) {
 		this.plsCache.set(pls.path, handleList);
 	}
 	if (handleList) {
-		this.editData(pls, {
-			size: handleList.Count,
-			duration: handleList.CalcTotalDuration(),
-			trackSize: handleList.CalcTotalSize()
-		}, false, true);
+		this.updatePlaylistHandleMeta(pls, handleList, false, true, pls.isAutoPlaylist || pls.query);
 	} else if (handleList === null) {
-		this.editData(pls, {
-			size: 0,
-			duration: 0,
-			trackSize: 0
-		}, false, true);
+		this.updatePlaylistHandleMeta(pls, new FbMetadbHandleList(), false, true, pls.isAutoPlaylist || pls.query);
 	}
 	return handleList;
 }
