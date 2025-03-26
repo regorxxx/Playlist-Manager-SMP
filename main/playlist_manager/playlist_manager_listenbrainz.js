@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/12/24
+//25/03/25
 
 /* exported ListenBrainz */
 
@@ -254,7 +254,7 @@ ListenBrainz.lookupArtistMBIDsByName = function lookupArtistMBIDsByName(names, b
 		names,
 		(name) => send({
 			method: 'GET',
-			URL: 'https://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query=' + encodeURI(name)
+			URL: 'https://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query=' + encodeURIComponent(name)
 		}).then(
 			(resolve) => {
 				if (resolve) {
