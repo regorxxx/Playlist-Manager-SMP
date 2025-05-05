@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/01/25
+//02/04/25
 
 /* exported _chart */
 
@@ -84,7 +84,7 @@ include('statistics_xxx_helper.js');
  * @param {number} [o.buttons.timer] - [=1500] Timer to hide buttons in ms
  * @param {object} [o.callbacks] - Callback functions
  * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask)}} [o.callbacks.point] - Point related functions
- * @param {{onMouseWwheel:function(step), onRbtnUp:function(x, y, mask)}} [o.callbacks.focus] - On panel focus functions
+ * @param {{onMouseWheel:function(step), onRbtnUp:function(x, y, mask)}} [o.callbacks.focus] - On panel focus functions
  * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.settings] - Settings button functions
  * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.display] - Display button functions
  * @param {{onLbtnUp:function(x, y, mask), onRbtnUp:function(x, y, mask), onDblLbtn:function(x, y, mask), tooltip:((boolean) => string)|string}} [o.callbacks.zoom] - Zoom button functions
@@ -126,7 +126,7 @@ function _chart({
 	buttons = {/* xScroll, settings, display, zoom, custom, alpha, timer */ },
 	callbacks = {
 		point: {/* onLbtnUp, onRbtnUp, onDblLbtn */ },
-		focus: {/* onMouseWwheel, onRbtnUp */ },
+		focus: {/* onMouseWheel, onRbtnUp */ },
 		settings: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
 		display: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
 		zoom: {/* onLbtnUp, onRbtnUp, onDblLbtn, tooltip */ },
@@ -167,7 +167,7 @@ function _chart({
 		this.callbacks = {
 			point: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null },
 			focus: {
-				onMouseWwheel: this.zoomX,
+				onMouseWheel: this.zoomX,
 				onRbtnUp: null
 			},
 			settings: { onLbtnUp: null, onRbtnUp: null, onDblLbtn: null, tooltip: null },
@@ -760,7 +760,7 @@ function _chart({
 								}
 								if (this.axis.x.labels && i === 0 || !this.axis.x.bSingleLabels) { // keys
 									label.xAxis = { x: 0, y: 0, w: 0, h: 0 };
-									const labelText = xAxisValues[j];
+									const labelText = xAxisValues[j].split('|')[0];
 									const tickH = label.xAxis.h = gr.CalcTextHeight(labelText, this.gFont);
 									const tickW = label.xAxis.w = gr.CalcTextWidth(labelText, this.gFont);
 									const border = labelOver.r / series * (series - i);
@@ -818,7 +818,7 @@ function _chart({
 							// Check if labels are drawn in the region to the left overlapping the axis title
 							const offsetLabels = labelOver.coord.reduce((prev, serie) => {
 								return Math.max(prev, serie.slice(1).reduce((prev, point) => {
-									return point.tetha > Math.PI / 2 && point.tetha <= Math.PI * 3 / 2 && point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y <= yTitle + keyW
+									return point.xAsis && point.tetha > Math.PI / 2 && point.tetha <= Math.PI * 3 / 2 && point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y <= yTitle + keyW
 										? prev !== 0 ? Math.min(point.xAxis.x, prev) : point.xAxis.x
 										: prev;
 								}, 0));
@@ -872,6 +872,7 @@ function _chart({
 						const drawLabelW = bFitTicks ? tickW : tickW * 3;
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
+							valueX = valueX.split('|')[0];
 							const xLabel = x + i * tickW;
 							// Don't paint labels when they can't be fitted properly
 							if (!bFitTicks) {
@@ -918,6 +919,7 @@ function _chart({
 					if (!bFitTicks) { offsetTickText -= tickW; }
 					let lastLabel = x;
 					xAxisValues.forEach((valueX, i) => {
+						valueX = valueX.split('|')[0];
 						let xLabel = x + i * tickW;
 						// Don't paint labels when they can't be fitted properly
 						if (!bFitTicks) {
@@ -1050,6 +1052,7 @@ function _chart({
 						if (!bFitTicks) { offsetTickText -= tickW; }
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
+							valueX = valueX.split('|')[0];
 							const xtickH = gr.CalcTextHeight(valueX, this.gFont);
 							const xtickW = gr.CalcTextWidth(valueX, this.gFont);
 							let xLabel = x + i * tickW;
@@ -1442,7 +1445,7 @@ function _chart({
 				return true;
 			}
 		}
-		this.leavePoints(false);
+		this.leave(false);
 		return false;
 	};
 
@@ -1470,7 +1473,7 @@ function _chart({
 		return false;
 	};
 
-	this.leave = () => {
+	this.leave = (cleanNear) => {
 		this.mx = -1;
 		this.my = -1;
 		this.getButtonKeys().forEach((button) => this[button].hover = false);
@@ -1478,7 +1481,7 @@ function _chart({
 			this.getButtonKeys().forEach((button) => this[button].repaint());
 			this.inFocus = false;
 		}
-		return this.leavePoints() || this.repaint();
+		return this.leavePoints(cleanNear) || this.repaint();
 	};
 
 	this.initPopup = () => {
@@ -1614,7 +1617,7 @@ function _chart({
 			if ((left - right) >= range) { return false; }
 		}
 		this.changeConfig({ bPaint: true, dataManipulation: { slice: [left, right === points ? Infinity : right] } });
-		this.move(this.mx, this.my);
+		setTimeout(() => this.move(this.mx, this.my), 10);
 		return true;
 	};
 	this.zoomXThrottle = throttle(this.zoomX, 30);
@@ -1711,9 +1714,9 @@ function _chart({
 		return false;
 	};
 
-	this.mouseWheel = (step) => {
-		if (this.inFocus) {
-			this.callbacks.focus.onMouseWwheel.call(this, step);
+	this.mouseWheel = (step, bForce) => {
+		if (this.inFocus || bForce) {
+			this.callbacks.focus.onMouseWheel.call(this, step);
 			return true;
 		}
 		return false;
@@ -2011,8 +2014,10 @@ function _chart({
 			maxCount: 0,
 			minCount: 0,
 			total: 0,
+			countX: 0,
 			count: 0,
 			mean: null,
+			meanUnique: null,
 			median: null,
 			mode: null,
 			sigma: 0,
@@ -2022,52 +2027,61 @@ function _chart({
 				universal: { '50%': [], '75%': [], '89%': [], '95%': [] }
 			},
 		};
-		statistics.total = serie.length;
-		serie.forEach((p, i) => {
-			const val = p.y;
-			if (val > statistics.max) { statistics.max = val; }
-			if (val < statistics.min) { statistics.min = val; }
-			statistics.mean += i * val;
-			statistics.count += val;
-		});
-		statistics.range = statistics.max - statistics.min;
-		statistics.mean = statistics.mean / statistics.count;
-		serie.forEach((p, i) => {
-			const val = p.y;
-			if (val === statistics.max) { statistics.maxCount++; }
-			else if (val === statistics.min) { statistics.minCount++; }
-			statistics.sigma += val * (i - statistics.mean) ** 2;
-		});
-		statistics.sigma = Math.sqrt(statistics.sigma / (statistics.count - 1));
-		statistics.popRange.universal['50%'].push(statistics.mean - Math.sqrt(2) * statistics.sigma, statistics.mean + Math.sqrt(2) * statistics.sigma);
-		statistics.popRange.universal['75%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
-		statistics.popRange.universal['89%'].push(statistics.mean - 3 * statistics.sigma, statistics.mean + 3 * statistics.sigma);
-		statistics.popRange.universal['95%'].push(statistics.mean - 4 * statistics.sigma, statistics.mean + 4 * statistics.sigma);
-		statistics.popRange.normal['50%'].push(statistics.mean - 0.674490 * statistics.sigma, statistics.mean + 0.674490 * statistics.sigma);
-		statistics.popRange.normal['75%'].push(statistics.mean - 1.149954 * statistics.sigma, statistics.mean + 1.149954 * statistics.sigma);
-		statistics.popRange.normal['89%'].push(statistics.mean - 1.644854 * statistics.sigma, statistics.mean + 1.644854 * statistics.sigma);
-		statistics.popRange.normal['95%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
-		if (options.bClampRange) {
-			for (let key in statistics.popRange) {
-				for (let subKey in statistics.popRange[key]) {
-					statistics.popRange[key][subKey][0] = Math.max(statistics.min, statistics.popRange[key][subKey][0]);
-					statistics.popRange[key][subKey][1] = Math.min(statistics.max, statistics.popRange[key][subKey][1]);
+		if (serie) {
+			statistics.total = serie.length;
+			const uniqueX = new Set();
+			serie.forEach((p, i) => {
+				const val = p.y || 0;
+				if (val > statistics.max) { statistics.max = val; }
+				if (val < statistics.min) { statistics.min = val; }
+				statistics.mean += i * val;
+				statistics.count += val;
+				if (!uniqueX.has(p.x)) {
+					uniqueX.add(p.x);
+					statistics.countX++;
+				}
+			});
+			statistics.range = statistics.max - statistics.min;
+			statistics.meanUnique = statistics.mean / statistics.countX;
+			statistics.mean = statistics.mean / statistics.count;
+			serie.forEach((p, i) => {
+				const val = p.y || 0;
+				if (val === statistics.max) { statistics.maxCount++; }
+				else if (val === statistics.min) { statistics.minCount++; }
+				statistics.sigma += val * (i - statistics.mean) ** 2;
+			});
+			statistics.sigma = Math.sqrt(statistics.sigma / (statistics.count - 1));
+			statistics.popRange.universal['50%'].push(statistics.mean - Math.sqrt(2) * statistics.sigma, statistics.mean + Math.sqrt(2) * statistics.sigma);
+			statistics.popRange.universal['75%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
+			statistics.popRange.universal['89%'].push(statistics.mean - 3 * statistics.sigma, statistics.mean + 3 * statistics.sigma);
+			statistics.popRange.universal['95%'].push(statistics.mean - 4 * statistics.sigma, statistics.mean + 4 * statistics.sigma);
+			statistics.popRange.normal['50%'].push(statistics.mean - 0.674490 * statistics.sigma, statistics.mean + 0.674490 * statistics.sigma);
+			statistics.popRange.normal['75%'].push(statistics.mean - 1.149954 * statistics.sigma, statistics.mean + 1.149954 * statistics.sigma);
+			statistics.popRange.normal['89%'].push(statistics.mean - 1.644854 * statistics.sigma, statistics.mean + 1.644854 * statistics.sigma);
+			statistics.popRange.normal['95%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
+			if (options.bClampRange) {
+				for (let key in statistics.popRange) {
+					for (let subKey in statistics.popRange[key]) {
+						statistics.popRange[key][subKey][0] = Math.max(statistics.min, statistics.popRange[key][subKey][0]);
+						statistics.popRange[key][subKey][1] = Math.min(statistics.max, statistics.popRange[key][subKey][1]);
+					}
 				}
 			}
-		}
-		const binSize = 1;
-		const histogram = this.calcHistogram(serie.map((p) => p.y), binSize, statistics.max, statistics.min);
-		const masxFreq = Math.max(...histogram);
-		statistics.mode = { value: statistics.min + histogram.indexOf(masxFreq) * binSize, frequency: masxFreq };
-		{
-			let i = 0, acumFreq = statistics.count / 2;
-			while (true) {
-				acumFreq -= histogram[i];
-				if (acumFreq <= 0) { break; } else { i++; }
+			const binSize = 1;
+			const histogram = this.calcHistogram(serie.map((p) => p.y || 0), binSize, statistics.max, statistics.min);
+			const histogramLen = histogram.length;
+			const masxFreq = Math.max(...histogram);
+			statistics.mode = { value: statistics.min + histogram.indexOf(masxFreq) * binSize, frequency: masxFreq };
+			{
+				let i = 0, acumFreq = statistics.count / 2;
+				while (i < histogramLen) {
+					acumFreq -= histogram[i];
+					if (acumFreq <= 0) { break; } else { i++; }
+				}
+				statistics.median = statistics.min + (i > 0 ? (2 * i - 1) * binSize / 2 : 0);
 			}
-			statistics.median = statistics.min + (i > 0 ? (2 * i - 1) * binSize / 2 : 0);
+			if (this.configuration.bDebug) { memoryPrint('statistics', [statistics, histogram]); }
 		}
-		if (this.configuration.bDebug) { memoryPrint('statistics', [statistics, histogram]); }
 		return statistics;
 	};
 
@@ -2100,7 +2114,7 @@ function _chart({
 				}));
 		let currNum = 0, totalNum = 0;
 		const total = this.dataTotal.length
-			? [...this.dataTotal[serieIdx].values()].reduce((acc, curr) => acc + curr, 0)
+			? [...this.dataTotal[serieIdx].values()].reduce((acc, curr) => { totalNum++; return acc + curr; }, 0)
 			: this.graph.multi
 				? this.data.flat(Infinity)
 					.map((point) => point.y)
