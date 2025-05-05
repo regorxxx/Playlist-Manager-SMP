@@ -117,10 +117,12 @@
 - AutoPlaylist: UI-only AutoPlaylists use the AutoPlaylist icon when using Lite mode, otherwise use the locked icon.
 - AutoPlaylist: last modified date is now changed whenever the num of tracks (size), tracks file size or duration doesn't match the last saved value (rounded to 2 decimals).
 - AutoPlaylist: sorting expressions at end of queries are now recognized at multiple input popups as the desired sorting, instead of asking for sorting again with another popup. For ex. at AutoPlaylist or Smart playlist (.xsp) creation, or when editing an existing playlist's query (in this case, the sorting will be replaced with the new one).
+- AutoPlaylist: editing an AutoPlaylist query or sorting will also refresh the the associated UI playlist if loaded.
 - XSP: new Smart Playlists created are now automatically loaded.
 - XSP: 'Clone in UI' menu entry or action also updates metadata now.
 - XSP: improved console logging for Smart Playlists loading, now the query part associated to playlists is also shown.
 - XSP: last modified date is now changed whenever the num of tracks (size), tracks file size, playlist file size or duration doesn't match the last saved value (rounded to 2 decimals).
+- XSP: editing an Smart Playlist query, sorting or limit will also refresh the the associated UI playlist if loaded.
 - Shortcuts: multiple improvements to shortcuts shown on tooltips, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
@@ -164,6 +166,7 @@
 - XSPF: cache not being cleared after using 'Update playlist' menu entry (or auto-updating), resulting on latest changes not being loaded without a manual panel refresh. It worked fine with other methods for sending tracks (like drag n' drop) though.
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
+- XSP: 'Reload playlist (overwrite)' not working properly for Smart Playlists.
 - UI: panel shortcuts like focus on search (Ctrl + E) conflict with quick-searching while pressing Ctrl/Shift (to look at any position).
 - UI: wrong column size in some cases -on auto mode- after using the search tool.
 - UI: fixed multiple selection behavior when using filters, where random items where being selected after filtering by Idx, even if they were not the original ones. Now it tries to maintain items only when they are also present after filtering, reducing the selection otherwise.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/03/25
+//08/04/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
 
@@ -129,12 +129,6 @@ function createMenuLeft(forcedIndex = -1) {
 				// Load playlist within foobar2000. Only 1 instance allowed
 				((!list.bLiteMode || pls.isAutoPlaylist) && !bIsPlsUI) && menu.newEntry({
 					entryText: bIsPlsLoaded ? 'Reload playlist (overwrite)' : 'Load playlist' + list.getGlobalShortcut('load'), func: () => {
-						if (pls.isAutoPlaylist) {
-							const idx = getPlaylistIndexArray(pls.nameId);
-							if (idx.length) {
-								plman.RemovePlaylistSwitch(idx[0]);
-							}
-						}
 						list.loadPlaylist(z);
 					}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING
 				});
@@ -142,8 +136,9 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: bIsPlsUI
 						? 'Show playlist'
-						: 'Show bound playlist' + (bIsPlsLoaded && bIsPlsActive	? (bIsPlsLoaded ? ' (active playlist)' : ' (not loaded)') : ''),
-					func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && !bIsPlsActive ? MF_STRING : MF_GRAYED });
+						: 'Show bound playlist' + (bIsPlsLoaded && bIsPlsActive ? (bIsPlsLoaded ? ' (active playlist)' : ' (not loaded)') : ''),
+					func: () => { list.showBoundPlaylist(z); }, flags: bIsPlsLoaded && !bIsPlsActive ? MF_STRING : MF_GRAYED
+				});
 				menu.newEntry({
 					entryText: 'Close playlist' + (bIsPlsLoaded ? (locks.includes('RemovePlaylist') ? ' (locked)' : '') : ' (not loaded)') + (bIsPlsUI ? list.getGlobalShortcut('delete') : ''),
 					func: () => { plman.RemovePlaylistSwitch(uiIdx); },
@@ -172,7 +167,7 @@ function createMenuLeft(forcedIndex = -1) {
 						if (selItems && selItems.Count) {
 							list.sendSelectionToPlaylist({ playlistIndex: z, bCheckDup: true });
 						}
-					}, flags: !bIsAutoPls && !bIsLockPls && (bWritableFormat || bIsPlsUI) && selItems.Count ? MF_STRING : MF_GRAYED
+					}, flags: !bIsAutoPls && !bIsLockPls && (bWritableFormat || bIsPlsUI) && selItems && selItems.Count ? MF_STRING : MF_GRAYED
 				});
 				menu.newSeparator();
 			}
@@ -224,15 +219,16 @@ function createMenuLeft(forcedIndex = -1) {
 				// Change AutoPlaylist query
 				menu.newEntry({
 					entryText: 'Edit query...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
+						const bXsp = pls.extension === '.xsp';
 						let newQuery = '';
-						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (pls.extension === '.xsp' ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
+						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (bXsp ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
 						catch (e) { return; } // eslint-disable-line no-unused-vars
 						const bPlaylist = newQuery.includes('#PLAYLIST# IS');
 						let sortFromQuery = newQuery;
 						newQuery = stripSort(newQuery);
 						sortFromQuery = sortFromQuery.replace(newQuery, '').trimStart();
 						if (!bPlaylist && !checkQuery(newQuery)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
-						if (pls.extension === '.xsp') {
+						if (bXsp) {
 							const { rules } = XSP.getRules(newQuery);
 							if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return; }
 							const jsp = XSP.emptyJSP('songs');
@@ -242,7 +238,7 @@ function createMenuLeft(forcedIndex = -1) {
 							}
 						}
 						if (newQuery !== pls.query || (sortFromQuery && sortFromQuery !== pls.sort)) {
-							const bDone = pls.extension === '.xsp' ? rewriteXSPQuery(pls, newQuery) : true;
+							const bDone = bXsp ? rewriteXSPQuery(pls, newQuery) : true;
 							if (bDone) {
 								list.editData(pls, {
 									query: newQuery,
@@ -254,6 +250,9 @@ function createMenuLeft(forcedIndex = -1) {
 								});
 								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 								list.filter();
+								// Refresh in UI
+								const uiIdx = getPlaylistIndexArray(pls.nameId);
+								uiIdx.some((idx) => (!bXsp && plman.IsAutoPlaylist(idx) || bXsp && !plman.IsAutoPlaylist(idx)) && list.loadPlaylist(z));
 							}
 						}
 					}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
@@ -272,6 +271,9 @@ function createMenuLeft(forcedIndex = -1) {
 								});
 								list.update({ bReuseData: true, bNotPaint: true, currentItemIndex: z });
 								list.filter();
+								// Refresh in UI
+								const uiIdx = getPlaylistIndexArray(pls.nameId);
+								uiIdx.some((idx) => !plman.IsAutoPlaylist(idx) && list.loadPlaylist(z));
 							}
 						}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
 					});
@@ -703,10 +705,12 @@ function createMenuLeft(forcedIndex = -1) {
 													const trackNum = Number(tags[3][0][0]);
 													const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
 													totalDuration += Math.round(Number(tags[4][0][0])); // In s
-													const location = [relPath.length && !_isLink(tags[5][0][0]) ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]]
-														.map((path) => {
-															return encodeURI(path.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26'));
-														});
+													let trackPath = tags[5][0][0].replace(/^file:\/+/, '');
+													const bLink = _isLink(trackPath);
+													trackPath = relPath.length && !_isLink(trackPath)
+														? getRelPath(trackPath, relPathSplit)
+														: trackPath;
+													const location = [(bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/'))];
 													const subSong = Number(tags[6][0][0]);
 													const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
 													const identifier = [tags[7][0][0]];
@@ -1516,12 +1520,15 @@ function createMenuLeftMult(forcedIndexes = []) {
 									bMultiple: list.bMultiple,
 									bExtendedM3U
 								});
-								if (bDone && handleList) {
-									handleList.Sort();
-									toConvertHandleList.MakeUnion(handleList);
-								}
+								return Promise.wait(60).then(() => {
+									if (bDone && handleList) {
+										handleList.Sort();
+										toConvertHandleList.MakeUnion(handleList);
+										toConvertHandleList.Sort();
+									}
+								});
 							}
-						}, 20).then(() => {
+						}, 100).then(() => {
 							if (!bShift && dsp) {
 								console.log('Playlist Manager: ' + toConvertHandleList.Count + ' tracks to convert.');
 								fb.RunContextCommandWithMetadb('Convert/' + dsp, toConvertHandleList, 8);
@@ -2140,10 +2147,12 @@ function createMenuRight() {
 											const trackNum = Number(tags[3][0][0]);
 											const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
 											totalDuration += Math.round(Number(tags[4][0][0])); // In s
-											const location = [relPath.length && !_isLink(tags[5][0][0]) ? getRelPath(tags[5][0][0], relPathSplit) : tags[5][0][0]]
-												.map((path) => {
-													return encodeURI(path.replace('file://', 'file:///').replace(/\\/g, '/').replace(/&/g, '%26'));
-												});
+											let trackPath = tags[5][0][0].replace(/^file:\/+/, '');
+											const bLink = _isLink(trackPath);
+											trackPath = relPath.length && !_isLink(trackPath)
+												? getRelPath(trackPath, relPathSplit)
+												: trackPath;
+											const location = [(bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/'))];
 											const subSong = Number(tags[6][0][0]);
 											const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
 											const identifier = [tags[7][0][0]];
