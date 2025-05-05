@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/03/25
+//08/04/25
 
 /* exported _list */
 
@@ -19,7 +19,7 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable, MAX_QUEUE_ITEMS:readable */
+/* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable, MAX_QUEUE_ITEMS:readable, removePlaylistByName:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
@@ -6477,6 +6477,7 @@ function _list(x, y, w, h) {
 			let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 			if (pls.isAutoPlaylist) { // AutoPlaylist
 				if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
+				else { removePlaylistByName(oldNameId); }
 				if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return; }
 				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 				plman.ActivePlaylist = fbPlaylistIndex;
@@ -6492,6 +6493,7 @@ function _list(x, y, w, h) {
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
+					if (pls.extension === '.xsp') { setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems'], 'remove'); }
 					loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } })
 						.then((bDone) => {
 							if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
