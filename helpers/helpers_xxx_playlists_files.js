@@ -804,7 +804,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				}
 				if (sortObj) { handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction); }
 				const limit = XSP.getLimit(jsp);
-				if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count); }
+				if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count - 1); }
 				if (bLog) { console.log('Loaded successfully XSP Playlist: ' + (bHasQueryPls ? XSP.getQuery(jsp) : query) + ' ' + sort); }
 			}
 		} else {

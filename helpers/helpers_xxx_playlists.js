@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/25
+//08/04/25
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS */
 
@@ -163,8 +163,10 @@ function getHandlesFromUIPlaylists(names = [], bSort = true) {
 	return output;
 }
 
-function getLocks(plsName) {
-	const index = plman.FindPlaylist(plsName);
+function getLocks(plsNameOrIdx) {
+	const index = typeof plsNameOrIdx === 'string'
+		? plman.FindPlaylist(plsNameOrIdx)
+		: plsNameOrIdx;
 	const types = index !== -1 ? [...new Set(plman.GetPlaylistLockedActions(index))] : [];
 	const name = index !== -1 ? plman.GetPlaylistLockName(index) : '';
 	const isSMPLock = name === window.Parent || !name;
