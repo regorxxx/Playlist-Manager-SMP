@@ -70,7 +70,7 @@ const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
-const pathTF = '$puts(ext,$lower($ext(%_PATH_RAW%)))$replace($replace(%_PATH_RAW%,\'file://\',),\'file-relative://\',)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
+const pathTF = '$puts(ext,$lower($ext(%_PATH_RAW%)))$replace(%_PATH_RAW%,\'file://\',,\'file-relative://\',)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
 
 /*
 	Playlist file manipulation
