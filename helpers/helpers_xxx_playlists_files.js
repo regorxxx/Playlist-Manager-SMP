@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/03/25
+//12/05/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -11,7 +11,7 @@ include('helpers_xxx_prototypes.js');
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
 include('helpers_xxx_tags.js');
-/* global checkQuery:readable, getSortObj:readable, getHandleListTagsV2:readable, queryCombinations:readable, isSubsongPath:readable */
+/* global checkQuery:readable, getSortObj:readable, getHandleListTagsV2:readable, queryCombinations:readable, isSubsongPath:readable, fileRegex:readable */
 include('helpers_xxx_playlists.js');
 /* global getHandlesFromUIPlaylists:readable */
 include('helpers_xxx_playlists_files_xspf.js');
@@ -70,7 +70,7 @@ const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
-const pathTF = '$puts(ext,$lower($ext(%_PATH_RAW%)))$replace(%_PATH_RAW%,\'file://\',)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
+const pathTF = '$puts(ext,$lower($ext(%_PATH_RAW%)))$replace($replace(%_PATH_RAW%,\'file://\',),\'file-relative://\',)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
 
 /*
 	Playlist file manipulation
@@ -217,7 +217,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					const duration = Math.round(Number(tags[4][i][0] * 1000)); // In ms
 					totalDuration += Math.round(Number(tags[4][i][0])); // In s
 					const bLink = _isLink(tags[5][i][0]);
-					const trackPath = tags[5][i][0].replace(/^file:\/+/, '');
+					const trackPath = tags[5][i][0].replace(fileRegex, '');
 					const location = [
 						relPath.length && !bLink
 							? getRelPath(trackPath, relPathSplit)
@@ -395,7 +395,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			newTrackText = newTrackText.map((item) => { // Encode file paths as URI
 				[pre, trackPath, post] = item.split(/<location>|<\/location>/);
 				const bLink = _isLink(trackPath);
-				trackPath = trackPath.replace(/^file:\/+/, '');
+				trackPath = trackPath.replace(fileRegex, '');
 				trackPath = bRel && !bLink
 					? getRelPath(trackPath, relPathSplit)
 					: trackPath; // Relative path conversion
@@ -502,7 +502,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 							let path;
 							try {
 								path = decodeURIComponent(loc).replace('file:///', ''); // file:///PATH/SUBPATH/...
-							} catch (e) {
+							} catch (e) { // eslint-disable-line no-unused-vars
 								path = loc;
 							}
 							if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
@@ -541,7 +541,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 					let path;
 					try {
 						path = decodeURI(row.location).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
-					} catch (e) {
+					} catch (e) { // eslint-disable-line no-unused-vars
 						path = row.location;
 					}
 					if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }

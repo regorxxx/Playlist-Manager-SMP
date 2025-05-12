@@ -1,7 +1,7 @@
 ﻿'use strict';
 //14/03/25
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -18,6 +18,7 @@ const tagsVolatileCache = new VolatileCache(1000); // Deleted every 1000 ms
 addEventListener('on_metadb_changed', () => tagsVolatileCache.clear());
 
 const subsongRegex = /,\d+$/;
+const fileRegex = /^file(-relative)?:\/+/i;
 
 // Tags descriptors:
 // Always use .toLowerCase first before checking if the set has the string. For ex
