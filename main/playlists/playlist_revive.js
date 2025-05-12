@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/24
+//12/05/25
 
 /*
 	Playlist Revive
@@ -23,7 +23,7 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
 /* global similarity:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getHandleListTagsV2:readable, queryCombinations:readable, queryJoin:readable */
+/* global getHandleListTagsV2:readable, queryCombinations:readable, queryJoin:readable, fileRegex:readable */
 
 function playlistRevive({
 	playlist = plman.ActivePlaylist, // Set to -1 to create a clone of selItems and output the revived list
@@ -47,7 +47,6 @@ function playlistRevive({
 	}
 
 	let cache = new Set();
-	const streamRegEx = /^file:\/\//i;
 
 	if (bNotifyPlsMan) { window.NotifyOthers('Playlist Manager: addToSkipRwLock', { uiIdx: playlist }); }
 
@@ -56,7 +55,7 @@ function playlistRevive({
 	selItems.Convert().forEach((handle) => {
 		if (cache.has(handle.RawPath)) { return; }
 		if (utils.FileExists(handle.Path)) { cache.add(handle.RawPath); return; }
-		if (!streamRegEx.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
+		if (!fileRegex.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
 		items.Insert(items.Count, handle);
 	});
 	if (!bSilent) {
@@ -88,7 +87,7 @@ function playlistRevive({
 	const query = queryJoin(queryArr.filter(Boolean), 'OR');
 	if (!bSilent && bSimulate) { console.log('Filtered library by: ' + query); }
 	try { fb.GetQueryItems(fb.GetLibraryItems(), query); } // Sanity check
-	catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query); return; }
+	catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query); return; } // eslint-disable-line no-unused-vars
 	const libraryItems = fb.GetQueryItems(fb.GetLibraryItems(), query);
 	const tagsLibrary = getHandleListTagsV2(libraryItems, tagsToCheck.slice(0, 5), { splitBy: null });  // discard path related tags
 	const libraryItemsArr = libraryItems.Convert();
@@ -313,14 +312,13 @@ function playlistRevive({
 function findDeadItems() {
 	let deadItems = [];
 	let cache = new Set();
-	const streamRegEx = /^file:\/\//i;
 	for (let i = 0; i < plman.PlaylistCount; i++) {
 		const selItems = plman.GetPlaylistItems(i);
 		let count = 0;
 		selItems.Convert().forEach((handle) => {
 			if (cache.has(handle.RawPath)) { return; }
 			if (utils.IsFile(handle.Path)) { cache.add(handle.RawPath); return; }
-			if (!streamRegEx.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
+			if (!fileRegex.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
 			count++;
 		});
 		if (count) { deadItems.push({ name: plman.GetPlaylistName(i), idx: i, items: count }); }
@@ -359,13 +357,12 @@ function getDeadItems(playlistIndex) {
 	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return []; }
 	let deadItems = [];
 	let cache = new Set();
-	const streamRegEx = /^file:\/\//i;
 	// Also checks AutoPlaylists, since dead items may be on library
 	const selItems = plman.GetPlaylistItems(playlistIndex);
 	selItems.Convert().forEach((handle, idx) => {
 		if (cache.has(handle.RawPath)) { return; }
 		if (utils.IsFile(handle.Path)) { cache.add(handle.RawPath); return; }
-		if (!streamRegEx.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
+		if (!fileRegex.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
 		deadItems.push({ handle, idx });
 	});
 	return deadItems;
