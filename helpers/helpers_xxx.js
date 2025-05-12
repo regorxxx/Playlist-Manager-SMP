@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//07/05/25
 
 /**
  * Global folders setting
@@ -19,7 +19,8 @@ folders.getRoot = (bRelative = true) => {
 	if (folders.JsPackageDirs) { return folders.JsPackageDirs.Root.replace(fb.ProfilePath, ''); }
 	try { include(''); }
 	catch (e) {
-		return e.message.replace('include failed:\nPath does not point to a valid file: ' + (bRelative ? fb.ProfilePath : ''), '')
+		return e.message.replace('include failed:\nPath does not point to a valid file: ', '')
+			.replace((bRelative ? fb.ProfilePath : ''), '')
 			.replace(/helpers\\$/, ''); // Required since include() points to this file (not the main one)
 	}
 };
@@ -186,5 +187,16 @@ Object.keys(globFonts).forEach((key) => {
 if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if something fails
 	new Promise((resolve) => { setTimeout(getSoFeatures, 1000); resolve(true); }).then(() => { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); });
 } else { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); }
+
+/*
+	Installation
+*/
+if (globSettings.bCheckInstallationPath && /\w:\\.*/i.test(folders.xxxName)) {
+	const message = 'Script has been installed in a folder outside foobar2000 profile folder, which is not supported. Errors are expected at some point.\n\nCurrent script path:\t' + folders.xxxName + '\nExpected path (*):\t' + fb.ProfilePath  + folders.xxxName.replace(/\w:\\.*\\profile\\/i, '').replace(/\w:\\.*\\xxx-scripts\\/i, 'xxx-scripts') + '\n\n(*) Note this path is just a guess based on your original path, may not be 100% accurate.';
+	if (globSettings.bPopupOnCheckInstallationPath) {
+		fb.ShowPopupMessage(message, 'Installation error: ' + window.Name);
+	}
+	console.log('Installation error: ' + window.Name + '\n\t ' + message.replace(/\n/g,'\n\t'));
+}
 
 globProfiler.Print('helpers_xxx');
