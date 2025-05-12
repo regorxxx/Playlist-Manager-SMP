@@ -1,11 +1,11 @@
 ﻿'use strict';
-//08/04/25
+//08/05/25
 
 /* exported _list */
 
 /* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable*/
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, _qCond:readable, capitalize:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, _qCond:readable, capitalize:readable, deepAssign:readable  */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -2503,15 +2503,15 @@ function _list(x, y, w, h) {
 		if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
 		if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
 		let method = this.methodState.split('\t')[0].replace('By ', '');
-		if (method === 'name' || this.properties.bQuicSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
+		if (method === 'name' || this.properties.bQuickSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 		let bNext = false;
 		let bPrev = false;
-		const bCycle = this.properties.bQuicSearchCycle[1];
+		const bCycle = this.properties.bQuickSearchCycle[1];
 		if (next !== 0) {
 			if (next > 0) { bNext = true; }
 			else if (next < 0) { bPrev = true; }
 		} else {
-			if (!this.properties.bQuicSearchNext[1]) {
+			if (!this.properties.bQuickSearchNext[1]) {
 				this.lastCharsPressed.str += keyChar;
 			} else { // Jump to next item with same char
 				if (this.lastCharsPressed.str !== keyChar) { this.lastCharsPressed.str += keyChar; } // NOSONAR
@@ -2543,8 +2543,7 @@ function _list(x, y, w, h) {
 		}
 		// Look for pls
 		const idx = (bPrev ? [...this.data].reverse() : this.data).findIndex((pls, idx) => {
-			if (bNext && currPlsIdx >= idx) { return false; }
-			else if (bPrev && (this.items - 1 - currPlsIdx) >= idx) { return false; }
+			if ((bNext && currPlsIdx >= idx) || (bPrev && (this.items - 1 - currPlsIdx) >= idx)) { return false; }
 			return searchStr(pls);
 		});
 		// Find first possible item if cycling is active
@@ -2854,17 +2853,21 @@ function _list(x, y, w, h) {
 		if (playlistIndex === -1) { this.resetMultSelect(); }
 		else {
 			const found = this.indexes.indexOf(playlistIndex);
-			if (found !== -1) {
-				const start = this.indexes.slice(-1)[0];
-				const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
-				this.indexes.splice(0, Infinity);
-				Array.prototype.push.apply(this.indexes, idxArr);
+			if (this.indexes.length) {
+				if (found !== -1) {
+					const start = this.indexes.slice(-1)[0];
+					const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
+					this.indexes.splice(0, Infinity);
+					Array.prototype.push.apply(this.indexes, idxArr);
+				} else {
+					const start = this.indexes.slice(-1)[0] || 0;
+					const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
+					idxArr.forEach((idx) => {
+						if (!this.indexes.includes(idx)) { this.indexes.push(idx); }
+					});
+				}
 			} else {
-				const start = this.indexes.slice(-1)[0] || 0;
-				const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
-				idxArr.forEach((idx) => {
-					if (!this.indexes.includes(idx)) { this.indexes.push(idx); }
-				});
+				this.indexes.push(playlistIndex);
 			}
 		}
 		return this.indexes;
@@ -2902,7 +2905,7 @@ function _list(x, y, w, h) {
 		} else if (pls && pls.isFolder) { // Folder
 			const singleActions = new Set(['Manage playlist']);
 			const ignoreActions = new Set(['Playlist\'s items menu']);
-			const openActions = new Set(['Multiple selection']);
+			const openActions = new Set(['Multiple selection', 'Multiple selection (range)']);
 			if (ignoreActions.has(shortcut.key)) { return; }
 			else if (singleActions.has(shortcut.key)) {
 				if (shortcut.func === this.playlistMenu || shortcut.func === this.contextMenu) { shortcut.func(z, x, y); }
@@ -6902,6 +6905,83 @@ function _list(x, y, w, h) {
 		}
 	};
 
+	this.shareUiSettings = (mode = 'popup') => {
+		const settings = Object.fromEntries([
+			...['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements', 'listColors']
+				.map((key) => [key, clone(this.properties[key].slice(0, 2))]),
+			...['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground', 'customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarTransparency', 'buttonsTextColor', 'customBackground', 'fontSize', 'imageBackground']
+				.map((key) => [key, clone(panel.properties[key].slice(0, 2))])
+		]);
+		switch (mode.toLowerCase()) {
+			case 'popup': {
+				const keys = ['Colors', 'Fonts', 'Background', 'Columns', 'Playlists display', 'UI elements', 'Tooltip'];
+				const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, window.Name, popup.question + popup.yes_no);
+				if (answer === popup.yes) {
+					window.NotifyOthers('Playlist Manager: share UI settings', settings);
+					return true;
+				}
+				return false;
+			}
+			case 'path': {
+				const input = Input.string('file', folders.data + 'ui_settings_' + window.Name + '.json', 'File name name:', 'Playlist Manager: export UI settings', folders.data + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+				if (input === null) { return null; }
+				return _save(input, JSON.stringify(settings, null, '\t').replace(/\n/g, '\r\n'))
+					? input
+					: null;
+			}
+			default:
+				return settings;
+		}
+	};
+
+	this.applyUiSettings = (settings, bForce) => {
+		pop.enable(true, 'Settings...', 'Sharing settings...\nPanel will be disabled during the process.', 'settings');
+		const answer = bForce
+			? popup.yes
+			: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.Name + ': Playlist Manager', popup.question + popup.yes_no);
+		if (answer === popup.yes) {
+			// List
+			['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle'].forEach((key) => {
+				this[key] = this.properties[key][1] = !!settings[key][1];
+			});
+			['statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements'].forEach((key) => {
+				this.properties[key][1] = String(settings[key][1]);
+				this[key] = JSON.parse(this.properties[key][1]);
+			});
+			this.colors = convertStringToObject(settings['listColors'][1], 'number');
+			this.properties.listColors[1] = settings['listColors'][1];
+			this.updatePlaylistIcons();
+			this.updateUIElements();
+			// Panel
+			const defaultButtonsCol = invert(panel.getColorBackground());
+			['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground'].forEach((key) => {
+				panel.properties[key][1] = panel.colors[key] = !!settings[key][1];
+			});
+			['customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarTransparency', 'buttonsTextColor', 'customBackground'].forEach((key) => {
+				panel.properties[key][1] = panel.colors[key] = Number(settings[key][1]);
+			});
+			panel.properties['fontSize'][1] = panel.fonts.size = Number(settings['fontSize'][1]);
+			panel.imageBackground = deepAssign()(
+				JSON.parse(panel.properties.imageBackground[3]),
+				JSON.parse(
+					settings.imageBackground[1],
+					(key, value) => ['image', 'handle', 'colors', 'id'].includes(key) ? null : value
+				)
+			);
+			panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
+			panel.updateImageBg(true);
+			panel.colorsChanged();
+			panel.fontChanged();
+			// Save
+			overwriteProperties(panel.properties);
+			overwriteProperties(this.properties);
+			this.checkConfigPostUpdate(this.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+			if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); } // Set defaults again
+		}
+		if (pop.isEnabled('settings')) { pop.disable(true); }
+		this.repaint();
+	};
+
 	this.reset = () => {
 		this.inRange = false;
 		this.items = 0;
@@ -7756,7 +7836,7 @@ function _list(x, y, w, h) {
 	this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
 	this.xspfRules = JSON.parse(this.properties['xspfRules'][1]);
 	// UI
-	this.tooltipSettings = JSON.parse(this.properties['tooltip'][1]);
+	this.tooltipSettings = JSON.parse(this.properties['tooltipSettings'][1]);
 	this.bShowSize = this.properties['bShowSize'][1];
 	this.bShowSep = this.properties['bShowSep'][1];
 	this.bShowIcons = this.properties['bShowIcons'][1];
@@ -8061,7 +8141,7 @@ function _list(x, y, w, h) {
 						(showMenus['Quick-search']
 							? '\nQuick-search:' +
 							'\n-------------------' +
-							(this.properties.bQuicSearchName[1]
+							(this.properties.bQuickSearchName[1]
 								? '\nPress any letter / number to jump to items matched by name' +
 								'\n(there is also a switch setting to use current sorting method).'
 								: '\nPress any letter / number to jump to items matched by current sorting' +

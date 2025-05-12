@@ -68,6 +68,7 @@
 - AutoPlaylist: UI-only AutoPlaylists have a new menu entry to show the native AutoPlaylist properties window.
 - Playlists maintenance tools: new entries to check for duplicates by TF for AutoPlaylists and standard playlists.
 - Queue: new entry for folders, multiple and single selection to add playlist(s) contents to queue. See related [thread](https://hydrogenaud.io/index.php/topic,127153.msg1056916/). If any of the playlist is already present on UI, the tracks are sent from them, thus having queue idx associated (which may be used via TF on playlist viewers).
+- UI: new menu entry to share current UI settings across all available Playlist Manager panels within foobar2000. It can be found at the settings menu 'Panel UI' submenu. Every other panel will be highlighted and show a popup asking to import the new settings or ignore them.
 - UI: new menu entry to close a playlist on the contextual menu.
 - UI: new setting to force quick-searching by name instead of being associated current sorting method (by category, size, etc.). It's enabled by default.
 - UI: added multiple popups and info related to the use of non-tracked items on library and files with subsongs (.cue, .iso, etc.).
@@ -82,8 +83,10 @@
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
+- Installation: added support for foobar v2.25+ file-relative protocols.
 - Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
 - Installation: multiple improvements to path handling for portable and non-portable installations. By default scripts will always try to use only relative paths to the profile folder, so scripts will work without any change when exporting the profile to any other installation. This change obviously doesn't apply to already existing installations unless restoring defaults.
+- Installation: added popup warnings when scripts are installed outside foobar2000 profile folder. These checks can be tweaked at globSettings.json.
 - Playlists maintenance tools: better handling of asynchronous processing, should work now better on slow HDDs when checking physical files (dead items, etc.).
 - XSPF: revamped .xspf playlist loading for links and non-tracked files. It will now filter dead items and also there are multiple settings to control if non-tracked files should be loaded (they must exist) and how it's done. Added compatibility with [foo_xspf1](https://github.com/Chocobo1/foo_xspf_1) as fallback loader, which may be specially useful to [load single tracks from non-tracked cue files or other containers](https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843); without the component is not possible to do so, unless the container file is tracked (the manager handles it) since native foobar2000 is unable to load tracks by subsongs from external files.
 - Playlist formats: already saved tracks file size and duration values will be rounded to 2 decimals on first init (after updating).
@@ -127,6 +130,7 @@
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
 - Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the scrip is checking if every track exist first.
+- UI: unified script updates settings across all my scripts, look for 'Updates' submenu.
 - UI: quick-search settings menu is now duplicated at the search button's settings submenu.
 - UI: pressing Up/Down arrow keys while quick-searching will jump to next/previous result.
 - UI: playlist metadata (like size) is now updated when using the search tool if data was not cached.
@@ -149,6 +153,7 @@
 ### Removed
 - UI: unnecessary playlist refresh after changing fonts size.
 ### Fixed
+- Backup: auto-backup not including sorting and extra config file.
 - Subsongs: fixed path handling for tracks with subsongs for any source different than ISO files (it was broken due to an un-tested change on previous versions). It should now properly handle all cases, even DSD files in .DSF and .WV formats (which report wrong 1 idx value).
 - Search: last search not being applied on startup in some cases.
 - Auto-loading: manager kept reloading playlist files (auto-load) when tags, categories, etc. where changed via menus due to physical file changes.
@@ -167,6 +172,7 @@
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
 - XSP: 'Reload playlist (overwrite)' not working properly for Smart Playlists.
+- UI: applying 'Multiple selection (range)' shortcut without a initial selection no longer selects all items up to the mouse position but only selects the current item.
 - UI: panel shortcuts like focus on search (Ctrl + E) conflict with quick-searching while pressing Ctrl/Shift (to look at any position).
 - UI: wrong column size in some cases -on auto mode- after using the search tool.
 - UI: fixed multiple selection behavior when using filters, where random items where being selected after filtering by Idx, even if they were not the original ones. Now it tries to maintain items only when they are also present after filtering, reducing the selection otherwise.
