@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/25
+//08/05/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -15,7 +15,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable */
+/* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_playlists.js');
@@ -144,7 +144,7 @@ let properties = {
 	_placeholder0_: ['', false, { func: isBoolean }, false],
 	_placeholder1_: ['', false, { func: isBoolean }, false],
 	categoryState: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
-	tooltip: ['Tooltip settings', JSON.stringify({
+	tooltipSettings: ['Tooltip settings', JSON.stringify({
 		bShowTips: true,
 		show: {
 			category: true,
@@ -188,7 +188,7 @@ let properties = {
 	bCopyAsync: ['Copy tracks asynchronously on export?', true, { func: isBoolean }, true],
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }, true],
 	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }, true],
-	bQuicSearchName: ['Quick-search forced by name', true, { func: isBoolean }, true],
+	bQuickSearchName: ['Quick-search forced by name', true, { func: isBoolean }, true],
 	_placeholder3_: ['', false, { func: isBoolean }, false],
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }, true],
 	bSavingXsp: ['Auto-save .xsp playlists?', false, { func: isBoolean }, false],
@@ -229,8 +229,8 @@ let properties = {
 	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching', true, { func: isBoolean }, true],
 	activePlsStartup: ['Active playlist on startup', '', { func: isStringWeak }, ''],
 	bBlockUpdateAutoPls: ['Block panel while updating AutoPlaylists', false, { func: isBoolean }, false],
-	bQuicSearchNext: ['Quick-search jump to next item when letter is pressed twice', true, { func: isBoolean }, true],
-	bQuicSearchCycle: ['Quick-search cycling when no more items found', true, { func: isBoolean }, true],
+	bQuickSearchNext: ['Quick-search jump to next item when letter is pressed twice', true, { func: isBoolean }, true],
+	bQuickSearchCycle: ['Quick-search cycling when no more items found', true, { func: isBoolean }, true],
 	mShortcutsHeader: ['M. click (header) modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: '- None -',
@@ -377,7 +377,7 @@ properties['converterPreset'].push({ func: isJSON }, properties['converterPreset
 properties['playlistIcons'].push({ func: isJSON }, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({ func: isJSON }, properties['mShortcuts'][1]);
 properties['lShortcuts'].push({ func: isJSON }, properties['lShortcuts'][1]);
-properties['tooltip'].push({ func: isJSON }, properties['tooltip'][1]);
+properties['tooltipSettings'].push({ func: isJSON }, properties['tooltipSettings'][1]);
 properties['rShortcuts'].push({ func: isJSON }, properties['rShortcuts'][1]);
 properties['lShortcutsHeader'].push({ func: isJSON }, properties['lShortcutsHeader'][1]);
 properties['mShortcutsHeader'].push({ func: isJSON }, properties['mShortcutsHeader'][1]);
@@ -429,11 +429,11 @@ setProperties(properties, 'plm_');
 	// Update default info popup values (for compat with new releases)
 	if (!infoPopups.firstInit) {
 		[	// xspf popup is left to fire again on purpose
-			{property: 'plm_16.Playlist Manager: Fired once', key: 'firstInit'},
-			{property: 'plm_18.Playlist Manager fpl: Fired once', key: 'fplFormat'},
-			{property: 'plm_19.Playlist Manager pls: Fired once', key: 'plsFormat'},
-			{property: 'plm_43.Playlist Manager xsp: Fired once', key: 'xspFormat'},
-			{property: 'plm_52.Playlist Manager on network drive: Fired once', key: 'networkDrive'},
+			{ property: 'plm_16.Playlist Manager: Fired once', key: 'firstInit' },
+			{ property: 'plm_18.Playlist Manager fpl: Fired once', key: 'fplFormat' },
+			{ property: 'plm_19.Playlist Manager pls: Fired once', key: 'plsFormat' },
+			{ property: 'plm_43.Playlist Manager xsp: Fired once', key: 'xspFormat' },
+			{ property: 'plm_52.Playlist Manager on network drive: Fired once', key: 'networkDrive' },
 		].map((o) => {
 			if (window.GetProperty(o.property, false)) {
 				infoPopups[o.key] = true;
@@ -1016,6 +1016,11 @@ if (!list.properties.bSetup[1]) {
 			}
 			case 'scrollbar hidden': {
 				window.RepaintRect(list.x + list.w - list.categoryHeaderOffset, list.y, list.x + list.w, list.y + list.h);
+				break;
+			}
+			case 'Playlist Manager: share UI settings': {
+				if (info) { list.applyUiSettings(clone(info)); }
+				break;
 			}
 		}
 	});

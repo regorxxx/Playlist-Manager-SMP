@@ -1,7 +1,7 @@
 ﻿'use strict';
-//08/04/25
+//12/05/25
 
-/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting */
+/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
@@ -24,7 +24,7 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getPlaylistIndexArray:readable, sendToPlaylist:readable, MAX_QUEUE_ITEMS:readable */
+/* global getPlaylistIndexArray:readable, sendToPlaylist:readable, MAX_QUEUE_ITEMS:readable, fileRegex:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
@@ -705,7 +705,7 @@ function createMenuLeft(forcedIndex = -1) {
 													const trackNum = Number(tags[3][0][0]);
 													const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
 													totalDuration += Math.round(Number(tags[4][0][0])); // In s
-													let trackPath = tags[5][0][0].replace(/^file:\/+/, '');
+													let trackPath = tags[5][0][0].replace(fileRegex, '');
 													const bLink = _isLink(trackPath);
 													trackPath = relPath.length && !_isLink(trackPath)
 														? getRelPath(trackPath, relPathSplit)
@@ -1259,7 +1259,13 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const showMenus = JSON.parse(list.properties.showMenus[1]);
 	// Header
 	if (list.bShowMenuHeader) {
-		menu.newEntry({ entryText: '--- ' + playlists.length + ' playlists: ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 20) + ' ---', flags: MF_GRAYED });
+		const items = playlists.filter((pls) => !isFolder(pls));
+		const itemsNum = items.length;
+		const folderNum = playlists.length - itemsNum;
+		menu.newEntry({
+			entryText: '--- ' + items.length + ' playlists' + (folderNum ? ' (' + folderNum + ' folders)' : '') + ': ' + items.map((pls) => pls.name).joinUpToChars(', ', 20) + ' ---',
+			flags: MF_GRAYED
+		});
 		menu.newSeparator();
 	}
 	// Entries
@@ -2147,7 +2153,7 @@ function createMenuRight() {
 											const trackNum = Number(tags[3][0][0]);
 											const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
 											totalDuration += Math.round(Number(tags[4][0][0])); // In s
-											let trackPath = tags[5][0][0].replace(/^file:\/+/, '');
+											let trackPath = tags[5][0][0].replace(fileRegex, '');
 											const bLink = _isLink(trackPath);
 											trackPath = relPath.length && !_isLink(trackPath)
 												? getRelPath(trackPath, relPathSplit)
@@ -3067,20 +3073,6 @@ function createMenuRightTop() {
 					list.delays = JSON.parse(list.properties['delays'][1]);
 				}
 			});
-		}
-		{	// Updates
-			menu.newSeparator(menuName);
-			menu.newEntry({
-				menuName, entryText: 'Automatically check for updates', func: () => {
-					list.properties.bAutoUpdateCheck[1] = !list.properties.bAutoUpdateCheck[1];
-					overwriteProperties(list.properties);
-					if (list.properties.bAutoUpdateCheck[1]) {
-						if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
-						setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
-					}
-				}
-			});
-			menu.newCheckMenuLast(() => list.properties.bAutoUpdateCheck[1]);
 		}
 		if (!list.bLiteMode) {	// Stop tracking library paths
 			menu.newSeparator(menuName);
@@ -4288,7 +4280,7 @@ function createMenuRightTop() {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: item, func: () => {
 							list.tooltipSettings.bShowTips = (i === 0);
-							list.properties.tooltip[1] = JSON.stringify(list.tooltipSettings);
+							list.properties.tooltipSettings[1] = JSON.stringify(list.tooltipSettings);
 							overwriteProperties(list.properties);
 						}
 					});
@@ -4303,7 +4295,7 @@ function createMenuRightTop() {
 				menu.newEntry({
 					menuName: subMenuName, entryText, func: () => {
 						list.tooltipSettings.show[key] = !list.tooltipSettings.show[key];
-						list.properties.tooltip[1] = JSON.stringify(list.tooltipSettings);
+						list.properties.tooltipSettings[1] = JSON.stringify(list.tooltipSettings);
 						overwriteProperties(list.properties);
 					}
 				});
@@ -4672,6 +4664,15 @@ function createMenuRightTop() {
 		if (showMenus['Quick-search']) {	// QuickSearch
 			menu.newSeparator(menuName);
 			quickSearchMenu(menu, menuName);
+		}
+		menu.newSeparator(menuName);
+		{	// Share UI settings
+			menu.newEntry({
+				menuName,
+				entryText: 'Share UI settings...', func: () => {
+					list.shareUiSettings('popup');
+				}
+			});
 		}
 	}
 	menu.newSeparator();
@@ -5162,6 +5163,28 @@ function createMenuRightTop() {
 			menu.newCheckMenuLast(() => list.logOpt[opt.key]);
 		});
 	}
+	{
+		const menuName = menu.newMenu('Updates');
+		menu.newEntry({
+			menuName, entryText: 'Automatically check for updates', func: () => {
+				list.properties.bAutoUpdateCheck[1] = !list.properties.bAutoUpdateCheck[1];
+				overwriteProperties(list.properties);
+				if (list.properties.bAutoUpdateCheck[1]) {
+					if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
+					setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
+				}
+			}
+		});
+		menu.newCheckMenuLast(() => list.properties.bAutoUpdateCheck[1]);
+		menu.newSeparator(menuName);
+		menu.newEntry({
+			menuName, entryText: 'Check for updates...', func: () => {
+				if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
+				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name));
+			}
+		});
+	}
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Lite mode', func: () => {
@@ -5278,14 +5301,6 @@ function createMenuRightTop() {
 		});
 		menu.newCheckMenuLast(() => stats.bEnabled);
 	}
-	menu.newSeparator();
-	menu.newEntry({
-		entryText: 'Check for updates...', func: () => {
-			if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
-			checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-				.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name));
-		}
-	});
 	menu.newSeparator();
 	menu.newEntry({ entryText: 'Open playlists folder...', func: () => { _explorer(list.playlistsPath); } });
 	{	// Readme
@@ -5963,32 +5978,32 @@ function quickSearchMenu(menu, menuName) {
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Force searching by name', func: () => {
-				list.properties.bQuicSearchName[1] = !list.properties.bQuicSearchName[1];
+				list.properties.bQuickSearchName[1] = !list.properties.bQuickSearchName[1];
 				overwriteProperties(list.properties);
-				if (list.properties.bQuicSearchName[1]) {
+				if (list.properties.bQuickSearchName[1]) {
 					fb.ShowPopupMessage('Enabling this option will force searching by nane, without considering the current sorting method.\n\nIf searching by date, size, etc. is desired according to current sorting, disable it.', window.Name);
 				}
 			}
 		});
-		menu.newCheckMenuLast(() => list.properties.bQuicSearchName[1]);
+		menu.newCheckMenuLast(() => list.properties.bQuickSearchName[1]);
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Jump to next item on multiple presses', func: () => {
-				list.properties.bQuicSearchNext[1] = !list.properties.bQuicSearchNext[1];
+				list.properties.bQuickSearchNext[1] = !list.properties.bQuickSearchNext[1];
 				overwriteProperties(list.properties);
 				fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name);
 			}
 		});
-		menu.newCheckMenuLast(() => list.properties.bQuicSearchNext[1]);
+		menu.newCheckMenuLast(() => list.properties.bQuickSearchNext[1]);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Cycle on last result', func: () => {
-				list.properties.bQuicSearchCycle[1] = !list.properties.bQuicSearchCycle[1];
+				list.properties.bQuickSearchCycle[1] = !list.properties.bQuickSearchCycle[1];
 				overwriteProperties(list.properties);
-				if (list.properties.bQuicSearchCycle[1]) {
+				if (list.properties.bQuickSearchCycle[1]) {
 					fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name);
 				}
-			}, flags: list.properties.bQuicSearchNext[1] ? MF_STRING : MF_GRAYED
+			}, flags: list.properties.bQuickSearchNext[1] ? MF_STRING : MF_GRAYED
 		});
-		menu.newCheckMenuLast(() => list.properties.bQuicSearchCycle[1]);
+		menu.newCheckMenuLast(() => list.properties.bQuickSearchCycle[1]);
 	}
 }
