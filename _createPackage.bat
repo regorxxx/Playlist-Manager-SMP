@@ -111,6 +111,7 @@ CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_crc.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
@@ -133,6 +134,7 @@ CALL :copy_file helpers\popup_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\world_map.txt
 REM helpers external
+CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
@@ -280,8 +282,8 @@ CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\input_box.txt
 CALL :copy_file helpers\readme\playlist_manager.txt
 REM helpers external
-CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\7z
+CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\cmdutils
@@ -360,6 +362,8 @@ CALL :copy_file helpers\helpers_xxx_basic_js.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_file_zip.js
+CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
 CALL :copy_file helpers\helpers_xxx_global_post.js
@@ -376,6 +380,7 @@ CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\seekbar.txt
 REM helpers external
+CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\chroma.js
@@ -450,6 +455,7 @@ CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_crc.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
@@ -476,6 +482,7 @@ CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\timeline_dynamic_query.txt
 CALL :copy_file helpers\readme\timeline.txt
 REM helpers external
+CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\chroma.js
@@ -534,6 +541,7 @@ CALL :copy_file helpers\helpers_xxx_basic_js.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
 CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
@@ -551,6 +559,7 @@ CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\volume_seekbar_slider.txt
 REM helpers external
+CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\namethatcolor
