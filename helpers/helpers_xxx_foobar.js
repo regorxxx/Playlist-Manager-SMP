@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//13/05/25
 
 /* exported checkCompatible, memoryUsed, isPortable, lastStartup, memoryPrint*/
 
@@ -61,8 +61,8 @@ function memoryPrint(text, obj) {
 function isPortable(propertyText, bWarn = true) {
 	const bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
 	if (bPort && bWarn) {
-		if (Array.isArray(propertyText)) { propertyText = propertyText.join('\n'); }
-		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n' + propertyText, window.Name);
+		if (Array.isArray(propertyText)) { propertyText = propertyText.join('\n - '); }
+		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n\n - ' + propertyText, window.Name);
 	}
 	return bPort;
 }
