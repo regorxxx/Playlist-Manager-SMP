@@ -1,7 +1,7 @@
 ﻿'use strict';
-//11/03/25
+//14/05/25
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -113,6 +113,10 @@ function _resolvePath(path) {
 	return path;
 }
 
+function _comparePaths(source, destination) {
+	return (source.endsWith('\\') ? source.slice(0, -1) : source).toLowerCase() === (destination.endsWith('\\') ? destination.slice(0, -1) : destination).toLowerCase();
+}
+
 function _isFile(file) {
 	file = _resolvePath(file);
 	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsFile(file); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
@@ -183,7 +187,7 @@ function _renameFile(oldFilePath, newFilePath) {
 	if (!newFilePath.length) { return; }
 	oldFilePath = _resolvePath(oldFilePath);
 	newFilePath = _resolvePath(newFilePath);
-	if (oldFilePath === newFilePath) { return true; }
+	if (_comparePaths(oldFilePath, newFilePath)) { return true; }
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
 			const filePath = utils.SplitFilePath(newFilePath)[0];
@@ -200,24 +204,69 @@ function _renameFile(oldFilePath, newFilePath) {
 	return false;
 }
 
+function _renameFolder(oldFolderPath, newFolderPath) {
+	if (!newFolderPath.length) { return; }
+	oldFolderPath = _resolvePath(oldFolderPath);
+	newFolderPath = _resolvePath(newFolderPath);
+	if (_comparePaths(oldFolderPath, newFolderPath)) { return true; }
+	if (!_isFolder(newFolderPath)) {
+		if (_isFolder(oldFolderPath)) {
+			try {
+				fso.MoveFolder(oldFolderPath, newFolderPath);
+			} catch (e) { // eslint-disable-line no-unused-vars
+				return false;
+			}
+			return _isFolder(newFolderPath);
+		}
+		return false;
+	}
+	return false;
+}
+
 // Copy
+// https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/copyfile-method
 function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 	if (!newFilePath.length) { return; }
 	oldFilePath = _resolvePath(oldFilePath);
 	newFilePath = _resolvePath(newFilePath);
-	if (oldFilePath === newFilePath) { return true; }
-	if (!_isFile(newFilePath)) {
-		if (_isFile(oldFilePath)) {
-			const filePath = utils.SplitFilePath(newFilePath)[0];
-			if (!_isFolder(filePath)) { _createFolder(filePath); }
+	const source = newFilePath.replace(/(([^\\.]*\.\*)|(\*\.[^.]*)|\*\.\*)$/i, '');
+	const bWildCard = !_comparePaths(oldFilePath, source);
+	const bTargetFolder = newFilePath.endsWith('\\');
+	if (_comparePaths(oldFilePath, newFilePath)) { return true; }
+	if ((bTargetFolder && _isFolder(newFilePath)) || (!bTargetFolder && !_isFile(newFilePath))) {
+		if ((bWildCard && _isFolder(source)) || (!bWildCard && _isFile(oldFilePath))) {
+			if (!bTargetFolder) {
+				const filePath = utils.SplitFilePath(newFilePath)[0];
+				if (!_isFolder(filePath)) { _createFolder(filePath); }
+			}
 			try {
 				bAsync ? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
 			} catch (e) { // eslint-disable-line no-unused-vars
 				return false;
 			}
-			return (bAsync ? true : _isFile(newFilePath) && _isFile(oldFilePath)); // Must check afterwards for Async
+			return (bAsync ? true : (bTargetFolder || _isFile(newFilePath)) && (bWildCard || _isFile(oldFilePath))); // Must check afterwards for Async
 		}
 		return false;
+	}
+	return false;
+}
+
+// Copy
+// https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/copyfolder-method
+function _copyFolder(oldFolderPath, newFolderPath, bAsync = false) {
+	if (!newFolderPath.length) { return; }
+	oldFolderPath = _resolvePath(oldFolderPath);
+	newFolderPath = _resolvePath(newFolderPath);
+	const source = oldFolderPath.replace(/(\\\\)?\*?$/i, '$1');
+	if (_comparePaths(oldFolderPath, newFolderPath)) { return true; }
+	if (_isFolder(source)) {
+		if (newFolderPath.endsWith('\\') && !_isFolder(newFolderPath)) { _createFolder(newFolderPath); }
+		try {
+			bAsync ? _runCmd('CMD /C COPY "' + oldFolderPath + '" "' + newFolderPath + '"', false) : fso.CopyFolder(oldFolderPath, newFolderPath);
+		} catch (e) { // eslint-disable-line no-unused-vars
+			return false;
+		}
+		return (bAsync ? true : _isFolder(newFolderPath) && _isFolder(source)); // Must check afterwards for Async
 	}
 	return false;
 }
@@ -257,20 +306,20 @@ function _restoreFile(file) {
 	file = _resolvePath(file);
 	if (!_isFile(file)) {
 		const arr = utils.SplitFilePath(file);
-		const OriginalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
+		const originalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let numItems, items;
 		try {
 			items = app.NameSpace(10).Items();
 			numItems = items.Count;
 		} catch (e) { return false; } // eslint-disable-line no-unused-vars
 		for (let i = 0; i < numItems; i++) {
-			if (items.Item(i).Name === OriginalFileName) {
+			if (items.Item(i).Nam.toLowerCase() === originalFileName.toLowerCase()) {
 				_renameFile(items.Item(i).Path, file);
 				break;
 			}
 		}
 		const bFound = _isFile(file);
-		if (!bFound) { console.log('_restoreFile(): Can not restore file, \'' + OriginalFileName + '\' was not found at the bin.'); }
+		if (!bFound) { console.log('_restoreFile(): Can not restore file, \'' + originalFileName + '\' was not found at the bin.'); }
 		return bFound;
 	} else {
 		console.log('_restoreFile(): Can not restore file to \'' + file + '\' since there is already another file at the same path.');
@@ -534,7 +583,7 @@ function findRecursivePaths(path = fb.ProfilePath) {
 	arr = utils.Glob(path + '*.*', 0x00000020); // Directory
 	arr.forEach((subPath) => {
 		if (subPath.includes('\\..') || subPath.includes('\\.')) { return; }
-		if (subPath === path) { return; }
+		if (_comparePaths(subPath, path)) { return; }
 		pathArr.push(subPath);
 		pathArr = pathArr.concat(findRecursivePaths(subPath + '\\'));
 	});
@@ -558,9 +607,9 @@ function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath
 
 function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 	let finalPath = '';
-	if (relPath.startsWith('.\\profile\\') && absPath === fb.ProfilePath) { finalPath = relPath.replace('.\\profile\\', absPath); }
-	else if (relPath.startsWith(folders.xxxRootName) && absPath === folders.xxx) { finalPath = relPath.replace(folders.xxxRootName, absPath); }
-	else if (relPath.startsWith('.\\') && absPath === fb.FoobarPath) { finalPath = relPath.replace('.\\', absPath); }
+	if (relPath.startsWith('.\\profile\\') && _comparePaths(absPath, fb.ProfilePath)) { finalPath = relPath.replace('.\\profile\\', absPath); }
+	else if (relPath.startsWith(folders.xxxRootName) && _comparePaths(absPath, folders.xxx)) { finalPath = relPath.replace(folders.xxxRootName, absPath); }
+	else if (relPath.startsWith('.\\') && _comparePaths(absPath, fb.FoobarPath)) { finalPath = relPath.replace('.\\', absPath); }
 	else {
 		const relPathArr = relPath.split('\\').filter(Boolean);
 		const absPathArr = absPath.split('\\').filter(Boolean);
@@ -571,8 +620,8 @@ function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 				for (let j = absPathArr.length - 1; j >= 0; j--) {
 					if (bIntersect) {
 						if (relPathArr[i] === '..') { relPathArr[i] = ''; }
-						else if (relPathArr[i] !== absPathArr[i]) { relPathArr[i] = absPathArr[j]; }
-					} else { bIntersect = relPathArr[i] === absPathArr[j]; }
+						else if (relPathArr[i].toLowerCase() !== absPathArr[i].toLowerCase()) { relPathArr[i] = absPathArr[j]; }
+					} else { bIntersect = relPathArr[i].toLowerCase() === absPathArr[j].toLowerCase(); }
 				}
 			}
 			finalPath = relPathArr.join('\\');

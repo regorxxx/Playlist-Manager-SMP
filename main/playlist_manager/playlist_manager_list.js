@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/05/25
+//14/05/25
 
 /* exported _list */
 
@@ -6942,11 +6942,12 @@ function _list(x, y, w, h) {
 		if (answer === popup.yes) {
 			// List
 			['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle'].forEach((key) => {
-				this[key] = this.properties[key][1] = !!settings[key][1];
+				this.properties[key][1] = !!settings[key][1];
+				if (Object.hasOwn(this, key)) { this[key] = this.properties[key][1]; }
 			});
 			['statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements'].forEach((key) => {
 				this.properties[key][1] = String(settings[key][1]);
-				this[key] = JSON.parse(this.properties[key][1]);
+				if (Object.hasOwn(this, key)) { this[key] = JSON.parse(this.properties[key][1]); }
 			});
 			this.colors = convertStringToObject(settings['listColors'][1], 'number');
 			this.properties.listColors[1] = settings['listColors'][1];
@@ -6955,10 +6956,12 @@ function _list(x, y, w, h) {
 			// Panel
 			const defaultButtonsCol = invert(panel.getColorBackground());
 			['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground'].forEach((key) => {
-				panel.properties[key][1] = panel.colors[key] = !!settings[key][1];
+				panel.properties[key][1] = !!settings[key][1];
+				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = panel.properties[key][1]; }
 			});
 			['customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarTransparency', 'buttonsTextColor', 'customBackground'].forEach((key) => {
-				panel.properties[key][1] = panel.colors[key] = Number(settings[key][1]);
+				panel.properties[key][1] = Number(settings[key][1]);
+				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = panel.properties[key][1]; }
 			});
 			panel.properties['fontSize'][1] = panel.fonts.size = Number(settings['fontSize'][1]);
 			panel.imageBackground = deepAssign()(

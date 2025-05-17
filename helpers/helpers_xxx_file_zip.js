@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/23
+//14/05/25
 
 /* exported _zip, _unzip */
 
@@ -8,12 +8,12 @@ include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 /* global _q:readable, isArrayStrings:readable */
 include('helpers_xxx_file.js');
-/* global _runCmd:readable */
+/* global _runCmd:readable, _resolvePath:readable */
 
 // NOSONAR [_zip(folders.xxx + 'test.txt','test.zip');]
 // NOSONAR [_zip(['test.txt', 'test2.txt'], 'test.zip');]
 function _zip(file, toPath, bAsync = false, relativePath = null, timeout = 0) {
-	const cmd = _q(folders.xxx + 'helpers-external\\7z\\' + (soFeat.x64 ? '7za' : '7za_32')+ '.exe') + ' a -tzip ' + _q(toPath) + ' ' + (isArrayStrings(file) ? file.map((f) => {return _q(f);}).join(' ') : _q(file));
+	const cmd = _q(folders.xxx + 'helpers-external\\7z\\' + (soFeat.x64 ? '7za' : '7za_32')+ '.exe') + ' a -tzip ' + _q(toPath) + ' ' + (isArrayStrings(file) ? file.map((f) => _q(_resolvePath(f))).join(' ') : _q(file));
 	let relCmd;
 	if (timeout) {
 		if (relativePath) {
@@ -29,6 +29,6 @@ function _zip(file, toPath, bAsync = false, relativePath = null, timeout = 0) {
 
 // NOSONAR [_unzip(folders.xxx + 'test.zip', folders.xxx + 'test\\');]
 function _unzip(file, toPath, bAsync = false) {
-	const cmd = '"' + folders.xxx + 'helpers-external\\7z\\' + (soFeat.x64 ? '7za' : '7za_32')+ '.exe" e "' + file + '" -o"' + toPath + '"';
+	const cmd = '"' + folders.xxx + 'helpers-external\\7z\\' + (soFeat.x64 ? '7za' : '7za_32')+ '.exe" x "' + file + '" -o"' + toPath + '"';
 	_runCmd(cmd, !bAsync);
 }

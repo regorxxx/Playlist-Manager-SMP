@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/05/25
+//14/05/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,10 +8,12 @@
 
 /* exported delayAutoUpdate, plsRwLock */
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.19.0', features: { drag_n_drop: true, grab_focus: true } }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '0.20.0', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
-/* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, dropMask:readable, globProfiler:readable, globQuery:readable */
+/* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, globProfiler:readable, globQuery:readable */
+include('helpers\\helpers_xxx_flags.js');
+/* global VK_LWIN:readable, dropMask:readable */
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
@@ -45,7 +47,7 @@ include('main\\playlist_manager\\playlist_manager_panel.js');
 include('main\\playlist_manager\\playlist_manager_buttons.js');
 /* global createMenuRightFilter:readable, createMenuRightSort:readable, _listButtons */
 include('main\\playlist_manager\\playlist_manager_menu.js');
-/* global createMenuRightTop:readable, createMenuRight:readable */
+/* global createMenuRightTop:readable, createMenuRight:readable, importSettingsMenu:readable */
 include('main\\playlist_manager\\playlist_manager_helpers.js');
 /* global backup:readable, switchLock:readable, clonePlaylistInUI:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable */
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
@@ -819,6 +821,9 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
 		if (!list.bInit) { return true; }
 		if (pop.isEnabled() || stats.bEnabled) { return true; }
+		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
+			return importSettingsMenu().btn_up(x, y);
+		}
 		if (list.modeUI === 'traditional' && bottomToolbar.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
 				return createMenuRightTop().btn_up(x, y);
@@ -1426,6 +1431,12 @@ if (!list.properties.bSetup[1]) {
 	});
 	addEventListener('on_mouse_lbtn_down', (x, y, mask) => { // eslint-disable-line no-unused-vars
 		bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
+	});
+	addEventListener('on_mouse_rbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
+		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
+			return importSettingsMenu().btn_up(x, y);
+		}
+		return true; // left shift + left windows key will bypass this callback and will open default context menu.
 	});
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => { // eslint-disable-line no-unused-vars
 		bottomToolbar.on_mouse_move_buttn(x, y, mask);
