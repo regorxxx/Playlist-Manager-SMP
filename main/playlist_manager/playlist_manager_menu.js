@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/25
+//20/05/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -6122,7 +6122,7 @@ function importSettingsMenu() {
 					}
 				);
 				overwriteProperties(settings);
-				if (bDone) { console.log('Playlist Manager: imported panel settings from\n\t ' + input); }
+				console.log('Playlist Manager: imported panel settings from\n\t ' + input);
 			}
 			console.log('Playlist Manager: reloading panel...');
 			window.Reload();

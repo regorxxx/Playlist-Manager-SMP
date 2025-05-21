@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/25
+//20/05/25
 
 /* exported _list */
 
@@ -6915,7 +6915,7 @@ function _list(x, y, w, h) {
 		switch (mode.toLowerCase()) {
 			case 'popup': {
 				const keys = ['Colors', 'Fonts', 'Background', 'Columns', 'Playlists display', 'UI elements', 'Tooltip'];
-				const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, window.Name, popup.question + popup.yes_no);
+				const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, 'Playlist Manager: share UI settings', popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					window.NotifyOthers('Playlist Manager: share UI settings', settings);
 					return true;
@@ -6935,6 +6935,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.applyUiSettings = (settings, bForce) => {
+		window.highlight = true;
 		pop.enable(true, 'Settings...', 'Sharing settings...\nPanel will be disabled during the process.', 'settings');
 		const answer = bForce
 			? popup.yes
@@ -6961,7 +6962,7 @@ function _list(x, y, w, h) {
 			});
 			['customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarTransparency', 'buttonsTextColor', 'customBackground'].forEach((key) => {
 				panel.properties[key][1] = Number(settings[key][1]);
-				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = panel.properties[key][1]; }
+				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = Number(panel.properties[key][1]); }
 			});
 			panel.properties['fontSize'][1] = panel.fonts.size = Number(settings['fontSize'][1]);
 			panel.imageBackground = deepAssign()(
@@ -6982,6 +6983,7 @@ function _list(x, y, w, h) {
 			if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); } // Set defaults again
 		}
 		if (pop.isEnabled('settings')) { pop.disable(true); }
+		window.highlight = false;
 		this.repaint();
 	};
 

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/25
+//19/05/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -879,6 +879,7 @@ if (!list.properties.bSetup[1]) {
 			}
 		}
 		pop.paint(gr);
+		if (window.highlight) { extendGR(gr, { Highlight: true }); }
 		if (window.debugPainting) { window.drawDebugRectAreas(gr); }
 	});
 
