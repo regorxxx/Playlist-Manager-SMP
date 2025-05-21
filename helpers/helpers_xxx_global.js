@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/25
+//20/05/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -203,6 +203,8 @@ const globTags = {
 	skipCount: '$max(%SKIP_COUNT%,%SKIP_TRACK_SKIP_COUNT%,0)',
 	folksonomy: 'FOLKSONOMY',
 	feedback: 'FEEDBACK',
+	lra: 'REPLAYGAIN_TRACK_RANGE',
+	danceness: 'DANCENESS',
 	related: 'RELATED',
 	unrelated: 'UNRELATED',
 	lbSimilarArtist: 'SIMILAR ARTISTS LISTENBRAINZ',

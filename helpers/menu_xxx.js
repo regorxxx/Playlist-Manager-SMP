@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/25
+//20/05/25
 
 /* exported _menu */
 
@@ -340,6 +340,18 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		if (bAddInvisibleIds) { entryText += invsId(true); } // At this point don't use other name than this!
 		entryArr.push({ entryText, func, menuName, flags, bIsMenu: false, data });
 		return entryArr[entryArr.length - 1];
+	};
+	/**
+	 * Equivalent to .newEntry() but returns the menu object instead of entry name, for chaining purposes.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name concatEntry
+	 * @param {object} o - Arguments
+	 * @returns {this}
+	 */
+	this.concatEntry = (...args) => {
+		return this.newEntry(args[0]) && this;
 	};
 	/**
 	 * Creates an separator attached to any parent menu.
