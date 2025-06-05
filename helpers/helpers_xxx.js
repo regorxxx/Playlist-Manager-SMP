@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/25
+//26/05/25
 
 /**
  * Global folders setting
@@ -9,14 +9,16 @@ const folders = {};
  * Package directories (only available if script is a package)
  * @type {{Root: string, Assets: string, Scripts: string, Storage: string}|null}
  */
-folders.JsPackageDirs = (utils.GetPackageInfo(window.ScriptInfo.PackageId || -1) || { Directories: null }).Directories;
+folders.JsPackageDirs = window.ScriptInfo.PackageId
+	? utils.GetPackageInfo(window.ScriptInfo.PackageId).Directories
+	: null;
 if (folders.JsPackageDirs) { for (const key in folders.JsPackageDirs) { folders.JsPackageDirs[key] += '\\'; } }
 /**
  * Retrieves scripts root at profile folder using this helper path as reference
  * @type {(boolean) => string} - Ex: scripts\\SMP\\xxx-scripts\\
  */
 folders.getRoot = (bRelative = true) => {
-	if (folders.JsPackageDirs) { return folders.JsPackageDirs.Root.replace(fb.ProfilePath, ''); }
+	if (folders.JsPackageDirs) { return folders.JsPackageDirs.Root.replace((bRelative ? fb.ProfilePath : ''), ''); }
 	try { include(''); }
 	catch (e) {
 		return e.message.replace('include failed:\nPath does not point to a valid file: ', '')

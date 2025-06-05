@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/12/24
+//05/06/25
 
 /* exported downloadText, paginatedFetch, abortWebRequests */
 
@@ -71,7 +71,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 			timer = null;
 			if (!func) { // 408 Request Timeout
 				let status;
-				try { status = xmlhttp.status; } catch (e) { status = 408; }
+				try { status = xmlhttp.status; } catch (e) { status = 408; } // eslint-disable-line no-unused-vars
 				reject({ status, responseText: 'Request Timeout' });
 			}
 		}, timeOut, xmlhttp);
