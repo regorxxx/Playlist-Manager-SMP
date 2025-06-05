@@ -164,7 +164,8 @@
 - Exporting Playlists: fixed output path option (without a popup asking for it) and filename presets introduced on [0.17.0](#0170---2024-07-24) not working for AutoPlaylists and Smart Playlists.
 - Folders: 'Move to folder' submenu was missing nested folders if they were not expanded. Now they are shown, although folders not present in current view/filter state, are still hidden.
 - Folders: error restoring a deleted folder.
-- FLP: wrong encoding of special chars '; , / ? : @ & = + $ #'.
+- FPL: wrong encoding of special chars '; , / ? : @ & = + $ #'.
+- FPL: fix parsing of file paths.
 - XSPF: wrong encoding of special chars '; , / ? : @ & = + $ #'.
 - XSPF: malformed file paths when adding tracks to a .xspf playlist directly by mouse shortcut or drag n' dropping, which broke compatibility with other software.
 - XSPF: URLS not being loaded properly in some cases due to forced lower casing. Now they are loaded with original casing. This error was heavily dependent on exotic servers being case sensitive.

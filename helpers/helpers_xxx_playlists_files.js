@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/05/25
+//04/06/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -540,7 +540,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 				if (Object.hasOwn(row, 'location') && row.location && row.location.length) {
 					let path;
 					try {
-						path = decodeURI(row.location).replace('file:///', '').replace(/%26/g, '&'); // file:///PATH/SUBPATH/...
+						path = decodeURIComponent(row.location).replace('file:///', ''); // file:///PATH/SUBPATH/...
 					} catch (e) { // eslint-disable-line no-unused-vars
 						path = row.location;
 					}

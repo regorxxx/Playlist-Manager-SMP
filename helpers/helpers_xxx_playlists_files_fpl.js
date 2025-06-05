@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/05/25
+//04/06/25
 
 /* exported FPL */
 
@@ -47,7 +47,7 @@ const FPL = {
 		const jspf = XSPF.emptyJSPF();
 		const playlist = jspf.playlist;
 		const fileMagic = hexArr.slice(0, 16);
-		if (fileMagic.join() === this.MAGIC) { // Exported FPL playlists
+		if (fileMagic.join('') === this.MAGIC) { // Exported FPL playlists
 			hexArr = hexArr.join('').split('\x00').slice(0, -1);
 			playlist.meta.push({ magic: this.MAGIC });
 		} else {
@@ -62,7 +62,7 @@ const FPL = {
 		if (tracksLen) { // Tracks from playlist
 			for (let i = 0; i < tracksLen; i++) {
 				playlist.track.push({
-					location: 'file:///' + encodeURIComponent(tracks[i].replace(/\\/g, '/')),
+					location: 'file:///' + encodeURIComponent(tracks[i].replace(fileRegex, '').replace(/\\/g, '/')),
 					annotation: void (0),
 					title: void (0),
 					creator: void (0),
