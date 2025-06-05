@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/11/24
+//04/06/25
 
 /* exported _panel */
 
@@ -48,6 +48,10 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colorsChanged = () => {
 		if (window.InstanceType) {
 			this.colors.background = window.GetColourDUI(1);
+			// Workaround for foo_flowin using DUI and not matching global CUI theme (at least on foobar v1.6)
+			if (window.IsDark && this.colors.background === 4293059298) {
+				this.colors.background = RGB(25, 25, 25);
+			}
 			this.colors.text = this.colors.bCustomText ? this.colors.customText : window.GetColourDUI(0);
 			this.colors.highlight = window.GetColourDUI(2);
 		} else {
@@ -107,7 +111,9 @@ function _panel(customBackground = false, bSetup = false) {
 				col = this.colors.background;
 				break;
 			case this.colors.mode === 1:
-				col = window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
+				col = window.InstanceType
+					? window.GetColourDUI(1)
+					: window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
 				break;
 			case this.colors.mode === 2:
 				col = this.colors.customBackground;
