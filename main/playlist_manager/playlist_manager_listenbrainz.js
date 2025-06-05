@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/03/25
+//05/06/25
 
 /* exported ListenBrainz */
 
@@ -2188,7 +2188,7 @@ ListenBrainz.decryptToken = function decryptToken({ lBrainzToken, bEncrypted = t
 	if (bEncrypted && !this.cache.key) {
 		let pass = '';
 		try { pass = utils.InputBox(window.ID, 'Enter password:', window.Name, pass, true); }
-		catch (e) { return null; }
+		catch (e) { return null; } // eslint-disable-line no-unused-vars
 		if (!pass.length) { return null; }
 		this.cache.key = new SimpleCrypto(pass);
 	}
