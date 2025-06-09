@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/03/25
+//09/06/25
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
@@ -19,19 +19,27 @@ include('helpers_xxx_file.js');
 // For ex. for setting properties with UI buttons after initialization.
 function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
 	const bNumber = count > 0;
+	const propertiesDescriptorOut = {...propertiesDescriptor};
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
-		const description = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
+		const property = propertiesDescriptorOut[k] = [...propertiesDescriptor[k]];
+		const description = property[0] = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + property[0];
 		if (bForce) { // Only use set when overwriting... this is done to have default values set first and then overwriting if needed.
-			if (!checkProperty(propertiesDescriptor[k])) { window.SetProperty(description, propertiesDescriptor[k][3]); }
-			else { window.SetProperty(description, propertiesDescriptor[k][1]); }
+			if (!checkProperty(property)) {
+				window.SetProperty(description, property[3]);
+			} else {
+				window.SetProperty(description, property[1]);
+			}
 		} else {
-			if (!checkProperty(propertiesDescriptor[k])) { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][3])); } // NOSONAR
-			else { checkProperty(propertiesDescriptor[k], window.GetProperty(description, propertiesDescriptor[k][1])); }
+			if (!checkProperty(property)) {
+				checkProperty(property, window.GetProperty(description, property[3]));
+			} else {
+				checkProperty(property, window.GetProperty(description, property[1]));
+			}
 		}
 		if (bNumber) { count++; }
 	}
-	return propertiesDescriptor;
+	return propertiesDescriptorOut;
 }
 
 // Overwrites all properties at once
@@ -39,10 +47,11 @@ function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 function overwriteProperties(propertiesDescriptor) { // Equivalent to setProperties(propertiesDescriptor,'',0,false,true);
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
-		if (!checkProperty(propertiesDescriptor[k])) {
-			window.SetProperty(propertiesDescriptor[k][0], propertiesDescriptor[k][3]);
+		const property = propertiesDescriptor[k];
+		if (!checkProperty(property)) {
+			window.SetProperty(property[0], property[3]);
 		} else {
-			window.SetProperty(propertiesDescriptor[k][0], propertiesDescriptor[k][1]);
+			window.SetProperty(property[0], property[1]);
 		}
 	}
 	return propertiesDescriptor;
@@ -98,7 +107,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 			output[k] = null;
 			cacheDescription = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k] = window.GetProperty(cacheDescription);
-			if (!checkProperty(propertiesDescriptor[k], output[k])) {
+			if (!checkProperty([cacheDescription, ...propertiesDescriptor[k].slice(1)], output[k])) {
 				output[k] = propertiesDescriptor[k][3];
 			}
 			if (bNumber) { count++; }
@@ -110,7 +119,7 @@ function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPaddi
 			output[k][0] = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + propertiesDescriptor[k][0];
 			output[k][1] = window.GetProperty(output[k][0]);
 			if (propertiesDescriptor[k].length === 4) {
-				if (!checkProperty(propertiesDescriptor[k], output[k][1])) {
+				if (!checkProperty([output[k][0], ...propertiesDescriptor[k].slice(1)], output[k][1])) {
 					output[k][1] = propertiesDescriptor[k][3];
 				}
 				output[k][2] = propertiesDescriptor[k][2];
@@ -214,8 +223,8 @@ function checkProperty(property, withValue) {
 	if (!bPass) {
 		doOnce(
 			property[0] + ': ' + valToCheck + ' -> ' + property[3],
-			fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\n\nWrong value: ' + valToCheck + '\n\nReplaced with: ' + property[3] + '\n\n' + report)
-		);
+			() => fb.ShowPopupMessage('Property value is wrong. Using default value as fallback:\n\'' + property[0] + '\'\n\nWrong value: ' + valToCheck + '\n\nReplaced with: ' + property[3] + '\n\n' + report)
+		)();
 	}
 	return bPass;
 }
