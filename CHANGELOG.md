@@ -71,6 +71,7 @@
 - Installation: new panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), used to export/import panel settings and any other associated data. These entries may be used to fully backup the panel data, help when moving between different JS components (JSplitter <-> SMP) or even foobar2000 installations,, without needing to manually backup the panel properties or other external files (like .json, playlists, etc.).
 - UI: new menu entry to share current UI settings across all available Playlist Manager panels within foobar2000. It can be found at the settings menu 'Panel UI' submenu. Every other panel will be highlighted and show a popup asking to import the new settings or ignore them.
 - UI: new menu entry to close a playlist on the contextual menu.
+- UI: new menu entries to add new playlists by specified extension (and not only the panel's default one).
 - UI: new setting to force quick-searching by name instead of being associated current sorting method (by category, size, etc.). It's enabled by default.
 - UI: added multiple popups and info related to the use of non-tracked items on library and files with subsongs (.cue, .iso, etc.).
 - UI: settings button tooltip now shows 'Shift + Win + R. Click' shortcut to open SMP/JSpliter panel menu (which works globally on any script and panel, at any position).
