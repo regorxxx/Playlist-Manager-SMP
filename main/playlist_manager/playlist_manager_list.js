@@ -98,6 +98,7 @@ function _list(x, y, w, h) {
 	const regexUnit = /(^\d*.*\d* )(\w*)/;
 	const quickSearchRe = /[0-z]/; // Equal to [_A-z0-9]
 	const playlistRe = /playlist/gi;
+	const bFplWrite = writablePlaylistFormats.has('.fpl');
 	let Fuse;
 
 	// Global tooltip
@@ -574,7 +575,7 @@ function _list(x, y, w, h) {
 		let warningText = '';
 		if (Object.hasOwn(lShortcuts, mask) && lShortcuts[mask].key === 'Copy selection to playlist' || Object.hasOwn(mShortcuts, mask) && mShortcuts[mask].key === 'Copy selection to playlist') {
 			if (pls.isAutoPlaylist || pls.query) { warningText += '\n' + '(' + (pls.isAutoPlaylist ? 'AutoPlaylists' : 'Smart Playlists') + ' are non editable, convert it first)'; }
-			else if (pls.extension === '.fpl') { warningText += '\n(.fpl playlists are non editable, convert it first)'; }
+			else if (pls.extension === '.fpl' && !bFplWrite) { warningText += '\n(.fpl playlists are non editable, convert it first)'; }
 			else if (pls.isLocked) { warningText += '\n(Locked playlists are non editable, unlock it first)'; }
 			else {
 				const selItems = fb.GetSelections(1);
@@ -2705,6 +2706,7 @@ function _list(x, y, w, h) {
 							}
 						});
 					}
+					// TODO Error on non writable playlists?
 					if (bUpdateMBID && writablePlaylistFormats.has(pls.extension)) { setPlaylist_mbid(playlist_mbid, this, pls); }
 					return true;
 				});
@@ -3259,11 +3261,11 @@ function _list(x, y, w, h) {
 		}
 		let bDup = false;
 		if (pls.isFolder) { // Only check allowed destinations
-			bDup = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && item.extension !== '.fpl' && (bAlsoHidden || this.data.includes(item)))
+			bDup = pls.pls.filter((item) => !item.isAutoPlaylist && !item.query && (item.extension !== '.fpl' || bFplWrite) && (bAlsoHidden || this.data.includes(item)))
 				.map((item) => this.checkSelectionDuplicatesPlaylist({ pls: item }))
 				.flat(Infinity)
 				.every((result) => result === true);
-		} else if (!pls.isAutoPlaylist && !pls.query && pls.extension !== '.fpl' && pls.size) {
+		} else if (!pls.isAutoPlaylist && !pls.query && (pls.extension !== '.fpl' || bFplWrite) && pls.size) {
 			const selItems = fb.GetSelections(1);
 			if (selItems && selItems.Count) {
 				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])));
@@ -3361,13 +3363,13 @@ function _list(x, y, w, h) {
 			return false;
 		}
 		if (pls.isFolder) { // Only check allowed destinations
-			const plsArr = pls.pls.filtered.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && item.extension !== '.fpl');
+			const plsArr = pls.pls.filtered.filter((item) => !item.isAutoPlaylist && !item.query && !item.isLocked && (item.extension !== '.fpl' || bFplWrite));
 			const total = plsArr.length;
 			return plsArr.map((item, i) => this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: !!(bPaint && total === (i + 1)), bDelSource: !!(bDelSource && total === (i + 1)), bAlsoHidden: true }))
 				.flat(Infinity)
 				.some((result) => result === true);
 		} else {
-			if (pls.isAutoPlaylist || pls.isLocked || pls.extension === '.fpl' || pls.query) { return false; } // Skip non writable playlists
+			if (pls.isAutoPlaylist || pls.isLocked || (pls.extension === '.fpl' && !bFplWrite) || pls.query) { return false; } // Skip non writable playlists
 			let selItems = fb.GetSelections(1);
 			if (selItems && selItems.Count) {
 				if (bCheckDup) { this.checkSelectionDuplicatesPlaylist({ playlistIndex, pls, bAlsoHidden }); }
@@ -3775,7 +3777,9 @@ function _list(x, y, w, h) {
 						bDeleted = _recycleFile(playlistPath, true);
 					} else { bDeleted = true; }
 					if (bDeleted) {
-						const extension = this.bSavingDefExtension || plsData.extension === '.fpl' ? this.playlistsExtension : plsData.extension;
+						const extension = this.bSavingDefExtension || (plsData.extension === '.fpl' && !bFplWrite)
+							? this.playlistsExtension
+							: plsData.extension;
 						let done = savePlaylist({ playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, author: plsData.author, description: plsData.description, bBom: this.bBOM });
 						if (!done) {
 							fb.ShowPopupMessage(
@@ -5021,7 +5025,7 @@ function _list(x, y, w, h) {
 				const bCache = this.requiresCachePlaylistSearch();
 				this.data = loadPlaylistsFromFolder(this.playlistsPath, this.logOpt.loadPls).map((item) => {
 					if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
-						if (this.bFplLock) { item.isLocked = true; }
+						if (!bFplWrite && this.bFplLock) { item.isLocked = true; }
 						let fplPlaylist = this.dataFpl.find((pls) => { return pls.name === item.name; });
 						if (fplPlaylist) { // Size and author are read from file
 							item.category = fplPlaylist.category;
@@ -6889,7 +6893,11 @@ function _list(x, y, w, h) {
 	this.fplPopup = (bForce = false) => {
 		if (!this.infoPopups.fplFormat || bForce) {
 			this.setInfoPopup('fplFormat');
-			fb.ShowPopupMessage('Playlist Manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager: .fpl playlists');
+			if (bFplWrite) {
+				fb.ShowPopupMessage('Playlist Manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are writable but additional metadata (UUID, category, lock status or tags) is not saved in the playlist file. It will be cached between sessions as soon as it\'s set for the first time.', 'Playlist Manager: .fpl playlists');
+			} else {
+				fb.ShowPopupMessage('Playlist Manager has loaded a .fpl playlist for the first time. This is an informative popup.\n\n-.fpl playlists are non writable, but size and other data (UUID, category, lock status or tags) may be cached between sessions as soon as it\'s set for the first time.\n-By default they are set as locked files (so they will never be autosaved), if you want to convert them to another editable extension, just force a playlist update.\n-To edit category or tags, unlock the playlist, set the desired values and lock it again. The data will be saved between sessions.\n-Playlist size can only be retrieved when the playlist is loaded within foobar2000, so the first time it\'s loaded, the value will be stored for future sessions.', 'Playlist Manager: .fpl playlists');
+			}
 		}
 	};
 	this.noLibPopup = (bForce = false) => {
