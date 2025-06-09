@@ -980,10 +980,29 @@ function createMenuFolder(menu, folder, z) {
 	menu.newSeparator();
 	{ // New Playlists
 		const subMenuName = menu.newMenu('New child item');
-		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Playlist File...', func: () => { list.add({ bEmpty: true, toFolder: folder }); } });
+		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Playlist File ' + _p(list.playlistsExtension) + '...', func: () => { list.add({ bEmpty: true, toFolder: folder }); } });
+		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUiPlaylist({ bInputName: true, toFolder: folder }); } });
+		menu.newSeparator(subMenuName);
 		menu.newEntry({ menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => { list.addAutoPlaylist(void (0), void (0), folder); } });
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
-		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUiPlaylist({ bInputName: true, toFolder: folder }); } });
+		if (!list.bLiteMode) {
+			menu.newSeparator(subMenuName);
+			const subMenuNameTwo = menu.newMenu('New Playlist File (by ext)...', subMenuName);
+			writablePlaylistFormats.forEach((ext) => {
+				menu.newEntry({
+					menuName: subMenuNameTwo,
+					entryText: ext, func: () => {
+						const rule = list.folderRules.others;
+						const toFolder = rule.length
+							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+							: null;
+						list.add({ bEmpty: true, toFolder, ext });
+					}
+				});
+			});
+		}
+		menu.newSeparator(subMenuName);
+		menu.newEntry({ menuName: subMenuName, entryText: 'Folder...', func: () => { list.addFolder(void (0), folder); } });
 		menu.newSeparator(subMenuName);
 		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder }); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
@@ -1018,8 +1037,6 @@ function createMenuFolder(menu, folder, z) {
 				}
 			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 		});
-		menu.newSeparator(subMenuName);
-		menu.newEntry({ menuName: subMenuName, entryText: 'Folder...', func: () => { list.addFolder(void (0), folder); } });
 	}
 	menu.newSeparator();
 	menu.newEntry({
@@ -1788,17 +1805,8 @@ function createMenuRight() {
 	const sel = fb.GetSelections(1);
 	// Entries
 	{ // New Playlists
-		list.bLiteMode && menu.newEntry({
-			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
-				const rule = list.folderRules.internalUi;
-				const toFolder = rule.length
-					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
-					: null;
-				list.addUiPlaylist({ bInputName: true, toFolder });
-			}
-		});
 		!list.bLiteMode && menu.newEntry({
-			entryText: 'New Playlist File...' + list.getGlobalShortcut('new file'), func: () => {
+			entryText: 'New Playlist File ' + _p(list.playlistsExtension) + '...' + list.getGlobalShortcut('new file'), func: () => {
 				const rule = list.folderRules.others;
 				const toFolder = rule.length
 					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
@@ -1806,7 +1814,7 @@ function createMenuRight() {
 				list.add({ bEmpty: true, toFolder });
 			}
 		});
-		!list.bLiteMode && menu.newEntry({
+		menu.newEntry({
 			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
 				const rule = list.folderRules.internalUi;
 				const toFolder = rule.length
@@ -1935,6 +1943,22 @@ function createMenuRight() {
 						const pls = list.addAutoPlaylist({ sort: '', ...opt, name }, false, toFolder);
 						if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
 					}, flags
+				});
+			});
+		}
+		if (!list.bLiteMode) {
+			menu.newSeparator();
+			const menuName = menu.newMenu('New Playlist File (by ext)...');
+			writablePlaylistFormats.forEach((ext) => {
+				menu.newEntry({
+					menuName,
+					entryText: ext, func: () => {
+						const rule = list.folderRules.others;
+						const toFolder = rule.length
+							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
+							: null;
+						list.add({ bEmpty: true, toFolder, ext });
+					}
 				});
 			});
 		}
@@ -5375,7 +5399,7 @@ function createMenuRightFilter(buttonKey) {
 	menu.newSeparator();
 	{
 		menu.newEntry({
-			entryText: 'Also reset search filter', func: () => {
+			entryText: 'Reset also applies to search', func: () => {
 				list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				overwriteProperties(list.properties);
@@ -5809,9 +5833,27 @@ function createMenuFilterSorting() {
 	menu.newSeparator();
 	{
 		const subMenuName = menu.newMenu('Other filter settings');
+		{	// Filtering
+			const subMenuNameTwo = menu.newMenu('Save filtering between sessions', subMenuName);
+			const options = ['Yes: Always restore last used', 'No: Reset on startup'];
+			const optionsLength = options.length;
+			menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Sorting, category and Playlists view:', flags: MF_GRAYED });
+			menu.newSeparator(subMenuNameTwo);
+			options.forEach((item, i) => {
+				menu.newEntry({
+					menuName: subMenuNameTwo, entryText: item, func: () => {
+						list.bSaveFilterStates = (i === 0);
+						list.properties['bSaveFilterStates'][1] = list.bSaveFilterStates;
+						overwriteProperties(list.properties);
+					}
+				});
+			});
+			menu.newCheckMenuLast(() => (list.bSaveFilterStates ? 0 : 1), optionsLength);
+		}
+		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName,
-			entryText: 'Also reset search filter', func: () => {
+			entryText: 'Reset also applies to search', func: () => {
 				list.searchMethod.bResetFilters = !list.searchMethod.bResetFilters;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				overwriteProperties(list.properties);

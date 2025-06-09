@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/25
+//04/06/25
 
 /* exported _list */
 
@@ -6317,7 +6317,7 @@ function _list(x, y, w, h) {
 		return objectPlaylist;
 	};
 
-	this.add = ({ bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length, toFolder = null } = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists,,,
+	this.add = ({ bEmpty = true, name = '', bShowPopups = true, bInputName = !name.length, toFolder = null, ext = this.playlistsExtension } = {}) => { // Creates new playlist file, empty or using the active playlist. Changes both total size and number of playlists...
 		if (!bEmpty && plman.ActivePlaylist === -1) { return null; }
 		const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 		const oldName = removeIdFromStr(oldNameId);
@@ -6329,7 +6329,7 @@ function _list(x, y, w, h) {
 			if (!input.length) { return null; }
 		}
 		const newName = input;
-		const oPlaylistPath = this.playlistsPath + sanitize(newName) + this.playlistsExtension;
+		const oPlaylistPath = this.playlistsPath + sanitize(newName) + ext;
 		// Auto-Tags
 		const oPlaylistTags = [];
 		let objectPlaylist = null;
@@ -6356,7 +6356,7 @@ function _list(x, y, w, h) {
 			}
 			// Creates the file on the folder
 			if (!_isFolder(this.playlistsPath)) { _createFolder(this.playlistsPath); } // For first playlist creation
-			let done = savePlaylist({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
+			let done = savePlaylist({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? new FbMetadbHandleList() : null), playlistPath: oPlaylistPath, ext, playlistName: newName, UUID, category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM });
 			if (done) {
 				const now = Date.now();
 				const handleList = bEmpty ? null : plman.GetPlaylistItems(plman.ActivePlaylist);
@@ -6364,7 +6364,7 @@ function _list(x, y, w, h) {
 					id: UUID,
 					path: oPlaylistPath,
 					name: newName,
-					extension: this.playlistsExtension,
+					extension: ext,
 					size: bEmpty ? 0 : handleList.Count,
 					fileSize: utils.GetFileSize(done),
 					trackSize: bEmpty ? 0 : handleList.CalcTotalSize(),
@@ -6419,7 +6419,7 @@ function _list(x, y, w, h) {
 					'Playlist generation failed while writing file:\n' + oPlaylistPath +
 					'\n\nTrace:' +
 					'\nadd' + _p({ bEmpty, name, bShowPopups, bInputName }.toStr()) +
-					'\n\nsavePlaylist' + _p({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? 'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext: this.playlistsExtension, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
+					'\n\nsavePlaylist' + _p({ playlistIndex: (bEmpty ? -1 : plman.ActivePlaylist), handleList: (bEmpty ? 'new FbMetadbHandleList()' : null), playlistPath: oPlaylistPath, ext, playlistName: newName, useUUID: this.optionsUUIDTranslate(), category: oPlaylistCategory, tags: oPlaylistTags, relPath: (this.bRelativePath ? this.playlistsPath : ''), bBom: this.bBOM }.toStr())
 					, 'Playlist Manager: ' + newName, bShowPopups);
 				return null;
 			}
