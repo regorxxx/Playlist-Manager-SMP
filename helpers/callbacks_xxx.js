@@ -53,6 +53,7 @@ const callbacks = {
 	on_library_items_changed:				{listeners: [], bRegistered: false},
 	on_library_items_removed:				{listeners: [], bRegistered: false},
 	on_load_image_done:						{listeners: [], bRegistered: false},
+	on_locations_added:						{listeners: [], bRegistered: false},
 	on_main_menu:							{listeners: [], bRegistered: false},
 	on_main_menu_dynamic:					{listeners: [], bRegistered: false},
 	on_metadb_changed:						{listeners: [], bRegistered: false},
