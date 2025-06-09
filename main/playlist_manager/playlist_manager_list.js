@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/06/25
+//09/06/25
 
 /* exported _list */
 
@@ -2801,6 +2801,7 @@ function _list(x, y, w, h) {
 				if (this.searchMethod.bName && match(pls.name)) { return true; }
 				else if (this.searchMethod.bTags && match(pls.tags)) { return true; } // NOSONAR [explicit branches]
 				else if (this.searchMethod.bCategory && match(pls.category)) { return true; } // NOSONAR [explicit branches]
+				else if (this.searchMethod.bMetaQuery && match(pls.query)) { return true; } // NOSONAR [explicit branches]
 				if (this.searchMethod.bPath) {
 					let paths;
 					const idx = plman.FindPlaylist(pls.nameId);

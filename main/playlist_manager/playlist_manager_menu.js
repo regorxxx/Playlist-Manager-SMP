@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/25
+//09/06/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -5459,7 +5459,8 @@ function createMenuSearch() {
 			{ entryText: 'By tracks\' metadata (from playlist)', key: 'bMetaPls' },
 			{ entryText: 'By tracks\' metadata (from tracks)', key: 'bMetaTracks' },
 			{ entryText: 'By tracks\' path', key: 'bPath' },
-			{ entryText: 'By query', key: 'bQuery' }
+			{ entryText: 'By query (applied to tracks)', key: 'bQuery' },
+			{ entryText: 'By query (string search)', key: 'bMetaQuery' }
 		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);

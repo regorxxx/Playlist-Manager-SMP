@@ -277,6 +277,7 @@ let properties = {
 		bMetaTracks: false,
 		meta: [globTags.artist, 'ALBUM', globTags.title, globTags.date],
 		bQuery: true,
+		bMetaQuery: true,
 		dragDropPriority: ['bPath', 'bQuery', 'bMetaTracks'],
 		text: '',
 	})],
