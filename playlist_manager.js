@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/05/25
+//09/06/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -119,8 +119,8 @@ const debouncedCacheLib = debounce(cacheLib, 5000);
 let properties = {
 	playlistPath: ['Path to the folder containing the playlists', '.\\profile\\playlist_manager\\', { func: isString, portable: true }, '.\\profile\\playlist_manager\\'],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }, 3000], // Safety limit 0 or > 1000
-	bFplLock: ['Load .fpl native playlists as read only?', true, { func: isBoolean }, true],
-	extension: ['Extension used when saving playlists (' + [...writablePlaylistFormats].join(', ') + ')', '.m3u8', { func: (val) => { return writablePlaylistFormats.has(val); } }, '.m3u8'],
+	bFplLock: ['Load .fpl native playlists as read only', true, { func: isBoolean }, true],
+	extension: ['Extension used when saving playlists', '.m3u8', { func: (val) => writablePlaylistFormats.has(val) }, '.m3u8'],
 	autoUpdate: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.', 5000, { func: isInt, range: [[0, 0], [200, Infinity]] }, 5000], // Safety limit 0 or > 200
 	bShowSize: ['Show playlist size', false, { func: isBoolean }, false],
 	bUpdateAutoPlaylist: ['Update AutoPlaylist size by query output', true, { func: isBoolean }, true],
@@ -128,7 +128,7 @@ let properties = {
 	optionUUID: ['UUID current method', '', { func: isStringWeak }, ''],
 	methodState: ['Current sorting method. Allowed: ', '', { func: isStringWeak }, ''], // Description and value filled on list.init() with defaults. Just a placeholder
 	sortState: ['Current sorting order. Allowed: ', '', { func: isStringWeak }, ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	bSaveFilterStates: ['Maintain filters between sessions?', true, { func: isBoolean }, true],
+	bSaveFilterStates: ['Save filtering between sessions', true, { func: isBoolean }, true],
 	filterStates: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
 	bShowSep: ['Show name/category separators: ', true, { func: isBoolean }, true],
 	listColors: ['List items color codes', '', { func: isStringWeak }, ''],
@@ -510,7 +510,7 @@ let plsRwLock;
 		const uiElements = JSON.parse(prop.uiElements[1]);
 		if (readme.length) { fb.ShowPopupMessage(readme, 'Playlist Manager: introduction'); }
 		{	// Lite mode
-			const answer = WshShell.Popup('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled. \n\nEnable lite mode?', 0, window.Name, popup.question + popup.yes_no);
+			const answer = WshShell.Popup('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled. \n\nEnable lite mode?', 0, 'Lite mode', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				prop.bLiteMode[1] = true;
 			}
@@ -520,7 +520,7 @@ let plsRwLock;
 			const otherFeatures = ['Advanced search tools'];
 			const answer = prop.bLiteMode[1]
 				? popup.no
-				: WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, 'Lite mode', popup.question + popup.yes_no);
+				: WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, 'Features', popup.question + popup.yes_no);
 			if (answer === popup.no) {
 				// Menus
 				const showMenus = JSON.parse(prop.showMenus[1]);
