@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/05/25
+//09/06/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -857,7 +857,9 @@ function clonePlaylistFile(list, z, ext, toFolder) {
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI
 		? getFilePathsFromPlaylist(pls.path)
-		: fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
+		: handleList
+			? fb.TitleFormat(pathTF).EvalWithMetadbs(handleList)
+			: [];
 	const root = utils.SplitFilePath(playlistPath)[0];
 	const report = [];
 	const subsongRe = subsongRegex;
@@ -1089,7 +1091,9 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	const subsongRe = subsongRegex;
 	const paths = !bUI && !bXSP
 		? getFilePathsFromPlaylist(playlistPath)
-		: fb.TitleFormat(pathTF).EvalWithMetadbs(handleList);
+		: handleList
+			? fb.TitleFormat(pathTF).EvalWithMetadbs(handleList)
+			: [];
 	const root = utils.SplitFilePath(newPath)[0];
 	_setClipboardData(root);
 	const report = [];
