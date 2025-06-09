@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/25
+//09/06/25
 
 /* exported ListenBrainz */
 
@@ -447,6 +447,7 @@ ListenBrainz.exportPlaylist = async function exportPlaylist(pls, root = '', toke
 	const handleList = !bUI
 		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
+	if (!handleList) { console.log('exportPlaylist: no valid pls provided'); return Promise.resolve(''); }
 	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
 	const missingCount = handleList.Count - mbid.length;
 	if (missingCount) { console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks on exporting'); }

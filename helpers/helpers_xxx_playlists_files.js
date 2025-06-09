@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/06/25
+//09/06/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -1008,7 +1008,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 		}
 	}
 	if (bLog) { test.Print(); }
-	return (!bReturnNotFound ? handlePlaylist : { handlePlaylist, pathsNotFound, locationsByOrder });
+	return (bReturnNotFound ? { handlePlaylist, pathsNotFound, locationsByOrder } : handlePlaylist);
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files
