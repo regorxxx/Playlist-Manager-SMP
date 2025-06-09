@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/05/25
+//09/06/25
 
 /* exported extendGR */
 
@@ -123,7 +123,10 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
 					that = old(...arguments);
-				} catch (e) { bRetry = false; } // eslint-disable-line no-unused-vars
+				} catch (e) { // eslint-disable-line no-unused-vars
+					bRetry = false;
+					gr.DrawRect(newArgs[0], newArgs[1], newArgs[2], newArgs[3], newArgs[6], newArgs[7]);
+				}
 				if (typeof doOnce !== 'undefined' && options.Debug) {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: DrawRoundRect\n' +
@@ -154,7 +157,10 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 				newArgs[5] = newArgs[5] / 2 - Number.EPSILON;
 				try {
 					that = old(...arguments);
-				} catch (e) { bRetry = false; } // eslint-disable-line no-unused-vars
+				} catch (e) { // eslint-disable-line no-unused-vars
+					bRetry = false;
+					gr.FillSolidRect(newArgs[0], newArgs[1], newArgs[2], newArgs[3], newArgs[6]);
+				}
 				if (typeof doOnce !== 'undefined' && options.Debug) {
 					doOnce('Paint bug', fb.ShowPopupMessage.bind(fb))( // eslint-disable-line no-undef
 						'SMP bug drawing: FillRoundRect\n' +
@@ -428,6 +434,25 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 			return null;
 		}).bind(that);
 		return that;
+	};
+}
+
+if (fb.AddLocationsAsync) {
+	fb.AddLocationsAsyncV2 = function AddLocationsAsyncV2(locations) {
+		return new Promise((resolve) => {
+			const id = fb.AddLocationsAsync([locations]);
+			if (typeof addEventListener !== 'undefined' && typeof removeEventListenerSelf !== 'undefined') {
+				/* global removeEventListenerSelf:readable */
+				addEventListener('on_locations_added', (taskId, handleList) => {
+					if (taskId === id) {
+						removeEventListenerSelf();
+						resolve(handleList);
+					}
+				});
+			} else {
+				throw new Error('callbacks_xxx.js is missing');
+			}
+		});
 	};
 }
 
