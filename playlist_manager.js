@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//10/06/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -119,7 +119,10 @@ const debouncedCacheLib = debounce(cacheLib, 5000);
 let properties = {
 	playlistPath: ['Path to the folder containing the playlists', '.\\profile\\playlist_manager\\', { func: isString, portable: true }, '.\\profile\\playlist_manager\\'],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }, 3000], // Safety limit 0 or > 1000
-	bFplLock: ['Load .fpl native playlists as read only', true, { func: isBoolean }, true],
+	fplRules: ['fpl playlists behavior', JSON.stringify({
+		bLockOnLoad: true,
+		bNonTrackedSupport: true,
+	})],
 	extension: ['Extension used when saving playlists', '.m3u8', { func: (val) => writablePlaylistFormats.has(val) }, '.m3u8'],
 	autoUpdate: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.', 5000, { func: isInt, range: [[0, 0], [200, Infinity]] }, 5000], // Safety limit 0 or > 200
 	bShowSize: ['Show playlist size', false, { func: isBoolean }, false],
@@ -398,6 +401,7 @@ properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
 properties['logOpt'].push({ func: isJSON }, properties['logOpt'][1]);
 properties['xspfRules'].push({ func: isJSON }, properties['xspfRules'][1]);
 properties['infoPopups'].push({ func: isJSON }, properties['infoPopups'][1]);
+properties['fplRules'].push({ func: isJSON }, properties['fplRules'][1]);
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
@@ -613,7 +617,7 @@ let plsRwLock;
 			? window.NotifyOthers('Playlist Manager: playlistPath', null)
 			: setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
-		const id = addEventListener('on_notify_data', (name, info) => {
+		const listener = addEventListener('on_notify_data', (name, info) => {
 			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
 			switch (name) { // NOSONAR
 				case 'Playlist Manager: playlistPath': {
@@ -627,7 +631,7 @@ let plsRwLock;
 				}
 			}
 		});
-		setTimeout(() => removeEventListener('on_notify_data', null, id), 20000);
+		setTimeout(() => removeEventListener(listener.event, null, listener.id), 20000);
 		// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first init...
 		new Promise((resolve) => {
 			const timer = setInterval(() => {
@@ -766,8 +770,9 @@ if (!list.properties.bSetup[1]) {
 		if (bottomToolbar.curBtn === null) {
 			if (scroll && scroll.btn_up(x, y)) { return; }
 			list.lbtn_up(x, y, mask);
+		} else {
+			bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
 		}
-		bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
 	});
 
 	addEventListener('on_mouse_mbtn_up', (x, y, mask) => {
@@ -784,8 +789,9 @@ if (!list.properties.bSetup[1]) {
 		if (bottomToolbar.curBtn === null) {
 			if (scroll && scroll.btn_down(x, y)) { return; }
 			list.lbtn_down(x, y, mask);
+		} else {
+			bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
 		}
-		bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
 	});
 
 	addEventListener('on_mouse_lbtn_dblclk', (x, y) => {
