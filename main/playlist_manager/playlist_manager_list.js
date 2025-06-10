@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//10/06/25
 
 /* exported _list */
 
@@ -21,7 +21,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable, MAX_QUEUE_ITEMS:readable, removePlaylistByName:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
+/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, addHandleToPlaylistV2:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -3496,9 +3496,12 @@ function _list(x, y, w, h) {
 		const [handleUpdate, tagsUpdate] = this.bAutoTrackTag ? this.getUpdateTrackTags(handleList, pls) : [null, null]; // Done at 2 steps, first get tags
 		const playlistPath = pls.path;
 		const bUI = pls.extension === '.ui';
-		const backPath = playlistPath + '.back';
-		if (pls.extension === '.m3u' || pls.extension === '.m3u8' || pls.extension === '.xspf') { _copyFile(playlistPath, backPath); }
-		let done = bUI ? true : addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
+		// Backups are already handled at below method
+		let done = bUI
+			? true
+			: pls.extension === '.fpl' && this.fplRules.bNonTrackedSupport
+				? addHandleToPlaylistV2(handleList, playlistPath)
+				: addHandleToPlaylist(handleList, playlistPath, (this.bRelativePath ? this.playlistsPath : ''), this.bBOM);
 		if (!done) {
 			fb.ShowPopupMessage(
 				'Playlist generation failed while writing file:\n' + playlistPath +
@@ -3506,9 +3509,8 @@ function _list(x, y, w, h) {
 				'\nadd' + _p({ playlistIndex, handleList, bAlsoHidden, bPaint }.toStr()) +
 				'\n\naddHandleToPlaylist' + _p({ handleList, playlistPath, relativePath: (this.bRelativePath ? this.playlistsPath : ''), bBOM: this.bBOM }.toStr())
 				, window.Name);
-			_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
 			return false;
-		} else if (_isFile(backPath)) { _deleteFile(backPath); }
+		}
 		this.checkLibraryWarnings(handleList);
 		// If done, then we repaint later. Now we manually update the data changes... only one playlist length and/or playlist file size can change here
 		pls = this.getPls(pls, true);
@@ -5026,7 +5028,7 @@ function _list(x, y, w, h) {
 				const bCache = this.requiresCachePlaylistSearch();
 				this.data = loadPlaylistsFromFolder(this.playlistsPath, this.logOpt.loadPls).map((item) => {
 					if (item.extension === '.fpl') { // Workaround for fpl playlist limitations... load cached playlist size and other data
-						if (!bFplWrite && this.bFplLock) { item.isLocked = true; }
+						if (!bFplWrite && this.fplRules.bLockOnLoad) { item.isLocked = true; }
 						let fplPlaylist = this.dataFpl.find((pls) => { return pls.name === item.name; });
 						if (fplPlaylist) { // Size and author are read from file
 							item.category = fplPlaylist.category;
@@ -7034,10 +7036,10 @@ function _list(x, y, w, h) {
 		this.methodState = this.properties['methodState'][1];
 		this.sortState = this.properties['sortState'][1];
 		this.optionUUID = this.properties['optionUUID'][1];
-		this.bFplLock = this.properties['bFplLock'][1];
 		this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
 		this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
 		this.xspfRules = JSON.parse(this.properties['xspfRules'][1]);
+		this.fplRules = JSON.parse(this.properties['fplRules'][1]);
 		this.bShowSep = this.properties['bShowSep'][1];
 		this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 		this.bRelativePath = this.properties['bRelativePath'][1];
@@ -7845,10 +7847,10 @@ function _list(x, y, w, h) {
 	this.bUseUUID = this.properties['bUseUUID'][1];
 	this.optionsUUID = () => { return ['Yes: Using invisible chars plus (*) indicator (experimental)', 'Yes: Using a-f chars', 'Yes: Using only (*) indicator', 'No: Only the name']; };
 	this.optionUUID = this.properties['optionUUID'][1];
-	this.bFplLock = this.properties['bFplLock'][1];
 	this.bSaveFilterStates = this.properties['bSaveFilterStates'][1];
 	this.bAutoRefreshXsp = this.properties['bAutoRefreshXsp'][1];
 	this.xspfRules = JSON.parse(this.properties['xspfRules'][1]);
+	this.fplRules = JSON.parse(this.properties['fplRules'][1]);
 	// UI
 	this.tooltipSettings = JSON.parse(this.properties['tooltipSettings'][1]);
 	this.bShowSize = this.properties['bShowSize'][1];
