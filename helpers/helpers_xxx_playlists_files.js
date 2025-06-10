@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//10/06/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -301,7 +301,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 		if (extension === '.fpl') {
 			const plsItems = getHandlesFromPlaylist({ playlistPath, relPath, bOmitNotFound: true, bReturnNotFound: true });
 			if (plsItems.pathsNotFound.length) {
-				console.log('addHandleToPlaylist(): .fpl playlists contains items non-tracked on library. To add new items, load it first.');
+				console.log('addHandleToPlaylist(): .fpl playlists contains items non-tracked on library.');
 				return false;
 			}
 			const oldHandleList = plsItems.handleList || new FbMetadbHandleList();
@@ -475,6 +475,51 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 			console.log('Playlist manager: Restoring backup...');
 		} else if (_isFile(backPath)) { _deleteFile(backPath); }
 		return bDone ? playlistPath : false;
+	}
+	return false;
+}
+
+/**
+ * Adds a handle list to a playlist file
+ *
+ * @function
+ * @name addHandleToPlaylistV2
+ * @kind function
+ * @param {FbMetadbHandleList} handleList
+ * @param {string} playlistPath
+ * @param {string} relPath?
+ * @param {boolean} bBOM?
+ * @returns {boolean} Sucess flag
+ */
+function addHandleToPlaylistV2(handleList, playlistPath, relPath = '', bBOM = false) { // eslint-disable-line no-unused-vars
+	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
+	if (!writablePlaylistFormats.has(extension)) {
+		console.log('addHandleToPlaylistV2(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
+		return false;
+	}
+	if (_isFile(playlistPath)) {
+		if (extension === '.fpl') {
+			if (!addHandleToPlaylist(...arguments)) {
+				const backPath = playlistPath + '.back';
+				fb.AddLocationsAsyncV2([playlistPath])
+					.then((plsItems) => {
+						if (!plsItems) { return false; }
+						plsItems.AddRange(handleList);
+						_copyFile(playlistPath, backPath);
+						plsItems.SaveAs(playlistPath);
+						let bDone = _isFile(playlistPath);
+						// Check
+						if (!bDone) {
+							_renameFile(backPath, playlistPath); // Restore backup in case something goes wrong
+							console.log('Playlist manager: Restoring backup...');
+						} else if (_isFile(backPath)) { _deleteFile(backPath); }
+						return bDone ? playlistPath : false;
+					});
+			}
+			return playlistPath;
+		} else {
+			return addHandleToPlaylist(...arguments);
+		}
 	}
 	return false;
 }
