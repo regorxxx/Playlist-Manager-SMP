@@ -84,6 +84,7 @@
 - Statistics: Y-Axis filter at display menu now allows any custom value for 'greater than'/'lower than' filters.
 - Statistics: option to filter data between 2 custom values on Y-Axis at display menu.
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
+- FPL: new settings to control .fpl playlists behavior, found at 'Playlist behavior\FPL playlists'. This submenu now exposes some previously hidden settings and also new ones related to JSplitter/marc2003's SMP mod.
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
 ### Changed
 - Installation: added support for foobar v2.25+ file-relative protocols.
@@ -154,6 +155,8 @@
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 - helpers: performance improvements caching library items at multiple places.
 ### Removed
+- FPL: hidden setting to always lock .fpl playlists on load. This setting is now exposed on a more general 'FPL rules' property.
+- UI: unnecessary double playlist backup when sending selection to a playlist.
 - UI: unnecessary playlist refresh after changing fonts size.
 ### Fixed
 - Backup: auto-backup not including sorting and extra config file.
