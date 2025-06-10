@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//10/06/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -3298,8 +3298,8 @@ function createMenuRightTop() {
 		}
 		if (!list.bLiteMode) {	// XSPF playlists
 			menu.newSeparator(menuName);
-			const subMenuName = menu.newMenu('XSPF behavior', menuName);
 			{
+				const subMenuName = menu.newMenu('XSPF playlists', menuName);
 				const subMenuNameTwo = menu.newMenu('Non-tracked files on library', subMenuName);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Load them if found on disk', func: () => {
@@ -3323,6 +3323,47 @@ function createMenuRightTop() {
 					}, flags: list.xspfRules.bLoadNotTrackedItems ? MF_STRING : MF_GRAYED
 				});
 				menu.newCheckMenuLast(() => list.xspfRules.bFallbackComponentXSPF && list.xspfRules.bLoadNotTrackedItems);
+			}
+			{
+				const subMenuName = menu.newMenu('FPL playlists', menuName);
+				{
+					const bSupported = writablePlaylistFormats.has('.fpl');
+					const subMenuNameTwo = menu.newMenu('Non-library files', subMenuName);
+					if (!bSupported) {
+						menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Newer SMP required', flags: MF_GRAYED });
+						menu.newSeparator(subMenuNameTwo);
+					}
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: 'Yes: full support', func: () => {
+							list.fplRules.bNonTrackedSupport = true;
+							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
+							overwriteProperties(list.properties);
+							fb.ShowPopupMessage('Non-library files will be fully supported with a performance penalty. Additionally, tracks will be asynchronous loaded in some cases (affecting some checks).\n\nWARNING: This feature currently works only for actions related to sending selections.', window.Name);
+						}, flags: bSupported ? MF_STRING : MF_GRAYED
+					});
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: 'No: only library items', func: () => {
+							list.fplRules.bNonTrackedSupport = false;
+							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
+							overwriteProperties(list.properties);
+							fb.ShowPopupMessage('Non-library files will be omitted when internally processing .fpl playlists on actions like searching or sending selection to playlists. This will improve performance a bit.\n\nNote: playlist loading always support non-library files anyway.', window.Name);
+						}, flags: bSupported ? MF_STRING : MF_GRAYED
+					});
+					if (bSupported) { menu.newCheckMenuLast(() => list.fplRules.bNonTrackedSupport ? 0 : 1, 2); }
+				}
+				{
+					menu.newEntry({
+						menuName: subMenuName, entryText: 'Lock playlist on load', func: () => {
+							list.fplRules.bLockOnLoad = !list.fplRules.bLockOnLoad;
+							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
+							overwriteProperties(list.properties);
+							if (list.fplRules.bLockOnLoad) {
+								fb.ShowPopupMessage('.fpl playlists loaded will be automatically locked to avoid unwanted changes or conversion to other formats.', window.Name);
+							}
+						}
+					});
+					menu.newCheckMenuLast(() => list.fplRules.bLockOnLoad);
+				}
 			}
 		}
 		if (showMenus['Tags'] || showMenus['Folders']) { menu.newSeparator(menuName); }
