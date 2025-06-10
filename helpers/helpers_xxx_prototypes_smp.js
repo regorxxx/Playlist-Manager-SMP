@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//10/06/25
 
 /* exported extendGR */
 
@@ -443,12 +443,13 @@ if (fb.AddLocationsAsync) {
 			const id = fb.AddLocationsAsync([locations]);
 			if (typeof addEventListener !== 'undefined' && typeof removeEventListenerSelf !== 'undefined') {
 				/* global removeEventListenerSelf:readable */
-				addEventListener('on_locations_added', (taskId, handleList) => {
+				const listener = addEventListener('on_locations_added', (taskId, handleList) => {
 					if (taskId === id) {
 						removeEventListenerSelf();
 						resolve(handleList);
 					}
 				});
+				setTimeout(() => removeEventListener(listener.event, void(0), listener.id), 60000);
 			} else {
 				throw new Error('callbacks_xxx.js is missing');
 			}

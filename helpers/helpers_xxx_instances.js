@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//10/06/25
 
 /* exported newInstancesManager*/
 
@@ -60,7 +60,7 @@ function _instancesManager() {
 		} else {
 			this.isWorking = true;
 			const newInstances = [];
-			const id = addEventListener('on_notify_data', (name, /** @type {{caller:string, name:string, id:string, date:number, panelName:string}} */ info) => {
+			const listener = addEventListener('on_notify_data', (name, /** @type {{caller:string, name:string, id:string, date:number, panelName:string}} */ info) => {
 				if (name === 'getInstance' && info && info.caller === window.ID) {
 					newInstances.push({ ...info });
 				}
@@ -68,7 +68,7 @@ function _instancesManager() {
 			const self = this.getSelf(key);
 			window.NotifyOthers('sendInstance', { caller: window.ID, key, ...(self || {}) });
 			return Promise.wait(this._timeout).then(() => {
-				removeEventListener('on_notify_data', null, id);
+				removeEventListener(listener.event, null, listener.id);
 				if (!this._[key]) { this._[key] = []; }
 				else {
 					this._[key].length = 0;
