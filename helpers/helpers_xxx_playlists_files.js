@@ -1,7 +1,7 @@
 ﻿'use strict';
 //11/06/25
 
-/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
+/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -1093,6 +1093,22 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 	}
 	if (bLog) { test.Print(); }
 	return (bReturnNotFound ? { handlePlaylist, pathsNotFound, locationsByOrder } : handlePlaylist);
+}
+
+function getHandlesFromPlaylistV2({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bMultiple = false, bLog = true, xspfRules = { bFallbackComponentXSPF: false }, poolItems = fb.GetLibraryItems() } = {}) { // eslint-disable-line no-unused-vars
+	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
+	const out = getHandlesFromPlaylist(...arguments);
+	if (extension === '.fpl' && fb.AddLocationsAsyncV2) {
+		if (bReturnNotFound && out.pathsNotFound.length) {
+			return fb.AddLocationsAsyncV2([playlistPath])
+				.then((handleList) => {
+					out.handlePlaylist = handleList;
+					out.pathsNotFound.length = 0;
+					return out;
+				});
+		}
+	}
+	return Promise.resolve(out);
 }
 
 // Loading m3u, m3u8 & pls playlist files is really slow when there are many files

@@ -254,7 +254,13 @@ function createMenuLeft(forcedIndex = -1) {
 								list.filter();
 								// Refresh in UI
 								const uiIdx = getPlaylistIndexArray(pls.nameId);
-								uiIdx.some((idx) => (!bXsp && plman.IsAutoPlaylist(idx) || bXsp && !plman.IsAutoPlaylist(idx)) && list.loadPlaylist(z));
+								(async () => {
+									for (let idx of uiIdx) {
+										if (!bXsp && plman.IsAutoPlaylist(idx) || bXsp && !plman.IsAutoPlaylist(idx)) {
+											if (await list.loadPlaylist(z).bLoaded) { break; }
+										}
+									}
+								})();
 							}
 						}
 					}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
@@ -275,7 +281,13 @@ function createMenuLeft(forcedIndex = -1) {
 								list.filter();
 								// Refresh in UI
 								const uiIdx = getPlaylistIndexArray(pls.nameId);
-								uiIdx.some((idx) => !plman.IsAutoPlaylist(idx) && list.loadPlaylist(z));
+								(async () => {
+									for (let idx of uiIdx) {
+										if (!plman.IsAutoPlaylist(idx)) {
+											if (await list.loadPlaylist(z).bLoaded) { break; }
+										}
+									}
+								})();
 							}
 						}, flags: !bIsLockPls && bIsValidXSP ? MF_STRING : MF_GRAYED
 					});
@@ -3338,7 +3350,7 @@ function createMenuRightTop() {
 							list.fplRules.bNonTrackedSupport = true;
 							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
 							overwriteProperties(list.properties);
-							fb.ShowPopupMessage('Non-library files will be fully supported with a performance penalty. Additionally, tracks will be asynchronous loaded in some cases (affecting some checks).\n\nWARNING: This feature currently works only for actions related to sending selections.', window.Name);
+							fb.ShowPopupMessage('Non-library files will be fully supported with a performance penalty. Additionally, tracks will be asynchronous loaded in some cases (affecting some checks).\n\nWARNING: This feature currently works for actions related to sending selections, playlist maintenance tools and playlist cloning. It doesn\'t work for search or playlist exporting.', window.Name);
 						}, flags: bSupported ? MF_STRING : MF_GRAYED
 					});
 					menu.newEntry({
