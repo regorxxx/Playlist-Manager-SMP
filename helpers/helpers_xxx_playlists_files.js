@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/25
+//11/06/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist */
 
@@ -500,6 +500,7 @@ function addHandleToPlaylistV2(handleList, playlistPath, relPath = '', bBOM = fa
 	if (_isFile(playlistPath)) {
 		if (extension === '.fpl') {
 			if (!addHandleToPlaylist(...arguments)) {
+				if (!fb.AddLocationsAsyncV2) { return false; }
 				const backPath = playlistPath + '.back';
 				fb.AddLocationsAsyncV2([playlistPath])
 					.then((plsItems) => {
