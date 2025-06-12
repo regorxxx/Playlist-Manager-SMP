@@ -7166,7 +7166,7 @@ function _list(x, y, w, h) {
 			this.playlistsPath += '\\';
 			this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 			this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
-			this.properties['playlistPath'][1] += '\\';
+			this.properties['playlistsPath'][1] += '\\';
 			bDone = true;
 		}
 		if (!_isFolder(this.playlistsPathDisk + ':\\')) { fb.ShowPopupMessage('Disk associated to tracked folder doesn\'t exist:\nTracked folder:\t' + this.playlistsPath + '\nDrive letter:\t' + this.playlistsPathDisk + ':\\\n\nReconfigure it at the header menu if needed.', window.Name); }
@@ -7851,9 +7851,9 @@ function _list(x, y, w, h) {
 	// Properties
 	this.defaultProperties = clone(properties); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.properties = getPropertiesPairs(properties, 'plm_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
-	this.playlistsPath = this.properties['playlistPath'][1].startsWith('.')
-		? findRelPathInAbsPath(this.properties['playlistPath'][1], fb.ProfilePath)
-		: this.properties['playlistPath'][1];
+	this.playlistsPath = this.properties['playlistsPath'][1].startsWith('.')
+		? findRelPathInAbsPath(this.properties['playlistsPath'][1], fb.ProfilePath)
+		: this.properties['playlistsPath'][1];
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1].toLowerCase();

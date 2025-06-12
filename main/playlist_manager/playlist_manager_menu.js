@@ -2682,7 +2682,7 @@ function createMenuRightTop() {
 	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({
 			entryText: 'Set playlists folder...', func: () => {
-				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name, list.properties['playlistPath'][3], void (0), true);
+				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name, list.properties['playlistsPath'][3], void (0), true);
 				if (input === null) { return; }
 				let bDone = _isFolder(input);
 				if (!bDone) { bDone = _createFolder(input); }
@@ -2691,7 +2691,7 @@ function createMenuRightTop() {
 					return;
 				}
 				// Update property to save between reloads
-				list.properties['playlistPath'][1] = input;
+				list.properties['playlistsPath'][1] = input;
 				list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
 				list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
 				list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();

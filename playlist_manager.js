@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/25
+//12/06/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -117,7 +117,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
 let properties = {
-	playlistPath: ['Path to the folder containing the playlists', '.\\profile\\playlist_manager\\', { func: isString, portable: true }, '.\\profile\\playlist_manager\\'],
+	playlistsPath: ['Tracked playlists folder', '.\\profile\\playlist_manager\\', { func: isString, portable: true }, '.\\profile\\playlist_manager\\'],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }, 3000], // Safety limit 0 or > 1000
 	fplRules: ['fpl playlists behavior', JSON.stringify({
 		bLockOnLoad: true,
@@ -443,6 +443,7 @@ setProperties(properties, 'plm_');
 			{ property: 'plm_52.Playlist Manager on network drive: Fired once', key: 'networkDrive' },
 		].map((o) => {
 			if (window.GetProperty(o.property, false)) {
+				window.SetProperty(o.property, null);
 				infoPopups[o.key] = true;
 				return true;
 			}
@@ -454,6 +455,22 @@ setProperties(properties, 'plm_');
 			}
 		});
 	}
+	// Update old properties (for compat with new releases)
+	[
+		{ property: 'plm_01.Path to the folder containing the playlists', key: 'playlistsPath' },
+	].map((o) => {
+		const val = window.GetProperty(o.property, null);
+		if (val !== null) {
+			window.SetProperty(o.property, null);
+			prop[o.key][1] = val;
+			return true;
+		}
+	}).some((val) => {
+		if (val) {
+			bDone = true;
+			return true;
+		}
+	});
 	if (bDone) { overwriteProperties(prop); }
 	if (prop.bAutoUpdateCheck[1]) {
 		include('helpers\\helpers_xxx_web_update.js');
@@ -461,7 +478,7 @@ setProperties(properties, 'plm_');
 	}
 	// Rename json file on lite mode the first time it runs
 	if (prop.panelUUID[1] === properties.panelUUID[1] && prop.bLiteMode[1]) {
-		const file = folders.data + 'playlistManager_' + prop.playlistPath[1].split('\\').filter(Boolean).pop().replace(':', '');
+		const file = folders.data + 'playlistManager_' + prop.playlistsPath[1].split('\\').filter(Boolean).pop().replace(':', '');
 		if (_isFile(file + '.json')) {
 			const newFile = folders.data + 'playlistManager_' + prop.panelUUID[1];
 			const suffix = ['.json', '_sorting.json', '_config.json', '.json.old', '_sorting.json.old', '_config.json.old'];
@@ -509,7 +526,7 @@ let plsRwLock;
 		}
 		infoPopups.firstInit = true;
 		prop.infoPopups[1] = JSON.stringify(infoPopups);
-		isPortable(prop['playlistPath'][0]);
+		isPortable(prop['playlistsPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
 		const uiElements = JSON.parse(prop.uiElements[1]);
