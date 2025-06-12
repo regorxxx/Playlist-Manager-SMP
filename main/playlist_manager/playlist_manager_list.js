@@ -6720,6 +6720,7 @@ function _list(x, y, w, h) {
 		const newNameId = pls.nameId;
 		const index = plman.FindPlaylist(newNameId);
 		plman.ActivePlaylist = index;
+		return true;
 	};
 
 	this.removePlaylists = (idxArr, bAlsoHidden = false) => {
@@ -7414,6 +7415,20 @@ function _list(x, y, w, h) {
 			this.properties['xspfRules'][1] = JSON.stringify(this.xspfRules);
 			bDone = true;
 		}
+		// Check FPL rules
+		const fplRulesDef = JSON.parse(this.properties['fplRules'][3]);
+		if (!isArrayEqual(Object.keys(this.fplRules), Object.keys(fplRulesDef))) {
+			for (let key in fplRulesDef) {
+				this.fplRules[key] = fplRulesDef[key];
+			}
+			this.properties['fplRules'][1] = JSON.stringify(this.fplRules);
+			bDone = true;
+		}
+		if (this.fplRules.bNonTrackedSupport && !bFplWrite) {
+			this.fplRules.bNonTrackedSupport = false;
+			this.properties['fplRules'][1] = JSON.stringify(this.fplRules);
+			bDone = true;
+		}
 		return bDone;
 	};
 
@@ -7484,7 +7499,7 @@ function _list(x, y, w, h) {
 				{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked', 'isFolder'] },
 				{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked', 'isFolder'] },
 				{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: ['isFolder'] },
-				{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['', '.ui'], skipProp: ['!size', 'isFolder'] },
+				{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['.ui'], skipProp: ['!size', 'isFolder'] },
 				{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
 				{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
 			];
