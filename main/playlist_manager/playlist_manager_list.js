@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/25
+//12/06/25
 
 /* exported _list */
 
@@ -6449,46 +6449,58 @@ function _list(x, y, w, h) {
 	};
 
 	this.loadPlaylistOrShow = (idx, bAlsoHidden = false) => {
+		let loadPromise = { bLoaded: Promise.resolve(false), bDone: Promise.resolve(false), bShow: Promise.resolve(false) };
 		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
 			console.log('Playlist Manager: Error loading/showing playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylistOrShow)');
-			return false;
+			return loadPromise;
 		}
 		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
 		const duplicated = getPlaylistIndexArray(pls.nameId);
-		if (duplicated.length === 0) { this.loadPlaylist(idx, bAlsoHidden); }
-		else if (duplicated.length === 1) { this.showBoundPlaylist(idx, bAlsoHidden); }
-		else if (duplicated.length > 1 && pls.extension === '.ui') { // Cycle through all playlist with same name
+		if (duplicated.length === 0) {
+			({ bLoaded: loadPromise.bLoaded, bDone: loadPromise.bDone } = this.loadPlaylist(idx, bAlsoHidden));
+			loadPromise.bShow = loadPromise.bDone;
+		} else if (duplicated.length === 1) {
+			loadPromise.bShow = Promise.resolve(this.showBoundPlaylist(idx, bAlsoHidden));
+		} else if (duplicated.length > 1 && pls.extension === '.ui') { // Cycle through all playlist with same name
 			let i = 0;
 			const ap = plman.ActivePlaylist;
-			if (duplicated[duplicated.length - 1] !== ap) { while (duplicated[i] <= ap) { i++; } }
-			plman.ActivePlaylist = duplicated[i];
+			if (ap !== -1) {
+				if (duplicated[duplicated.length - 1] !== ap) { while (duplicated[i] <= ap) { i++; } }
+				plman.ActivePlaylist = duplicated[i];
+				loadPromise.bShow = Promise.resolve(true);
+			}
 		}
+		return loadPromise;
 	};
 
 	this.loadPlaylist = (idx, bAlsoHidden = false) => {
+		let loadPromise = { bLoaded: Promise.resolve(false), bDone: Promise.resolve(false) };
 		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
 			console.log('Playlist Manager: Error loading playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylist)');
-			return false;
+			return loadPromise;
 		}
 		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
-		if (pls.extension === '.ui') { return; }
+		if (pls.extension === '.ui') { return loadPromise; }
 		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: ' + pls.name);
-			return;
+			return loadPromise;
 		}
 		const oldNameId = pls.nameId;
 		const oldName = pls.name;
 		const duplicated = getPlaylistIndexArray(oldNameId);
 		if (duplicated && duplicated.length > 1) {
 			fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
-			return false;
+			return loadPromise;
 		} else {
 			if (autoBackTimer && debouncedUpdate && !this.bLiteMode) { backup(this.properties.autoBackN[1], true, this.logOpt.profile); } // Async backup before future changes
 			let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 			if (pls.isAutoPlaylist) { // AutoPlaylist
 				if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
 				else { removePlaylistByName(oldNameId); }
-				if (!checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); return; }
+				if (!checkQuery(pls.query, true, true)) {
+					fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);
+					return loadPromise;
+				}
 				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 				plman.ActivePlaylist = fbPlaylistIndex;
 				const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true); // Update size on load
@@ -6504,31 +6516,35 @@ function _list(x, y, w, h) {
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 					const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 					if (pls.extension === '.xsp') { setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems'], 'remove'); }
-					loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } })
-						.then((bDone) => {
-							if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
-							else if (pls.query) { // Update size on load for smart playlists
-								const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true);
-								if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
-									this.updateTags(handleList, pls);
-								}
-								if (pls.extension === '.xsp') {
-									setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
-								}
-							} else {
-								this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, void (0), void (0), ['.xspf'].includes(pls.extension));
+					loadPromise.bDone = loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } });
+					loadPromise.bLoaded = Promise.resolve(true);
+					loadPromise.bDone.then((bDone) => {
+						if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
+						else if (pls.query) { // Update size on load for smart playlists
+							const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true);
+							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
+								this.updateTags(handleList, pls);
 							}
-							// Workaround for XSPF and FPL playlist limitations...
-							if (pls.extension === '.fpl') {
-								setTimeout(() => this.updatePlaylistFpl(fbPlaylistIndex), 2000);
+							if (pls.extension === '.xsp') {
+								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
 							}
-							this.repaint(false, 'list');
-						});
-				} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); return false; }
+						} else {
+							this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, void (0), void (0), ['.xspf'].includes(pls.extension));
+						}
+						// Workaround for XSPF and FPL playlist limitations...
+						if (pls.extension === '.fpl') {
+							setTimeout(() => this.updatePlaylistFpl(fbPlaylistIndex), 2000);
+						}
+						this.repaint(false, 'list');
+					});
+				} else {
+					fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
+					return loadPromise;
+				}
 			}
 		}
 		this.lastPlsLoaded.push(pls);
-		return true;
+		return loadPromise;
 	};
 
 	this.queuePlaylist = (idxOrPls, options = { bAsync: false, bRandom: false, bDedup: false }) => {

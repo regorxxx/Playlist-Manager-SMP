@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//11/06/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -19,7 +19,7 @@ include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getPlaylistIndexArray:readable, getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable,  */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global loadablePlaylistFormats:readable, fplCache:readable, xmlDomCache:readable , getFilePathsFromPlaylist:readable, _explorer:readable, savePlaylist:readable, xspCache:readable, xspfCache:readable, arePathsInMediaLibrary:readable, pathTF:readable, loadXspPlaylist:readable */
+/* global loadablePlaylistFormats:readable, fplCache:readable, xmlDomCache:readable , getFilePathsFromPlaylist:readable, _explorer:readable, savePlaylist:readable, xspCache:readable, xspfCache:readable, arePathsInMediaLibrary:readable, pathTF:readable, loadXspPlaylist:readable, getHandlesFromPlaylistV2:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_fpl.js');
 /* global FPL:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
@@ -699,7 +699,7 @@ function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Aut
 	return bDone;
 }
 
-function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+async function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -715,7 +715,8 @@ function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false, bMul
 		else { console.log('Error duplicating playlist'); return false; }
 		bDone = true;
 	} else if (idx && idx.length === 0) { // Not loaded? Load, duplicate it
-		list.loadPlaylist(z);
+		bDone = await list.loadPlaylist(z).bDone;
+		if (!bDone) { return false; }
 		const newIdx = plman.DuplicatePlaylist(plman.ActivePlaylist, plman.GetPlaylistName(plman.ActivePlaylist).replace(pls.name, playlistName));
 		plman.RemovePlaylistSwitch(plman.ActivePlaylist);
 		if (newIdx !== -1) { plman.ActivePlaylist = newIdx - 1; }
@@ -737,7 +738,7 @@ function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false, bMul
 	return bDone;
 }
 
-function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false }, toFolder = void (0)) {
+async function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false }, toFolder = void (0)) {
 	if (z < 0 || (!opt.bAlsoHidden && z >= list.items) || (opt.bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
@@ -759,7 +760,9 @@ function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMult
 	const handleList = !bUI
 		? pls.isAutoPlaylist
 			? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
-			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
+			: pls.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+				? (await getHandlesFromPlaylistV2({ playlistPath: pls.path, bOmitNotFound: true, bReturnNotFound: true })).handlePlaylist
+				: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	if (handleList) {
 		list.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
@@ -787,7 +790,7 @@ function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMult
 	return bDone;
 }
 
-function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }) {
+async function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }) {
 	if (!Array.isArray(zArr)) {
 		console.log('Playlist Manager: Error merge-loading playlists. Index is not an array.');
 		return false;
@@ -812,7 +815,9 @@ function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: fals
 		const handleListZ = !bUI
 			? pls.isAutoPlaylist
 				? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
-				: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
+				: pls.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+					? (await getHandlesFromPlaylistV2({ playlistPath: pls.path, bOmitNotFound: true, bReturnNotFound: true })).handlePlaylist
+					: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 			: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 		if (bDone && handleListZ) {
 			bDone = true;
@@ -841,7 +846,7 @@ function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: fals
 	return bDone;
 }
 
-function clonePlaylistFile(list, z, ext, toFolder) {
+async function clonePlaylistFile(list, z, ext, toFolder) {
 	if (ext === '.ui') { return clonePlaylistInUI(list, z, void (0), toFolder); }
 	let bDone = false;
 	const pls = list.data[z];
@@ -853,7 +858,9 @@ function clonePlaylistFile(list, z, ext, toFolder) {
 	const playlistPath = list.playlistsPath + sanitize(playlistName) + ext;
 	// Create new playlist and check paths
 	const handleList = !bUI
-		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
+		? pls.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+			? (await getHandlesFromPlaylistV2({ playlistPath: pls.path, bOmitNotFound: true, bReturnNotFound: true })).handlePlaylist
+			: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
 		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
 	const paths = !bUI
 		? getFilePathsFromPlaylist(pls.path)
@@ -1714,7 +1721,10 @@ function findDuplicatesByTF(checkKeys = globTags.remDupl, mode = 'all' /* all|pl
 						? getHandlesFromUIPlaylists([playlist.nameId], false)
 						: playlist.isAutoPlaylist
 							? fb.GetQueryItems(libItems, stripSort(playlist.query))
-							: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true, poolItems: libItems })
+							: playlist.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+								? getHandlesFromPlaylistV2({ playlistPath: playlist.path, bOmitNotFound: true, bReturnNotFound: true, poolItems: libItems })
+									.then((out) => out.handlePlaylist)
+								: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true, poolItems: libItems })
 				)
 					.then((handleList) => Promise.wait(15).then(() => handleList))
 					.then((handleList) => {
@@ -1836,7 +1846,10 @@ function findDurationMismatch() {
 			playlists,
 			(playlist, i) => {
 				return Promise.resolve(
-					getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, poolItems: libItems })
+					playlist.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+						? getHandlesFromPlaylistV2({ playlistPath: playlist.path, bOmitNotFound: true, bReturnNotFound: true, poolItems: libItems })
+							.then((out) => out.handlePlaylist)
+						: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, poolItems: libItems })
 				)
 					.then((handleList) => Promise.wait(15).then(() => handleList))
 					.then((handleList) => {
@@ -1958,7 +1971,10 @@ function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 						? !bUI
 							? playlist.isAutoPlaylist
 								? fb.GetQueryItems(libItems, stripSort(playlist.query))
-								: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true, poolItems: libItems })
+								: playlist.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+									? getHandlesFromPlaylistV2({ playlistPath: playlist.path, bOmitNotFound: true, bReturnNotFound: true, poolItems: libItems })
+										.then((out) => out.handlePlaylist)
+									: getHandlesFromPlaylist({ playlistPath: playlist.path, relPath: list.playlistsPath, bOmitNotFound: true, poolItems: libItems })
 							: getHandlesFromUIPlaylists([playlist.nameId], false) // Omit not found
 						: null
 				)

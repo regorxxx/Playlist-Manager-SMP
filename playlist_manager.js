@@ -1064,13 +1064,13 @@ if (!list.properties.bSetup[1]) {
 			switch (menu.type.toLowerCase()) {
 				case 'load playlist': {
 					const idx = [...menu.arg];
-					idx.forEach((i) => { list.loadPlaylistOrShow(i, true); });
+					idx.forEach((i) => list.loadPlaylistOrShow(i, true));
 					bDone = true;
 					break;
 				}
 				case 'lock playlist': {
 					const idx = [...menu.arg];
-					idx.forEach((i) => { switchLock(list, i, true); });
+					idx.forEach((i) => switchLock(list, i, true));
 					bDone = true;
 					break;
 				}
@@ -1082,23 +1082,23 @@ if (!list.properties.bSetup[1]) {
 				}
 				case 'clone in ui': {
 					const idx = [...menu.arg];
-					idx.forEach((i) => {
+					Promise.serial(idx, (i) => {
 						const item = list.dataAll[i];
 						const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-						clonePlaylistInUI(list, i, { remDupl, bMultiple: list.bMultiple, bAdvTitle: list.bAdvTitle, bAlsoHidden: true });
+						return clonePlaylistInUI(list, i, { remDupl, bMultiple: list.bMultiple, bAdvTitle: list.bAdvTitle, bAlsoHidden: true });
 					});
 					bDone = true;
 					break;
 				}
 				case 'copy selection': {
 					const idx = [...menu.arg];
-					idx.forEach((i) => { list.sendSelectionToPlaylist({ playlistIndex: i, bCheckDup: true, bAlsoHidden: true }); });
+					idx.forEach((i) => list.sendSelectionToPlaylist({ playlistIndex: i, bCheckDup: true, bAlsoHidden: true }));
 					bDone = true;
 					break;
 				}
 				case 'move selection': {
 					const idx = [...menu.arg];
-					idx.forEach((i) => { list.sendSelectionToPlaylist({ playlistIndex: i, bCheckDup: true, bAlsoHidden: true, bDelSource: true }); });
+					idx.forEach((i) => list.sendSelectionToPlaylist({ playlistIndex: i, bCheckDup: true, bAlsoHidden: true, bDelSource: true }));
 					bDone = true;
 					break;
 				}
@@ -1109,7 +1109,7 @@ if (!list.properties.bSetup[1]) {
 				}
 				case 'new playlist (empty)': {
 					let name = 'New playlist';
-					if (list.dataAll.some((pls) => { return pls.name === name; })) {
+					if (list.dataAll.some((pls) => pls.name === name)) {
 						name += ' ' + _p(list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(name)) { count++; } return count; }, 0));
 					}
 					list.add({ bEmpty: true, name, bShowPopups: false });
@@ -1135,7 +1135,7 @@ if (!list.properties.bSetup[1]) {
 					const idx = list.dataAll
 						.map((pls, i) => (pls.tags.includes('bMultMenu') ? i : -1))
 						.filter((idx) => idx !== -1);
-					idx.forEach((i) => clonePlaylistInUI(list, i, true));
+					Promise.serial(idx, (i) => clonePlaylistInUI(list, i, true));
 					bDone = true;
 					break;
 				}
