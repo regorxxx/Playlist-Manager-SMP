@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/25
+//12/06/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
 
@@ -137,15 +137,19 @@ function _isLink(path) {
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
 	if (!folder.length) { return false; }
 	folder = _resolvePath(folder);
-	if (!_isFolder(folder)) {
-		const subFolders = folder.split('\\').map((_, i, arr) => {
+	if (!_isFolder(folder) && !_isFile(folder)) {
+		if (!folder.endsWith('\\')) { folder += '\\'; }
+		const subFolders = new Set(folder.split('\\').map((_, i, arr) => {
 			return i ? arr.slice(0, i).reduce((path, name) => { return path + '\\' + name; }) : _;
-		});
+		}));
 		subFolders.forEach((path) => {
-			try {
-				fso.CreateFolder(path);
-			} catch (e) { // eslint-disable-line no-unused-vars
-				return false;
+			if (!_isFolder(path)) {
+				try {
+					fso.CreateFolder(path);
+				} catch (e) {
+					console.log(parseWinApiError(e.message));
+					return false;
+				}
 			}
 		});
 		return _isFolder(folder);
@@ -159,7 +163,8 @@ function _deleteFile(file, bForce = true) {
 	if (_isFile(file)) {
 		try {
 			fso.DeleteFile(file, bForce);
-		} catch (e) { // eslint-disable-line no-unused-vars
+		} catch (e) {
+			console.log(parseWinApiError(e.message));
 			return false;
 		}
 		return !(_isFile(file));
@@ -174,7 +179,8 @@ function _deleteFolder(folder, bForce = true) {
 		if (folder.endsWith('\\')) { folder = folder.slice(0, -1); }
 		try {
 			fso.DeleteFolder(folder, bForce);
-		} catch (e) { // eslint-disable-line no-unused-vars
+		} catch (e) {
+			console.log(parseWinApiError(e.message));
 			return false;
 		}
 		return !(_isFolder(folder));
@@ -194,7 +200,8 @@ function _renameFile(oldFilePath, newFilePath) {
 			if (!_isFolder(filePath)) { _createFolder(filePath); }
 			try {
 				fso.MoveFile(oldFilePath, newFilePath);
-			} catch (e) { // eslint-disable-line no-unused-vars
+			} catch (e) {
+				console.log(parseWinApiError(e.message));
 				return false;
 			}
 			return _isFile(newFilePath);
@@ -204,16 +211,20 @@ function _renameFile(oldFilePath, newFilePath) {
 	return false;
 }
 
+// https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/movefolder-method
 function _renameFolder(oldFolderPath, newFolderPath) {
 	if (!newFolderPath.length) { return; }
 	oldFolderPath = _resolvePath(oldFolderPath);
 	newFolderPath = _resolvePath(newFolderPath);
+	const source = oldFolderPath.replace(/\*$/i, '');
 	if (_comparePaths(oldFolderPath, newFolderPath)) { return true; }
-	if (!_isFolder(newFolderPath)) {
-		if (_isFolder(oldFolderPath)) {
+	if (!source.endsWith('\\') || !_isFolder(newFolderPath)) {
+		if (_isFolder(source)) {
+			_createFolder(newFolderPath);
 			try {
 				fso.MoveFolder(oldFolderPath, newFolderPath);
-			} catch (e) { // eslint-disable-line no-unused-vars
+			} catch (e) {
+				console.log(parseWinApiError(e.message));
 				return false;
 			}
 			return _isFolder(newFolderPath);
@@ -229,7 +240,7 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 	if (!newFilePath.length) { return; }
 	oldFilePath = _resolvePath(oldFilePath);
 	newFilePath = _resolvePath(newFilePath);
-	const source = newFilePath.replace(/(([^\\.]*\.\*)|(\*\.[^.]*)|\*\.\*)$/i, '');
+	const source = oldFilePath.replace(/(([^\\.]*\.\*)|(\*\.[^.]*)|\*\.\*)$/i, '');
 	const bWildCard = !_comparePaths(oldFilePath, source);
 	const bTargetFolder = newFilePath.endsWith('\\');
 	if (_comparePaths(oldFilePath, newFilePath)) { return true; }
@@ -241,7 +252,8 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 			}
 			try {
 				bAsync ? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
-			} catch (e) { // eslint-disable-line no-unused-vars
+			} catch (e) {
+				console.log(parseWinApiError(e.message));
 				return false;
 			}
 			return (bAsync ? true : (bTargetFolder || _isFile(newFilePath)) && (bWildCard || _isFile(oldFilePath))); // Must check afterwards for Async
@@ -263,7 +275,8 @@ function _copyFolder(oldFolderPath, newFolderPath, bAsync = false) {
 		if (newFolderPath.endsWith('\\') && !_isFolder(newFolderPath)) { _createFolder(newFolderPath); }
 		try {
 			bAsync ? _runCmd('CMD /C COPY "' + oldFolderPath + '" "' + newFolderPath + '"', false) : fso.CopyFolder(oldFolderPath, newFolderPath);
-		} catch (e) { // eslint-disable-line no-unused-vars
+		} catch (e) {
+			console.log(parseWinApiError(e.message));
 			return false;
 		}
 		return (bAsync ? true : _isFolder(newFolderPath) && _isFolder(source)); // Must check afterwards for Async
@@ -378,7 +391,9 @@ function _saveFSO(file, value, bUTF16) {
 			fileObj.Write(value);
 			fileObj.Close();
 			return true;
-		} catch (e) { /* log error later */ } // eslint-disable-line no-unused-vars
+		} catch (e) {
+			console.log(parseWinApiError(e.message));
+		 }
 	}
 	console.log('Error saving to ' + file);
 	return false;
@@ -753,4 +768,9 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 		}
 	}
 	return out;
+}
+
+function parseWinApiError(message, bAddLink = true) {
+	return message.replace('ActiveX_Run failed:\nWinAPI error:\n  ActiveXObject call failed with error ', 'WinAPI error ')
+		.replace('\n    ', ' ') + (bAddLink ? '\n\t Check: https://www.hresult.info/FACILITY_CONTROL' : '');
 }
