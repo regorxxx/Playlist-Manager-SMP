@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/06/25
+//11/06/25
 
 /* exported ListenBrainz */
 
@@ -1500,7 +1500,7 @@ ListenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
  * @param {string} token - ListenBrainz user token
  * @param {('v1'|'v2')} algorithm - [='v1'] see {@link ListenBrainz.algorithm.retrieveSimilarArtists} for further information
  * @param {boolean} bRetry - [=true] Tries v2 algorithm is the lookup doesnt return at least 5 results
- * @returns {Promise<{ {artist_mbid: string, comment:string, gender: string, name: string, reference_mbid: string, score: number, type: string }[]}>}
+ * @returns {Promise.<{ {artist_mbid: string, comment:string, gender: string, name: string, reference_mbid: string, score: number, type: string }[]}>}
  */
 ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1', bRetry = true) {
 	if (!artistMbids || !artistMbids.length) { console.log('retrieveSimilarArtists: no artistMbids provided'); return Promise.resolve([]); }
@@ -1549,7 +1549,7 @@ ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
  * @param {string[]} recordingMBIDs - Array of recordings MBIDs
  * @param {string} token - ListenBrainz user token
  * @param {('v1')} algorithm - [='v1'] see {@link ListenBrainz.algorithm.retrieveSimilarRecordings} for further information
- * @returns {Promise<{{recording_mbid:string, recording_name:string, artist_credit_name:string, [artist_credit_mbids]:string[], caa_id:string, caa_release_mbid:string, canonical_recording_mbid:string, score:number, reference_mbid:string }[]}>}
+ * @returns {Promise.<{{recording_mbid:string, recording_name:string, artist_credit_name:string, [artist_credit_mbids]:string[], caa_id:string, caa_release_mbid:string, canonical_recording_mbid:string, score:number, reference_mbid:string }[]}>}
  */
 ListenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBIDs, token, algorithm = 'v1') {
 	if (!recordingMBIDs || !recordingMBIDs.length) { console.log('retrieveSimilarRecordings: no recordingMBIDs provided'); return Promise.resolve([]); }
@@ -1592,7 +1592,7 @@ ListenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
  * @param {string} user
  * @param {string} token - ListenBrainz user token
  * @param {number} iThreshold - [=0.7] Minimum score
- * @returns {Promise<{{user_name:string, similarity:strin}[]}>}
+ * @returns {Promise.<{{user_name:string, similarity:strin}[]}>}
  */
 ListenBrainz.retrieveSimilarUsers = function retrieveSimilarUsers(user, token, iThreshold = 0.7) {
 	if (!user || !user.length || !token || !token.length) { console.log('retrieveSimilarUsers: no user/token provided'); return Promise.resolve([]); }

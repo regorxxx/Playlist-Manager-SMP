@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/12/24
+//11/06/25
 
 /*
 	Remove duplicates
@@ -405,7 +405,7 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
  * @param {boolean} o.bMultiple - Parse multi-value tags separately (by ', '), requiring a single match
  * @param {boolean} o.bTagsCache - Use tag cache file
  * @param {boolean} o.bProfile - Log profiling
- * @returns {FbMetadbHandleList?}
+ * @returns {Promise.<FbMetadbHandleList?>}
  */
 async function removeDuplicatesAsync({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bMultiple = true, bTagsCache = true, bProfile = false } = {}) {
 	// Check input

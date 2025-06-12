@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/25
+//11/06/25
 
 /* exported _menu */
 
@@ -476,7 +476,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	this.tip = (...args) => {
 		let tip = '';
 		args.forEach((arg) => {
-			if (arg === null || typeof arg === 'undefined') { return; } else { arg = String(arg); }
+			if (arg === null || typeof arg === 'undefined') { return; } else { arg = String(arg); } // NOSONAR
 			if (arg.length) {
 				if (!tip.length) { tip += '\t'; }
 				tip += arg;

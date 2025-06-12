@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/04/25
+//11/06/25
 
 /* exported _chart */
 
@@ -37,7 +37,7 @@ include('statistics_xxx_helper.js');
  * @constructor
  * @param {object} o - argument
  * @param {{x:string, y:number}[][]} o.data - Array of series. Every serie is an array of points.
- * @param {() => Promise<{x:string, y:number}[][]>|Promise<{x:string, y:number}[][]>} [o.dataAsync] - [=null] function returning a promise or a promise which must resolve to an array of series.
+ * @param {() => Promise.<{x:string, y:number}[][]>|Promise.<{x:string, y:number}[][]>} [o.dataAsync] - [=null] function returning a promise or a promise which must resolve to an array of series.
  * @param {number[]} [o.colors] - [=[]] Array of android colors, one per serie. If not specified, it will be automatically chosen according to o.chroma.scheme
  * @param {object} [o.chroma] - Color palette settings
  * @param {'diverging'|'qualitative'|'sequential'|'random'|number[]} [o.chroma.scheme] - Scheme by name or array of colors. See https://vis4.net/chromajs/#color-scales
