@@ -6124,44 +6124,44 @@ function importSettingsMenu() {
 								playlistsPath = settings.playlistsPath[1].startsWith('.')
 									? findRelPathInAbsPath(settings.playlistsPath[1], fb.ProfilePath)
 									: settings.playlistsPath[1];
-								console.log('Playlist Manager: setting new  tracked folder\n\t ' + playlistsPath);
+								console.log(panelName + ': setting new  tracked folder\n\t ' + playlistsPath);
 							} else {
 								playlistsPath = settings.playlistsPath;
-								console.log('Playlist Manager: importing only playlists data into current tracked folder\n\t ' + playlistsPath);
+								console.log(panelName + ': importing only playlists data into current tracked folder\n\t ' + playlistsPath);
 							}
 							return true;
 						}
 						return false;
 					},
 					onUnzipData: (importPath, panelName) => { // eslint-disable-line no-unused-vars
-						let bDone = getFiles(folders.temp + 'import\\', loadablePlaylistFormats)
+						let bDone = getFiles(importPath, loadablePlaylistFormats)
 							.map((file) => {
-								const newFile = file.replace(folders.temp + 'import\\', playlistsPath);
+								const newFile = file.replace(importPath, playlistsPath);
 								if (_isFile(newFile)) { _deleteFile(newFile); }
 								return _renameFile(file, newFile);
 							})
 							.every((done) => {
 								if (!done) {
-									console.popup('Playlist Manager: failed importing playlist files.', window.Name);
+									console.popup(panelName + ': failed importing playlist files.', window.Name);
 									return false;
 								}
 								return true;
 							});
-						if (bDone) { console.log('Playlist Manager: imported playlists files'); }
-						bDone = bDone && getFiles(folders.temp + 'import\\', new Set(['.json', '.old']))
+						if (bDone) { console.log(panelName + ': imported playlists files'); }
+						bDone = bDone && getFiles(importPath, new Set(['.json', '.old']))
 							.map((file) => {
-								const newFile = file.replace(folders.temp + 'import\\', folders.data);
+								const newFile = file.replace(importPath, folders.data);
 								if (_isFile(newFile)) { _deleteFile(newFile); }
 								return _renameFile(file, newFile);
 							})
 							.every((done) => {
 								if (!done) {
-									console.popup('Playlist Manager: failed importing playlist json.', window.Name);
+									console.popup(panelName + ': failed importing playlist json.', window.Name);
 									return false;
 								}
 								return true;
 							});
-						if (bDone) { console.log('Playlist Manager: imported playlists json'); }
+						if (bDone) { console.log(panelName + ': imported playlists json'); }
 						return bDone;
 					}
 				},
