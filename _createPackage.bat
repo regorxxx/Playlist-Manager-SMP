@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.27/01/2025
+REM Create packages (zip file) from js files v.12/06/2025
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -110,6 +110,7 @@ CALL :copy_file helpers\helpers_xxx_cache_volatile.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_crc.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_export.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
@@ -248,6 +249,7 @@ CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_controller.js
 CALL :copy_file helpers\helpers_xxx_crc.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_export.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
@@ -361,6 +363,7 @@ CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_export.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
@@ -454,6 +457,7 @@ CALL :copy_file helpers\helpers_xxx_cache_volatile.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_crc.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_export.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js
@@ -540,6 +544,7 @@ CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_export.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_file_zip.js
 CALL :copy_file helpers\helpers_xxx_flags.js

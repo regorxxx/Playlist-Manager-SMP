@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/25
+//12/06/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -16,9 +16,9 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable, _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _deleteFolder:readable */
-include('..\\..\\helpers\\helpers_xxx_file_zip.js');
-/* global _zip:readable, _unzip:readable */
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable */
+include('..\\..\\helpers\\helpers_xxx_export.js');
+/* global exportSettings:readable, importSettings:readable */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
@@ -6100,116 +6100,74 @@ function importSettingsMenu() {
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Export panel settings...', func: () => {
-			const bData = (list.bLiteMode || !list.playlistsPath.length
-				? popup.no
-				: WshShell.Popup('Also export playlists data?', 0, 'Playlist Manager: Export panel settings', popup.question + popup.yes_no)
-			) === popup.yes;
-			const input = Input.string('file', folders.data + 'settings_' + window.Name.replace(/\s/g, '_') + (bData ? '_' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip' : '.json'), 'File name:', 'Playlist Manager: export panel settings', folders.data + 'settings' + (bData ? '.zip' : '.json'), void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
-			if (input === null) { return null; }
-			const settings = JSON.stringify(
+			const bData = WshShell.Popup('Also export playlists files and data?', 0, 'Playlist Manager: Export panel settings', popup.question + popup.yes_no) === popup.yes;
+			const playlistFilesMask = bData && list.playlistsPath.length
+				? Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext)
+				: [];
+			exportSettings(
 				list.properties,
-				(key, val) => {
-					if (Array.isArray(val)) {
-						val.length = 2;
-					}
-					return val;
-				},
-				'\t'
-			).replace(/\n/g, '\r\n');
-			let bDone;
-			if (bData) {
-				bDone = _save(folders.temp + 'settings.json', settings);
-				if (bDone) {
-					const playlistFilesMask = Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext); // Ext already has a .
-					_zip(
-						[...playlistFilesMask, list.filename, list.filename + '.old', list.filename.replace('.json', '_sorting.json'), list.filename.replace('.json', '_config.json'), folders.temp + 'settings.json'],
-						input,
-						false
-					);
-					bDone = _isFile(input);
-				}
-			} else if (_save(input, settings)) { bDone = true; }
-			if (bDone) {
-				console.log('Playlist Manager: exported panel settings to\n\t ' + input);
-				_explorer(input);
-			} else {
-				console.popup('Playlist Manager: failed exporting panel settings.', window.Name);
-			}
+				bData
+					? [...playlistFilesMask, list.filename, list.filename + '.old', list.filename.replace('.json', '_sorting.json'), list.filename.replace('.json', '_config.json'), folders.temp + 'settings.json']
+					: [],
+				'Playlist Manager'
+			);
 		}
 	});
 	menu.newEntry({
 		entryText: 'Import panel settings...', func: () => {
-			const input = Input.string('file', '', 'File name:\n\nPanel settings must be provided in a .json file, if including also playlists data provide a .zip file instead.\n\nNote existing playlists will be overwritten.', 'Playlist Manager: import settings', 'C:\\foobar2000\\profile\\js_data\\settings_Playlist_Manager_2025-05-09T11_06_50.zip', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
-			if (input === null) { return null; }
-			let bDone;
-			if (/\.zip$/i.test(input)) {
-				_deleteFolder(folders.temp + 'import\\');
-				_unzip(input, folders.temp + 'import\\');
-				let playlistPath;
-				if (_isFile(folders.temp + 'import\\settings.json')) {
-					const settings = JSON.parse(
-						_open(folders.temp + 'import\\settings.json', utf8),
-						(key, val) => {
-							return val === null
-								? Infinity
-								: val;
+			let playlistsPath;
+			importSettings(
+				{
+					onUnzipSettings: (settings, bFound, panelName) => { // eslint-disable-line no-unused-vars
+						if (settings) {
+							if (Array.isArray(settings.playlistsPath)) {
+								playlistsPath = settings.playlistsPath[1].startsWith('.')
+									? findRelPathInAbsPath(settings.playlistsPath[1], fb.ProfilePath)
+									: settings.playlistsPath[1];
+								console.log('Playlist Manager: setting new  tracked folder\n\t ' + playlistsPath);
+							} else {
+								playlistsPath = settings.playlistsPath;
+								console.log('Playlist Manager: importing only playlists data into current tracked folder\n\t ' + playlistsPath);
+							}
+							return true;
 						}
-					);
-					overwriteProperties(settings);
-					playlistPath = settings.playlistPath[1].startsWith('.')
-						? findRelPathInAbsPath(settings.playlistPath[1], fb.ProfilePath)
-						: settings.playlistPath[1];
-					_deleteFile(folders.temp + 'import\\settings.json');
-					console.log('Playlist Manager: imported panel settings');
-				} else {
-					playlistPath = list.playlistPath;
-					console.log('Playlist Manager: no panel settings file found (settings.json)');
-					console.log('Playlist Manager: importing only playlists data into current tracked folder\n\t ' + playlistPath);
-				}
-				bDone = getFiles(folders.temp + 'import\\', loadablePlaylistFormats)
-					.map((file) => {
-						const newFile = file.replace(folders.temp + 'import\\', playlistPath);
-						if (_isFile(newFile)) { _deleteFile(newFile); }
-						return _renameFile(file, newFile);
-					})
-					.every((done) => {
-						if (!done) {
-							console.popup('Playlist Manager: failed importing playlist files.', window.Name);
-							return false;
-						}
-						return true;
-					});
-				if (bDone) { console.log('Playlist Manager: imported playlists files'); }
-				bDone = bDone && getFiles(folders.temp + 'import\\', new Set(['.json', '.old']))
-					.map((file) => {
-						const newFile = file.replace(folders.temp + 'import\\', folders.data);
-						if (_isFile(newFile)) { _deleteFile(newFile); }
-						return _renameFile(file, newFile);
-					})
-					.every((done) => {
-						if (!done) {
-							console.popup('Playlist Manager: failed importing playlist json.', window.Name);
-							return false;
-						}
-						return true;
-					});
-				if (bDone) { console.log('Playlist Manager: imported playlists json'); }
-				_deleteFolder(folders.temp + 'import\\');
-				if (bDone) { console.log('Playlist Manager: imported panel settings + playlists data from\n\t ' + input); }
-			} else {
-				const settings = JSON.parse(
-					_open(input, utf8),
-					(key, val) => {
-						return val === null
-							? Infinity
-							: val;
+						return false;
+					},
+					onUnzipData: (importPath, panelName) => { // eslint-disable-line no-unused-vars
+						let bDone = getFiles(folders.temp + 'import\\', loadablePlaylistFormats)
+							.map((file) => {
+								const newFile = file.replace(folders.temp + 'import\\', playlistsPath);
+								if (_isFile(newFile)) { _deleteFile(newFile); }
+								return _renameFile(file, newFile);
+							})
+							.every((done) => {
+								if (!done) {
+									console.popup('Playlist Manager: failed importing playlist files.', window.Name);
+									return false;
+								}
+								return true;
+							});
+						if (bDone) { console.log('Playlist Manager: imported playlists files'); }
+						bDone = bDone && getFiles(folders.temp + 'import\\', new Set(['.json', '.old']))
+							.map((file) => {
+								const newFile = file.replace(folders.temp + 'import\\', folders.data);
+								if (_isFile(newFile)) { _deleteFile(newFile); }
+								return _renameFile(file, newFile);
+							})
+							.every((done) => {
+								if (!done) {
+									console.popup('Playlist Manager: failed importing playlist json.', window.Name);
+									return false;
+								}
+								return true;
+							});
+						if (bDone) { console.log('Playlist Manager: imported playlists json'); }
+						return bDone;
 					}
-				);
-				overwriteProperties(settings);
-				console.log('Playlist Manager: imported panel settings from\n\t ' + input);
-			}
-			console.log('Playlist Manager: reloading panel...');
-			window.Reload();
+				},
+				{ playlistsPath: list.playlistsPath },
+				'Playlist Manager'
+			);
 		}
 	});
 	menu.newSeparator();

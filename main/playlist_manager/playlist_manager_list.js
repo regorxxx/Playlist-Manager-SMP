@@ -8226,7 +8226,8 @@ function _list(x, y, w, h) {
 						'\n' +
 						'\nSMP / JSplitter Panel:' +
 						'\n-------------------' +
-						'\n- Shift + Win + R. Click: open panel menu.'
+						'\n- Shift + Win + R. Click: open SMP panel menu.' +
+						'\n- Ctrl + Win + R. Click: open script panel menu.'
 						, window.Name + ': Quick help');
 				} else {
 					createMenuRightTop().btn_up(x, y, void (0), 'Open documentation...');
