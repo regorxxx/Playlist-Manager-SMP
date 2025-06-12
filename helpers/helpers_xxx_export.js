@@ -6,7 +6,7 @@
 include('helpers_xxx.js');
 /* global folders:readable */
 include('helpers_xxx_file.js');
-/* global _isFile:readable, _save:readable, _explorer:readable, WshShell:readable, popup:readable, _deleteFile:readable, _deleteFolder:readable, _open:readable, utf8:readable, _isFolder:readable, _copyFolder:readable, _renameFolder:readable, _copyFile:readable */
+/* global _isFile:readable, _save:readable, _explorer:readable, WshShell:readable, popup:readable, _deleteFile:readable, _deleteFolder:readable, _open:readable, utf8:readable, _isFolder:readable, _renameFolder:readable */
 include('helpers_xxx_file_zip.js');
 /* global _zip:readable, _unzip:readable */
 include('helpers_xxx_input.js');
@@ -74,12 +74,14 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 	}
 	const input = Input.string('file', '', 'File name:\n\nPanel settings must be provided in a .json or .zip file.\n\nNote existing files associated to the panel may be overwritten.', panelName + ': import settings', '.\\profile\\js_data\\settings_' + panelName.replace(/\s/g, '') + '_2025-05-09T11_06_50.zip', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
 	if (input === null) { return null; }
+	let bDone;
 	if (/\.zip$/i.test(input)) {
-		_deleteFolder(folders.temp + 'import\\');
-		_unzip(input, folders.temp + 'import\\');
-		if (_isFile(folders.temp + 'import\\settings.json')) {
+		const importPath = folders.temp + 'import\\';
+		_deleteFolder(importPath);
+		_unzip(input, importPath);
+		if (_isFile(importPath + 'settings.json')) {
 			const settings = JSON.parse(
-				_open(folders.temp + 'import\\settings.json', utf8),
+				_open(importPath + 'settings.json', utf8),
 				(key, val) => {
 					return val === null
 						? Infinity
@@ -91,7 +93,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 				return false;
 			}
 			overwriteProperties(settings);
-			_deleteFile(folders.temp + 'import\\settings.json');
+			_deleteFile(importPath + 'settings.json');
 			console.log(panelName + ': imported panel settings');
 		} else {
 			if (callbacks.onLoadSetting && !callbacks.onLoadSetting(currSettings, false, panelName)) {
@@ -100,33 +102,31 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 			}
 			console.log(panelName + ': no panel settings file found (settings.json)');
 		}
-		if (callbacks.onUnzipData && !callbacks.onUnzipData(folders.temp + 'import\\', panelName)) {
+		if (callbacks.onUnzipData && !callbacks.onUnzipData(importPath, panelName)) {
 			console.popup(panelName + ': failed importing data files.', window.Name);
 			return false;
 		}
-		let bDone = true;
-		if (_isFolder(folders.temp + 'import\\presets\\')) {
-			bDone = _renameFolder(folders.userPresets.replace(/\\$/gi, ''), folders.temp + 'import\\back\\');
+		if (_isFolder(importPath + 'presets\\')) {
+			bDone = _renameFolder(folders.userPresets.replace(/\\$/gi, ''), importPath + 'back\\');
 			if (bDone) {
-				if (callbacks.onUnzipPresets && !callbacks.onUnzipPresets(folders.temp + 'import\\presets\\', panelName)) {
+				if (callbacks.onUnzipPresets && !callbacks.onUnzipPresets(importPath + 'presets\\', panelName)) {
 					console.popup(panelName + ': failed importing user global presets.', window.Name);
 					bDone = false;
 				}
-				bDone = bDone && _copyFolder(folders.temp + 'import\\presets\\*', folders.userPresets);
-				bDone = bDone && _copyFile(folders.temp + 'import\\presets\\*.*', folders.userPresets);
+				bDone = bDone && _renameFolder(importPath + 'presets', folders.data);
 				if (bDone) {
-					_deleteFolder(folders.temp + 'import\\back\\presets');
+					_deleteFolder(importPath + 'back\\presets');
 					console.log(panelName + ': imported user global presets.', window.Name);
 				} else {
 					if (_isFolder(folders.userPresets)) { _deleteFolder(folders.userPresets); }
-					_renameFolder(folders.temp + 'import\\back\\presets', folders.data);
+					_renameFolder(importPath + 'back\\presets', folders.data);
 					console.popup(panelName + ': failed importing user global presets.', window.Name);
 				}
 			} else { console.popup(panelName + ': failed importing user global presets.', window.Name); }
 		}
 		if (bDone) { console.log(panelName + ': imported data files'); }
-		if (callbacks.onUnzipDelete) { callbacks.onUnzipDelete(folders.temp + 'import\\presets\\', bDone, panelName); }
-		_deleteFolder(folders.temp + 'import\\');
+		if (callbacks.onUnzipDelete) { callbacks.onUnzipDelete(importPath + 'presets\\', bDone, panelName); }
+		_deleteFolder(importPath);
 		if (bDone) { console.log(panelName + ': imported panel settings + data files from\n\t ' + input); }
 	} else {
 		const settings = JSON.parse(
@@ -143,11 +143,13 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 		}
 		overwriteProperties(settings);
 		console.log(panelName + ': imported panel settings from\n\t ' + input);
+		bDone = true;
 	}
-	if (callbacks.onReload && !callbacks.onReload(panelName)) {
+	if (bDone && callbacks.onReload && !callbacks.onReload(panelName)) {
 		console.popup(panelName + ': failed reloading panel.', window.Name);
 		return false;
 	}
+	if (bDone) { fb.ShowPopupMessage(panelName + ':\n\nSucessfully imported panel settings from:\n' + input, window.Name); }
 	console.log(panelName + ': reloading panel...');
 	window.Reload();
 }
