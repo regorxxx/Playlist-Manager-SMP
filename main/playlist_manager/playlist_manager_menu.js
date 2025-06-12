@@ -6119,7 +6119,7 @@ function importSettingsMenu() {
 			exportSettings(
 				list.properties,
 				bData
-					? [...playlistFilesMask, list.filename, list.filename + '.old', list.filename.replace('.json', '_sorting.json'), list.filename.replace('.json', '_config.json'), folders.temp + 'settings.json']
+					? [...playlistFilesMask, list.filename, list.filename + '.old', list.filename.replace('.json', '_sorting.json'), list.filename.replace('.json', '_config.json')]
 					: [],
 				'Playlist Manager'
 			);

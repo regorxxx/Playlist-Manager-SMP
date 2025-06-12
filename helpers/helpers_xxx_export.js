@@ -41,8 +41,9 @@ function exportSettings(properties, data = [], panelName = window.Name, toFile =
 	).replace(/\n/g, '\r\n');
 	let bDone;
 	if (bZip) {
-		bDone = _save(folders.temp + 'settings.json', settings);;
+		bDone = _save(folders.temp + 'settings.json', settings);
 		if (bDone) {
+			if (!data.includes(folders.temp + 'settings.json')) { data.push(folders.temp + 'settings.json'); }
 			_zip(
 				data.filter(Boolean),
 				toFile,
@@ -64,11 +65,11 @@ function exportSettings(properties, data = [], panelName = window.Name, toFile =
 function importSettings(callbacks, currSettings, panelName = window.Name) {
 	if (!callbacks) {
 		callbacks = {
-			onLoadSetting: (settings, bSettingsFound, panelName) => void (0), // eslint-disable-line no-unused-vars
-			onUnzipData: (importPath, panelName) => void (0), // eslint-disable-line no-unused-vars
-			onUnzipPresets: (importPath, panelName) => void (0), // eslint-disable-line no-unused-vars
-			onUnzipDelete: (importPath, bDone, panelName) => void (0), // eslint-disable-line no-unused-vars
-			onReload: ( panelName) => void (0) // eslint-disable-line no-unused-vars
+			onLoadSetting: (settings, bSettingsFound, panelName) => true, // eslint-disable-line no-unused-vars
+			onUnzipData: (importPath, panelName) => true, // eslint-disable-line no-unused-vars
+			onUnzipPresets: (importPath, panelName) => true, // eslint-disable-line no-unused-vars
+			onUnzipDelete: (importPath, bDone, panelName) => true, // eslint-disable-line no-unused-vars
+			onReload: (panelName) => true // eslint-disable-line no-unused-vars
 		};
 	}
 	const input = Input.string('file', '', 'File name:\n\nPanel settings must be provided in a .json or .zip file.\n\nNote existing files associated to the panel may be overwritten.', panelName + ': import settings', '.\\profile\\js_data\\settings_' + panelName.replace(/\s/g, '') + '_2025-05-09T11_06_50.zip', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
