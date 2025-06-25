@@ -5381,7 +5381,7 @@ function _list(x, y, w, h) {
 			this.cacheLibTimer = null;
 			this.bLibraryChanged = true;
 		}
-		if (bNotify) { window.NotifyOthers('Playlist Manager: switch tracking', this.bTracking); } // FIXME: move to init to avoid double execution in some cases?
+		if (bNotify) { window.NotifyOthers('Playlist Manager: switch tracking', this.bTracking); }
 		this.repaint(false, !this.bLiteMode && this.uiElements['Header buttons'].elements['Settings menu'].enabled ? 'all' : 'list');
 		return this.bTracking;
 	};
@@ -8135,7 +8135,8 @@ function _list(x, y, w, h) {
 							: (!this.bTracking ? (bHighlighting ? '\n' : '') +
 								'Library tracking disabled\n' : '') +
 							'(Shift + L. Click to switch library tracking)' +
-							'\n(Shift + Win + R. Click for SMP panel menu)'
+							'\n(Shift + Win + R. Click for SMP panel menu)' +
+							'\n(Ctrl + Win + R. Click for script panel menu)'
 					);
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
