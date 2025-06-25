@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/25
+//22/06/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -450,7 +450,7 @@ function setPlaylist_mbid(playlist_mbid, list, pls) {
 	if (pls.isFolder) { return bDone; }
 	if (playlist_mbid !== pls.playlist_mbid) {
 		if (pls.extension === '.ui' || pls.extension === '.strm') {
-			console.log('Playlist Manager: Playlist\'s tags can not be edited due to format ' + pls.extension);
+			console.log('Playlist Manager: Playlist\'s mbid can not be edited due to format ' + pls.extension);
 		} else if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp') {
 			if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 				fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.Name);

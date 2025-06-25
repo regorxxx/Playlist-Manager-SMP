@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/25
+//24/06/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -1878,7 +1878,7 @@ function createMenuRight() {
 				{ name: 'Loved tracks', query: globQuery.loved, menu: 'Rating' },
 				{ name: 'Hated tracks', query: globQuery.hated, menu: 'Rating' },
 				{ name: 'sep', menu: 'Rating' },
-				{ name: 'Fav tracks', query: globQuery.fav, sort: 'SORT BY ' + _qCond(globTags.playCount), bSortForced: false, menu: 'Rating' },
+				{ name: 'Fav tracks', query: globQuery.fav, sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false, menu: 'Rating' },
 			]).concat([
 				{ name: 'sep' },
 				{
@@ -1920,7 +1920,7 @@ function createMenuRight() {
 				{
 					name: 'Fav tracks (by Artist)',
 					query: globQuery.fav + ' AND (' + globTags.artist + ' IS #' + globTags.artistRaw + '#)',
-					sort: 'SORT BY ' + _qCond(globTags.playCount), bSortForced: false,
+					sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false,
 					menu: 'From selection', expansionBy: 'OR',
 					plsName: 'Fav tracks by ' + globTags.artist
 				},
@@ -2025,7 +2025,7 @@ function createMenuRight() {
 						found.push({ name: list.dataAll[i].name, category: list.dataAll[i].category });
 					}
 				}
-				found.sort((a, b) => a.category.localeCompare(b.category));
+				found.sort((a, b) => a.category.localeCompare(b.category, void(0), { sensitivity: 'base', numeric: true }));
 				for (let i = 0, prevCat = null; i < found.length; i++) {
 					if (prevCat !== found[i].category) {
 						prevCat = found[i].category;
@@ -5402,7 +5402,9 @@ function createMenuRightSort() {
 	menu.clear(true); // Reset one every call
 	// Entries
 	{	// Sorting
-		const options = Object.keys(list.sortMethods(false)).slice(0, -1).sort((a, b) => a.localeCompare(b)).concat(['sep', list.manualMethodState()]);
+		const options = Object.keys(list.sortMethods(false)).slice(0, -1)
+			.sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base', numeric: true }))
+			.concat(['sep', list.manualMethodState()]);
 		menu.newEntry({ entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newSeparator();
 		options.forEach((item) => {
@@ -5514,7 +5516,7 @@ function createMenuSearch() {
 			{ entryText: 'By tracks\' path', key: 'bPath' },
 			{ entryText: 'By query (applied to tracks)', key: 'bQuery' },
 			{ entryText: 'By query (string search)', key: 'bMetaQuery' }
-		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText));
+		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText, void(0), { sensitivity: 'base', numeric: true }));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);
 		options.forEach((opt) => {
@@ -5593,7 +5595,7 @@ function createMenuSearch() {
 			});
 		}
 		if (showMenus['Quick-search']) {	// QuickSearch
-			menu.newSeparator();
+			menu.newSeparator(subMenu);
 			quickSearchMenu(menu, subMenu);
 		}
 		menu.newSeparator(subMenu);
@@ -5699,7 +5701,9 @@ function createMenuFilterSorting() {
 	// Entries
 	{	// Sorting method
 		const subMenuName = menu.newMenu('Sorting method');
-		const options = Object.keys(list.sortMethods(false)).slice(0, -1).sort((a, b) => a.localeCompare(b)).concat(['sep', list.manualMethodState()]);
+		const options = Object.keys(list.sortMethods(false)).slice(0, -1)
+			.sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base', numeric: true }))
+			.concat(['sep', list.manualMethodState()]);
 		menu.newEntry({ menuName: subMenuName, entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
 		options.forEach((item) => {

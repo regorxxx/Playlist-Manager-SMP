@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/25
+//24/06/25
 
 /* exported _list */
 
@@ -411,7 +411,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		let warningText = '';
-		if (this.bLibraryChanged && !this.bLiteMode) { warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
+		if (this.bLibraryChanged && !this.bLiteMode) { warningText += '\nWarning: Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
 		if (warningText.length) { tooltipText += '\n' + warningText; }
 		return tooltipText;
 	};
@@ -581,11 +581,11 @@ function _list(x, y, w, h) {
 				const selItems = fb.GetSelections(1);
 				if (!selItems || !selItems.Count) { warningText += '\n(No items on current selection)'; }
 			}
-			if (this.checkSelectionDuplicatesPlaylist({ playlistIndex: this.index })) { warningText += '\nWarning! Some track(s) already present...'; }
+			if (this.checkSelectionDuplicatesPlaylist({ playlistIndex: this.index })) { warningText += '\nWarning: Some track(s) already present...'; }
 		}
-		if (iDup > 1) { warningText += '\nWarning! Multiple UI playlists ' + _p(iDup) + ' have the same name.'; }
-		if (this.bLibraryChanged && !this.bLiteMode && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') { warningText += '\nWarning! Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
-		if (pls.extension === '.xsp' && pls.type !== 'songs') { warningText += '\nWarning! XSP playlist with non compatible type ' + _p(pls.type) + '.'; }
+		if (iDup > 1) { warningText += '\nWarning: Multiple UI playlists ' + _p(iDup) + ' have the same name.'; }
+		if (this.bLibraryChanged && !this.bLiteMode && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') { warningText += '\nWarning: Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
+		if (pls.extension === '.xsp' && pls.type !== 'songs') { warningText += '\nWarning: XSP playlist with non compatible type ' + _p(pls.type) + '.'; }
 		if (warningText.length) { tooltipText += '\n' + warningText; }
 		return tooltipText;
 	};
@@ -2706,8 +2706,7 @@ function _list(x, y, w, h) {
 							}
 						});
 					}
-					// TODO Error on non writable playlists?
-					if (bUpdateMBID && writablePlaylistFormats.has(pls.extension)) { setPlaylist_mbid(playlist_mbid, this, pls); }
+					if (bUpdateMBID) { setPlaylist_mbid(playlist_mbid, this, pls); }
 					return true;
 				});
 			});
@@ -3397,7 +3396,7 @@ function _list(x, y, w, h) {
 					// Warn about dead items
 					selItems.Convert().some((handle, i) => {
 						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-							fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + pls.name);
+							fb.ShowPopupMessage('Warning: There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + pls.name);
 							return true;
 						}
 						return false;
@@ -3820,7 +3819,7 @@ function _list(x, y, w, h) {
 							if (selItems && selItems.length) {
 								selItems.some((handle, i) => {
 									if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-										fb.ShowPopupMessage('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + plsData.name);
+										fb.ShowPopupMessage('Warning: There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + plsData.name);
 										return true;
 									}
 									return false;
@@ -4058,8 +4057,8 @@ function _list(x, y, w, h) {
 								? { nameId: subPls.nameId, isFolder: subPls.isFolder }
 								: { nameId: subPls.nameId, extension: subPls.extension };
 						});
-						oldPlsClean.pls.sort((a, b) => a.nameId.localeCompare(b.nameId));
-						if (newPls.isFolder) { newPls.pls.sort((a, b) => a.nameId.localeCompare(b.nameId)); }
+						oldPlsClean.pls.sort((a, b) => a.nameId.localeCompare(b.nameId, void (0), { sensitivity: 'base', numeric: true }));
+						if (newPls.isFolder) { newPls.pls.sort((a, b) => a.nameId.localeCompare(b.nameId, void (0), { sensitivity: 'base', numeric: true })); }
 						// If it's not a folder it will shown an error later
 					}
 					if (!compareObjects(oldPlsClean, newPls)) {
@@ -4202,7 +4201,9 @@ function _list(x, y, w, h) {
 		if (idx === 0) { return defCateg; }
 		let categ = new Set();
 		this.dataAll.forEach((playlist) => { if (playlist.category.length) { categ.add(playlist.category); } });
-		return idx ? [defCateg, ...[...categ].sort((a, b) => a.localeCompare(b))][idx] : [defCateg, ...[...categ].sort((a, b) => a.localeCompare(b))];
+		return idx
+			? [defCateg, ...[...categ].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))][idx]
+			: [defCateg, ...[...categ].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))];
 	};
 	this.categoryState = [];
 	this.tags = (idx = null) => {
@@ -4210,7 +4211,9 @@ function _list(x, y, w, h) {
 		if (idx === 0) { return defTag; }
 		let tags = new Set();
 		this.dataAll.forEach((playlist) => { if (playlist.tags.length) { playlist.tags.forEach((tag) => { tags.add(tag); }); } });
-		return idx ? [defTag, ...[...tags].sort((a, b) => a.localeCompare(b))][idx] : [defTag, ...[...tags].sort((a, b) => a.localeCompare(b))];
+		return idx
+			? [defTag, ...[...tags].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))][idx]
+			: [defTag, ...[...tags].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))];
 	};
 	this.tagState = [];
 	// By pls
@@ -4436,7 +4439,13 @@ function _list(x, y, w, h) {
 	this.availableFilters = () => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		const bListenBrainz = this.properties.lBrainzToken[1].length > 0;
-		return [showMenus['Category'] ? 'Category' : '', !this.bLiteMode ? 'Extension' : '', 'Lock state', showMenus['Online sync'] && bListenBrainz ? 'MBID' : '', 'Playlist type', showMenus['Tags'] ? 'Tag' : ''].filter(Boolean).sort((a, b) => a.localeCompare(b));
+		return [
+			showMenus['Category'] ? 'Category' : '',
+			!this.bLiteMode ? 'Extension' : '',
+			'Lock state',
+			showMenus['Online sync'] && bListenBrainz ? 'MBID' : '',
+			'Playlist type', showMenus['Tags'] ? 'Tag' : ''
+		].filter(Boolean).sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base', numeric: true }));
 	};
 	this.filterData = ({ data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false } = {}) => {
 		if (!data) { throw new Error('No data provided for filtering'); }
@@ -4555,8 +4564,8 @@ function _list(x, y, w, h) {
 		return {
 			'By name':
 			{
-				'Az': (a, b) => { return a.name.localeCompare(b.name); },
-				'Za': (a, b) => { return 0 - a.name.localeCompare(b.name); }
+				'Az': (a, b) => { return a.name.localeCompare(b.name, void(0), { sensitivity: 'base', numeric: true }); },
+				'Za': (a, b) => { return 0 - a.name.localeCompare(b.name, void(0), { sensitivity: 'base', numeric: true }); }
 			},
 			'By size':
 			{
@@ -4567,8 +4576,8 @@ function _list(x, y, w, h) {
 				? {
 					'By category':
 					{
-						'(C) Az': (a, b) => { return a.category.localeCompare(b.category); },
-						'(C) Za': (a, b) => { return 0 - a.category.localeCompare(b.category); }
+						'(C) Az': (a, b) => { return a.category.localeCompare(b.category, void(0), { sensitivity: 'base', numeric: true }); },
+						'(C) Za': (a, b) => { return 0 - a.category.localeCompare(b.category, void(0), { sensitivity: 'base', numeric: true }); }
 					}
 				}
 				: {}
@@ -4577,8 +4586,8 @@ function _list(x, y, w, h) {
 				? {
 					'By tags\t-first one-':
 					{
-						'(T) Az': (a, b) => { return (a.tags[0] || '').localeCompare((b.tags[0] || '')); },
-						'(T) Za': (a, b) => { return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || '')); }
+						'(T) Az': (a, b) => { return (a.tags[0] || '').localeCompare((b.tags[0] || ''), void(0), { sensitivity: 'base', numeric: true }); },
+						'(T) Za': (a, b) => { return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''), void(0), { sensitivity: 'base', numeric: true }); }
 					}
 				}
 				: {}
@@ -5372,7 +5381,7 @@ function _list(x, y, w, h) {
 			this.cacheLibTimer = null;
 			this.bLibraryChanged = true;
 		}
-		if (bNotify) { window.NotifyOthers('Playlist Manager: switch tracking', this.bTracking); } // TODO move to init to avoid double execution in some cases?
+		if (bNotify) { window.NotifyOthers('Playlist Manager: switch tracking', this.bTracking); } // FIXME: move to init to avoid double execution in some cases?
 		this.repaint(false, !this.bLiteMode && this.uiElements['Header buttons'].elements['Settings menu'].enabled ? 'all' : 'list');
 		return this.bTracking;
 	};
@@ -5874,7 +5883,7 @@ function _list(x, y, w, h) {
 				.filter((folder) => this.data.includes(folder) || this.data.includes(this.getTopFolder(folder)))
 			: this.dataAll.filter((pls) => pls.isFolder)
 		)
-			.sort((a, b) => a.nameId.localeCompare(b.nameId))
+			.sort((a, b) => a.nameId.localeCompare(b.nameId, void(0), { sensitivity: 'base', numeric: true }))
 			.map((folder) => {
 				return {
 					name: folder.nameId,
@@ -6012,7 +6021,7 @@ function _list(x, y, w, h) {
 				if (selItems && selItems.length) {
 					selItems.some((handle, i) => {
 						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
+							console.popup('Warning: There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
 							return true;
 						}
 						return false;
@@ -6415,7 +6424,7 @@ function _list(x, y, w, h) {
 				if (selItems && selItems.length) {
 					selItems.some((handle, i) => {
 						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
-							console.popup('Warning! There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
+							console.popup('Warning: There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
 							return true;
 						}
 						return false;
@@ -7520,6 +7529,9 @@ function _list(x, y, w, h) {
 				{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
 			];
 			menusPls.forEach((menu) => { listExport[menu.type] = []; });
+			/* FIXME: Remove all playlist related menus since they depend on idx which change on every playlist change
+				Alternatively, expose new settings to selectively switch specific menus
+			*/
 			this.dataAll.forEach((pls, i) => {
 				if (!this.bAllPls && pls.extension === '.ui') { return; }
 				if (pls.tags.includes('bSkipMenu')) { return; }

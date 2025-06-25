@@ -877,7 +877,8 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_paint', (gr) => {
-		if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
+		if (globSettings.bDebugPaint) { extendGR(gr, {  DrawRoundRect: true, FillRoundRect: true, Repaint: true }); }
+		else { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true }); }
 		list.prePaint();
 		panel.paint(gr);
 		if (!stats.bEnabled) {
