@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/25
+//16/06/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
 
@@ -73,12 +73,145 @@ const systemCodePage = _isFile(systemCodePageFile) ? _open(systemCodePageFile).s
 
 const popup = {
 	ok: 0,
+	ok_cancel: 1,
+	abort_retry_ignore: 2,
+	yes_no_cancel: 3,
 	yes_no: 4,
+	retry_cancel: 5,
+	// Return
+	timeout: -1,
+	okr: 1,
+	cancel: 2,
+	abort: 3,
+	retry: 4,
+	ignore: 5,
 	yes: 6,
 	no: 7,
+	// Icon
 	stop: 16,
 	question: 32,
-	info: 64
+	exclamation: 48,
+	info: 64,
+	// Default button
+	firstButton: 0,
+	secondButton: 256,
+	thirdButton: 512,
+	fourthButton: 768,
+	// Extra
+	appModal: 0,
+	systemModal: 4096,
+	helpButton: 16384, // Doesn't work on vb
+	foreground: 65536,
+	rightAlign: 524288,
+};
+
+const WinApiError = {
+	UNKNOWN: 'UNKNOWN',
+	'0x800A0005': 'CTL_E_ILLEGALFUNCTIONCALL',
+	'0x800A0006': 'CTL_E_OVERFLOW',
+	'0x800A0007': 'CTL_E_OUTOFMEMORY',
+	'0x800A000B': 'CTL_E_DIVISIONBYZERO',
+	'0x800A000E': 'CTL_E_OUTOFSTRINGSPACE',
+	'0x800A001C': 'CTL_E_OUTOFSTACKSPACE',
+	'0x800A0034': 'CTL_E_BADFILENAMEORNUMBER',
+	'0x800A0035': 'CTL_E_FILENOTFOUND',
+	'0x800A0036': 'CTL_E_BADFILEMODE',
+	'0x800A0037': 'CTL_E_FILEALREADYOPEN',
+	'0x800A0039': 'CTL_E_DEVICEIOERROR',
+	'0x800A003A': 'CTL_E_FILEALREADYEXISTS',
+	'0x800A003B': 'CTL_E_BADRECORDLENGTH',
+	'0x800A003D': 'CTL_E_DISKFULL',
+	'0x800A003F': 'CTL_E_BADRECORDNUMBER',
+	'0x800A0040': 'CTL_E_BADFILENAME',
+	'0x800A0043': 'CTL_E_TOOMANYFILES',
+	'0x800A0044': 'CTL_E_DEVICEUNAVAILABLE',
+	'0x800A0046': 'CTL_E_PERMISSIONDENIED',
+	'0x800A0047': 'CTL_E_DISKNOTREADY',
+	'0x800A004B': 'CTL_E_PATHFILEACCESSERROR',
+	'0x800A004C': 'CTL_E_PATHNOTFOUND',
+	'0x800A005D': 'CTL_E_INVALIDPATTERNSTRING',
+	'0x800A005E': 'CTL_E_INVALIDUSEOFNULL',
+	'0x800A0141': 'CTL_E_INVALIDFILEFORMAT',
+	'0x800A017C': 'CTL_E_INVALIDPROPERTYVALUE',
+	'0x800A017D': 'CTL_E_INVALIDPROPERTYARRAYINDEX',
+	'0x800A017E': 'CTL_E_SETNOTSUPPORTEDATRUNTIME',
+	'0x800A017F': 'CTL_E_SETNOTSUPPORTED',
+	'0x800A0181': 'CTL_E_NEEDPROPERTYARRAYINDEX',
+	'0x800A0183': 'CTL_E_SETNOTPERMITTED',
+	'0x800A0189': 'CTL_E_GETNOTSUPPORTEDATRUNTIME',
+	'0x800A018A': 'CTL_E_GETNOTSUPPORTED',
+	'0x800A01A6': 'CTL_E_PROPERTYNOTFOUND',
+	'0x800A01CC': 'CTL_E_INVALIDCLIPBOARDFORMAT',
+	'0x800A01E1': 'CTL_E_INVALIDPICTURE',
+	'0x800A01E2': 'CTL_E_PRINTERERROR',
+	'0x800A0258': 'CTL_E_CUSTOM_FIRST',
+	'0x800A02DF': 'CTL_E_CANTSAVEFILETOTEMP',
+	'0x800A02E8': 'CTL_E_SEARCHTEXTNOTFOUND',
+	'0x800A02EA': 'CTL_E_REPLACEMENTSTOOLONG',
+	'0x800A0BB8': 'adErrProviderFailed',
+	'0x800A0BB9': 'adErrInvalidArgument',
+	'0x800A0BBA': 'adErrOpeningFile',
+	'0x800A0BBB': 'adErrReadFile',
+	'0x800A0BBC': 'adErrWriteFile',
+	'0x800A0BCD': 'adErrNoCurrentRecord',
+	'0x800A0C93': 'adErrIllegalOperation',
+	'0x800A0C94': 'adErrCantChangeProvider',
+	'0x800A0CAE': 'adErrInTransaction',
+	'0x800A0CB3': 'adErrFeatureNotAvailable',
+	'0x800A0CC1': 'adErrItemNotFound',
+	'0x800A0D27': 'adErrObjectInCollection',
+	'0x800A0D5C': 'adErrObjectNotSet',
+	'0x800A0D5D': 'adErrDataConversion',
+	'0x800A0E78': 'adErrObjectClosed',
+	'0x800A0E79': 'adErrObjectOpen',
+	'0x800A0E7A': 'adErrProviderNotFound',
+	'0x800A0E7B': 'adErrBoundToCommand',
+	'0x800A0E7C': 'adErrInvalidParamInfo',
+	'0x800A0E7D': 'adErrInvalidConnection',
+	'0x800A0E7E': 'adErrNotReentrant',
+	'0x800A0E7F': 'adErrStillExecuting',
+	'0x800A0E80': 'adErrOperationCancelled',
+	'0x800A0E81': 'adErrStillConnecting',
+	'0x800A0E82': 'adErrInvalidTransaction',
+	'0x800A0E83': 'adErrNotExecuting',
+	'0x800A0E84': 'adErrUnsafeOperation',
+	'0x800A0E85': 'adWrnSecurityDialog',
+	'0x800A0E86': 'adWrnSecurityDialogHeader',
+	'0x800A0E87': 'adErrIntegrityViolation',
+	'0x800A0E88': 'adErrPermissionDenied',
+	'0x800A0E89': 'adErrDataOverflow',
+	'0x800A0E8A': 'adErrSchemaViolation',
+	'0x800A0E8B': 'adErrSignMismatch',
+	'0x800A0E8C': 'adErrCantConvertvalue',
+	'0x800A0E8D': 'adErrCantCreate',
+	'0x800A0E8E': 'adErrColumnNotOnThisRow',
+	'0x800A0E8F': 'adErrURLDoesNotExist|adErrURLIntegrViolSetColumns',
+	'0x800A0E90': 'adErrTreePermissionDenied',
+	'0x800A0E91': 'adErrInvalidURL',
+	'0x800A0E92': 'adErrResourceLocked',
+	'0x800A0E93': 'adErrResourceExists',
+	'0x800A0E94': 'adErrCannotComplete',
+	'0x800A0E95': 'adErrVolumeNotFound',
+	'0x800A0E96': 'adErrOutOfSpace',
+	'0x800A0E97': 'adErrResourceOutOfScope',
+	'0x800A0E98': 'adErrUnavailable',
+	'0x800A0E99': 'adErrURLNamedRowDoesNotExist',
+	'0x800A0E9A': 'adErrDelResOutOfScope',
+	'0x800A0E9B': 'adErrPropInvalidColumn',
+	'0x800A0E9C': 'adErrPropInvalidOption',
+	'0x800A0E9D': 'adErrPropInvalidValue',
+	'0x800A0E9E': 'adErrPropConflicting',
+	'0x800A0E9F': 'adErrPropNotAllSettable',
+	'0x800A0EA0': 'adErrPropNotSet',
+	'0x800A0EA1': 'adErrPropNotSettable',
+	'0x800A0EA2': 'adErrPropNotSupported',
+	'0x800A0EA3': 'adErrCatalogNotSet',
+	'0x800A0EA4': 'adErrCantChangeConnection',
+	'0x800A0EA5': 'adErrFieldsUpdateFailed',
+	'0x800A0EA6': 'adErrDenyNotSupported',
+	'0x800A0EA7': 'adErrDenyTypeNotSupported',
+	'0x800A0EA9': 'adErrProviderNotSpecified',
+	'0x800A0EAA': 'adErrConnectionStringTooLong'
 };
 
 /*
@@ -119,6 +252,7 @@ function _comparePaths(source, destination) {
 
 function _isFile(file) {
 	file = _resolvePath(file);
+	if (file.endsWith('\\')) { file = file.slice(0, -1); }
 	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsFile(file); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
 	else { return isString(file) ? fso.FileExists(file) : false; }
 }
@@ -393,7 +527,7 @@ function _saveFSO(file, value, bUTF16) {
 			return true;
 		} catch (e) {
 			console.log(parseWinApiError(e.message));
-		 }
+		}
 	}
 	console.log('Error saving to ' + file);
 	return false;
@@ -770,7 +904,9 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 	return out;
 }
 
+
 function parseWinApiError(message, bAddLink = true) {
-	return message.replace('ActiveX_Run failed:\nWinAPI error:\n  ActiveXObject call failed with error ', 'WinAPI error ')
-		.replace('\n    ', ' ') + (bAddLink ? '\n\t Check: https://www.hresult.info/FACILITY_CONTROL' : '');
+	const code = (/\((\w*)\)/gi.exec(message)[1] || 'UNKNOWN').toUpperCase().replace('0X', '0x');
+	return 'WinAPI error: ' + code + ' - ' + WinApiError[code] +
+		(bAddLink ? '\n\t Check: https://www.hresult.info/FACILITY_CONTROL' + (code !== 'UNKNOWN' ? '/' + code : '') : '');
 }
