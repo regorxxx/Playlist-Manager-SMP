@@ -2509,10 +2509,10 @@ function _chart({
 							this.dataManipulation.sort[label] = function reverseNum(a, b) { return b[axis] - a[axis]; };
 							break;
 						case 'string natural':
-							this.dataManipulation.sort[label] = function naturalString(a, b) { return a[axis].localeCompare(b[axis]); };
+							this.dataManipulation.sort[label] = function naturalString(a, b) { return a[axis].localeCompare(b[axis], void(0), { sensitivity: 'base', numeric: true }); };
 							break;
 						case 'string reverse':
-							this.dataManipulation.sort[label] = function reverseString(a, b) { return 0 - a[axis].localeCompare(b[axis]); };
+							this.dataManipulation.sort[label] = function reverseString(a, b) { return 0 - a[axis].localeCompare(b[axis], void(0), { sensitivity: 'base', numeric: true }); };
 							break;
 						case 'random':
 							this.dataManipulation.sort[label] = Array.prototype.shuffle;
