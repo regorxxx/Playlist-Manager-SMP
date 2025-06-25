@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/25
+//23/06/25
 
 /* exported _chart */
 
@@ -760,7 +760,7 @@ function _chart({
 								}
 								if (this.axis.x.labels && i === 0 || !this.axis.x.bSingleLabels) { // keys
 									label.xAxis = { x: 0, y: 0, w: 0, h: 0 };
-									const labelText = xAxisValues[j].split('|')[0];
+									const labelText = xAxisValues[j].split('|')[0].cut(25);
 									const tickH = label.xAxis.h = gr.CalcTextHeight(labelText, this.gFont);
 									const tickW = label.xAxis.w = gr.CalcTextWidth(labelText, this.gFont);
 									const border = labelOver.r / series * (series - i);
@@ -872,7 +872,7 @@ function _chart({
 						const drawLabelW = bFitTicks ? tickW : tickW * 3;
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
-							valueX = valueX.split('|')[0];
+							valueX = valueX.split('|')[0].cut(25);
 							const xLabel = x + i * tickW;
 							// Don't paint labels when they can't be fitted properly
 							if (!bFitTicks) {
@@ -919,7 +919,7 @@ function _chart({
 					if (!bFitTicks) { offsetTickText -= tickW; }
 					let lastLabel = x;
 					xAxisValues.forEach((valueX, i) => {
-						valueX = valueX.split('|')[0];
+						valueX = valueX.split('|')[0].cut(25);
 						let xLabel = x + i * tickW;
 						// Don't paint labels when they can't be fitted properly
 						if (!bFitTicks) {
@@ -1052,7 +1052,7 @@ function _chart({
 						if (!bFitTicks) { offsetTickText -= tickW; }
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
-							valueX = valueX.split('|')[0];
+							valueX = valueX.split('|')[0].cut(25);
 							const xtickH = gr.CalcTextHeight(valueX, this.gFont);
 							const xtickW = gr.CalcTextWidth(valueX, this.gFont);
 							let xLabel = x + i * tickW;
