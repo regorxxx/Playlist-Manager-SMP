@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/03/25
+//25/06/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
@@ -156,7 +156,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 	if (handle && handle instanceof FbMetadbHandleList) {
 		const queryArr = [...new Set(
 			handle.Convert().map((h) => queryReplaceWithCurrent(query, h, { bToLowerCase: true }))
-		)].sort((a, b) => a.localeCompare(b));
+		)].sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base' }));
 		return queryArr.length ? queryJoin(queryArr, 'OR') : '';
 	}
 	// global queries without handle required
@@ -289,21 +289,26 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
 	// Dates
-	if (/#(MONTH|YEAR|DAY|NOW)#/i.test(query)) {
+	if (/#(MONTH|YEAR|DAY|NOW|NOW_TS|TODAY|TODAY_TS|YESTERDAY)#/i.test(query)) {
 		const date = new Date();
+		const yesterday = new Date(date);
+		yesterday.setDate(yesterday.getDate() - 1);
 		query = query.replace(/#YEAR#/gi, date.getFullYear().toString());
 		query = query.replace(/#MONTH#/gi, (date.getMonth() + 1).toString());
 		query = query.replace(/#DAY#/gi, date.getDate().toString());
-		query = query.replace(/#NOW#/gi, date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString() + '-' + date.getDate().toString());
+		query = query.replace(/#(NOW|TODAY)#/gi, date.toISOString().split('T')[0]);
+		query = query.replace(/#(NOW_TS|TODAY_TS)#/gi, Math.round(date.getTime() / 1000));
+		query = query.replace(/#YESTERDAY#/gi, yesterday.toISOString().split('T')[0]);
+		query = query.replace(/#YESTERDAY_TS#/gi, Math.round(date.getTime() / 1000));
 	}
 	// System
-	if (/#(VOLUME|VOLUMEDB|VERSION|ISPLAYING|ISPAUSED|SAC|PLSCOUNT)#/i.test(query)) {
+	if (/#(VOLUME|VOLUMEDB|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
 		query = query.replace(/#VOLUME#/gi, Math.round(100 + fb.Volume));
 		query = query.replace(/#VOLUMEDB#/gi, fb.Volume.toFixed(2) + ' dB');
 		query = query.replace(/#VERSION#/gi, fb.Version);
 		query = query.replace(/#ISPLAYING#/gi, fb.IsPlaying ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
-		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#PLAYSTATE#/gi, fb.IsPlaying ? (fb.IsPaused ? 'Paused' : 'Playing') : 'Stopped');
 		query = query.replace(/#SAC#/gi, fb.StopAfterCurrent  ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLSCOUNT#/gi, plman.PlaylistCount);
 	}
@@ -374,7 +379,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#PLSTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
 		query = query.replace(/#PLSISAUTOPLS#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
 		query = query.replace(/#PLSISLOCKED#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
-		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b)).join(', ') : '');
+		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base' })).join(', ') : '');
 		query = query.replace(/#PLSLOCKNAME#/gi, pls !== -1 ? plman.GetPlaylistLockName(pls) || '' : '');
 	}
 	if (/#(PLSPLAYIDX|PLSPLAYNAME|PLSPLAYTRACKS)#/i.test(query)) {
@@ -744,7 +749,7 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 				: tagsArray[i]
 			: tagsArray[i];
 		if (options.bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
-		else { tagString += (i === 0 ? '' : sep) + _b(tagStr); } // We have tag values separated by comma and different tags by |
+		else { tagString += (i === 0 ? '' : sep) + _b(tagStr); } // We have tag values separated by comma and different tags by 'sep'
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
@@ -773,15 +778,17 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
  * @kind function
  * @param {FbMetadbHandleList} handleList
  * @param {string[]} tagsArray
- * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, iLimit: number, bCached: boolean }} options
+ * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, splitExclude: set?, iLimit: number, bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
+function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', splitExclude: null, iLimit: -1, bCached: false }) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handleList) { return null; }
 	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
 	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
+	const bSplit = options.splitBy && options.splitBy.length;
+	const bSplitExclude = options.splitExclude && options.splitExclude instanceof Set && options.splitExclude.size;
 	let outputArrayi_length = handleList.Count;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
@@ -803,9 +810,13 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 			: '[' + tagString + ']';
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handleList);
-		if (options.splitBy && options.splitBy.length) {
+		if (bSplit) {
 			for (let j = 0; j < outputArrayi_length; j++) {
-				outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
+				if (!bSplitExclude || !options.splitExclude.has(outputArray[i][j])) {
+					outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
+				} else {
+					outputArray[i][j] = [outputArray[i][j]];
+				}
 			}
 		} else {
 			for (let j = 0; j < outputArrayi_length; j++) {
@@ -828,15 +839,17 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
  * @kind function
  * @param {FbMetadbHandleList} handleList
  * @param {{name: string, type: string}[]} tagsArray - Type: number|string
- * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, iLimit: number, bCached: boolean }} options
+ * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, splitExclude: set?, iLimit: number, bCached: boolean }} options
  * @returns {string[][]|string[]|number[][]|number[]}
  */
-function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false }) {
+function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', splitExclude: null, iLimit: -1, bCached: false }) {
 	if (!isArray(tagsArray)) { return null; }
 	if (!handleList) { return null; }
 	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
 	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
+	const bSplit = options.splitBy && options.splitBy.length;
+	const bSplitExclude = options.splitExclude && options.splitExclude instanceof Set && options.splitExclude.size;
 	let outputArrayi_length = handleList.Count;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
@@ -854,9 +867,13 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 			: (options.bEmptyVal ? tagName : '[' + tagName + ']');
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handleList);
-		if (options.splitBy && options.splitBy.length) {
+		if (bSplit) {
 			for (let j = 0; j < outputArrayi_length; j++) {
-				outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
+				if (!bSplitExclude || !options.splitExclude.has(outputArray[i][j])) {
+					outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
+				} else {
+					outputArray[i][j] = [outputArray[i][j]];
+				}
 				if (type) {
 					outputArray[i][j] = outputArray[i][j].map((val) => {
 						switch (type) {

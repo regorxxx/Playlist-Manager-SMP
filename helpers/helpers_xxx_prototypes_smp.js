@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/25
+//13/06/25
 
 /* exported extendGR */
 
@@ -110,7 +110,8 @@ Object.defineProperty(fb, 'tfCache', {
 function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, Highlight: false, ImgBox: true, Debug: false }) {
 	if (!gr.Extended) { gr.Extended = options; }
 	else { Object.keys(options).forEach((opt) => { if (options[opt]) { gr.Extended[opt] = true; } }); }
-	if (options.DrawRoundRect) {
+	if (!gr.ExtendedDone) { gr.ExtendedDone = {}; }
+	if (options.DrawRoundRect && !gr.ExtendedDone.DrawRoundRect) {
 		const old = gr.DrawRoundRect.bind(gr);
 		gr.DrawRoundRect = function DrawRoundRect() { // x, y, w, h, arc_width, arc_height, line_width, colour
 			let that;
@@ -143,8 +144,9 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 			}
 			return that;
 		};
+		gr.ExtendedDone.DrawRoundRect = true;
 	}
-	if (options.FillRoundRect) {
+	if (options.FillRoundRect && !gr.ExtendedDone.FillRoundRect) {
 		const old = gr.FillRoundRect.bind(gr);
 		gr.FillRoundRect = function FillRoundRect() { // x, y, w, h, arc_width, arc_height, colour
 			let that;
@@ -177,24 +179,27 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 			}
 			return that;
 		};
+		gr.ExtendedDone.FillRoundRect = true;
 	}
-	if (options.ImgBox) {
+	if (options.ImgBox && !gr.ExtendedDone.ImgBox) {
 		const old = gr.DrawImage.bind(gr);
 		gr.DrawImage = function DrawImage() { // img, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, angleopt, alphaop
 			const that = old(...arguments);
 			gr.DrawRect(arguments[1], arguments[2], arguments[3], arguments[4], 2, 1694433280); // Red 90%
 			return that;
 		};
+		gr.ExtendedDone.ImgBox = true;
 	}
-	if (options.Highlight) {
+	if (options.Highlight && !gr.ExtendedDone.Highlight) {
 		const size = Math.min(window.Height, window.Width) / 10;
 		gr.FillSolidRect(size, 0, window.Width, size, 1694433280);
 		gr.FillSolidRect(0, 0, size, window.Height - size, 1694433280);
 		gr.FillSolidRect(window.Width - size, size, window.Width - size, window.Height, 1694433280);
 		gr.FillSolidRect(0, window.Height - size, window.Width - size, window.Height, 1694433280);
 		setTimeout(() => window.Repaint(true), 250);
+		gr.ExtendedDone.Highlight = true;
 	}
-	if (options.Repaint && !window.debugPainting) {
+	if (options.Repaint && !window.debugPainting && !gr.ExtendedDone.Repaint) {
 		window.debugPainting = true;
 		const old = window.RepaintRect.bind(window);
 		window.RepaintRect = (function () {
@@ -205,6 +210,7 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 				old(...arguments);
 			}
 		}).bind(window);
+		gr.ExtendedDone.Repaint = true;
 	}
 }
 
@@ -449,7 +455,7 @@ if (fb.AddLocationsAsync) {
 						resolve(handleList);
 					}
 				});
-				setTimeout(() => removeEventListener(listener.event, void(0), listener.id), 60000);
+				setTimeout(() => removeEventListener(listener.event, void (0), listener.id), 60000);
 			} else {
 				throw new Error('callbacks_xxx.js is missing');
 			}

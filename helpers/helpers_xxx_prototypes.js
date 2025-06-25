@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//15/06/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
 
@@ -713,7 +713,7 @@ Array.prototype.partialSort = function (order, bOptimize = true) { // NOSONAR
 };
 
 // https://en.wikipedia.org/wiki/Schwartzian_transform
-// or (a, b) => {return a[1].localeCompare(b[1]);}
+// or (a, b) => a[1].localeCompare(b[1], void(0), { sensitivity: 'base' })
 Array.prototype.schwartzianSort = function (processFunc, sortFunc = (a, b) => a[1] - b[1]) { // NOSONAR
 	return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
 };
