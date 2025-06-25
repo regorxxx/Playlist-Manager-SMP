@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/06/25
+//23/06/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -5315,7 +5315,7 @@ function createMenuRightTop() {
 					: null;
 				debouncedUpdate = debounce(list.updatePlaylist, list.properties.autoSave[1]);
 				instances.add(window.ScriptInfo.Name);
-				list.switchTracking(true, void (0), false);
+				list.switchTracking(true, false, false);
 			}
 			// Copy data
 			const toDelete = [];
@@ -5595,7 +5595,7 @@ function createMenuSearch() {
 			});
 		}
 		if (showMenus['Quick-search']) {	// QuickSearch
-			menu.newSeparator(subMenu);
+			menu.newSeparator();
 			quickSearchMenu(menu, subMenu);
 		}
 		menu.newSeparator(subMenu);
