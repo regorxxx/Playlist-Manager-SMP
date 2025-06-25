@@ -1,7 +1,7 @@
 ﻿'use strict';
-//20/05/25
+//24/06/25
 
-/* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
+/* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
 include('helpers_xxx.js');
 /* global folders:readable */
@@ -18,7 +18,7 @@ function loadUserDefFile(def) {
 		if (data) {
 			const handleList = new FbMetadbHandleList();
 			const skipCheckKeys = ['_description', '_usage'];
-			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font' || def._type === 'Setting') {
+			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font' || def._type === 'Setting' || def._type === 'Set' || def._type === 'Array') {
 				for (const key in data) {
 					if (Object.hasOwn(def, key)) {
 						def[key] = data[key];
@@ -70,6 +70,15 @@ function loadUserDefFile(def) {
 									);
 									def[key].size = 10;
 								}
+							} else if (def._type === 'Set' || def._type === 'Array') {
+								if (!def[key]) {
+									fb.ShowPopupMessage(
+										'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
+										'\n\nValue is empty. It must be filled with at least and empty array.'
+										, 'Loading config from ' + def._file
+									);
+								}
+								if (def._type === 'Set') { def[key] = new Set(def[key]); }
 							}
 						}
 					} else { bSave = true; }
@@ -108,9 +117,20 @@ function loadUserDefFile(def) {
 		}
 	} else { addGlobValues(def._type); bSave = true; }
 	if (bSave) {
-		const { _type, _file, ...rest } = def; // eslint-disable-line no-unused-vars
-		_save(_file, JSON.stringify(rest, (key, value) => { return (value instanceof RegExp ? value.toSource() : value); }, '\t').replace(/\n/g, '\r\n'));
+		saveUserDefFile(def);
 	}
+}
+
+function saveUserDefFile(def) {
+	const { _type, _file, ...rest } = def; // eslint-disable-line no-unused-vars
+	_save(
+		_file,
+		JSON.stringify(rest, (key, value) => {
+			if (value instanceof RegExp) { return value.toSource(); }
+			else if (value instanceof Set) { return [...value]; }
+			else { return value; }
+		}, '\t').replace(/\n/g, '\r\n')
+	);
 }
 
 /* eslint-disable no-useless-escape */
@@ -125,15 +145,15 @@ function loadUserDefFile(def) {
  * @returns {void}
  */
 function addGlobValues(type) {
-	const _t = (tag) => !tag.includes('%') && !tag.includes('$') ? '%' + tag+ '%' : tag;
+	const _t = (tag) => !tag.includes('%') && !tag.includes('$') ? '%' + tag + '%' : tag;
 	switch (type) {
 		case 'TF':
 			globTags.title = '$ascii($lower($trim($replace(' + _t(globTags.titleRaw) + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
 			globTags.artist = _t(globTags.artistRaw);
 			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 			globTags.sortPlayCount = '$sub(99999,' + _t(globTags.playCount) + ')';
-			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%FIRST_PLAYED%,%2003_FIRST_PLAYED%)';
-			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,%2003_LAST_PLAYED%)';
+			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%2003_FIRST_PLAYED%,%FIRST_PLAYED%,99999)';
+			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%2003_LAST_PLAYED%,%LAST_PLAYED%,0)';
 			globTags.sortAdded = '$if3(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
 			globTags.isLoved = '$ifequal(' + _t(globTags.feedback) + ',1,1$not(0),0)';
 			globTags.isHated = '$ifequal(' + _t(globTags.feedback) + ',-1,1$not(0),0)';
@@ -170,6 +190,8 @@ function addGlobValues(type) {
 				'|' + globTags.playCount;
 			globQuery.fav = '((' + globQuery.loved + ') OR (' + globQuery.ratingTop + '))';
 			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
+			globQuery.lastPlayedFunc = '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%LAST_PLAYED% PRESENT AND %LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#))';
+			globQuery.firstPlayedFunc = '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%FIRST_PLAYED% PRESENT AND %FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#))';
 			break;
 		case 'All':
 			addGlobValues('tags');
@@ -233,8 +255,8 @@ const globQuery = {
 	live: '(' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live)',
 	hifi: globTags.style + ' IS hi-fi',
 	SACD: '(%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64)',
-	recent: '(%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS OR %2003_LAST_PLAYED% DURING LAST 4 WEEKS)',
-	added: '(%ADDED_ENHANCED% DURING LAST 4 WEEKS OR %ADDED% DURING LAST 4 WEEKS OR %2003_ADDED% DURING LAST 4 WEEKS)',
+	recent: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% DURING LAST 4 WEEKS) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% DURING LAST 4 WEEKS))',
+	added: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% DURING LAST 4 WEEKS) OR (%2003_ADDED% PRESENT AND %2003_ADDED% DURING LAST 4 WEEKS) OR (%2003_ADDED% MISSING AND %ADDED% DURING LAST 4 WEEKS))',
 	loved: globTags.feedback + ' IS 1',
 	hated: globTags.feedback + ' IS -1'
 };
@@ -300,4 +322,13 @@ const globSettings = {
 	bTooltip: true,
 	bLogToFile: false,
 	instanceManager: 'v1'
+};
+
+// No-Split Artist: user replaceable with a presets file at folders.data
+const globNoSplitArtist = {
+	_type: 'Set',
+	_file: folders.userPresetsGlobal + 'globNoSplitArtist.json',
+	_description: 'List of artists which should not be split (usually due to comma usage).',
+	_usage: 'Artists can be added manually or at relevant scripts via menus.',
+	list: ['10,000 Maniacs', 'Crosby, Stills, Nash & Young', 'Crosby, Stills & Nash', 'Our Friend, Surrender']
 };
