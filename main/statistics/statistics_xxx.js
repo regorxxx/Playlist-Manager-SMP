@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/25
+//25/06/25
 
 /* exported _chart */
 
@@ -802,7 +802,7 @@ function _chart({
 						const keyH = gr.CalcTextHeight(key, this.gFont);
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-							gr.DrawString(key, this.gFont, yAxisColor, labelOver.coord[0][0].from.x - labelOver.r - keyH * 2, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, w, this.h, StringFormatFlags.DirectionVertical);
+							gr.DrawString(key, this.gFont, yAxisColor, labelOver.coord[0][0].from.x - labelOver.r - keyW - keyH, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, w, this.h, StringFormatFlags.DirectionVertical);
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
@@ -825,7 +825,7 @@ function _chart({
 							}, 0);
 							const xImg = offsetLabels !== 0
 								? offsetLabels - keyH * 3 / 2
-								: labelOver.coord[0][0].from.x - labelOver.r - keyH * 2;
+								: labelOver.coord[0][0].from.x - labelOver.r - keyW - keyH;
 							gr.DrawImage(img, xImg, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
 						}
@@ -1024,7 +1024,7 @@ function _chart({
 						const keyH = gr.CalcTextHeight(key, this.gFont);
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-							gr.DrawString(key, this.gFont, yAxisColor, x - yOffsetKey - maxTickW - _scale(4), this.y + (this.h - this.y) / 2 - keyW / 2, w, this.h, StringFormatFlags.DirectionVertical);
+							gr.DrawString(key, this.gFont, yAxisColor, x - xOffsetKey - maxTickW - _scale(4), this.y + (this.h - this.y) / 2 - keyW / 2, w, this.h, StringFormatFlags.DirectionVertical);
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
@@ -1036,7 +1036,7 @@ function _chart({
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-							gr.DrawImage(img, x - yOffsetKey - maxTickW - _scale(5), this.y + (this.h - this.y) / 2 - keyW / 2, keyH, keyW, 0, 0, img.Width, img.Height);
+							gr.DrawImage(img, x - xOffsetKey - maxTickW - _scale(5), this.y + (this.h - this.y) / 2 - keyW / 2, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
 						}
 					}
