@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/25
+//22/06/25
 
 /*
 	Remove duplicates
@@ -407,7 +407,7 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
  * @param {boolean} o.bProfile - Log profiling
  * @returns {Promise.<FbMetadbHandleList?>}
  */
-async function removeDuplicatesAsync({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bMultiple = true, bTagsCache = true, bProfile = false } = {}) {
+async function removeDuplicatesAsync({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bMultiple = true, bTagsCache = false, bProfile = false } = {}) {
 	// Check input
 	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicatesAsync: checkKeys [' + checkKeys + '] was null, empty or not an array');
