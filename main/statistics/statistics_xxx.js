@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/06/25
+//27/06/25
 
 /* exported _chart */
 
@@ -461,11 +461,12 @@ function _chart({
 				iX = r * Math.cos(alpha + iAlpha / sliceTicks * h);
 				circleArr.push(c.x + iX, c.y + iY);
 			}
-			if (circleArr.length) {
+			const polygonPoints = circleArr.length;
+			if (polygonPoints) {
 				gr.FillPolygon(color, 0, circleArr);
 				if (bFocused) { gr.FillPolygon(borderColor, 0, circleArr); }
 				// Borders
-				if (this.graph.borderWidth) {
+				if (this.graph.borderWidth && polygonPoints > 2) {
 					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
 				}
 			}
@@ -507,11 +508,12 @@ function _chart({
 				iX = r * Math.cos(alpha + iAlpha / sliceTicks * h);
 				circleArr.push(c.x + iX, c.y + iY);
 			}
-			if (circleArr.length) {
+			const polygonPoints = circleArr.length;
+			if (polygonPoints) {
 				gr.FillPolygon(color, 0, circleArr);
 				if (bFocused) { gr.FillPolygon(borderColor, 0, circleArr); }
 				// Borders
-				if (this.graph.borderWidth) {
+				if (this.graph.borderWidth && polygonPoints > 2) {
 					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
 				}
 			}
@@ -800,9 +802,22 @@ function _chart({
 						const key = this.configuration.bAltVerticalText ? this.axis.y.key.flip() : this.axis.y.key;
 						const keyW = gr.CalcTextWidth(key, this.gFont);
 						const keyH = gr.CalcTextHeight(key, this.gFont);
+						const yTitle = this.y + (this.h - this.y) / 2 - keyW * 2 / 3;
+						const initXTitle = labelOver.coord[0][0].from.x - labelOver.r - keyW - keyH;
+						// Check if labels are drawn in the region to the left overlapping the axis title
+						const offsetLabels = labelOver.coord.reduce((prev, serie) => {
+							return Math.max(prev, serie.slice(1).reduce((prev, point) => {
+								return (point.xAxis.y >= yTitle && point.xAxis.y <= yTitle + keyW || point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y + point.xAxis.h <= yTitle + keyW) && (initXTitle >= point.xAxis.x && initXTitle <= point.xAxis.x + point.xAxis.w || initXTitle + keyH >= point.xAxis.x && (initXTitle + keyH) <= point.xAxis.x + point.xAxis.w)
+									? prev !== 0 ? Math.min(point.xAxis.x, point.xAxis.x, prev) : Math.min(point.xAxis.x, point.xAxis.x)
+									: prev;
+							}, 0));
+						}, 0);
+						const xTitle = offsetLabels !== 0
+							? Math.min(offsetLabels - keyH * 1.5, initXTitle)
+							: initXTitle;
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
-							gr.DrawString(key, this.gFont, yAxisColor, labelOver.coord[0][0].from.x - labelOver.r - keyW - keyH, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, w, this.h, StringFormatFlags.DirectionVertical);
+							gr.DrawString(key, this.gFont, yAxisColor, xTitle, yTitle, w, this.h, StringFormatFlags.DirectionVertical);
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
@@ -814,19 +829,7 @@ function _chart({
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
-							const yTitle = this.y + (this.h - this.y) / 2 - keyW * 2 / 3;
-							// Check if labels are drawn in the region to the left overlapping the axis title
-							const offsetLabels = labelOver.coord.reduce((prev, serie) => {
-								return Math.max(prev, serie.slice(1).reduce((prev, point) => {
-									return point.xAsis && point.tetha > Math.PI / 2 && point.tetha <= Math.PI * 3 / 2 && point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y <= yTitle + keyW
-										? prev !== 0 ? Math.min(point.xAxis.x, prev) : point.xAxis.x
-										: prev;
-								}, 0));
-							}, 0);
-							const xImg = offsetLabels !== 0
-								? offsetLabels - keyH * 3 / 2
-								: labelOver.coord[0][0].from.x - labelOver.r - keyW - keyH;
-							gr.DrawImage(img, xImg, this.y + (this.h - this.y) / 2 - keyW * 2 / 3, keyH, keyW, 0, 0, img.Width, img.Height);
+							gr.DrawImage(img, xTitle, yTitle, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
 						}
 					}
@@ -2327,6 +2330,15 @@ function _chart({
 			if (dataAsync) { this.initDataAsync(); }
 			else if (bCheckColors && this.dataAsync) { this.dataAsync.then(() => this.checkColors()); } // NOSONAR
 		} // May be managed by the chart or externally
+		if (dataManipulation && Object.hasOwn(dataManipulation, 'filter') && !Object.hasOwn(dataManipulation, 'slice')) {
+			const back = [...this.dataManipulation.slice];
+			const max = this.getMaxRange();
+			const range = Math.max(this.dataManipulation.slice[1] - Math.max(this.dataManipulation.slice[0], 0), 1);
+			if (this.dataManipulation.slice[0] >= max) { this.dataManipulation.slice[0] = 0; }
+			if (range >= max) { this.dataManipulation.slice[1] = Infinity; }
+			else { this.dataManipulation.slice[1] = this.dataManipulation.slice[0] + range; }
+			if (back[0] !== this.dataManipulation.slice[0] || back[1] !== this.dataManipulation.slice[1]) { this.initData(); }
+		}
 		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(), arguments[0], callbackArgs); }
 		if (bPaint) { this.repaint(); }
 		return this;
@@ -2509,10 +2521,10 @@ function _chart({
 							this.dataManipulation.sort[label] = function reverseNum(a, b) { return b[axis] - a[axis]; };
 							break;
 						case 'string natural':
-							this.dataManipulation.sort[label] = function naturalString(a, b) { return a[axis].localeCompare(b[axis], void(0), { sensitivity: 'base', numeric: true }); };
+							this.dataManipulation.sort[label] = function naturalString(a, b) { return a[axis].localeCompare(b[axis], void (0), { sensitivity: 'base', numeric: true }); };
 							break;
 						case 'string reverse':
-							this.dataManipulation.sort[label] = function reverseString(a, b) { return 0 - a[axis].localeCompare(b[axis], void(0), { sensitivity: 'base', numeric: true }); };
+							this.dataManipulation.sort[label] = function reverseString(a, b) { return 0 - a[axis].localeCompare(b[axis], void (0), { sensitivity: 'base', numeric: true }); };
 							break;
 						case 'random':
 							this.dataManipulation.sort[label] = Array.prototype.shuffle;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/25
+//26/05/25
 
 /* exported createStatisticsMenu */
 
@@ -216,9 +216,10 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			const subMenuLow = menu.newMenu('Lower than', subMenu);
 			// Create a filter entry for each fraction of the max value (duplicates filtered)
 			const parent = this;
-			const options = [...new Set([this.stats.maxY, 1000, 100, 10, 10 / 2, 10 / 3, 10 / 5, 10 / 7].map((frac) => {
-				return Math.round(this.stats.maxY / frac) || 1; // Don't allow zero
-			}))];
+			const options = [...new Set([
+				this.stats.minY, this.stats.maxY,
+				...[1000, 100, 10, 10 / 2, 10 / 3, 10 / 5, 10 / 7].map((frac) => Math.round(this.stats.maxY / frac) || 1)
+			])].sort((a, b) => a - b);
 			{
 				options.map((val) => {
 					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtGreat(val), entryText: val };
