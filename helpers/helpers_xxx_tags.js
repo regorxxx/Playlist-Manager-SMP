@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/06/25
+//28/06/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
@@ -289,20 +289,24 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
 	// Dates
-	if (/#(MONTH|YEAR|DAY|NOW|NOW_TS|TODAY|TODAY_TS|YESTERDAY)#/i.test(query)) {
+	if (/#((PREV)?(DECADE|YEAR|MONTH|DAY)|NOW(_TS)?|TODAY(_TS)?|(YESTER|PREV)DAY(_TS)?)#/i.test(query)) {
 		const date = new Date();
 		const yesterday = new Date(date);
 		yesterday.setDate(yesterday.getDate() - 1);
+		query = query.replace(/#DECADE#/gi, Math.floor(date.getFullYear() / 10).toString() + '0s');
+		query = query.replace(/#PREVDECADE#/gi, (Math.floor(date.getFullYear() / 10) - 1).toString() + '0s');
 		query = query.replace(/#YEAR#/gi, date.getFullYear().toString());
+		query = query.replace(/#PREVYEAR#/gi, (date.getFullYear() - 1).toString());
 		query = query.replace(/#MONTH#/gi, (date.getMonth() + 1).toString());
+		query = query.replace(/#PREVMONTH#/gi, (date.getMonth() - 1).toString());
 		query = query.replace(/#DAY#/gi, date.getDate().toString());
 		query = query.replace(/#(NOW|TODAY)#/gi, date.toISOString().split('T')[0]);
-		query = query.replace(/#(NOW_TS|TODAY_TS)#/gi, Math.round(date.getTime() / 1000));
-		query = query.replace(/#YESTERDAY#/gi, yesterday.toISOString().split('T')[0]);
-		query = query.replace(/#YESTERDAY_TS#/gi, Math.round(date.getTime() / 1000));
+		query = query.replace(/#(NOW|TODAY)_TS#/gi, Math.round(date.getTime() / 1000));
+		query = query.replace(/#(YESTER|PREV)DAY#/gi, yesterday.toISOString().split('T')[0]);
+		query = query.replace(/#(YESTER|PREV)DAY_TS#/gi, Math.round(date.getTime() / 1000));
 	}
 	// System
-	if (/#(VOLUME|VOLUMEDB|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
+	if (/#(VOLUME(DB)?|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
 		query = query.replace(/#VOLUME#/gi, Math.round(100 + fb.Volume));
 		query = query.replace(/#VOLUMEDB#/gi, fb.Volume.toFixed(2) + ' dB');
 		query = query.replace(/#VERSION#/gi, fb.Version);
@@ -312,7 +316,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#SAC#/gi, fb.StopAfterCurrent  ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLSCOUNT#/gi, plman.PlaylistCount);
 	}
-	if (/#(DEVICE|DEVICEID)#/i.test(query)) {
+	if (/#(DEVICE(ID)?)#/i.test(query)) {
 		let device;
 		try { device = JSON.parse(fb.GetOutputDevices()).find((d) => d.active); } catch { } // eslint-disable-line no-empty
 		query = query.replace(/#DEVICE#/gi, device ? device.name : '?');
@@ -340,7 +344,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#PLAYMODE#/gi, playModes[plman.PlaybackOrder]);
 	}
 	// Selection
-	if (/#(SELTRACKS|SELDURATION|SELSIZE)#/i.test(query)) {
+	if (/#(SEL(TRACKS|DURATION|SIZE))#/i.test(query)) {
 		const sel = fb.GetSelections(1);
 		query = query.replace(/#SELTRACKS#/gi, sel ? sel.Count : 0);
 		query = query.replace(/#SELDURATION#/gi, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
@@ -360,7 +364,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#SELTYPE#/gi, selTypes[fb.GetSelectionType()]);
 	}
 	// Selection (focus)
-	if (/#(SELPLAYING|SELINLIBRARY)#/i.test(query)) {
+	if (/#(SEL(PLAYING|INLIBRARY))#/i.test(query)) {
 		const sel = fb.GetFocusItem(true);
 		query = query.replace(/#SELPLAYING#/gi, sel ? (() => {
 			const np = fb.GetNowPlaying();
@@ -372,7 +376,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#SELINLIBRARY#/gi, sel ? fb.IsMetadbInMediaLibrary(sel) + (options.bBooleanForce ? '$not(0)' : '') : '');
 	}
 	// Playlist
-	if (/#(PLSIDX|PLSNAME|PLSTRACKS|PLSISAUTOPLS|PLSISLOCKED|PLSLOCKS|PLSLOCKNAME)#/i.test(query)) {
+	if (/#(PLS(IDX|NAME|TRACKS|ISAUTOPLS|ISLOCKED|LOCKS|LOCKNAME))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
 		query = query.replace(/#PLSIDX#/gi, pls !== -1 ? pls : '?');
 		query = query.replace(/#PLSNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
@@ -382,20 +386,20 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base' })).join(', ') : '');
 		query = query.replace(/#PLSLOCKNAME#/gi, pls !== -1 ? plman.GetPlaylistLockName(pls) || '' : '');
 	}
-	if (/#(PLSPLAYIDX|PLSPLAYNAME|PLSPLAYTRACKS)#/i.test(query)) {
+	if (/#(PLSPLAY(IDX|NAME|TRACKS))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
 		query = query.replace(/#PLSPLAYIDX#/gi, pls !== -1 ? pls : '?');
 		query = query.replace(/#PLSPLAYNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
 		query = query.replace(/#PLSPLAYTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
 	}
 	// Playlist items
-	if (/#(PLSDURATION|PLSSIZE)#/i.test(query)) {
+	if (/#(PLS(DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
 		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
 		query = query.replace(/#PLSDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#PLSSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
-	if (/#(PLSPLAYDURATION|PLSPLAYSIZE)#/i.test(query)) {
+	if (/#(PLSPLAY(DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
 		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
 		query = query.replace(/#PLSPLAYDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
