@@ -156,7 +156,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 	if (handle && handle instanceof FbMetadbHandleList) {
 		const queryArr = [...new Set(
 			handle.Convert().map((h) => queryReplaceWithCurrent(query, h, { bToLowerCase: true }))
-		)].sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base' }));
+		)].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base' }));
 		return queryArr.length ? queryJoin(queryArr, 'OR') : '';
 	}
 	// global queries without handle required
@@ -289,17 +289,28 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 	if (options.bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
 	// Dates
-	if (/#((PREV)?(DECADE|YEAR|MONTH|DAY)|NOW(_TS)?|TODAY(_TS)?|(YESTER|PREV)DAY(_TS)?)#/i.test(query)) {
+	if (/#((PREV)?(DECADE|YEAR|(M)?MONTH|(D)?DAY|(D)?WEEK)|NOW(_TS)?|TODAY(_TS)?|(YESTER|PREV)DAY(_TS)?)#/i.test(query)) {
 		const date = new Date();
 		const yesterday = new Date(date);
-		yesterday.setDate(yesterday.getDate() - 1);
+		yesterday.setDate(date.getDate() - 1);
+		const weekFirstDay = new Date(date);
+		weekFirstDay.setDate(date.getDate() - date.getDay() + (date.getDay() == 0 ? -6 : 1));
+		const prevWeekFirstDay = new Date(weekFirstDay);
+		prevWeekFirstDay.setDate(weekFirstDay.getDate() - 7);
 		query = query.replace(/#DECADE#/gi, Math.floor(date.getFullYear() / 10).toString() + '0s');
 		query = query.replace(/#PREVDECADE#/gi, (Math.floor(date.getFullYear() / 10) - 1).toString() + '0s');
 		query = query.replace(/#YEAR#/gi, date.getFullYear().toString());
 		query = query.replace(/#PREVYEAR#/gi, (date.getFullYear() - 1).toString());
 		query = query.replace(/#MONTH#/gi, (date.getMonth() + 1).toString());
+		query = query.replace(/#MMONTH#/gi, ('0' + (date.getMonth() + 1).toString()).slice(-2));
 		query = query.replace(/#PREVMONTH#/gi, (date.getMonth() - 1).toString());
+		query = query.replace(/#PREVMMONTH#/gi, ('0' + (date.getMonth() - 1).toString()).slice(-2));
+		query = query.replace(/#WEEK#/gi, weekFirstDay.getDate().toString());
+		query = query.replace(/#DWEEK#/gi, ('0' + weekFirstDay.getDate().toString()).slice(-2));
+		query = query.replace(/#PREVWEEK#/gi, prevWeekFirstDay.getDate().toString());
+		query = query.replace(/#PREVDWEEK#/gi, ('0' + prevWeekFirstDay.getDate().toString()).slice(-2));
 		query = query.replace(/#DAY#/gi, date.getDate().toString());
+		query = query.replace(/#DDAY#/gi, ('0' + date.getDate().toString()).slice(-2));
 		query = query.replace(/#(NOW|TODAY)#/gi, date.toISOString().split('T')[0]);
 		query = query.replace(/#(NOW|TODAY)_TS#/gi, Math.round(date.getTime() / 1000));
 		query = query.replace(/#(YESTER|PREV)DAY#/gi, yesterday.toISOString().split('T')[0]);
@@ -313,7 +324,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#ISPLAYING#/gi, fb.IsPlaying ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLAYSTATE#/gi, fb.IsPlaying ? (fb.IsPaused ? 'Paused' : 'Playing') : 'Stopped');
-		query = query.replace(/#SAC#/gi, fb.StopAfterCurrent  ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#SAC#/gi, fb.StopAfterCurrent ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLSCOUNT#/gi, plman.PlaylistCount);
 	}
 	if (/#(DEVICE(ID)?)#/i.test(query)) {
@@ -383,7 +394,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#PLSTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
 		query = query.replace(/#PLSISAUTOPLS#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
 		query = query.replace(/#PLSISLOCKED#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
-		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base' })).join(', ') : '');
+		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base' })).join(', ') : '');
 		query = query.replace(/#PLSLOCKNAME#/gi, pls !== -1 ? plman.GetPlaylistLockName(pls) || '' : '');
 	}
 	if (/#(PLSPLAY(IDX|NAME|TRACKS))#/i.test(query)) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/06/25
+//29/06/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -33,8 +33,9 @@ function loadUserDefFile(def) {
 								}
 								if (def._type === 'Query') {
 									try {
-										fb.GetQueryItems(handleList, def[key]);
-										fb.GetQueryItems(handleList, '* HAS \'\' AND (' + def[key] + ')');
+										const query = def[key].replaceAll('#QUERYEXPRESSION#', 'PRESENT');
+										fb.GetQueryItems(handleList, query);
+										fb.GetQueryItems(handleList, '* HAS \'\' AND (' + query + ')');
 									} catch (e) { // eslint-disable-line no-unused-vars
 										fb.ShowPopupMessage(
 											'There has been an error trying to parse the setting:\n' + key + ' (' + def._type + ' type)' +
@@ -190,8 +191,8 @@ function addGlobValues(type) {
 				'|' + globTags.playCount;
 			globQuery.fav = '((' + globQuery.loved + ') OR (' + globQuery.ratingTop + '))';
 			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
-			globQuery.lastPlayedFunc = '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%LAST_PLAYED% PRESENT AND %LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#))';
-			globQuery.firstPlayedFunc = '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%FIRST_PLAYED% PRESENT AND %FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#))';
+			globQuery.recent = globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST 4 WEEKS');
+			globQuery.added = globQuery.addedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST 4 WEEKS');
 			break;
 		case 'All':
 			addGlobValues('tags');
@@ -255,8 +256,9 @@ const globQuery = {
 	live: '(' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live)',
 	hifi: globTags.style + ' IS hi-fi',
 	SACD: '(%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64)',
-	recent: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% DURING LAST 4 WEEKS) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% DURING LAST 4 WEEKS))',
-	added: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% DURING LAST 4 WEEKS) OR (%2003_ADDED% PRESENT AND %2003_ADDED% DURING LAST 4 WEEKS) OR (%2003_ADDED% MISSING AND %ADDED% DURING LAST 4 WEEKS))',
+	lastPlayedFunc: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% #QUERYEXPRESSION#))',
+	firstPlayedFunc: '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%FIRST_PLAYED% PRESENT AND %FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#))',
+	addedFunc: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_ADDED% PRESENT AND %2003_ADDED% #QUERYEXPRESSION#) OR (%2003_ADDED% MISSING AND %ADDED% #QUERYEXPRESSION#))',
 	loved: globTags.feedback + ' IS 1',
 	hated: globTags.feedback + ' IS -1'
 };

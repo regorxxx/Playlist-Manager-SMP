@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/24
+//29/06/25
 
 
 include('helpers_xxx_global.js');
@@ -9,4 +9,4 @@ include('helpers_xxx_global.js');
 globFonts.tooltip = {name: !soFeat.popup ? 'Arial Unicode MS' : 'Tahoma', size: 10};
 
 // Query helpers
-globQuery.recentBy = (time) => globQuery.recent.replace(/(\d*) (SECOND|MINUTE|HOUR|WEEK|DAY)s?/gi, time);
+globQuery.recentBy = (time) => globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST ' +  time);
