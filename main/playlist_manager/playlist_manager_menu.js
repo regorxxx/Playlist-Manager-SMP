@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/25
+//02/07/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -34,7 +34,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
 /* global XSP:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, queryReplaceWithCurrent:readable, isSubsongPath:readable */
+/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, queryReplaceWithCurrent:readable, isSubsongPath:readable, queryJoin:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -1858,22 +1858,81 @@ function createMenuRight() {
 		});
 		{	// Preset AutoPlaylists
 			const options = [
-				{ name: 'Media library (full)', query: 'ALL' },
+				{ name: 'Media library', query: 'ALL' },
 			].concat([
 				{ name: 'sep' },
-				{ name: 'Recently added', query: globQuery.added, sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortAdded), bSortForced: false, menu: 'Playcount and date' },
+				{
+					name: 'Recently added',
+					query: globQuery.added,
+					sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortAdded),
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
 				{ name: 'sep', menu: 'Playcount and date' },
-				{ name: 'Tracks never played', query: _qCond(globTags.playCount) + ' IS 0', menu: 'Playcount and date' },
-				{ name: 'Tracks played in the last 5 days', query: globQuery.recentBy('5 DAYS'), sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortLastPlayed), bSortForced: false, menu: 'Playcount and date' },
+				{
+					name: 'Never played',
+					query: _qCond(globTags.playCount) + ' IS 0',
+					menu: 'Playcount and date'
+				},
+				{
+					name: 'Last played today',
+					query: globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING #NOW#'),
+					sort: { tfo: globTags.playCountRateGlobalDay, direction: -1 },
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
+				{
+					name: 'Last played yesterday',
+					query: globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING #YESTERDAY#'),
+					sort: { tfo: globTags.playCountRateGlobalDay, direction: -1 },
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
+				{
+					name: 'Last played last 5 days',
+					query: globQuery.recentBy('5 DAYS'),
+					sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortLastPlayed),
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
+				{ name: 'sep', menu: 'Playcount and date' },
+				{
+					name: 'Daily listen rate ≥1',
+					query: 'NOT ' + _qCond(globTags.playCountRateGlobalDay) + ' LESS 1',
+					sort: { tfo: globTags.playCountRateGlobalDay, direction: -1 },
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
+				{
+					name: 'Weekly listen rate ≥1',
+					query: 'NOT ' + _qCond(globTags.playCountRateGlobalWeek) + ' LESS 1',
+					sort: { tfo: globTags.playCountRateGlobalWeek, direction: -1 },
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
+				{
+					name: 'Monthly listen rate ≥1',
+					query: 'NOT ' + _qCond(globTags.playCountRateGlobalMonth) + ' LESS 1',
+					sort: { tfo: globTags.playCountRateGlobalMonth, direction: -1 },
+					bSortForced: false,
+					menu: 'Playcount and date'
+				},
+				{
+					name: 'Yearly listen rate ≥1',
+					query: 'NOT ' + _qCond(globTags.playCountRateGlobalYear) + ' LESS 1',
+					sort: { tfo: globTags.playCountRateGlobalYear, direction: -1 },
+					bSortForced: false,
+					menu: 'Playcount and date'
+				}
 			]).concat([
 				{ name: 'sep' },
-				{ name: 'Tracks unrated', query: globQuery.noRating, menu: 'Rating' },
+				{ name: 'Unrated tracks', query: globQuery.noRating, menu: 'Rating' },
 				{ name: 'sep', menu: 'Rating' },
-				{ name: 'Tracks rated 1', query: globTags.rating + ' IS 1', menu: 'Rating' },
-				{ name: 'Tracks rated 2', query: globTags.rating + ' IS 2', menu: 'Rating' },
-				{ name: 'Tracks rated 3', query: globTags.rating + ' IS 3', menu: 'Rating' },
-				{ name: 'Tracks rated 4', query: globTags.rating + ' IS 4', menu: 'Rating' },
-				{ name: 'Tracks rated 5', query: globTags.rating + ' IS 5', menu: 'Rating' },
+				{ name: 'Rated 1 tracks', query: globTags.rating + ' IS 1', menu: 'Rating' },
+				{ name: 'Rated 2 tracks', query: globTags.rating + ' IS 2', menu: 'Rating' },
+				{ name: 'Rated 3 tracks', query: globTags.rating + ' IS 3', menu: 'Rating' },
+				{ name: 'Rated 4 tracks', query: globTags.rating + ' IS 4', menu: 'Rating' },
+				{ name: 'Rated 5 tracks', query: globTags.rating + ' IS 5', menu: 'Rating' },
 				{ name: 'sep', menu: 'Rating' },
 				{ name: 'Loved tracks', query: globQuery.loved, menu: 'Rating' },
 				{ name: 'Hated tracks', query: globQuery.hated, menu: 'Rating' },
@@ -1911,18 +1970,31 @@ function createMenuRight() {
 				},
 				{ name: 'sep', menu: 'From selection' },
 				{
-					name: 'Rated >2 tracks (by Artist)',
-					query: globTags.rating + ' GREATER 2 AND (' + globTags.artist + ' IS #' + globTags.artistRaw + '#)',
+					name: 'Tracks (by Artist)',
+					query: globTags.artist + ' IS #' + globTags.artistRaw + '#',
+					menu: 'From selection', expansionBy: 'OR',
+					plsName: 'Tracks by ' + globTags.artist
+				},
+				{
+					name: 'Rated ≥3 tracks (by Artist)',
+					query: queryJoin([globQuery.ratingGr2, globTags.artist + ' IS #' + globTags.artistRaw + '#']),
 					sort: 'SORT BY "$rand()"', bSortForced: false,
 					menu: 'From selection', expansionBy: 'OR',
-					plsName: 'Rated >2 by ' + globTags.artist
+					plsName: 'Rated ≥3 by ' + globTags.artist
 				},
 				{
 					name: 'Fav tracks (by Artist)',
-					query: globQuery.fav + ' AND (' + globTags.artist + ' IS #' + globTags.artistRaw + '#)',
+					query: queryJoin([globQuery.fav, globTags.artist + ' IS #' + globTags.artistRaw + '#']),
 					sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false,
 					menu: 'From selection', expansionBy: 'OR',
 					plsName: 'Fav tracks by ' + globTags.artist
+				},
+				{
+					name: 'Loved tracks (by artist)',
+					query: queryJoin([globQuery.loved, globTags.artist + ' IS #' + globTags.artistRaw + '#']),
+					sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false,
+					menu: 'From selection', expansionBy: 'OR',
+					plsName: 'Loved tracks by ' + globTags.artist
 				},
 			]);
 			const subMenuName = menu.newMenu('Preset AutoPlaylists');
@@ -2025,7 +2097,7 @@ function createMenuRight() {
 						found.push({ name: list.dataAll[i].name, category: list.dataAll[i].category });
 					}
 				}
-				found.sort((a, b) => a.category.localeCompare(b.category, void(0), { sensitivity: 'base', numeric: true }));
+				found.sort((a, b) => a.category.localeCompare(b.category, void (0), { sensitivity: 'base', numeric: true }));
 				for (let i = 0, prevCat = null; i < found.length; i++) {
 					if (prevCat !== found[i].category) {
 						prevCat = found[i].category;
@@ -5403,7 +5475,7 @@ function createMenuRightSort() {
 	// Entries
 	{	// Sorting
 		const options = Object.keys(list.sortMethods(false)).slice(0, -1)
-			.sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base', numeric: true }))
+			.sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))
 			.concat(['sep', list.manualMethodState()]);
 		menu.newEntry({ entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newSeparator();
@@ -5516,7 +5588,7 @@ function createMenuSearch() {
 			{ entryText: 'By tracks\' path', key: 'bPath' },
 			{ entryText: 'By query (applied to tracks)', key: 'bQuery' },
 			{ entryText: 'By query (string search)', key: 'bMetaQuery' }
-		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText, void(0), { sensitivity: 'base', numeric: true }));
+		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText, void (0), { sensitivity: 'base', numeric: true }));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);
 		options.forEach((opt) => {
@@ -5702,7 +5774,7 @@ function createMenuFilterSorting() {
 	{	// Sorting method
 		const subMenuName = menu.newMenu('Sorting method');
 		const options = Object.keys(list.sortMethods(false)).slice(0, -1)
-			.sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base', numeric: true }))
+			.sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))
 			.concat(['sep', list.manualMethodState()]);
 		menu.newEntry({ menuName: subMenuName, entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
