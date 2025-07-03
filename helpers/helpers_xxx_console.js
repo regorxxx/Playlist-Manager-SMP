@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/25
+//01/07/25
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -114,10 +114,14 @@ console.formatArg = (arg) => {
 								return 'Error ' + arg.toString().replace(/["\n]/g, '');
 							} else if (typeof v === 'function') {
 								return 'Function ' + v.name || 'anonymous';
+							} else if (v === Infinity) {
+								return 'INFINITY';
+							} else if (v === -Infinity) {
+								return '-INFINITY';
 							}
 						}
 						return v;
-					});
+					}).replace(/"(-)?INFINITY"/g, '$1\u221E');
 				} catch (e) {
 					if (e.message === 'can\'t access dead object') {
 						console.logUI('Console.log: ' + e.message + ': ', type);
