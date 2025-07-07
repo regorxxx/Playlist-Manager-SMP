@@ -34,7 +34,7 @@ const playlistDescriptors = {
 	'.xspf': /* ... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf1e0', iconBg: null },
 	'.xsp': /* ...................... */ { isReadable: true, isLoadable: true, icon: '\uf0d0', iconBg: null },
 	'.strm': /* ..................... */ { isReadable: true, isLoadable: true, icon: '\uf0f6', iconBg: null },
-	'.fpl': /* ...................... */ { isReadable: true, isLoadable: true, icon: '\uf1c6', iconBg: null },
+	'.fpl': /* .... */ { isWritable: !!(new FbMetadbHandleList()).SaveAs, isReadable: true, isLoadable: true, icon: '\uf1c7', iconBg: '\uf15b' },
 	// Abstract items
 	'.ui': /* ........................................................... */ { icon: '\uf26c', iconBg: null },
 	autoPlaylist: /* ................................................ */ { icon: '\uf0e7', iconBg: '\uf15b' },
