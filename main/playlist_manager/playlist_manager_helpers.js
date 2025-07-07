@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/06/25
+//07/07/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -915,7 +915,7 @@ function exportPlaylistFile(list, z, defPath = '') {
 	bDone = _copyFile(playlistPath, path);
 	if (bDone) {
 		if (list.properties.bOpenOnExport[1]) { _explorer(path); }
-		console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+		console.log('Playlist Manager: exporting -> ' + playlistName);
 	} else { fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.Name); }
 	return bDone;
 }
@@ -946,7 +946,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 		}
 		bDone = _copyFile(playlistPath, path + playlistName);
 		if (bDone) {
-			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+			console.log('Playlist Manager: exporting -> ' + playlistName);
 		} else { fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.\n\n' + playlistPath, window.Name); }
 		return bDone;
 	});
@@ -996,7 +996,7 @@ function exportPlaylistFileWithRelPaths({ list, z, ext = '', defPath = '', bNoIn
 			return { bDone, newPath, paths };
 		}
 	}
-	console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+	console.log('Playlist Manager: exporting -> ' + playlistName);
 	return { bDone, newPath, paths };
 }
 
@@ -1039,7 +1039,7 @@ function exportPlaylistFileWithTracks({ list, z, defPath = '', bAsync = true, bN
 		}).then(() => {
 			if (list.properties.bOpenOnExport[1] && bOpenOnExport) { _explorer(newPath); }
 			if (report.length) { fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.Name); }
-			console.log('Playlist Manager: exporting tracks from ' + playlistName + ' done.');
+			console.log('Playlist Manager: exporting tracks -> ' + playlistName);
 			return bDone;
 		});
 	} else { fb.ShowPopupMessage('Failed when copying playlist file to \'' + newPath + '\'.', window.Name); }
@@ -1157,7 +1157,7 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 				return { bDone, handleList };
 			}
 			if (bOpenOnExport) { _explorer(newPath); }
-			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+			console.log('Playlist Manager: exporting converted tracks -> ' + playlistName);
 		}
 	}
 	return { bDone, handleList };
@@ -1252,7 +1252,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 				return { bDone, handleList };
 			}
 			if (bOpenOnExport) { _explorer(newPath); }
-			console.log('Playlist Manager: exporting ' + playlistName + ' done.');
+			console.log('Playlist Manager: exporting converted tracks -> ' + playlistName);
 		}
 	}
 	return { bDone, handleList };

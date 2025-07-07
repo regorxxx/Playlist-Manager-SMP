@@ -5667,7 +5667,7 @@ function createMenuSearch() {
 			});
 		}
 		if (showMenus['Quick-search']) {	// QuickSearch
-			menu.newSeparator();
+			menu.newSeparator(subMenu);
 			quickSearchMenu(menu, subMenu);
 		}
 		menu.newSeparator(subMenu);
