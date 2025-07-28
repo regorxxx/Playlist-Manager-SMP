@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/06/25
+//08/07/25
 
 /* exported _list */
 
@@ -3342,7 +3342,7 @@ function _list(x, y, w, h) {
 			if (this.bAutoRefreshXsp) { this.refreshSmartPlaylists({ sources }); }
 		}
 		if (bSucess) {
-			if (['By track size', 'By duration'].includes(this.getMethodState())) {
+			if (['By track size', 'By duration', 'By size', 'By date\t-last modified-'].includes(this.getMethodState())) {
 				this.sort();
 			} else {
 				[this.offset, this.index] = cache;
@@ -3457,7 +3457,7 @@ function _list(x, y, w, h) {
 					}
 					if (!bSkipXspRefresh && this.bAutoRefreshXsp) {
 						this.refreshSmartPlaylists({ sources: [pls.nameId] });
-						if (['By track size', 'By duration'].includes(this.getMethodState())) {
+						if (['By track size', 'By duration', 'By size', 'By date\t-last modified-'].includes(this.getMethodState())) {
 							this.sort();
 						}
 					}
@@ -4445,7 +4445,7 @@ function _list(x, y, w, h) {
 			'Lock state',
 			showMenus['Online sync'] && bListenBrainz ? 'MBID' : '',
 			'Playlist type', showMenus['Tags'] ? 'Tag' : ''
-		].filter(Boolean).sort((a, b) => a.localeCompare(b, void(0), { sensitivity: 'base', numeric: true }));
+		].filter(Boolean).sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }));
 	};
 	this.filterData = ({ data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false } = {}) => {
 		if (!data) { throw new Error('No data provided for filtering'); }
@@ -4564,8 +4564,8 @@ function _list(x, y, w, h) {
 		return {
 			'By name':
 			{
-				'Az': (a, b) => { return a.name.localeCompare(b.name, void(0), { sensitivity: 'base', numeric: true }); },
-				'Za': (a, b) => { return 0 - a.name.localeCompare(b.name, void(0), { sensitivity: 'base', numeric: true }); }
+				'Az': (a, b) => { return a.name.localeCompare(b.name, void (0), { sensitivity: 'base', numeric: true }); },
+				'Za': (a, b) => { return 0 - a.name.localeCompare(b.name, void (0), { sensitivity: 'base', numeric: true }); }
 			},
 			'By size':
 			{
@@ -4576,8 +4576,8 @@ function _list(x, y, w, h) {
 				? {
 					'By category':
 					{
-						'(C) Az': (a, b) => { return a.category.localeCompare(b.category, void(0), { sensitivity: 'base', numeric: true }); },
-						'(C) Za': (a, b) => { return 0 - a.category.localeCompare(b.category, void(0), { sensitivity: 'base', numeric: true }); }
+						'(C) Az': (a, b) => { return a.category.localeCompare(b.category, void (0), { sensitivity: 'base', numeric: true }); },
+						'(C) Za': (a, b) => { return 0 - a.category.localeCompare(b.category, void (0), { sensitivity: 'base', numeric: true }); }
 					}
 				}
 				: {}
@@ -4586,8 +4586,8 @@ function _list(x, y, w, h) {
 				? {
 					'By tags\t-first one-':
 					{
-						'(T) Az': (a, b) => { return (a.tags[0] || '').localeCompare((b.tags[0] || ''), void(0), { sensitivity: 'base', numeric: true }); },
-						'(T) Za': (a, b) => { return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''), void(0), { sensitivity: 'base', numeric: true }); }
+						'(T) Az': (a, b) => { return (a.tags[0] || '').localeCompare((b.tags[0] || ''), void (0), { sensitivity: 'base', numeric: true }); },
+						'(T) Za': (a, b) => { return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''), void (0), { sensitivity: 'base', numeric: true }); }
 					}
 				}
 				: {}
@@ -5021,10 +5021,11 @@ function _list(x, y, w, h) {
 						if (test) { test.Print(); }
 						this.save();
 						if (bInit && this.bDynamicMenus) { console.log('Playlist Manager: Created dynamic menus'); }
-						if (this.properties.bBlockUpdateAutoPls[1] && pop.isEnabled('AutoPlaylist size')) { pop.disable(true); }
 						if (this.requiresCachePlaylistSearch()) {
-							Promise.wait(500).then(this.cachePlaylistSearch);
-						}
+							Promise.wait(500).then(this.cachePlaylistSearch)
+								.then(this.sort);
+						} else { this.sort(); }
+						if (this.properties.bBlockUpdateAutoPls[1] && pop.isEnabled('AutoPlaylist size')) { pop.disable(true); }
 					});
 				}
 			}
@@ -5404,7 +5405,7 @@ function _list(x, y, w, h) {
 				.then(() => {
 					console.log('Playlist Manager: Cached playlists for searching ' + _p(bIncludeAutoPls ? 'all' : 'files'));
 					// Refresh sorting with new data
-					if (['By track size', 'By duration', 'By date\t-last modified-'].includes(this.getMethodState())) {
+					if (['By track size', 'By duration', 'By size', 'By date\t-last modified-'].includes(this.getMethodState())) {
 						this.sort();
 					}
 					this.repaint(false, !this.bLiteMode && this.uiElements['Header buttons'].elements['Settings menu'].enabled ? 'all' : 'list');
@@ -5883,7 +5884,7 @@ function _list(x, y, w, h) {
 				.filter((folder) => this.data.includes(folder) || this.data.includes(this.getTopFolder(folder)))
 			: this.dataAll.filter((pls) => pls.isFolder)
 		)
-			.sort((a, b) => a.nameId.localeCompare(b.nameId, void(0), { sensitivity: 'base', numeric: true }))
+			.sort((a, b) => a.nameId.localeCompare(b.nameId, void (0), { sensitivity: 'base', numeric: true }))
 			.map((folder) => {
 				return {
 					name: folder.nameId,
@@ -6758,7 +6759,7 @@ function _list(x, y, w, h) {
 		});
 		if (this.bAutoRefreshXsp) {
 			this.refreshSmartPlaylists({ sources });
-			if (['By track size', 'By duration'].includes(this.getMethodState())) {
+			if (['By track size', 'By duration', 'By size', 'By date\t-last modified-'].includes(this.getMethodState())) {
 				this.sort();
 			}
 		}
@@ -6862,7 +6863,7 @@ function _list(x, y, w, h) {
 		}
 		if (!bSkipXspRefresh && this.bAutoRefreshXsp) {
 			this.refreshSmartPlaylists({ sources: [pls.nameId] });
-			if (['By track size', 'By duration'].includes(this.getMethodState())) {
+			if (['By track size', 'By duration', 'By size', 'By date\t-last modified-'].includes(this.getMethodState())) {
 				this.sort();
 			}
 		}
@@ -7143,8 +7144,12 @@ function _list(x, y, w, h) {
 				});
 			} else { this.deleteExportInfo(); }
 			if (this.requiresCachePlaylistSearch() && ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0)) {
-				Promise.wait(this.delays.playlistCache).then(this.cachePlaylistSearch);
+				Promise.wait(this.delays.playlistCache)
+					.then(this.cachePlaylistSearch)
+					.then(this.sort);
 			}
+		} else {
+			this.sort();
 		}
 		if (test) {
 			test.Print();

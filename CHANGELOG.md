@@ -183,6 +183,7 @@
 - UI: panel shortcuts like focus on search (Ctrl + E) conflict with quick-searching while pressing Ctrl/Shift (to look at any position).
 - UI: wrong column size in some cases -on auto mode- after using the search tool.
 - UI: fixed multiple selection behavior when using filters, where random items where being selected after filtering by Idx, even if they were not the original ones. Now it tries to maintain items only when they are also present after filtering, reducing the selection otherwise.
+- UI: sorting not being updated in some cases after playlist modifications.
 - UI: minor fixes to available actions on playlist menus.
 - UI: '&' being displayed as '_' on tooltips.
 - UI: minor new line errors on folder button tooltip.
