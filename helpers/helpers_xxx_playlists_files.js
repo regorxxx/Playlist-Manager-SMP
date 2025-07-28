@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/07/25
+//08/07/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
@@ -1091,7 +1091,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			if (relPath.length && (!Object.hasOwn(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) { libItemsRelPaths[relPath] = newLibItemsRelPaths; }
 		}
 	}
-	if (bLog) { test.Print(); }
+	if (test) { test.Print(); }
 	return (bReturnNotFound ? { handlePlaylist, pathsNotFound, locationsByOrder } : handlePlaylist);
 }
 
