@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/07/25
+//29/07/25
 
 /* exported _list */
 
@@ -6511,8 +6511,7 @@ function _list(x, y, w, h) {
 					fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);
 					return loadPromise;
 				}
-				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
-				plman.ActivePlaylist = fbPlaylistIndex;
+				plman.ActivePlaylist = plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
 				const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true); // Update size on load
 				if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 					this.updateTags(handleList, pls);

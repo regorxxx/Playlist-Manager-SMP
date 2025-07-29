@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/06/25
+//29/07/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
@@ -438,13 +438,13 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 function queryJoin(queryArray, setLogic = 'AND') {
 	setLogic = (setLogic || '').toUpperCase();
 	if (!logicDic.includes(setLogic)) {
-		console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
+		console.log('queryJoin(): setLogic is wrong.\n\t ', setLogic);
 		return;
 	}
 	let arrayLength = queryArray.length;
 	// Wrong array
 	if (!Array.isArray(queryArray) || typeof queryArray === 'undefined' || queryArray === null || arrayLength === null || arrayLength === 0) {
-		console.log('queryJoin(): queryArray [' + queryArray + '] was null, empty or not an array.');
+		console.log('queryJoin(): queryArray was null, empty or not an array.\n\t ', queryArray);
 		return; //Array was null or not an array
 	}
 	const allRegex = /ALL/;
@@ -488,11 +488,11 @@ function queryJoin(queryArray, setLogic = 'AND') {
 function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subtagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
 	// Wrong tagsArray
 	if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
-		console.log('queryCombinations(): tagsArray [' + tagsArray + '] was null, empty or not an array. queryKey = ' + queryKey);
+		console.log('queryCombinations(): tagsArray was null, empty or not an array.\n\t ', tagsArray);
 		return; //Array was null or not an array
 	}
 	if (typeof queryKey === 'undefined' || queryKey === null || !queryKey) {
-		console.log('queryCombinations(): queryKey not set. tagsArray = ' + tagsArray);
+		console.log('queryCombinations(): queryKey not set.\n\t ', queryKey);
 		return;
 	}
 	tagsArrayLogic = (tagsArrayLogic || '').toUpperCase();
