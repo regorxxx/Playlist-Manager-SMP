@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/07/25
+//31/07/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -783,7 +783,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newSeparator(subMenuName);
 					menu.newEntry({
 						menuName: subMenuName, entryText: 'Get URL...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
-							console.popup('Playlist URL:\n\t' + lb.getPlaylistURL(pls), window.Name);
+							console.popup('Playlist URL:\n\t ' + lb.getPlaylistURL(pls), window.Name);
 						}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED
 					});
 					menu.newEntry({
@@ -1587,7 +1587,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Get URL...' + (playlists.some((pls) => pls.playlist_mbid.length) ? '' : '\t(no MBID)'), func: async () => {
-				console.popup('Playlist URL:\n\t' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t'), window.Name);
+				console.popup('Playlist URL:\n\t ' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t '), window.Name);
 			}, flags: playlists.some((pls) => pls.playlist_mbid.length) ? MF_STRING : MF_GRAYED
 		});
 	}
@@ -5832,7 +5832,7 @@ function createMenuFilterSorting() {
 				}
 				console.log(
 					'Playlist Manager: sorted playlist tabs in U. ' + list.getMethodState() + ' ' + _p(list.getSortState()) +
-					(bHasFolders ? ' following folder tree' : '') + '.\n\t' +
+					(bHasFolders ? ' following folder tree' : '') + '.\n\t ' +
 					plsNames.map((name, i) => _b(i) + ' ' + name).join(', ')
 				);
 			}, flags: list.bAllPls ? MF_STRING : MF_GRAYED
@@ -5843,7 +5843,7 @@ function createMenuFilterSorting() {
 				const bShift = utils.IsKeyPressed(VK_SHIFT);
 				plman.SortPlaylistsByName(bShift ? -1 : 1);
 				console.log(
-					'Playlist Manager: sorted playlist tabs in UI. By name ' + _p(bShift ? 'Za' : 'Az') + '.\n\t' +
+					'Playlist Manager: sorted playlist tabs in UI. By name ' + _p(bShift ? 'Za' : 'Az') + '.\n\t ' +
 					range(0, plman.PlaylistCount - 1).map((i) => _b(i) + ' ' + plman.GetPlaylistName(i)).join(', ')
 				);
 			}

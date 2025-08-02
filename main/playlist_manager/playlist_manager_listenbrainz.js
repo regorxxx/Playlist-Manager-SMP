@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/25
+//31/07/25
 
 /* exported ListenBrainz */
 
@@ -825,7 +825,7 @@ ListenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 					results.forEach((result, i) => {
 						if (!result) { report.push(handleList[i].RawPath); }
 					});
-					console.log(report.join('\n\t')); // DEBUG
+					console.log(report.join('\n\t ')); // DEBUG
 				}
 				return results;
 			}
@@ -1700,7 +1700,7 @@ ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 			handleArr[i] = void (0);
 		}
 	}
-	if (notFound.length) { console.log('Some tracks have not been found on library:\n\t' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t')); }
+	if (notFound.length) { console.log('Some tracks have not been found on library:\n\t ' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t ')); }
 	if (this.bProfile) { profiler.Print(''); }
 	return { handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound };
 };
