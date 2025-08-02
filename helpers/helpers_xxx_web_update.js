@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//31/07/25
 
 /* exported checkUpdate */
 
@@ -56,7 +56,7 @@ function checkUpdate({
 				case 12007: reason = 'Network error'; break;
 				case '': reason = 'Uknown error'; break;
 			}
-			console.log('downloadText(): ' + reason + '\n\t' + versionURL);
+			console.log('downloadText(): ' + reason + '\n\t ' + versionURL);
 			return false;
 		});
 }

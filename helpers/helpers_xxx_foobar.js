@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/25
+//31/07/25
 
 /* exported checkCompatible, memoryUsed, isPortable, lastStartup, memoryPrint*/
 
@@ -50,10 +50,10 @@ function memoryPrint(text, obj) {
 		window.Name + (text ? ' - ' + text : '') +
 		(
 			typeof obj !== 'undefined'
-				? '\n\tArgs memory usage: ' + utils.FormatFileSize(roughSizeOfObject(obj))
+				? '\n\t Args memory usage: ' + utils.FormatFileSize(roughSizeOfObject(obj))
 				: ''
 		) +
-		'\n\tPanel memory usage: ' + utils.FormatFileSize(window.JsMemoryStats.MemoryUsage) +
+		'\n\t Panel memory usage: ' + utils.FormatFileSize(window.JsMemoryStats.MemoryUsage) +
 		'  /  Total memory usage:: ' + utils.FormatFileSize(window.JsMemoryStats.TotalMemoryLimit)
 	);
 }
