@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/03/25
+//01/08/25
 
 /* exported clone, getNested, setNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
@@ -8,8 +8,8 @@
   Deep clones all properties except functions
 */
 function clone(obj) {
-	const raw = new Set(['function', 'number', 'boolean', 'string']);
-	if (raw.has(typeof obj)) { return obj; }
+	const raw = new Set(['function', 'number', 'boolean', 'string', 'undefined']);
+	if (raw.has(typeof obj) || obj === null) { return obj; }
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/06/25
+//01/08/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
 
@@ -477,17 +477,12 @@ function matchCase(text, pattern, bFirst = true) {
 	return result;
 }
 
-function capitalize(s) {
+function capitalize(s, bPartial = false) {
 	if (!isString(s)) { return typeof s === 'number' ? s.toString() : ''; }
-	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+	return s.charAt(0).toUpperCase() + (bPartial ? s.slice(1) : s.slice(1).toLowerCase());
 }
 
-function capitalizePartial(s) {
-	if (!isString(s)) { return typeof s === 'number' ? s.toString() : ''; }
-	return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
+function capitalizeAll(s, sep = ' ', bJoinSep = true, bPartial = false) { // Can use RegEx as separator, when using RegEx with capture groups to also include separators on split array, bJoinSep should be false to join 'as is'
 	if (!isString(s)) { return typeof s === 'number' ? s.toString() : ''; }
 	if (Array.isArray(sep)) {
 		const copy = [...s.toLowerCase()];
@@ -502,7 +497,7 @@ function capitalizeAll(s, sep = ' ', bJoinSep = true) { // Can use RegEx as sepa
 		}
 		return copy.join('');
 	}
-	return s.split(sep).map((subS) => subS.charAt(0).toUpperCase() + subS.slice(1).toLowerCase()).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
+	return s.split(sep).map((subS) => subS.charAt(0).toUpperCase() + (bPartial ? subS.slice(1) : subS.slice(1).toLowerCase())).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
 }
 
 function _p(value) {
