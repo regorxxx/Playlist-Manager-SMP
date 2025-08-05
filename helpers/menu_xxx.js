@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/25
+//05/08/25
 
 /* exported _menu */
 
@@ -149,7 +149,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 */
 	this.getNumEntries = () => entryArr.length;
 	/**
-	 * Gets all menu entries (parents and entries), but those created by conditional menus are not set yet!
+	 * Gets all menu entries (parents and entries), but those created by conditional entries are not set yet!
 	 *
 	 * @kind method
 	 * @memberof _menu
@@ -207,13 +207,11 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	this.isLastEntrySep = void (0); // Defined so JSDOC works properly
 	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry('sep'); } });
 	/**
-	 * Checks if last entry matches a name by type
+	 * Gets all submenu entries, but those created by conditional entries are not set yet!
 	 *
 	 * @kind method
 	 * @memberof _menu
-	 * @name isLastEntry
-	 * @param {string} name - Entry name for lookup
-	 * @param {('entry'|'cond'|'menu')} [type] - [='entry'] Entry type.
+	 * @name getMenus
 	 * @returns {Menu[]}
 	 */
 	this.getMenus = () => [...menuArr];
@@ -254,7 +252,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		return found ? found.menuName : null;
 	};
 	/**
-	 * Gets all menu check entries, but those created by conditional menus are not set yet!
+	 * Gets all menu check entries, but those created by conditional entries are not set yet!
 	 *
 	 * @kind method
 	 * @memberof _menu
