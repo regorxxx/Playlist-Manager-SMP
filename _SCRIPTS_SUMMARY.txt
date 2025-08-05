@@ -61,8 +61,8 @@ unified toolbar wih special UI related settings (see above):
 			- .\buttons\buttons_playlist_tools_submenu_custom.js.js
 	+ Search by Distance:
 		- .\buttons\buttons_search_by_distance_customizable.js (configurable with menus)
-		- .\buttons\buttons_search_by_distance.js
-		- .\buttons\buttons_search_by_distance_info.js
+		- .\buttons\buttons_search_by_distance_basic.js
+		- .\buttons\buttons_search_by_distance_explorer.js
 	+ Playlist manipulation:
 		- .\buttons\buttons_playlist_remove_duplicates.js
 		- .\buttons\buttons_playlist_filter.js
