@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/25
+//06/08/25
 
 /* exported ListenBrainz */
 
@@ -49,7 +49,7 @@ const ListenBrainz = {
  * @property {object} playlist
  * @property {string} playlist.title - Playlist title.
  * @property {string} playlist.creator - User/software who created the playlist.
- * @property {string} playlist.annotation - Ccomment on the playlist.
+ * @property {string} playlist.annotation - Comment on the playlist.
  * @property {string} playlist.info - URI of a web page to find out more about the playlist.
  * @property {string} playlist.location - Source URI for the playlist.
  * @property {string} playlist.identifier - Canonical ID for this playlist. Likely to be a hash or other location-independent name.
@@ -290,7 +290,7 @@ ListenBrainz.lookupArtistMBIDsByName = function lookupArtistMBIDsByName(names, b
  * Retrieves Artist MBID (MUSICBRAINZ_ALBUMARTISTID|MUSICBRAINZ_ARTISTID) for a handle list, using tags and [optionally] via API.
  * Output has the same length/sorting than input.
  *
- * There is additional handling for special artists if bRetry is set to true when passing a single handle, where it tryes to switch Album Artist/Artist to find a real artist MBID.
+ * There is additional handling for special artists if bRetry is set to true when passing a single handle, where it tries to switch Album Artist/Artist to find a real artist MBID.
  * @see {@link https://musicbrainz.org/doc/Style/Unknown_and_untitled/Special_purpose_artist}
  * @see {@link https://musicbrainz.org/artist/4e46dd54-81a6-4a75-a666-d0e447861e3f}
  * @see {@link ListenBrainz.lookupArtistMBIDs}
@@ -328,7 +328,7 @@ ListenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, b
 	return tags;
 };
 /**
- * Creates a dictionary of MBIDs per Artist. Artists in ListenBrainz may not necessarily match the library ones, due to variations, etc. A lookupo is used for every MBID and once the canonical name is retrieved, it's matched against the list of artists passed on input if their similarity is high enough (Levenshtein distance > 90%).
+ * Creates a dictionary of MBIDs per Artist. Artists in ListenBrainz may not necessarily match the library ones, due to variations, etc. A lookup is used for every MBID and once the canonical name is retrieved, it's matched against the list of artists passed on input if their similarity is high enough (Levenshtein distance > 90%).
  * @see {@link https://datasets.listenbrainz.org/artist-lookup}
  * @overload
  * @param {string[]} artists
@@ -338,7 +338,7 @@ ListenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, b
  * @returns {Promise.<{artist:string, mbids:string[]}[]>}
  */
 /**
- * Creates a dictionary of Artists per MBID. Artists in ListenBrainz may not necessarily match the library ones, due to variations, etc. A lookupo is used for every MBID and once the canonical name is retrieved, it's matched against the list of artists passed on input if their similarity is high enough (Levenshtein distance > 90%).
+ * Creates a dictionary of Artists per MBID. Artists in ListenBrainz may not necessarily match the library ones, due to variations, etc. A lookup is used for every MBID and once the canonical name is retrieved, it's matched against the list of artists passed on input if their similarity is high enough (Levenshtein distance > 90%).
  * @see {@link https://datasets.listenbrainz.org/artist-lookup}
  * @overload
  * @param {string[]} artists
@@ -438,7 +438,7 @@ ListenBrainz.consoleError = function consoleError(message = 'Token can not be va
  * @param {string} root - Path in case relative paths are used in playlist file
  * @param {string} token
  * @param {Boolean} [bLookupMBIDs=true] - Lookup MBIDs using API for tracks without such tag
- * @returns {Promise.<string>} Playlist MBID on sucess
+ * @returns {Promise.<string>} Playlist MBID on success
  */
 ListenBrainz.exportPlaylist = async function exportPlaylist(pls, root = '', token = '', bLookupMBIDs = true) { // NOSONAR
 	if (!pls.path && !pls.extension || pls.extension && !pls.nameId || !pls.name) { console.log('exportPlaylist: no valid pls provided'); return Promise.resolve(''); }
@@ -498,7 +498,7 @@ ListenBrainz.exportPlaylist = async function exportPlaylist(pls, root = '', toke
  * @param {string} root - Path in case relative paths are used in playlist file
  * @param {string} token
  * @param {Boolean} [bLookupMBIDs=true] - Lookup MBIDs using API for tracks without such tag
- * @returns {Promise.<string>} Playlist MBID on sucess
+ * @returns {Promise.<string>} Playlist MBID on success
  */
 ListenBrainz.syncPlaylist = function syncPlaylist(pls, root = '', token = '', bLookupMBIDs = true) {// NOSONAR
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) { console.log('syncPlaylist: no playlist_mbid provided'); return Promise.resolve(''); }
@@ -563,10 +563,10 @@ ListenBrainz.syncPlaylist = function syncPlaylist(pls, root = '', token = '', bL
  * @kind method
  * @memberof ListenBrainz
  * @param {{playlist_mbid:string}} pls - Playlist object which must contain at least those keys
- * @param {number} offset- If the offset is providedm then the recordings will be added at that offset, otherwise they will be added at the end of the playlist.
+ * @param {number} offset- If the offset is provided then the recordings will be added at that offset, otherwise they will be added at the end of the playlist.
  * @param {string} token
  * @param {Boolean} [bLookupMBIDs=true] - Lookup MBIDs using API for tracks without such tag
- * @returns {Promise.<string>} Playlist MBID on sucess
+ * @returns {Promise.<string>} Playlist MBID on success
  */
 ListenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, token, bLookupMBIDs = true) {
 	if (!pls.playlist_mbid || !pls.playlist_mbid.length) { console.log('addPlaylist: no playlist_mbid provided'); return Promise.resolve(''); }
@@ -1499,7 +1499,7 @@ ListenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
  * @param {string[]} artistMbids - Array of artist MBIDs
  * @param {string} token - ListenBrainz user token
  * @param {('v1'|'v2')} algorithm - [='v1'] see {@link ListenBrainz.algorithm.retrieveSimilarArtists} for further information
- * @param {boolean} bRetry - [=true] Tries v2 algorithm is the lookup doesnt return at least 5 results
+ * @param {boolean} bRetry - [=true] Tries v2 algorithm is the lookup doesn't return at least 5 results
  * @returns {Promise.<{ {artist_mbid: string, comment:string, gender: string, name: string, reference_mbid: string, score: number, type: string }[]}>}
  */
 ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1', bRetry = true) {
@@ -1592,7 +1592,7 @@ ListenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(reco
  * @param {string} user
  * @param {string} token - ListenBrainz user token
  * @param {number} iThreshold - [=0.7] Minimum score
- * @returns {Promise.<{{user_name:string, similarity:strin}[]}>}
+ * @returns {Promise.<{{user_name:string, similarity:string}[]}>}
  */
 ListenBrainz.retrieveSimilarUsers = function retrieveSimilarUsers(user, token, iThreshold = 0.7) {
 	if (!user || !user.length || !token || !token.length) { console.log('retrieveSimilarUsers: no user/token provided'); return Promise.resolve([]); }
@@ -1633,7 +1633,7 @@ ListenBrainz.retrieveSimilarUsers = function retrieveSimilarUsers(user, token, i
  * @param {string} filter - Recommended 'NOT (%RATING% EQUAL 1 OR %RATING% EQUAL 2) AND NOT (GENRE IS live OR STYLE IS live)'
  * @param {string} sort
  * @param {boolean} [bOnlyMBID=false] - Wether find matches by fuzzy lookup or only using MBIDs.
- * @returns {{handleList:FbMetadbHandleList, handleArr:(FbMetadbHandle|void)[], notFound:{creator:string, title:string, identifier:string, artistIndentifier:string[]}}} handleList contains all items found, but it may have less items than the input. handleArr contains all items by input order, wether they are found (handles) or not (void). notFound may be used to identify missing items and directly look for them using {@link youTube.searchForYoutubeTrack}.
+ * @returns {{handleList:FbMetadbHandleList, handleArr:(FbMetadbHandle|void)[], notFound:{creator:string, title:string, identifier:string, artistIdentifier:string[]}}} handleList contains all items found, but it may have less items than the input. handleArr contains all items by input order, wether they are found (handles) or not (void). notFound may be used to identify missing items and directly look for them using {@link youTube.searchForYoutubeTrack}.
  */
 ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort = globQuery.remDuplBias, bOnlyMBID = false) {
 	if (!jspf) { return null; }
@@ -1665,7 +1665,7 @@ ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 		let query = '';
 		let lookup = {};
 		let identifier = '';
-		const artistIndentifier = Object.hasOwn(rowExt, 'artist_identifiers') && rowExt.artist_identifiers && rowExt.artist_identifiers.length
+		const artistIdentifier = Object.hasOwn(rowExt, 'artist_identifiers') && rowExt.artist_identifiers && rowExt.artist_identifiers.length
 			? rowExt.artist_identifiers.map((val) => decodeURI(val).replace(this.regEx, ''))
 			: [''];
 		lookupKeys.forEach((look) => {
@@ -1696,7 +1696,7 @@ ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 			}
 		}
 		if (!handleArr[i]) {
-			notFound.push({ creator: rows[i].creator, title: rows[i].title, identifier /* str */, artistIndentifier /* [str, ...]*/ });
+			notFound.push({ creator: rows[i].creator, title: rows[i].title, identifier /* str */, artistIdentifier /* [str, ...]*/ });
 			handleArr[i] = void (0);
 		}
 	}

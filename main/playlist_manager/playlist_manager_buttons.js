@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/12/24
+//06/08/25
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -358,7 +358,7 @@ function _listButtons(bSetup = false) {
 		this.gDown = false;
 		if (this.curBtn) {
 			this.curBtn.onClick();
-			// Solves error if you create a new Whsell Popup (this.curBtn becomes null) after pressing the button and firing this.curBtn.onClick()
+			// Solves error if you create a new WshShell Popup (this.curBtn becomes null) after pressing the button and firing this.curBtn.onClick()
 			if (this.curBtn) {
 				this.curBtn.changeState(buttonStates.hover);
 				list.repaint();
@@ -472,7 +472,7 @@ function _listButtons(bSetup = false) {
 				description: sortTooltip,
 				icon: sortIcon
 			}),
-			// Cycle filtering between playlist types: all, autoplaylist, (standard) playlist
+			// Cycle filtering between playlist types: all, AutoPlaylist, (standard) playlist
 			filterOneButton: new ThemedPanelButton({
 				x: calcNextButtonCoordinates(buttonCoordinatesTwo).x,
 				y: calcNextButtonCoordinates(buttonCoordinatesTwo, false).y,

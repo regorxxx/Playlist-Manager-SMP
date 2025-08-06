@@ -220,8 +220,12 @@ function getPlaylistSelectedIndexLast(playlistIndex) {
 function getSource(type, arg) {
 	switch (type) {
 		case 'playlist': return getHandlesFromUIPlaylists(arg, false); // [playlist names]
-		case 'playingPlaylist': return (plman.PlayingPlaylist !== -1 && fb.IsPlaying ? plman.GetPlaylistItems(plman.PlayingPlaylist) : getSource('activePlaylist'));
-		case 'activePlaylist': return (plman.ActivePlaylist !== -1 ? plman.GetPlaylistItems(plman.ActivePlaylist) : new FbMetadbHandleList());
+		case 'playingPlaylist': return plman.PlayingPlaylist !== -1 && fb.IsPlaying
+			? plman.GetPlaylistItems(plman.PlayingPlaylist)
+			: getSource('activePlaylist');
+		case 'activePlaylist': return plman.ActivePlaylist !== -1
+			? plman.GetPlaylistItems(plman.ActivePlaylist)
+			: new FbMetadbHandleList();
 		case 'handleList': return arg;
 		case 'library':
 		default: return fb.GetLibraryItems();

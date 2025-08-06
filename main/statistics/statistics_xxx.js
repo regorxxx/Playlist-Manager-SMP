@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/06/25
+//06/08/25
 
 /* exported _chart */
 
@@ -36,9 +36,9 @@ include('statistics_xxx_helper.js');
  * @name _chart
  * @constructor
  * @param {object} o - argument
- * @param {{x:string, y:number}[][]} o.data - Array of series. Every serie is an array of points.
+ * @param {{x:string, y:number}[][]} o.data - Array of series. Every series is an array of points.
  * @param {() => Promise.<{x:string, y:number}[][]>|Promise.<{x:string, y:number}[][]>} [o.dataAsync] - [=null] function returning a promise or a promise which must resolve to an array of series.
- * @param {number[]} [o.colors] - [=[]] Array of android colors, one per serie. If not specified, it will be automatically chosen according to o.chroma.scheme
+ * @param {number[]} [o.colors] - [=[]] Array of android colors, one per series. If not specified, it will be automatically chosen according to o.chroma.scheme
  * @param {object} [o.chroma] - Color palette settings
  * @param {'diverging'|'qualitative'|'sequential'|'random'|number[]} [o.chroma.scheme] - Scheme by name or array of colors. See https://vis4.net/chromajs/#color-scales
  * @param {boolean} [o.chroma.colorBlindSafe] - Flag to use only palettes which are colorblind safe
@@ -51,14 +51,14 @@ include('statistics_xxx_helper.js');
  * @param {number} [o.graph.pointAlpha] - [=255] Point transparency [0-255]
  * @param {object} [o.dataManipulation] - Data manipulation settings
  * @param {object} [o.dataManipulation.sort] - Sort settings
- * @param {_chartSorting} [o.dataManipulation.sort.x] - [='natural'] Sorts the serie by X-value
- * @param {_chartSorting} [o.dataManipulation.sort.y] - [=null] Sorts the serie by y-value
- * @param {_chartSorting} [o.dataManipulation.sort.z] - [=null] Sorts the serie by Z-value, used when o.graph.multi is true
+ * @param {_chartSorting} [o.dataManipulation.sort.x] - [='natural'] Sorts the series by X-value
+ * @param {_chartSorting} [o.dataManipulation.sort.y] - [=null] Sorts the series by y-value
+ * @param {_chartSorting} [o.dataManipulation.sort.z] - [=null] Sorts the series by Z-value, used when o.graph.multi is true
  * @param {_chartSorting} [o.dataManipulation.sort.my] - [='reverse num'] Sorts every Z-group by Y-value, used when o.graph.multi is true
  * @param {_chartSorting} [o.dataManipulation.sort.mz] - [='reverse num'] Sorts every Z-group by Z-value, used when o.graph.multi is true
- * @param {(point: {x: string, y: number, total: number}, idx: number, serie: any[]) => boolean} [o.dataManipulation.filter] - [=null]
+ * @param {(point: {x: string, y: number, total: number}, idx: number, series: any[]) => boolean} [o.dataManipulation.filter] - [=null]
  * @param {boolean} [o.dataManipulation.mFilter] - [=true]
- * @param {[number, number]} [o.dataManipulation.slice] - [=[0,10]] Displays only these range of values (by pos) of every serie
+ * @param {[number, number]} [o.dataManipulation.slice] - [=[0,10]] Displays only these range of values (by pos) of every series
  * @param {_chartDistrPlot} [o.dataManipulation.distribution] - [=null] Fits the data into a distribution function
  * @param {_chartProbPlot} [o.dataManipulation.probabilityPlot] - [=null] Fits the data into a probability function
  * @param {number} [o.dataManipulation.group] - [=4] How many Z-groups are displayed, used when o.graph.multi is true
@@ -93,19 +93,19 @@ include('statistics_xxx_helper.js');
  * @param {object} [o.callbacks.config] - Config related callbacks
  * @param {function(config, arguments, callbackArgs)} [o.callbacks.config.change] - Called when changing any setting via this.changeConfig().
  * @param {() => [number, number]} [o.callbacks.config.backgroundColor] - Called when using dynamic colors to adjust axis/label colors
- * @param {(number[]) => void} [o.callbacks.config.artColors] - Placeholder for callback which should be called by bakground methods when using dynamic colors to adjust series colors
+ * @param {(number[]) => void} [o.callbacks.config.artColors] - Placeholder for callback which should be called by background methods when using dynamic colors to adjust series colors
  * @param {number} [o.x] - [=0] X panel position
  * @param {number} [o.y] - [=0] Y panel position
  * @param {number} [o.w] - [=window.Width] W panel position
  * @param {number} [o.w] - [=window.Height] H panel position
  * @param {string} [o.title] - Chart title
  * @param {GdiFont} [o.gFont] - [=_gdiFont('Segoe UI', _scale(10))] Chart font
- * @param {((refPoint, serie, mask) => string)|string} [o.tooltipText] - [='']
+ * @param {((refPoint, series, mask) => string)|string} [o.tooltipText] - [='']
  */
 function _chart({
 	data,
 	dataAsync = null,
-	colors = [/* rgbSerie1, ... */],
+	colors = [/* rgbSeries1, ... */],
 	chroma = {/* scheme, colorBlindSafe, interpolation */ },
 	graph = {/* type, multi, borderWidth, point, pointAlpha */ },
 	dataManipulation = {/* sort, filter, mFilter, slice, distribution , probabilityPlot, group */ },
@@ -134,7 +134,7 @@ function _chart({
 		xScroll: {/* tooltip */ },
 		config: {/* change, backgroundColor, artColors */ }
 	},
-	configuration = {/* bLoadAsyncData: true, bAltVerticalText: false, bPopupBackground: false, bDebug: false, bProfile: false, bSlicePerKey: true, bDynLabelColor: true, bDynLabelColorBW: true, bDynSerieColor: false, bDynBgColor: false, maxSliceOnDataChange: 100 */ },
+	configuration = {/* bLoadAsyncData: true, bAltVerticalText: false, bPopupBackground: false, bDebug: false, bProfile: false, bSlicePerKey: true, bDynLabelColor: true, bDynLabelColorBW: true, bDynSeriesColor: false, bDynBgColor: false, maxSliceOnDataChange: 100 */ },
 	x = 0,
 	y = 0,
 	w = window.Width,
@@ -207,14 +207,14 @@ function _chart({
 		}
 	};
 
-	this.paintScatter = (gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues) => { // NOSONAR
+	this.paintScatter = (gr, series, i, x, y, w, h, maxY, tickW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const pointType = (this.graph.point || 'circle').toLowerCase();
 		const selBar = this.graph.borderWidth * 2;
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const xPoint = x + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = y - valH;
@@ -265,14 +265,14 @@ function _chart({
 		});
 	};
 
-	this.paintLines = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
+	this.paintLines = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
 			const xPoint = x + idx * tickW;
@@ -284,7 +284,7 @@ function _chart({
 			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
-					const newValH = serie[j - 1].y / (maxY || 1) * (y - h);
+					const newValH = series[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
 					gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
@@ -295,14 +295,14 @@ function _chart({
 	};
 
 	// Same than paintLines but splits thick lines into multiple pieces to avoid drawing glitches
-	this.paintLinesHighQ = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
+	this.paintLinesHighQ = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
 			const xPoint = x + idx * tickW;
@@ -319,7 +319,7 @@ function _chart({
 			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
-					const newValH = serie[j - 1].y / (maxY || 1) * (y - h);
+					const newValH = series[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
 					if (this.graph.borderWidth > 1) {
@@ -340,14 +340,14 @@ function _chart({
 		});
 	};
 
-	this.paintFill = (gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
+	this.paintFill = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
 			const xPoint = x + idx * tickW;
@@ -364,7 +364,7 @@ function _chart({
 			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
-					const newValH = serie[j - 1].y / (maxY || 1) * (y - h);
+					const newValH = series[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
 					const lineArr = [xPoint, yPoint, xPoint, y, newXPoint + 0.25, y, newXPoint + 0.25, newYPoint];
@@ -375,14 +375,14 @@ function _chart({
 		});
 	};
 
-	this.paintBars = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
+	this.paintBars = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const xValues = x + i * barW;
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = y - valH;
@@ -397,14 +397,14 @@ function _chart({
 		});
 	};
 
-	this.paintHorizontalBars = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues, xAxisValuesLen) => { // NOSONAR
+	this.paintHorizontalBars = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues, xAxisValuesLen) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const yValues = y - barW - i * barW;
 		let valW;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valW = value.y / (maxY || 1) * (w - x);
 			const revIdx = Math.abs(xAxisValuesLen - xAxisValues.indexOf(value.x) - 1); // Idx reversed
 			const yPoint = yValues - revIdx * tickW;
@@ -420,14 +420,14 @@ function _chart({
 		});
 	};
 
-	this.paintTimeline = (gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
+	this.paintTimeline = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const xValues = x + i * barW;
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? 300 : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
-		serie.forEach((value, j) => {
+		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) / 2 * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = (y - h) / 2 - valH + this.margin.top;
@@ -443,7 +443,7 @@ function _chart({
 		});
 	};
 
-	this.paintPie = (gr, serie, i, x, y, w, h, maxY, r) => { // NOSONAR
+	this.paintPie = (gr, series, i, x, y, w, h, maxY, r) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		let circleArr = [];
@@ -465,15 +465,15 @@ function _chart({
 			gr.FillPolygon(bgColor, 0, circleArr);
 		}
 		let alpha = 0;
-		serie.forEach((value, j, thisSerie) => {
+		series.forEach((value, j, thisSeries) => {
 			const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), getBrightness(...toRGB(this.colors[i][j])) < 50 ? 300 : 25);
 			const color = RGBA(...toRGB(this.colors[i][j]), this.graph.pointAlpha);
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [...Object.values(c)];
-			const sumY = thisSerie.reduce((acc, val) => acc + val.y, 0);
+			const sumY = thisSeries.reduce((acc, val) => acc + val.y, 0);
 			const perc = sumY !== 0
 				? value.y / sumY
-				: 1 / thisSerie.length;
+				: 1 / thisSeries.length;
 			const sliceTicks = perc * ticks;
 			const iAlpha = 2 * Math.PI * perc;
 			for (let h = 0; h < sliceTicks; h++) {
@@ -498,7 +498,7 @@ function _chart({
 		return labelCoord;
 	};
 
-	this.paintDoughnut = (gr, serie, i, x, y, w, h, maxY, r, rInner) => { // NOSONAR
+	this.paintDoughnut = (gr, series, i, x, y, w, h, maxY, r, rInner) => { // NOSONAR
 		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		let circleArr = [];
@@ -507,15 +507,15 @@ function _chart({
 		const ticks = r * 2 * Math.PI;
 		let iY, iX;
 		let alpha = 0;
-		serie.forEach((value, j, thisSerie) => {
+		series.forEach((value, j, thisSeries) => {
 			const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), getBrightness(...toRGB(this.colors[i][j])) < 50 ? 300 : 25);
 			const color = RGBA(...toRGB(this.colors[i][j]), this.graph.pointAlpha);
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [];
-			const sumY = thisSerie.reduce((acc, val) => acc + val.y, 0);
+			const sumY = thisSeries.reduce((acc, val) => acc + val.y, 0);
 			const perc = sumY !== 0
 				? value.y / sumY
-				: 1 / thisSerie.length;
+				: 1 / thisSeries.length;
 			const sliceTicks = perc * ticks;
 			const iAlpha = 2 * Math.PI * perc;
 			for (let h = 0; h < sliceTicks; h++) {
@@ -567,8 +567,8 @@ function _chart({
 		const yGridColor = bDynLabelColor ? bgColor : this.grid.y.color || bgColor;
 		// Max Y value for all series
 		let maxY = 0, minY = 0;
-		this.dataDraw.forEach((serie) => {
-			serie.forEach((value) => {
+		this.dataDraw.forEach((series) => {
+			series.forEach((value) => {
 				if (value.y > maxY) { maxY = value.y; }
 				if (value.y < minY) { minY = value.y; }
 			});
@@ -580,9 +580,9 @@ function _chart({
 		const tickText = ticks.map((tick) => this.nFormatter(tick, 1));
 		// Retrieve all different label on all series
 		const points = [];
-		this.dataDraw.forEach((serie, i) => {
+		this.dataDraw.forEach((series, i) => {
 			points.push([]);
-			serie.forEach((value) => points[i].push(value));
+			series.forEach((value) => points[i].push(value));
 		});
 		const getUniqueListBy = function getUniqueListBy(arr, key) {
 			return [...new Map(arr.map(item => [item[key], item])).values()];
@@ -658,22 +658,22 @@ function _chart({
 				// Values
 				const last = xAxisValuesLen - 1;
 				gr.SetSmoothingMode(4); // Antialias for lines
-				this.dataDraw.forEach((serie, i) => {
-					if (graphType === 'scatter' || (serie.length === 1)) {
-						this.paintScatter(gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues);
+				this.dataDraw.forEach((series, i) => {
+					if (graphType === 'scatter' || (series.length === 1)) {
+						this.paintScatter(gr, series, i, x, y, w, h, maxY, tickW, xAxisValues);
 					} else if (graphType === 'fill') {
-						this.paintFill(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+						this.paintFill(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					} else if (graphType === 'lines') {
-						this.paintLines(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+						this.paintLines(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					} else if (graphType === 'lines-hq') {
-						this.paintLinesHighQ(gr, serie, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+						this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					}
 				});
 				gr.SetSmoothingMode(0);
 				break;
 			}
 			case 'q-q plot':
-			case 'p-p plot': { // Mixes scatter and lines (last serie)
+			case 'p-p plot': { // Mixes scatter and lines (last series)
 				x -= this.axis.x.width * 1 / 2;
 				tickW = (w - this.margin.leftAuto) / ((xAxisValuesLen - 1) || 1);
 				barW = 0;
@@ -685,8 +685,8 @@ function _chart({
 				if (len > 0) { // Paint first the line, then the points
 					this.paintLines(gr, this.dataDraw[len], len, x, y, w, h, maxY, tickW, last, xAxisValues);
 					for (let i = 0; i < len; i++) {
-						const serie = this.dataDraw[i];
-						this.paintScatter(gr, serie, i, x, y, w, h, maxY, tickW, xAxisValues);
+						const series = this.dataDraw[i];
+						this.paintScatter(gr, series, i, x, y, w, h, maxY, tickW, xAxisValues);
 					}
 				}
 				gr.SetSmoothingMode(0);
@@ -699,12 +699,12 @@ function _chart({
 				offsetTickText = - tickW / 2;
 				// Values
 				gr.SetSmoothingMode(4); // Antialias for lines
-				const series = this.dataDraw.length;
-				this.dataDraw.forEach((serie, i) => {
-					const r = tickW * (series - i) / series;
-					const serieCoord = this.paintPie(gr, serie, i, x, y, w, h, maxY, r);
-					labelOver.coord.push([{ from: { x: x + w / 2, y: (y + h) / 2 }, to: { x: x + w / 2 + r, y: (y + h) / 2 }, val: void (0), alpha: 0 }, ...serieCoord]);
-					this.dataCoords[i].forEach((point) => { point.r1 = (series - i - 1) / series * r; });
+				const seriesLen = this.dataDraw.length;
+				this.dataDraw.forEach((series, i) => {
+					const r = tickW * (seriesLen - i) / seriesLen;
+					const seriesCoord = this.paintPie(gr, series, i, x, y, w, h, maxY, r);
+					labelOver.coord.push([{ from: { x: x + w / 2, y: (y + h) / 2 }, to: { x: x + w / 2 + r, y: (y + h) / 2 }, val: void (0), alpha: 0 }, ...seriesCoord]);
+					this.dataCoords[i].forEach((point) => { point.r1 = (seriesLen - i - 1) / seriesLen * r; });
 				});
 				labelOver.r = tickW;
 				gr.SetSmoothingMode(0);
@@ -717,13 +717,13 @@ function _chart({
 				offsetTickText = - tickW / 2;
 				// Values
 				gr.SetSmoothingMode(4); // Antialias for lines
-				const series = this.dataDraw.length + 1;
-				this.dataDraw.forEach((serie, i) => {
-					const r1 = tickW * (series - i) / series;
-					const r2 = tickW * (series - i - 1) / series;
-					const serieCoord = this.paintDoughnut(gr, serie, i, x, y, w, h, maxY, r1, r2);
-					labelOver.coord.push([{ from: { x: x + w / 2, y: (y + h) / 2 }, to: { x: x + w / 2 + r1, y: (y + h) / 2 }, val: void (0), alpha: 0 }, ...serieCoord]);
-					this.dataCoords[i].forEach((point) => { point.r1 = (series - i - 1) / series * r1; });
+				const seriesLen = this.dataDraw.length + 1;
+				this.dataDraw.forEach((series, i) => {
+					const r1 = tickW * (seriesLen - i) / seriesLen;
+					const r2 = tickW * (seriesLen - i - 1) / seriesLen;
+					const seriesCoord = this.paintDoughnut(gr, series, i, x, y, w, h, maxY, r1, r2);
+					labelOver.coord.push([{ from: { x: x + w / 2, y: (y + h) / 2 }, to: { x: x + w / 2 + r1, y: (y + h) / 2 }, val: void (0), alpha: 0 }, ...seriesCoord]);
+					this.dataCoords[i].forEach((point) => { point.r1 = (seriesLen - i - 1) / seriesLen * r1; });
 				});
 				labelOver.r = tickW;
 				gr.SetSmoothingMode(0);
@@ -734,8 +734,8 @@ function _chart({
 				tickW = (w - this.margin.leftAuto) / xAxisValuesLen;
 				barW = tickW / this.series;
 				// Values
-				this.dataDraw.forEach((serie, i) => {
-					this.paintTimeline(gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues);
+				this.dataDraw.forEach((series, i) => {
+					this.paintTimeline(gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues);
 				});
 				break;
 			}
@@ -744,8 +744,8 @@ function _chart({
 				tickW = (y - this.margin.top) / Math.max(xAxisValuesLen, 1);
 				barW = tickW / (this.series || 1);
 				// Values
-				this.dataDraw.forEach((serie, i) => {
-					this.paintHorizontalBars(gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues, xAxisValuesLen);
+				this.dataDraw.forEach((series, i) => {
+					this.paintHorizontalBars(gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues, xAxisValuesLen);
 				});
 				break;
 			}
@@ -754,8 +754,8 @@ function _chart({
 				tickW = (w - this.margin.leftAuto) / xAxisValuesLen;
 				barW = tickW / this.series;
 				// Values
-				this.dataDraw.forEach((serie, i) => {
-					this.paintBars(gr, serie, i, x, y, w, h, maxY, tickW, barW, xAxisValues);
+				this.dataDraw.forEach((series, i) => {
+					this.paintBars(gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues);
 				});
 			}
 		}
@@ -769,8 +769,8 @@ function _chart({
 				// Y Axis ticks
 				if (this.axis.y.show || this.axis.x.show) {
 					if (this.axis.y.labels || this.axis.x.labels) {
-						const series = this.dataDraw.length + (graphType === 'doughnut' ? 1 : 0);
-						this.dataDraw.forEach((serie, i) => {
+						const seriesLen = this.dataDraw.length + (graphType === 'doughnut' ? 1 : 0);
+						this.dataDraw.forEach((series, i) => {
 							const labels = labelOver.coord[i];
 							let prevLabel = labels[0];
 							labels.slice(1).forEach((label, j) => {
@@ -779,7 +779,7 @@ function _chart({
 									const labelText = round(label.val, 0) + '%';
 									const tickH = gr.CalcTextHeight(labelText, this.gFont);
 									const tickW = gr.CalcTextWidth(labelText, this.gFont);
-									const centroid = labelOver.r / series * ((series - (i + 1)) / 2 + (series - i) / 2);
+									const centroid = labelOver.r / seriesLen * ((seriesLen - (i + 1)) / 2 + (seriesLen - i) / 2);
 									const yTickText = label.from.y + centroid * Math.sin(tetha) - tickH / 2;
 									const xTickText = label.from.x + centroid * Math.cos(tetha) - tickW / 2;
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -790,7 +790,7 @@ function _chart({
 									const labelText = xAxisValues[j].split('|')[0].cut(25);
 									const tickH = label.xAxis.h = gr.CalcTextHeight(labelText, this.gFont);
 									const tickW = label.xAxis.w = gr.CalcTextWidth(labelText, this.gFont);
-									const border = labelOver.r / series * (series - i);
+									const border = labelOver.r / seriesLen * (seriesLen - i);
 									const yTickText = label.xAxis.y = label.from.y + (border + tickH / 2) * Math.sin(tetha) - tickH / 2;
 									const xTickText = label.xAxis.x = label.from.x + (border + tickW) * Math.cos(tetha) - tickW / 2;
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -802,7 +802,7 @@ function _chart({
 									const offsetL = Math.max(Math.max(xTickText, this.x + _scale(2) + this.margin.left / 3) - xTickText, 0);
 									// Lines to labels
 									if (this.axis.x.bAltLabels) {
-										const centroid = labelOver.r / series * ((series - (i + 1)) / 2 + (series - i) / 2); // Set to zero to draw from center
+										const centroid = labelOver.r / seriesLen * ((seriesLen - (i + 1)) / 2 + (seriesLen - i) / 2); // Set to zero to draw from center
 										const centerX = label.from.x + centroid * Math.cos(tetha);
 										const centerY = label.from.y + centroid * Math.sin(tetha);
 										const borderX = xTickText - _scale(2) - offsetR + offsetL;
@@ -830,8 +830,8 @@ function _chart({
 						const yTitle = this.y + (this.h - this.y) / 2 - keyW * 2 / 3;
 						const initXTitle = labelOver.coord[0][0].from.x - labelOver.r - keyW - keyH;
 						// Check if labels are drawn in the region to the left overlapping the axis title
-						const offsetLabels = labelOver.coord.reduce((prev, serie) => {
-							return Math.max(prev, serie.slice(1).reduce((prev, point) => {
+						const offsetLabels = labelOver.coord.reduce((prev, series) => {
+							return Math.max(prev, series.slice(1).reduce((prev, point) => {
 								return point.xAxis && (point.xAxis.y >= yTitle && point.xAxis.y <= yTitle + keyW || point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y + point.xAxis.h <= yTitle + keyW) && (initXTitle >= point.xAxis.x && initXTitle <= point.xAxis.x + point.xAxis.w || initXTitle + keyH >= point.xAxis.x && (initXTitle + keyH) <= point.xAxis.x + point.xAxis.w)
 									? prev !== 0 ? Math.min(point.xAxis.x, point.xAxis.x, prev) : Math.min(point.xAxis.x, point.xAxis.x)
 									: prev;
@@ -874,8 +874,8 @@ function _chart({
 					const bFitTicks = minTickH < tickW;
 					const lineWidth = this.axis.x.width / 2;
 					if (bFitTicks) {
-						points.forEach((serie) => {
-							serie.forEach((value) => {
+						points.forEach((series) => {
+							series.forEach((value) => {
 								const axisIdx = Math.abs(xAxisValuesLen - xAxisValues.indexOf(value.x) - 1); // Idx reversed
 								let topMax = value.y / (maxY || 1) * (w - x);
 								const valueX = value.x.split('|')[0];
@@ -1005,13 +1005,13 @@ function _chart({
 							const yLine = yPos + this.axis.x.width * 2;
 							let xLine = xLabel;
 							let hLine = yPos - this.axis.x.width - (this.axis.x.bAltLabels ? (y - h) / 2 : 0);
-							// Center line and ajust height if data is evenly grouped
+							// Center line and adjust height if data is evenly grouped
 							if (this.graphSpecs.timeline.bAxisCenteredX && this.graph.multi) {
 								xLine += tickW / 2;
 								if (this.dataManipulation.group % 2 !== 0) {
-									const [serie, idx] = this.tracePoint(xLine, yPos - this.axis.x.width - (y - h) / 2);
-									if (serie !== -1 && idx !== -1) {
-										const coords = this.sizePoint(this.dataCoords[serie][idx], false);
+									const [series, idx] = this.tracePoint(xLine, yPos - this.axis.x.width - (y - h) / 2);
+									if (series !== -1 && idx !== -1) {
+										const coords = this.sizePoint(this.dataCoords[series][idx], false);
 										hLine += coords.h;
 									}
 								}
@@ -1043,12 +1043,12 @@ function _chart({
 						}
 						valueX = this.configuration.bAltVerticalText ? valueX.flip() : valueX;
 						const xTickW = gr.CalcTextWidth(valueX, this.gFont);
-						const xtickH = gr.CalcTextHeight(valueX, this.gFont);
+						const xTickH = gr.CalcTextHeight(valueX, this.gFont);
 						// Draw line and rectangle
 						const borderColor = RGBA(...toRGB(this.mostContrastColor(xAxisColor).color), 150);
 						gr.DrawLine(xLabel, y, xLabel, yLabel, this.axis.x.width / 2, xAxisColor);
-						xLabel -= (i === 0 ? 0 : xtickH / 2);
-						gr.FillSolidRect(xLabel, yLabel - xTickW - _scale(5), xtickH, xTickW + _scale(5), borderColor);
+						xLabel -= (i === 0 ? 0 : xTickH / 2);
+						gr.FillSolidRect(xLabel, yLabel - xTickW - _scale(5), xTickH, xTickW + _scale(5), borderColor);
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
 							gr.DrawString(valueX, this.gFont, xAxisColor, xLabel, yLabel - xTickW - this.axis.x.width, tickW, this.h, StringFormatFlags.DirectionVertical);
@@ -1071,8 +1071,8 @@ function _chart({
 				}
 				if (this.graph.multi) {
 					if (w / tickW < 30) { // Don't paint labels when they can't be fitted properly
-						points.forEach((serie, i) => {
-							serie.forEach((value, j) => {
+						points.forEach((series, i) => {
+							series.forEach((value, j) => {
 								const zLabel = x + (xAxisValues.indexOf(value.x) + i / this.series) * tickW;
 								let valueZ = (this.configuration.bAltVerticalText ? value.z.flip() : value.z) || '';
 								const xTickW = gr.CalcTextWidth(valueZ, this.gFont);
@@ -1168,8 +1168,8 @@ function _chart({
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
 							valueX = valueX.split('|')[0].cut(25);
-							const xtickH = gr.CalcTextHeight(valueX, this.gFont);
-							const xtickW = gr.CalcTextWidth(valueX, this.gFont);
+							const xTickH = gr.CalcTextHeight(valueX, this.gFont);
+							const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 							let xLabel = x + i * tickW;
 							// Don't paint labels when they can't be fitted properly
 							if (!bFitTicks) {
@@ -1180,7 +1180,7 @@ function _chart({
 								if (i === 0 && offsetTickText) { // Fix for first label position
 									const zeroW = xLabel + offsetTickText - this.x - this.margin.leftAuto / 2 + (bFitTicks ? tickW : drawLabelW);
 									const zeroX = this.x + this.margin.leftAuto / 2 + xOffsetKey + (bFitTicks ? 0 : tickW * 2 / 3);
-									if (this.axis.x.bAltLabels) { gr.FillSolidRect(zeroX, y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(zeroX, y + this.axis.y.width * 3 / 2, xTickW + _scale(2), xTickH, borderColor); }
 									const flags = DT_LEFT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									gr.GdiDrawText(valueX, this.gFont, xAxisColor, zeroX, y + this.axis.y.width, zeroW, this.h, flags);
 								} else if (i === last) { // Fix for last label position
@@ -1189,12 +1189,12 @@ function _chart({
 										: tickW;
 									const lastX = xLabel + offsetTickText + Math.min(Math.max((minTickW - 30) / 30 * tickW / 2, 0), tickW / 8);
 									if (lastW > 0) {
-										if (this.axis.x.bAltLabels) { gr.FillSolidRect(lastX, y + this.axis.y.width * 3 / 2, xtickW, xtickH, borderColor); }
+										if (this.axis.x.bAltLabels) { gr.FillSolidRect(lastX, y + this.axis.y.width * 3 / 2, xTickW, xTickH, borderColor); }
 										const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-										gr.GdiDrawText(valueX, this.gFont, xAxisColor, lastX, y + this.axis.y.width, xtickW, this.h, flags);
+										gr.GdiDrawText(valueX, this.gFont, xAxisColor, lastX, y + this.axis.y.width, xTickW, this.h, flags);
 									}
 								} else {
-									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel - xtickW / 2 - _scale(2), y + this.axis.y.width * 3 / 2, xtickW + _scale(2), xtickH, borderColor); }
+									if (this.axis.x.bAltLabels) { gr.FillSolidRect(xLabel - xTickW / 2 - _scale(2), y + this.axis.y.width * 3 / 2, xTickW + _scale(2), xTickH, borderColor); }
 									const flags = DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 									gr.GdiDrawText(valueX, this.gFont, xAxisColor, xLabel + offsetTickText, y + this.axis.y.width, drawLabelW, this.h, flags);
 								}
@@ -1400,10 +1400,10 @@ function _chart({
 			case 'doughnut':
 			case 'pie':
 				for (let i = 0; i < this.series; i++) {
-					const serie = this.dataCoords[i];
-					const len = serie.length;
+					const series = this.dataCoords[i];
+					const len = series.length;
 					for (let j = 0; j < len; j++) {
-						const [distPhi, distR] = this.distanceToPoint(x, y, serie[j]);
+						const [distPhi, distR] = this.distanceToPoint(x, y, series[j]);
 						if (distPhi === 0 && distR === 0) {
 							if (bCacheNear) { this.nearPoint = [i, j]; }
 							return [i, j];
@@ -1416,13 +1416,13 @@ function _chart({
 			default: {
 				const tracedPoints = [];
 				for (let i = 0; i < this.series; i++) {
-					const serie = this.dataCoords[i];
-					const len = serie.length;
+					const series = this.dataCoords[i];
+					const len = series.length;
 					for (let j = 0; j < len; j++) {
-						const point = serie[j];
+						const point = series[j];
 						const [distX, distY] = this.distanceToPoint(x, y, point);
 						if (distX === 0 && distY === 0) {
-							tracedPoints.push({ serieIdx: i, pointIdx: j, point });
+							tracedPoints.push({ seriesIdx: i, pointIdx: j, point });
 							break;
 						} else if (bCacheNear) {
 							distances.push({ idx: [i, j], dist: (distX ** 2 + distY ** 2) ** (1 / 2) });
@@ -1431,8 +1431,8 @@ function _chart({
 				} // For multiple series, points may be stacked and they are preferred by Y position
 				if (tracedPoints.length) {
 					tracedPoints.sort((a, b) => a.point.x - b.point.x + a.point.y - b.point.y);
-					if (bCacheNear) { this.nearPoint = [tracedPoints[0].serieIdx, tracedPoints[0].pointIdx]; }
-					return [tracedPoints[0].serieIdx, tracedPoints[0].pointIdx];
+					if (bCacheNear) { this.nearPoint = [tracedPoints[0].seriesIdx, tracedPoints[0].pointIdx]; }
+					return [tracedPoints[0].seriesIdx, tracedPoints[0].pointIdx];
 				}
 			}
 		}
@@ -1510,15 +1510,15 @@ function _chart({
 							: '';
 					}
 				}
-				const [serie, idx] = this.tracePoint(x, y, true); // This must be calculated always to have a point after zoom clicking
+				const [series, idx] = this.tracePoint(x, y, true); // This must be calculated always to have a point after zoom clicking
 				if (!bInButton) {
-					const bPoint = serie !== -1 && idx !== -1;
-					const bPaint = this.currPoint[0] !== serie || this.currPoint[1] !== idx;
+					const bPoint = series !== -1 && idx !== -1;
+					const bPaint = this.currPoint[0] !== series || this.currPoint[1] !== idx;
 					if (bPaint) {
 						let coords;
 						// Repaint around current point
 						if (bPoint) {
-							coords = this.sizePoint(this.dataCoords[serie][idx], true);
+							coords = this.sizePoint(this.dataCoords[series][idx], true);
 							this.repaint(...Object.values(coords));
 						}
 						// Repaint around old point
@@ -1528,11 +1528,11 @@ function _chart({
 						}
 					}
 					if (!bHand && !ttText) {
-						this.currPoint = [serie, idx];
+						this.currPoint = [series, idx];
 						if (bPoint) {
 							bHand = true;
 							const bPercent = this.graph.type === 'doughnut' || this.graph.type === 'pie';
-							const refPoint = this.dataDraw[serie][idx];
+							const refPoint = this.dataDraw[series][idx];
 							const bShowAllPoints = this.graph.multi && ['scatter', 'lines', 'fill'].includes(this.graph.type);
 							const points = bShowAllPoints && this.dataDraw.length > 1
 								? this.dataDraw.map((s) => s.find((p) => p.x === refPoint.x)).flat(Infinity).filter(Boolean)
@@ -1551,7 +1551,7 @@ function _chart({
 									(this.graph.multi ? ' - ' + point.z : '');
 							});
 							ttText += this.tooltipText
-								? isFunction(tooltipText) ? tooltipText.call(this, refPoint, serie, mask) : tooltipText
+								? isFunction(tooltipText) ? tooltipText.call(this, refPoint, series, mask) : tooltipText
 								: '';
 						}
 					}
@@ -1618,8 +1618,8 @@ function _chart({
 		const near = this.nearPoint[0] !== -1 && this.nearPoint[1] !== -1 ? this.getCurrentPoint(true) : null;
 		if (near) {
 			let i = 0;
-			for (let serie of this.dataDraw) {
-				const idx = serie.findIndex((point) => near.x === point.x);
+			for (let series of this.dataDraw) {
+				const idx = series.findIndex((point) => near.x === point.x);
 				if (idx !== -1) { return [i, idx]; }
 				i++;
 			}
@@ -1911,14 +1911,14 @@ function _chart({
 			const method = Object.entries(Array.prototype).find((pair) => pair[1] === sortFunc)[0];
 			if (sortArg) {
 				if (bFlat) { data[method](...sortArg); }
-				else { data.map((serie) => serie[method](...sortArg)); }
+				else { data.map((series) => series[method](...sortArg)); }
 			} else {
 				if (bFlat) { data[method](); }
-				else { data.map((serie) => serie[method]()); }
+				else { data.map((series) => series[method]()); }
 			}
 		} else {
 			if (bFlat) { data.sort(sorter); }
-			else { data.map((serie) => serie.sort(sorter)); } // NOSONAR
+			else { data.map((series) => series.sort(sorter)); } // NOSONAR
 		}
 		return data;
 	};
@@ -1927,8 +1927,8 @@ function _chart({
 		if (!this.dataDraw) { return; }
 		if (this.configuration.bProfile) { this.profile.CheckPoint('Clean data'); }
 		this.dataDraw = this.dataDraw
-			.map((serie) => {
-				return serie.filter((point) => {
+			.map((series) => {
+				return series.filter((point) => {
 					return point && (Object.hasOwn(point, 'x') && point.x !== null && point.x !== '' && Object.hasOwn(point, 'y') && Number.isFinite(point.y));
 				});
 			});
@@ -1938,7 +1938,7 @@ function _chart({
 	this.filter = () => { // Filter points with user provided function
 		if (!this.dataManipulation.filter) { return; }
 		if (this.configuration.bProfile) { this.profile.CheckPoint('Filter data'); }
-		this.dataDraw = this.dataDraw.map((serie) => serie.filter(this.dataManipulation.filter));
+		this.dataDraw = this.dataDraw.map((series) => series.filter(this.dataManipulation.filter));
 		if (this.configuration.bDebug) { memoryPrint('filter', this.dataDraw); }
 		if (this.configuration.bProfile) { this.profile.CheckPointStep('Filter data'); }
 	};
@@ -1955,42 +1955,42 @@ function _chart({
 		// If end is greater than the length of the array, it uses the length of the array
 		if (this.configuration.bSlicePerKey) {
 			const xKeys = new Set();
-			const xKeysSerie = [];
+			const xKeysSeries = [];
 			const range = Math.abs(slice[1] - slice[0]);
 			const series = this.dataDraw.length;
 			for (let i = 0; i < series; i++) {
-				const serie = this.dataDraw[i];
-				const serieLen = serie.length;
-				xKeysSerie.push(new Set());
+				const series = this.dataDraw[i];
+				const seriesLen = series.length;
+				xKeysSeries.push(new Set());
 				let j = i === 0
 					? slice[0]
-					: serie.findIndex((v) => xKeys.has(v.x));
+					: series.findIndex((v) => xKeys.has(v.x));
 				let k = j;
 				if (range === Infinity) {
-					for (void (0); j < serieLen; j++) {
-						const value = serie[j];
-						if (typeof value === 'undefined' || value === null) { continue; } // Serie may have no point at this range
+					for (void (0); j < seriesLen; j++) {
+						const value = series[j];
+						if (typeof value === 'undefined' || value === null) { continue; } // Series may have no point at this range
 						if (!xKeys.has(value.x)) { xKeys.add(value.x); }
-						xKeysSerie[i].add(value.x);
+						xKeysSeries[i].add(value.x);
 					}
-					this.dataDraw[i] = serie.slice(k, Infinity);
+					this.dataDraw[i] = series.slice(k, Infinity);
 				} else {
-					for (void (0); j < serieLen; j++) {
-						const value = serie[j];
-						if (typeof value === 'undefined' || value === null) { continue; } // Serie may have no point at this range
+					for (void (0); j < seriesLen; j++) {
+						const value = series[j];
+						if (typeof value === 'undefined' || value === null) { continue; } // Series may have no point at this range
 						if (!xKeys.has(value.x)) {
 							if (xKeys.size >= range) {
-								this.dataDraw[i] = serie.slice(k, j);
+								this.dataDraw[i] = series.slice(k, j);
 								break;
 							}
 							xKeys.add(value.x);
 						}
-						xKeysSerie[i].add(value.x);
+						xKeysSeries[i].add(value.x);
 					}
 				}
 			}
 		} else {
-			this.dataDraw = this.dataDraw.map((serie) => serie.slice(...slice));
+			this.dataDraw = this.dataDraw.map((series) => series.slice(...slice));
 		}
 		if (this.configuration.bProfile) { this.profile.CheckPointStep('Sort & Slice data'); }
 	};
@@ -2000,24 +2000,24 @@ function _chart({
 		if (this.configuration.bDebug) { memoryPrint('normal', this.dataDraw); }
 	};
 
-	this.normalApply = (series, bInverse = false) => { // Sort as normal distribution
+	this.normalApply = (seriesArr, bInverse = false) => { // Sort as normal distribution
 		const sortX = (a, b) => a.x.localeCompare(b.x, void (0), { numeric: true });
 		const sortY = bInverse
 			? (a, b) => b.y - a.y
 			: (a, b) => a.y - b.y;
-		series = series.map((serie) =>
-			serie.sort(sortX).sort(sortY)
+		seriesArr = seriesArr.map((series) =>
+			series.sort(sortX).sort(sortY)
 				.reduceRight((acc, val, i) => i % 2 === 0 ? [...acc, val] : [val, ...acc], [])
 		);
 		const slice = this.dataManipulation.slice;
-		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return series; } // NOSONAR
-		return series.map((serie) => {
-			const len = serie.length;
+		if (!slice || !slice.length === 2 || (slice[0] === 0 && slice[1] === Infinity)) { return seriesArr; } // NOSONAR
+		return seriesArr.map((series) => {
+			const len = series.length;
 			const tail = slice[1];
 			const center = Math.round(len / 2) + slice[0];
 			const left = Math.max(center - tail, 1);
 			const right = center + tail;
-			return serie.slice(left - 1, right);
+			return series.slice(left - 1, right);
 		});
 	};
 
@@ -2054,73 +2054,73 @@ function _chart({
 			case 'cdf plot': { bCumulative = true; } // NOSONAR
 			case 'cumulative distribution plot': { bCumulative = true; } // eslint-disable-line no-fallthrough
 			case 'distribution plot': { // eslint-disable-line no-fallthrough
-				let newSerie;
+				let newSeries;
 				if (this.series === 1 && this.dataManipulation.distribution) {
 					const dist = this.dataManipulation.distribution.toLowerCase();
 					if (dist === 'normal inverse') { this.normal(); }
-					const serie = this.dataDraw[0];
-					const statistics = this.computeStatistics(serie);
+					const series = this.dataDraw[0];
+					const statistics = this.computeStatistics(series);
 					if (dist === 'normal inverse') { this.normalInverse(); }
-					newSerie = new Array(statistics.total).fill(0);
+					newSeries = new Array(statistics.total).fill(0);
 					const fNorm = (x) => Math.exp(-((x - statistics.mean) ** 2 / statistics.sigma ** 2) / 2) / (statistics.sigma * Math.sqrt(2 * Math.PI));
 					switch (dist) {
 						case 'normal':
-							newSerie = newSerie.map((_, i) => { return { x: serie[i].x, y: fNorm(i) * statistics.count }; });
+							newSeries = newSeries.map((_, i) => { return { x: series[i].x, y: fNorm(i) * statistics.count }; });
 							break;
 						case 'normal inverse':
-							newSerie = newSerie.map((_, i) => { return { x: serie[i].x, y: (1 - fNorm(i)) * statistics.count / statistics.total }; });
+							newSeries = newSeries.map((_, i) => { return { x: series[i].x, y: (1 - fNorm(i)) * statistics.count / statistics.total }; });
 							break;
 						case 'none':
 						default:
 							break;
 					}
 				}
-				if (newSerie) { this.dataDraw.push(newSerie); }
+				if (newSeries) { this.dataDraw.push(newSeries); }
 				if (bCumulative) { // Create new objects to not overwrite original references...
-					this.dataDraw.forEach((serie) => { serie.forEach((val, i, arr) => { arr[i] = { x: val.x, y: val.y + (i ? arr[i - 1].y : 0) }; }); });
+					this.dataDraw.forEach((series) => { series.forEach((val, i, arr) => { arr[i] = { x: val.x, y: val.y + (i ? arr[i - 1].y : 0) }; }); });
 				}
 				if (this.configuration.bProfile) { this.profile.CheckPointStep('Probability plot'); }
 				return true;
 			}
 			case 'p-p plot': {
-				let newSerie;
+				let newSeries;
 				if (this.series === 1 && this.dataManipulation.distribution) {
 					const dist = this.dataManipulation.distribution.toLowerCase();
 					if (dist === 'normal inverse') { this.normal(); }
-					const serie = this.dataDraw[0];
-					const statistics = this.computeStatistics(serie);
+					const series = this.dataDraw[0];
+					const statistics = this.computeStatistics(series);
 					if (dist === 'normal inverse') { this.normalInverse(); }
-					newSerie = new Array(statistics.total).fill(0);
+					newSeries = new Array(statistics.total).fill(0);
 					const fNorm = (x) => Math.exp(-((x - statistics.mean) ** 2 / statistics.sigma ** 2) / 2) / (statistics.sigma * Math.sqrt(2 * Math.PI));
 					switch (dist.toLowerCase()) {
 						case 'normal':
 						case 'normal inverse':
-							newSerie = newSerie.map((_, i) => { return { x: serie[i].x, y: (1 - fNorm(i)) / statistics.total }; });
+							newSeries = newSeries.map((_, i) => { return { x: series[i].x, y: (1 - fNorm(i)) / statistics.total }; });
 							break;
 						case 'none':
 						default:
 							break;
 					}
 				}
-				this.dataDraw.forEach((serie) => {
-					const total = serie.reduce((curr, val) => curr + val.y, 0);
-					serie.forEach((val) => { val.y = val.y / total; });
+				this.dataDraw.forEach((series) => {
+					const total = series.reduce((curr, val) => curr + val.y, 0);
+					series.forEach((val) => { val.y = val.y / total; });
 				});
-				if (newSerie) { this.dataDraw.push(newSerie); }
-				this.dataDraw.forEach((serie) => { serie.forEach((val, i, arr) => { val.y = i ? arr[i - 1].y + val.y : val.y; }); });
+				if (newSeries) { this.dataDraw.push(newSeries); }
+				this.dataDraw.forEach((series) => { series.forEach((val, i, arr) => { val.y = i ? arr[i - 1].y + val.y : val.y; }); });
 				const last = this.dataDraw[this.dataDraw.length - 1];
 				// "Fix" float errors and round
-				const error = this.dataDraw.map((serie) => (1 - serie[serie.length - 1].y));
-				this.dataDraw.forEach((serie, j) => {
-					const len = serie.length;
-					serie.forEach((val, i) => {
+				const error = this.dataDraw.map((series) => (1 - series[series.length - 1].y));
+				this.dataDraw.forEach((series, j) => {
+					const len = series.length;
+					series.forEach((val, i) => {
 						val.y += error[j] / len * (2 * i - len);
 						val.y = round(val.y, 3, 10 ** -3);
 					});
 				});
 				// Change axis
-				this.dataDraw.forEach((serie) => {
-					serie.forEach((val, i) => {
+				this.dataDraw.forEach((series) => {
+					series.forEach((val, i) => {
 						val.x = last[i].y;
 					});
 				});
@@ -2137,7 +2137,7 @@ function _chart({
 		}
 	};
 
-	this.computeStatistics = (serie, options = { bClampRange: true }) => {
+	this.computeStatistics = (series, options = { bClampRange: true }) => {
 		options = { bClampRange: true, ...(options || {}) };
 		const statistics = {
 			max: -Infinity,
@@ -2158,10 +2158,10 @@ function _chart({
 				universal: { '50%': [], '75%': [], '89%': [], '95%': [] }
 			},
 		};
-		if (serie) {
-			statistics.total = serie.length;
+		if (series) {
+			statistics.total = series.length;
 			const uniqueX = new Set();
-			serie.forEach((p, i) => {
+			series.forEach((p, i) => {
 				const val = p.y || 0;
 				if (val > statistics.max) { statistics.max = val; }
 				if (val < statistics.min) { statistics.min = val; }
@@ -2175,7 +2175,7 @@ function _chart({
 			statistics.range = statistics.max - statistics.min;
 			statistics.meanUnique = statistics.mean / statistics.countX;
 			statistics.mean = statistics.mean / statistics.count;
-			serie.forEach((p, i) => {
+			series.forEach((p, i) => {
 				const val = p.y || 0;
 				if (val === statistics.max) { statistics.maxCount++; }
 				else if (val === statistics.min) { statistics.minCount++; }
@@ -2199,10 +2199,10 @@ function _chart({
 				}
 			}
 			const binSize = 1;
-			const histogram = this.calcHistogram(serie.map((p) => p.y || 0), binSize, statistics.max, statistics.min);
+			const histogram = this.calcHistogram(series.map((p) => p.y || 0), binSize, statistics.max, statistics.min);
 			const histogramLen = histogram.length;
-			const masxFreq = Math.max(...histogram);
-			statistics.mode = { value: statistics.min + histogram.indexOf(masxFreq) * binSize, frequency: masxFreq };
+			const maxFreq = Math.max(...histogram);
+			statistics.mode = { value: statistics.min + histogram.indexOf(maxFreq) * binSize, frequency: maxFreq };
 			{
 				let i = 0, acumFreq = statistics.count / 2;
 				while (i < histogramLen) {
@@ -2236,26 +2236,26 @@ function _chart({
 	};
 
 	this.computeStatisticsPoint = (point = this.getCurrentPoint(), precision = 1) => {
-		const serieIdx = this.dataDraw.length === 1 || this.graph.multi
+		const seriesIdx = this.dataDraw.length === 1 || this.graph.multi
 			? 0
 			: this.getCurrentPoint() === point
 				? this.getCurrentPointIndex()
-				: this.dataDraw.findIndex((serie) => serie.find((p) => {
+				: this.dataDraw.findIndex((series) => series.find((p) => {
 					return ['x', 'y', 'z'].every((c) => point === p || !p[c] && !point[c] || p[c] === point[c]);
 				}));
 		let currNum = 0, totalNum = 0;
 		const total = this.dataTotal.length
-			? [...this.dataTotal[serieIdx].values()].reduce((acc, curr) => { totalNum++; return acc + curr; }, 0)
+			? [...this.dataTotal[seriesIdx].values()].reduce((acc, curr) => { totalNum++; return acc + curr; }, 0)
 			: this.graph.multi
 				? this.data.flat(Infinity)
 					.map((point) => point.y)
 					.reduce((acc, curr) => { totalNum++; return acc + curr; }, 0)
-				: this.data[serieIdx]
+				: this.data[seriesIdx]
 					.map((dataPoint) => dataPoint.y)
 					.reduce((acc, curr) => { totalNum++; return acc + curr; }, 0);
 		const totalCurr = this.dataTotal.length
 			? this.graph.multi
-				? this.dataTotal[serieIdx].get(point.z)
+				? this.dataTotal[seriesIdx].get(point.z)
 				: total
 			: this.graph.multi
 				? this.data.flat(Infinity)
@@ -2301,21 +2301,21 @@ function _chart({
 		if (this.configuration.bProfile) { this.profile.CheckPoint('Calc totals'); }
 		this.dataTotal.length = 0;
 		if (this.graph.multi) {
-			this.data.forEach((serie) => {
-				const serieTotals = new Map();
-				serie.forEach((pointArr) =>
-					pointArr.forEach((point) => serieTotals.set(point.z, (serieTotals.get(point.z) || 0) + (point.y || 0)))
+			this.data.forEach((series) => {
+				const seriesTotals = new Map();
+				series.forEach((pointArr) =>
+					pointArr.forEach((point) => seriesTotals.set(point.z, (seriesTotals.get(point.z) || 0) + (point.y || 0)))
 				);
-				serie.forEach((pointArr) =>
-					pointArr.forEach((point) => point.total = serieTotals.get(point.z))
+				series.forEach((pointArr) =>
+					pointArr.forEach((point) => point.total = seriesTotals.get(point.z))
 				);
-				this.dataTotal.push(serieTotals);
+				this.dataTotal.push(seriesTotals);
 			});
 		} else {
-			this.data.forEach((serie) => {
-				const serieTotals = new Map();
-				serie.forEach((point) => serieTotals.set(point.x, (serieTotals.get(point.x) || 0) + point.y));
-				this.dataTotal.push(serieTotals);
+			this.data.forEach((series) => {
+				const seriesTotals = new Map();
+				series.forEach((point) => seriesTotals.set(point.x, (seriesTotals.get(point.x) || 0) + point.y));
+				this.dataTotal.push(seriesTotals);
 			});
 		}
 		if (this.configuration.bProfile) { this.profile.CheckPointStep('Calc totals'); }
@@ -2324,12 +2324,12 @@ function _chart({
 	this.expandData = (group = this.dataManipulation.group) => {
 		if (this.configuration.bProfile) { this.profile.CheckPoint('Expand data'); }
 		if (this.graph.multi) { // 3-dimensional data with every point having multiple {Y,Z} points
-			if (this.data.length > 1) { throw new Error('Can not map more than 1 serie to 3D charts'); }
-			const series = this.data.map((serie) => [...(serie || [])]);
+			if (this.data.length > 1) { throw new Error('Can not map more than 1 series to 3D charts'); }
+			const series = this.data.map((series) => [...(series || [])]);
 			this.dataDraw = [];
 			for (let i = 0; i < group; i++) { this.dataDraw.push([]); }
-			series.forEach((serie) => {
-				serie.forEach((pointArr) => {
+			series.forEach((series) => {
+				series.forEach((pointArr) => {
 					const sortedPoints = this.multiSort(this.multiFilter([...pointArr]));
 					const len = pointArr.length;
 					this.stats.minGroup = Math.min(len, this.stats.maxGroup);
@@ -2343,7 +2343,7 @@ function _chart({
 			});
 			this.series = this.dataDraw.length;
 		} else {
-			this.dataDraw = this.data.map((serie) => [...(serie || [])]);
+			this.dataDraw = this.data.map((series) => [...(series || [])]);
 		}
 		if (this.configuration.bProfile) { this.profile.CheckPointStep('Expand data'); }
 	};
@@ -2360,7 +2360,7 @@ function _chart({
 		if (this.configuration.bProfile) { this.profile.CheckPointPrint('Clean data'); }
 		this.filter();
 		if (this.configuration.bProfile) { this.profile.CheckPointPrint('Filter data'); }
-		this.stats.points = this.dataDraw.map((serie) => serie.length);
+		this.stats.points = this.dataDraw.map((series) => series.length);
 		if (!this.distribution()) {
 			this.sort();
 			this.slice();
@@ -2370,7 +2370,7 @@ function _chart({
 			this.probabilityPlot();
 			if (this.configuration.bProfile) { this.profile.CheckPointPrint('Probability plot', false); }
 		}
-		this.stats.pointsDraw = this.dataDraw.map((serie) => serie.length);
+		this.stats.pointsDraw = this.dataDraw.map((series) => series.length);
 		if (this.configuration.bDebug) { memoryPrint('manipulate data end', this.dataDraw); }
 	};
 
@@ -2512,7 +2512,7 @@ function _chart({
 				}
 				if (series && this.colors.some((arrCol, i) => arrCol.filter(Boolean).length !== this.dataDraw[i].length)) {
 					this.colors.forEach((arrCol, i) => {
-						const serieLen = this.dataDraw[i].length;
+						const seriesLen = this.dataDraw[i].length;
 						// Random colors or using Chroma scale with specific scheme or array of colors
 						let schemeStr = this.chroma.scheme && typeof this.chroma.scheme === 'string' ? this.chroma.scheme.toLowerCase() : null;
 						let bRandom = !this.chroma.scheme || schemeStr === 'random' || schemeStr === 'rand';
@@ -2520,7 +2520,7 @@ function _chart({
 							arrCol.forEach((color, j) => {
 								if (!color) { arrCol[j] = this.randomColor(); }
 							});
-							for (let j = arrCol.length; j < serieLen; j++) {
+							for (let j = arrCol.length; j < seriesLen; j++) {
 								arrCol.push(this.randomColor());
 							}
 						} else { // Chroma scale method
@@ -2532,7 +2532,7 @@ function _chart({
 							} else { // An array of colors or colorbrewer palette (string)
 								scheme = this.chroma.scheme;
 							}
-							const scale = this.chromaColor(scheme, serieLen, this.chroma.interpolation || 'lrgb');
+							const scale = this.chromaColor(scheme, seriesLen, this.chroma.interpolation || 'lrgb');
 							let k = 0;
 							arrCol.forEach((color, j) => {
 								if (!color) {
@@ -2540,7 +2540,7 @@ function _chart({
 									k++;
 								}
 							});
-							for (let j = arrCol.length; j < serieLen; j++) {
+							for (let j = arrCol.length; j < seriesLen; j++) {
 								arrCol.push(scale[k]);
 								k++;
 							}
@@ -2555,7 +2555,7 @@ function _chart({
 					if (Array.isArray(this.colors[i])) { this.colors[i] = this.colors[i][0]; }
 				}
 				if (this.colors.filter(Boolean).length !== series) {
-					// Random colors or using Chroma scale with specific schems or array of colors
+					// Random colors or using Chroma scale with specific schemas or array of colors
 					let schemeStr = this.chroma.scheme && typeof this.chroma.scheme === 'string' ? this.chroma.scheme.toLowerCase() : null;
 					let bRandom = !this.chroma.scheme || schemeStr === 'random' || schemeStr === 'rand';
 					if (bRandom) {
@@ -2615,11 +2615,11 @@ function _chart({
 		if (pPlot && pPlot !== 'none') {
 			if (this.series === 1 && !dist) {
 				if (pPlot === 'cdf plot' || pPlot === 'cumulative distribution plot' || pPlot === 'distribution plot') {
-					console.log('Statistics: distribution has not been set and there is only a single serie for ' + pPlot + '. Using normal by default.');
+					console.log('Statistics: distribution has not been set and there is only a single series for ' + pPlot + '. Using normal by default.');
 					this.dataManipulation.distribution = 'normal';
 					bPass = false;
 				} else if (pPlot === 'p-p plot') {
-					console.log('Statistics: distribution has not been set and there is only a single serie for ' + pPlot + '. Using normal inverse by default.');
+					console.log('Statistics: distribution has not been set and there is only a single series for ' + pPlot + '. Using normal inverse by default.');
 					this.dataManipulation.distribution = 'normal inverse';
 					this.axis.x.key = 'Theoretical cumulative distribution';
 					this.axis.y.key = 'Empirical cumulative distribution';

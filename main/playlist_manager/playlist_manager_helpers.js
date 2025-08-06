@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/07/25
+//06/08/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -694,7 +694,7 @@ function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Aut
 	const playlistName = pls.name + ' (copy ' + list.dataAll.reduce((count, iPls) => { if (iPls.name.startsWith(pls.name + ' (copy ')) { count++; } return count; }, 0) + ')';
 	const objectPlaylist = clone(pls);
 	objectPlaylist.name = playlistName;
-	bDone = !!list.addSmartplaylist(objectPlaylist, void (0), toFolder);
+	bDone = !!list.addSmartPlaylist(objectPlaylist, void (0), toFolder);
 	if (bDone) { console.log('Playlist Manager: cloning ' + playlistName + ' done.'); } else { console.log('Playlist Manager: Error duplicating playlist'); return false; }
 	return bDone;
 }
@@ -1263,10 +1263,10 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 	const oldName = pls.name;
 	const oldNameId = pls.nameId;
 	const oldId = pls.id;
-	const newNameId = newName + ((list.bUseUUID && pls.id.length) ? pls.id : ''); // May have enabled/disabled UUIDs just before renamin
+	const newNameId = newName + ((list.bUseUUID && pls.id.length) ? pls.id : ''); // May have enabled/disabled UUIDs just before renaming
 	const newId = (list.bUseUUID && oldId.length) ? oldId : nextId(list.optionsUUIDTranslate(), true); // May have enabled/disabled UUIDs just before renaming
 	const duplicated = plman.FindPlaylist(newNameId);
-	let bRenamedSucessfully = false;
+	let bRenamedSuccessfully = false;
 	if (bUpdatePlman && duplicated !== -1 || !bUpdatePlman && duplicated !== plman.ActivePlaylist) { // Playlist already exists on foobar2000...
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n\nChoose another unique name for renaming.', window.Name);
 	} else if (list.dataAll.some((pls) => pls.nameId === newNameId)) { // Playlist already exists on manager...
@@ -1285,7 +1285,7 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 				if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
 				list.update({ bReuseData: true, bNotPaint: true });
 				list.filter();
-				bRenamedSucessfully = true;
+				bRenamedSuccessfully = true;
 			} else {
 				if (_isFile(pls.path)) { // NOSONAR
 					// Backup
@@ -1294,8 +1294,8 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 					_copyFile(oldPath, backPath);
 					// Locked files have the name variable as read only, so we only change the filename. We can not replace oldName with new name since successive renaming steps would not work. We simply strip the filename and replace it with the new name
 					let newPath = sanitizePath(pls.path.split('.').slice(0, -1).join('.').split('\\').slice(0, -1).concat([newName]).join('\\') + pls.extension);
-					bRenamedSucessfully = oldPath !== newPath ? _renameFile(oldPath, newPath) : true;
-					if (bRenamedSucessfully) {
+					bRenamedSuccessfully = oldPath !== newPath ? _renameFile(oldPath, newPath) : true;
+					if (bRenamedSuccessfully) {
 						list.editData(pls, {
 							path: newPath
 						});
@@ -1338,12 +1338,12 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 								if (bUpdatePlman) { list.updatePlman(pls.nameId, oldNameId); } // Update with new id
 								list.update({ bReuseData: true, bNotPaint: true });
 								list.filter();
-								bRenamedSucessfully = true;
+								bRenamedSuccessfully = true;
 							}
 						} else {
 							list.update({ bReuseData: true, bNotPaint: true });
 							list.filter();
-							bRenamedSucessfully = true;
+							bRenamedSuccessfully = true;
 						}
 					} else { fb.ShowPopupMessage('Error renaming playlist file: ' + oldName + ' --> ' + newName + '\n\nOld Path: ' + oldPath + '\nNew Path: ' + newPath + '\n\nRestoring backup...', window.Name); }
 					if (!_isFile(oldPath) && !_isFile(newPath)) { _renameFile(backPath, oldPath); console.log('Playlist manager: Restoring backup...'); } // Restore backup in case something goes wrong
@@ -1352,8 +1352,8 @@ function renamePlaylist(list, z, newName, bUpdatePlman = true) {
 			}
 		}
 	}
-	if (bRenamedSucessfully) { list.showPlsByObj(pls); }
-	return bRenamedSucessfully;
+	if (bRenamedSuccessfully) { list.showPlsByObj(pls); }
+	return bRenamedSuccessfully;
 }
 
 function renameFolder(list, z, newName) {
@@ -1814,7 +1814,7 @@ function findSizeMismatch() {
 					else if (typeof size === 'undefined') { report.push(playlist.path + ' (no size tag found)'); bDone = true; }
 					else if (filePathsNum !== size) { report.push(playlist.path + ' (tag: ' + size + ', paths: ' + filePathsNum + ')'); bDone = true; }
 					else if (playlist.extension === '.strm' && size > 1) {
-						report.push(playlist.path + ' (paths: ' + filePathsNum + ', .srtrm size can not be > 1)');
+						report.push(playlist.path + ' (paths: ' + filePathsNum + ', .strm size can not be > 1)');
 						bDone = true;
 					}
 					if (bDone) { found.push(playlist); }

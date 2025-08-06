@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/11/24
+//06/08/25
 
 /* global list:readable, folders:readable */
 include('..\\window\\window_xxx.js');
@@ -13,7 +13,7 @@ include('..\\..\\helpers\\helpers_xxx_file.js');
 // Set default properties (used on data later)
 let propertiesOptions = {
 	bOptions:	['Options panel opened?'		, false		], // To maintain the same window on script reload (would be an ID when having multiple windows)
-	tabWidth:	['full / text'					, 'full'	], // Tab behaviour
+	tabWidth:	['full / text'					, 'full'	], // Tab behavior
 	UI:			['default / material'			, 'material'], // Theme
 };
 setProperties(propertiesOptions, '', 0);
@@ -48,7 +48,7 @@ options.addTab({title: 'Playlist saving', columns: 1, data: [
 		{title: 'Playlist File handling'},
 			{subTitle: 'Format', values: [
 				{name: 'Try to save playlists always as default format?', pId: 'bSavingDefExtension', pIdx: 1, constructor: Boolean, tt: 'Apply default format in any case, not only to new playlists created.\n\nFormat of existing playlists will be changed to the default format whenever they are saved: Manually or on Auto-saving.\n\nOther saving related configuration may apply (like Smart Playlists being skipped or warning popups whenever format will be changed).'},
-				{name: 'Auto-save .xsp playlists?', pId: 'bSavingXsp', pIdx: 1, constructor: Boolean, tt: 'Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes agains their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.'},
+				{name: 'Auto-save .xsp playlists?', pId: 'bSavingXsp', pIdx: 1, constructor: Boolean, tt: 'Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes against their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.'},
 				{name: 'Warnings when saving to another format', pId: 'bSavingWarnings', pIdx: 1, constructor: Boolean, tt: 'Warns if format will be changed whenever a playlist is saved.'}
 			]},
 			{subTitle: 'Format', values: [
@@ -56,14 +56,14 @@ options.addTab({title: 'Playlist saving', columns: 1, data: [
 			]},
 			{subTitle: 'Track handling', values: [
 				{name: 'Use relative paths for all new playlists', pId: 'bRelativePath', pIdx: 1, constructor: Boolean, tt: (value) => {
-					return (value ?'All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).' :'All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).');}
+					return (value ?'All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).' :'All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).');}
 						}
 			]},
 	]
 	/* eslint-enable indent */
 ], description: 'This tab modifies data saved on properties panel'});
 
-options.addTab({title: 'Playlist behaviour', columns: 4, data: [
+options.addTab({title: 'Playlist behavior', columns: 4, data: [
 	/* eslint-disable indent */
 	[
 		{title: 'Track handling'},
@@ -121,7 +121,7 @@ options.addTab({title: 'Playlist behaviour', columns: 4, data: [
 	/* eslint-enable indent */
 ], description: 'This tab modifies data saved on properties panel'});
 
-options.addTab({title: 'Panel behaviour', columns: 1, data: [
+options.addTab({title: 'Panel behavior', columns: 1, data: [
 	/* eslint-disable indent */
 	[
 		{title: 'List view'},
@@ -149,7 +149,7 @@ options.addTab({title: 'UI', columns: 1, data: [
 				{name: 'Show playlist size:', pId: 'bShowSize', pIdx: 1, constructor: Boolean},
 				{name: 'Show header on playlist menus?', pId: 'bShowMenuHeader', pIdx: 1, constructor: Boolean},
 			]},
-		{title: 'Tootip'},
+		{title: 'Tooltip'},
 			{values: [
 				{name: 'Usage text on tooltips', pId: 'bShowTips', pIdx: 1, constructor: Boolean},
 			]},

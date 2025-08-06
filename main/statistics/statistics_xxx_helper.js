@@ -1,11 +1,11 @@
 ﻿'use strict';
-//07/11/24
+//06/08/25
 
 // Dummy file to load existing helpers or independent file
 {
 	let bIncludeRel = true;
 	let Chroma, NatSort;
-	try { include('..\\..\\helpers\\helpers_xxx_dummy.js'); } catch (e) { bIncludeRel = false; }
+	try { include('..\\..\\helpers\\helpers_xxx_dummy.js'); } catch (e) { bIncludeRel = false; } // eslint-disable-line no-unused-vars
 	if (bIncludeRel) {
 		include('..\\..\\helpers\\helpers_xxx.js');
 		include('..\\..\\helpers\\helpers_xxx_basic_js.js');

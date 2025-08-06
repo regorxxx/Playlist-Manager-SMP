@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/25
+//06/08/25
 
 /* exported _listStatistics */
 
@@ -13,7 +13,7 @@ include('..\\..\\helpers\\menu_xxx.js');
 
 function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	const parent = this;
-	const sizeThreshold = 25; // Used at getData to clasify playlists by size
+	const sizeThreshold = 25; // Used at getData to classify playlists by size
 	let rows = 0;
 	let columns = 0;
 	let nCharts = [];
@@ -431,7 +431,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			w: 0,
 			y: 0,
 			h: 0,
-			tooltipText: function (point, serie, mask) { return '\n\n(L. click to filter list by ' + this.axis.x.key + ')'; }, // eslint-disable-line no-unused-vars
+			tooltipText: function (point, series, mask) { return '\n\n(L. click to filter list by ' + this.axis.x.key + ')'; }, // eslint-disable-line no-unused-vars
 			callbacks: {
 				point: { onLbtnUp: parent.onLbtnUpPoint },
 				settings: { onLbtnUp: function (x, y, mask) { return parent.onLbtnUpSettings.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars

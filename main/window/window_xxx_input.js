@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/02/25
+//06/08/25
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -82,18 +82,18 @@ function _check({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4
 		if (this.trackCheck(x, y)) {
 			if (this.shape === 'circle') {
 				if (!this.value) {
-					this.toogle();
+					this.toggle();
 					return true;
 				}
 			} else if (this.shape === 'square') {
-				this.toogle();
+				this.toggle();
 				return true;
 			}
 		}
 		return false;
 	};
 
-	this.toogle = (newValue = !this.value) => {
+	this.toggle = (newValue = !this.value) => {
 		this.value = newValue;
 		this.repaint();
 		return this.value;
@@ -149,7 +149,7 @@ function _toggleControl({ x, y, size = _scale(10) * 1.5, value = false, color = 
 	};
 	this.btn_up = (x, y) => {
 		if (this.trackCheck(x, y)) {
-			this.toogle();
+			this.toggle();
 			return true;
 		}
 		return false;
@@ -170,13 +170,13 @@ function _toggleControl({ x, y, size = _scale(10) * 1.5, value = false, color = 
 
 	this.createKnobShadow = () => {
 		this.knobShadowImg = gdi.CreateImage(this.knobShadowSize + this.h / 4, this.knobShadowSize + this.h / 4);
-		const shimg = this.knobShadowImg.GetGraphics();
-		shimg.FillEllipse(0, 0, this.knobShadowSize, this.knobShadowSize, RGBA(128, 128, 128, 128));
-		this.knobShadowImg.ReleaseGraphics(shimg);
+		const shadowImg = this.knobShadowImg.GetGraphics();
+		shadowImg.FillEllipse(0, 0, this.knobShadowSize, this.knobShadowSize, RGBA(128, 128, 128, 128));
+		this.knobShadowImg.ReleaseGraphics(shadowImg);
 		this.knobShadowImg.StackBlur(2);
 	};
 
-	this.toogle = (newValue = !this.value) => {
+	this.toggle = (newValue = !this.value) => {
 		this.value = newValue;
 		this.repaint();
 	};
@@ -784,7 +784,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	};
 
 	this.drawCursor = function (gr) {
-		if (cInputbox.cursorState) {
+		if (cInputBox.cursorState) {
 			if (this.Cpos >= this.offset) {
 				this.Cx = this.getCx(this.Cpos);
 				const x1 = this.x + this.Cx;
@@ -803,7 +803,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		} else {
 			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce, 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); } // NOSONAR
 			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce, 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
-			else { console.log('oInputbox: parentObject has no repaint method.', 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
+			else { console.log('oInputBox: parentObject has no repaint method.', 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
 		}
 	};
 
@@ -835,10 +835,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 			}
 			this.edit = false;
 			// clear timer
-			if (cInputbox.timerCursor) {
-				window.ClearInterval(cInputbox.timerCursor);
-				cInputbox.timerCursor = false;
-				cInputbox.cursorState = true;
+			if (cInputBox.timerCursor) {
+				window.ClearInterval(cInputBox.timerCursor);
+				cInputBox.timerCursor = false;
+				cInputBox.cursorState = true;
 			}
 			this.repaint();
 		} else if (bFocused && this.edit) {
@@ -847,18 +847,18 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	};
 
 	this.resetCursorTimer = function () {
-		if (cInputbox.timerCursor) {
-			window.ClearInterval(cInputbox.timerCursor);
-			cInputbox.timerCursor = false;
-			cInputbox.cursorState = true;
+		if (cInputBox.timerCursor) {
+			window.ClearInterval(cInputBox.timerCursor);
+			cInputBox.timerCursor = false;
+			cInputBox.cursorState = true;
 		}
-		cInputbox.timerCursor = window.SetInterval(() => {
-			cInputbox.cursorState = !cInputbox.cursorState;
+		cInputBox.timerCursor = window.SetInterval(() => {
+			cInputBox.cursorState = !cInputBox.cursorState;
 			this.repaint();
 			if (!this.edit) {
-				window.ClearInterval(cInputbox.timerCursor);
-				cInputbox.timerCursor = false;
-				cInputbox.cursorState = true;
+				window.ClearInterval(cInputBox.timerCursor);
+				cInputBox.timerCursor = false;
+				cInputBox.cursorState = true;
 			}
 		}, 500);
 	};
@@ -893,10 +893,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					this.SelEnd = 0;
 					this.textSelected = '';
 					if (old.hover !== this.hover) {
-						if (cInputbox.timerCursor) {
-							window.ClearInterval(cInputbox.timerCursor);
-							cInputbox.timerCursor = false;
-							cInputbox.cursorState = true;
+						if (cInputBox.timerCursor) {
+							window.ClearInterval(cInputBox.timerCursor);
+							cInputBox.timerCursor = false;
+							cInputBox.cursorState = true;
 						}
 					}
 				}
@@ -983,10 +983,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					this.SelBegin = 0;
 					this.SelEnd = 0;
 					this.textSelected = '';
-					if (cInputbox.timerCursor) {
-						window.ClearInterval(cInputbox.timerCursor);
-						cInputbox.timerCursor = false;
-						cInputbox.cursorState = true;
+					if (cInputBox.timerCursor) {
+						window.ClearInterval(cInputBox.timerCursor);
+						cInputBox.timerCursor = false;
+						cInputBox.cursorState = true;
 					}
 				}
 				if (['hover', 'edit'].some((k) => old[k] !== this[k])) { this.repaint(); }
@@ -997,12 +997,12 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 
 	this.showContextMenu = function (x, y) {
 		const _menu = window.CreatePopupMenu();
-		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
+		cInputBox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputBox.doc.parentWindow.clipboardData.getData('Text');
 		_menu.AppendMenuItem(this.sText.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Undo');
 		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Copy');
-		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Paste');
+		_menu.AppendMenuItem(cInputBox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Paste');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Delete');
 		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 6, 'Select All');
@@ -1019,7 +1019,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 				break;
 			case 2:
 				if (this.edit && this.select) {
-					utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
+					utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
 					const p1 = this.SelBegin;
 					const p2 = this.SelEnd;
 					this.offset = this.offset >= this.textSelected.length ? this.offset - this.textSelected.length : 0;
@@ -1035,11 +1035,11 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 				break;
 			case 3:
 				if (this.edit && this.select) {
-					utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
+					utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
 				}
 				break;
 			case 4:
-				if (this.edit && cInputbox.clipboard) {
+				if (this.edit && cInputBox.clipboard) {
 					if (this.select) {
 						const p1 = this.SelBegin;
 						const p2 = this.SelEnd;
@@ -1049,20 +1049,20 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 						this.SelEnd = this.SelBegin;
 
 						if (this.Cpos < this.text.length) {
-							this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
+							this.text = this.text.slice(0, p1) + cInputBox.clipboard + this.text.slice(p2);
 						} else {
-							this.text = this.text + cInputbox.clipboard;
+							this.text = this.text + cInputBox.clipboard;
 						}
-						this.Cpos += cInputbox.clipboard.length;
+						this.Cpos += cInputBox.clipboard.length;
 						this.calcText();
 						this.repaint();
 					} else {
 						if (this.Cpos > 0) { // cursor pos > 0
-							this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+							this.text = this.text.substring(0, this.Cpos) + cInputBox.clipboard + this.text.substring(this.Cpos, this.text.length);
 						} else {
-							this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+							this.text = cInputBox.clipboard + this.text.substring(this.Cpos, this.text.length);
 						}
-						this.Cpos += cInputbox.clipboard.length;
+						this.Cpos += cInputBox.clipboard.length;
 						this.calcText();
 						this.repaint();
 					}
@@ -1087,14 +1087,14 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		}
 	};
 
-	this.on_key_down = function (vkey) {
+	this.on_key_down = function (vKey) {
 		this.resetCursorTimer();
-		this.on_key(vkey, getKeyboardMask());
+		this.on_key(vKey, getKeyboardMask());
 	};
 
-	this.on_key = function (vkey, mask) {
+	this.on_key = function (vKey, mask) {
 		if (mask == kMask.none) {
-			switch (vkey) {
+			switch (vKey) {
 				case VK_SHIFT:
 					break;
 				case VK_ESCAPE:
@@ -1232,7 +1232,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		} else {
 			switch (mask) {
 				case kMask.shift: {
-					if (vkey == VK_HOME) { // SHIFT + HOME
+					if (vKey == VK_HOME) { // SHIFT + HOME
 						if (this.edit) {
 							if (!this.select) {
 								this.anchor = this.Cpos;
@@ -1258,7 +1258,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey == VK_END) { // SHIFT + END
+					if (vKey == VK_END) { // SHIFT + END
 						if (this.edit) {
 							if (!this.select) {
 								this.anchor = this.Cpos;
@@ -1285,7 +1285,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey == VK_LEFT) { // SHIFT + KEY LEFT
+					if (vKey == VK_LEFT) { // SHIFT + KEY LEFT
 						if (this.edit) {
 							if (!this.select) {
 								this.anchor = this.Cpos;
@@ -1313,7 +1313,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey == VK_RIGHT) { // SHIFT + KEY RIGHT
+					if (vKey == VK_RIGHT) { // SHIFT + KEY RIGHT
 						if (this.edit) {
 							if (!this.select) {
 								this.anchor = this.Cpos;
@@ -1343,7 +1343,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					break;
 				}
 				case kMask.ctrl: {
-					if (vkey == 65) { // CTRL + A
+					if (vKey == 65) { // CTRL + A
 						if (this.edit && this.text.length > 0) {
 							this.SelBegin = 0;
 							this.SelEnd = this.text.length;
@@ -1352,15 +1352,15 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey == 67) { // CTRL + C
+					if (vKey == 67) { // CTRL + C
 						if (this.edit && this.select) {
-							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
+							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
 						}
 					}
-					if (vkey == 88) { // CTRL + X
+					if (vKey == 88) { // CTRL + X
 						if (this.edit && this.select) {
 							this.sText = this.text;
-							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
+							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
 							const p1 = this.SelBegin;
 							const p2 = this.SelEnd;
 							this.select = false;
@@ -1372,15 +1372,15 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey == 90) { // CTRL + Z
+					if (vKey == 90) { // CTRL + Z
 						if (this.edit) {
 							this.text = this.sText;
 							this.repaint();
 						}
 					}
-					if (vkey == 86) { // CTRL + V
-						cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
-						if (this.edit && cInputbox.clipboard) {
+					if (vKey == 86) { // CTRL + V
+						cInputBox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputBox.doc.parentWindow.clipboardData.getData('Text');
+						if (this.edit && cInputBox.clipboard) {
 							this.sText = this.text;
 							if (this.select) {
 								const p1 = this.SelBegin;
@@ -1390,32 +1390,32 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 								this.Cpos = this.SelBegin;
 								this.SelEnd = this.SelBegin;
 								if (this.Cpos < this.text.length) {
-									this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
+									this.text = this.text.slice(0, p1) + cInputBox.clipboard + this.text.slice(p2);
 								} else {
-									this.text = this.text + cInputbox.clipboard;
+									this.text = this.text + cInputBox.clipboard;
 								}
-								this.Cpos += cInputbox.clipboard.length;
+								this.Cpos += cInputBox.clipboard.length;
 								this.calcText();
 								this.repaint();
 							} else {
 								if (this.Cpos > 0) { // cursor pos > 0
-									this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+									this.text = this.text.substring(0, this.Cpos) + cInputBox.clipboard + this.text.substring(this.Cpos, this.text.length);
 								} else {
-									this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+									this.text = cInputBox.clipboard + this.text.substring(this.Cpos, this.text.length);
 								}
-								this.Cpos += cInputbox.clipboard.length;
+								this.Cpos += cInputBox.clipboard.length;
 								this.calcText();
 								this.repaint();
 							}
 						}
 					}
-					if (vkey == VK_HOME) { // CTRL + HOME
+					if (vKey == VK_HOME) { // CTRL + HOME
 						this.on_key(VK_HOME, kMask.none);
 					}
-					if (vkey == VK_END) { // CTRL + END
+					if (vKey == VK_END) { // CTRL + END
 						this.on_key(VK_END, kMask.none);
 					}
-					if (vkey == VK_BACK) { // CTRL + BACK
+					if (vKey == VK_BACK) { // CTRL + BACK
 						//save text before update
 						this.sText = this.text;
 						if (this.edit) {
@@ -1450,7 +1450,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 						this.select = false;
 						this.repaint();
 					}
-					if (vkey === VK_DELETE) { // CTRL + SUPR
+					if (vKey === VK_DELETE) { // CTRL + DEL
 						//save text before update
 						this.sText = this.text;
 						if (this.edit) {
@@ -1492,7 +1492,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 						this.select = false;
 						this.repaint();
 					}
-					if (vkey === VK_LEFT) { // CTRL + KEY LEFT
+					if (vKey === VK_LEFT) { // CTRL + KEY LEFT
 						if (this.edit && this.Cpos > 0) {
 							let newSelIdx = 0;
 							if (this.Cpos <= this.text.length) {
@@ -1509,7 +1509,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey === VK_RIGHT) { // CTRL + KEY RIGHT
+					if (vKey === VK_RIGHT) { // CTRL + KEY RIGHT
 						if (this.edit && this.Cpos < this.text.length) {
 							let newSelIdx = this.text.length;
 							if (this.Cpos >= 0) {
@@ -1536,13 +1536,13 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					break;
 				}
 				case kMask.ctrlShift: {
-					if (vkey == VK_HOME) { // CTRL + SHIFT + HOME
+					if (vKey == VK_HOME) { // CTRL + SHIFT + HOME
 						this.on_key(VK_HOME, kMask.shift);
 					}
-					if (vkey == VK_END) { // CTRL + SHIFT + END
+					if (vKey == VK_END) { // CTRL + SHIFT + END
 						this.on_key(VK_END, kMask.shift);
 					}
-					if (vkey === VK_LEFT) { // CTRL + SHIFT + KEY LEFT
+					if (vKey === VK_LEFT) { // CTRL + SHIFT + KEY LEFT
 						if (this.edit && this.Cpos > 0) {
 							let newSelIdx = 0;
 							if (this.Cpos <= this.text.length) {
@@ -1564,7 +1564,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							this.repaint();
 						}
 					}
-					if (vkey === VK_RIGHT) { // CTRL + SHIFT + KEY RIGHT
+					if (vKey === VK_RIGHT) { // CTRL + SHIFT + KEY RIGHT
 						if (this.edit && this.Cpos < this.text.length) {
 							let newSelIdx = this.text.length;
 							if (this.Cpos >= 0) {
@@ -1654,7 +1654,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 
 // Helpers
 
-const cInputbox = {
+const cInputBox = {
 	timerCursor: false,
 	cursorState: true,
 	doc: new ActiveXObject('htmlfile'),

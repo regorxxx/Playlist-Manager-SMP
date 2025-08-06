@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//06/08/24
 
 /* exported _scrollBar */
 
@@ -89,7 +89,7 @@ function _scrollBar({
 				const currY = Math.min(Math.max(this.calcCurrPos(), this.y), this.y + this.h - this.size);
 				const currX = this.x + this.w * 2 / 3 - this.wHidden;
 				try { gr.FillRoundRect(currX, currY, this.wHidden, this.size, this.wHidden / 2, this.wHidden / 2, this.color); }
-				catch (e) { gr.FillSolidRect(currX, currY, this.wHidden, this.size, this.color); }
+				catch (e) { gr.FillSolidRect(currX, currY, this.wHidden, this.size, this.color); } // eslint-disable-line no-unused-vars
 				gr.SetSmoothingMode(SmoothingMode.Default);
 				return;
 			}

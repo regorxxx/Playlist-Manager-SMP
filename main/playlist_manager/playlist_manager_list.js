@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/07/25
+//06/08/25
 
 /* exported _list */
 
@@ -25,7 +25,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursivefile:readable, _open:readable */
+/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
 /* global funcDict:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
@@ -116,14 +116,14 @@ function _list(x, y, w, h) {
 		this.repaint();
 	};
 
-	this.liteMenusOmmit = ['Relative paths handling', 'Export and copy', 'File management', 'File locks'];
+	this.liteMenusOmit = ['Relative paths handling', 'Export and copy', 'File management', 'File locks'];
 	this.updateMenus = ({ menus = {/* key: boolean, ... */ }, bSave = true, bOverrideDefaults = false } = {}) => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		Object.keys(menus).forEach((key) => {
 			showMenus[key] = menus[key];
 		});
 		if (this.bLiteMode) {
-			this.liteMenusOmmit.forEach((key) => {
+			this.liteMenusOmit.forEach((key) => {
 				showMenus[key] = false;
 			});
 		}
@@ -441,7 +441,7 @@ function _list(x, y, w, h) {
 		} else {
 			const total = pls.pls.lengthDeep;
 			const totalCurrentView = pls.pls.lengthFilteredDeep;
-			tooltipText += '\n' + 'Childs: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
+			tooltipText += '\n' + 'Children: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
 		}
 		if (showTt.duration) {
 			tooltipText += '\n' + 'Duration: ' + (pls.isFolder
@@ -745,7 +745,7 @@ function _list(x, y, w, h) {
 						w: 0,
 						h: 0
 					},
-					{	// Poweraction
+					{	// Power Action
 						parent: this.uiElements['Header buttons'].elements['Power actions'].enabled ? this.headerButtons.action : null,
 						position: this.uiElements['Header buttons'].elements['Power actions'].position,
 						icon: chars.bolt,
@@ -882,7 +882,7 @@ function _list(x, y, w, h) {
 	this.bPaintButtons = true;
 	this.paintStack = [];
 	this.prePaint = () => {
-		// Multiple repaint calls may poin to different parts of the panel.
+		// Multiple repaint calls may point to different parts of the panel.
 		// Without this only the last one would be used which may introduce glitches
 		const keys = ['bPaintHeader', 'bPaintList', 'bPaintButtons'];
 		if (this.paintStack.length) {
@@ -988,7 +988,7 @@ function _list(x, y, w, h) {
 		// Rows
 		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
 		let cacheLen = 0;
-		const ellipisisW = this.bShowSize ? gr.CalcTextWidth('...', panel.fonts.normal) : 0;
+		const ellipsisW = this.bShowSize ? gr.CalcTextWidth('...', panel.fonts.normal) : 0;
 		const iconsRightW = this.uiElements['Scrollbar'].enabled && scroll ? this.w - (scroll.visible ? scroll.w : scroll.wHidden) : this.textWidth;
 		const level = { name: '', offset: 0 };
 		// Helpers
@@ -1046,8 +1046,8 @@ function _list(x, y, w, h) {
 						const sepLetter = data.length ? data[0].toUpperCase() : '-';
 						const nextIdx = currIdx + indexSortStateOffset;
 						const nextData = Array.isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
-						const nextsepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
-						if (sepLetter !== nextsepLetter && !(sepLetter in nums)) {
+						const nextSepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
+						if (sepLetter !== nextSepLetter && !(sepLetter in nums)) {
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.rowHeight), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.rowHeight), 1, categoryHeaderLineColor, _scale(2));
@@ -1076,7 +1076,7 @@ function _list(x, y, w, h) {
 					const size = ' (' + pls.size + ')';
 					const sizeW = gr.CalcTextWidth(size, panel.colors.bBold ? panel.fonts.normalBold : panel.fonts.normal);
 					const plsW = w - sizeW;
-					const left = this.textWidth - 30 - sizeW - ellipisisW - _scale(3) * (1 + level * 2) - levelOffset;
+					const left = this.textWidth - 30 - sizeW - ellipsisW - _scale(3) * (1 + level * 2) - levelOffset;
 					playlistDataText = pls.name.slice(0, Math.floor(left * pls.name.length / plsW)) + '...' + size;
 				} else { cacheLen = playlistDataText.length; }
 			}
@@ -1396,7 +1396,7 @@ function _list(x, y, w, h) {
 					gr.GdiDrawText('Starts with:', panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
 			}
 			// Draw the letter
-			if (idxHighlight === -1) { // Striked out when not found
+			if (idxHighlight === -1) { // Stroked out when not found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylist, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
 				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2);
@@ -1613,9 +1613,9 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	const comparekeys = ['nameId', 'id', 'path', 'extension', 'isAutoPlaylist', 'playlist_mbid', 'isFolder'];
+	const compareKeys = ['nameId', 'id', 'path', 'extension', 'isAutoPlaylist', 'playlist_mbid', 'isFolder'];
 	this.comparePls = (from, to) => {
-		return comparekeys.every((key) => from[key] === to[key]);
+		return compareKeys.every((key) => from[key] === to[key]);
 	};
 
 	this.getIndex = (pls, bAlsoHidden = false) => {
@@ -1635,7 +1635,7 @@ function _list(x, y, w, h) {
 			: null;
 	};
 
-	this.getIndexSortedBy = ({ key = 'modified', bInverse = false, bSkipLibrayViewer = true } = {}) => {
+	this.getIndexSortedBy = ({ key = 'modified', bInverse = false, bSkipLibraryViewer = true } = {}) => {
 		let filterFunc;
 		switch (key) {
 			case 'created':
@@ -1643,7 +1643,7 @@ function _list(x, y, w, h) {
 			case 'duration': filterFunc = ({ pls }) => !pls.isFolder; break;
 			case 'size': filterFunc = ({ pls }) => !pls.isFolder; break;
 		}
-		if (bSkipLibrayViewer) {
+		if (bSkipLibraryViewer) {
 			const regExp = /Library Viewer|Filter Results/i;
 			const oldFunc = filterFunc;
 			filterFunc = ({ pls }) => oldFunc({ pls }) && !regExp.test(pls.nameId);
@@ -2042,7 +2042,7 @@ function _list(x, y, w, h) {
 							this.executeAction(z, x, y, shortcuts[mask]);
 						} else { // Only mouse
 							const currItem = this.data[z];
-							if (!this.bDoubleclick) { // It's not a second lbtn click
+							if (!this.bDoubleClick) { // It's not a second lbtn click
 								if (currItem) {
 									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
 										this.playlistMenu(z, x, y);
@@ -2053,7 +2053,7 @@ function _list(x, y, w, h) {
 										this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
 									}
 								}
-							} else { this.bDoubleclick = false; }
+							} else { this.bDoubleClick = false; }
 						}
 					} else if (this.isInternalDrop()) { this.internalPlsDrop = []; }
 					break;
@@ -2089,9 +2089,9 @@ function _list(x, y, w, h) {
 					const shortcuts = this.getShortcuts('L', 'HEADER');
 					const sgShortcut = shortcuts[Object.hasOwn(shortcuts, mask) ? mask : 'SG_CLICK'];
 					if (sgShortcut) { // Select all from current view or clean selection
-						if (!this.bDoubleclick) { // It's not a second lbtn click
+						if (!this.bDoubleClick) { // It's not a second lbtn click
 							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void (0), x, y, sgShortcut, false);
-						} else { this.bDoubleclick = false; }
+						} else { this.bDoubleClick = false; }
 					}
 					this.move(this.mx, this.my, mask); // Updates tooltip even when mouse hasn't moved
 				}
@@ -2164,7 +2164,7 @@ function _list(x, y, w, h) {
 					const z = this.index;
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
-					this.bDoubleclick = true;
+					this.bDoubleClick = true;
 					if (!this.data[z] || this.data[z].isFolder) { break; }
 					this.executeAction(z, x, y, shortcuts[mask]);
 					break;
@@ -2192,7 +2192,7 @@ function _list(x, y, w, h) {
 				} else if (bActionButton || this.modeUI === 'traditional' || !this.uiElements['Header buttons'].elements['Power actions'].enabled) {
 					clearTimeout(this.timeOut);
 					this.timeOut = null;
-					this.bDoubleclick = true;
+					this.bDoubleClick = true;
 					const shortcuts = this.getShortcuts('L', 'HEADER');
 					const sgShortcut = shortcuts[mask];
 					if (sgShortcut) {
@@ -3158,8 +3158,8 @@ function _list(x, y, w, h) {
 					const newIdx = plman.ActivePlaylist;
 					if (bFromPlsUI) { plman.ActivePlaylist = idx; }
 					// Remove track on move
-					const bSucess = this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: (mask - 32) !== MK_CONTROL });
-					if (bSucess) {
+					const bSuccess = this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true, bAlsoHidden: true, bPaint: false, bDelSource: (mask - 32) !== MK_CONTROL });
+					if (bSuccess) {
 						// Don't reload the list but just paint with changes to avoid jumps
 						plman.ActivePlaylist = newIdx;
 						this.showCurrPls();
@@ -3168,8 +3168,8 @@ function _list(x, y, w, h) {
 			} else { // Send to existing playlist
 				const cache = [this.offset, this.index];
 				// Remove track on move
-				const bSucess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: (mask & MK_CONTROL) !== MK_CONTROL });
-				if (bSucess) {
+				const bSuccess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: (mask & MK_CONTROL) !== MK_CONTROL });
+				if (bSuccess) {
 					// Don't reload the list but just paint with changes to avoid jumps
 					this.repaint(false, 'list');
 					[this.offset, this.index] = cache;
@@ -3325,23 +3325,23 @@ function _list(x, y, w, h) {
 
 	this.sendSelectionToPlaylists = ({ playlistIndexArr = this.indexes.length ? this.indexes : [this.index], bCheckDup = true, bDelSource = false } = {}) => {
 		const cache = [this.offset, this.index];
-		let bSucess = false;
+		let bSuccess = false;
 		if (playlistIndexArr.length) {
 			const sources = [];
 			playlistIndexArr.forEach((zz) => {
 				const item = typeof zz !== 'undefined' && zz !== -1 ? this.data[zz] : null;
 				if (item && item.isFolder) {
 					if (!!item.pls.lengthFiltered && this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: false, bDelSource, bSkipXspRefresh: true })) {
-						bSucess = true;
+						bSuccess = true;
 					}
 				} else if (this.sendSelectionToPlaylist({ playlistIndex: zz, bCheckDup: true, bPaint: false, bDelSource, bSkipXspRefresh: true })) {
-					bSucess = true;
+					bSuccess = true;
 				}
-				if (bSucess && item) { sources.push(item.nameId); }
+				if (bSuccess && item) { sources.push(item.nameId); }
 			});
 			if (this.bAutoRefreshXsp) { this.refreshSmartPlaylists({ sources }); }
 		}
-		if (bSucess) {
+		if (bSuccess) {
 			if (['By track size', 'By duration', 'By size', 'By date\t-last modified-'].includes(this.getMethodState())) {
 				this.sort();
 			} else {
@@ -3975,7 +3975,7 @@ function _list(x, y, w, h) {
 				dataExternalPlaylists.push(oAutoPlaylistItem);
 			});
 		} else if (answer === popup.no) {
-			const importFormats = new Set(['.fpl', '.srtm', '.pls']);
+			const importFormats = new Set(['.fpl', '.strm', '.pls']);
 			const answerAuto = data.some((pls) => pls.query)
 				? WshShell.Popup('Import AutoPlaylists and Smart Playlists metadata?\n\nIn case a match it\'s found, a popup will ask to overwrite current playlist.', 0, 'Playlist Manager: AutoPlaylists', popup.question + popup.yes_no)
 				: popup.no;
@@ -4175,7 +4175,7 @@ function _list(x, y, w, h) {
 	};
 	this.importAutoPlaylistsFromSqlite = (path = fb.ProfilePath + 'playlists-v2.0\\') => {
 		if (!_isFolder(path)) { return null; }
-		const files = findRecursivefile('*.sqlite', [path]);
+		const files = findRecursiveFile('*.sqlite', [path]);
 		const data = files.map((file) => FPL.parseSqliteFile(file)).filter(Boolean);
 		// Playlist names must be retrieved from another index file
 		if (data && data.length) {
@@ -4197,13 +4197,13 @@ function _list(x, y, w, h) {
 
 	// Categories and tags
 	this.categories = (idx = null) => {
-		const defCateg = '(None)';
-		if (idx === 0) { return defCateg; }
-		let categ = new Set();
-		this.dataAll.forEach((playlist) => { if (playlist.category.length) { categ.add(playlist.category); } });
+		const defCategory = '(None)';
+		if (idx === 0) { return defCategory; }
+		let categories = new Set();
+		this.dataAll.forEach((playlist) => { if (playlist.category.length) { categories.add(playlist.category); } });
 		return idx
-			? [defCateg, ...[...categ].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))][idx]
-			: [defCateg, ...[...categ].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))];
+			? [defCategory, ...[...categories].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))][idx]
+			: [defCategory, ...[...categories].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))];
 	};
 	this.categoryState = [];
 	this.tags = (idx = null) => {
@@ -5373,7 +5373,7 @@ function _list(x, y, w, h) {
 		if (this.bTracking) {
 			this.clearSelPlaylistCache();
 			fb.queryCache.clear();
-			this.cacheLibTimer = cacheLib(false, 'Updating...'); // Do it inmediately
+			this.cacheLibTimer = cacheLib(false, 'Updating...'); // Do it immediately
 			if (bCachePls && this.requiresCachePlaylistSearch()) {
 				this.cachePlaylistSearch();
 			}
@@ -5610,11 +5610,11 @@ function _list(x, y, w, h) {
 	this.editData = (objectPlaylist, properties, bSave = false, bDate = false) => {
 		const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 		if (Array.isArray(objectPlaylist)) {
-			const bSucess = objectPlaylist.map((objectPlaylist_i, i) => {
+			const bSuccess = objectPlaylist.map((objectPlaylist_i, i) => {
 				return this.editData(objectPlaylist_i, properties[i], false, bDate);
 			});
 			clearInterval(delay);
-			if (bSucess.every(Boolean)) {
+			if (bSuccess.every(Boolean)) {
 				if (bSave) { this.save(); }
 				return true;
 			} else {
@@ -5935,7 +5935,7 @@ function _list(x, y, w, h) {
 					}
 				});
 			}
-			// Ommit non found sources
+			// Omit non found sources
 			[...queue].forEach((val) => {
 				if (!this.dataAll.some((source) => source.name === val)) {
 					queue.delete(val);
@@ -5946,7 +5946,7 @@ function _list(x, y, w, h) {
 		return isCircular;
 	};
 
-	this.converUiPlaylist = ({ idx = -1, name = '', bShowPopups = true, toFolder = null } = {}) => {
+	this.convertUiPlaylist = ({ idx = -1, name = '', bShowPopups = true, toFolder = null } = {}) => {
 		if (idx === -1) {
 			if (plman.ActivePlaylist === -1) { return null; }
 			else { idx = plman.ActivePlaylist; }
@@ -6212,7 +6212,7 @@ function _list(x, y, w, h) {
 		return objectPlaylist;
 	};
 
-	this.addSmartplaylist = (pls = null, bEdit = true, toFolder = null) => {
+	this.addSmartPlaylist = (pls = null, bEdit = true, toFolder = null) => {
 		this.xspPopup();
 		// Check if there are initial values
 		const bPls = !!pls;
@@ -7113,7 +7113,7 @@ function _list(x, y, w, h) {
 		this.loadConfigFile();
 		const z = this.offset + Math.round(this.rows / 2 - 1);
 		this.cacheLastPosition(z);
-		this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track autotagging according to query and tags
+		this.bUpdateAutoPlaylist = true; // Forces AutoPlaylist size update and track auto-tagging according to query and tags
 		if (test) { test.CheckPointStep('Clear'); test.CheckPoint('Update'); }
 		this.update({ bNotPaint: true, currentItemIndex: z });
 		if (test) { test.CheckPointStep('Update'); test.CheckPoint('Filter'); }
@@ -7188,7 +7188,7 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.checkConfig = ({ bSilenSorting = false, bResetColors = false } = {}) => { // Forces right settings
+	this.checkConfig = ({ bSilentSorting = false, bResetColors = false } = {}) => { // Forces right settings
 		let bDone = false;
 		// Check playlists path
 		if (!this.playlistsPath.endsWith('\\')) {
@@ -7225,7 +7225,7 @@ function _list(x, y, w, h) {
 		}
 		// Check sorting is valid
 		if (!Object.hasOwn(this.sortMethods(false), this.methodState)) {
-			if (!bSilenSorting) {
+			if (!bSilentSorting) {
 				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
 			}
 			this.methodState = this.getMethodState(); // On first call first state of that method will be default
@@ -7233,7 +7233,7 @@ function _list(x, y, w, h) {
 			bDone = true;
 		}
 		if (!Object.hasOwn(this.sortMethods(false)[this.methodState], this.sortState)) {
-			if (!bSilenSorting) {
+			if (!bSilentSorting) {
 				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
 			}
 			this.sortState = this.getSortState(); // On first call first state of that method will be default
@@ -7868,7 +7868,7 @@ function _list(x, y, w, h) {
 	this.itemsFolder = 0;
 	this.text_x = 0;
 	this.timeOut = null;
-	this.bDoubleclick = false;
+	this.bDoubleClick = false;
 	this.bSelMenu = false;
 	this.filename = '';
 	this.configFile = null;
@@ -8089,13 +8089,13 @@ function _list(x, y, w, h) {
 			x: 0, y: 0, w: 0, h: 0, inFocus: false,
 			text: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_CONTROL && this.items && plman.ActivePlaylist !== -1 && !this.bIsDragDrop) {
-					const idx = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibrayViewer: true });
+					const idx = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibraryViewer: true });
 					this.showPlsByIdxThrottled(idx);
 				} else if (idxHighlight !== -1 && animation.bForce) { idxHighlight = -1; animation.bForce = false; }
 				return 'List menu...' + this.getGlobalShortcut('list menu', { bTab: false, bParen: true }) +
 					'\n----------------------------------------------\n' +
 					'(Shift + L. Click to copy selection to new playlist)\n' +
-					'(Ctrl + L. Click to copy selection to lastest playlist)';
+					'(Ctrl + L. Click to copy selection to latest playlist)';
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_SHIFT) {
@@ -8104,7 +8104,7 @@ function _list(x, y, w, h) {
 					if (this.items && plman.ActivePlaylist !== -1 && !this.bIsDragDrop) {
 						const selItems = fb.GetSelections(1);
 						if (selItems && selItems.Count) {
-							const playlistIndex = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibrayViewer: true });
+							const playlistIndex = this.getIndexSortedBy({ key: 'modified', bInverse: true, bSkipLibraryViewer: true });
 							this.sendSelectionToPlaylist({ playlistIndex, bCheckDup: true });
 						}
 					}
@@ -8211,7 +8211,7 @@ function _list(x, y, w, h) {
 								: '\nPress any letter / number to jump to items matched by current sorting' +
 								'\n(i.e. sorting by category jumps by it instead of item name).'
 							) +
-							'\nPressing Shift/Ctrl matches at any position, not only from the beggining.' +
+							'\nPressing Shift/Ctrl matches at any position, not only from the beginning.' +
 							'\n'
 							: '') +
 						'\nDrag n\' drop (tracks):' +

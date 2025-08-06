@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//06/08/25
 
 /* global SimpleCrypto:readable */
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
@@ -75,12 +75,12 @@ youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 					? nodes.map((node) => {
 						if (Object.hasOwn(node, 'videoRenderer') && Object.hasOwn(node.videoRenderer, 'videoId')) {
 							let title, id, length;
-							try { title = node.videoRenderer.title.runs[0].text; } catch (e) { title = ''; }
-							try { id = node.videoRenderer.videoId; } catch (e) { id = ''; }
+							try { title = node.videoRenderer.title.runs[0].text; } catch (e) { title = ''; } // eslint-disable-line no-unused-vars
+							try { id = node.videoRenderer.videoId; } catch (e) { id = ''; } // eslint-disable-line no-unused-vars
 							try {
 								length = node.videoRenderer.lengthText.simpleText;
 								length = length.split(':').reduce((acc, time) => (60 * acc) + +time);
-							} catch (e) { id = ''; }
+							} catch (e) { id = ''; } // eslint-disable-line no-unused-vars
 							return (id && title && length ? { id, title, length, score: 0 } : null);
 						} else { return null; }
 					}).filter(Boolean) : [];

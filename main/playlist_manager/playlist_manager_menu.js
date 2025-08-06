@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/25
+//06/08/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -304,7 +304,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newEntry({
 						entryText: 'Convert to playlist file', func: () => {
 							const idx = plman.FindPlaylist(pls.nameId);
-							list.converUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
+							list.convertUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
 						}, flags: bIsPlsUI ? MF_STRING : MF_GRAYED
 					});
 				} else {
@@ -441,7 +441,7 @@ function createMenuLeft(forcedIndex = -1) {
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.newEntry({
-					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist && !bIsPlsUI ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 autoplaylist no matter the original format
+					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist && !bIsPlsUI ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 AutoPlaylist no matter the original format
 						cloneAsAutoPls(list, z, uiIdx);
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
@@ -996,7 +996,7 @@ function createMenuFolder(menu, folder, z) {
 		menu.newEntry({ menuName: subMenuName, entryText: 'UI-only Playlist...', func: () => { list.addUiPlaylist({ bInputName: true, toFolder: folder }); } });
 		menu.newSeparator(subMenuName);
 		menu.newEntry({ menuName: subMenuName, entryText: 'AutoPlaylist...', func: () => { list.addAutoPlaylist(void (0), void (0), folder); } });
-		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => { list.addSmartplaylist(void (0), void (0), folder); } });
+		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'Smart Playlist...', func: () => list.addSmartPlaylist(void (0), void (0), folder) });
 		if (!list.bLiteMode) {
 			menu.newSeparator(subMenuName);
 			const subMenuNameTwo = menu.newMenu('New Playlist File (by ext)...', subMenuName);
@@ -1245,7 +1245,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const menu = menuLbtnMult;
 	menu.clear(true); // Reset on every call
 	if (indexes.length === 0) {
-		fb.ShowPopupMessage('Selected indexes wwere empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		fb.ShowPopupMessage('Selected indexes were empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
 	const playlists = [];
@@ -1372,7 +1372,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 				playlists.forEach((pls) => {
 					if (isPlsUI(pls)) {
 						const idx = plman.FindPlaylist(pls.nameId);
-						list.converUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
+						list.convertUiPlaylist({ idx, name: pls.name, toFolder: list.getParentFolder(pls) });
 					}
 				});
 			}, flags: bIsPlsUISome ? MF_STRING : MF_GRAYED
@@ -1852,7 +1852,7 @@ function createMenuRight() {
 				const toFolder = rule.length
 					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 					: null;
-				const pls = list.addSmartplaylist(void (0), void (0), toFolder);
+				const pls = list.addSmartPlaylist(void (0), void (0), toFolder);
 				if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
 			}
 		});
@@ -2480,7 +2480,7 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Absolute/relative paths consistency
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Absolute/relative paths...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other enviroments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other environments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking absolute/relative paths...\nPanel will be disabled during the process.'); }
 					findMixedPaths().then(({ found, report }) => {
@@ -2813,7 +2813,7 @@ function createMenuRightTop() {
 			const subMenuName = menu.newMenu('Categories shown');
 			const options = list.categories();
 			const defOpt = options[0];
-			menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Toggle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Restore all', func: () => {
@@ -2831,7 +2831,9 @@ function createMenuRightTop() {
 						if (utils.IsKeyPressed(VK_SHIFT)) {
 							categoryState = [item];
 						} else {
-							categoryState = list.categoryState.includes(item) ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
+							categoryState = list.categoryState.includes(item)
+								? list.categoryState.filter((category) => category !== item)
+								: (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
 						}
 						list.filter({ categoryState });
 					}
@@ -2843,7 +2845,7 @@ function createMenuRightTop() {
 			const subMenuName = menu.newMenu('Tags shown');
 			const options = list.tags();
 			const defOpt = options[0];
-			menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Toggle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Restore all', func: () => {
@@ -2888,8 +2890,8 @@ function createMenuRightTop() {
 								list.bRelativePath = (i === 0);
 								list.properties['bRelativePath'][1] = list.bRelativePath;
 								overwriteProperties(list.properties);
-								if (i === 0) { fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name); }
-								else { fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; appart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name); }
+								if (i === 0) { fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name); }
+								else { fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name); }
 							}
 						});
 					});
@@ -2983,7 +2985,7 @@ function createMenuRightTop() {
 								list.bSavingXsp = (i === 1);
 								list.properties['bSavingXsp'][1] = list.bSavingXsp;
 								overwriteProperties(list.properties);
-								if (list.bSavingXsp) { fb.ShowPopupMessage('Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes agains their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.', window.Name); }
+								if (list.bSavingXsp) { fb.ShowPopupMessage('Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes against their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.', window.Name); }
 							}
 						});
 					});
@@ -3340,7 +3342,7 @@ function createMenuRightTop() {
 						'When this option is enabled, multi-value tags are parsed independently and a track may be considered a duplicate if at least one of those values match (instead of requiring all to match in the same order).\n\nSo for \'[ARTIST, DATE, TITLE]\' tags, these are duplicates with this option enabled:\n' +
 						'\nJimi Hendrix - 1969 - Blabla' +
 						'\nJimi Hendrix experience, Jimi Hendrix - 1969 - Blabla' +
-						'\nBand of Gypys, Jimi Hendrix - 1969 - Blabla' +
+						'\nBand of Gypsys, Jimi Hendrix - 1969 - Blabla' +
 						'\n\nWith multi-value parsing disabled, these are considered non-duplicated tracks since not all artists match.',
 						'Playlist Manager'
 					);
@@ -3453,7 +3455,7 @@ function createMenuRightTop() {
 		if (showMenus['Tags'] || showMenus['Folders']) { menu.newSeparator(menuName); }
 		if (showMenus['Tags']) {	// Playlist AutoTags & Actions
 			const subMenuName = menu.newMenu('Playlist AutoTags and actions', menuName);
-			menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file\'s Tags relatad actions:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file\'s Tags related actions:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			{
 				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with', subMenuName);
@@ -3540,7 +3542,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTagAutoPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional proccessing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name); }
+						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional processing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name); }
 						list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
 						list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
 						overwriteProperties(list.properties);
@@ -4560,7 +4562,7 @@ function createMenuRightTop() {
 					list.columns.labels.push('size');
 					list.columns.width.push(list.columns.width.slice(-1)[0] || 'auto');
 					list.columns.font.push(list.columns.font.slice(-1)[0] || 'normal');
-					list.columns.align.push(list.columns.align.slice(-1)[0] || 'rigth');
+					list.columns.align.push(list.columns.align.slice(-1)[0] || 'right');
 					list.columns.color.push(list.columns.color.slice(-1)[0] || 'playlistColor');
 					list.columns.bShown.push(true);
 					list.properties['columns'][1] = JSON.stringify(list.columns);
@@ -4714,7 +4716,7 @@ function createMenuRightTop() {
 						name: 'Full', elements: {
 							'Search filter': { enabled: true },
 							'Columns': { enabled: true },
-							'Bottom toobar': { enabled: true },
+							'Bottom toolbar': { enabled: true },
 							'Header buttons': {
 								enabled: true, elements:
 								{
@@ -4731,7 +4733,7 @@ function createMenuRightTop() {
 					{
 						name: 'Essential + Search', elements: {
 							'Search filter': { enabled: true },
-							'Bottom toobar': { enabled: true },
+							'Bottom toolbar': { enabled: true },
 							'Header buttons': {
 								enabled: true, elements:
 								{
@@ -4764,7 +4766,7 @@ function createMenuRightTop() {
 					{
 						name: 'Simple header', elements: {
 							'Search filter': { enabled: false },
-							'Bottom toobar': { enabled: true },
+							'Bottom toolbar': { enabled: true },
 							'Header buttons': {
 								enabled: false, elements:
 								{
@@ -4870,7 +4872,7 @@ function createMenuRightTop() {
 		{	// Icons
 			const subMenuName = menu.newMenu('Icons', menuName);
 			const options = [
-				{ name: 'Charets', icons: { open: chars.downOutline, closed: chars.leftOutline } },
+				{ name: 'Carets', icons: { open: chars.downOutline, closed: chars.leftOutline } },
 				{ name: 'Folders (solid)', icons: { open: chars.folderOpenBlack, closed: chars.folderCloseBlack } },
 				{ name: 'Folders (outline)', icons: { open: chars.folderOpenWhite, closed: chars.folderCloseWhite } },
 				{ name: 'Custom...', icons: { open: null, closed: null } },
@@ -5144,7 +5146,7 @@ function createMenuRightTop() {
 		menu.newEntry({ menuName: subMenuName, entryText: 'Menu entries / Features enabled:', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
 		Object.keys(showMenus).forEach((key) => {
-			if (list.bLiteMode && list.liteMenusOmmit.includes(key)) { return; }
+			if (list.bLiteMode && list.liteMenusOmit.includes(key)) { return; }
 			menu.newEntry({
 				menuName: subMenuName, entryText: key, func: () => {
 					list.updateMenus({ menus: { [key]: !showMenus[key] } });
@@ -5161,7 +5163,7 @@ function createMenuRightTop() {
 					options: Object.fromEntries(Object.keys(showMenus).map((k) => [k, true]))
 				},
 				{
-					name: 'Bassic',
+					name: 'Basic',
 					options: { ...defOpts, ...Object.fromEntries(['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'Statistics mode'].map((k) => [k, false])) }
 				},
 				{
@@ -5344,7 +5346,7 @@ function createMenuRightTop() {
 			list.properties['bLiteMode'][1] = list.bLiteMode;
 			if (list.bLiteMode) {
 				// Menus
-				const menus = Object.fromEntries([...list.liteMenusOmmit, 'Tags', 'Online sync', 'Statistics mode'].map((k) => [k, false]));
+				const menus = Object.fromEntries([...list.liteMenusOmit, 'Tags', 'Online sync', 'Statistics mode'].map((k) => [k, false]));
 				list.updateMenus({ menus, bSave: false, bOverrideDefaults: true });
 				// Other tools
 				if (list.searchInput) {
@@ -5461,7 +5463,7 @@ function createMenuRightTop() {
 				if (_isFile(path)) {
 					const bDone = _run(path);
 					if (!bDone) { _explorer(path); }
-				} else { console.log('Playlist Manager: Readme not foundd\n\t ' + path); }
+				} else { console.log('Playlist Manager: Readme not found\n\t ' + path); }
 			}
 		});
 	}
@@ -5854,7 +5856,7 @@ function createMenuFilterSorting() {
 		const subMenuName = menu.newMenu('Categories shown');
 		const options = list.categories();
 		const defOpt = options[0];
-		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'Toggle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Restore all', func: () => {
@@ -5872,7 +5874,9 @@ function createMenuFilterSorting() {
 					if (utils.IsKeyPressed(VK_SHIFT)) {
 						categoryState = [item];
 					} else {
-						categoryState = list.categoryState.includes(item) ? list.categoryState.filter((categ) => { return categ !== item; }) : (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
+						categoryState = list.categoryState.includes(item)
+							? list.categoryState.filter((category) => category !== item)
+							: (item === defOpt ? [defOpt, ...list.categoryState] : list.categoryState.concat([item]).sort());
 					}
 					list.filter({ categoryState });
 				}
@@ -5884,7 +5888,7 @@ function createMenuFilterSorting() {
 		const subMenuName = menu.newMenu('Tags shown');
 		const options = list.tags();
 		const defOpt = options[0];
-		menu.newEntry({ menuName: subMenuName, entryText: 'Toogle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenuName, entryText: 'Toggle (click) / Single (Shift + click):', func: null, flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Restore all', func: () => {
@@ -6155,7 +6159,7 @@ function quickSearchMenu(menu, menuName) {
 				list.properties.bQuickSearchName[1] = !list.properties.bQuickSearchName[1];
 				overwriteProperties(list.properties);
 				if (list.properties.bQuickSearchName[1]) {
-					fb.ShowPopupMessage('Enabling this option will force searching by nane, without considering the current sorting method.\n\nIf searching by date, size, etc. is desired according to current sorting, disable it.', window.Name);
+					fb.ShowPopupMessage('Enabling this option will force searching by name, without considering the current sorting method.\n\nIf searching by date, size, etc. is desired according to current sorting, disable it.', window.Name);
 				}
 			}
 		});

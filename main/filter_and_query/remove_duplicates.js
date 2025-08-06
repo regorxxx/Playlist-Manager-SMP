@@ -1,16 +1,16 @@
 ﻿'use strict';
-//22/06/25
+//06/08/25
 
 /*
 	Remove duplicates
 	Remove tracks with same tags (also duplicated files) from active playlist.
 	if 'handleList = null' then it will work directly on current active playlist.
 	If 'sortOutput = ""', then final order will be randomized. It follows 'plman.SortByFormat' conventions.
-	Any 'sort...' variable follows titleformat conventions
+	Any 'sort...' variable follows TitleFormat conventions
 		i.e. "%TITLE%|%ALBUM ARTIST%|%DATE%"
-	Any 'check...' variable can follow both tag name or titleformat conventions (functions too)
+	Any 'check...' variable can follow both tag name or TitleFormat conventions (functions too)
 		i.e. 'TITLE' or '%TITLE%'
-	You can add multiple entries to the same variable but then it must follow titleformat conventions.
+	You can add multiple entries to the same variable but then it must follow TitleFormat conventions.
 		i.e. 'checkKeys = [%TITLE% - %ARTIST%]'
 	The multiple 'check...' variables are joined using ' - '
 
@@ -20,7 +20,7 @@
 		That means this could be used both to find duplicates or for custom post-playlist
 		creation filtering (1 track per artist, 1 track per date, etc.)
 	Tip:
-		Add musicBraiz track ID and album as default: solves same track with different dates...
+		Add musicBrainz track ID and album as default: solves same track with different dates...
 */
 
 /* exported filterDuplicates, removeDuplicates, removeDuplicatesAsync, showDuplicates */
@@ -85,9 +85,9 @@ function filterDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 
 	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
-	let checklength = checkKeys.length;
+	let checkLength = checkKeys.length;
 	let i = 0;
-	while (i < checklength) {
+	while (i < checkLength) {
 		const key = _t(checkKeys[i]);
 		if (i === 0) { sortInput = key; }
 		else { sortInput += sep + key; }
@@ -465,7 +465,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 
 	let set = new Set();
 	if (bMultiple) {
-		const dics = Array.from({ length: checkLength }, () => new Set());
+		const dictionaries = Array.from({ length: checkLength }, () => new Set());
 		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
 		let i = 0;
 		if (bAdvTitle) {
@@ -478,10 +478,10 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 						? str.split(', ')
 						: [str.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g').trim()];
 				});
-				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
+				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dictionaries[j].has(subStr)));
 				if (!bFound) {
 					items.push(copy[i]);
-					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
+					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dictionaries[j].add(subStr)));
 				}
 				i++;
 			}
@@ -492,10 +492,10 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 						? str.split(', ')
 						: [str];
 				});
-				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dics[j].has(subStr)));
+				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dictionaries[j].has(subStr)));
 				if (!bFound) {
 					items.push(copy[i]);
-					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dics[j].add(subStr)));
+					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dictionaries[j].add(subStr)));
 				}
 				i++;
 			}
@@ -594,9 +594,9 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 
 	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
-	let checklength = checkKeys.length;
+	let checkLength = checkKeys.length;
 	let i = 0;
-	while (i < checklength) {
+	while (i < checkLength) {
 		const key = _t(checkKeys[i]);
 		if (i === 0) { sortInput = key; }
 		else { sortInput += sep + key; }

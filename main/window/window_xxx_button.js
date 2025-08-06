@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/11/24
+//06/08/25
 
 /* exported _button */
 
@@ -127,9 +127,9 @@ function _button({
 			if (this.lbtnFunc) {
 				if (!this.bDblClk) {
 					if (parent) {
-						this.timeoutLclk = setTimeout(() => this.lbtnFunc.call(parent, x, y, mask, parent, 1), this.iDoubleClickTimer);
+						this.timeoutLClick = setTimeout(() => this.lbtnFunc.call(parent, x, y, mask, parent, 1), this.iDoubleClickTimer);
 					} else {
-						this.timeoutLclk = setTimeout(() => this.lbtnFunc(x, y, mask, 1), this.iDoubleClickTimer);
+						this.timeoutLClick = setTimeout(() => this.lbtnFunc(x, y, mask, 1), this.iDoubleClickTimer);
 					}
 				} else { this.bDblClk = false; }
 			}
@@ -163,8 +163,8 @@ function _button({
 				}
 			}
 			this.bDblClk = true;
-			clearTimeout(this.timeoutLclk);
-			this.timeoutLclk = null;
+			clearTimeout(this.timeoutLClick);
+			this.timeoutLClick = null;
 			return true;
 		}
 		return false;
@@ -192,5 +192,5 @@ function _button({
 	this.scrollSpeed = scrollSpeed;
 	this.scrollSteps = scrollSteps;
 	this.iDoubleClickTimer = iDoubleClickTimer;
-	this.timeoutLclk = null;
+	this.timeoutLClick = null;
 }

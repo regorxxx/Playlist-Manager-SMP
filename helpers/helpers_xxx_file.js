@@ -1,7 +1,7 @@
 ﻿'use strict';
-//16/06/25
+//06/08/25
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -743,7 +743,7 @@ function findRecursiveDirs(path = fb.ProfilePath) {
 	return findRecursivePaths(path).map((dir) => dir.replace(_resolvePath(path), ''));
 }
 
-function findRecursivefile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath]) {
+function findRecursiveFile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath]) {
 	let fileArr = [];
 	if (isArrayStrings(inPaths)) {
 		inPaths = inPaths.map((path) => _resolvePath(path));

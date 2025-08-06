@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/05/25
+//06/08/25
 
 /* exported createStatisticsMenu */
 
@@ -90,9 +90,9 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 		}.bind(this);
 	};
-	const filtGreat = (num) => ((a) => a.y > num);
-	const filtLow = (num) => ((a) => a.y < num);
-	const filtBetween = (lim) => ((a) => a.y > lim[0] && a.y < lim[1]);
+	const filterGreat = (num) => ((a) => a.y > num);
+	const filterLow = (num) => ((a) => a.y < num);
+	const filterBetween = (lim) => ((a) => a.y > lim[0] && a.y < lim[1]);
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
 	// Header
@@ -224,7 +224,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			])].sort((a, b) => a - b);
 			{
 				options.map((val) => {
-					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtGreat(val), entryText: val };
+					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filterGreat(val), entryText: val };
 				}).forEach(function (option, i) {
 					createMenuOption('dataManipulation', 'filter', subMenuGreat, false)(option);
 					menu.newCheckMenu(subMenuGreat, option.entryText, void (0), () => {
@@ -243,7 +243,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 						}
 						this.changeConfig({
 							dataManipulation: {
-								filter: val === -Infinity ? null : filtGreat(val)
+								filter: val === -Infinity ? null : filterGreat(val)
 							}, callbackArgs: { bSaveProperties: true }
 						});
 					}
@@ -256,7 +256,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 			{
 				options.map((val) => {
-					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filtLow(val), entryText: val };
+					return { isEq: null, key: this.dataManipulation.filter, value: null, newValue: filterLow(val), entryText: val };
 				}).forEach(function (option, i) {
 					createMenuOption('dataManipulation', 'filter', subMenuLow, false)(option);
 					menu.newCheckMenu(subMenuLow, option.entryText, void (0), () => {
@@ -275,7 +275,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 						}
 						this.changeConfig({
 							dataManipulation: {
-								filter: val === Infinity ? null : filtLow(val)
+								filter: val === Infinity ? null : filterLow(val)
 							}, callbackArgs: { bSaveProperties: true }
 						});
 					}
@@ -303,7 +303,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 						}
 						this.changeConfig({
 							dataManipulation: {
-								filter: limits.every((n) => !Number.isFinite(n)) ? null : filtBetween(limits)
+								filter: limits.every((n) => !Number.isFinite(n)) ? null : filterBetween(limits)
 							}, callbackArgs: { bSaveProperties: true }
 						});
 					}
@@ -420,8 +420,8 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		}
 	}
 	{
-		const bHasDynColor = this.callbacks.config.artColors && Object.hasOwn(this.configuration, 'bDynSerieColor');
-		const bUsesDynColor = bHasDynColor && this.configuration.bDynSerieColor;
+		const bHasDynColor = this.callbacks.config.artColors && Object.hasOwn(this.configuration, 'bDynSeriesColor');
+		const bUsesDynColor = bHasDynColor && this.configuration.bDynSeriesColor;
 		const subMenu = menu.newMenu('Color palette');
 		[
 			{ isEq: null, key: this.chroma.scheme, value: null, newValue: 'diverging', entryText: 'Diverging', flags: bUsesDynColor ? MF_GRAYED : MF_STRING },
@@ -457,11 +457,11 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}, flags: this.chroma.scheme === 'random' || bUsesDynColor ? MF_GRAYED : MF_STRING
 		});
 		menu.newCheckMenu(subMenu, 'Colorblind safe', void (0), () => this.chroma.colorBlindSafe && this.chroma.scheme !== 'random' && !bUsesDynColor);
-		if (this.callbacks.config.artColors && Object.hasOwn(this.configuration, 'bDynSerieColor')) {
+		if (this.callbacks.config.artColors && Object.hasOwn(this.configuration, 'bDynSeriesColor')) {
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
 			[
-				{ isEq: null, key: this.configuration.bDynSerieColor, value: null, newValue: !this.configuration.bDynSerieColor, entryText: 'Use art colors (background cover mode)' },
-			].forEach(createMenuOption('configuration', 'bDynSerieColor', subMenuTwo, true));
+				{ isEq: null, key: this.configuration.bDynSeriesColor, value: null, newValue: !this.configuration.bDynSeriesColor, entryText: 'Use art colors (background cover mode)' },
+			].forEach(createMenuOption('configuration', 'bDynSeriesColor', subMenuTwo, true));
 			[
 				{ isEq: null, key: this.configuration.bDynBgColor, value: null, newValue: !this.configuration.bDynBgColor, entryText: 'Also apply to background color', flags: bUsesDynColor ? MF_STRING : MF_GRAYED },
 			].forEach(createMenuOption('configuration', 'bDynBgColor', subMenuTwo, true));

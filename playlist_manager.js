@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/25
+//06/08/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -177,7 +177,7 @@ let properties = {
 	converterPreset: ['Converter Preset list', JSON.stringify([
 		{ name: '', dsp: '...', tf: '.\\%FILENAME%.mp3', path: '', playlistOutPath: '', extension: '' }, // Export all at same folder
 		{ name: '', dsp: '...', tf: '.\\' + _t(globTags.artist) + '\\%ALBUM%\\%TRACK% - %TITLE%.mp3', path: '', playlistOutPath: '', extension: '' }, // Transfer library
-		{ name: '--Kodi Librelec (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', playlistOutPath: '', extension: '.m3u', bExtendedM3U: true }, // Kodi-like library
+		{ name: '--Kodi LibrELEC (<your_disk_name>)--', dsp: '...', tf: '/media/<your_disk_name>/music/$puts(art,$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))))$ifequal($strrchr($get(art),.),$len($get(art)),$puts(art,$cut($get(art),$sub($len($get(art)),1))),)$puts(alb,$ascii(%album%))$ifequal($strrchr($get(alb),.),$len($get(alb)),$puts(alb,$cut($get(alb),$sub($len($get(alb)),1))),)$replace($get(art),:,-,/,-,?,)/$replace($get(alb),:,-,/,-,?,)/$replace($ascii(%TRACK% - %TITLE%),:,-,/,-,?,).lossy.flac', path: '', playlistOutPath: '', extension: '.m3u', bExtendedM3U: true }, // Kodi-like library
 		{ name: '--Kodi Windows (<your_disk_name>)--', dsp: '...', tf: '<your_disk_name>:\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%album%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u', bExtendedM3U: true }, // Kodi-like library
 		{ name: '--Foobar2000 mobile (playlists folder)--', dsp: '...', tf: '..\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on different folder than music
 		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same root than music (without a folder)
@@ -229,7 +229,7 @@ let properties = {
 	})],
 	bMultMenuTag: ['Automatically add \'bMultMenu\' to all playlists', false],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
-	lBrainzEncrypt: ['Encript ListenBrainz user token?', false, { func: isBoolean }, false],
+	lBrainzEncrypt: ['Encrypt ListenBrainz user token?', false, { func: isBoolean }, false],
 	bLookupMBIDs: ['Lookup for missing track MBIDs?', true, { func: isBoolean }, true],
 	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching', true, { func: isBoolean }, true],
 	activePlsStartup: ['Active playlist on startup', '', { func: isStringWeak }, ''],
@@ -728,7 +728,7 @@ if (!list.properties.bSetup[1]) {
 		dblclkFunc: (current) => { // eslint-disable-line no-unused-vars
 			list.showCurrPls() || list.showCurrPls({ bPlayingPls: true });
 		},
-		tt: 'Double L. click to Show active or now playling playlist'
+		tt: 'Double L. click to Show active or now playing playlist'
 	}) : null;
 
 	// Tracking a network drive?
@@ -1328,7 +1328,7 @@ if (!list.properties.bSetup[1]) {
 		list.up_btn.hover = list.up_btn.lbtn_up(x, y);
 		list.down_btn.hover = list.down_btn.lbtn_up(x, y);
 		// Check actions per UI element
-		const headerbuttons = Object.keys(list.headerButtons);
+		const headerButtons = Object.keys(list.headerButtons);
 		if (list.traceHeader(x, y)) {
 			if (list.searchInput && list.searchInput.trackCheck(x, y)) { // Search input
 				const trackText = (method) => {
@@ -1341,7 +1341,7 @@ if (!list.properties.bSetup[1]) {
 					action.Effect = dropEffect.none; action.Text = 'Path searching must be enabled';
 				}
 				return;
-			} else if (headerbuttons.some((key) => list.headerButtons[key].inFocus)) { // New playlist button
+			} else if (headerButtons.some((key) => list.headerButtons[key].inFocus)) { // New playlist button
 				if (list.headerButtons.newPls.inFocus) {
 					action.Text = 'Create new Playlist ' + _p((mask & MK_CONTROL) === MK_CONTROL ? 'copy' : 'move');
 				} else {
@@ -1431,21 +1431,21 @@ if (!list.properties.bSetup[1]) {
 	// key listener (workaround for keys not working when focus is not on panel)
 	const keyListener = {};
 	keyListener.bShift = false;
-	keyListener.bCtrol = false;
+	keyListener.bCtrl = false;
 	keyListener.fn = repeatFn(() => {
 		if (!list.bInit) { return; }
 		if (list.tooltip.bActive) {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
-			const bCtrol = utils.IsKeyPressed(VK_CONTROL);
-			if (bShift === keyListener.bShift && bCtrol === keyListener.bCtrol) { return; }
-			else if (bShift && bCtrol) { list.move(list.mx, list.my, MK_SHIFT + MK_CONTROL, list.bIsDragDrop); }
+			const bCtrl = utils.IsKeyPressed(VK_CONTROL);
+			if (bShift === keyListener.bShift && bCtrl === keyListener.bCtrl) { return; }
+			else if (bShift && bCtrl) { list.move(list.mx, list.my, MK_SHIFT + MK_CONTROL, list.bIsDragDrop); }
 			else if (bShift) { list.move(list.mx, list.my, MK_SHIFT, list.bIsDragDrop); }
-			else if (bCtrol) { list.move(list.mx, list.my, MK_CONTROL, list.bIsDragDrop); }
+			else if (bCtrl) { list.move(list.mx, list.my, MK_CONTROL, list.bIsDragDrop); }
 			else { list.move(list.mx, list.my, null, list.bIsDragDrop); }
 			keyListener.bShift = bShift;
-			keyListener.bCtrol = bCtrol;
+			keyListener.bCtrl = bCtrl;
 		} else {
-			keyListener.bShift = keyListener.bCtrol = false;
+			keyListener.bShift = keyListener.bCtrl = false;
 		}
 	}, 500)();
 

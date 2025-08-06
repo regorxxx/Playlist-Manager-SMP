@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//06/08/25
 
 /* exported ImportTextPlaylist */
 
@@ -114,7 +114,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 			}).then(
 				(resolve) => resolve || '',
 				(reject) => {
-					if (reject.responseText.startsWith('Type missmatch')) {
+					if (reject.responseText.startsWith('Type mismatch')) {
 						console.log('ImportTexTPlaylist.importFile(): could not retrieve any text from ' + path);
 						console.log('ImportTexTPlaylist.importFile(): ' + reject.responseText);
 					} else {

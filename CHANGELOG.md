@@ -199,6 +199,7 @@
 - Statistics: loading popup not being shown while the manager initializes all playlists on startup.
 - Crash using drag n' drop or actions which moved the selection to a playlist if the source playlist was not tracked by the manager.
 - Statistics: minor fixes.
+- Fixed some misspelled terms on UI and variables (which also lead to some minor bugs).
 
 ## [0.19.0] - 2024-10-09
 ### Added
