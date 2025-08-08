@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/25
+//07/08/25
 
 /* exported exportSettings, importSettings */
 
@@ -149,7 +149,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 		console.popup(panelName + ': failed reloading panel.', window.Name);
 		return false;
 	}
-	if (bDone) { fb.ShowPopupMessage(panelName + ':\n\nSucessfully imported panel settings from:\n' + input, window.Name); }
+	if (bDone) { fb.ShowPopupMessage(panelName + ':\n\nSuccessfully imported panel settings from:\n' + input, window.Name); }
 	console.log(panelName + ': reloading panel...');
 	window.Reload();
 }

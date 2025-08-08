@@ -1,11 +1,11 @@
 ﻿'use strict';
-//24/02/25
+//07/08/25
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
 /* global XSP:readable*/
 
-XSP.isFoec = (typeof isEnhPlayCount !== 'undefined' && isEnhPlayCount) || (typeof isEnhPlayCount === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount')); // eslint-disable-line no-undef
+XSP.isFooEnhPlayCount = (typeof isEnhPlayCount !== 'undefined' && isEnhPlayCount) || (typeof isEnhPlayCount === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_enhanced_playcount')); // eslint-disable-line no-undef
 XSP.isFo2k3 = (typeof isPlaycount2003 !== 'undefined' && isPlaycount2003) || (typeof isPlaycount2003 === 'undefined' && typeof utils.CheckComponent !== 'undefined' && utils.CheckComponent('foo_playcount_2003')); // eslint-disable-line no-undef
 
 XSP.getQuerySort = function (jsp) {
@@ -233,7 +233,7 @@ XSP.getFbTag = function (tag) {
 		case 'styles': { fbTag = 'STYLE'; break; }
 		case 'albumartist': { fbTag = '"ALBUM ARTIST"'; break; }
 		case 'playcount': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
-			fbTag = XSP.isFoec
+			fbTag = XSP.isFooEnhPlayCount
 				? XSP.isFo2k3
 					? '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)"'
 					: '"$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,0)"'
@@ -243,7 +243,7 @@ XSP.getFbTag = function (tag) {
 			break;
 		}
 		case 'lastplayed': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
-			fbTag = XSP.isFoec
+			fbTag = XSP.isFooEnhPlayCount
 				? '%LAST_PLAYED_ENHANCED%'
 				: XSP.isFo2k3
 					? '%2003_LAST_PLAYED%'
@@ -252,7 +252,7 @@ XSP.getFbTag = function (tag) {
 		}
 		case 'datenew':
 		case 'dateadded': { // Requires foo_enhanced_playcount / foo_playcount / foo_playcount_2003
-			fbTag = XSP.isFoec
+			fbTag = XSP.isFooEnhPlayCount
 				? '%ADDED_ENHANCED%'
 				: XSP.isFo2k3
 					? '%2003_ADDED%'
@@ -273,8 +273,8 @@ XSP.getFbTag = function (tag) {
 
 XSP.getTag = function (fbTag) {
 	let tag = '';
-	let fbTaguc = fbTag.toUpperCase().replace(/["%]/g, ''); // removes % in any case to match all possibilities
-	switch (fbTaguc) {
+	let fbTagUp = fbTag.toUpperCase().replace(/["%]/g, ''); // removes % in any case to match all possibilities
+	switch (fbTagUp) {
 		case 'GENRE':
 		case 'ALBUM':
 		case 'ARTIST':
@@ -287,7 +287,7 @@ XSP.getTag = function (fbTag) {
 		case 'SAMPLERATE':
 		case 'BITRATE':
 		case 'ORIGYEAR':
-		case 'PATH': { tag = fbTaguc.toLowerCase(); break; }
+		case 'PATH': { tag = fbTagUp.toLowerCase(); break; }
 		case 'YEAR':
 		case 'DATE': { tag = 'year'; break; }
 		case 'LENGTH_SECONDS': { tag = 'time'; break; }

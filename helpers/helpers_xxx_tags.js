@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/25
+//07/08/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
@@ -211,7 +211,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 				const sep = '|‎|';
 				tfo = !bIsFunc
 					? '[$meta_sep(' + tfo + ',\'' + sep + '\')]'
-					: '[' + tfo + ']'; // Split multivalue tags if possible!
+					: '[' + tfo + ']'; // Split multi-value tags if possible!
 				// Workaround for album artist
 				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
 					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
@@ -235,7 +235,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 				}
 				if (options.bDebug) { console.log('tfoVal:', tfoVal); }
 				if (options.bDebug) { console.log('multi-tag:', tfoVal.includes(sep)); }
-				if (tfoVal.includes(sep)) { // Split multivalue tags if possible!
+				if (tfoVal.includes(sep)) { // Split multi-value tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interQueryStart = interText.startsWith(')')
 						? interText.slice(0, interText.split('').findIndex((s) => s !== ')'))
@@ -465,7 +465,7 @@ function queryJoin(queryArray, setLogic = 'AND') {
 
 /**
  * It gets either a 2D array of tag values [[,],...], output from k_combinations(), or 1D array, and creates a query for all those combinations.
- * For 2D, every subset uses 'subtagsArrayLogic' between the tags. And then 'tagsArrayLogic' between subsets. QueryKey is the tag name.
+ * For 2D, every subset uses 'subTagsArrayLogic' between the tags. And then 'tagsArrayLogic' between subsets. QueryKey is the tag name.
  * For 1D arrays, only 'tagsArrayLogic' is used.
  * When using an array as 'tagsArrayLogic', the output is also an array, meant to be used with {@link queryJoin}
  *
@@ -475,7 +475,7 @@ function queryJoin(queryArray, setLogic = 'AND') {
  * @param {string[]|string[][]} tagsArray - The tag values in 1D or 2D array
  * @param {string|string[]} queryKey - May be a single or array of TitleFormat strings
  * @param {string} tagsArrayLogic - May be: AND|OR|AND NOT|OR NOT
- * @param {?string} subtagsArrayLogic - May be: AND|OR|AND NOT|OR NOT
+ * @param {?string} subTagsArrayLogic - May be: AND|OR|AND NOT|OR NOT
  * @param {?string} [match='IS'] - [=IS] May be: IS|HAS|EQUAL
  * @returns {string|string[]|undefined}
  * @example
@@ -485,7 +485,7 @@ function queryJoin(queryArray, setLogic = 'AND') {
  * // Returns '[ARTIST IS A OR ARTIST IS B, TITLE IS A OR TITLE IS B]
  * queryCombinations(['A','B'], ['ARTIST', 'TITLE'], 'OR', void(0), 'IS')
  */
-function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subtagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
+function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subTagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
 	// Wrong tagsArray
 	if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
 		console.log('queryCombinations(): tagsArray was null, empty or not an array.\n\t', tagsArray);
@@ -496,14 +496,14 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 		return;
 	}
 	tagsArrayLogic = (tagsArrayLogic || '').toUpperCase();
-	subtagsArrayLogic = (subtagsArrayLogic || '').toUpperCase();
+	subTagsArrayLogic = (subTagsArrayLogic || '').toUpperCase();
 	match = (match || '').toUpperCase();
 	if (isArrayStrings(queryKey)) {
 		let queryKeyLength = queryKey.length;
 		let i = 0;
 		let queryArray = [];
 		while (i < queryKeyLength) {
-			queryArray.push(/** @type {string} */(queryCombinations(tagsArray, queryKey[i], tagsArrayLogic, subtagsArrayLogic, match)));
+			queryArray.push(/** @type {string} */(queryCombinations(tagsArray, queryKey[i], tagsArrayLogic, subTagsArrayLogic, match)));
 			i++;
 		}
 		return queryArray;
@@ -511,7 +511,7 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 	let tagsArrayLength = tagsArray.length;
 	/** @type {string|string[]} */
 	let query = '';
-	if (!Array.isArray(tagsArray[0])) { //no subtagsArrays
+	if (!Array.isArray(tagsArray[0])) { //no subTagsArrays
 		if (!logicDic.includes(tagsArrayLogic)) {
 			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
 			return;
@@ -526,11 +526,11 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 			i++;
 		}
 	} else {
-		if (!logicDic.includes(tagsArrayLogic) || !logicDic.includes(subtagsArrayLogic)) {
-			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subtagsArrayLogic (' + subtagsArrayLogic + ') are wrong');
+		if (!logicDic.includes(tagsArrayLogic) || !logicDic.includes(subTagsArrayLogic)) {
+			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subTagsArrayLogic (' + subTagsArrayLogic + ') are wrong');
 			return;
 		}
-		let k = tagsArray[0].length; //SubtagsArrays length
+		let k = tagsArray[0].length; // subTagsArrays length
 		let i = 0;
 		while (i < tagsArrayLength) {
 			if (i !== 0) {
@@ -539,9 +539,9 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 			let j = 0;
 			while (j < k) {
 				if (j === 0) {
-					query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][0]); // only adds pharentesis when more than one subtag! Estetic fix...
+					query += (k > 1 ? '(' : '') + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][0]); // only adds parenthesis when more than one subTag! Esthetic fix...
 				} else {
-					query += ' ' + subtagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][j]);
+					query += ' ' + subTagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(tagsArray[i][j]);
 				}
 				j++;
 			}
@@ -804,7 +804,7 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 	const tagArray_length = tagsArray.length;
 	const bSplit = options.splitBy && options.splitBy.length;
 	const bSplitExclude = options.splitExclude && options.splitExclude instanceof Set && options.splitExclude.size;
-	let outputArrayi_length = handleList.Count;
+	let outputTagArrayLength = handleList.Count;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
 	let i = 0;
@@ -826,7 +826,7 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handleList);
 		if (bSplit) {
-			for (let j = 0; j < outputArrayi_length; j++) {
+			for (let j = 0; j < outputTagArrayLength; j++) {
 				if (!bSplitExclude || !options.splitExclude.has(outputArray[i][j])) {
 					outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
 				} else {
@@ -834,7 +834,7 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 				}
 			}
 		} else {
-			for (let j = 0; j < outputArrayi_length; j++) {
+			for (let j = 0; j < outputTagArrayLength; j++) {
 				outputArray[i][j] = [outputArray[i][j]];
 			}
 		}
@@ -865,7 +865,7 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 	const tagArray_length = tagsArray.length;
 	const bSplit = options.splitBy && options.splitBy.length;
 	const bSplitExclude = options.splitExclude && options.splitExclude instanceof Set && options.splitExclude.size;
-	let outputArrayi_length = handleList.Count;
+	let outputTagArrayLength = handleList.Count;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
 	let i = 0;
@@ -883,7 +883,7 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handleList);
 		if (bSplit) {
-			for (let j = 0; j < outputArrayi_length; j++) {
+			for (let j = 0; j < outputTagArrayLength; j++) {
 				if (!bSplitExclude || !options.splitExclude.has(outputArray[i][j])) {
 					outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
 				} else {
@@ -900,7 +900,7 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 				}
 			}
 		} else {
-			for (let j = 0; j < outputArrayi_length; j++) {
+			for (let j = 0; j < outputTagArrayLength; j++) {
 				if (type) {
 					switch (type) {
 						case 'number': { outputArray[i][j] = Number(outputArray[i][j]); break; }

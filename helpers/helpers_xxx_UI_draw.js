@@ -1,7 +1,7 @@
 ﻿'use strict';
-//30/12/23
+//07/08/25
 
-/* exported _sb */
+/* exported _sb, fillWithPattern */
 
 /* global getClosestDivisor:readable, SF_CENTRE:readable, IDC_HAND:readable */
 include('helpers_xxx_UI.js');
@@ -124,7 +124,7 @@ function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
 			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, 'horizontalDotted');
 			break;
 		}
-		case 'mossaic': {
+		case 'mosaic': {
 			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 2 / 3, 'verticalDotted');
 			fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size * 1 / 3, 'horizontalDotted');
 			break;

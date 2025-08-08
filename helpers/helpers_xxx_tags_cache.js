@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/24
+//07/08/25
 
 include('callbacks_xxx.js');
 include('helpers_xxx.js');
@@ -21,7 +21,7 @@ const tagsCache = {
 	filesCRC: {},
 	currCRC: {},
 	toStr: {},
-	updateFromhook: false,
+	updateFromHook: false,
 	enabled: false,
 	listeners: []
 };
@@ -190,7 +190,7 @@ tagsCache.enable = function () {
 		}),
 		addEventListener('on_metadb_changed', (handleList, fromHook) => {
 			if (!this.enabled) { return; }
-			if (!this.updateFromhook && fromHook) { return; }
+			if (!this.updateFromHook && fromHook) { return; }
 			const keys = [...this.cache.keys()];
 			if (keys.length) {
 				this.cacheTags(keys, iStepsLibrary, iDelayLibrary, handleList.Convert(), true);

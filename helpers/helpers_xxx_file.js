@@ -16,12 +16,13 @@ include('helpers_xxx_prototypes.js');
 const fso = new ActiveXObject('Scripting.FileSystemObject');
 const WshShell = new ActiveXObject('WScript.Shell');
 const app = new ActiveXObject('Shell.Application');
-const spaces = { desktop: 0, bin: 10, userdesktop: 16, fonts: 19 };
-const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, Syestem: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048 };
+const spaces = { desktop: 0, documents: 5, startup: 7, recent: 8, bin: 10, userDesktop: 16, fonts: 19, pictures: 39, profile: 40 };
+const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, System: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048 };
 const utf8 = convertCharsetToCodepage('UTF-8');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
 const absPathRegExp = /[A-z]*:\\/;
-const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR
+const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR /* cspell:disable-line */
+
 
 include('helpers_xxx.js');
 /* global folders:readable, isCompatible:readable, lastStartup:readable, VK_SHIFT:readable */
@@ -105,6 +106,7 @@ const popup = {
 	rightAlign: 524288,
 };
 
+/* cspell:disable */
 const WinApiError = {
 	UNKNOWN: 'UNKNOWN',
 	'0x800A0005': 'CTL_E_ILLEGALFUNCTIONCALL',
@@ -213,6 +215,7 @@ const WinApiError = {
 	'0x800A0EA9': 'adErrProviderNotSpecified',
 	'0x800A0EAA': 'adErrConnectionStringTooLong'
 };
+/* cspell:enable */
 
 /*
 	File manipulation
@@ -265,7 +268,7 @@ function _isFolder(folder) {
 
 function _isLink(path) {
 	path = path.toLowerCase().replace(/\\\\/g, '//');
-	return ['http://', 'https://', 'fy+', '3dydfy:', 'youtube.', 'www.'].some((prefix) => path.startsWith(prefix));
+	return ['http://', 'https://', 'fy+', '3dydfy:', 'youtube.', 'www.'].some((prefix) => path.startsWith(prefix)); /* cspell:disable-line */
 }
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
@@ -437,7 +440,7 @@ function _recycleFile(file, bCheckBin = false) {
 					app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
 					// fso.GetFile(file).Delete(true);
 				} catch (e) { // eslint-disable-line no-unused-vars
-					try { _runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true); } // cmdUtils as fallback
+					try { _runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true); } // cmdUtils as fallback /* cspell:disable-line */
 					catch (e) { return false; } // eslint-disable-line no-unused-vars
 				}
 			}
@@ -571,9 +574,9 @@ function _jsonParseFileSplit(filePath, codePage = 0) {
 	const [path, fileName, extension] = utils.SplitFilePath(filePath);
 	const files = utils.Glob(path + '\\' + fileName + '*' + extension);
 	let result = [];
-	const rgex = new RegExp(fileName + '[0-9]*' + extension); // Only allow numbers as suffix
+	const regex = new RegExp(fileName + '[0-9]*' + extension); // Only allow numbers as suffix
 	for (const file of files) {
-		if (rgex.test(file)) {
+		if (regex.test(file)) {
 			const data = _jsonParseFile(file, codePage);
 			if (data) { result = result.concat(data); }
 			else { return null; }
@@ -808,7 +811,7 @@ function sanitizePath(value) { // Sanitize illegal chars but skip drive
 }
 
 function UUID() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { /* cspell:disable-line */
 		const rnd = Math.random() * 16 | 0;
 		const v = c === 'x' ? rnd : (rnd & 0x3 | 0x8);
 		return v.toString(16);

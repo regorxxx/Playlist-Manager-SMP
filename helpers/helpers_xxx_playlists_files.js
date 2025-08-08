@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/07/25
+//07/08/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
@@ -287,7 +287,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
  * @param {string} playlistPath
  * @param {string} relPath?
  * @param {boolean} bBOM?
- * @returns {boolean} Sucess flag
+ * @returns {boolean} Success flag
  */
 function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = false) {
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
@@ -489,7 +489,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
  * @param {string} playlistPath
  * @param {string} relPath?
  * @param {boolean} bBOM?
- * @returns {boolean} Sucess flag
+ * @returns {boolean} Success flag
  */
 function addHandleToPlaylistV2(handleList, playlistPath, relPath = '', bBOM = false) { // eslint-disable-line no-unused-vars
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();

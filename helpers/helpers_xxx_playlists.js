@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/04/25
+//08/08/25
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS */
 
@@ -119,7 +119,7 @@ function findPlaylistNamesDuplicated() {
  * @param {string} playlistName
  * @returns {FbMetadbHandleList\|(FbMetadbHandle|string)[]}
  */
-function sendToPlaylist(handleList, playlistName) {
+function sendToPlaylist(handleList, playlistName, bLog = true) {
 	// Clear playlist if needed. Preferred to removing it, since then we could undo later...
 	// Look if target playlist already exists
 	let i = 0;
@@ -127,6 +127,11 @@ function sendToPlaylist(handleList, playlistName) {
 	while (i < plc) {
 		if (plman.GetPlaylistName(i) === playlistName) {
 			plman.ActivePlaylist = i;
+			if (plman.PlaylistItemCount(i)) {
+				plman.UndoBackup(plman.ActivePlaylist);
+				plman.ClearPlaylist(plman.ActivePlaylist);
+			}
+			if (bLog) { console.log('Playlist used: ' + playlistName); }
 			break;
 		} else {
 			i++;
@@ -135,20 +140,15 @@ function sendToPlaylist(handleList, playlistName) {
 	if (i === plc) { //if no playlist was found before
 		plman.CreatePlaylist(plc, playlistName);
 		plman.ActivePlaylist = plc;
-		console.log('Playlist created: ' + playlistName);
-	}
-	if (plman.PlaylistItemCount(plman.ActivePlaylist)) {
-		plman.UndoBackup(plman.ActivePlaylist);
-		plman.ClearPlaylist(plman.ActivePlaylist);
-		console.log('Playlist used: ' + playlistName);
+		if (bLog) { console.log('Playlist created: ' + playlistName); }
 	}
 	// Create playlist
 	if (Array.isArray(handleList)) {
 		handleList = handleList.filter(Boolean);
-		console.log('Final selection: ' + handleList.length + ' tracks');
+		if (bLog) { console.log('Final selection: ' + handleList.length + ' tracks'); }
 		plman.AddPlaylistItemsOrLocations(plman.ActivePlaylist, handleList, true);
 	} else {
-		console.log('Final selection: ' + handleList.Count + ' tracks');
+		if (bLog) { console.log('Final selection: ' + handleList.Count + ' tracks'); }
 		plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
 	}
 	return handleList;

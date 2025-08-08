@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/25
+//07/08/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
 
@@ -675,11 +675,11 @@ Array.prototype.joinUpToChars = function (sep, chars) { // NOSONAR
 };
 
 Array.prototype.multiIndexOf = function (el) { // NOSONAR
-	const idxs = [];
+	const idxArr = [];
 	for (let i = this.length - 1; i >= 0; i--) {
-		if (this[i] === el) { idxs.unshift(i); }
+		if (this[i] === el) { idxArr.unshift(i); }
 	}
-	return idxs;
+	return idxArr;
 };
 
 Array.prototype.partialSort = function (order, bOptimize = true) { // NOSONAR
@@ -847,12 +847,12 @@ function range(start, stop, step = 1) {
 	return Array.from({ length: Math.round((stop - start) / step + 1) }, (_, i) => start + (i * step));
 }
 
-function round(floatnum, decimals, eps = 10 ** -14) {
+function round(floatNum, decimals, eps = 10 ** -14) {
 	return (decimals > 0
 		? decimals === 15
-			? floatnum
-			: Math.round(floatnum * Math.pow(10, decimals) + eps) / Math.pow(10, decimals)
-		: Math.round(floatnum)
+			? floatNum
+			: Math.round(floatNum * Math.pow(10, decimals) + eps) / Math.pow(10, decimals)
+		: Math.round(floatNum)
 	);
 }
 

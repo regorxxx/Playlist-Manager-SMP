@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/06/25
+//07/08/25
 
 /* exported extendGR */
 
@@ -27,7 +27,7 @@ if (!Object.hasOwn) {
 	RegExp
 */
 
-// Add unnoficial method for JSsplitter
+// Add unofficial method for JSsplitter
 // https://reference.codeproject.com/javascript/Reference/Global_Objects/Regexp/toSource
 if (!RegExp.prototype.toSource) {
 	Object.defineProperty(RegExp.prototype, 'toSource', {
@@ -183,7 +183,7 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 	}
 	if (options.ImgBox && !gr.ExtendedDone.ImgBox) {
 		const old = gr.DrawImage.bind(gr);
-		gr.DrawImage = function DrawImage() { // img, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, angleopt, alphaop
+		gr.DrawImage = function DrawImage() { // img, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, angleOpt, alphaOp
 			const that = old(...arguments);
 			gr.DrawRect(arguments[1], arguments[2], arguments[3], arguments[4], 2, 1694433280); // Red 90%
 			return that;

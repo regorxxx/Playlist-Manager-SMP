@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/03/25
+//07/08/25
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -45,7 +45,7 @@ const colorbrewer = {
 
 // Cache
 const scaleDPI = { factor: -1, reference: 72 }; // Caches _scale() values;
-const fonts = { notFound: [] }; // Caches _gdifont() values;
+const fonts = { notFound: [] }; // Caches _gdiFont() values;
 
 // Flags
 const LEFT = DT_VCENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -266,7 +266,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 }
 
 /*
-	Colours
+	Colors
 */
 
 function RGBA(r, g, b, a) {

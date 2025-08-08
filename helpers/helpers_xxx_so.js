@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//07/08/25
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -11,7 +11,7 @@ include('helpers_xxx.js');
 */
 
 function getSoFeatures() {
-	const soFeat = { gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiplus: true, segoe: true, bio: true, x64: true };
+	const soFeat = { gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiPlus: true, segoe: true, bio: true, x64: true };
 	const WshShell = new ActiveXObject('WScript.Shell');
 	const app = new ActiveXObject('Shell.Application');
 	let doc;
@@ -52,7 +52,7 @@ function getSoFeatures() {
 		try { WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); } catch (e) { soFeat.dpi = false; } // eslint-disable-line no-unused-vars
 	} else { soFeat.dpi = false; }
 	if (!utils.CheckFont('Arial')) {
-		soFeat.gdiplus = false;
+		soFeat.gdiPlus = false;
 	}
 	if (!utils.CheckFont('Segoe UI')) {
 		soFeat.segoe = false;
@@ -93,7 +93,7 @@ function checkSoFeatures(soFeat, bPopup = true) {
 	}
 	// Scripting
 	if (!soFeat.bio) {
-		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nMissing scripting components for vbs integration (BIO panel).' + '\n\nFeatures affected:\nBio Script will not work properly (and any of my scripts integrated with it will skip its usage).' + tip + '\n\nFix:  Install \'wsh57\' and \'mdac28\' with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks wsh57 mdac28' + '\n\nFix: Also msado15 needs to be aded to the dll overrides in Winecfg:\n' + 'https://hydrogenaud.io/index.php?topic=121786.msg1005447#msg1005447' + '\n' + 'https://itectec.com/ubuntu/ubuntu-how-to-override-a-dll-without-using-the-winecfg-gui-in-wine/' + '\n' + 'https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides', 'SO features');
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nMissing scripting components for vbs integration (BIO panel).' + '\n\nFeatures affected:\nBio Script will not work properly (and any of my scripts integrated with it will skip its usage).' + tip + '\n\nFix:  Install \'wsh57\' and \'mdac28\' with Winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks wsh57 mdac28' + '\n\nFix: Also msado15 needs to be added to the dll overrides in Winecfg:\n' + 'https://hydrogenaud.io/index.php?topic=121786.msg1005447#msg1005447' + '\n' + 'https://itectec.com/ubuntu/ubuntu-how-to-override-a-dll-without-using-the-winecfg-gui-in-wine/' + '\n' + 'https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides', 'SO features');
 		bPass = false;
 	}
 	// UI
@@ -101,8 +101,8 @@ function checkSoFeatures(soFeat, bPopup = true) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nRegistry entry not found:\nHKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI' + '\n\nFeatures affected:\nUI scaling will not adjust properly according to screen resolution.' + tip + '\n\nFix: add entry to registry.\n' + 'HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI          --->     96\n\nCMD command:\n' + 'reg.exe ADD "HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics" /v AppliedDPI /t REG_DWORD /d 96', 'SO features');
 		bPass = false;
 	}
-	if (!soFeat.gdiplus) {
-		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nFonts are not found via utils.CheckFont() and gdi.Font().' + '\n\nFeatures affected:\nScript fonts may not be properly displayed or some symbols missing.' + tip + '\n\nFix: install install \'gdiplus\' package with winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks gdiplus', 'SO features');
+	if (!soFeat.gdiPlus) {
+		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nFonts are not found via utils.CheckFont() and gdi.Font().' + '\n\nFeatures affected:\nScript fonts may not be properly displayed or some symbols missing.' + tip + '\n\nFix: install install \'gdiPlus\' package with winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks gdiPlus', 'SO features');
 		bPass = false;
 	} else if (!soFeat.segoe) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nSegoe UI font is missing.' + '\n\nFeatures affected:\nDefault and fallback font when others are missing will not be displayed properly and some texts may not be displayed at all.' + tip + '\n\nFix: install missing font.\n' + 'https://github.com/mrbvrz/segoe-ui-linux', 'SO features');

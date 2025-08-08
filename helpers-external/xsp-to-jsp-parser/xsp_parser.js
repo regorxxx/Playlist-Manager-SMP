@@ -1,5 +1,5 @@
 ﻿'use strict';
-// 09/08/24
+// 07/08/25
 // Copyright Regorxxx 2024
 // Based on works by J. Chris Anderson 2007
 // https://github.com/jchris/xspf-to-jspf-parser
@@ -32,22 +32,21 @@ const XSP = {
 		const playlist = jsp.playlist;
 		let code = [];
 		// XML Header
-		code.push('<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>');
-		code.push('<smartplaylist type=\"' + jsp.playlist.type + '\">');
+		code.push('<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>');
+		code.push('<smartplaylist type="' + jsp.playlist.type + '">');
 		// Playlist Header [required]
 		const headerKeys = ['name', 'match'];
 		headerKeys.forEach((key) => {
-			const val = playlist[key];
-			if (playlist.hasOwnProperty(key) && typeof val !== 'undefined') {
-				code.push('	<' + key + '>' + val + '</' + key + '>');
+			if (Object.hasOwn(playlist, key) && typeof playlist[key] !== 'undefined') {
+				code.push('	<' + key + '>' + playlist[key] + '</' + key + '>');
 			}
 		});
 		// Rules
 		const rules = playlist.rules;
 		for (const rule of rules) {
-			if (rule && rule.hasOwnProperty('field') && rule.hasOwnProperty('operator') && rule.hasOwnProperty('value')) {
+			if (rule && Object.hasOwn(rule, 'field') && Object.hasOwn(rule, 'operator') && Object.hasOwn(rule, 'value')) {
 				if (typeof rule.field !== 'undefined' && typeof rule.operator !== 'undefined') {
-					code.push('	<rule field=\"' + rule.field + '\" operator=\"' + rule.operator + '\">');
+					code.push('	<rule field="' + rule.field + '" operator="' + rule.operator + '">');
 					for (const val of rule.value) {
 						if (typeof val !== 'undefined') { code.push('		<value>' + val + '</value>'); }
 					}
@@ -59,14 +58,12 @@ const XSP = {
 		const order = playlist.order[0];
 		if (typeof order !== 'undefined') {
 			const dir = Object.keys(order);
-			code.push('	<order direction=\"' + dir + '\">' + order[dir] + '</order>'); // One line per key
+			code.push('	<order direction="' + dir + '">' + order[dir] + '</order>'); // One line per key
 		}
 		const optKeys = ['group', 'limit'];
 		optKeys.forEach((key) => {
-			const val = playlist[key];
-			const typeVal = typeof val;
-			if (playlist.hasOwnProperty(key) && typeVal !== 'undefined') {
-				code.push('	<' + key + '>' + val + '</' + key + '>'); // One line per key
+			if (Object.hasOwn(playlist, key) && typeof playlist[key] !== 'undefined') {
+				code.push('	<' + key + '>' + playlist[key] + '</' + key + '>'); // One line per key
 			}
 		});
 		code.push('</smartplaylist>');
@@ -95,9 +92,9 @@ const XSP = {
 
 		return playlist;
 	},
-	getExtensionReader: function (appname, pltr) {
-		if (XSP.extensionParsers[pltr][appname]) {
-			return XSP.extensionParsers[pltr][appname];
+	getExtensionReader: function (appName, pltr) {
+		if (XSP.extensionParsers[pltr][appName]) {
+			return XSP.extensionParsers[pltr][appName];
 		} else {
 			return function (node) { return XSP.getUniqueKeyValuePairs(node); };
 		}

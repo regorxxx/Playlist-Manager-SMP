@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/25
+//07/08/25
 
 /* exported checkUpdate */
 
@@ -54,7 +54,7 @@ function checkUpdate({
 			if (typeof reason === 'object') { reason = reason.responseText || reason.status; }
 			switch (reason) {
 				case 12007: reason = 'Network error'; break;
-				case '': reason = 'Uknown error'; break;
+				case '': reason = 'Unknown error'; break;
 			}
 			console.log('downloadText(): ' + reason + '\n\t ' + versionURL);
 			return false;

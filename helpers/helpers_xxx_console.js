@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/07/25
+//07/08/25
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -211,16 +211,14 @@ if (FbProfiler.prototype) {
 // Rewrap FbProfiler to also log to file
 if (FbProfiler.prototype.Print) {
 	FbProfiler.prototype.PrintUI = FbProfiler.prototype.Print;
-	FbProfiler.prototype.Print = function (additionalMsgopt = '', printComponentInfoopt = true) {
+	FbProfiler.prototype.Print = function (additionalMsgOpt = '', printComponentInfoOpt = true) {
 		// Recreate the message format
 		let message = '';
-		if (printComponentInfoopt) { message += 'Spider Monkey Panel v' + utils.Version + ': '; }
+		if (printComponentInfoOpt) { message += 'Spider Monkey Panel v' + utils.Version + ': '; }
 		message += 'profiler (' + this.Name + '): ';
-		if (additionalMsgopt && additionalMsgopt.length) { message += additionalMsgopt + ' '; }
+		if (additionalMsgOpt && additionalMsgOpt.length) { message += additionalMsgOpt + ' '; }
 		message += this.Time + 'ms';
 		console.log(message); // Instead of using the original method, just use the basic log routine with debounce
-		// this.PrintUI(additionalMsgopt, printComponentInfoopt);
-		// consoleLog(message);
 	};
 	console.checkSize();
 }

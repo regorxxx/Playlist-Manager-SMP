@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//07/08/25
 
 /* exported exportDSP, exportDevices, exportComponents */
 
@@ -23,7 +23,7 @@ function exportDevices(path) {
 }
 function exportComponents(path, newEntries /*{key: val, ...*/) {
 	const data = _jsonParseFile(path + 'components.json', utf8) || {};
-	['foo_run_main', 'foo_runcmd', 'foo_quicksearch', 'foo_youtube'].forEach((key) => {
+	['foo_run_main', 'foo_runcmd', 'foo_quicksearch', 'foo_youtube'].forEach((key) => { /* cspell:disable-line */
 		data[key] = utils.CheckComponent(key, true);
 	});
 	for (let key in newEntries) {data[key] = newEntries[key];}

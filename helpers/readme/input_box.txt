@@ -28,10 +28,10 @@ Pressing CTRL:
 	CTRL + Z: Undo
 	CTRL + V: Paste
 	CTRL + BACK: Delete previous word
-	CTRL + SUPR: Delete next word
+	CTRL + DEL: Delete next word
 	CTRL + LEFT: Move cursor to previous word
 	CTRL + RIGHT: Move cursor to next word
-	
+
 Pressing CTRL + SHIFT:
 	CTRL + SHIFT: + LEFT: Select previous word
 	CTRL + SHIFT: + RIGHT: Select next word
