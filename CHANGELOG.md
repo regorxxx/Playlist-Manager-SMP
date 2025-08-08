@@ -117,6 +117,10 @@
 - Statistics: multiple menu entries at 'Display settings' have been renamed for clarity's sake.
 - Statistics: buttons are now smoothly hidden when panel is not on focus. Transparency may be adjusted from 0 to 255 by setting buttons.alpha, timer to hide them by setting buttons.timer.
 - Search: timeout for autosearch changed to 700 ms (previously 500 ms).
+- Search: the search input box will parse RegExps if they are written in /[expression]/[flags] form, there is no need to enable additional settings.
+- Search: the search input box setting to parse RegExp now controls whether all input is parsed as RegExp by default or not. i.e. 'test.*' will be equivalent to /test.*/i. Note 'i' flag is forced in these cases, to specify other flags use /[expression]/[flags] format.
+- Search: the search input box will allow the usage of wildcards on plain text search, without the need of RegExp usage. i.e. 'test* ' will be internally converted to /test.* /i.
+- Search: drag n' drop multiple tracks using path search is now always allowed no matter if the setting to parse as RegExp is enabled or not.
 - Tags: contextual menu on multiple selection to set tags now doesn't switch the presence of the tag value but first tries to add the value to all items and when it's already present, tries to delete it. This should simplify usage, since items already having the tag will not remove it when trying to also add it to those missing it.
 - AutoPlaylist: UI-only AutoPlaylists are now treated as AutoPlaylists internally and not only as UI-only playlists (this involves some big changes internally so there may be some minor bugs as consequence). Thanks to these changes a lot of other improvements have been possible.
 - AutoPlaylist: new AutoPlaylists created are now automatically loaded.
@@ -162,6 +166,7 @@
 - Backup: auto-backup not including sorting and extra config file.
 - Subsongs: fixed path handling for tracks with subsongs for any source different than ISO files (it was broken due to an un-tested change on previous versions). It should now properly handle all cases, even DSD files in .DSF and .WV formats (which report wrong 1 idx value).
 - Search: last search not being applied on startup in some cases.
+- Search: not excluding folders on internal processing on some cases.
 - Auto-loading: manager kept reloading playlist files (auto-load) when tags, categories, etc. where changed via menus due to physical file changes.
 - Playlists maintenance tools: fixed 'Revive dead items' maintenance tool changes being overridden by 'Playlist saving\Skip overwriting Playlists on file loading' setting added on [0.19.0](#0190---2024-10-09). It also applies to the version on [Playlist Tools](https://github.com/regorxxx/Playlist-Tools-SMP).
 - Playlists maintenance tools: fixed 'Subsong items' maintenance tool report, which did output a wrong number of found items.

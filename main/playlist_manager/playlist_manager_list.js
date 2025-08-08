@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//07/08/25
 
 /* exported _list */
 
@@ -2774,15 +2774,16 @@ function _list(x, y, w, h) {
 					};
 				}
 			} else if (!bIsQuery) {
-				let rgExp;
-				if (this.searchMethod.bRegExp) {
-					let re, flag;
-					try {
-						[, re, flag] = term.match(/\/(.*)\/([a-z]+)?/);
-						rgExp = re ? new RegExp(re, flag) : null;
-					} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
-				}
-				if (!rgExp) { rgExp = new RegExp(escapeRegExp(term), 'gi'); }
+				let rgExp, re, flag;
+				try {
+					[, re, flag] = term.startsWith('/')
+						? term.match(/\/(.*)\/([a-z]+)?/)
+						: this.searchMethod.bRegExp
+							? [void (0), term, 'i']
+							: [];
+					rgExp = re ? new RegExp(re, flag) : null;
+				} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
+				if (!rgExp) { rgExp = new RegExp(escapeRegExp(term).replace('\\*', '.*'), 'i'); }
 				match = (val) => {
 					return Array.isArray(val)
 						? val.some((v) => rgExp.test(v))
@@ -2796,6 +2797,7 @@ function _list(x, y, w, h) {
 				};
 			}
 			const found = [...this.dataAll].filter((pls) => {
+				if (pls.isFolder) { return this.searchMethod.bName && match(pls.name); } // Folders only have name
 				if (this.searchMethod.bQuery && bIsQuery) { return match(pls); } // Breaks here
 				if (this.searchMethod.bName && match(pls.name)) { return true; }
 				else if (this.searchMethod.bTags && match(pls.tags)) { return true; } // NOSONAR [explicit branches]
@@ -3093,7 +3095,7 @@ function _list(x, y, w, h) {
 				let search = '';
 				const trackSearch = (method) => {
 					if (method === 'bPath' && this.searchMethod.bPath) {
-						if (selItems.Count > 1 && this.searchMethod.bRegExp) {
+						if (selItems.Count > 1) {
 							const paths = selItems.GetLibraryRelativePaths()
 								.map((path) => path.split('\\').slice(-1)[0])
 								.filter(Boolean)
@@ -3120,7 +3122,7 @@ function _list(x, y, w, h) {
 						search = queryJoin(trackQueries, 'OR');
 						return true;
 					} else if (method === 'bMetaTracks' && this.searchMethod.bMetaTracks) {
-						if (selItems.Count > 1 && this.searchMethod.bRegExp) {
+						if (selItems.Count > 1) {
 							const tags = getHandleListTags(selItems, [globTags.titleRaw])
 								.flat(Infinity).filter(Boolean)
 								.map(escapeRegExpV2);
@@ -7041,6 +7043,34 @@ function _list(x, y, w, h) {
 		this.lastOffset = 0;
 		this.internalPlsDrop = [];
 		this.data = []; // Data to paint
+		/**
+		 * @typedef {object} Playlist - Playlist object
+		 * @property {string} path - File path
+		 * @property {string} name - Playlist name
+		 * @property {string} nameId - Playlist name + Id
+		 * @property {string} id - Playlist Id
+		 * @property {string} extension - File extension
+		 * @property {number} size - Playlist tracks number
+		 * @property {number} fileSize - File size
+		 * @property {number} trackSize - Playlist tracks' file size
+		 * @property {number} duration - Playlist tracks' duration
+		 * @property {boolean} isLocked - Flag if file is locked
+		 * @property {boolean} isFolder - Flag for folders
+		 * @property {boolean} isAutoPlaylist - Flag for AutoPlaylists
+		 * @property {string} query  - Query for AutoPlaylists
+		 * @property {string} sort  - Sorting for AutoPlaylists
+		 * @property {boolean} bSortForced  - Flag for AutoPlaylists sorting
+		 * @property {number} limit  - Limit for Smart Playlists
+		 * @property {string} category  - Playlist category
+		 * @property {string[]} tags  - Playlist tags
+		 * @property {string[]} trackTags  - Playlist track tags
+		 * @property {string} playlist_mbid  - ListenBrainz playlist MBID
+		 * @property {string} author  - Playlist author
+		 * @property {string} description  - Playlist description
+		 * @property {number} created  - Playlist created date
+		 * @property {number} created  - Playlist modified date
+		 */
+		/** @type {Playlist[]} - Playlists list */
 		this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
 		this.dataAutoPlaylists = []; // Only autoplaylists to save to json
 		this.dataFpl = []; // Only fpl playlists to save to json
@@ -8244,6 +8274,8 @@ function _list(x, y, w, h) {
 							? '\nSearch Filter:' +
 							'\n-------------------' +
 							'\nRight click on button to configure search method.' +
+							'\nWildcards (*) are allowed. i.e. \'My * playlist\'.' +
+							'\nRegExp are allowed in /[expression]/[flags] form.' +
 							'\nTracks drag n\' drop will search playlists by (priority configurable):' +
 							this.searchMethod.dragDropPriority
 								.map((method, i) => '\n\t' + (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')))

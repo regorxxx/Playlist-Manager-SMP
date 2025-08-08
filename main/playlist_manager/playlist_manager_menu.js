@@ -5612,7 +5612,7 @@ function createMenuSearch() {
 								'\nSimon & Garfunkel\\Bookends {2014 HD Tracks HD886447698259}\\01 - Mrs. Robinson.flac' +
 								'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' +
 								'\n\nDrag n\' drop integration:' +
-								'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
+								'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. RegExp is used to search for multiple filenames at the same time.'
 								, window.Name
 							);
 						} else if (opt.key === 'bMetaPls') {
@@ -5696,7 +5696,7 @@ function createMenuSearch() {
 		});
 		menu.newCheckMenuLast(() => list.searchMethod.bAutoSearch);
 		menu.newEntry({
-			menuName: subMenu, entryText: 'Parse RegExp expressions', func: () => {
+			menuName: subMenu, entryText: 'Parse input as RegExp', func: () => {
 				list.searchMethod.bRegExp = !list.searchMethod.bRegExp;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
 				overwriteProperties(list.properties);
@@ -5705,12 +5705,10 @@ function createMenuSearch() {
 				}
 				if (list.searchMethod.bRegExp) {
 					fb.ShowPopupMessage(
-						'This option will parse RegExp expressions on the input box and apply it to the list. For ex:' +
-						'\n\n/Top/ would match \'Top tracks\' but /top/ would not. Searching for \'top\' or \'Top\' as plain text would perform a case insensitive search in any case, being thus equivalent to /top/i.' +
+						'This option will parse all input as RegExp. The default flag, unless otherwise specified, is \'i\'. For ex:' +
+						'\n\n\'Top\', \'top\' and /Top/ would match \'Top tracks\' but /top/ would not, since the first 2 queries are case insensitive but the rest are not. Searching for \'top\' or \'Top\' is thus equivalent to /top/i.' +
 						'\n\nFor more info see:' +
-						'\nhttps://regexr.com/' +
-						'\n\nDrag n\' drop integration:' +
-						'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. \'Parse RegExp expressions\' must be enabled to search for multiple filenames at the same time.'
+						'\nhttps://regexr.com/'
 						, window.Name
 					);
 				}
