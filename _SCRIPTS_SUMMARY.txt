@@ -1,7 +1,7 @@
 INFO:
 -----
 This is general info for all the scripts. Within all files you will find 6 [+] big scripts: Playlist
-Manager, Timeline, World Map, Not a Waveform Seekbar, Search by Distance (button) and Playlist Tools
+Manager, Timeline, World Map, Not a Waveform Seekbar, Music Map (button) and Playlist Tools
 (button). And a collection of other small utilities and/or buttons (quicksearch, top tracks,
 duplicates, device priority, etc.). All files have extensive comments and descriptions at the header
 and all along the code, so you can check specific info about what everything does in its own file.
@@ -59,10 +59,10 @@ unified toolbar wih special UI related settings (see above):
 			- .\buttons\buttons_playlist_tools_macros.js
 			- .\buttons\buttons_playlist_tools_pool.js
 			- .\buttons\buttons_playlist_tools_submenu_custom.js.js
-	+ Search by Distance:
-		- .\buttons\buttons_search_by_distance_customizable.js (configurable with menus)
-		- .\buttons\buttons_search_by_distance_basic.js
-		- .\buttons\buttons_search_by_distance_explorer.js
+	+ Music Map:
+		- .\buttons\buttons_music_map_customizable.js (configurable with menus)
+		- .\buttons\buttons_music_map_basic.js
+		- .\buttons\buttons_music_map_explorer.js
 	+ Playlist manipulation:
 		- .\buttons\buttons_playlist_remove_duplicates.js
 		- .\buttons\buttons_playlist_filter.js
@@ -99,7 +99,7 @@ wants to create their own buttons using the existing framework.
 
 The 'helpers' and 'main' folder contains common files used by most of the scripts. Don't touch
 or load these alone. 'music_graph_descriptors_xxx.js', 'music_graph_descriptors_xxx_user.js'
-and 'dyngenre_map_xxx.js' files, are related to 'Search by Distance' scripts. Look at those
+and 'dyngenre_map_xxx.js' files, are related to 'Music Map' scripts. Look at those
 files to understand what they do. Some users may want to add their own genres/styles at
 'music_graph_descriptors_xxx_user.js', to do so a copy of the file must be placed at
 (profile folder) '.\\js_data\\helpers\\' (this can be done with the customizable button).

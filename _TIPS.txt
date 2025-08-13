@@ -36,7 +36,7 @@ Presets TIP:
 -------------
 There are multiple useful presets for components, the UI or these JSplitter\SMP scripts at the folder
 named 'Presets'. Further documentation can be found there. Some of them are meant to be loaded
-automatically (recipes and themes for Search By Distance) to then be set at buttons, others are meant
+automatically (recipes and themes for Music Map) to then be set at buttons, others are meant
 to be loaded on demand to modify the panel behavior (Playlist Tools). Masstagger presets can be loaded
 at its panel, while UI TF scripts are meant to be used at different places of UI config (columns,
 library view, etc.) if desired. In both cases their use is in line with these SMP scripts, so they make
@@ -48,7 +48,7 @@ displays keys in Camelot Wheel notation with colors).
 	- Notepad++: to highligh picard code on notepad++
 	- Picard: to be used on picard as tagging scripts
 	- Playlist Tools: presets (menu entries) which can be added to the script
-	- Search by [distance]: presets (menu entries) which are loaded on the fly on the custom button
+	- Music Map: presets (menu entries) which are loaded on the fly on the custom button
 	- UI: multiple UI scripts
 		- DUI
 		- CUI
