@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//18/08/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
 
@@ -77,7 +77,7 @@ function createMenuLeft(forcedIndex = -1) {
 		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
 		return menu;
 	}
-	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMirrorChanges', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const lb = ListenBrainz;
 	const uiIdx = plman.FindPlaylist(pls.nameId);
 	const bIsPlsLoaded = uiIdx !== -1;
@@ -1256,7 +1256,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			return menu;
 		}
 	}
-	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
+	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMirrorChanges', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
 	const lb = ListenBrainz;
 	// Helpers
 	const isPlsLoaded = (pls) => plman.FindPlaylist(pls.nameId) !== -1;
@@ -3458,8 +3458,8 @@ function createMenuRightTop() {
 			menu.newEntry({ menuName: subMenuName, entryText: 'Playlist file\'s Tags related actions:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			{
-				const subMenuNameTwo = menu.newMenu('Automatically tag loaded playlists with', subMenuName);
-				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Set tags:', flags: MF_GRAYED });
+				const subMenuNameTwo = menu.newMenu('Automatically tag playlists', subMenuName);
+				menu.newEntry({ menuName: subMenuNameTwo, entryText: 'Set tags to add:', flags: MF_GRAYED });
 				menu.newSeparator(subMenuNameTwo);
 				const options = ['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu'];
 				options.forEach((item) => {
@@ -3488,7 +3488,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoCustomTag);
 			}
 			{
-				const subMenuNameTwo = menu.newMenu('Apply actions according to AutoTags', subMenuName);
+				const subMenuNameTwo = menu.newMenu('Enable tag-based actions', subMenuName);
 				const options = ['Yes: At playlist loading', 'No: Ignore them'];
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
@@ -3497,8 +3497,10 @@ function createMenuRightTop() {
 							list.bApplyAutoTags = (i === 0);
 							list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
 							overwriteProperties(list.properties);
-							fb.ShowPopupMessage('Note in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).\n\n\'bMultMenu\': Associates playlist to menu entries applied to multiple playlists.\n\n\'bSkipMenu\': Skips dynamic menu creation for tagged playlist.\n\nUsage of \'bPinnedFirst\' and \'bPinnedLast\', to pin playlists at top/bottom, require automatic actions to be enabled.', window.Name);
-							if (list.data.some((pls) => pls.tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast'))) { list.sort(); } // For pinned recordings
+							fb.ShowPopupMessage('To see the list of special tags and their associated actions check the documentation' + list.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' or quick help' + list.getGlobalShortcut('quick help', { bTab: false, bParen: true }) + '.\n\nNote in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).', window.Name);
+							if (list.data.some((pls) => pls.tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast'))) {
+								list.sort();
+							}
 						}
 					});
 				});

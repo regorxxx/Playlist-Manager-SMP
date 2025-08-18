@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//18/08/25
 
 /* exported _list */
 
@@ -2444,7 +2444,11 @@ function _list(x, y, w, h) {
 							}
 							return true;
 						case 'f11': // Help
-							createMenuRightTop().btn_up(this.mx, this.my, void (0), 'Open documentation...');
+							if (getKeyboardMask() === kMask.shift) {
+								this.headerButtons.help.func(void (0), void (0), MK_SHIFT);
+							} else {
+								createMenuRightTop().btn_up(this.mx, this.my, void (0), 'Open documentation...');
+							}
 							return true;
 						case 'f12': // Tracked folder
 							if (!this.bLiteMode) { _explorer(this.playlistsPath); }
@@ -2570,25 +2574,25 @@ function _list(x, y, w, h) {
 	this.listGlobalShortcuts = (bForce = false, bTips = true) => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		return (this.properties.bGlobalShortcuts[1] || bForce
-			? '\n- F1: lock / unlock playlist(s). (*)' +
-			'\n- F2: rename playlist.' +
-			'\n- F3: clone in UI playlist(s). (*)' +
-			'\n- F4: load / jump to playlist(s). (*)' +
-			'\n- F5: copy playlist(s) (with same format). (*)' +
-			(showMenus['Online sync'] ? '\n- F6: export playlist(s) to ListenBrainz (+ Spotify). (*)' : '\n- F6: -none-\t(disabled Online sync)') +
-			'\n- F7: new playlist' + (showMenus['Folders'] ? ' or folder (+ Shift)' : '') + '.' +
-			(showMenus['Category'] ? '\n- F8: cycle categories.' : '\n- F8: -none-\t(disabled Categories)') +
-			'\n- F9: search playlists with selected tracks.' +
-			'\n- F10: settings menu or list menu (+ Shift).' +
-			'\n- F11: documentation (pdf).' +
-			(!this.bLiteMode ? '\n- F12: open playlists tracked folder.' : '\n- F12: -none-\t(disabled File tracking -lite mode-)') +
-			(bTips ? '\n(*) Also apply to multiple selection and recursively to folders.' : '')
+			? '\n- ' + this.getGlobalShortcut('lock file', { bTab: false, bForce: true }) + ': lock / unlock playlist(s). (*)' +
+			'\n- ' + this.getGlobalShortcut('rename', { bTab: false, bForce: true }) + ': rename playlist.' +
+			'\n- ' + this.getGlobalShortcut('clone ui', { bTab: false, bForce: true }) + ': clone in UI playlist(s). (*)' +
+			'\n- ' + this.getGlobalShortcut('load', { bTab: false, bForce: true }) + ': load / jump to playlist(s). (*)' +
+			'\n- ' + this.getGlobalShortcut('clone', { bTab: false, bForce: true }) + ': copy playlist(s) (with same format). (*)' +
+			'\n- ' + this.getGlobalShortcut('export', { bTab: false, bForce: true }) + ': ' + (showMenus['Export and copy'] ? 'export playlist(s) and tracks' + (showMenus['Online sync'] ? ' or to ListenBrainz (+ Shift). (*)' : '.') : '-none-\t(disabled file exporting -lite mode-)' + (showMenus['Online sync'] ? 'or export to ListenBrainz (+ Shift). (*)' : ' (disabled Online sync)')) +
+			'\n- ' + this.getGlobalShortcut('new file', { bTab: false, bForce: true }) + ': new playlist' + (showMenus['Folders'] ? ' or folder (+ Shift)' : '') + '.' +
+			'\n- ' + this.getGlobalShortcut('cycle category', { bTab: false, bForce: true }) + ': ' + (showMenus['Category'] ? 'cycle categories.' : '-none-\t(disabled Categories)') +
+			'\n- ' + this.getGlobalShortcut('search tracks', { bTab: false, bForce: true }) + ': search playlists with selected tracks.' +
+			'\n- ' + this.getGlobalShortcut('settings menu', { bTab: false, bForce: true }) + ': settings menu or list menu (+ Shift).' +
+			'\n- ' + this.getGlobalShortcut('documentation', { bTab: false, bForce: true }) + ': documentation (pdf) or quick help (+ Shift).' +
+			'\n- ' + this.getGlobalShortcut('tracked folder', { bTab: false, bForce: true }) + ': ' + (!this.bLiteMode ? 'open playlists tracked folder.' : '-none-\t(disabled File tracking -lite mode-)') +
+			(bTips ? '\n(*) Also applies to multiple selection and recursively to folders.' : '')
 			: '');
 	};
 
 	this.getGlobalShortcut = (action = '', options = { bTab: true, bParen: false }) => {
 		options = { bTab: true, bParen: false, ...options };
-		const bEnabled = this.properties.bGlobalShortcuts[1];
+		const bEnabled = this.properties.bGlobalShortcuts[1] || options.bForce;
 		let shortcut = '';
 		switch (action.toLowerCase()) {
 			case 'lock file': shortcut = bEnabled ? 'F1' : ''; break;
@@ -2597,17 +2601,20 @@ function _list(x, y, w, h) {
 			case 'clone ui': shortcut = bEnabled ? 'F3' : ''; break;
 			case 'load': shortcut = bEnabled ? 'F4' : ''; break;
 			case 'clone': shortcut = bEnabled ? 'F5' : ''; break;
-			case 'new ui': shortcut = bEnabled && this.bLiteMode ? 'F7' : ''; break;
-			case 'new file': shortcut = bEnabled && !this.bLiteMode ? 'F7' : ''; break;
+			case 'export': shortcut = bEnabled && !this.bLiteMode || options.bForce ? 'F6' : ''; break;
+			case 'export listenbrainz': shortcut = bEnabled && this.properties.lBrainzToken[1].length > 0 || options.bForce ? 'Shift + F6' : ''; break;
+			case 'new ui': shortcut = bEnabled && this.bLiteMode || options.bForce ? 'F7' : ''; break;
+			case 'new file': shortcut = bEnabled && !this.bLiteMode || options.bForce ? 'F7' : ''; break;
 			case 'new folder': shortcut = bEnabled ? 'Shift + F7' : ''; break;
+			case 'cycle category': shortcut = bEnabled ? 'F8' : ''; break;
 			case 'search tracks': {
 				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
-				shortcut = bEnabled && bValidSearchMethods ? 'F9' : '';
+				shortcut = bEnabled && bValidSearchMethods || options.bForce ? 'F9' : '';
 				break;
 			}
 			case 'find': {
 				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
-				shortcut = bEnabled
+				shortcut = bEnabled || options.bForce
 					? bValidSearchMethods ? 'Shift + F9' : 'F9'
 					: '';
 				break;
@@ -2615,7 +2622,8 @@ function _list(x, y, w, h) {
 			case 'settings menu': shortcut = bEnabled ? 'F10' : ''; break;
 			case 'list menu': shortcut = bEnabled ? 'Shift + F10' : ''; break;
 			case 'documentation': shortcut = bEnabled ? 'F11' : ''; break;
-			case 'tracked folder': shortcut = bEnabled && !this.bLiteMode ? 'F12' : ''; break;
+			case 'quick help': shortcut = bEnabled ? 'Shift + F11' : ''; break;
+			case 'tracked folder': shortcut = bEnabled && !this.bLiteMode || options.bForce ? 'F12' : ''; break;
 			case 'columns': shortcut = 'º, \\ or Numpad /'; break;
 			case 'delete': shortcut = 'Del'; break;
 			case 'search': shortcut = 'Ctrl + E'; break;
@@ -3897,7 +3905,7 @@ function _list(x, y, w, h) {
 				else if (bAllExt) {
 					if (pls.extension !== '.fpl' && pls.extension !== '.xsp') { return ''; }
 					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
-						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: export to JSON');
+						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' for more info', 'Playlist Manager: export to JSON');
 						return '';
 					}
 				}
@@ -3918,7 +3926,7 @@ function _list(x, y, w, h) {
 				const pls = this.data[i];
 				if ((pls.extension === '.fpl' || pls.extension === '.xsp') && bAllExt) {
 					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't export incompatible files
-						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: export to JSON');
+						fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats ' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' for more info', 'Playlist Manager: export to JSON');
 						return;
 					}
 					toSave.push(pls);
@@ -4004,7 +4012,7 @@ function _list(x, y, w, h) {
 						item.path = item.path.replace(/(.*)\\(.*$)/, this.playlistsPath + '$2');
 						if (!_isFile(item.path)) { return; }
 						if (Object.hasOwn(item, 'type') && item.type !== 'songs') { // Don't import incompatible files
-							fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: import from JSON');
+							fb.ShowPopupMessage('XSP has a non compatible type: ' + item.type + '\nPlaylist: ' + item.name + '\n\nRead the playlist formats documentation' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' for more info', 'Playlist Manager: import from JSON');
 							return;
 						}
 						if (!checkQuery(item.query, false, false, true)) { fb.ShowPopupMessage(item.nameId + '\n\nQuery not valid:\n' + item.query, 'Playlist Manager: import from JSON'); return; }
@@ -5080,7 +5088,7 @@ function _list(x, y, w, h) {
 			}
 			this.data = this.data.concat(this.dataAutoPlaylists);
 			// Auto-Tags & Actions
-			this.data.forEach((item) => {
+			this.data.forEach((item, i) => {
 				let bSave = false;
 				let oriTags = [...item.tags];
 				// Auto-Tags
@@ -5119,13 +5127,20 @@ function _list(x, y, w, h) {
 					} else if (backPath.length && _isFile(backPath)) { _deleteFile(backPath); }
 				}
 				// Perform Auto-Tags actions
+				if (item.tags.includes('bMirrorChanges')) { this.plsMirrorPopup(); }
+				if (['bAutoLoad', 'bAutoLock', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'].some((tag) => item.tags.includes(tag))) {
+					this.autoTagsPopup();
+				}
 				if (this.bApplyAutoTags) {
 					if (item.tags.includes('bAutoLock')) { item.isLocked = true; }
+					if (item.tags.includes('bMirrorChanges') && plman.FindPlaylist(item.nameId) !== -1) {
+						this.loadPlaylist(i, false, false);
+					}
 				}
 			});
 			this.dataAll = [...this.data];
 		}
-		// Playlists on
+		// Playlists on UI
 		if (this.bAllPls) {
 			// Remove any previous UI pls on update
 			const cache = bReuseData
@@ -5137,8 +5152,8 @@ function _list(x, y, w, h) {
 				}
 				: null;
 			this.indexes = [];
-			this.dataAll = this.dataAll.filter((pls) => { return pls.extension !== '.ui'; });
-			this.data = this.data.filter((pls) => { return pls.extension !== '.ui'; });
+			this.dataAll = this.dataAll.filter((pls) => pls.extension !== '.ui');
+			this.data = this.data.filter((pls) => pls.extension !== '.ui');
 			// And refresh
 			this.dataFoobar = [];
 			const fooPls = getPlaylistNames();
@@ -6485,7 +6500,7 @@ function _list(x, y, w, h) {
 		return loadPromise;
 	};
 
-	this.loadPlaylist = (idx, bAlsoHidden = false) => {
+	this.loadPlaylist = (idx, bAlsoHidden = false, bFocus = true) => {
 		let loadPromise = { bLoaded: Promise.resolve(false), bDone: Promise.resolve(false) };
 		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
 			console.log('Playlist Manager: Error loading playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylist)');
@@ -6494,7 +6509,7 @@ function _list(x, y, w, h) {
 		const pls = bAlsoHidden ? this.dataAll[idx] : this.data[idx];
 		if (pls.extension === '.ui') { return loadPromise; }
 		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
-			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', 'Playlist Manager: ' + pls.name);
+			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' for more info', 'Playlist Manager: ' + pls.name);
 			return loadPromise;
 		}
 		const oldNameId = pls.nameId;
@@ -6513,7 +6528,8 @@ function _list(x, y, w, h) {
 					fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);
 					return loadPromise;
 				}
-				plman.ActivePlaylist = plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
+				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
+				if (bFocus) { plman.ActivePlaylist = fbPlaylistIndex; }
 				const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true); // Update size on load
 				if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 					this.updateTags(handleList, pls);
@@ -6521,7 +6537,7 @@ function _list(x, y, w, h) {
 			} else { // Or file
 				if (_isFile(pls.path)) { // NOSONAR
 					if (!fbPlaylistIndex) { fbPlaylistIndex = plman.CreatePlaylist(plman.PlaylistCount, oldNameId); } //If it was not loaded on foobar2000, then create a new one
-					plman.ActivePlaylist = fbPlaylistIndex;
+					if (bFocus) { plman.ActivePlaylist = fbPlaylistIndex; }
 					// Try to load handles from library first, greatly speeds up non fpl large playlists
 					// But it will fail as soon as any track is not found on library
 					// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
@@ -6943,7 +6959,18 @@ function _list(x, y, w, h) {
 			fb.ShowPopupMessage('Playlist Manager has detected that you are adding a track which is a subsong from a container file (like .cue or .iso).\n\nWhile this usage is supported (for tracked files on library), note these playlists will not work on any other software out there (not even foobar2000 outside the Playlist Manager context).\n\nNon-tracked files on library will not work properly when loading playlist files referencing them due to a limitation of foobar2000 (*).\n\nAdditionally this is also a problem with most playlist formats which can not be avoided. Either avoid using this kind of files or use the \'Export and convert\' tools to properly export single tracks and compatible playlist files to other devices.\n\nAlternatively, .xspf format allows references by subsong in its specs. But this playlist format is not as universally compatible like .m3u8 for example. To load .xspf playlists natively on foobar2000, install foo_xspf_1 (**) with appropriate settings (***). The manager can handle them too, but they will work only with tracked files on library. You need the component to properly load non-tracked .cue or .iso files. This behavior can be tweaked at \'Playlist behavior\\XSPF behavior\'.\n\n(*) https://hydrogenaud.io/index.php/topic,127554.new.html#info_1060475\n(**) https://github.com/Chocobo1/foo_xspf_1\n(***) https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', 'Playlist Manager: subsong items');
 		}
 	};
-
+	this.plsMirrorPopup = (bForce = false) => {
+		if (!this.infoPopups.plsMirror || bForce) {
+			this.setInfoPopup('plsMirror');
+			fb.ShowPopupMessage('Playlist Manager has loaded a playlist with \'bMirrorChanges\' tag for the first time. This is an informative popup.\n\n-Playlists with this tag will be reloaded (overwritten) every time the manager refresh the playlist files (due to external changes). This may be used to mirror any change on files by external software.\n-This behavior may clash with changes made to playlists within foobar2000, since external changes always take precedence\n-This tag may be added or removed using the playlist contextual menu.\n-The action is only applied if \'Playlist AutoTags and actions\' are enabled.', 'Playlist Manager: mirror changes AutoTag');
+		}
+	};
+	this.autoTagsPopup = (bForce = false) => {
+		if (!this.infoPopups.autoTags || bForce) {
+			this.setInfoPopup('autoTags');
+			fb.ShowPopupMessage('Playlist Manager has loaded a playlist with special tags associated to actions for the first time. This is an informative popup.\n\n-The list of special tags and their associated actions can be found at the documentation' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' and quick help' + this.getGlobalShortcut('quick help', { bTab: false, bParen: true }) + '.\n-These tag may be added or removed using the playlist contextual menu.\n-The actions are only applied if \'Playlist AutoTags and actions\' are enabled.', 'Playlist Manager: AutoTags and actions');
+		}
+	};
 	this.shareUiSettings = (mode = 'popup') => {
 		const settings = Object.fromEntries([
 			...['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements', 'listColors']
@@ -8224,7 +8251,7 @@ function _list(x, y, w, h) {
 					const showMenus = JSON.parse(this.properties.showMenus[1]);
 					fb.ShowPopupMessage(
 						'Global shortcuts:' +
-						'\n-------------------' +
+						'\n-----------------' +
 						this.listGlobalShortcuts(void (0), false) +
 						'\n- ' + this.getGlobalShortcut('columns', { bTab: false, bParen: false }) + ': hide/show the playlist\'s metadata columns.' +
 						'\n- ' + this.getGlobalShortcut('flat view', { bTab: false, bParen: false }) + ': flat/folders view' +
@@ -8234,7 +8261,7 @@ function _list(x, y, w, h) {
 						'\n' +
 						(showMenus['Quick-search']
 							? '\nQuick-search:' +
-							'\n-------------------' +
+							'\n-------------' +
 							(this.properties.bQuickSearchName[1]
 								? '\nPress any letter / number to jump to items matched by name' +
 								'\n(there is also a switch setting to use current sorting method).'
@@ -8245,7 +8272,7 @@ function _list(x, y, w, h) {
 							'\n'
 							: '') +
 						'\nDrag n\' drop (tracks):' +
-						'\n-------------------' +
+						'\n----------------------' +
 						'\n- Standard: move selection to playlist / folder (recursive).' +
 						'\n- Ctrl: copy selection to playlist / folder (recursive).' +
 						'\n- Alt: move selection to new playlist' +
@@ -8253,18 +8280,18 @@ function _list(x, y, w, h) {
 						(this.searchInput ? '\n- On Search Filter: search tracks within playlists (path/query/tags).' : '') +
 						'\n' +
 						'\nDrag n\' drop (internal):' +
-						'\n-------------------' +
+						'\n------------------------' +
 						'\n- Manual sorting: move item to new position (check cursor).' +
 						'\n- General: move items out of/into selected folder (check cursor).' +
 						'\n' +
 						'\nTooltip:' +
-						'\n-------------------' +
+						'\n--------' +
 						'\nShift / Ctrl over buttons / playlists will show the associated action.' +
 						'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
 						'\n' +
 						(this.uiElements['Bottom toolbar'].enabled
 							? '\nFilter/sorting bottom toolbar:' +
-							'\n-------------------' +
+							'\n------------------------------' +
 							'\nLeft click on button to apply current method.' +
 							'\nRight click on button to configure available methods.' +
 							'\n'
@@ -8272,7 +8299,7 @@ function _list(x, y, w, h) {
 						) +
 						(this.searchInput
 							? '\nSearch Filter:' +
-							'\n-------------------' +
+							'\n--------------' +
 							'\nRight click on button to configure search method.' +
 							'\nWildcards (*) are allowed. i.e. \'My * playlist\'.' +
 							'\nRegExp are allowed in /[expression]/[flags] form.' +
@@ -8284,13 +8311,22 @@ function _list(x, y, w, h) {
 							: ''
 						) +
 						'\nList view shortcuts:' +
-						'\n-------------------' +
+						'\n--------------------' +
 						'\n- Up / Down: scroll down / up.' +
 						'\n- Re Pag / Av Pag: scroll down / up page.' +
 						'\n- Home / End: scroll to top / bottom.' +
 						'\n' +
+						'\nAutoTags and Actions:' +
+						'\n---------------------' +
+						'\n- bAutoLoad: playlist is loaded within automatically (on UI).' +
+						'\n- bAutoLock: playlist is locked automatically.' +
+						'\n- bMirrorChanges: playlist is reloaded on external changes.' +
+						'\n- bMultMenu: associates playlist to dynamic main menu entries.' +
+						'\n- bPinnedFirst: show the playlist pinned at top.' +
+						'\n- bPinnedLast: show the playlist pinned at bottom.' +
+						'\n' +
 						'\nSMP / JSplitter Panel:' +
-						'\n-------------------' +
+						'\n----------------------' +
 						'\n- Shift + Win + R. Click: open SMP panel menu.' +
 						'\n- Ctrl + Win + R. Click: open script panel menu.'
 						, window.Name + ': Quick help');

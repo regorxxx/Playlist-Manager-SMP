@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//18/08/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -144,6 +144,8 @@ let properties = {
 		noLibTracked: false,
 		subsongItem: false,
 		networkDrive: false,
+		plsMirror: false,
+		autoTags: false
 	})],
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }, false],
 	_placeholder0_: ['', false, { func: isBoolean }, false],
