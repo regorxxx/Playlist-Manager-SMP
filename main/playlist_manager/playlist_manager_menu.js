@@ -1,7 +1,7 @@
 ﻿'use strict';
 //18/08/25
 
-/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu */
+/* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
@@ -6267,6 +6267,106 @@ function importSettingsMenu() {
 		entryText: 'Share UI settings...', func: () => {
 			list.shareUiSettings('popup');
 		}
+	});
+	return menu;
+}
+
+function createMenuExport(forcedIndexes = []) {
+	const indexes = forcedIndexes.length === 0 ? [...list.indexes] : [...forcedIndexes]; // When delaying menu, the mouse may move to other index...
+	list.tooltip.SetValue(null);
+	const menu = menuLbtnMult;
+	menu.clear(true); // Reset on every call
+	if (indexes.length === 0) {
+		fb.ShowPopupMessage('Selected indexes were empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		return menu;
+	}
+	const playlists = [];
+	for (let z of indexes) {
+		playlists.push(list.data[z]);
+		if (!playlists.slice(-1)[0]) {
+			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.Name);
+			return menu;
+		}
+	}
+	// Helpers
+	const isAutoPls = (pls) => pls.isAutoPlaylist || pls.query;
+	const isPlsUI = (pls) => pls.extension === '.ui';
+	const isFolder = (pls) => pls.isFolder;
+	// Pls
+	const playlistsUI = playlists.filter((pls) => pls.extension === '.ui');
+	// Evaluate
+	const bIsAutoPlsEvery = playlists.every((pls) => isAutoPls(pls));
+	const bIsValidXSPEvery = playlists.every((pls) => pls.extension !== '.xsp' || (Object.hasOwn(pls, 'type') && pls.type === 'songs'));
+	const bIsAutoPlsSome = bIsAutoPlsEvery || playlists.some((pls) => isAutoPls(pls));
+	const bIsFolderEvery = playlists.every((pls) => isFolder(pls));
+	const bIsPlsUISome = playlistsUI.length !== 0;
+	const bWritableFormat = playlists.some((pls) => writablePlaylistFormats.has(pls.extension));
+	// Enabled menus
+	const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
+	const presets = JSON.parse(list.properties.converterPreset[1]);
+	const subMenuName = menu.newMenu('Export and Convert Tracks to...', void (0), presets.length ? flags : MF_GRAYED);
+	menu.newEntry({ menuName: subMenuName, entryText: 'Shift + Click to skip tracks conversion:', flags: MF_GRAYED });
+	menu.newSeparator(subMenuName);
+	presets.forEach((preset) => {
+		const path = preset.path;
+		const playlistOutPath = preset.playlistOutPath || '';
+		let pathName = playlistOutPath.length
+			? '(Fixed folder)'
+			: path.length
+				? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
+				: '(Folder)';
+		const dsp = preset.dsp;
+		let dspName = (dsp !== '...' ? dsp : '(DSP)');
+		const tf = preset.tf;
+		let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
+		const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
+		const extensionName = extension.length ? '[' + extension + ']' : '';
+		const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
+		if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
+		if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
+		if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
+		menu.newEntry({
+			menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
+				const bShift = utils.IsKeyPressed(VK_SHIFT);
+				const toConvertHandleList = new FbMetadbHandleList();
+				Promise.serial(indexes.filter((idx, i) => !playlists[i].isFolder), (z, i) => {
+					const pls = playlists[i];
+					if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return; }
+					if (writablePlaylistFormats.has(pls.extension) || isPlsUI(pls) || isAutoPls(pls)) {
+						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls)
+							? list.removeDuplicatesAutoPls
+							: [];
+						const exportFunc = pls.isAutoPlaylist
+							? exportAutoPlaylistFileWithTracksConvert
+							: exportPlaylistFileWithTracksConvert;
+						const { bDone, handleList } = exportFunc({
+							list, z,
+							tf,
+							preset: null,
+							defPath: path,
+							playlistOutPath,
+							ext: extension,
+							remDupl, // Include remDupl for XSP playlists
+							bAdvTitle: list.bAdvTitle,
+							bMultiple: list.bMultiple,
+							bExtendedM3U
+						});
+						return Promise.wait(60).then(() => {
+							if (bDone && handleList) {
+								handleList.Sort();
+								toConvertHandleList.MakeUnion(handleList);
+								toConvertHandleList.Sort();
+							}
+						});
+					}
+				}, 100).then(() => {
+					if (!bShift && dsp) {
+						console.log('Playlist Manager: ' + toConvertHandleList.Count + ' tracks to convert.');
+						fb.RunContextCommandWithMetadb('Convert/' + dsp, toConvertHandleList, 8);
+					}
+				});
+			}, flags
+		});
 	});
 	return menu;
 }

@@ -103,6 +103,7 @@
 - Folders: 'Move to folder' submenus now also display the entire folder tree instead of a plain list with all folders. i.e. a folder containing folders will have its own submenu, etc. In any case folders are still sorted by name.
 - Documentation: improved quick help and shortcuts referencing at multiple popups.
 - Keyboard shortcuts: pressing Shift + F11 will open the quick help popup.
+- Keyboard shortcuts: F6 shortcut now opens a menu to export selected playlists, while Shift + F6 export them to ListenBrainz.
 - Instances manager: simplified the way multiple panels are handled (and library cache shared); it should work better now, without the need for an external file. Old method may also be used if new one gives problems on startup (see below).
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to choose the instances manager used. By default is now set to 'v1' (see above).
 - [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support for locked playlists.

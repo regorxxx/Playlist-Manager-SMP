@@ -3,7 +3,7 @@
 
 /* exported _list */
 
-/* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
+/* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable*/
 include('..\\window\\window_xxx_input.js');
@@ -2392,14 +2392,30 @@ function _list(x, y, w, h) {
 								else { return clonePlaylistFile(this, z, pls.extension); }
 							}
 							return false;
-						case 'f6': // Export to ListenBrainz (move)
-							if (z !== -1 && showMenus['Online sync']) {
-								if (this.indexes.length) {
-									const playlists = this.indexes.map((idx) => this.data[idx]);
-									const bDone = playlists.map(this.exportToListenbrainz);
-									return bDone.every(Boolean);
+						case 'f6': // Export to file / to ListenBrainz (move)
+							if (z !== -1) {
+								if (getKeyboardMask() === kMask.shift && showMenus['Online sync']) {
+									if (this.indexes.length) {
+										const playlists = this.indexes.map((idx) => this.data[idx]);
+										const bDone = playlists.map(this.exportToListenbrainz);
+										return bDone.every(Boolean);
+									} else {
+										return this.exportToListenbrainz(pls);
+									}
 								} else {
-									return this.exportToListenbrainz(pls);
+									const indexes = [];
+									const bOpen = pls.isFolder && pls.isOpen;
+									if (this.indexes.length) {
+										indexes.push(...this.indexes);
+									} else if (pls.isFolder) {
+										if (!bOpen) { this.switchFolder(z); }
+										pls.pls.filtered.forEach((subPls) => indexes.push(this.getIndex(subPls, false)));
+									} else {
+										indexes.push(z);
+									}
+									createMenuExport(indexes).btn_up(this.mx, this.my);
+									if (!bOpen) { this.switchFolder(z); }
+									return true;
 								}
 							}
 							return false;
@@ -2590,7 +2606,7 @@ function _list(x, y, w, h) {
 			: '');
 	};
 
-	this.getGlobalShortcut = (action = '', options = { bTab: true, bParen: false }) => {
+	this.getGlobalShortcut = (action = '', options = { bTab: true, bParen: false, bForce: false }) => {
 		options = { bTab: true, bParen: false, ...options };
 		const bEnabled = this.properties.bGlobalShortcuts[1] || options.bForce;
 		let shortcut = '';
