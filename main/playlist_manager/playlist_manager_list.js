@@ -8334,6 +8334,7 @@ function _list(x, y, w, h) {
 						'\n' +
 						'\nAutoTags and Actions:' +
 						'\n---------------------' +
+						'\nEnabled on settings menu (playlists behavior). Special tags available:' +
 						'\n- bAutoLoad: playlist is loaded within automatically (on UI).' +
 						'\n- bAutoLock: playlist is locked automatically.' +
 						'\n- bMirrorChanges: playlist is reloaded on external changes.' +
