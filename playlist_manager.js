@@ -150,7 +150,7 @@ let properties = {
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }, false],
 	scrollSettings: ['Scroll settings', JSON.stringify({
 		bSmooth: true,
-		bReversed: true,
+		bReversed: false,
 		unit: null
 	})],
 	_placeholder1_: ['', false, { func: isBoolean }, false],
