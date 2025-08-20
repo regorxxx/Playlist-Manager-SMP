@@ -1,9 +1,9 @@
 ﻿'use strict';
-//18/08/25
+//20/08/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
-/* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable */
+/* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable, scrollBar:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable */
@@ -3249,7 +3249,7 @@ function createMenuRightTop() {
 						list.properties['bUpdateAutoPlaylist'][1] = i === 0; // True will force a refresh on script loading
 						overwriteProperties(list.properties);
 						if (list.properties['bUpdateAutoPlaylist'][1]) {
-							fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this config is.', window.Name);
+							fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this setting.', window.Name);
 						}
 					}
 				});
@@ -3544,7 +3544,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTagAutoPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional processing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' config is.', window.Name); }
+						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional processing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' setting is.', window.Name); }
 						list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
 						list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
 						overwriteProperties(list.properties);
@@ -3965,7 +3965,9 @@ function createMenuRightTop() {
 							panel.properties['fontSize'][1] = panel.fonts.size;
 							overwriteProperties(panel.properties);
 							panel.fontChanged();
-							list.repaint();
+							list.repaint(true);
+							scrollBar.resize();
+							list.repaint(true);
 						}
 					});
 				});
@@ -3986,7 +3988,7 @@ function createMenuRightTop() {
 			}
 		}
 		{	// List colors
-			const subMenuName = menu.newMenu('Set custom colors', menuName);
+			const subMenuName = menu.newMenu('Custom colors', menuName);
 			{
 				const subMenuNameTwo = menu.newMenu('List items', subMenuName);
 				const options = ['Standard playlists...', 'AutoPlaylists...', !list.bLiteMode ? 'Smart playlists...' : null, list.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
@@ -4009,7 +4011,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							list.properties.listColors[1] = convertObjectToString(list.colors);
 							overwriteProperties(list.properties);
-							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig()); // Ensure related settings is set properly
 							list.repaint();
 						}
 					});
@@ -4044,7 +4046,7 @@ function createMenuRightTop() {
 							}
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 							list.repaint();
 						}
 					});
@@ -4067,7 +4069,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 							list.repaint();
 						}
 					});
@@ -4092,7 +4094,7 @@ function createMenuRightTop() {
 								// Update property to save between reloads
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 								list.repaint();
 							}
 						});
@@ -4107,7 +4109,7 @@ function createMenuRightTop() {
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
-							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 							list.repaint();
 						}
 					});
@@ -4128,7 +4130,7 @@ function createMenuRightTop() {
 								// Update property to save between reloads
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 								list.repaint();
 							}
 						});
@@ -4155,7 +4157,7 @@ function createMenuRightTop() {
 								}
 								overwriteProperties(panel.properties);
 								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 								// Set defaults again
 								if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); }
 								list.repaint();
@@ -4171,7 +4173,7 @@ function createMenuRightTop() {
 						panel.properties['bAltRowsColor'][1] = panel.colors.bAltRowsColor;
 						overwriteProperties(panel.properties);
 						panel.colorsChanged();
-						list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+						list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 						list.repaint();
 					}
 				});
@@ -4225,7 +4227,7 @@ function createMenuRightTop() {
 							}
 							overwriteProperties(list.properties);
 							overwriteProperties(panel.properties);
-							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+							list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 							list.repaint();
 						}
 					});
@@ -4274,7 +4276,7 @@ function createMenuRightTop() {
 					panel.setDefault({ all: true });
 					overwriteProperties(list.properties);
 					overwriteProperties(panel.properties);
-					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related config is set properly
+					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
 					list.repaint();
 				}
 			});
@@ -4423,7 +4425,7 @@ function createMenuRightTop() {
 		menu.newSeparator(menuName);
 		{	// Tooltip
 			const subMenuName = menu.newMenu('Tooltip', menuName);
-			menu.newEntry({ menuName: subMenuName, entryText: 'Tooltip config:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Tooltip settings:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			{
 				const subMenuNameTwo = menu.newMenu('Show usage info', subMenuName);
@@ -4460,7 +4462,7 @@ function createMenuRightTop() {
 		menu.newSeparator(menuName);
 		{	// Columns
 			const subMenuName = menu.newMenu('Columns', menuName);
-			menu.newEntry({ menuName: subMenuName, entryText: 'Columns config:' + '\t' + (list.getColumnsEnabled() ? '(disabled)' : ''), flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'Columns settings:' + '\t' + (list.getColumnsEnabled() ? '(disabled)' : ''), flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			list.columns.labels.forEach((key, i) => {
 				const subMenuColumn = menu.newMenu('Column ' + (i + 1) + '\t ' + _b(key), subMenuName);

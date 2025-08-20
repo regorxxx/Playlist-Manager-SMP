@@ -1,9 +1,9 @@
 ﻿'use strict';
-//18/08/25
+//20/08/25
 
 /* exported _list */
 
-/* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable */
+/* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable, scrollBar:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable*/
 include('..\\window\\window_xxx_input.js');
@@ -66,7 +66,12 @@ function _list(x, y, w, h) {
 	let maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
 
 	// UI offset
-	let yOffset = _scale(6) + panel.rowHeight / 4;
+	let yOffset = (panel.rowHeight >= 22
+		? panel.rowHeight / 2
+		: panel.rowHeight >= 18
+			? panel.rowHeight / 3
+			: panel.rowHeight / 5
+	) + panel.rowHeight / 4;
 	const columnOffset = Math.max(_scale(2), 3);
 
 	// Header
@@ -113,7 +118,13 @@ function _list(x, y, w, h) {
 			button.x = button.y = button.w = button.h = 0;
 		}
 		this.size(options);
-		this.repaint();
+		if (this.uiElements['Scrollbar'].enabled && scrollBar) {
+			this.repaint(true);
+			scrollBar.resize();
+			this.repaint(true);
+		} else {
+			this.repaint();
+		}
 	};
 
 	this.liteMenusOmit = ['Relative paths handling', 'Export and copy', 'File management', 'File locks'];
@@ -309,16 +320,17 @@ function _list(x, y, w, h) {
 	this.size = (options = { bScroll: false, bCenter: false, bOmitType: false }) => {
 		options = { ...{ bScroll: false, bCenter: false, bOmitType: false }, ...options };
 		this.cacheLastPosition();
-		const oldH = this.h;
+		yOffset = (panel.rowHeight >= 22
+			? panel.rowHeight / 2
+			: panel.rowHeight >= 18
+				? panel.rowHeight / 3
+				: panel.rowHeight / 5
+		) + panel.rowHeight / 4;
 		this.w = panel.w - (this.x * 2);
 		this.h = panel.h - this.y;
 		this.index = 0;
 		this.offset = 0;
-		if (oldH > 0 && this.h > 0) { yOffset = (_scale(1) + panel.rowHeight / 4) * (this.h / oldH); }
-		const hOffset = _scale(this.uiElements['Up/down buttons'].enabled
-			? (this.uiElements['Bottom toolbar'].enabled ? 24 : 12)
-			: (this.uiElements['Bottom toolbar'].enabled ? 12 : 4)
-		);
+		const hOffset = _scale(this.uiElements['Up/down buttons'].enabled ? 12 : 2) + (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0);
 		this.rows = Math.floor((this.h - hOffset - yOffset) / panel.rowHeight); // 24
 		this.up_btn.x = this.x + Math.round((this.w - _scale(12)) / 2);
 		this.down_btn.x = this.up_btn.x;
@@ -989,7 +1001,7 @@ function _list(x, y, w, h) {
 		const nums = new Array(10).fill(null); // To easily check index from 0 to 9 without using global isNaN()
 		let cacheLen = 0;
 		const ellipsisW = this.bShowSize ? gr.CalcTextWidth('...', panel.fonts.normal) : 0;
-		const iconsRightW = this.uiElements['Scrollbar'].enabled && scroll ? this.w - (scroll.visible ? scroll.w : scroll.wHidden) : this.textWidth;
+		const iconsRightW = this.uiElements['Scrollbar'].enabled && scrollBar ? this.w - (scrollBar.visible ? scrollBar.w : scrollBar.wHidden) : this.textWidth;
 		const level = { name: '', offset: 0 };
 		// Helpers
 		const shading = {};
@@ -1501,7 +1513,7 @@ function _list(x, y, w, h) {
 					}
 					if (bPaint) { this.repaint(false, 'list'); }
 				}
-				if (this.uiElements['Scrollbar'].enabled && scroll && scroll.bDrag) {
+				if (this.uiElements['Scrollbar'].enabled && scrollBar && scrollBar.bDrag) {
 					this.offset = offset;
 					this.index = Math.floor((this.my - this.y - yOffset) / panel.rowHeight) + this.offset;
 					this.inRange = true;

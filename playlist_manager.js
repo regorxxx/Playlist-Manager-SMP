@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/08/25
+//20/08/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -682,7 +682,7 @@ globProfiler.Print('init');
 // List and other UI elements
 const list = new _list(LM, TM, 0, 0);
 const stats = new _listStatistics(LM, TM, 0, 0, list.properties.bStatsMode[1], JSON.parse(list.properties.statsConfig[1]));
-let scroll; // eslint-disable-line no-redeclare
+let scrollBar; // eslint-disable-line no-redeclare
 
 const autoSaveTimer = Number(list.properties.autoSave[1]);
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
@@ -719,7 +719,7 @@ if (!list.properties.bSetup[1]) {
 	autoBackRepeat = (autoBackTimer && isInt(autoBackTimer)) ? repeatFn(backup, autoBackTimer)(list.properties.autoBackN[1]) : null;
 	const plsHistory = new PlsHistory();
 	// Scroll bar
-	scroll = list.uiElements['Scrollbar'].enabled ? new _scrollBar({ // eslint-disable-line no-global-assign
+	scrollBar = list.uiElements['Scrollbar'].enabled ? new _scrollBar({ // eslint-disable-line no-global-assign
 		w: _scale(5),
 		size: _scale(14),
 		bgColor: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.3 : 0.8),
@@ -732,6 +732,15 @@ if (!list.properties.bSetup[1]) {
 		},
 		tt: 'Double L. click to Show active or now playing playlist'
 	}) : null;
+
+	scrollBar.resize = function () {
+		this.x = window.Width - this.w;
+		this.y = list.getHeaderSize().h;
+		this.h = list.h - (this.y - list.y) - 1;
+		if (list.uiElements['Bottom toolbar'].enabled) { this.h -= bottomToolbar.h - _scale(1); }
+		this.rows = Math.max(list.items - list.rows, 0);
+		this.rowsPerPage = list.rows;
+	};
 
 	// Tracking a network drive?
 	if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
@@ -787,7 +796,7 @@ if (!list.properties.bSetup[1]) {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (bottomToolbar.curBtn === null) {
-			if (scroll && scroll.btn_up(x, y)) { return; }
+			if (scrollBar && scrollBar.btn_up(x, y)) { return; }
 			list.lbtn_up(x, y, mask);
 		} else {
 			bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
@@ -806,7 +815,7 @@ if (!list.properties.bSetup[1]) {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (bottomToolbar.curBtn === null) {
-			if (scroll && scroll.btn_down(x, y)) { return; }
+			if (scrollBar && scrollBar.btn_down(x, y)) { return; }
 			list.lbtn_down(x, y, mask);
 		} else {
 			bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
@@ -817,7 +826,7 @@ if (!list.properties.bSetup[1]) {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (bottomToolbar.curBtn === null) {
-			if (scroll && scroll.lbtn_dblclk(x, y)) { return; }
+			if (scrollBar && scrollBar.lbtn_dblclk(x, y)) { return; }
 			list.lbtn_dblclk(x, y);
 		}
 	});
@@ -825,7 +834,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
 		if (stats.bEnabled) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return; }
-		if (scroll && scroll.move(x, y)) { list.move(-1, -1); bottomToolbar.curBtn = null; return; }
+		if (scrollBar && scrollBar.move(x, y)) { list.move(-1, -1); bottomToolbar.curBtn = null; return; }
 		if (!list.isInternalDrop()) { bottomToolbar.on_mouse_move_buttn(x, y, mask); }
 		if (bottomToolbar.curBtn === null) {
 			list.move(x, y, mask, bDragDrop);
@@ -841,7 +850,7 @@ if (!list.properties.bSetup[1]) {
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		bottomToolbar.on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
-		scroll && scroll.move(-1, -1);
+		scrollBar && scrollBar.move(-1, -1);
 	});
 
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
@@ -858,7 +867,7 @@ if (!list.properties.bSetup[1]) {
 			}
 		} else {
 			if (bottomToolbar.curBtn === null) {
-				if (scroll && scroll.trace(x, y)) { return scroll.rbtn_up(x, y); }
+				if (scrollBar && scrollBar.trace(x, y)) { return scrollBar.rbtn_up(x, y); }
 				else { return list.rbtn_up(x, y, mask); }
 			}
 			if (bottomToolbar.curBtn === bottomToolbar.buttons.sortButton) { // Sort button menu
@@ -879,7 +888,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_paint', (gr) => {
-		if (globSettings.bDebugPaint) { extendGR(gr, {  DrawRoundRect: true, FillRoundRect: true, Repaint: true }); }
+		if (globSettings.bDebugPaint) { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true, Repaint: true }); }
 		else { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true }); }
 		list.prePaint();
 		panel.paint(gr);
@@ -895,13 +904,13 @@ if (!list.properties.bSetup[1]) {
 				if (list.uiElements['Bottom toolbar'].enabled) { bottomToolbar.on_paint_buttn(gr); }
 			}
 			list.paint(gr);
-			if (list.bPaintList && scroll) {
-				scroll.rows = Math.max(list.items - list.rows, 0);
-				scroll.rowsPerPage = list.rows;
-				scroll.currRow = list.offset;
-				if (scroll.rows >= 1) {
-					scroll.size = Math.max(Math.round(scroll.h / (scroll.rows === 1 ? 2 : scroll.rows)), _scale(14));
-					scroll.paint(gr);
+			if (list.bPaintList && scrollBar) {
+				scrollBar.rows = Math.max(list.items - list.rows, 0);
+				scrollBar.rowsPerPage = list.rows;
+				scrollBar.currRow = list.offset;
+				if (scrollBar.rows >= 1) {
+					scrollBar.size = Math.max(Math.round(scrollBar.h / (scrollBar.rows === 1 ? 2 : scrollBar.rows)), _scale(14));
+					scrollBar.paint(gr);
 				}
 			}
 		}
@@ -914,15 +923,8 @@ if (!list.properties.bSetup[1]) {
 		panel.size();
 		list.size();
 		bottomToolbar.on_size_buttn();
+		scrollBar.resize();
 		pop.resize();
-		if (scroll) {
-			scroll.x = window.Width - scroll.w;
-			scroll.y = list.getHeaderSize().h;
-			scroll.h = list.h - (scroll.y - list.y) - 1;
-			if (list.uiElements['Bottom toolbar'].enabled) { scroll.h -= bottomToolbar.h - _scale(1); }
-			scroll.rows = Math.max(list.items - list.rows, 0);
-			scroll.rowsPerPage = list.rows;
-		}
 	});
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
@@ -1356,7 +1358,7 @@ if (!list.properties.bSetup[1]) {
 				action.Text = '';
 				return;
 			}
-		} else if (bottomToolbar.curBtn !== null || (scroll && scroll.trace(x, y))) { // Scrollbar or buttons
+		} else if (bottomToolbar.curBtn !== null || (scrollBar && scrollBar.trace(x, y))) { // Scrollbar or buttons
 			// else if (bottomToolbar.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
 			action.Effect = dropEffect.none;
 			action.Text = '';

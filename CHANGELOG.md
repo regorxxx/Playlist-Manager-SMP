@@ -188,6 +188,9 @@
 - XSP: unnecessary logging when checking for circular references on Smart playlists (.xsp).
 - XSP: wrong size reported for Smart Playlists (.xsp) in some cases. For ex. at init or during search caching due to duplicates removal setting not being used in such cases.
 - XSP: 'Reload playlist (overwrite)' not working properly for Smart Playlists.
+- UI: fixed scrollbar resizing after changing font size or adding/deleting UI elements (like the header or bottom toolbar).
+- UI: fixed rows resizing not being consistent with panel init.
+- UI: fixed rows overlapping in some cases the bottom or header toolbar.
 - UI: applying 'Multiple selection (range)' shortcut without a initial selection no longer selects all items up to the mouse position but only selects the current item.
 - UI: panel shortcuts like focus on search (Ctrl + E) conflict with quick-searching while pressing Ctrl/Shift (to look at any position).
 - UI: wrong column size in some cases -on auto mode- after using the search tool.
