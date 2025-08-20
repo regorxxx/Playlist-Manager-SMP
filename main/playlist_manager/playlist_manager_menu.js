@@ -4459,6 +4459,67 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.tooltipSettings.show[key]);
 			});
 		}
+		{	// Scroll
+			const subMenuName = menu.newMenu('List scrolling', menuName);
+			menu.newEntry({ menuName: subMenuName, entryText: 'Scrolling settings:', flags: MF_GRAYED });
+			menu.newSeparator(subMenuName);
+			{
+				const subMenuNameTwo = menu.newMenu('Rows per step', subMenuName);
+				const options = [1, 2, 5, 10];
+				const optionsLength = options.length;
+				const autoScroll = Math.ceil(Math.min(list.items, list.rows) / 10);
+				menu.newEntry({
+					menuName: subMenuNameTwo, entryText: 'Automatic\t' + _b(autoScroll), func: () => {
+						list.scrollSettings.unit = null;
+						list.properties.scrollSettings[1] = JSON.stringify(list.scrollSettings);
+						overwriteProperties(list.properties);
+					}
+				});
+				menu.newSeparator(subMenuNameTwo);
+				options.forEach((item) => {
+					menu.newEntry({
+						menuName: subMenuNameTwo, entryText: item, func: () => {
+							list.scrollSettings.unit = item;
+							list.properties.scrollSettings[1] = JSON.stringify(list.scrollSettings);
+							overwriteProperties(list.properties);
+						}
+					});
+				});
+				menu.newSeparator(subMenuNameTwo);
+				menu.newEntry({
+					menuName: subMenuNameTwo, entryText: 'Custom...\t' + _b(list.scrollSettings.unit || autoScroll), func: () => {
+						const input = Input.number('int', list.scrollSettings.unit || 0, 'Enter number of rows per step:\n(int number)\n\nSet to 0 for auto.', window.Name, 2);
+						if (input === null) { return; }
+						list.scrollSettings.unit = input || null;
+						list.properties.scrollSettings[1] = JSON.stringify(list.scrollSettings);
+						overwriteProperties(list.properties);
+					}
+				});
+				menu.newCheckMenuLast(() => {
+					let idx = options.indexOf(list.scrollSettings.unit);
+					return idx === -1
+						? list.scrollSettings.unit ? optionsLength + 1 : 0
+						: idx;
+				}, optionsLength + 4);
+			}
+			menu.newSeparator(subMenuName);
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Smooth scrolling', func: () => {
+					list.scrollSettings.bSmooth = !list.scrollSettings.bSmooth;
+					list.properties.scrollSettings[1] = JSON.stringify(list.scrollSettings);
+					overwriteProperties(list.properties);
+				}
+			});
+			menu.newCheckMenuLast(() => list.scrollSettings.bSmooth);
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Reverse scrolling', func: () => {
+					list.scrollSettings.bReversed = !list.scrollSettings.bReversed;
+					list.properties.scrollSettings[1] = JSON.stringify(list.scrollSettings);
+					overwriteProperties(list.properties);
+				}
+			});
+			menu.newCheckMenuLast(() => list.scrollSettings.bReversed);
+		}
 		menu.newSeparator(menuName);
 		{	// Columns
 			const subMenuName = menu.newMenu('Columns', menuName);

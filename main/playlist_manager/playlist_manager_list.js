@@ -1494,11 +1494,23 @@ function _list(x, y, w, h) {
 		return x > button.x && x < (button.x + button.w) && y > button.y && y < (button.y + button.h);
 	};
 
-	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = 3 } = {}) => {
+	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10) } = {}) => {
 		if (this.trace(this.mx, this.my) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				if (!Number.isInteger(s)) { s = Math.round(s); }
-				let offset = this.offset - (s * scrollDelta); // Offset changes by 3 on every step
+				if (this.scrollSettings.bSmooth) {
+					const delta = Math.min(Math.abs(s * scrollDelta), this.items);
+					if (delta > 1) {
+						const dir = Math.sign(s * scrollDelta);
+						Promise.serial(
+							Array.from({ length: delta }, () => dir),
+							(s) => this.wheel({ s, bPaint, bForce, scrollDelta: 1 }),
+							delta !== this.items ? 30 : 0
+						);
+						return true;
+					}
+				}
+				let offset = this.offset - (s * scrollDelta);
 				if (offset < 0) {
 					offset = 0;
 				}
@@ -2231,13 +2243,14 @@ function _list(x, y, w, h) {
 			this.searchInput.on_key_down(k);
 			return;
 		}
+		const scrollDir = this.scrollSettings.bReversed ? -1 : 1;
 		switch (k) {
 			// Scroll wheel
 			case VK_UP: {
 				if (this.lastCharsPressed.str.length) {
 					this.quickSearch(void (0), -1);
 				} else {
-					this.wheel({ s: 1, bForce: true });
+					this.wheel({ s: scrollDir * 1, bForce: true });
 				}
 				return true;
 			}
@@ -2245,34 +2258,26 @@ function _list(x, y, w, h) {
 				if (this.lastCharsPressed.str.length) {
 					this.quickSearch(void (0), 1);
 				} else {
-					this.wheel({ s: -1, bForce: true });
+					this.wheel({ s: scrollDir * -1, bForce: true });
 				}
 				return true;
 			}
 			// Scroll entire pages
 			case VK_PGUP: {
-				this.wheel({ s: this.rows / 3, bForce: true });
+				this.wheel({ s: scrollDir * this.rows / 3, bForce: true });
 				return true;
 			}
 			case VK_PGDN: {
-				this.wheel({ s: -this.rows / 3, bForce: true });
+				this.wheel({ s: scrollDir * -this.rows / 3, bForce: true });
 				return true;
 			}
 			// Go to top/bottom
 			case VK_HOME: {
-				let offset = 0;
-				while (true) {
-					this.wheel({ s: 1, bPaint: false });
-					if (offset === this.offset) { this.repaint(false, 'list'); currentItemIndex = 0; break; } else { offset = this.offset; }
-				}
+				this.wheel({ s: scrollDir * Infinity, bForce: true  });
 				return true;
 			}
 			case VK_END: {
-				let offset = 0;
-				while (true) {
-					this.wheel({ s: -1, bPaint: false });
-					if (offset === this.offset) { this.repaint(false, 'list'); currentItemIndex = this.items - 1; break; } else { offset = this.offset; }
-				}
+				this.wheel({ s: scrollDir * -Infinity, bForce: true  });
 				return true;
 			}
 			// Updates tooltip even when mouse hasn't moved
@@ -8000,6 +8005,7 @@ function _list(x, y, w, h) {
 	this.iDoubleClickTimer = this.properties['iDoubleClickTimer'][1];
 	this.columns = JSON.parse(this.properties['columns'][1]);
 	this.statusIcons = JSON.parse(this.properties['statusIcons'][1]);
+	this.scrollSettings = JSON.parse(this.properties['scrollSettings'][1]);
 	// Folders
 	this.folders = JSON.parse(this.properties['folders'][1]);
 	// Panel behavior

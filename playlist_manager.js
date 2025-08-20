@@ -148,7 +148,11 @@ let properties = {
 		autoTags: false
 	})],
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }, false],
-	_placeholder0_: ['', false, { func: isBoolean }, false],
+	scrollSettings: ['Scroll settings', JSON.stringify({
+		bSmooth: true,
+		bReversed: true,
+		unit: null
+	})],
 	_placeholder1_: ['', false, { func: isBoolean }, false],
 	categoryState: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
 	tooltipSettings: ['Tooltip settings', JSON.stringify({
@@ -381,6 +385,7 @@ let properties = {
 		bLoadNotTrackedItems: false,
 	})],
 };
+properties['scrollSettings'].push({ func: isJSON }, properties['scrollSettings'][1]);
 properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
 properties['playlistIcons'].push({ func: isJSON }, properties['playlistIcons'][1]);
 properties['mShortcuts'].push({ func: isJSON }, properties['mShortcuts'][1]);
@@ -884,7 +889,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_wheel', (s) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		list.wheel({ s });
+		list.wheel({ s: list.scrollSettings.bReversed ? -s : s });
 	});
 
 	addEventListener('on_paint', (gr) => {
