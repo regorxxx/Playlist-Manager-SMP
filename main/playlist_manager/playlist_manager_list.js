@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/08/25
+//21/08/25
 
 /* exported _list */
 
@@ -317,8 +317,8 @@ function _list(x, y, w, h) {
 		return this.uiElements['Columns'].enabled && this.getColumnsEnabled(label).length > 0;
 	};
 
-	this.size = (options = { bScroll: false, bCenter: false, bOmitType: false }) => {
-		options = { ...{ bScroll: false, bCenter: false, bOmitType: false }, ...options };
+	this.size = (options = { bScroll: false, bCenter: false, bOmitType: false, bMaintainFocus: true }) => {
+		options = { ...{ bScroll: false, bCenter: false, bOmitType: false, bMaintainFocus: true }, ...options };
 		this.cacheLastPosition();
 		yOffset = (panel.rowHeight >= 22
 			? panel.rowHeight / 2
@@ -338,7 +338,7 @@ function _list(x, y, w, h) {
 		this.down_btn.y = this.y + this.h - _scale(12) - (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0); // Accommodate space for buttons!
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
-		this.jumpLastPosition(options);
+		if (options.bMaintainFocus) { this.jumpLastPosition(options); }
 	};
 
 	this.getHeaderSize = (bOnlyButtons) => {
@@ -966,6 +966,7 @@ function _list(x, y, w, h) {
 		const rows = Math.min(this.items, this.rows);
 		const rowWidth = this.x + this.w; // Ignore separator UI config
 		const selWidth = this.bShowSep ? this.x + this.w - this.categoryHeaderOffset : this.x + this.w; // Adjust according to UI config
+		if ((this.y + yOffset + (rows - 1) * panel.rowHeight) > (this.h - bottomToolbar.h)) { this.size({ bMaintainFocus: false });} // Fix incorrect sizing on init
 		// Highlight
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
@@ -2273,11 +2274,11 @@ function _list(x, y, w, h) {
 			}
 			// Go to top/bottom
 			case VK_HOME: {
-				this.wheel({ s: scrollDir * Infinity, bForce: true  });
+				this.wheel({ s: scrollDir * Infinity, bForce: true });
 				return true;
 			}
 			case VK_END: {
-				this.wheel({ s: scrollDir * -Infinity, bForce: true  });
+				this.wheel({ s: scrollDir * -Infinity, bForce: true });
 				return true;
 			}
 			// Updates tooltip even when mouse hasn't moved
