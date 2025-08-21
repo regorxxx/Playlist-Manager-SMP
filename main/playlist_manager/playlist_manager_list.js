@@ -5070,6 +5070,7 @@ function _list(x, y, w, h) {
 								.then(this.sort);
 						} else { this.sort(); }
 						if (this.properties.bBlockUpdateAutoPls[1] && pop.isEnabled('AutoPlaylist size')) { pop.disable(true); }
+						else if (!bNotPaint || bInit) { this.repaint(false, 'list'); }
 					});
 				}
 			}
@@ -7849,7 +7850,8 @@ function _list(x, y, w, h) {
 			this.checkConfigPostUpdate(bDone);
 			this.updatePlaylistIcons();
 			// Uses last view config at init, categories and filters are previously restored according to bSaveFilterStates
-			this.filter();
+			this.filter({ bRepaint: false });
+			this.sort(); // Even if list is sorted later, this ensures no unnecessary flickering due to position changes
 			if (test) { test.Print('Load playlists'); }
 			globProfiler.Print('list.init.playlists');
 		}).then(() => {
