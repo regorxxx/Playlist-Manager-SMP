@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//22/08/25
 
 /* exported _menu */
 
@@ -225,7 +225,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 */
 	this.getMainMenuName = () => menuArr.length ? menuArr[0].menuName : null;
 	/**
-	 * Checks if a menu name exists at an specific parent or globally.
+	 * Checks if a menu name exists at an specific parent or globally. Invisible Ids, if present, are also matched.
 	 *
 	 * @kind method
 	 * @memberof _menu
@@ -234,9 +234,24 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {string} [subMenuFrom] - If not set, performs a global lookup.
 	 * @returns {boolean}
 	 */
-	this.hasMenu = (menuName, subMenuFrom = '') => menuArr.find((menu) => menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true));
+	this.hasMenu = (menuName, subMenuFrom = '') => !!menuArr.find((menu) => menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true));
 	/**
-	 * Gets the key of the main menu (root). Useful to concatenate multiple menus.
+	 * Checks if a menu name exists at an specific parent or globally. Invisible Ids, if present, are discarded.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name hasAnyMenu
+	 * @param {string} menuName - Name for lookup
+	 * @param {string} [subMenuFrom] - If not set, performs a global lookup.
+	 * @returns {boolean}
+	 */
+	this.hasAnyMenu = (menuName, subMenuFrom = '') => {
+		menuName = menuName.replace(hiddenCharsRegEx, '');
+		subMenuFrom = subMenuFrom.replace(hiddenCharsRegEx, '');
+		return !!menuArr.find((menu) => menu.menuName === menuName && (subMenuFrom.length ? menu.subMenuFrom === subMenuFrom : true));
+	};
+	/**
+	 * Gets the key of the main menu (root). Useful to concatenate multiple menus. Invisible Ids, if present, are discarded and not used for matching.
 	 *
 	 * @kind method
 	 * @memberof _menu
