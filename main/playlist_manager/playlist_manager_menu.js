@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/08/25
+//22/08/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -5370,6 +5370,7 @@ function createMenuRightTop() {
 			{ key: 'autoSize', entryText: 'Autoplaylists updates' },
 			{ key: 'loadPls', entryText: 'Load playlist' },
 			{ key: 'profile', entryText: 'Global profiling' },
+			{ key: 'mainMenu', entryText: 'Dynamic menus' },
 		].forEach((opt) => {
 			menu.newEntry({
 				menuName: subMenuName, entryText: opt.entryText, func: () => {

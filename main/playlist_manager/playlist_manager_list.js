@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/08/25
+//22/08/25
 
 /* exported _list */
 
@@ -966,7 +966,7 @@ function _list(x, y, w, h) {
 		const rows = Math.min(this.items, this.rows);
 		const rowWidth = this.x + this.w; // Ignore separator UI config
 		const selWidth = this.bShowSep ? this.x + this.w - this.categoryHeaderOffset : this.x + this.w; // Adjust according to UI config
-		if ((this.y + yOffset + (rows - 1) * panel.rowHeight) > (this.h - bottomToolbar.h)) { this.size({ bMaintainFocus: false });} // Fix incorrect sizing on init
+		if ((this.y + yOffset + (rows - 1) * panel.rowHeight) > (this.h - bottomToolbar.h)) { this.size({ bMaintainFocus: false }); } // Fix incorrect sizing on init
 		// Highlight
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
@@ -5064,7 +5064,7 @@ function _list(x, y, w, h) {
 					Promise.all(promises).then(() => {
 						if (test) { test.Print(); }
 						this.save();
-						if (bInit && this.bDynamicMenus) { console.log('Playlist Manager: Created dynamic menus'); }
+						if (bInit && this.bDynamicMenus && this.logOpt.mainMenu) { console.log('Playlist Manager: Created dynamic menus'); }
 						if (this.requiresCachePlaylistSearch()) {
 							Promise.wait(500).then(this.cachePlaylistSearch)
 								.then(this.sort);
@@ -7229,7 +7229,7 @@ function _list(x, y, w, h) {
 						}, 250);
 					});
 				}).then((result) => {
-					if (result) { console.log('Playlist Manager: Created dynamic menus'); }
+					if (result && this.logOpt.mainMenu) { console.log('Playlist Manager: Created dynamic menus'); }
 					this.exportPlaylistsInfo();
 					callbacksListener.checkPanelNamesAsync();
 				});
@@ -7892,7 +7892,7 @@ function _list(x, y, w, h) {
 								}, 250);
 							});
 						}).then((result) => {
-							if (result) { console.log('Playlist Manager: Created dynamic menus'); }
+							if (result && this.logOpt.mainMenu) { console.log('Playlist Manager: Created dynamic menus'); }
 							this.exportPlaylistsInfo();
 							callbacksListener.checkPanelNamesAsync();
 						});

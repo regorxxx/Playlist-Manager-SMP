@@ -88,6 +88,7 @@
 - XSP: added support for [foo_playcount_2003](https://marc2k3.github.io/component/playcount-2003/) tags in Smart Playlists. i.e. '%2003_ADDED%', '%2003_LAST_PLAYED%', '%2003_PLAYCOUNT%' and '%2003_RATING%'.
 - FPL: new settings to control .fpl playlists behavior, found at 'Playlist behavior\FPL playlists'. This submenu now exposes some previously hidden settings and also new ones related to JSplitter/marc2003's SMP mod.
 - Exporting Playlists: 'Export and convert' presets have an additional option (at 'Playlist format' submenu) for .m3u and .m3u8 formats to switch Extended M3U usage. By default is set to true (previous behavior). It can be disabled for devices which can't parse comments prefaced by '#' (like Fiio devices). Fiio default preset has been updated with this setting.
+- Console: additional logging options at settings menu.
 ### Changed
 - Installation: added support for foobar v2.25+ file-relative protocols.
 - Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
@@ -1161,7 +1162,7 @@
 - Metadata inheritance: AutoPlaylists and Smart Playlists (.xsp) did not inherit metadata (tags, category) from current view when creating new playlists.
 - AutoTags: 'bAutoLock' tag was not being applied to AutoPlaylists and Smart Playlists (.xsp) on creation when Auto-tagging was enabled.
 - Console: removed non needed log warning about sorting direction not being available when a Smart Playlist (.xsp) playlist had no sort tag (since it's optional).
-- Console: Progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
+- Console: progress code in multiple tools have been fixed to display more accurately the percentage progress in the log.
 - Helpers: rewritten sorting analysis to account for quotes not being needed at sorting for functions.
 - Helpers: avoid file reading crashing in any case (even if it's locked by another process).
 - Helpers: fixed query checking not working due to upper/lower case mixing in some cases, should now be pretty robust with RegEx.
