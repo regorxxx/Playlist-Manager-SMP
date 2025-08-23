@@ -3159,7 +3159,7 @@ function createMenuRightTop() {
 					case 'dynamicMenus':
 						entry = '      -> Dynamic menus';
 						info = 'Processed after \'Startup playlists\' step.';
-						bEnabled = list.bDynamicMenus;
+						bEnabled = list.iDynamicMenus > 0;
 						break;
 					case 'playlistCache':
 						entry = '      -> Search cache';
@@ -3683,7 +3683,7 @@ function createMenuRightTop() {
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newCheckMenuLast(() => !!preset.path.length);
@@ -3694,7 +3694,7 @@ function createMenuRightTop() {
 							preset.playlistOutPath = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newCheckMenuLast(() => !!playlistOutPath.length);
@@ -3708,7 +3708,7 @@ function createMenuRightTop() {
 										preset.extension = extension;
 										list.properties['converterPreset'][1] = JSON.stringify(presets);
 										overwriteProperties(list.properties);
-										if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+										if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 									}
 								}
 							});
@@ -3722,7 +3722,7 @@ function createMenuRightTop() {
 									preset.bExtendedM3U = !bExtendedM3U;
 									list.properties['converterPreset'][1] = JSON.stringify(presets);
 									overwriteProperties(list.properties);
-									if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+									if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 								}
 							});
 							menu.newCheckMenuLast(() => bExtendedM3U);
@@ -3737,7 +3737,7 @@ function createMenuRightTop() {
 								preset.dsp = input;
 								list.properties['converterPreset'][1] = JSON.stringify(presets);
 								overwriteProperties(list.properties);
-								if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+								if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 							}
 						}
 					});
@@ -3748,7 +3748,7 @@ function createMenuRightTop() {
 							preset.tf = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newSeparator(subMenuNameTwo);
@@ -3759,7 +3759,7 @@ function createMenuRightTop() {
 							preset.name = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newSeparator(subMenuNameTwo);
@@ -3773,7 +3773,7 @@ function createMenuRightTop() {
 							presets.push(clone);
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newEntry({
@@ -3784,7 +3784,7 @@ function createMenuRightTop() {
 							presets.splice(input - 1, 0, preset);
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 					menu.newEntry({
@@ -3792,7 +3792,7 @@ function createMenuRightTop() {
 							presets.splice(i, 1);
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
 							overwriteProperties(list.properties);
-							if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+							if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						}
 					});
 				});
@@ -3802,7 +3802,7 @@ function createMenuRightTop() {
 						presets.push({ dsp: '...', tf: '.\\%filename%.mp3', path: '' });
 						list.properties['converterPreset'][1] = JSON.stringify(presets);
 						overwriteProperties(list.properties);
-						if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 					}
 				});
 				menu.newSeparator(subMenuName);
@@ -3810,7 +3810,7 @@ function createMenuRightTop() {
 					menuName: subMenuName, entryText: 'Restore defaults', func: () => {
 						list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
 						overwriteProperties(list.properties);
-						if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 					}
 				});
 			}
@@ -5257,27 +5257,27 @@ function createMenuRightTop() {
 		{	// Dynamic menus
 			const flags = isCompatible('1.6.1', 'smp') ? MF_STRING : MF_GRAYED;
 			const subMenuName = menu.newMenu('Create dynamic menus', menuName);
-			const options = ['Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...', 'No: don\'t integrate the panel in main menu'];
+			const options = ['No: don\'t integrate the panel in main menu', 'Yes: for usage on UI buttons', 'Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...'];
 			const optionsLength = options.length;
 			menu.newEntry({ menuName: subMenuName, entryText: 'File\\Spider Monkey Panel\\Script commands:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			options.forEach((item, i) => {
 				menu.newEntry({
 					menuName: subMenuName, entryText: item, func: () => {
-						list.bDynamicMenus = i === 0;
-						if (list.bDynamicMenus) {
+						list.iDynamicMenus = i;
+						if (list.iDynamicMenus > 0) {
 							fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)\n\nPlaylists tagged with \'bMultMenu\' will be associated to these special\nmenu entries:\n\t-Load tagged playlists\n\t-Clone tagged playlists in UI', window.Name);
 						}
-						list.properties['bDynamicMenus'][1] = list.bDynamicMenus;
+						list.properties['iDynamicMenus'][1] = list.iDynamicMenus;
 						overwriteProperties(list.properties);
 						// And create / delete menus
-						if (list.bDynamicMenus) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
+						if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 						else { list.deleteMainMenuDynamic(); list.deleteExportInfo(); list.listenNames = false; }
 						if (folders.ajqueryCheck()) { exportComponents(folders.ajquerySMP); }
 					}, flags
 				});
 			});
-			menu.newCheckMenuLast(() => (list.bDynamicMenus ? 0 : 1), optionsLength);
+			menu.newCheckMenuLast(() => list.iDynamicMenus, optionsLength);
 		}
 		if (showMenus['Online sync']) {	// ListenBrainz
 			const subMenuName = menu.newMenu('ListenBrainz', menuName);

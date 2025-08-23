@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//22/08/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -386,7 +386,7 @@ function setTag(tags, list, z) {
 		}
 	}
 	// Rebuild dynamic menus if needed
-	if (bDone && (tags.includes('bSkipMenu') || pls.tags.includes('bSkipMenu')) && list.bDynamicMenus) { list.createMainMenuDynamic().then(() => list.exportPlaylistsInfo()); }
+	if (bDone && (tags.includes('bSkipMenu') || pls.tags.includes('bSkipMenu')) && list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => list.exportPlaylistsInfo()); }
 	if (bDone && (tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast')) && list.bApplyAutoTags) { list.sort(); }
 	return bDone;
 }

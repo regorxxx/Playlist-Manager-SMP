@@ -219,7 +219,7 @@ let properties = {
 			return [key, { icon, iconBg }];
 		})))
 	],
-	bDynamicMenus: ['Show dynamic menus?', true, { func: isBoolean }, true],
+	iDynamicMenus: ['Show dynamic menus', 1, { func: isInt, range: [[0, 2]] }, 1],
 	lShortcuts: ['L. click modifiers', JSON.stringify({
 		Ctrl: 'Copy selection to playlist',
 		Shift: 'Load / show playlist',
@@ -1069,7 +1069,7 @@ if (!list.properties.bSetup[1]) {
 	// Main menu commands
 	addEventListener('on_main_menu_dynamic', (id) => {
 		if (!list.bInit) { return; }
-		if (list.bDynamicMenus && list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
+		if (list.iDynamicMenus > 0 && list.mainMenuDynamic && id < list.mainMenuDynamic.length) {
 			const menu = list.mainMenuDynamic[id];
 			let bDone = false;
 			switch (menu.type.toLowerCase()) {

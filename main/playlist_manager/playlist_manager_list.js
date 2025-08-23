@@ -5064,7 +5064,7 @@ function _list(x, y, w, h) {
 					Promise.all(promises).then(() => {
 						if (test) { test.Print(); }
 						this.save();
-						if (bInit && this.bDynamicMenus && this.logOpt.mainMenu) { console.log('Playlist Manager: Created dynamic menus'); }
+						if (bInit && this.iDynamicMenus > 0 && this.logOpt.mainMenu) { console.log('Playlist Manager: Created dynamic menus'); }
 						if (this.requiresCachePlaylistSearch()) {
 							Promise.wait(500).then(this.cachePlaylistSearch)
 								.then(this.sort);
@@ -5613,7 +5613,7 @@ function _list(x, y, w, h) {
 			_save(this.filename, JSON.stringify(data, this.replacer, '\t').replace(/\n/g, '\r\n'), this.bBOM); // No BOM
 		}
 		if (!bInit) {
-			if (this.bDynamicMenus) {
+			if (this.iDynamicMenus > 0) {
 				this.createMainMenuDynamic().then(() => {
 					this.exportPlaylistsInfo();
 					callbacksListener.checkPanelNamesAsync();
@@ -7214,12 +7214,12 @@ function _list(x, y, w, h) {
 		this.folderStack = [];
 		this.skipRwLock = new Set();
 		if (test) { test.CheckPointStep('Filter'); }
-		if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
+		if (this.iDynamicMenus > 0 || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 			const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 			const bColumns = this.isColumnsEnabled('size');
 			const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
 			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
-			if (this.bDynamicMenus) {
+			if (this.iDynamicMenus > 0) {
 				Promise.wait(this.delays.dynamicMenus).then(() => {
 					return new Promise((resolve) => {
 						const id = setInterval(() => {
@@ -7615,19 +7615,18 @@ function _list(x, y, w, h) {
 			const wName = window.Name;
 			data[wName] = {};
 			// Per playlist
-			const menusPls = [
-				{ type: 'load playlist', name: 'Load playlist/', description: 'Load playlist into UI.', skipExt: ['.ui'], skipProp: ['isFolder'] },
-				{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked', 'isFolder'] },
-				{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked', 'isFolder'] },
-				{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: ['isFolder'] },
-				{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['.ui'], skipProp: ['!size', 'isFolder'] },
-				{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
-				{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
-			];
+			const menusPls = this.iDynamicMenus > 1 // Remove playlist entries since idx changes on every playlist change
+				? [
+					{ type: 'load playlist', name: 'Load playlist/', description: 'Load playlist into UI.', skipExt: ['.ui'], skipProp: ['isFolder'] },
+					{ type: 'lock playlist', name: 'Lock playlist/', description: 'Lock playlist file.', skipExt: ['.ui'], skipProp: ['isLocked', 'isFolder'] },
+					{ type: 'lock playlist', name: 'Unlock playlist/', description: 'Unlock playlist file.', skipExt: ['.ui'], skipProp: ['!isLocked', 'isFolder'] },
+					{ type: 'delete playlist', name: 'Delete playlist/', description: 'Delete playlist file.', skipExt: ['.ui'], skipProp: ['isFolder'] },
+					{ type: 'clone in ui', name: 'Clone playlist in UI/', description: 'Load a copy of the playlist file.', skipExt: ['.ui'], skipProp: ['!size', 'isFolder'] },
+					{ type: 'copy selection', name: 'Copy selection to/', description: 'Copy selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
+					{ type: 'move selection', name: 'Move selection to/', description: 'Move selection to playlist file.', skipExt: ['', '.fpl'], skipProp: ['query', 'isAutoPlaylist', 'isLocked', 'isFolder'] },
+				]
+				: [];
 			menusPls.forEach((menu) => { listExport[menu.type] = []; });
-			/* FIXME: Remove all playlist related menus since they depend on idx which change on every playlist change
-				Alternatively, expose new settings to selectively switch specific menus
-			*/
 			this.dataAll.forEach((pls, i) => {
 				if (!this.bAllPls && pls.extension === '.ui') { return; }
 				if (pls.tags.includes('bSkipMenu')) { return; }
@@ -7876,12 +7875,12 @@ function _list(x, y, w, h) {
 				globProfiler.Print('list.init.playlistsAutoLoad');
 			});
 		}).then(() => {
-			if (this.bDynamicMenus || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
+			if (this.iDynamicMenus > 0 || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 				const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 				const bColumns = this.isColumnsEnabled('size');
 				const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
 				const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
-				if (this.bDynamicMenus) {
+				if (this.iDynamicMenus > 0) {
 					if ((!bUpdateSize && !bAutoTrackTag) || queryItems === 0) {
 						Promise.wait(this.delays.dynamicMenus).then(() => {
 							return new Promise((resolve) => {
@@ -8040,7 +8039,7 @@ function _list(x, y, w, h) {
 	this.bSavingXsp = this.properties['bSavingXsp'][1];
 	this.bShowMenuHeader = this.properties['bShowMenuHeader'][1];
 	this.bAllPls = this.properties['bAllPls'][1];
-	this.bDynamicMenus = this.properties['bDynamicMenus'][1];
+	this.iDynamicMenus = this.properties['iDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
 	this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 	this.bForceCachePls = this.properties['bForceCachePls'][1];
@@ -8377,7 +8376,7 @@ function _list(x, y, w, h) {
 	this.searchCurrent = '';
 	this.searchHistory = [];
 	this.searchInput = null;
-	callbacksListener.listenNames = this.bDynamicMenus;
+	callbacksListener.listenNames = this.iDynamicMenus > 0;
 	this.plsCache = new Map();
 	globProfiler.Print('list.prototype');
 	this.bInit = false;
