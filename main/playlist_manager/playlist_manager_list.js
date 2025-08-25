@@ -336,6 +336,7 @@ function _list(x, y, w, h) {
 		this.down_btn.x = this.up_btn.x;
 		this.up_btn.y = this.y + _scale(1);
 		this.down_btn.y = this.y + this.h - _scale(12) - (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0); // Accommodate space for buttons!
+		this.calcRowWidthCache = null;
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
 		if (options.bMaintainFocus) { this.jumpLastPosition(options); }
