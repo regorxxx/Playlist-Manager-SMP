@@ -211,6 +211,7 @@
 - UI: workaround for dark theme not being identified on DUI foo_flowin panels.
 - UI: multiple workarounds for rounded rectangles not being painted properly or producing crashes (SMP limitation).
 - UI: fixed repainting errors in some cases at init related to sorting.
+- UI: workaround for DPI checking under multiple OSes, specially for Wine (Unix).
 - Dynamic menus: missing 'Clone in UI' exposed dynamic menu (at 'File\Spider Monkey Panel\...' for AutoPlaylists.
 - Statistics: chart not properly updating after the manager initializes all playlists on startup.
 - Statistics: loading popup not being shown while the manager initializes all playlists on startup.

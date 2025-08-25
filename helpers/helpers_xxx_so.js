@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//25/08/25
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -48,9 +48,26 @@ function getSoFeatures() {
 	}
 	globProfiler.Print('getSoFeatures.scripting');
 	// UI
-	if (typeof WshShell !== 'undefined') {
-		try { WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); } catch (e) { soFeat.dpi = false; } // eslint-disable-line no-unused-vars
-	} else { soFeat.dpi = false; }
+	if (typeof window.DPI !== 'number') {
+		if (typeof WshShell !== 'undefined') {
+			try { Number(WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')); }
+			catch (e) { // eslint-disable-line no-unused-vars
+				try { Number(WshShell.RegRead('HKCU\\Control Panel\\Desktop\\LogPixels')); }
+				catch (e) { // eslint-disable-line no-unused-vars
+					try { Number(WshShell.RegRead('HKCU\\Software\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\\LogPixels')); }
+					catch (e) { // eslint-disable-line no-unused-vars
+						try { Number(WshShell.RegRead('HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI\\LogPixels')); }
+						catch (e) { // eslint-disable-line no-unused-vars
+							try { Number(WshShell.RegRead('HKLM\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\\LogPixels')); }
+							catch (e) { // eslint-disable-line no-unused-vars
+								soFeat.dpi = false;
+							}
+						}
+					}
+				}
+			}
+		} else { soFeat.dpi = false; }
+	}
 	if (!utils.CheckFont('Arial')) {
 		soFeat.gdiPlus = false;
 	}
