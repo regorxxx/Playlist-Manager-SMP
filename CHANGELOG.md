@@ -81,6 +81,7 @@
 - UI: settings to selectively chose what playlist metadata is shown on the tooltip.
 - UI: created and last modified date can now be shown on tooltip.
 - UI: new settings exposed for scrolling: smooth scrolling, reverse and rows per step. Smooth scrolling displays the animation within intermediate steps. Auto setting for rows per step will dynamically adjust the steps to the current size of the list.
+- UI: new settings to control font scaling for different UI elements.
 - Playlists maintenance tools: new entry to check for subsong items in AutoPlaylists and Smart Playlists.
 - Statistics: X-Axis shown values at display menu now allows any custom value.
 - Statistics: Y-Axis filter at display menu now allows any custom value for 'greater than'/'lower than' filters.

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/08/25
+//26/08/25
 
 /* exported _list */
 
@@ -315,6 +315,14 @@ function _list(x, y, w, h) {
 
 	this.isColumnsEnabled = (label) => {
 		return this.uiElements['Columns'].enabled && this.getColumnsEnabled(label).length > 0;
+	};
+
+	this.isTopButtonsEnabled = () => {
+		const header = this.uiElements['Header buttons'];
+		const keys = this.bLiteMode
+			? Object.keys(header.elements).filter((subKey) => subKey !== 'Folder')
+			: Object.keys(header.elements);
+		return keys.some((subKey) => header.elements[subKey].enabled);
 	};
 
 	this.size = (options = { bScroll: false, bCenter: false, bOmitType: false, bMaintainFocus: true }) => {

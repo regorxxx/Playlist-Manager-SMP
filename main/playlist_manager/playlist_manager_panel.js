@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/06/25
+//26/08/25
 
 /* exported _panel */
 
@@ -23,8 +23,8 @@ function _panel(customBackground = false, bSetup = false) {
 		customText: ['Custom text color', RGB(157, 158, 163), { func: isInt }], // Gray
 		buttonsTextColor: ['Buttons\' text color', bottomToolbar.config.textColor, { func: isInt }],
 		bAltRowsColor: ['Alternate rows background color', true, { func: isBoolean }],
-		bToolbar: ['Use toolbar mode?', true, { func: isBoolean }],
-		bButtonsBackground: ['Use buttons background?', false, { func: isBoolean }],
+		bToolbar: ['Use toolbar mode', true, { func: isBoolean }],
+		bButtonsBackground: ['Use buttons background', false, { func: isBoolean }],
 		buttonsToolbarColor: ['Buttons\' toolbar color', RGB(0, 0, 0), { func: isInt }],
 		buttonsToolbarTransparency: ['Buttons\' toolbar transparency', 5, { func: isInt, range: [[0, 100]] }],
 		imageBackground: ['Image background config', JSON.stringify({
@@ -38,9 +38,16 @@ function _panel(customBackground = false, bSetup = false) {
 			bTint: true,
 			bCacheAlbum: true
 		}), { func: isJSON }],
-		bFontOutline: ['Add shadows to font?', false, { func: isBoolean }],
-		bBold: ['Use bold font?', false, { func: isBoolean }],
-		headerButtonsColor: ['Header buttons\' toolbar color', -1, { func: isInt }],
+		bFontOutline: ['Add shadows to font', false, { func: isBoolean }],
+		bBold: ['Use bold font', false, { func: isBoolean }],
+		headerButtonsColor: ['Header buttons\' toolbar color', -1, { func: isJSON }],
+		fontScale: ['Font scaling', JSON.stringify({
+			inputSize: 1,
+			headerSize: 1,
+			title: 1,
+			buttons: 1,
+			small: 1
+		}), -1, { func: isInt }],
 	};
 	for (let key in panelProperties) { panelProperties[key][3] = panelProperties[key][1]; }
 	setProperties(panelProperties, 'panel_');
@@ -83,14 +90,13 @@ function _panel(customBackground = false, bSetup = false) {
 			console.log('Unable to use default font. Using', name, 'instead.');
 		}
 		if (this.fonts.size <= 0) { this.fonts.size = 6; }
-		this.fonts.inputSize = _scale(Math.max(this.fonts.size - 9, 6));
-		this.fonts.headerSize = _scale(Math.max(this.fonts.size - 7, 8));
-		this.fonts.title = _gdiFont(name, (this.fonts.size + 2) <= 16 ? this.fonts.size + 2 : this.fonts.size, FontStyle.Bold);
+		this.fonts.inputSize = _scale(Math.max(this.fonts.size - 7, 6) * this.fonts.scale.inputSize);
+		this.fonts.headerSize = _scale(Math.max(this.fonts.size - 7, 8) * this.fonts.scale.headerSize);
+		this.fonts.title = _gdiFont(name, Math.round((this.fonts.size + 2 <= 16 ? this.fonts.size + 2 : this.fonts.size) * this.fonts.scale.title), FontStyle.Bold);
 		this.fonts.normal = _gdiFont(name, this.fonts.size);
 		this.fonts.normalBold = _gdiFont(name, this.fonts.size - 1, FontStyle.Bold);
-		this.fonts.buttons = _gdiFont(name, _scale(Math.max(this.fonts.size - 8, 7)));
-		this.fonts.small = _gdiFont(name, this.fonts.size - 4);
-		this.fonts.fixed = _gdiFont('Lucida Console', this.fonts.size);
+		this.fonts.buttons = _gdiFont(name, _scale(Math.max(this.fonts.size - 7, 7) * this.fonts.scale.buttons));
+		this.fonts.small = _gdiFont(name, Math.round((this.fonts.size - 4) * this.fonts.scale.small));
 		this.rowHeight = this.fonts.normal.Height;
 		this.listObjects.forEach((item) => item.size());
 		bottomToolbar.on_size_buttn();
@@ -242,6 +248,10 @@ function _panel(customBackground = false, bSetup = false) {
 	this.h = 0;
 	this.fonts.sizes = [_scale(8), _scale(9), _scale(10), _scale(11), _scale(12), _scale(14)];
 	this.fonts.size = Math.max(this.properties['fontSize'][1], 6);
+	this.fonts.scale = deepAssign()(
+		JSON.parse(this.properties.fontScale[3]),
+		JSON.parse(this.properties.fontScale[1])
+	);
 	if (customBackground) {
 		this.customBackground = true;
 		this.colors.mode = this.properties.colorsMode[1];

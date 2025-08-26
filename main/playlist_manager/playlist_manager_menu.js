@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/08/25
+//26/08/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -3948,6 +3948,8 @@ function createMenuRightTop() {
 		{	// Font size
 			const subMenuName = menu.newMenu('Font size', menuName);
 			if (panel.listObjects.length || panel.textObjects.length) {
+				menu.newEntry({ menuName: subMenuName, entryText: 'Global font:', flags: MF_GRAYED });
+				menu.newSeparator(subMenuName);
 				const options = [...panel.fonts.sizes, 'sep', 'Custom...\t' + _b(panel.fonts.size)];
 				const optionsLength = options.length;
 				options.forEach((item, index) => {
@@ -3960,7 +3962,7 @@ function createMenuRightTop() {
 							} else {
 								const input = Input.number('int positive', panel.fonts.size, 'Input a number:\n(>= 6)', 'Font size', 13, [(n) => n > 0]);
 								if (!input) { return; }
-								panel.properties['fontSize'][1] = panel.fonts.size = input;
+								panel.fonts.size = input;
 							}
 							panel.properties['fontSize'][1] = panel.fonts.size;
 							overwriteProperties(panel.properties);
@@ -3986,6 +3988,49 @@ function createMenuRightTop() {
 				});
 				menu.newCheckMenuLast(() => panel.colors.bBold);
 			}
+		}
+		{	// Font scaling
+			const subMenuName = menu.newMenu('Font scaling', menuName);
+			menu.newEntry({ menuName: subMenuName, entryText: 'UI elements scaling:', flags: MF_GRAYED });
+			menu.newSeparator(subMenuName);
+			[
+				{ text: 'Search Input', key: 'inputSize', bEnabled: list.uiElements['Search filter'].enabled },
+				{ text: 'Header', key: 'title', bEnabled: !list.uiElements['Search filter'].enabled },
+				{ text: 'Top buttons', key: 'headerSize', bEnabled: list.isTopButtonsEnabled() },
+				{ text: 'Bottom buttons', key: 'buttons', bEnabled: list.uiElements['Bottom toolbar'].enabled },
+				{ text: 'Columns', key: 'small', bEnabled: list.uiElements['Columns'].enabled }
+			].forEach((entry) => {
+				const subMenuNameTwo = menu.newMenu(entry.text, subMenuName, entry.bEnabled ? MF_STRING : MF_GRAYED);
+				if (panel.listObjects.length || panel.textObjects.length) {
+					const options = [0.5, 0.75, 1, 1.25, 1.5, 2, 'sep', 'Custom...\t' + _b(panel.fonts.scale[entry.key])];
+					const optionsLength = options.length;
+					options.forEach((item, index) => {
+						if (menu.isSeparator(item)) { return menu.newSeparator(subMenuNameTwo); }
+						menu.newEntry({
+							menuName: subMenuNameTwo, entryText: item, func: () => {
+								if (index !== optionsLength - 1) {
+									if (panel.fonts.size === item) { return; }
+									panel.fonts.scale[entry.key] = item;
+								} else {
+									const input = Input.number('real positive', panel.fonts.scale[entry.key], 'Input a number:\n(> 0)\n\nSetting it to 1 will adjust fonts based only on reported DPI.', 'Font scaling', 1, [(n) => n > 0]);
+									if (!input) { return; }
+									panel.fonts.scale[entry.key] = input;
+								}
+								panel.properties['fontScale'][1] = JSON.stringify(panel.fonts.scale);
+								overwriteProperties(panel.properties);
+								panel.fontChanged();
+								list.repaint(true);
+								scrollBar.resize();
+								list.repaint(true);
+							}
+						});
+					});
+					menu.newCheckMenuLast((o, len) => {
+						let idx = o.indexOf(panel.fonts.scale[entry.key]);
+						return idx !== -1 ? idx : (len - 1);
+					}, options);
+				}
+			});
 		}
 		{	// List colors
 			const subMenuName = menu.newMenu('Custom colors', menuName);
