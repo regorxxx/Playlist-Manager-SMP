@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//25/08/25
 
 /*
 	Remove duplicates
@@ -460,7 +460,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 			tags.push(id);
 		}
 	} else {
-		tags = tfo.EvalWithMetadbs(copy);
+		tags = await tfo.EvalWithMetadbsAsync(copy);
 	}
 
 	let set = new Set();
