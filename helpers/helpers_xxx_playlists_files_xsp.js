@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//29/08/25
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -148,11 +148,11 @@ XSP.hasQueryPlaylists = function (jsp) {
 	return bPlaylists;
 };
 
-XSP.getQueryPlaylists = function (jsp) {
+XSP.getQueryPlaylists = function (jsp, bLog = true) {
 	const playlist = jsp.playlist;
 	const rules = playlist.rules;
 	const fields = new Set(rules.map((rule) => rule.field));
-	if (fields.has('playlist') && fields.size > 1) { console.log('Warning: XSP Playlist with mixed standard queries and playlists as sources.'); }
+	if (bLog && fields.has('playlist') && fields.size > 1) { console.log('Warning: XSP Playlist with mixed standard queries and playlists as sources.\n\t ' + (playlist.name || '- no name provided -')); }
 	const query = { is: [], isnot: [] };
 	for (let rule of rules) {
 		const tag = rule.field;

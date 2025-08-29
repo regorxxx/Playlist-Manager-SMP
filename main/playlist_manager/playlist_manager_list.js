@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/08/25
+//29/08/25
 
 /* exported _list */
 
@@ -5976,7 +5976,7 @@ function _list(x, y, w, h) {
 		else if (!jsp) { throw new Error('No jsp or pls provided'); }
 		if (!name && pls) { name = pls.name; }
 		else if (!name) { throw new Error('No name and pls provided'); }
-		const queue = new Set(XSP.getQueryPlaylists(jsp).is);
+		const queue = new Set(XSP.getQueryPlaylists(jsp, this.logOpt.loadPls).is);
 		let isCircular = false;
 		let i = 0;
 		while (queue.size || i > 100) {
@@ -5989,7 +5989,7 @@ function _list(x, y, w, h) {
 						const subJsp = loadXspPlaylist(source.path);
 						if (!subJsp) { return; }
 						queue.delete(source.name);
-						XSP.getQueryPlaylists(subJsp).is.forEach((newName) => queue.add(newName));
+						XSP.getQueryPlaylists(subJsp, false).is.forEach((newName) => queue.add(newName));
 						if (queue.has(name) || queue.has(source.name)) { isCircular = true; return; }
 					} else {
 						queue.delete(source.name);

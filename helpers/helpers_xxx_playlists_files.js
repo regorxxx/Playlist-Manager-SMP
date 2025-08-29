@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//29/08/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
@@ -278,7 +278,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 }
 
 /**
- * Adds a handle list to a playlist file
+ * Adds a handle list to a playlist file. Limited fpl support only for tracked items on library.
  *
  * @function
  * @name addHandleToPlaylist
@@ -480,7 +480,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 }
 
 /**
- * Adds a handle list to a playlist file
+ * Adds a handle list to a playlist file. Supports fpl playlists for non tracked items on library.
  *
  * @function
  * @name addHandleToPlaylistV2
@@ -863,7 +863,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			const sort = XSP.getSort(jsp);
 			const bHasQueryPls = XSP.hasQueryPlaylists(jsp);
 			if (bHasQueryPls) { // Uses playlists as sources
-				const queryPlaylists = XSP.getQueryPlaylists(jsp);
+				const queryPlaylists = XSP.getQueryPlaylists(jsp, bLog);
 				// From playlist manager or loaded playlists
 				const toIncludeHandle = typeof list !== 'undefined'
 					? list.getHandleFromPlaylists(queryPlaylists.is, void (0), bLog) // eslint-disable-line no-undef
