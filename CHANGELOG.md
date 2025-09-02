@@ -62,7 +62,7 @@
 
 ## [Unreleased][]
 ### Added
-- AutoTags: new 'bMirrorChanges' tag which forces playlists reloading (if playlist was already loaded on UI) when the manager refreshes due to external changes. It may be used to mirror any change on files due to external software. Note this behavior may clash with changes made to playlists within foobar2000, since external changes always take precedence. There is not any kind of specific changes comparison, the panel just reload any file with such tag (whether it was changed or not).
+- AutoTags: new 'bMirrorChanges' tag which forces playlists reloading (if playlist was already loaded on UI) when the manager refreshes due to external changes. It may be used to mirror any change on files due to external software. Note this behavior may clash with changes made to playlists within foobar2000, since external changes always take precedence. There is not any kind of specific changes comparison, only the last modified date is checked.
 - Search: new setting to search within queries by string matching. i.e. you can look for 'Rock' within all AutoPlaylists queries, and display those which use that word.
 - Sorting: new entry at 'Filter and sorting' button menu to apply current panel sorting to playlist tabs. Not available unless UI-only playlists are tracked. Note it follows the folder tree (if folders are present), thus respecting the sorting within (sub)folders. For ex. if there is a folder named 'UI' which is the last one alphabetically, and it contains two playlists named '3', '2', etc. these playlist will be the last one at tabs, since they belong to 'UI' parent. Thus, for items in panel being shown as '4', 'My pls', 'UI'['2',3'], it would result in a sorting for the playlist tabs as '4', 'My pls', '2', '3' instead of '2', '3', '4', 'My pls' (if folders were not considered). Note flat/folder view may easily be switched pressing Ctrl + B. Benefits of this feature over other approaches (as shown [here](https://hydrogenaud.io/index.php/topic,127288)), apart from following folder tree, include being able to sort with any other method supported by the panel. i.e. not only alphabetically, but also by playlist size, date, etc.
 - Sorting: new entry at 'Filter and sorting' button menu to alphabetically sort playlist tabs no matter if UI-only playlists are tracked or not (as shown [here](https://hydrogenaud.io/index.php/topic,127288)). Pressing shift while clicking the menu entry will invert order.
@@ -70,7 +70,7 @@
 - AutoPlaylist: UI-only AutoPlaylists have a new menu entry to show the native AutoPlaylist properties window.
 - Playlists maintenance tools: new entries to check for duplicates by TF for AutoPlaylists and standard playlists.
 - Queue: new entry for folders, multiple and single selection to add playlist(s) contents to queue. See related [thread](https://hydrogenaud.io/index.php/topic,127153.msg1056916/). If any of the playlist is already present on UI, the tracks are sent from them, thus having queue idx associated (which may be used via TF on playlist viewers).
-- Installation: new panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), used to export/import panel settings and any other associated data. These entries may be used to fully backup the panel data, help when moving between different JS components (JSplitter <-> SMP) or even foobar2000 installations,, without needing to manually backup the panel properties or other external files (like .json, playlists, etc.).
+- Installation: new panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), used to export/import panel settings and any other associated data. These entries may be used to fully backup the panel data, help when moving between different JS components (JSplitter <-> SMP) or even foobar2000 installations, without needing to manually backup the panel properties or other external files (like .json, playlists, etc.).
 - UI: new menu entry to share current UI settings across all available Playlist Manager panels within foobar2000. It can be found at the settings menu 'Panel UI' submenu. Every other panel will be highlighted and show a popup asking to import the new settings or ignore them.
 - UI: new menu entry to close a playlist on the contextual menu.
 - UI: new menu entries to add new playlists by specified extension (and not only the panel's default one).
@@ -98,7 +98,6 @@
 - Playlists maintenance tools: better handling of asynchronous processing, should work now better on slow HDDs when checking physical files (dead items, etc.).
 - XSPF: revamped .xspf playlist loading for links and non-tracked files. It will now filter dead items and also there are multiple settings to control if non-tracked files should be loaded (they must exist) and how it's done. Added compatibility with [foo_xspf1](https://github.com/Chocobo1/foo_xspf_1) as fallback loader, which may be specially useful to [load single tracks from non-tracked cue files or other containers](https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843); without the component is not possible to do so, unless the container file is tracked (the manager handles it) since native foobar2000 is unable to load tracks by subsongs from external files.
 - Playlist formats: already saved tracks file size and duration values will be rounded to 2 decimals on first init (after updating).
-- Search: searching by tracks' paths now includes AutoPlaylists.
 - Exporting Playlists: pressing SHIFT when clicking on any of the 'Export and convert' menu entries will skip tracks conversion and exporting and only process the playlist file. The submenu shows now this tip at the header. [Issue 86](https://github.com/regorxxx/Playlist-Manager-SMP/issues/86).
 - Exporting Playlists: 'Export and convert' action on folders or multi-selection will now collect all tracks first and fire a single converter thread for them, instead of one converter window per playlist. Total number of tracks which will be converted is shown on console.
 - Exporting Playlists: updated preset for FiiO devices to handle Cyrillic and other special chars.
@@ -124,6 +123,7 @@
 - Statistics: scrolling buttons are now shown only when the chart is not showing all data (no zoom).
 - Statistics: multiple menu entries at 'Display settings' have been renamed for clarity's sake.
 - Statistics: buttons are now smoothly hidden when panel is not on focus. Transparency may be adjusted from 0 to 255 by setting buttons.alpha, timer to hide them by setting buttons.timer.
+- Search: searching by tracks' paths now includes AutoPlaylists.
 - Search: timeout for autosearch changed to 700 ms (previously 500 ms).
 - Search: the search input box will parse RegExps if they are written in /[expression]/[flags] form, there is no need to enable additional settings.
 - Search: the search input box setting to parse RegExp now controls whether all input is parsed as RegExp by default or not. i.e. 'test.*' will be equivalent to /test.*/i. Note 'i' flag is forced in these cases, to specify other flags use /[expression]/[flags] format.
@@ -145,7 +145,7 @@
 - Shortcuts: multiple improvements to shortcuts shown on tooltips, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts behavior, adjusting them if lite mode is enabled or playlist is not compatible with such actions.
 - Shortcuts: multiple improvements to shortcuts available at settings menu, non compatible actions are grayed out.
-- Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the scrip is checking if every track exist first.
+- Playlists maintenance tools: on playlists with more than 20K tracks, opening the list menu no longer triggers a dead items check to show the count at the related menu entry. This should avoid situations where the menu is not shown immediately since the script is checking if every track exist first.
 - UI: unified script updates settings across all my scripts, look for 'Updates' submenu.
 - UI: quick-search settings menu is now duplicated at the search button's settings submenu.
 - UI: pressing Up/Down arrow keys while quick-searching will jump to next/previous result.
