@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/08/25
+//02/09/25
 
 /* exported _list */
 
@@ -4977,6 +4977,7 @@ function _list(x, y, w, h) {
 		if (!bReuseData) { // Recalculates from files
 			// AutoPlaylist and FPL From json
 			if (bLog) { console.log('Playlist Manager: reading files from ' + _q(this.playlistsPath)); }
+			const mirrorPls = this.dataAll.filter((pls) => pls.tags.includes('bMirrorChanges'));
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
 			this.dataXsp = [];
@@ -5178,7 +5179,10 @@ function _list(x, y, w, h) {
 				if (this.bApplyAutoTags) {
 					if (item.tags.includes('bAutoLock')) { item.isLocked = true; }
 					if (item.tags.includes('bMirrorChanges') && plman.FindPlaylist(item.nameId) !== -1) {
-						this.loadPlaylist(i, false, false);
+						const oldPls = mirrorPls.find((pls) => pls.nameId === item.nameId);
+						if (oldPls && oldPls.modified < item.modified) {
+							this.loadPlaylist(i, false, false);
+						}
 					}
 				}
 			});
@@ -5622,7 +5626,7 @@ function _list(x, y, w, h) {
 			_save(this.filename, JSON.stringify(data, this.replacer, '\t').replace(/\n/g, '\r\n'), this.bBOM); // No BOM
 		}
 		if (!bInit) {
-			if (this.iDynamicMenus > 0) {
+			if (this.iDynamicMenus > 1) {
 				this.createMainMenuDynamic().then(() => {
 					this.exportPlaylistsInfo();
 					callbacksListener.checkPanelNamesAsync();
@@ -7223,12 +7227,12 @@ function _list(x, y, w, h) {
 		this.folderStack = [];
 		this.skipRwLock = new Set();
 		if (test) { test.CheckPointStep('Filter'); }
-		if (this.iDynamicMenus > 0 || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
+		if (this.iDynamicMenus > 1 || this.uiElements['Search filter'].enabled) { // Init menus unless they will be init later after AutoPlaylists processing
 			const queryItems = this.itemsAutoPlaylist + this.itemsXsp;
 			const bColumns = this.isColumnsEnabled('size');
 			const bUpdateSize = this.properties['bUpdateAutoPlaylist'][1] && (this.bShowSize || bColumns);
 			const bAutoTrackTag = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && this.bAutoTrackTagAutoPlsInit;
-			if (this.iDynamicMenus > 0) {
+			if (this.iDynamicMenus > 1) {
 				Promise.wait(this.delays.dynamicMenus).then(() => {
 					return new Promise((resolve) => {
 						const id = setInterval(() => {
@@ -7739,8 +7743,8 @@ function _list(x, y, w, h) {
 	};
 
 	this.deleteMainMenuDynamic = () => {
-		this.mainMenuDynamic.forEach((pls, i) => {
-			try { fb.UnregisterMainMenuCommand(i); } catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
+		this.mainMenuDynamic.forEach((entry, i) => {
+			try { fb.UnregisterMainMenuCommand(i); } catch (e) { console.log(e.message); } // eslint-disable-line no-unused-vars
 		});
 		this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 	};
@@ -8367,6 +8371,7 @@ function _list(x, y, w, h) {
 						'\n- bAutoLoad: playlist is loaded within automatically (on UI).' +
 						'\n- bAutoLock: playlist is locked automatically.' +
 						'\n- bMirrorChanges: playlist is reloaded on external changes.' +
+						'\n- bSkipMenuTag: skips dynamic main menu creation for playlist.' +
 						'\n- bMultMenu: associates playlist to dynamic main menu entries.' +
 						'\n- bPinnedFirst: show the playlist pinned at top.' +
 						'\n- bPinnedLast: show the playlist pinned at bottom.' +
