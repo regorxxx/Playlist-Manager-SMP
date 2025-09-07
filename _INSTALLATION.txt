@@ -33,7 +33,7 @@ INSTALLATION AS FILE:
 Copy all files from the zip into a folder within foobar profile path. For ex: [profile]\xxx-scripts\
 If there is no such path, create the required folder and copy the files there.
 
-For ex: c:\Users\xxx\AppData\Roaming\foobar2000\scripts\SMP\xxx-scripts\
+For ex: c:\Users\xxx\AppData\Roaming\foobar2000\xxx-scripts\
 For portable installations >= 1.6: ...\foobar2000\profile\xxx-scripts\  (*)
 Multiple scripts may share some files (specially helpers) so overwrite if asked to do so.
 
