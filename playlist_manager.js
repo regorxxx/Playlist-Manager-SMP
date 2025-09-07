@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/08/25
+//07/09/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -192,25 +192,25 @@ let properties = {
 	])],
 	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }, true],
 	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }, false],
-	bBOM: ['Save files as UTF8 with BOM?', false, { func: isBoolean }, false],
+	bBOM: ['Save files as UTF8 with BOM', false, { func: isBoolean }, false],
 	removeDuplicatesAutoPls: ['AutoPlaylists, Remove duplicates by', JSON.stringify(globTags.remDupl), { func: isJSON }, JSON.stringify(globTags.remDupl)],
 	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true, { func: isBoolean }, true],
-	bShowMenuHeader: ['Show header on playlist menus?', true, { func: isBoolean }, true],
-	bCopyAsync: ['Copy tracks asynchronously on export?', true, { func: isBoolean }, true],
+	bShowMenuHeader: ['Show header on playlist menus', true, { func: isBoolean }, true],
+	bCopyAsync: ['Copy tracks asynchronously on export', true, { func: isBoolean }, true],
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }, true],
 	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }, true],
 	bQuickSearchName: ['Quick-search forced by name', true, { func: isBoolean }, true],
 	_placeholder3_: ['', false, { func: isBoolean }, false],
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }, true],
-	bSavingXsp: ['Auto-save .xsp playlists?', false, { func: isBoolean }, false],
-	bAllPls: ['Track UI-only playlists?', false, { func: isBoolean }, false],
+	bSavingXsp: ['Auto-save .xsp playlists', false, { func: isBoolean }, false],
+	bAllPls: ['Track UI-only playlists', false, { func: isBoolean }, false],
 	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !isNaN, range: [[0, 0], [1000, Infinity]] }, Infinity], // Infinity calls it on unload and playlist changes only
 	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }, 50],
 	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }, 'Playlist type,Lock state'],
-	bSavingDefExtension: ['Try to save playlists always as default format?', true, { func: isBoolean }, true],
+	bSavingDefExtension: ['Try to save playlists always as default format', true, { func: isBoolean }, true],
 	_placeholder4_: ['', false, { func: isBoolean }, false],
-	bOpenOnExport: ['Open folder on export actions?', true, { func: isBoolean }, true],
-	bShowIcons: ['Show playlist icons?', true, { func: isBoolean }, true],
+	bOpenOnExport: ['Open folder on export actions', true, { func: isBoolean }, true],
+	bShowIcons: ['Show playlist icons', true, { func: isBoolean }, true],
 	playlistIcons: ['Playlist icons codes (Font Awesome)', JSON.stringify(
 		Object.fromEntries(Object.entries(playlistDescriptors).map((plsPair) => {
 			const key = plsPair[0];
@@ -235,8 +235,8 @@ let properties = {
 	})],
 	bMultMenuTag: ['Automatically add \'bMultMenu\' to all playlists', false],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
-	lBrainzEncrypt: ['Encrypt ListenBrainz user token?', false, { func: isBoolean }, false],
-	bLookupMBIDs: ['Lookup for missing track MBIDs?', true, { func: isBoolean }, true],
+	lBrainzEncrypt: ['Encrypt ListenBrainz user token', false, { func: isBoolean }, false],
+	bLookupMBIDs: ['Lookup for missing track MBIDs', true, { func: isBoolean }, true],
 	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching', true, { func: isBoolean }, true],
 	activePlsStartup: ['Active playlist on startup', '', { func: isStringWeak }, ''],
 	bBlockUpdateAutoPls: ['Block panel while updating AutoPlaylists', false, { func: isBoolean }, false],
@@ -340,7 +340,7 @@ let properties = {
 		bShowSizeDeep: true,
 		icons: { open: chars.downOutline, closed: chars.leftOutline }
 	})],
-	bStatsMode: ['Stats mode enabled?', false, { func: isBoolean }, false],
+	bStatsMode: ['Stats mode enabled', false, { func: isBoolean }, false],
 	statsConfig: ['Stats mode configuration', JSON.stringify({
 		// graph: {/* type, borderWidth, point */},
 		// dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot*/},
@@ -349,7 +349,7 @@ let properties = {
 		// grid = {x: {/* show, color, width */}, y: {/* ... */}},
 		// axis = {x: {/* show, color, width, ticks, labels, key, bSingleLabels */}, y: {/* ... */}}
 	})],
-	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }, globSettings.bAutoUpdateCheck],
+	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }, globSettings.bAutoUpdateCheck],
 	panelUUID: ['Panel UUID', UUID(), { func: isUUID }, UUID()],
 	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }, true],
 	deleteBehavior: ['Playlist file delete behavior', 0, { func: (n) => n >= 0 && n <= 2 }, 0],

@@ -7744,7 +7744,7 @@ function _list(x, y, w, h) {
 
 	this.deleteMainMenuDynamic = () => {
 		this.mainMenuDynamic.forEach((entry, i) => {
-			try { fb.UnregisterMainMenuCommand(i); } catch (e) { console.log(e.message); } // eslint-disable-line no-unused-vars
+			try { fb.UnregisterMainMenuCommand(i); } catch (e) { console.log(e.message, '\n\t ' + entry.name); } // eslint-disable-line no-unused-vars
 		});
 		this.mainMenuDynamic.splice(0, this.mainMenuDynamic.length);
 	};
