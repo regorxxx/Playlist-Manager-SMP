@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/07/25
+//10/09/25
 
 /* exported checkCompatible, memoryUsed, isPortable, lastStartup, memoryPrint*/
 
@@ -29,12 +29,17 @@ function compareVersions(from, to, bNum = true) {
 }
 
 function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
-	return compareVersions((target.toLowerCase() === 'smp' ? utils : fb).Version.split('.'), requiredVersionStr.split('.'));
+	target = target.toLowerCase();
+	return target === 'smp' || target === 'jsplitter'
+		? compareVersions(utils.Version.split('.'), requiredVersionStr.split('.')) && (target === 'jsplitter' ? fb.ComponentPath.includes('foo_uie_jsplitter') : true)
+		: compareVersions(fb.Version.split('.'), requiredVersionStr.split('.'));
 }
 
 function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
+	target = target.toLowerCase();
 	if (!isCompatible(requiredVersionStr)) {
-		console.popup('This script requires v' + requiredVersionStr + '. Current ' + (target.toLowerCase() === 'smp' ? 'component' : 'Foobar2000') + ' version is v' + (target.toLowerCase() === 'smp' ? utils : fb).Version + '.', window.Name);
+		const isJsHost = target === 'smp' || target === 'jsplitter';
+		console.popup('This script requires v' + requiredVersionStr + '. Current ' + (isJsHost ? 'component' : 'Foobar2000') + ' version is v' + (isJsHost ? utils : fb).Version + '.', window.Name);
 	}
 }
 

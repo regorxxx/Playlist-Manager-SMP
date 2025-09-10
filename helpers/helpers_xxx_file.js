@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//10/09/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
 
@@ -256,13 +256,13 @@ function _comparePaths(source, destination) {
 function _isFile(file) {
 	file = _resolvePath(file);
 	if (file.endsWith('\\')) { file = file.slice(0, -1); }
-	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsFile(file); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
+	if (isCompatible('1.4.0', 'smp') || isCompatible('3.6.1', 'jsplitter')) { try { return utils.IsFile(file); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
 	else { return isString(file) ? fso.FileExists(file) : false; }
 }
 
 function _isFolder(folder) {
 	folder = _resolvePath(folder);
-	if (isCompatible('1.4.0', 'smp')) { try { return utils.IsDirectory(folder); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
+	if (isCompatible('1.4.0', 'smp') || isCompatible('3.6.1', 'jsplitter')) { try { return utils.IsDirectory(folder); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
 	else { return isString(folder) ? fso.FolderExists(folder) : false; }
 }
 

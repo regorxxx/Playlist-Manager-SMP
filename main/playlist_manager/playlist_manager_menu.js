@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/08/25
+//10/09/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -537,9 +537,9 @@ function createMenuLeft(forcedIndex = -1) {
 						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 						const extensionName = extension.length ? '[' + extension + ']' : '';
 						const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
-						if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
-						if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
-						if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
+						pathName = pathName.cut(20);
+						dspName = dspName.cut(20);
+						tfName = tfName.cut(35);
 						menu.newEntry({
 							menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 								const bShift = utils.IsKeyPressed(VK_SHIFT);
@@ -1528,9 +1528,9 @@ function createMenuLeftMult(forcedIndexes = []) {
 				const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 				const extensionName = extension.length ? '[' + extension + ']' : '';
 				const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
-				if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
-				if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
-				if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
+				pathName = pathName.cut(20);
+				dspName = dspName.cut(20);
+				tfName = tfName.cut(35);
 				menu.newEntry({
 					menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 						const bShift = utils.IsKeyPressed(VK_SHIFT);
@@ -3672,9 +3672,9 @@ function createMenuRightTop() {
 					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 					const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 					const extensionName = extension.length ? '[' + extension + ']' : '';
-					if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
-					if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
-					if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
+					pathName = pathName.cut(20);
+					dspName = dspName.cut(20);
+					tfName = tfName.cut(35);
 					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
@@ -5300,7 +5300,7 @@ function createMenuRightTop() {
 	{	// Integration
 		const menuName = menu.newMenu('Integration');
 		{	// Dynamic menus
-			const flags = isCompatible('1.6.1', 'smp') ? MF_STRING : MF_GRAYED;
+			const flags = isCompatible('1.6.1', 'smp') || isCompatible('3.6.1', 'jsplitter') ? MF_STRING : MF_GRAYED;
 			const subMenuName = menu.newMenu('Create dynamic menus', menuName);
 			const options = ['No: don\'t integrate the panel in main menu', 'Yes: for usage on UI buttons', 'Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...'];
 			const optionsLength = options.length;
@@ -5671,7 +5671,7 @@ function createMenuSearch() {
 		if (list.searchHistory.length) {
 			list.searchHistory.slice(-5).forEach((text) => {
 				menu.newEntry({
-					entryText: text.length > 20 ? text.substring(0, 20) + '...' : text, func: () => {
+					entryText: text.cut(20), func: () => {
 						list.searchCurrent = list.searchInput.text = text;
 						list.repaint();
 						list.search();
@@ -6431,9 +6431,9 @@ function createMenuExport(forcedIndexes = []) {
 		const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 		const extensionName = extension.length ? '[' + extension + ']' : '';
 		const bExtendedM3U = Object.hasOwn(preset, 'bExtendedM3U') ? preset.bExtendedM3U : true;
-		if (pathName.length > 20) { pathName = pathName.substring(0, 20) + '...'; }
-		if (dspName.length > 20) { dspName = dspName.substring(0, 20) + '...'; }
-		if (tfName.length > 35) { tfName = tfName.substring(0, 35) + '...'; }
+		pathName = pathName.cut(20);
+		dspName = dspName.cut(20);
+		tfName = tfName.cut(35);
 		menu.newEntry({
 			menuName: subMenuName, entryText: pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, func: () => {
 				const bShift = utils.IsKeyPressed(VK_SHIFT);

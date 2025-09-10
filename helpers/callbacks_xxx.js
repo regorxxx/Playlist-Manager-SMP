@@ -33,75 +33,75 @@
 */
 
 const callbacks = {
-	on_always_on_top_changed:				{listeners: [], bRegistered: false},
-	on_char: 								{listeners: [], bRegistered: false},
-	on_colours_changed:						{listeners: [], bRegistered: false},
-	on_cursor_follow_playback_changed:		{listeners: [], bRegistered: false},
-	on_drag_drop:							{listeners: [], bRegistered: false},
-	on_drag_enter:							{listeners: [], bRegistered: false},
-	on_drag_leave:							{listeners: [], bRegistered: false},
-	on_drag_over:							{listeners: [], bRegistered: false},
-	on_dsp_preset_changed:					{listeners: [], bRegistered: false},
-	on_focus:								{listeners: [], bRegistered: false},
-	on_font_changed:						{listeners: [], bRegistered: false},
-	on_get_album_art_done:					{listeners: [], bRegistered: false},
-	on_item_focus_change:					{listeners: [], bRegistered: false},
-	on_item_played:							{listeners: [], bRegistered: false},
-	on_key_down:							{listeners: [], bRegistered: false},
-	on_key_up:								{listeners: [], bRegistered: false},
-	on_library_items_added:					{listeners: [], bRegistered: false},
-	on_library_items_changed:				{listeners: [], bRegistered: false},
-	on_library_items_removed:				{listeners: [], bRegistered: false},
-	on_load_image_done:						{listeners: [], bRegistered: false},
-	on_locations_added:						{listeners: [], bRegistered: false},
-	on_main_menu:							{listeners: [], bRegistered: false},
-	on_main_menu_dynamic:					{listeners: [], bRegistered: false},
-	on_metadb_changed:						{listeners: [], bRegistered: false},
-	on_mouse_lbtn_dblclk:					{listeners: [], bRegistered: false},
-	on_mouse_lbtn_down:						{listeners: [], bRegistered: false},
-	on_mouse_lbtn_up:						{listeners: [], bRegistered: false},
-	on_mouse_leave:							{listeners: [], bRegistered: false},
-	on_mouse_mbtn_dblclk:					{listeners: [], bRegistered: false},
-	on_mouse_mbtn_down:						{listeners: [], bRegistered: false},
-	on_mouse_mbtn_up:						{listeners: [], bRegistered: false},
-	on_mouse_move:							{listeners: [], bRegistered: false},
-	on_mouse_rbtn_dblclk:					{listeners: [], bRegistered: false},
-	on_mouse_rbtn_down:						{listeners: [], bRegistered: false},
-	on_mouse_rbtn_up:						{listeners: [], bRegistered: false},
-	on_mouse_wheel:							{listeners: [], bRegistered: false},
-	on_mouse_wheel_h:						{listeners: [], bRegistered: false},
-	on_notify_data:							{listeners: [], bRegistered: false},
-	on_output_device_changed:				{listeners: [], bRegistered: false},
-	on_paint:								{listeners: [], bRegistered: false},
-	on_playback_dynamic_info:				{listeners: [], bRegistered: false},
-	on_playback_dynamic_info_track:			{listeners: [], bRegistered: false},
-	on_playback_edited:						{listeners: [], bRegistered: false},
-	on_playback_follow_cursor_changed:		{listeners: [], bRegistered: false},
-	on_playback_new_track:					{listeners: [], bRegistered: false},
-	on_playback_order_changed:				{listeners: [], bRegistered: false},
-	on_playback_pause:						{listeners: [], bRegistered: false},
-	on_playback_queue_changed:				{listeners: [], bRegistered: false},
-	on_playback_seek:						{listeners: [], bRegistered: false},
-	on_playback_starting:					{listeners: [], bRegistered: false},
-	on_playback_stop:						{listeners: [], bRegistered: false},
-	on_playback_time:						{listeners: [], bRegistered: false},
-	on_playlist_item_ensure_visible:		{listeners: [], bRegistered: false},
-	on_playlist_items_added:				{listeners: [], bRegistered: false},
-	on_playlist_items_removed:				{listeners: [], bRegistered: false},
-	on_playlist_items_reordered:			{listeners: [], bRegistered: false},
-	on_playlist_items_selection_change:		{listeners: [], bRegistered: false},
-	on_playlist_stop_after_current_changed:	{listeners: [], bRegistered: false},
-	on_playlist_switch:						{listeners: [], bRegistered: false},
-	on_playlists_changed:					{listeners: [], bRegistered: false},
-	on_replaygain_mode_changed:				{listeners: [], bRegistered: false},
-	on_script_unload:						{listeners: [], bRegistered: false},
-	on_selection_changed:					{listeners: [], bRegistered: false},
-	on_size:								{listeners: [], bRegistered: false},
-	on_volume_change:						{listeners: [], bRegistered: false}
+	on_always_on_top_changed: { listeners: [], bRegistered: false },
+	on_char: { listeners: [], bRegistered: false },
+	on_colours_changed: { listeners: [], bRegistered: false },
+	on_cursor_follow_playback_changed: { listeners: [], bRegistered: false },
+	on_drag_drop: { listeners: [], bRegistered: false },
+	on_drag_enter: { listeners: [], bRegistered: false },
+	on_drag_leave: { listeners: [], bRegistered: false },
+	on_drag_over: { listeners: [], bRegistered: false },
+	on_dsp_preset_changed: { listeners: [], bRegistered: false },
+	on_focus: { listeners: [], bRegistered: false },
+	on_font_changed: { listeners: [], bRegistered: false },
+	on_get_album_art_done: { listeners: [], bRegistered: false },
+	on_item_focus_change: { listeners: [], bRegistered: false },
+	on_item_played: { listeners: [], bRegistered: false },
+	on_key_down: { listeners: [], bRegistered: false },
+	on_key_up: { listeners: [], bRegistered: false },
+	on_library_items_added: { listeners: [], bRegistered: false },
+	on_library_items_changed: { listeners: [], bRegistered: false },
+	on_library_items_removed: { listeners: [], bRegistered: false },
+	on_load_image_done: { listeners: [], bRegistered: false },
+	on_locations_added: { listeners: [], bRegistered: false },
+	on_main_menu: { listeners: [], bRegistered: false },
+	on_main_menu_dynamic: { listeners: [], bRegistered: false },
+	on_metadb_changed: { listeners: [], bRegistered: false },
+	on_mouse_lbtn_dblclk: { listeners: [], bRegistered: false },
+	on_mouse_lbtn_down: { listeners: [], bRegistered: false },
+	on_mouse_lbtn_up: { listeners: [], bRegistered: false },
+	on_mouse_leave: { listeners: [], bRegistered: false },
+	on_mouse_mbtn_dblclk: { listeners: [], bRegistered: false },
+	on_mouse_mbtn_down: { listeners: [], bRegistered: false },
+	on_mouse_mbtn_up: { listeners: [], bRegistered: false },
+	on_mouse_move: { listeners: [], bRegistered: false },
+	on_mouse_rbtn_dblclk: { listeners: [], bRegistered: false },
+	on_mouse_rbtn_down: { listeners: [], bRegistered: false },
+	on_mouse_rbtn_up: { listeners: [], bRegistered: false },
+	on_mouse_wheel: { listeners: [], bRegistered: false },
+	on_mouse_wheel_h: { listeners: [], bRegistered: false },
+	on_notify_data: { listeners: [], bRegistered: false },
+	on_output_device_changed: { listeners: [], bRegistered: false },
+	on_paint: { listeners: [], bRegistered: false },
+	on_playback_dynamic_info: { listeners: [], bRegistered: false },
+	on_playback_dynamic_info_track: { listeners: [], bRegistered: false },
+	on_playback_edited: { listeners: [], bRegistered: false },
+	on_playback_follow_cursor_changed: { listeners: [], bRegistered: false },
+	on_playback_new_track: { listeners: [], bRegistered: false },
+	on_playback_order_changed: { listeners: [], bRegistered: false },
+	on_playback_pause: { listeners: [], bRegistered: false },
+	on_playback_queue_changed: { listeners: [], bRegistered: false },
+	on_playback_seek: { listeners: [], bRegistered: false },
+	on_playback_starting: { listeners: [], bRegistered: false },
+	on_playback_stop: { listeners: [], bRegistered: false },
+	on_playback_time: { listeners: [], bRegistered: false },
+	on_playlist_item_ensure_visible: { listeners: [], bRegistered: false },
+	on_playlist_items_added: { listeners: [], bRegistered: false },
+	on_playlist_items_removed: { listeners: [], bRegistered: false },
+	on_playlist_items_reordered: { listeners: [], bRegistered: false },
+	on_playlist_items_selection_change: { listeners: [], bRegistered: false },
+	on_playlist_stop_after_current_changed: { listeners: [], bRegistered: false },
+	on_playlist_switch: { listeners: [], bRegistered: false },
+	on_playlists_changed: { listeners: [], bRegistered: false },
+	on_replaygain_mode_changed: { listeners: [], bRegistered: false },
+	on_script_unload: { listeners: [], bRegistered: false },
+	on_selection_changed: { listeners: [], bRegistered: false },
+	on_size: { listeners: [], bRegistered: false },
+	on_volume_change: { listeners: [], bRegistered: false }
 };
 
 const parentWindow = this; // This is Window in this context without SMP wrapping
-parentWindow.eventListener = {event: null, id: null};
+parentWindow.eventListener = { event: null, id: null };
 
 /**
  * Adds a listener to any SMP callback
@@ -115,11 +115,11 @@ parentWindow.eventListener = {event: null, id: null};
  * @returns {false | { event: any; id: string; }}
  */
 function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
-	if (!Object.hasOwn(callbacks, event)) {console.log('addEventListener: event does not exist -> ' + event); return false;}
+	if (!Object.hasOwn(callbacks, event)) { console.log('addEventListener: event does not exist -> ' + event); return false; }
 	const id = UUID();
-	callbacks[event].listeners.push({id, listener});
-	if (bRegister && !callbacks[event].bRegistered) {registerCallback(event);} // Only add those callbacks needed to the global context
-	return {event, id};
+	callbacks[event].listeners.push({ id, listener });
+	if (bRegister && !callbacks[event].bRegistered) { registerCallback(event); } // Only add those callbacks needed to the global context
+	return { event, id };
 }
 
 /**
@@ -134,8 +134,8 @@ function addEventListener(event, listener, bRegister = true) { // eslint-disable
  * @returns {number}
  */
 function findEventListener(event, listener = null, id = null) {
-	if (!Object.hasOwn(callbacks, event)) {return -1;}
-	if (!listener && !id) {return -1;}
+	if (!Object.hasOwn(callbacks, event)) { return -1; }
+	if (!listener && !id) { return -1; }
 	return callbacks[event].listeners.findIndex((event) => (event.id === id || event.listener === listener));
 }
 
@@ -151,8 +151,8 @@ function findEventListener(event, listener = null, id = null) {
  * @returns {Boolean}
  */
 function removeEventListener(event, listener = null, id = null) { // eslint-disable-line no-redeclare
-	if (!Object.hasOwn(callbacks, event)) {return false;}
-	if (!listener && !id) {return false;}
+	if (!Object.hasOwn(callbacks, event)) { return false; }
+	if (!listener && !id) { return false; }
 	const idx = findEventListener(event, listener, id);
 	return idx !== -1 && callbacks[event].listeners.splice(idx, 1);
 }
@@ -168,9 +168,9 @@ function removeEventListener(event, listener = null, id = null) { // eslint-disa
  */
 function removeEventListeners(event) {
 	if (Array.isArray(event)) {
-		event.forEach((ev) => {removeEventListeners(ev);});
+		event.forEach((ev) => { removeEventListeners(ev); });
 	} else {
-		if (!Object.hasOwn(callbacks, event)) {console.log('removeEventListeners: event does not exist -> ' + event); return false;}
+		if (!Object.hasOwn(callbacks, event)) { console.log('removeEventListeners: event does not exist -> ' + event); return false; }
 		callbacks[event].listeners = [];
 	}
 	return true;
@@ -182,15 +182,15 @@ const removeEventListenerSelf = () => removeEventListener(this.eventListener.eve
 /*
 	Register callbacks
 */
-const fireEvents = function(event) {
-	return function() {
+const fireEvents = function (event) {
+	return function () {
 		let bReturn = event === 'on_mouse_rbtn_up' && callbacks[event].listeners.length; // To be used by on_mouse_rbtn_up to disable default menu
 		callbacks[event].listeners.forEach((eventListener) => {
-			if (typeof this === 'undefined') {console.log(event); console.log(eventListener.listener.toString());}
-			if (!eventListener.listener) {console.log(event); console.log(JSON.stringify(eventListener));}
-			this.eventListener = {event, id: eventListener.id};
+			if (typeof this === 'undefined') { console.log(event); console.log(eventListener.listener.toString()); }
+			if (!eventListener.listener) { console.log(event); console.log(JSON.stringify(eventListener)); }
+			this.eventListener = { event, id: eventListener.id };
 			bReturn = eventListener.listener.apply(this, arguments);
-			this.eventListener = {event: null, id: null};
+			this.eventListener = { event: null, id: null };
 		});
 		return bReturn;
 	};
@@ -199,7 +199,7 @@ const fireEvents = function(event) {
 function registerCallback(event) {
 	if (typeof parentWindow[event] !== 'undefined') {
 		const oldFunc = parentWindow[event];
-		parentWindow[event] = function() {
+		parentWindow[event] = function () {
 			const cache = oldFunc.apply(parentWindow, arguments);
 			const output = fireEvents(event).apply(parentWindow, arguments);
 			return (cache || output); // To be used by on_mouse_rbtn_up to disable default menu
@@ -211,7 +211,7 @@ function registerCallback(event) {
 }
 
 function registerAllCallbacks() {
-	Object.keys(callbacks).forEach((event) => {registerCallback(event);});
+	Object.keys(callbacks).forEach((event) => { registerCallback(event); });
 }
 
 /*
@@ -220,9 +220,9 @@ function registerAllCallbacks() {
 if (typeof UUID === 'undefined') {
 	// @ts-ignore
 	var UUID = () => { // NOSONAR[global]
-		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g , (c) => { /* cspell:disable-line */
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { /* cspell:disable-line */
 			const rnd = Math.random() * 16 | 0;
-			const v = c === 'x' ? rnd : (rnd&0x3|0x8);
+			const v = c === 'x' ? rnd : (rnd & 0x3 | 0x8);
 			return v.toString(16);
 		});
 	};
@@ -261,7 +261,7 @@ const callbacksListener = {
 	})()
 };
 
-callbacksListener.checkPanelNames = function() {
+callbacksListener.checkPanelNames = function () {
 	if (!window.Name.length) {
 		console.popup('Panel has no name: "' + window.Name + '"\n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
 	} else {
@@ -270,10 +270,10 @@ callbacksListener.checkPanelNames = function() {
 	}
 };
 
-callbacksListener.checkPanelNamesAsync = function() {setTimeout(this.checkPanelNames, 2000);};
+callbacksListener.checkPanelNamesAsync = function () { setTimeout(this.checkPanelNames, 2000); };
 
 addEventListener('on_notify_data', (name, info) => {
-	if (!name.startsWith('xxx-scripts')) {return;}
+	if (!name.startsWith('xxx-scripts')) { return; }
 	switch (name) {
 		case 'xxx-scripts: panel name': {
 			window.NotifyOthers('xxx-scripts: panel name reply', window.Name);
@@ -290,6 +290,20 @@ addEventListener('on_notify_data', (name, info) => {
 	}
 });
 
+addEventListener('on_key_down', (k) => {
+	if (k === 0x12) { // BUG: Windows alt key is never released properly on windows 11 (VK_ALT)
+		/* global isCompatible:readable */
+		if (typeof isCompatible !== 'undefined' && (isCompatible('4.0.5', 'jsplitter') || utils.Version.startsWith('3.') && isCompatible('3.7.5', 'jsplitter') || isCompatible('1.6.2.25.10.06', 'smp'))) { return; }
+		const id = setInterval(() => {
+			if (!utils.IsKeyPressed(k)) {
+				clearInterval(id);
+				if (typeof on_key_up !== 'undefined') { on_key_up(k); }
+			}
+		}, 60);
+		setTimeout(() => clearInterval(id), 5000);
+	}
+});
+
 addEventListener('on_paint', (gr) => { // Make it flash 3 times
 	if (callbacksListener.highlight) {
 		gr.FillSolidRect(0, 0, window.Width, window.Height, callbacksListener.transparency);
@@ -298,11 +312,11 @@ addEventListener('on_paint', (gr) => { // Make it flash 3 times
 	}
 	if (callbacksListener.step && callbacksListener.step < 6) {
 		callbacksListener.highlight = !!(callbacksListener.step % 2);
-		if (callbacksListener.step === 6) {callbacksListener.step = 0; callbacksListener.highlight = false;}
-		else if (!callbacksListener.highlight) {callbacksListener.step++;}
-		setTimeout(() => {window.Repaint();} , 600);
+		if (callbacksListener.step === 6) { callbacksListener.step = 0; callbacksListener.highlight = false; }
+		else if (!callbacksListener.highlight) { callbacksListener.step++; }
+		setTimeout(() => { window.Repaint(); }, 600);
 	}
 });
 
 // Notify the other panels
-setTimeout(() => {window.NotifyOthers('xxx-scripts: panel name reply', window.Name);}, 1000);
+setTimeout(() => { window.NotifyOthers('xxx-scripts: panel name reply', window.Name); }, 1000);
