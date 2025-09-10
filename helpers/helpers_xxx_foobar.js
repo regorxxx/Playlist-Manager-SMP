@@ -13,16 +13,14 @@ include('helpers_xxx_console.js');
 	Panels
 */
 
-function compareVersions(from, to, bNum = true) {
+function compareVersions(from, to) {
 	if (typeof from === 'string') { from = from.split('.'); }
 	if (typeof to === 'string') { to = to.split('.'); }
-	if (bNum) {
-		if (to.length > 3) { to.length = 3; }
-		if (from.length > 3) { from.length = 3; }
-	}
 	for (let i = 0; i < to.length; ++i) {
 		if (to[i] !== from[i]) {
-			return to[i].localeCompare(from[i], void (0), { numeric: true }) < 0;
+			return typeof from[i] === 'undefined'
+				? false
+				: to[i].localeCompare(from[i], void (0), { numeric: true }) < 0;
 		}
 	}
 	return true;

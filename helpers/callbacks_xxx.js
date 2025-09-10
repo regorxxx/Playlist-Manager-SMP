@@ -1,5 +1,5 @@
 'use strict';
-//07/08/25
+//10/09/25
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, registerAllCallbacks */
 
@@ -293,7 +293,7 @@ addEventListener('on_notify_data', (name, info) => {
 addEventListener('on_key_down', (k) => {
 	if (k === 0x12) { // BUG: Windows alt key is never released properly on windows 11 (VK_ALT)
 		/* global isCompatible:readable */
-		if (typeof isCompatible !== 'undefined' && (isCompatible('4.0.5', 'jsplitter') || utils.Version.startsWith('3.') && isCompatible('3.7.5', 'jsplitter') || isCompatible('1.6.2.25.10.06', 'smp'))) { return; }
+		if (typeof isCompatible !== 'undefined' && (isCompatible('4.0.5', 'jsplitter') || utils.Version.startsWith('3.') && isCompatible('3.7.5', 'jsplitter') || isCompatible('1.6.2.25.09.10', 'smp'))) { return; }
 		const id = setInterval(() => {
 			if (!utils.IsKeyPressed(k)) {
 				clearInterval(id);
