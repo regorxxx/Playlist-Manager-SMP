@@ -161,6 +161,7 @@
 - UI: greatly improved repainting performance using columns, values are now cached when possible. This heavily affected the mouse movement smoothness over the panel.
 - UI: improved general panel painting performance repainting only needed parts.
 - UI: new tooltip settings implementation will reset to defaults any current tooltip related setting upon first init.
+- UI: up/down buttons fading when mouse is not over the panel.
 - Backup: delayed panel JSON backup and recycling on startup, which sometimes slowed down foobar2000 startup in old machines.
 - Readme: updated readme pdf with latest changes, tips about 'Shift + Win + R. Click' shortcut (see above) and JSplitter install instructions.
 - Helpers: updated helpers.

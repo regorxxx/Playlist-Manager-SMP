@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/09/25
+//11/09/25
 
 /* exported _list */
 
@@ -1447,8 +1447,13 @@ function _list(x, y, w, h) {
 			gr.GdiDrawText(this.dragDropText, panel.fonts.normal, panel.colors.text, x, y, sizeX, sizeY, CENTRE);
 		}
 		// Up/down buttons
-		this.up_btn.paint(gr, this.up_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8) : panel.colors.text);
-		this.down_btn.paint(gr, this.down_btn.hover ? blendColors(RGB(...toRGB(panel.colors.text)), this.colors.selectedPlaylist, 0.8) : panel.colors.text);
+		const upDownColor = (btn) => btn.hover
+			? blendColors(panel.colors.text, this.colors.selectedPlaylist, 0.8)
+			: this.bMouseOver && this.inRange
+				? panel.colors.text
+				: blendColors(panel.colors.text, panelBgColor, 0.8);
+		this.up_btn.paint(gr, upDownColor(this.up_btn));
+		this.down_btn.paint(gr, upDownColor(this.down_btn));
 	};
 
 	this.repaint = (bForce, mode = 'all', coords = null) => {
@@ -1712,7 +1717,7 @@ function _list(x, y, w, h) {
 
 	this.move = (x, y, mask, bDragDrop = false, bTooltipOverride = false) => {
 		this.bIsDragDrop = bDragDrop;
-		this.bMouseOver = true;
+		this.bMouseOver = x !== -1 && y !== -1;
 		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
 		this.my = y;

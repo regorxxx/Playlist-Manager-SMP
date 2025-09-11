@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//11/09/25
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -301,7 +301,6 @@ function _listButtons(bSetup = false) {
 		}
 		[this.x, this.y, this.w, this.h] = retrieveBarCoords();
 		if (this.config.bToolbar) { // When not merged with panels
-
 			gr.FillSolidRect(this.x, this.y, this.w, this.h, opaqueColor(this.config.toolbarColor, this.config.toolbarTransparency));
 			gr.DrawLine(this.x, this.y, this.w, this.y, 1, opaqueColor(this.config.toolbarColor, Math.min(this.config.toolbarTransparency * 10, 100)));
 		}
