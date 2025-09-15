@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/09/25
+//15/09/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -6376,6 +6376,17 @@ function importSettingsMenu() {
 		entryText: 'Share UI settings...', func: () => {
 			list.shareUiSettings('popup');
 		}
+	});
+	menu.newSeparator();
+	menu.newEntry({
+		entryText: 'Configure panel...', func: () => window.ShowConfigureV2()
+	});
+	menu.newEntry({
+		entryText: 'Panel properties...', func: () => window.ShowProperties()
+	});
+	menu.newSeparator();
+	menu.newEntry({
+		entryText: 'Reload panel', func: () => window.Reload()
 	});
 	return menu;
 }
