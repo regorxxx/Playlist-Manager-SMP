@@ -85,7 +85,7 @@ unified toolbar wih special UI related settings (see above):
 	+ Last.fm:
 		- .\buttons\buttons_lastfm_tools.js
 	+ Tagging:
-		- .\buttons\buttons_tags_tagger.js
+		- .\buttons\buttons_tags_batch_tagger.js
 		- .\buttons\buttons_tags_save_tags.js
 	+ Autobackup:
 		- .\buttons\buttons_others_autobackup.js

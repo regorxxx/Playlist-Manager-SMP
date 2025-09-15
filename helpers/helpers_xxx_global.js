@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/25
+//12/09/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -156,8 +156,8 @@ function addGlobValues(type) {
 			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%2003_FIRST_PLAYED%,%FIRST_PLAYED%,99999)';
 			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%2003_LAST_PLAYED%,%LAST_PLAYED%,0)';
 			globTags.sortAdded = '$if3(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
-			globTags.isLoved = '$ifequal(' + _t(globTags.feedback) + ',1,1$not(0),0)';
-			globTags.isHated = '$ifequal(' + _t(globTags.feedback) + ',-1,1$not(0),0)';
+			globTags.isLoved = '$ifequal($if2(' + _t(globTags.feedback) + ',%2003_LOVED%),1,1$not(0),0)';
+			globTags.isHated = '$ifequal($if2(' + _t(globTags.feedback) + '%2003_LOVED%),-1,1$not(0),0)';
 			globTags.isRatedTop = '$ifequal(' + _t(globTags.rating) + ',5,1$not(0),0)';
 			globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 			globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
@@ -183,7 +183,7 @@ function addGlobValues(type) {
 			globQuery.remDuplBias = globTags.rating +
 				'|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => _t(t)).join('\', \'') + '),live),0,0,1)' +
 				'|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => _t(t)).join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)' +
-				'|$add(1,' + _t(globTags.feedback) + ')' +
+				'|$add(1,$if2(' + _t(globTags.feedback) + ',%2003_LOVED%))' +
 				'|$if($strstr($lower(%TRACKDSP%),best),1,0)' +
 				'|$ifgreater(%__CHANNELS%,2,0,1)' +
 				'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
@@ -261,7 +261,7 @@ const globQuery = {
 	lastPlayedFunc: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% #QUERYEXPRESSION#))',
 	firstPlayedFunc: '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%FIRST_PLAYED% PRESENT AND %FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#))',
 	addedFunc: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_ADDED% PRESENT AND %2003_ADDED% #QUERYEXPRESSION#) OR (%2003_ADDED% MISSING AND %ADDED% #QUERYEXPRESSION#))',
-	loved: globTags.feedback + ' IS 1',
+	loved: globTags.feedback + ' IS 1 OR %2003_LOVED% IS 1',
 	hated: globTags.feedback + ' IS -1'
 };
 
