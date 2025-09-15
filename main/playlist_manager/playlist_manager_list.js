@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/09/25
+//15/09/25
 
 /* exported _list */
 
@@ -975,7 +975,11 @@ function _list(x, y, w, h) {
 		const rows = Math.min(this.items, this.rows);
 		const rowWidth = this.x + this.w; // Ignore separator UI config
 		const selWidth = this.bShowSep ? this.x + this.w - this.categoryHeaderOffset : this.x + this.w; // Adjust according to UI config
-		if ((this.y + yOffset + (rows - 1) * panel.rowHeight) > (this.h - bottomToolbar.h)) { this.size({ bMaintainFocus: false }); } // Fix incorrect sizing on init
+		// Workaround for incorrect sizing on init
+		if ((this.y + yOffset + (rows - 1) * panel.rowHeight) > (this.h - bottomToolbar.h)) {
+			this.size({ bMaintainFocus: false });
+			if (this.uiElements['Scrollbar'].enabled && scrollBar) { scrollBar.resize(); }
+		}
 		// Highlight
 		if (idxHighlight !== -1) {
 			const currSelIdx = idxHighlight;
@@ -2833,7 +2837,7 @@ function _list(x, y, w, h) {
 				let rgExp, re, flag;
 				try {
 					[, re, flag] = term.startsWith('/')
-						? term.match(/\/(.*)\/([a-z]+)?/)
+						? term.match(/\/(.*)\/([gimsuy]+)?/)
 						: this.searchMethod.bRegExp
 							? [void (0), term, 'i']
 							: [];
