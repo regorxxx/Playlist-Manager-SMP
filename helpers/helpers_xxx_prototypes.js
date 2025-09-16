@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//16/09/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
 
@@ -279,10 +279,12 @@ Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 				: bCapitalizeKeys
 					? capitalize(entry[0].toString())
 					: entry[0].toString()
-			) + ': ' + (typeof entry[1] === 'object'
-				? entry[1] === null ? 'null' : entry[1].toStr()
-				: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
-			);
+			) + ': ' +
+				(
+					typeof entry[1] === 'object'
+						? entry[1] === null ? 'null' : entry[1].toStr()
+						: typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
+				);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
@@ -426,14 +428,16 @@ function isStringWeak(str) {
 	return (typeof str === 'string');
 }
 
-String.prototype.replaceLast = function replaceLast(word, newWord) { // NOSONAR
-	const n = word === null || typeof word === 'undefined' || isStringWeak(word) && !word.length
-		? -1
-		: this.lastIndexOf(word);
-	return n === -1
-		? this
-		: this.slice(0, n) + this.slice(n).replace(word, newWord);
-};
+if (!String.prototype.replaceLast) {
+	String.prototype.replaceLast = function replaceLast(word, newWord) { // NOSONAR
+		const n = word === null || typeof word === 'undefined' || isStringWeak(word) && !word.length
+			? -1
+			: this.lastIndexOf(word);
+		return n === -1
+			? this
+			: this.slice(0, n) + this.slice(n).replace(word, newWord);
+	};
+}
 
 if (!String.prototype.replaceAll) {
 	String.prototype.replaceAll = function replaceAll(word, newWord) { // NOSONAR
@@ -450,19 +454,23 @@ if (!String.prototype.replaceAll) {
 	};
 }
 
-String.prototype.count = function count(c) { // NOSONAR
-	let result = 0, i = 0;
-	for (i; i < this.length; i++) {
-		if (this[i] == c) { result++; }
-	}
-	return result;
-};
+if (!String.prototype.count) {
+	String.prototype.count = function count(c) { // NOSONAR
+		let result = 0, i = 0;
+		for (i; i < this.length; i++) {
+			if (this[i] == c) { result++; }
+		}
+		return result;
+	};
+}
 
-const cutRegex = {};
-String.prototype.cut = function cut(c) { // NOSONAR
-	if (!cutRegex.hasOwnProperty(c)) { cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g'); } // eslint-disable-line no-prototype-builtins
-	return this.replace(cutRegex[c], '$1\u2026'); // ...
-};
+if (!String.prototype.cut) {
+	const cutRegex = {};
+	String.prototype.cut = function cut(c) { // NOSONAR
+		if (!cutRegex.hasOwnProperty(c)) { cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g'); } // eslint-disable-line no-prototype-builtins
+		return this.replace(cutRegex[c], '$1\u2026'); // ...
+	};
+}
 
 function matchCase(text, pattern, bFirst = true) {
 	let result = '';
@@ -578,55 +586,69 @@ function isArrayEqual(arrayA, arrayB) {
 	return new Set(arrayA).isEqual(new Set(arrayB));
 }
 
-// Cycles an array n times. Changes the original variable.
-// Use this to change states on buttons on click. So every click changes to next state.
-// arr = [0,1,2]; arr.rotate(1); -> [1,2,0]
-Array.prototype.rotate = (function () { // NOSONAR
-	const unshift = Array.prototype.unshift, splice = Array.prototype.splice;
-	return function (count) {
-		const len = this.length >>> 0;
-		count = count >> 0;
-		unshift.apply(this, splice.call(this, count % len, len));
+if (!Array.prototype.rotate) {
+	// Cycles an array n times. Changes the original variable.
+	// Use this to change states on buttons on click. So every click changes to next state.
+	// arr = [0,1,2]; arr.rotate(1); -> [1,2,0]
+	Array.prototype.rotate = (function () { // NOSONAR
+		const unshift = Array.prototype.unshift, splice = Array.prototype.splice;
+		return function (count) {
+			const len = this.length >>> 0;
+			count = count >> 0;
+			unshift.apply(this, splice.call(this, count % len, len));
+			return this;
+		};
+	})();
+}
+
+if (!Array.prototype.swap) {
+	Array.prototype.swap = function (i, j) { // NOSONAR
+		[this[i], this[j]] = [this[j], this[i]];
 		return this;
 	};
-})();
+}
 
-Array.prototype.swap = function (i, j) { // NOSONAR
-	[this[i], this[j]] = [this[j], this[i]];
-	return this;
-};
+if (!Array.prototype.shuffle) {
+	// Randomly rearranges the items in an array, modifies original. Fisher-Yates algorithm
+	Array.prototype.shuffle = function () { // NOSONAR
+		let last = this.length, n;
+		while (last > 0) {
+			n = Math.floor(Math.random() * last--);
+			[this[n], this[last]] = [this[last], this[n]];
+		}
+		return this;
+	};
+}
 
-// Randomly rearranges the items in an array, modifies original. Fisher-Yates algorithm
-Array.prototype.shuffle = function () { // NOSONAR
-	let last = this.length, n;
-	while (last > 0) {
-		n = Math.floor(Math.random() * last--);
-		[this[n], this[last]] = [this[last], this[n]];
-	}
-	return this;
-};
+if (!Array.prototype.move) {
+	// [3, 4, 5, 1, 2].move(3, 0, 2) // => [1, 2, 3, 4, 5]
+	Array.prototype.move = function (from, to, on) { // NOSONAR
+		this.splice(to, 0, this.splice(from, on)[0]);
+	};
+}
 
-// [3, 4, 5, 1, 2].move(3, 0, 2) // => [1, 2, 3, 4, 5]
-Array.prototype.move = function (from, to, on) { // NOSONAR
-	this.splice(to, 0, this.splice(from, on)[0]);
-};
+if (!Array.prototype.chunk) {
+	// [1, 2, 3, 4, 5, 6, 7].chunk(3) // => [[1, 2, 3], [4, 5, 6], [7]]
+	Array.prototype.chunk = function (chunkSize) { // NOSONAR
+		const R = [];
+		for (let i = 0; i < this.length; i += chunkSize) {
+			R.push(this.slice(i, i + chunkSize));
+		}
+		return R;
+	};
+}
 
-// [1, 2, 3, 4, 5, 6, 7].chunk(3) // => [[1, 2, 3], [4, 5, 6], [7]]
-Array.prototype.chunk = function (chunkSize) { // NOSONAR
-	const R = [];
-	for (let i = 0; i < this.length; i += chunkSize) {
-		R.push(this.slice(i, i + chunkSize));
-	}
-	return R;
-};
+if (!Array.prototype.joinLast) {
+	Array.prototype.joinLast = function joinLast(separator, lastSeparator) { // NOSONAR
+		return this.join(separator || '').replaceLast(separator, lastSeparator);
+	};
+}
 
-Array.prototype.joinLast = function joinLast(separator, lastSeparator) { // NOSONAR
-	return this.join(separator || '').replaceLast(separator, lastSeparator);
-};
-
-Array.prototype.average = function (fn) { // NOSONAR
-	return (fn ? this.map(fn) : this).reduce((prev, curr, i) => prev + (curr - prev) / (i + 1), 0);
-};
+if (!Array.prototype.average) {
+	Array.prototype.average = function (fn) { // NOSONAR
+		return (fn ? this.map(fn) : this).reduce((prev, curr, i) => prev + (curr - prev) / (i + 1), 0);
+	};
+}
 
 function zeroOrVal(e) {
 	return (e === 0 || e);
@@ -655,76 +677,92 @@ Array.shuffle = function () {
 	return [...arguments];
 };
 
-// Join array and split lines every n elements joined
-Array.prototype.joinEvery = function (sep, n, newLineChar = '\n') { // NOSONAR
-	const len = this.length;
-	let i = 0;
-	let str = '';
-	while (i < len) {
-		str += (str.length ? sep + newLineChar : '') + this.slice(i, i + n).join(sep);
-		i += n;
-	}
-	return str;
-};
+if (!Array.prototype.joinEvery) {
+	// Join array and split lines every n elements joined
+	Array.prototype.joinEvery = function (sep, n, newLineChar = '\n') { // NOSONAR
+		const len = this.length;
+		let i = 0;
+		let str = '';
+		while (i < len) {
+			str += (str.length ? sep + newLineChar : '') + this.slice(i, i + n).join(sep);
+			i += n;
+		}
+		return str;
+	};
+}
 
-Array.prototype.joinUpToChars = function (sep, chars) { // NOSONAR
-	let str = '';
-	str = this.join(sep);
-	if (str.length > chars) { str = str.slice(0, chars) + '...'; }
-	return str;
-};
+if (!Array.prototype.joinUpToChars) {
+	Array.prototype.joinUpToChars = function (sep, chars) { // NOSONAR
+		let str = '';
+		str = this.join(sep);
+		if (str.length > chars) { str = str.slice(0, chars) + '...'; }
+		return str;
+	};
+}
 
-Array.prototype.multiIndexOf = function (el) { // NOSONAR
-	const idxArr = [];
-	for (let i = this.length - 1; i >= 0; i--) {
-		if (this[i] === el) { idxArr.unshift(i); }
-	}
-	return idxArr;
-};
+if (!Array.prototype.multiIndexOf) {
+	Array.prototype.multiIndexOf = function (el) { // NOSONAR
+		const idxArr = [];
+		for (let i = this.length - 1; i >= 0; i--) {
+			if (this[i] === el) { idxArr.unshift(i); }
+		}
+		return idxArr;
+	};
+}
 
-Array.prototype.partialSort = function (order, bOptimize = true) { // NOSONAR
-	if (bOptimize) { order = [...(new Set(order).intersection(new Set(this)))]; }
-	const profiler = new FbProfiler('partialSort');
-	const orderIndex = [];
-	const orderLen = order.length;
-	for (let i = 0; i < orderLen; i++) {
-		const idx = this.indexOf(order[i]);
-		if (idx != -1) { orderIndex[i] = idx; }
-	}
-	const orderIdxLen = orderIndex.length;
-	for (let i = 0; i < orderIdxLen; i++) {
-		let indexI = orderIndex[i];
-		for (let j = i + 1; j < orderIdxLen; j++) {
-			const indexJ = orderIndex[j];
-			if (indexI > indexJ) {
-				[this[indexI], this[indexJ]] = [this[indexJ], this[indexI]];
-				[orderIndex[i], orderIndex[j]] = [indexJ, indexI];
-				indexI = indexJ;
+if (!Array.prototype.partialSort) {
+	Array.prototype.partialSort = function (order, bOptimize = true) { // NOSONAR
+		if (bOptimize) { order = [...(new Set(order).intersection(new Set(this)))]; }
+		const profiler = new FbProfiler('partialSort');
+		const orderIndex = [];
+		const orderLen = order.length;
+		for (let i = 0; i < orderLen; i++) {
+			const idx = this.indexOf(order[i]);
+			if (idx != -1) { orderIndex[i] = idx; }
+		}
+		const orderIdxLen = orderIndex.length;
+		for (let i = 0; i < orderIdxLen; i++) {
+			let indexI = orderIndex[i];
+			for (let j = i + 1; j < orderIdxLen; j++) {
+				const indexJ = orderIndex[j];
+				if (indexI > indexJ) {
+					[this[indexI], this[indexJ]] = [this[indexJ], this[indexI]];
+					[orderIndex[i], orderIndex[j]] = [indexJ, indexI];
+					indexI = indexJ;
+				}
 			}
 		}
+		profiler.Print();
+		return this;
+	};
+}
+
+if (!Array.prototype.schwartzianSort) {
+	// https://en.wikipedia.org/wiki/Schwartzian_transform
+	// or (a, b) => a[1].localeCompare(b[1], void(0), { sensitivity: 'base' })
+	Array.prototype.schwartzianSort = function (processFunc, sortFunc = (a, b) => a[1] - b[1]) { // NOSONAR
+		return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
+	};
+}
+
+if (!Array.prototype.radixSort || !!Array.prototype.radixSortInt) {
+	// https://github.com/aldo-gutierrez/bitmasksorterJS
+	const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
+	if (!Array.prototype.radixSort) {
+		Array.prototype.radixSort = function (bReverse = false, start, end) { // NOSONAR
+			return bReverse //NOSONAR
+				? bitmask.sortNumber.call(this, this, start, end).reverse()
+				: bitmask.sortNumber.call(this, this, start, end);
+		};
 	}
-	profiler.Print();
-	return this;
-};
-
-// https://en.wikipedia.org/wiki/Schwartzian_transform
-// or (a, b) => a[1].localeCompare(b[1], void(0), { sensitivity: 'base' })
-Array.prototype.schwartzianSort = function (processFunc, sortFunc = (a, b) => a[1] - b[1]) { // NOSONAR
-	return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
-};
-
-// https://github.com/aldo-gutierrez/bitmasksorterJS
-const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
-Array.prototype.radixSort = function (bReverse = false, start, end) { // NOSONAR
-	return bReverse //NOSONAR
-		? bitmask.sortNumber.call(this, this, start, end).reverse()
-		: bitmask.sortNumber.call(this, this, start, end);
-};
-Array.prototype.radixSortInt = function (bReverse = false, start, end) { // NOSONAR
-	return bReverse //NOSONAR
-		? bitmask.sortInt.call(this, this, start, end).reverse()
-		: bitmask.sortInt.call(this, this, start, end);
-};
+	if (!Array.prototype.radixSortInt) {
+		Array.prototype.radixSortInt = function (bReverse = false, start, end) { // NOSONAR
+			return bReverse //NOSONAR
+				? bitmask.sortInt.call(this, this, start, end).reverse()
+				: bitmask.sortInt.call(this, this, start, end);
+		};
+	}
+}
 
 function cartesian(...args) {
 	const r = [], max = args.length - 1;
@@ -746,68 +784,84 @@ function cartesian(...args) {
 	Sets
 */
 
-Set.prototype.isSuperset = function (subset) { // NOSONAR
-	for (const elem of subset) {
-		if (!this.has(elem)) {
-			return false;
+if (!Set.prototype.isSuperset) {
+	Set.prototype.isSuperset = function (subset) { // NOSONAR
+		for (const elem of subset) {
+			if (!this.has(elem)) {
+				return false;
+			}
 		}
-	}
-	return true;
-};
+		return true;
+	};
+}
 
-Set.prototype.union = function (setB) { // NOSONAR
-	const union = new Set(this);
-	for (const elem of setB) {
-		union.add(elem);
-	}
-	return union;
-};
-
-Set.prototype.intersection = function (setB) { // NOSONAR
-	const intersection = new Set();
-	for (const elem of setB) {
-		if (this.has(elem)) {
-			intersection.add(elem);
+if (!Set.prototype.union) {
+	Set.prototype.union = function (setB) { // NOSONAR
+		const union = new Set(this);
+		for (const elem of setB) {
+			union.add(elem);
 		}
-	}
-	return intersection;
-};
+		return union;
+	};
+}
 
-Set.prototype.difference = function (setB) { // NOSONAR
-	const difference = new Set(this);
-	for (const elem of setB) {
-		difference.delete(elem);
-	}
-	return difference;
-};
+if (!Set.prototype.intersection) {
+	Set.prototype.intersection = function (setB) { // NOSONAR
+		const intersection = new Set();
+		for (const elem of setB) {
+			if (this.has(elem)) {
+				intersection.add(elem);
+			}
+		}
+		return intersection;
+	};
+}
 
-Set.prototype.isEqual = function (subset) { // NOSONAR
-	return (this.size === subset.size && this.isSuperset(subset));
-};
+if (!Set.prototype.difference) {
+	Set.prototype.difference = function (setB) { // NOSONAR
+		const difference = new Set(this);
+		for (const elem of setB) {
+			difference.delete(elem);
+		}
+		return difference;
+	};
+}
 
-Set.prototype.unionSize = function (setB) { // NOSONAR
-	let size = 0;
-	for (const elem of setB) {
-		if (!this.has(elem)) { size++; }
-	}
-	return size;
-};
+if (!Set.prototype.isEqual) {
+	Set.prototype.isEqual = function (subset) { // NOSONAR
+		return (this.size === subset.size && this.isSuperset(subset));
+	};
+}
 
-Set.prototype.intersectionSize = function (setB) { // NOSONAR
-	let size = 0;
-	for (const elem of setB) {
-		if (this.has(elem)) { size++; }
-	}
-	return size;
-};
+if (!Set.prototype.unionSize) {
+	Set.prototype.unionSize = function (setB) { // NOSONAR
+		let size = 0;
+		for (const elem of setB) {
+			if (!this.has(elem)) { size++; }
+		}
+		return size;
+	};
+}
 
-Set.prototype.differenceSize = function (setB) { // NOSONAR
-	let size = this.size;
-	for (const elem of setB) {
-		if (this.has(elem)) { size--; }
-	}
-	return size;
-};
+if (!Set.prototype.intersectionSize) {
+	Set.prototype.intersectionSize = function (setB) { // NOSONAR
+		let size = 0;
+		for (const elem of setB) {
+			if (this.has(elem)) { size++; }
+		}
+		return size;
+	};
+}
+
+if (!Set.prototype.differenceSize) {
+	Set.prototype.differenceSize = function (setB) { // NOSONAR
+		let size = this.size;
+		for (const elem of setB) {
+			if (this.has(elem)) { size--; }
+		}
+		return size;
+	};
+}
 
 /*
 	Numbers
