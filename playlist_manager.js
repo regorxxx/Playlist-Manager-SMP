@@ -117,24 +117,24 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
 let properties = {
-	playlistsPath: ['Tracked playlists folder', '.\\profile\\playlist_manager\\', { func: isString, portable: true }, '.\\profile\\playlist_manager\\'],
-	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }, 3000], // Safety limit 0 or > 1000
+	playlistsPath: ['Tracked playlists folder', '.\\profile\\playlist_manager\\', { func: isString, portable: true }],
+	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }], // Safety limit 0 or > 1000
 	fplRules: ['fpl playlists behavior', JSON.stringify({
 		bLockOnLoad: true,
 		bNonTrackedSupport: true,
-	})],
-	extension: ['Extension used when saving playlists', '.m3u8', { func: (val) => writablePlaylistFormats.has(val) }, '.m3u8'],
-	autoUpdate: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.', 5000, { func: isInt, range: [[0, 0], [200, Infinity]] }, 5000], // Safety limit 0 or > 200
-	bShowSize: ['Show playlist size', false, { func: isBoolean }, false],
-	bUpdateAutoPlaylist: ['Update AutoPlaylist size by query output', true, { func: isBoolean }, true],
-	bUseUUID: ['Use UUIDs along playlist names (not available for .pls playlists).', false, { func: isBoolean }, false],
-	optionUUID: ['UUID current method', '', { func: isStringWeak }, ''],
-	methodState: ['Current sorting method. Allowed: ', '', { func: isStringWeak }, ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	sortState: ['Current sorting order. Allowed: ', '', { func: isStringWeak }, ''], // Description and value filled on list.init() with defaults. Just a placeholder
-	bSaveFilterStates: ['Save filtering between sessions', true, { func: isBoolean }, true],
-	filterStates: ['Current filters: ', '0,0'], // Description and value filled on list.init() with defaults. Just a placeholder
-	bShowSep: ['Show name/category separators: ', true, { func: isBoolean }, true],
-	listColors: ['List items color codes', '', { func: isStringWeak }, ''],
+	}), { func: isJSON }],
+	extension: ['Extension used when saving playlists', '.m3u8', { func: (val) => writablePlaylistFormats.has(val) }],
+	autoUpdate: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.', 5000, { func: isInt, range: [[0, 0], [200, Infinity]] }], // Safety limit 0 or > 200
+	bShowSize: ['Show playlist size', false, { func: isBoolean }],
+	bUpdateAutoPlaylist: ['Update AutoPlaylist size by query output', true, { func: isBoolean }],
+	bUseUUID: ['Use UUIDs along playlist names (not available for .pls playlists).', false, { func: isBoolean }],
+	optionUUID: ['UUID current method', '', { func: isStringWeak }],
+	methodState: ['Current sorting method. Allowed: ', '', { func: isStringWeak }], // Description and value filled on list.init() with defaults. Just a placeholder
+	sortState: ['Current sorting order. Allowed: ', '', { func: isStringWeak }], // Description and value filled on list.init() with defaults. Just a placeholder
+	bSaveFilterStates: ['Save filtering between sessions', true, { func: isBoolean }],
+	filterStates: ['Current filters: ', '0,0', { func: isString }], // Description and value filled on list.init() with defaults. Just a placeholder
+	bShowSep: ['Show name/category separators: ', true, { func: isBoolean }],
+	listColors: ['List items color codes', '', { func: isStringWeak }],
 	infoPopups: ['Info popups fired once', JSON.stringify({
 		firstInit: false,
 		fplFormat: false,
@@ -146,15 +146,15 @@ let properties = {
 		networkDrive: false,
 		plsMirror: false,
 		autoTags: false
-	})],
-	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }, false],
+	}), { func: isJSON }],
+	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }],
 	scrollSettings: ['Scroll settings', JSON.stringify({
 		bSmooth: true,
 		bReversed: false,
 		unit: null
-	})],
+	}), { func: isJSON }],
 	_placeholder1_: ['', false, { func: isBoolean }, false],
-	categoryState: ['Current categories showed.', '[]'], // Description and value filled on list.init() with defaults. Just a placeholder
+	categoryState: ['Current categories showed.', JSON.stringify([]), { func: isJSON }], // Description and value filled on list.init() with defaults. Just a placeholder
 	tooltipSettings: ['Tooltip settings', JSON.stringify({
 		bShowTips: true,
 		show: {
@@ -168,18 +168,18 @@ let properties = {
 			tags: true,
 			trackSize: true,
 		}
-	})],
-	bAutoLoadTag: ['Automatically add \'bAutoLoad\' to all playlists', false, { func: isBoolean }, false],
-	bAutoLockTag: ['Automatically add \'bAutoLock\' to all playlists', false, { func: isBoolean }, false],
-	bAutoCustomTag: ['Automatically add custom tags to all playlists', false, { func: isBoolean }, false],
-	autoCustomTag: ['Custom tags to add', '', { func: isStringWeak }, ''],
-	bApplyAutoTags: ['Apply actions based on tags (lock, load)', false, { func: isBoolean }, false],
-	bAutoTrackTag: ['Enable auto-tagging for added tracks (at autosave)', false, { func: isBoolean }, false],
-	bAutoTrackTagAlways: ['Enable auto-tagging for added tracks (always)', false, { func: isBoolean }, false],
-	bAutoTrackTagPls: ['Auto-tagging for standard playlists', false, { func: isBoolean }, false],
-	bAutoTrackTagLockPls: ['Auto-tagging for locked playlists', false, { func: isBoolean }, false],
-	bAutoTrackTagAutoPls: ['Auto-tagging for AutoPlaylists', false, { func: isBoolean }, false],
-	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false, { func: isBoolean }, false],
+	}), { func: isJSON }],
+	bAutoLoadTag: ['Automatically add \'bAutoLoad\' to all playlists', false, { func: isBoolean }],
+	bAutoLockTag: ['Automatically add \'bAutoLock\' to all playlists', false, { func: isBoolean }],
+	bAutoCustomTag: ['Automatically add custom tags to all playlists', false, { func: isBoolean }],
+	autoCustomTag: ['Custom tags to add', '', { func: isStringWeak }],
+	bApplyAutoTags: ['Apply actions based on tags (lock, load)', false, { func: isBoolean }],
+	bAutoTrackTag: ['Enable auto-tagging for added tracks (at autosave)', false, { func: isBoolean }],
+	bAutoTrackTagAlways: ['Enable auto-tagging for added tracks (always)', false, { func: isBoolean }],
+	bAutoTrackTagPls: ['Auto-tagging for standard playlists', false, { func: isBoolean }],
+	bAutoTrackTagLockPls: ['Auto-tagging for locked playlists', false, { func: isBoolean }],
+	bAutoTrackTagAutoPls: ['Auto-tagging for AutoPlaylists', false, { func: isBoolean }],
+	bAutoTrackTagAutoPlsInit: ['Auto-tagging for AutoPlaylists at startup', false, { func: isBoolean }],
 	converterPreset: ['Converter Preset list', JSON.stringify([
 		{ name: '', dsp: '...', tf: '.\\%FILENAME%.mp3', path: '', playlistOutPath: '', extension: '' }, // Export all at same folder
 		{ name: '', dsp: '...', tf: '.\\' + _t(globTags.artist) + '\\%ALBUM%\\%TRACK% - %TITLE%.mp3', path: '', playlistOutPath: '', extension: '' }, // Transfer library
@@ -189,72 +189,71 @@ let properties = {
 		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same root than music (without a folder)
 		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same folder than music
 		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\' + globTags.artistAlbumTrackTitleSanitize + '.mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8', bExtendedM3U: false } // FiiO music
-	])],
-	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }, true],
-	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }, false],
-	bBOM: ['Save files as UTF8 with BOM', false, { func: isBoolean }, false],
-	removeDuplicatesAutoPls: ['AutoPlaylists, Remove duplicates by', JSON.stringify(globTags.remDupl), { func: isJSON }, JSON.stringify(globTags.remDupl)],
-	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true, { func: isBoolean }, true],
-	bShowMenuHeader: ['Show header on playlist menus', true, { func: isBoolean }, true],
-	bCopyAsync: ['Copy tracks asynchronously on export', true, { func: isBoolean }, true],
-	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }, true],
-	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }, true],
-	bQuickSearchName: ['Quick-search forced by name', true, { func: isBoolean }, true],
-	_placeholder3_: ['', false, { func: isBoolean }, false],
-	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }, true],
-	bSavingXsp: ['Auto-save .xsp playlists', false, { func: isBoolean }, false],
-	bAllPls: ['Track UI-only playlists', false, { func: isBoolean }, false],
-	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !isNaN, range: [[0, 0], [1000, Infinity]] }, Infinity], // Infinity calls it on unload and playlist changes only
-	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }, 50],
-	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }, 'Playlist type,Lock state'],
-	bSavingDefExtension: ['Try to save playlists always as default format', true, { func: isBoolean }, true],
-	_placeholder4_: ['', false, { func: isBoolean }, false],
-	bOpenOnExport: ['Open folder on export actions', true, { func: isBoolean }, true],
-	bShowIcons: ['Show playlist icons', true, { func: isBoolean }, true],
+	]), { func: isJSON }],
+	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }],
+	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }],
+	bBOM: ['Save files as UTF8 with BOM', false, { func: isBoolean }],
+	removeDuplicatesAutoPls: ['AutoPlaylists, Remove duplicates by', JSON.stringify(globTags.remDupl), { func: isJSON }],
+	bRemoveDuplicatesAutoPls: ['AutoPlaylists, filtering enabled', true, { func: isBoolean }],
+	bShowMenuHeader: ['Show header on playlist menus', true, { func: isBoolean }],
+	bCopyAsync: ['Copy tracks asynchronously on export', true, { func: isBoolean }],
+	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }],
+	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }],
+	bQuickSearchName: ['Quick-search forced by name', true, { func: isBoolean }],
+	_placeholder3_: ['', false, { func: isBoolean }],
+	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }],
+	bSavingXsp: ['Auto-save .xsp playlists', false, { func: isBoolean }],
+	bAllPls: ['Track UI-only playlists', false, { func: isBoolean }],
+	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !isNaN, range: [[0, 0], [1000, Infinity]] }], // Infinity calls it on unload and playlist changes only
+	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }],
+	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }],
+	bSavingDefExtension: ['Try to save playlists always as default format', true, { func: isBoolean }],
+	_placeholder4_: ['', false, { func: isBoolean }],
+	bOpenOnExport: ['Open folder on export actions', true, { func: isBoolean }],
+	bShowIcons: ['Show playlist icons', true, { func: isBoolean }],
 	playlistIcons: ['Playlist icons codes (Font Awesome)', JSON.stringify(
 		Object.fromEntries(Object.entries(playlistDescriptors).map((plsPair) => {
 			const key = plsPair[0];
 			const icon = plsPair[1].icon ? plsPair[1].icon.charCodeAt(0).toString(16) : null;
 			const iconBg = plsPair[1].iconBg ? plsPair[1].iconBg.charCodeAt(0).toString(16) : null;
 			return [key, { icon, iconBg }];
-		})))
-	],
-	iDynamicMenus: ['Show dynamic menus', 1, { func: isInt, range: [[0, 2]] }, 1],
+		}))), { func: isJSON }],
+	iDynamicMenus: ['Show dynamic menus', 1, { func: isInt, range: [[0, 2]] }],
 	lShortcuts: ['L. click modifiers', JSON.stringify({
 		Ctrl: 'Copy selection to playlist',
 		Shift: 'Load / show playlist',
 		'Ctrl + Shift': 'Clone playlist in UI',
 		'Single Click': '- None -',
 		'Double Click': 'Load / show playlist'
-	})],
+	}), { func: isJSON }],
 	mShortcuts: ['M. click modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: 'Multiple selection (range)',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Multiple selection'
-	})],
-	bMultMenuTag: ['Automatically add \'bMultMenu\' to all playlists', false],
-	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }, ''],
-	lBrainzEncrypt: ['Encrypt ListenBrainz user token', false, { func: isBoolean }, false],
-	bLookupMBIDs: ['Lookup for missing track MBIDs', true, { func: isBoolean }, true],
-	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching', true, { func: isBoolean }, true],
-	activePlsStartup: ['Active playlist on startup', '', { func: isStringWeak }, ''],
-	bBlockUpdateAutoPls: ['Block panel while updating AutoPlaylists', false, { func: isBoolean }, false],
-	bQuickSearchNext: ['Quick-search jump to next item when letter is pressed twice', true, { func: isBoolean }, true],
-	bQuickSearchCycle: ['Quick-search cycling when no more items found', true, { func: isBoolean }, true],
+	}), { func: isJSON }],
+	bMultMenuTag: ['Automatically add \'bMultMenu\' to all playlists', false, { func: isBoolean }],
+	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }],
+	lBrainzEncrypt: ['Encrypt ListenBrainz user token', false, { func: isBoolean }],
+	bLookupMBIDs: ['Lookup for missing track MBIDs', true, { func: isBoolean }],
+	bAdvTitle: ['AutoPlaylists, duplicates RegExp title matching', true, { func: isBoolean }],
+	activePlsStartup: ['Active playlist on startup', '', { func: isStringWeak }],
+	bBlockUpdateAutoPls: ['Block panel while updating AutoPlaylists', false, { func: isBoolean }],
+	bQuickSearchNext: ['Quick-search jump to next item when letter is pressed twice', true, { func: isBoolean }],
+	bQuickSearchCycle: ['Quick-search cycling when no more items found', true, { func: isBoolean }],
 	mShortcutsHeader: ['M. click (header) modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: '- None -',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Multiple selection (all)'
-	})],
+	}), { func: isJSON }],
 	lShortcutsHeader: ['L. click (header) modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: '- None -',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Show current / playing playlist',
 		'Double Click': 'Cycle categories'
-	})],
+	}), { func: isJSON }],
 	showMenus: ['Show menus configuration', JSON.stringify({
 		'Playlist\'s items menu': false,
 		'Category': true,
@@ -270,7 +269,7 @@ let properties = {
 		'Folders': true,
 		'Statistics mode': true,
 		'Queue handling': true
-	})],
+	}), { func: isJSON }],
 	searchMethod: ['Search settings', JSON.stringify({
 		bName: true,
 		bTags: true,
@@ -289,7 +288,7 @@ let properties = {
 		bMetaQuery: true,
 		dragDropPriority: ['bPath', 'bQuery', 'bMetaTracks'],
 		text: '',
-	})],
+	}), { func: isJSON }],
 	uiElements: ['UI elements', JSON.stringify({
 		'Scrollbar': { enabled: true },
 		'Search filter': { enabled: true },
@@ -308,18 +307,18 @@ let properties = {
 				'Help': { enabled: true, position: 6 },
 			}
 		}
-	})],
-	bSetup: ['Setup mode', true, { func: isBoolean }, true],
-	iDoubleClickTimer: ['Double click timer', 375, { func: isInt }, 375],
+	}), { func: isJSON }],
+	bSetup: ['Setup mode', true, { func: isBoolean }],
+	iDoubleClickTimer: ['Double click timer', 375, { func: isInt }],
 	rShortcuts: ['R. click modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: 'Playlist\'s items menu',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Manage playlist'
-	})],
-	bSpotify: ['ListenBrainz export to Spotify', true, { func: isBoolean }, true],
-	iTooltipTimer: ['Tooltip timer', 375 * 2, { func: isInt }, 375 * 2],
-	bGlobalShortcuts: ['Enable FX global shortcuts', true, { func: isBoolean }, true],
+	}), { func: isJSON }],
+	bSpotify: ['ListenBrainz export to Spotify', true, { func: isBoolean }],
+	iTooltipTimer: ['Tooltip timer', 375 * 2, { func: isInt }],
+	bGlobalShortcuts: ['Enable FX global shortcuts', true, { func: isBoolean }],
 	columns: ['Columns options', JSON.stringify({
 		labels: ['size', 'duration'],
 		width: ['auto', 'auto'],
@@ -330,17 +329,17 @@ let properties = {
 		line: 'none',
 		autoWidth: 'entire list',
 		sizeUnits: { prefix: '', suffix: ' \u266A' } // Musical note
-	})],
-	bSkipMenuTag: ['Automatically add \'bSkipMenuTag\' to all playlists', false, { func: isBoolean }, false],
-	bLiteMode: ['Lite mode enabled? (foo_plorg replacement)', false, { func: isBoolean }, false],
-	bAutoSelTitle: ['Playlist\'s name from selection using ARTIST[ - ALBUM]', false, { func: isBoolean }, false],
+	}), { func: isJSON }],
+	bSkipMenuTag: ['Automatically add \'bSkipMenuTag\' to all playlists', false, { func: isBoolean }],
+	bLiteMode: ['Lite mode enabled? (foo_plorg replacement)', false, { func: isBoolean }],
+	bAutoSelTitle: ['Playlist\'s name from selection using ARTIST[ - ALBUM]', false, { func: isBoolean }],
 	folders: ['Folders options', JSON.stringify({
 		maxDepth: 3,
 		bShowSize: true,
 		bShowSizeDeep: true,
 		icons: { open: chars.downOutline, closed: chars.leftOutline }
-	})],
-	bStatsMode: ['Stats mode enabled', false, { func: isBoolean }, false],
+	}), { func: isJSON }],
+	bStatsMode: ['Stats mode enabled', false, { func: isBoolean }],
 	statsConfig: ['Stats mode configuration', JSON.stringify({
 		// graph: {/* type, borderWidth, point */},
 		// dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot*/},
@@ -348,68 +347,45 @@ let properties = {
 		margin: { left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15) },
 		// grid = {x: {/* show, color, width */}, y: {/* ... */}},
 		// axis = {x: {/* show, color, width, ticks, labels, key, bSingleLabels */}, y: {/* ... */}}
-	})],
-	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }, globSettings.bAutoUpdateCheck],
-	panelUUID: ['Panel UUID', UUID(), { func: isUUID }, UUID()],
-	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }, true],
-	deleteBehavior: ['Playlist file delete behavior', 0, { func: (n) => n >= 0 && n <= 2 }, 0],
+	}), { func: isJSON }],
+	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }],
+	panelUUID: ['Panel UUID', UUID(), { func: isUUID }],
+	bAutoRefreshXsp: ['Automatically refresh XSP playlists sources', true, { func: isBoolean }],
+	deleteBehavior: ['Playlist file delete behavior', 0, { func: (n) => n >= 0 && n <= 2 }],
 	delays: ['Panel loading delays', JSON.stringify({
 		playlistLoading: 5000,
 		startupPlaylist: 2000,
 		dynamicMenus: 2500,
 		playlistCache: 6000,
-	})],
+	}), { func: isJSON }],
 	statusIcons: ['Playlist status icons', JSON.stringify({
 		active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: true },
 		playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
 		loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true }
-	})],
-	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }, false],
-	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone])],
-	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist])],
-	bMultiple: ['Partial multi-value tag matching', true, { func: isBoolean }, true],
+	}), { func: isJSON }],
+	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }],
+	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone]), { func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }],
+	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), { func: isJSON }],
+	bMultiple: ['Partial multi-value tag matching', true, { func: isBoolean }],
 	folderRules: ['Send new playlists to folders', JSON.stringify({
 		externalUi: '',
 		internalUi: '',
 		plsFromSel: '',
 		others: ''
-	})],
-	bRwLock: ['Not overwrite playlists loading new files', false, { func: isBoolean }, false],
+	}), { func: isJSON }],
+	bRwLock: ['Not overwrite playlists loading new files', false, { func: isBoolean }],
 	logOpt: ['Logging options', JSON.stringify({
 		autoSize: false,
 		loadPls: false,
 		profile: false,
 		mainMenu: false
-	})],
+	}), { func: isJSON }],
 	xspfRules: ['XSPF playlists behavior', JSON.stringify({
 		bFallbackComponentXSPF: false,
 		bLoadNotTrackedItems: false,
-	})],
+	}), { func: isJSON }],
 };
-properties['scrollSettings'].push({ func: isJSON }, properties['scrollSettings'][1]);
-properties['converterPreset'].push({ func: isJSON }, properties['converterPreset'][1]);
-properties['playlistIcons'].push({ func: isJSON }, properties['playlistIcons'][1]);
-properties['mShortcuts'].push({ func: isJSON }, properties['mShortcuts'][1]);
-properties['lShortcuts'].push({ func: isJSON }, properties['lShortcuts'][1]);
-properties['tooltipSettings'].push({ func: isJSON }, properties['tooltipSettings'][1]);
-properties['rShortcuts'].push({ func: isJSON }, properties['rShortcuts'][1]);
-properties['lShortcutsHeader'].push({ func: isJSON }, properties['lShortcutsHeader'][1]);
-properties['mShortcutsHeader'].push({ func: isJSON }, properties['mShortcutsHeader'][1]);
-properties['showMenus'].push({ func: isJSON }, properties['showMenus'][1]);
-properties['searchMethod'].push({ func: isJSON }, properties['searchMethod'][1]);
-properties['uiElements'].push({ func: isJSON }, properties['uiElements'][1]);
-properties['columns'].push({ func: isJSON }, properties['columns'][1]);
-properties['folders'].push({ func: isJSON }, properties['folders'][1]);
-properties['statsConfig'].push({ func: isJSON }, properties['statsConfig'][1]);
-properties['delays'].push({ func: isJSON }, properties['delays'][1]);
-properties['statusIcons'].push({ func: isJSON }, properties['statusIcons'][1]);
-properties['importPlaylistFilters'].push({ func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }, properties['importPlaylistFilters'][1]);
-properties['importPlaylistMask'].push({ func: isJSON }, properties['importPlaylistMask'][1]);
-properties['folderRules'].push({ func: isJSON }, properties['folderRules'][1]);
-properties['logOpt'].push({ func: isJSON }, properties['logOpt'][1]);
-properties['xspfRules'].push({ func: isJSON }, properties['xspfRules'][1]);
-properties['infoPopups'].push({ func: isJSON }, properties['infoPopups'][1]);
-properties['fplRules'].push({ func: isJSON }, properties['fplRules'][1]);
+Object.keys(properties).forEach(p => properties[p].push(properties[p][1]));
 setProperties(properties, 'plm_');
 {	// Check if is a setup or normal init
 	let prop = getPropertiesPairs(properties, 'plm_');
