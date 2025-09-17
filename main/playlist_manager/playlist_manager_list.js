@@ -856,7 +856,7 @@ function _list(x, y, w, h) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', panel.colors.highlight, panelBgColor, panelBgColor, this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
+						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', blendColors(panel.colors.headerButtons, panelBgColor, 0.1), panelBgColor, panelBgColor, this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
 						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
 							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
 							if (this.searchMethod.text.length) {
@@ -7397,7 +7397,7 @@ function _list(x, y, w, h) {
 			bDone = true;
 		}
 		if (this.searchInput) {
-			this.searchInput.textColor = panel.colors.highlight;
+			this.searchInput.textColor = blendColors(panel.colors.headerButtons, panel.getColorBackground(), 0.1);
 			this.searchInput.backColor = panel.getColorBackground();
 			this.searchInput.borderColor = panel.getColorBackground();
 			this.searchInput.backSelectionColor = this.colors.selectedPlaylist;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/09/25
+//17/09/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -54,6 +54,8 @@ include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global ListenBrainz:readable */
 include('main\\playlist_manager\\playlist_manager_statistics.js');
 /* global _listStatistics:readable */
+include('main\\window\\window_xxx_dynamic_colors.js');
+/* global dynamicColors:readable, mostContrastColor:readable */
 include('main\\window\\window_xxx_scrollbar.js');
 /* global _scrollBar:readable */
 
@@ -153,7 +155,7 @@ let properties = {
 		bReversed: false,
 		unit: null
 	}), { func: isJSON }],
-	_placeholder1_: ['', false, { func: isBoolean }, false],
+	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
 	categoryState: ['Current categories showed.', JSON.stringify([]), { func: isJSON }], // Description and value filled on list.init() with defaults. Just a placeholder
 	tooltipSettings: ['Tooltip settings', JSON.stringify({
 		bShowTips: true,
@@ -1039,6 +1041,45 @@ if (!list.properties.bSetup[1]) {
 				if (info) { list.applyUiSettings(clone(info)); }
 				break;
 			}
+			case 'Playlist Manager: set colors': { // Needs an array of 5 colors or an object {background, text, headerButtons, buttonsText, buttonsToolbar }
+				if (info && list.properties.bOnNotifyColors[1]) {
+					const colors = clone(info);
+					const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'text', 'headerButtons', 'buttonsText', 'buttonsToolbar'].indexOf(key)];
+					const hasColor = (key) => typeof getColor(key) !== 'undefined';
+					if (panel.colors.mode.colorMode !== 0 && hasColor('background')) {
+						panel.colors.customBackground = getColor('background');
+					}
+					if (panel.colors.bCustomText && hasColor('text')) { panel.colors.customText = getColor('text'); }
+					if (panel.colors.headerButtons !== -1 && hasColor('headerButtons')) { panel.colors.headerButtons = getColor('headerButtons'); }
+					if (panel.colors.buttonsTextColor !== -1 && hasColor('buttonsText')) { panel.colors.buttonsTextColor = getColor('buttonsText'); }
+					if (panel.colors.buttonsToolbarColor !== -1 && hasColor('buttonsToolbar')) { panel.colors.buttonsToolbarColor = getColor('buttonsToolbar'); }
+					panel.colorsChanged();
+					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
+					list.repaint();
+				}
+				break;
+			}
+			case 'Colors: set color scheme':
+			case 'Playlist Manager: set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
+				if (info && list.properties.bOnNotifyColors[1]) {
+					const { main, sec, note, mainAlt, secAlt } = dynamicColors( // eslint-disable-line no-unused-vars
+						clone(info),
+						panel.getColorBackground(),
+						true
+					);
+					if (panel.colors.mode.colorMode !== 0) {
+						panel.colors.customBackground = main;
+					}
+					if (panel.colors.bCustomText) { panel.colors.customText = blendColors(mostContrastColor(panel.getColorBackground()).color, sec, 0.3); }
+					if (panel.colors.headerButtons !== -1) { panel.colors.headerButtons = blendColors(mostContrastColor(panel.getColorBackground()).color, note, 0.6); }
+					if (panel.colors.buttonsTextColor !== -1) { panel.colors.buttonsTextColor = blendColors(mostContrastColor(panel.getColorBackground()).color, note, 0.6); }
+					if (panel.colors.buttonsToolbarColor !== -1) { panel.colors.buttonsToolbarColor = mainAlt; }
+					panel.colorsChanged();
+					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
+					list.repaint();
+				}
+				break;
+			}
 		}
 	});
 
@@ -1436,6 +1477,13 @@ if (!list.properties.bSetup[1]) {
 			keyListener.bShift = keyListener.bCtrl = false;
 		}
 	}, 500)();
+
+	if (list.properties.bOnNotifyColors[1]) { // Ask color-servers at init
+		setTimeout(() => {
+			window.NotifyOthers('Colors: ask color scheme', 'Playlist Manager: set color scheme');
+			window.NotifyOthers('Colors: ask colors', 'Playlist Manager: set colors');
+		}, 1000);
+	}
 
 	stats.attachCallbacks();
 } else {
