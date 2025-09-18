@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/08/25
+//18/09/25
 
 /* exported _menu */
 
@@ -181,7 +181,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name getLastEntry
 	 * @returns {MenuEntry?}
 	 */
-	this.getLastEntry = () => { return (entryArr.length !== 0 ? entryArr[entryArr.length - 1] : null); };
+	this.getLastEntry = () => entryArr.length !== 0 ? entryArr[entryArr.length - 1] : null;
 	/**
 	 * Checks if last entry matches a name by type
 	 *
@@ -189,12 +189,21 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @memberof _menu
 	 * @name isLastEntry
 	 * @param {string} name - Entry name for lookup
-	 * @param {('entry'|'cond'|'menu')} [type] - [='entry'] Entry type.
+	 * @param {('entry'|'cond'|'menu'|'sep')} [type] - [='entry'] Entry type.
 	 * @returns {boolean}
 	 */
 	this.isLastEntry = (name, type = 'entry') => {
 		const last = this.getLastEntry();
-		return last && ((type === 'entry' || type === 'cond' && last.condFunc) && last.entryText === name || type === 'menu' && last.bIsMenu && last.menuName === name);
+		if (last) {
+			if (type === 'entry' || type === 'cond' && last.condFunc) {
+				return last.entryText === name;
+			} else if (type === 'menu' && last.bIsMenu) {
+				return last.menuName === name;
+			} else if (type === 'sep') {
+				return this.isSeparator(last);
+			}
+		}
+		return false;
 	};
 	/**
 	 * Returns if last entry is a separator
@@ -205,7 +214,51 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name isLastEntrySep
 	 */
 	this.isLastEntrySep = void (0); // Defined so JSDOC works properly
-	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry('sep'); } });
+	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry(void(0), 'sep'); } });
+	/**
+	 * Gets last menu entry created from specific submenu.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name getLastEntryFrom
+	 * @param {string} menuName - Menu name for lookup
+	 * @returns {MenuEntry?}
+	 */
+	this.getLastEntryFrom = (menuName) => this.getEntries().filter((entry) => entry.subMenuFrom === menuName).reverse()[0] || null;
+	/**
+	 * Checks if last entry from specific subMenu matches a name by type
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name isLastEntryFrom
+	 * @param {string} name - Entry name for lookup
+	 * @param {string} menuName - Menu name for lookup
+	 * @param {('entry'|'cond'|'menu'|'sep')} [type] - [='entry'] Entry type.
+	 * @returns {boolean}
+	 */
+	this.isLastEntryFrom = (name, menuName, type = 'entry') => {
+		const last = this.getLastEntryFrom(menuName);
+		if (last) {
+			if (type === 'entry' || type === 'cond' && last.condFunc) {
+				return last.entryText === name;
+			} else if (type === 'menu' && last.bIsMenu) {
+				return last.menuName === name;
+			} else if (type === 'sep') {
+				return this.isSeparator(last);
+			}
+		}
+		return false;
+	};
+	/**
+	 * Returns if last entry from specific submenu is a separator
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name isLastEntrySepFrom
+	 * @param {string} menuName - Menu name for lookup
+	 * @returns {boolean}
+	 */
+	this.isLastEntrySepFrom = (menuName) => this.isLastEntryFrom(void(0), menuName, 'sep');
 	/**
 	 * Gets all submenu entries, but those created by conditional entries are not set yet!
 	 *
@@ -300,16 +353,13 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			menuError({ function: 'newMenu\n', menuName, subMenuFrom, flags, context, main, message: 'A menu can not be a contextual menu and main menu at the same time' });
 			throwError('A menu can not be a contextual menu and main menu at the same time');
 		}
-		if (bAddInvisibleIds) {
-			if (this.hasMenu(menuName, subMenuFrom)) {
-				menuError({ function: 'newMenu\n', menuName, subMenuFrom, flags, message: 'There is already another menu with same name and same root' });
-				throwError('There is already another menu with same name and same root');
-			} else if (this.hasMenu(menuName)) {
+		if (this.hasMenu(menuName)) {
+			if (bAddInvisibleIds) {
 				menuName += this.getNextId(); // At this point don't use other name than this!
+			} else {
+				menuError({ function: 'newMenu\n', menuName, subMenuFrom, flags, message: 'There is already another menu with same name' });
+				throwError('There is already another menu with same name');
 			}
-		} else if (this.hasMenu(menuName)) {
-			menuError({ function: 'newMenu\n', menuName, subMenuFrom, flags, message: 'There is already another menu with same name' });
-			throwError('There is already another menu with same name');
 		}
 		menuArr.push({ menuName, subMenuFrom });
 		if (menuArr.length > 1 || !bInit) { entryArr.push({ menuName, subMenuFrom, flags, bIsMenu: true, context, main }); }
@@ -352,7 +402,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		if (typeof entryText === 'string' && separator.test(entryText)) { func = null; flags = MF_GRAYED; }
 		if (bAddInvisibleIds) { entryText += this.getNextId(); } // At this point don't use other name than this!
 		entryArr.push({ entryText, func, menuName, flags, bIsMenu: false, data });
-		return entryArr[entryArr.length - 1];
+		return this.getLastEntry();
 	};
 	/**
 	 * Equivalent to .newEntry() but returns the menu object instead of entry name, for chaining purposes.
@@ -520,7 +570,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	this.newCondEntry = ({ entryText = '', condFunc }) => {
 		if (eTypeToStr.includes(typeof entryText)) { entryText = entryText.toString(); }
 		entryArr.push({ entryText, condFunc });
-		return entryArr[entryArr.length - 1];
+		return this.getLastEntry();
 	};
 	/**
 	 * Should only be called on .initMenu(), thus within other checkMenu entries, to check if another entry has a radius or boolean check. For ex. in a submenu with an entry to input custom values, can be used to discover if any of the predefined entries are already checked. Returns null if the entry check was not found, otherwise returns a boolean or a number (with the delta idx) for radius checks.
@@ -707,7 +757,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 					if ((idxA + delta) > idxB) { console.log('Menu-Framework-SMP: .checkMenu() - idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); }
 					try { menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta); }
 					catch (e) {
-						throw new Error(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tentryTextB:\t' + entryTextB + '\n\tentryNameB:\t' + entryNameB + '\n\tmenuName:\t' + menuName);
+						throwError(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tentryTextB:\t' + entryTextB + '\n\tentryNameB:\t' + entryNameB + '\n\tmenuName:\t' + menuName);
 					}
 					return delta;
 				}
@@ -719,7 +769,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 					if (typeof bVal !== 'boolean') { console.log('Menu-Framework-SMP: .checkMenu() - idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
 					try { menuMap.get(menuName).CheckMenuItem(idxA, bVal); }
 					catch (e) {
-						throw new Error(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tmenuName:\t' + menuName);
+						throwError(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tmenuName:\t' + menuName);
 					}
 					return bVal;
 				}
@@ -792,7 +842,11 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		entryArr.forEach((entry) => {
 			if (Object.hasOwn(entry, 'condFunc')) { return; } // Skip conditional entries (they are already done)
 			if (!entry.bIsMenu) { // To main menu
-				this.addToMenu({ entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags });
+				try {
+					this.addToMenu({ entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags });
+				} catch (e) {
+					throwError(e.message + '\n\tentryText:\t' + entry.entryText + '\n\tmenuName:\t' + entry.menuName + '\n\tmenuName:\t' + entry.menuName);
+				}
 			} else { // Append sub-menus
 				const subMenuName = isFunction(entry.menuName) ? entry.menuName() : entry.menuName;
 				const bMainMenu = subMenuName === this.getMainMenuName() && entry.subMenuFrom === '';
@@ -817,14 +871,24 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 							if (count > 0) {
 								contextMenu = fb.CreateContextMenuManager();
 								contextMenu.InitContext(playlistItems);
-								contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
+								const child = this.getMenu(subMenuName);
+								try { contextMenu.BuildMenu(child, contextIdx, contextIdx + idxInitialOffset); }
+								catch (e) {
+									if (!child) { throwError('Missing child menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
+									else { throwError(e.message + '\n\tmenuName:\t' + subMenuName); }
+								}
 							} else {
 								this.addToMenu({ entryText: '   - No tracks -   ', menuName: subMenuName, flags: MF_GRAYED });
 							}
 						} else if (type === 'playlist' || type === 'nowplaying') { // InitContextPlaylist()
 							contextMenu = fb.CreateContextMenuManager();
 							contextMenu.InitContextPlaylist();
-							contextMenu.BuildMenu(this.getMenu(subMenuName), contextIdx, contextIdx + idxInitialOffset);
+							const child = this.getMenu(subMenuName);
+							try { contextMenu.BuildMenu(child, contextIdx, contextIdx + idxInitialOffset); }
+							catch (e) {
+								if (!child) { throwError('Missing child menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
+								else { throwError(e.message + '\n\tmenuName:\t' + subMenuName); }
+							}
 						}
 						if (contextMenu) {
 							contextIdx += idxInitialOffset;
@@ -838,14 +902,28 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 						if (mainAllowed.has(type)) {
 							mainMenu = fb.CreateMainMenuManager();
 							mainMenu.Init(type);
-							mainMenu.BuildMenu(this.getMenu(subMenuName), mainIdx, idxInitialOffset);
+							const child = this.getMenu(subMenuName);
+							try { mainMenu.BuildMenu(child, mainIdx, idxInitialOffset); }
+							catch (e) {
+								if (!child) { throwError('Missing child menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom); }
+								else { throwError(e.message + '\n\tmenuName:\t' + subMenuName); }
+							}
 						}
 						if (mainMenu) {
 							mainIdx += idxInitialOffset;
 							if (!bMainMenu) { mainMenuMap.set(subMenuName, mainMenu); }
 						}
 					}
-					if (!bMainMenu) { this.getMenu(subMenuName).AppendTo(this.getMenu(subMenuFrom), flags, subMenuNameSanitized); }
+					if (!bMainMenu) {
+						const from = this.getMenu(subMenuFrom);
+						const child = this.getMenu(subMenuName);
+						try { child.AppendTo(from, flags, subMenuNameSanitized); }
+						catch (e) {
+							if (!from) { throwError('Missing parent menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
+							else if (!child) { throwError('Missing child menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
+							else { throwError(e.message + '\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom); }
+						}
+					}
 				}
 			}
 		});
@@ -921,7 +999,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 					contextIdx += idxInitialOffset;
 				});
 			}
-			// Contextual menus
+			// Main menus
 			if (!bDone && currIdx >= mainIdxInitial) {
 				let mainIdx = mainIdxInitial;
 				mainMenuMap.forEach((mainMenu) => {
@@ -1114,6 +1192,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	*/
 	function throwError(message) {
 		if (!bThrowErrors) { return; }
+		message = message + '\n\n' + new Error().stack;
 		const requests = window.WebRequests;
 		if (requests && requests.size && typeof abortWebRequests !== 'undefined') {
 			abortWebRequests(false);
