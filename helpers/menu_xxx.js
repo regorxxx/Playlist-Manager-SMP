@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/09/25
+//20/09/25
 
 /* exported _menu */
 
@@ -214,7 +214,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name isLastEntrySep
 	 */
 	this.isLastEntrySep = void (0); // Defined so JSDOC works properly
-	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry(void(0), 'sep'); } });
+	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry(void (0), 'sep'); } });
 	/**
 	 * Gets last menu entry created from specific submenu.
 	 *
@@ -258,7 +258,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {string} menuName - Menu name for lookup
 	 * @returns {boolean}
 	 */
-	this.isLastEntrySepFrom = (menuName) => this.isLastEntryFrom(void(0), menuName, 'sep');
+	this.isLastEntrySepFrom = (menuName) => this.isLastEntryFrom(void (0), menuName, 'sep');
 	/**
 	 * Gets all submenu entries, but those created by conditional entries are not set yet!
 	 *
@@ -392,15 +392,17 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {Function?} [o.func] - [=null] Function associated to entry and called on l. click.
 	 * @param {stringLike|() => String} [o.menuName] - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
 	 * @param {Number|() => Number} [o.flags] - [=MF_STRING] Flags for the text
+	 * @param {() =>(Boolean)} [checkFunc] - [=null] For Boolean checks  of a single entry only, just return true/false.
 	 * @param {any?} [o.data] - [=null] Arbitrary data attached to the entry
 	 * @param {Boolean} [o.bAddInvisibleIds] -  [=false] Entries can have duplicate names without problems, but it may be difficult to use duplicate names for lookup. Invisible Ids may be automatically added to the entry name in such case setting this to true.
 	 * @returns {MenuEntry}
 	 */
-	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, data = null, bAddInvisibleIds = false }) => {
+	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, checkFunc = null, data = null, bAddInvisibleIds = false, }) => {
 		menuName = this.cleanEntryName(menuName);
 		entryText = this.cleanEntryName(entryText);
 		if (typeof entryText === 'string' && separator.test(entryText)) { func = null; flags = MF_GRAYED; }
 		if (bAddInvisibleIds) { entryText += this.getNextId(); } // At this point don't use other name than this!
+		if (checkFunc) { this.newCheckMenu(menuName, entryText, null, checkFunc); }
 		entryArr.push({ entryText, func, menuName, flags, bIsMenu: false, data });
 		return this.getLastEntry();
 	};
@@ -410,11 +412,13 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @kind method
 	 * @memberof _menu
 	 * @name concatEntry
-	 * @param {object} o - Arguments
+	 * @param {object} o - Arguments. It also supports an array of arguments, one per entry to add.
 	 * @returns {this}
 	 */
 	this.concatEntry = (...args) => {
-		return this.newEntry(args[0]) && this;
+		return Array.isArray(args[0])
+			? args[0].every((arg) => this.newEntry(arg)) && this
+			: this.newEntry(args[0]) && this;
 	};
 	/**
 	 * Creates an separator attached to any parent menu.
