@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/09/25
+//21/09/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -5449,7 +5449,7 @@ function createMenuRightTop() {
 				list.properties.bAutoUpdateCheck[1] = !list.properties.bAutoUpdateCheck[1];
 				overwriteProperties(list.properties);
 				if (list.properties.bAutoUpdateCheck[1]) {
-					if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
+					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
 					setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
 				}
 			}
@@ -5458,7 +5458,7 @@ function createMenuRightTop() {
 		menu.newSeparator(menuName);
 		menu.newEntry({
 			menuName, entryText: 'Check for updates...', func: () => {
-				if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
+				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
 					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Playlist manager: Update check'));
 			}

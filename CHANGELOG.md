@@ -66,6 +66,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- Auto-update: fix error including a file when enabling auto-updates if it was previously disabled.
 
 ## [1.0.0-beta.1] - 2025-09-20
 ### Added
