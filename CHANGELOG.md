@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.1](#100-beta1---2025-09-20)
 - [0.19.0](#0190---2024-10-09)
 - [0.18.1](#0181---2024-08-13)
 - [0.18.0](#0180---2024-07-30)
@@ -61,6 +62,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.1] - 2025-09-25
 ### Added
 - AutoTags: new 'bMirrorChanges' tag which forces playlists reloading (if playlist was already loaded on UI) when the manager refreshes due to external changes. It may be used to mirror any change on files due to external software. Note this behavior may clash with changes made to playlists within foobar2000, since external changes always take precedence. There is not any kind of specific changes comparison, only the last modified date is checked.
 - Search: new setting to search within queries by string matching. i.e. you can look for 'Rock' within all AutoPlaylists queries, and display those which use that word.
@@ -1456,7 +1463,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.1...HEAD
+[1.0.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.19.0...v1.0.0-beta.1
 [0.19.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.1...v0.19.0
 [0.18.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.17.0...v0.18.0
