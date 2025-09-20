@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/09/25
+//20/09/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -4309,6 +4309,21 @@ function createMenuRightTop() {
 							);
 					});
 				});
+			}
+			menu.newSeparator(subMenuName);
+			{
+				const subMenuSecondName = menu.newMenu('Dynamic colors', subMenuName);
+				menu.newEntry({
+					menuName: subMenuSecondName, entryText: 'Listen to color-servers', func: () => {
+						list.properties.bOnNotifyColors[1] = !list.properties.bOnNotifyColors[1];
+						overwriteProperties(list.properties);
+						if (list.properties.bOnNotifyColors[1]) {
+							window.NotifyOthers('Colors: ask color scheme', 'Playlist Manager: set color scheme');
+							window.NotifyOthers('Colors: ask color', 'Playlist Manager: set colors');
+						}
+					}
+				});
+				menu.newCheckMenuLast(() => list.properties.bOnNotifyColors[1]);
 			}
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
