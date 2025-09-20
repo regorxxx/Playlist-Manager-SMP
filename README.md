@@ -187,7 +187,7 @@ Full documentation notes can be found at the <a href="https://github.com/regorxx
  3. [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki).
 
 ## Nightly releases
-Automatic package [built from GitHub](https://nightly.link/regorxxx/Playlist-Manager-SMP/workflows/build/main/file.zip) (using the latest commit).
+Automatic package [built from GitHub](https://nightly.link/regorxxx/Playlist-Manager-SMP/workflows/build/main/file.zip) (using the latest commit). Unzip file.zip and load the *-package.zip inside as package.
 
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Playlist-Manager-SMP.svg?include_prereleases
