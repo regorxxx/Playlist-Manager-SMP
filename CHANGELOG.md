@@ -67,7 +67,7 @@
 ### Removed
 ### Fixed
 
-## [1.0.0-beta.1] - 2025-09-25
+## [1.0.0-beta.1] - 2025-09-20
 ### Added
 - AutoTags: new 'bMirrorChanges' tag which forces playlists reloading (if playlist was already loaded on UI) when the manager refreshes due to external changes. It may be used to mirror any change on files due to external software. Note this behavior may clash with changes made to playlists within foobar2000, since external changes always take precedence. There is not any kind of specific changes comparison, only the last modified date is checked.
 - Search: new setting to search within queries by string matching. i.e. you can look for 'Rock' within all AutoPlaylists queries, and display those which use that word.
