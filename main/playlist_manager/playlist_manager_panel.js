@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/08/25
+//21/09/25
 
 /* exported _panel */
 
@@ -159,11 +159,11 @@ function _panel(customBackground = false, bSetup = false) {
 				this.imageBackground.handle = handle.RawPath;
 				this.imageBackground.art.id = id;
 			}
-			if (this.imageBackground.art.image && Number.isInteger(this.imageBackground.blur) && this.imageBackground.blur > 0) {
-				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
-			}
 			if (this.imageBackground.art.image) {
 				this.imageBackground.art.colors = JSON.parse(this.imageBackground.art.image.GetColourSchemeJSON(4));
+			}
+			if (this.imageBackground.art.image && Number.isInteger(this.imageBackground.blur) && this.imageBackground.blur > 0) {
+				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
 			}
 			return this.listObjects.map((item) => item.repaint());
 		}).catch(() => {
