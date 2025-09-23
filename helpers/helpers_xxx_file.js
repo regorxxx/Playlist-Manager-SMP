@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/09/25
+//22/09/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
 
@@ -284,7 +284,7 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 				try {
 					fso.CreateFolder(path);
 				} catch (e) {
-					console.log(parseWinApiError(e.message));
+					console.log('_createFolder: ' + folder + '\n\t ' + parseWinApiError(e.message));
 					return false;
 				}
 			}
@@ -301,7 +301,7 @@ function _deleteFile(file, bForce = true) {
 		try {
 			fso.DeleteFile(file, bForce);
 		} catch (e) {
-			console.log(parseWinApiError(e.message));
+			console.log('_deleteFile: ' + file + '\n\t ' + parseWinApiError(e.message));
 			return false;
 		}
 		return !(_isFile(file));
@@ -317,7 +317,7 @@ function _deleteFolder(folder, bForce = true) {
 		try {
 			fso.DeleteFolder(folder, bForce);
 		} catch (e) {
-			console.log(parseWinApiError(e.message));
+			console.log('_deleteFolder: ' + folder + '\n\t ' + parseWinApiError(e.message));
 			return false;
 		}
 		return !(_isFolder(folder));
@@ -338,7 +338,7 @@ function _renameFile(oldFilePath, newFilePath) {
 			try {
 				fso.MoveFile(oldFilePath, newFilePath);
 			} catch (e) {
-				console.log(parseWinApiError(e.message));
+				console.log('_renameFile: ' + oldFilePath + ' -> ' + newFilePath + '\n\t ' + parseWinApiError(e.message));
 				return false;
 			}
 			return _isFile(newFilePath);
@@ -361,7 +361,7 @@ function _renameFolder(oldFolderPath, newFolderPath) {
 			try {
 				fso.MoveFolder(oldFolderPath, newFolderPath);
 			} catch (e) {
-				console.log(parseWinApiError(e.message));
+				console.log('_renameFolder: ' + oldFolderPath + ' -> ' + newFolderPath + '\n\t ' + parseWinApiError(e.message));
 				return false;
 			}
 			return _isFolder(newFolderPath);
@@ -390,7 +390,7 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 			try {
 				bAsync ? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false) : fso.CopyFile(oldFilePath, newFilePath);
 			} catch (e) {
-				console.log(parseWinApiError(e.message));
+				console.log('_copyFile: ' + oldFilePath + ' -> ' + newFilePath + '\n\t ' + parseWinApiError(e.message));
 				return false;
 			}
 			return (bAsync ? true : (bTargetFolder || _isFile(newFilePath)) && (bWildCard || _isFile(oldFilePath))); // Must check afterwards for Async
@@ -413,7 +413,7 @@ function _copyFolder(oldFolderPath, newFolderPath, bAsync = false) {
 		try {
 			bAsync ? _runCmd('CMD /C COPY "' + oldFolderPath + '" "' + newFolderPath + '"', false) : fso.CopyFolder(oldFolderPath, newFolderPath);
 		} catch (e) {
-			console.log(parseWinApiError(e.message));
+			console.log('_copyFolder: ' + oldFolderPath + ' -> ' + newFolderPath + '\n\t ' + parseWinApiError(e.message));
 			return false;
 		}
 		return (bAsync ? true : _isFolder(newFolderPath) && _isFolder(source)); // Must check afterwards for Async
@@ -529,7 +529,7 @@ function _saveFSO(file, value, bUTF16) {
 			fileObj.Close();
 			return true;
 		} catch (e) {
-			console.log(parseWinApiError(e.message));
+			console.log('_saveFSO: ' + file + '\n\t ' + parseWinApiError(e.message));
 		}
 	}
 	console.log('Error saving to ' + file);
