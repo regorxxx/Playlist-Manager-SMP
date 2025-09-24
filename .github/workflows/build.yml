@@ -26,6 +26,8 @@ jobs:
             ${{ 'Playlist-Manager-SMP' == github.event.repository.name }} => '2'
             ${{ 'Not-a-Waveform-Seekbar-SMP' == github.event.repository.name }} => '3'
             ${{ 'Timeline-SMP' == github.event.repository.name }} => '4'
+            ${{ 'Volume-Seekbar-SMP' == github.event.repository.name }} => '5'
+            ${{ 'Infinity-Tools-SMP' == github.event.repository.name }} => '6'
       - uses: actions/checkout@v4.1.1
         if: ${{ steps.package.outputs.match != '0' }}
       - name: 'Create package'
