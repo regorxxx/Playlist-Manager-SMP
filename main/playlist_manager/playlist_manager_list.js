@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/09/25
+//24/09/25
 
 /* exported _list */
 
@@ -7302,7 +7302,7 @@ function _list(x, y, w, h) {
 		}
 	};
 
-	this.checkConfig = ({ bSilentSorting = false, bResetColors = false } = {}) => { // Forces right settings
+	this.checkConfig = ({ bSilentSorting = false, bResetColors = false, bPreferBgColor = false } = {}) => { // Forces right settings
 		let bDone = false;
 		// Check playlists path
 		if (!this.playlistsPath.endsWith('\\')) {
@@ -7375,25 +7375,30 @@ function _list(x, y, w, h) {
 			});
 			this.properties['listColors'][1] = convertObjectToString(this.colors);
 			// Delete unused values and save as is, then fill with missing colors without saving to properties
-			const bDark = isDark(panel.getColorBackground());
+			const bgColor = panel.getColorBackground();
+			const bDark = isDark(...toRGB(bgColor));
+			const textColorBw = bPreferBgColor || !panel.colors.bCustomText
+				? bDark ? invert(bgColor, true) : invert(invert(bgColor, true))
+				: invert(panel.colors.text, true);
+			const textColorBwAlt = invert(textColorBw);
 			const colors = {
 				autoPlaylist: bDark ? RGB(255, 41, 119) : RGB(255, 66, 113),
 				smartPlaylist: RGB(101, 204, 50),
 				selectedPlaylist: RGB(0, 128, 192),
 				uiPlaylist: this.bLiteMode
-					? bDark ? invert(panel.colors.text) : panel.colors.text
-					: bDark ? RGB(174, 212, 255) : RGB(14, 190, 255),
+					? bDark ? textColorBw : textColorBwAlt
+					: bDark ? RGB(163, 206, 255) : RGB(64, 140, 145),
 				lockedPlaylist: RGB(220, 20, 60),
-				folder: bDark ? invert(panel.colors.text) : panel.colors.text,
-				standardPlaylist: bDark ? invert(panel.colors.text) : panel.colors.text,
+				folder: bDark ? textColorBw : textColorBwAlt,
+				standardPlaylist: bDark ? textColorBw : textColorBwAlt,
 			};
-			if (!this.colors.autoPlaylist) { this.colors.autoPlaylist = blendColors(panel.colors.text, RGB(...toRGB(colors.autoPlaylist)), 0.8); }
-			if (!this.colors.smartPlaylist) { this.colors.smartPlaylist = blendColors(panel.colors.text, RGB(...toRGB(colors.smartPlaylist)), 0.8); }
-			if (!this.colors.selectedPlaylist) { this.colors.selectedPlaylist = RGB(...toRGB(colors.selectedPlaylist)); }
-			if (!this.colors.uiPlaylist) { this.colors.uiPlaylist = blendColors(panel.colors.text, RGB(...toRGB(colors.uiPlaylist)), 0.8); }
-			if (!this.colors.lockedPlaylist) { this.colors.lockedPlaylist = RGB(...toRGB(colors.lockedPlaylist)); }
-			if (!this.colors.folder) { this.colors.folder = colors.folder; }
-			if (!this.colors.standardPlaylist) { this.colors.standardPlaylist = blendColors(colors.standardPlaylist, panel.getColorBackground(), 0.1); }
+			if (!this.colors.autoPlaylist) { this.colors.autoPlaylist = blendColors(textColorBwAlt, colors.autoPlaylist, 0.8); }
+			if (!this.colors.smartPlaylist) { this.colors.smartPlaylist = blendColors(textColorBwAlt, colors.smartPlaylist, 0.8); }
+			if (!this.colors.selectedPlaylist) { this.colors.selectedPlaylist = colors.selectedPlaylist; }
+			if (!this.colors.uiPlaylist) { this.colors.uiPlaylist = blendColors(textColorBwAlt, colors.uiPlaylist, 0.8); }
+			if (!this.colors.lockedPlaylist) { this.colors.lockedPlaylist = colors.lockedPlaylist; }
+			if (!this.colors.folder) { this.colors.folder = blendColors(colors.folder, bgColor, 0.1); }
+			if (!this.colors.standardPlaylist) { this.colors.standardPlaylist = blendColors(colors.standardPlaylist, bgColor, 0.1); }
 			bDone = true;
 		}
 		if (this.searchInput) {
