@@ -12,10 +12,11 @@ Note SMP is only available as x32 release, but JSplitter supports both architect
 ADDITIONAL REQUISITES: (INSTALL ALL)
 ----------------------
 All my scripts require these fonts: Font Awesome 4, Segoe UI and Arial Unicode MS.
-They can be found at paths below within the scripts/package root folder:
-	- _resources\Font Awesome 4.ttf
-	- _resources\Segoe UI.zip\Windows [XX]\seguisym.ttf
-	- _resources\Arial Unicode MS.TTF
+	- Font Awesome 4.ttf
+	- Segoe UI.zip\Windows [XX]\seguisym.ttf
+	- Arial Unicode MS.ttf
+
+They can be found at: https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts
 
 WINE USERS:
 -----------
