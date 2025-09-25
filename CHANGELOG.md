@@ -66,8 +66,8 @@
 ### Changed
 - UI: color extraction from background art is now done before blur is applied. Done after blur returned gray tones in so many unintended cases.
 - UI: tweaked how default colors -if not specified by user- are applied according to background and dynamic colors (from artwork). Standard playlists, UI-only playlists and folders should now have more predictable dark/light grey tones and dynamically adjust to background and standard text color.
-- Installation: fonts are no longer bundled at '_resources' folder, but found at: https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts
 ### Removed
+- Installation: fonts are no longer bundled at '_resources' folder, but found at: https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts
 ### Fixed
 - Auto-update: fix error including a file when enabling auto-updates if it was previously disabled.
 
