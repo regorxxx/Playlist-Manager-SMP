@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/09/25
+//25/09/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,7 +8,7 @@
 
 /* exported delayAutoUpdate, plsRwLock */
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist Manager', { author: 'regorxxx', version: '1.0.0-beta.1', features: { drag_n_drop: true, grab_focus: true } }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist-Manager-SMP', { author: 'regorxxx', version: '1.0.0-beta.2', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
 /* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, globProfiler:readable, globQuery:readable */
@@ -17,7 +17,7 @@ include('helpers\\helpers_xxx_flags.js');
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable, clone:readable */
+/* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable, clone:readable, _ps:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_playlists.js');
@@ -469,11 +469,11 @@ setProperties(properties, 'plm_');
 			const newFile = folders.data + 'playlistManager_' + prop.panelUUID[1];
 			const suffix = ['.json', '_sorting.json', '_config.json', '.json.old', '_sorting.json.old', '_config.json.old'];
 			if (suffix.every((s) => { return !_isFile(file + s) || _copyFile(file + s, newFile + s); })) {
-				console.log(window.Name + ': creating UUID file from existing JSON ' + _p(file + '.json')); // DEBUG
+				console.log(window.Name + ' (Playlist-Manager-SMP): creating UUID file from existing JSON ' + _p(file + '.json')); // DEBUG
 				suffix.forEach((s) => _recycleFile(file + s, true));
 			} else {
 				suffix.forEach((s) => _recycleFile(newFile + s, true));
-				console.popup(window.Name + ': error creating UUID file from existing JSON\n\n' + file, window.Name);
+				console.popup(window.Name + _ps(window.ScriptInfo.Name) + ': error creating UUID file from existing JSON\n\n' + file, window.Name + _ps(window.ScriptInfo.Name));
 			}
 		}
 	}
@@ -505,7 +505,7 @@ let plsRwLock;
 		pop.enable(true, 'Setup', 'Setup required.\nPanel will be disabled during the process.');
 	} else if (!infoPopups.firstInit) {
 		if (folders.JsPackageDirs) { // Workaround for https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210
-			WshShell.Popup('This script has been installed as a package.\nBefore closing the \'Spider Monkey Panel\\JSplitter configuration window\' all popups must be closed, take your time reading them and following their instructions.\nAfterwards, close the window. Panel will be reloaded.', 0, window.Name, popup.info + popup.ok);
+			WshShell.Popup('This script has been installed as a package.\nBefore closing the \'Spider Monkey Panel\\JSplitter configuration window\' all popups must be closed, take your time reading them and following their instructions.\nAfterwards, close the window. Panel will be reloaded.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.info + popup.ok);
 			if (getPropertiesValues(properties, 'plm_').filter(Boolean).length === 0) { // At this point nothing works properly so just throw
 				throw new Error('READ THE POPUPS AND STOP CLICKING ON BUTTONS WITHOUT READING!!!\nOtherwise TT, aka GeoRrGiA-ReBorN\'s master, will try\nto kill you with their good jokes.\n\nReally, read the popups and make our lives easier. Try reinstalling the script.\n\nThanks :)');
 			}
@@ -644,7 +644,7 @@ let plsRwLock;
 			list.resetFilter();
 			// Import AutoPlaylists
 			if (list.isAutoPlaylistMissing()) {
-				const answer = WshShell.Popup('Import native AutoPlaylists into the manager?\n\nClicking no will treat them as UI-only playlists and cloning or later importing (which can be done at any point) would be required to edit them.', 0, window.Name, popup.question + popup.yes_no);
+				const answer = WshShell.Popup('Import native AutoPlaylists into the manager?\n\nClicking no will treat them as UI-only playlists and cloning or later importing (which can be done at any point) would be required to edit them.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					try { fb.RunMainMenuCommand('Save configuration'); } catch (e) { console.log(e); }
 					list.importAutoPlaylistsFromFoobar({ bSelect: false });
@@ -733,7 +733,7 @@ if (!list.properties.bSetup[1]) {
 			list.setInfoPopup('networkDrive');
 			const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 			const readme = _open(file, utf8);
-			fb.ShowPopupMessage(readme, window.Name);
+			fb.ShowPopupMessage(readme, window.Name + _ps(window.ScriptInfo.Name));
 		}
 	} else if (list.infoPopups.networkDrive) {
 		list.setInfoPopup('networkDrive', false);
@@ -991,7 +991,7 @@ if (!list.properties.bSetup[1]) {
 					if (now - plmInit.lastUpdate > 1000) { plmInit.lastUpdate = now; } else { plmInit.lastUpdate = now; return; } // Update once per time needed...
 					libItemsAbsPaths = [...info];
 					if (plmInit.interval) { clearInterval(plmInit.interval); plmInit.interval = null; }
-					console.log('precacheLibraryPaths: using paths from another instance.', window.Name);
+					console.log('precacheLibraryPaths: using paths from another instance.', window.Name + _ps(window.ScriptInfo.Name));
 					// Update rel paths if needed with new data
 					if (list.bRelativePath && list.playlistsPath.length) {
 						if (Object.hasOwn(libItemsRelPaths, list.playlistsPath) && libItemsRelPaths[list.playlistsPath].length !== libItemsAbsPaths.length) {
@@ -1025,7 +1025,7 @@ if (!list.properties.bSetup[1]) {
 			}
 			case 'xxx-scripts: lb token reply': {
 				if (callbacksListener.lBrainzTokenListener) {
-					console.log('lb token reply: using token from another instance.', window.Name, _p('from ' + info.name));
+					console.log('lb token reply: using token from another instance.', window.Name + _ps(window.ScriptInfo.Name), _p('from ' + info.name));
 					list.properties.lBrainzToken[1] = info.lBrainzToken;
 					list.properties.lBrainzEncrypt[1] = info.lBrainzEncrypt;
 					overwriteProperties(list.properties);

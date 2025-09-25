@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/08/25
+//25/09/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
@@ -7,7 +7,7 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
 /* global globQuery:readable, iStepsLibrary:readable, iDelayLibraryPLM:readable */
 include('helpers_xxx_prototypes.js');
-/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable, round:readable, toType:readable */
+/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable, round:readable, toType:readable, _ps:readable */
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
 include('helpers_xxx_tags.js');
@@ -956,7 +956,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				handlePlaylist[i] = poolItems[idx];
 				if (newLibItemsAbsPaths[idx].toLowerCase() !== filePaths[i] && (!newLibItemsRelPaths || newLibItemsRelPaths && newLibItemsRelPaths[idx].toLowerCase() !== filePaths[i])) { // Ensure the cache is up to date
 					handlePlaylist = null;
-					fb.ShowPopupMessage('The library cache is not up to date and is being rebuilt; the playlist will be loaded using the native Foobar2000 method if trying to load the playlist into the UI. You may abort it and try loading the playlist afterwards or wait.\n\n In any other case, wait for the cache to be rebuilt and execute the action again.', window.Name);
+					fb.ShowPopupMessage('The library cache is not up to date and is being rebuilt; the playlist will be loaded using the native Foobar2000 method if trying to load the playlist into the UI. You may abort it and try loading the playlist afterwards or wait.\n\n In any other case, wait for the cache to be rebuilt and execute the action again.', window.Name + _ps(window.ScriptInfo.Name));
 					break;
 				}
 				count++;

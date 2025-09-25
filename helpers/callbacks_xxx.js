@@ -1,5 +1,5 @@
 'use strict';
-//10/09/25
+//25/09/25
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, registerAllCallbacks */
 
@@ -263,7 +263,7 @@ const callbacksListener = {
 
 callbacksListener.checkPanelNames = function () {
 	if (!window.Name.length) {
-		console.popup('Panel has no name: "' + window.Name + '"\n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
+		console.popup('Panel has no name: "" (' + window.ScriptInfo.Name + ') \n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
 	} else {
 		this.listenNames = true;
 		window.NotifyOthers('xxx-scripts: panel name', window.Name);

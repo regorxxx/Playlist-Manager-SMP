@@ -1,14 +1,16 @@
 ﻿'use strict';
-//25/08/25
+//25/09/25
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
 include('helpers_xxx.js');
-/* global globFonts:readable, globSettings:readable, doOnce:readable, folders:readable, globSettings:readable */
+/* global globFonts:readable, globSettings:readable, doOnce:readable, globSettings:readable */
 include('helpers_xxx_UI_chars.js');
 include('callbacks_xxx.js');
+include('helpers_xxx_prototypes.js');
+/* global _ps:readable */
 
 /*
 	Global Variables
@@ -389,7 +391,7 @@ function _gdiFont(name, size, style) {
 	}
 	if (fonts[id].Name !== name && !fonts.notFound.includes(name)) { // Display once per session, otherwise it floods the console with the same message...
 		fonts.notFound.push(name);
-		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install dependency found at (a restart is required):\n' + folders.xxx + '_resources', window.Name);
+		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install the required fonts found at:\nhttps://github.com/regorxxx/foobar2000-assets/tree/main/Fonts\n\nA restart is required after installation!', window.Name + _ps(window.ScriptInfo.Name));
 		console.log('Missing font: ' + name);
 	}
 	return fonts[id];

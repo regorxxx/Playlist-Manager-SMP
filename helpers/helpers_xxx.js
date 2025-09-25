@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/06/25
+//25/09/25
 
 /**
  * Global folders setting
@@ -142,7 +142,7 @@ console.MaxSize = 1000000;
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
-/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, globNoSplitArtist:readable */
+/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, globNoSplitArtist:readable, _ps:readable */
 // Load user files used at helpers_xxx_global.js
 loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
@@ -152,7 +152,7 @@ loadUserDefFile(globNoSplitArtist);
 
 /** @type {FbProfiler} - Global profiler instance to use at init */
 const globProfiler = globSettings.bProfileInit
-	? new FbProfiler(window.Name + ' - Global profiler')
+	? new FbProfiler(window.Name  + _ps(window.ScriptInfo.Name) + ' - Global profiler')
 	: { Print: () => void (0), Time: void (0), Reset: () => void (0) };
 
 if (!globSettings.bLogToFile) { console.disableFile(); }
@@ -197,9 +197,9 @@ if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if s
 if (globSettings.bCheckInstallationPath && /\w:\\.*/i.test(folders.xxxName)) {
 	const message = 'Script has been installed in a folder outside foobar2000 profile folder, which is not supported. Errors are expected at some point.\n\nCurrent script path:\t' + folders.xxxName + '\nExpected path (*):\t' + fb.ProfilePath  + folders.xxxName.replace(/\w:\\.*\\profile\\/i, '').replace(/\w:\\.*\\xxx-scripts\\/i, 'xxx-scripts') + '\n\n(*) Note this path is just a guess based on your original path, may not be 100% accurate.';
 	if (globSettings.bPopupOnCheckInstallationPath) {
-		fb.ShowPopupMessage(message, 'Installation error: ' + window.Name);
+		fb.ShowPopupMessage(message, 'Installation error: ' + window.Name + _ps(window.ScriptInfo.Name));
 	}
-	console.log('Installation error: ' + window.Name + '\n\t ' + message.replace(/\n/g,'\n\t'));
+	console.log('Installation error: ' + window.Name + _ps(window.ScriptInfo.Name) + '\n\t ' + message.replace(/\n/g,'\n\t'));
 }
 
 globProfiler.Print('helpers_xxx');

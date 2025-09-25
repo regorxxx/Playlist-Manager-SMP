@@ -1,9 +1,9 @@
 ﻿'use strict';
-//06/08/25
+//25/09/25
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable */
+/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, _ps:readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable, Input:readable */
 include('..\\statistics\\statistics_xxx_menu.js');
@@ -231,7 +231,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			].forEach(createMenuOption('data', null, subMenu, true, (option) => {
 				if (Object.hasOwn(option.args.data, 'sourceArg')) {
 					if (option.args.data.sourceArg === null) {
-						const input = Input.string('string', parent.sourceArg || '', 'Enter playlist name(s):\n(separated by ;)', window.Name, 'My Playlist;Other Playlist', void (0), true) || Input.lastInput;
+						const input = Input.string('string', parent.sourceArg || '', 'Enter playlist name(s):\n(separated by ;)', window.Name + _ps(window.ScriptInfo.Name), 'My Playlist;Other Playlist', void (0), true) || Input.lastInput;
 						if (input === null) { return; }
 						parent.sourceArg = input.split(';');
 					} else {

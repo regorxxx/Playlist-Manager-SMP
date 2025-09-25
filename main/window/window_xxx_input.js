@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//25/09/25
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -235,7 +235,7 @@ function _colorPicker({ x, y, size = 10, color = 0xFF4354AF, hoverColor = 0xFF43
 	this.btn_up = (x, y) => {
 		if (this.trackCheck(x, y)) {
 			this.color = utils.ColourPicker(0, this.color);
-			console.log('Window (' + window.Name + '): Selected color ->\n\t Android: ' + this.color + ' - RGB: ' + toRGB(this.color));
+			console.log('Window (' + window.Name + ' (' + window.ScriptInfo.Name + ')' + '): Selected color ->\n\t Android: ' + this.color + ' - RGB: ' + toRGB(this.color));
 			this.repaint(true);
 			return true;
 		}

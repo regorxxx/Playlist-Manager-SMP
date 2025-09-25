@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//25/09/25
 
 /* exported ListenBrainz */
 
@@ -8,7 +8,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 /* global globQuery:readable, popup:readable, folders:readable */
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global require:readable, nextId:readable, _q:readable, _t:readable, isArrayStrings:readable */
+/* global require:readable, nextId:readable, _q:readable, _t:readable, isArrayStrings:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isFile:readable, _deleteFile:readable, _renameFile:readable, WshShell:readable, sanitize:readable, _jsonParseFileCheck:readable, utf8:readable, _save:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -422,7 +422,7 @@ ListenBrainz.consoleError = function consoleError(message = 'Token can not be va
 		'\n\t- 429: Too many requests on a short amount of time.' +
 		'\n\t- 400: Only add max ' + this.MAX_RECORDINGS_PER_ADD + ' recordings per call. (Bug at script level)' +
 		'\n\t- 200: ListenBrainz Token not valid.'
-		, window.Name
+		, window.Name + _ps(window.ScriptInfo.Name)
 	);
 };
 
@@ -696,7 +696,7 @@ ListenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 				const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
 				const backPath = playlistPath + '.back';
 				if (_isFile(playlistPath)) {
-					let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer === popup.no) { return false; }
 					_renameFile(playlistPath, backPath);
 				}
@@ -720,7 +720,7 @@ ListenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
 		});
 		clearInterval(delay);
 	}
-	if (!bDone) { fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name); }
+	if (!bDone) { fb.ShowPopupMessage('There were some errors on playlist syncing. Check console.', window.Name + _ps(window.ScriptInfo.Name)); }
 	return bDone;
 };
 /**
@@ -2188,7 +2188,7 @@ ListenBrainz.getUserServices = function getUserServices(user, token) {
 ListenBrainz.decryptToken = function decryptToken({ lBrainzToken, bEncrypted = true }) {
 	if (bEncrypted && !this.cache.key) {
 		let pass = '';
-		try { pass = utils.InputBox(window.ID, 'Enter password:', window.Name, pass, true); }
+		try { pass = utils.InputBox(window.ID, 'Enter password:', window.Name + _ps(window.ScriptInfo.Name), pass, true); }
 		catch (e) { return null; } // eslint-disable-line no-unused-vars
 		if (!pass.length) { return null; }
 		this.cache.key = new SimpleCrypto(pass);

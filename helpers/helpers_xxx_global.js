@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/25
+//25/09/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -7,6 +7,8 @@ include('helpers_xxx.js');
 /* global folders:readable */
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _jsonParseFileCheck:readable, utf8:readable, _save:readable */
+include('helpers_xxx_prototypes.js');
+/* global _ps:readable */
 
 /*
 	Global tags, queries, RegExp
@@ -14,7 +16,7 @@ include('helpers_xxx_file.js');
 function loadUserDefFile(def) {
 	let bSave = false;
 	if (_isFile(def._file)) {
-		const data = _jsonParseFileCheck(def._file, 'User definition file', window.Name, utf8);
+		const data = _jsonParseFileCheck(def._file, 'User definition file', window.Name + _ps(window.ScriptInfo.Name), utf8);
 		if (data) {
 			const handleList = new FbMetadbHandleList();
 			const skipCheckKeys = ['_description', '_usage'];

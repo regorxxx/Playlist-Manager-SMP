@@ -1,7 +1,7 @@
 ﻿'use strict';
-//16/09/25
+//25/09/25
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable */
@@ -508,24 +508,28 @@ function capitalizeAll(s, sep = ' ', bJoinSep = true, bPartial = false) { // Can
 	return s.split(sep).map((subS) => subS.charAt(0).toUpperCase() + (bPartial ? subS.slice(1) : subS.slice(1).toLowerCase())).join(bJoinSep ? sep : ''); // Split, capitalize each subString and join
 }
 
-function _p(value) {
-	return '(' + value + ')';
+function _p(value, bSpace) {
+	return (bSpace ? ' ' : '') + '(' + value + ')';
 }
 
-function _q(value) {
-	return '"' + value + '"';
+function _ps(value) {
+	return _p(value, true);
 }
 
-function _b(value) {
-	return '[' + value + ']';
+function _q(value, bSpace) {
+	return (bSpace ? ' ' : '') + '"' + value + '"';
+}
+
+function _b(value, bSpace) {
+	return (bSpace ? ' ' : '') + '[' + value + ']';
 }
 
 function _t(tag) {
 	return (tag.includes('%') || tag.includes('$') ? tag : '%' + tag + '%');
 }
 
-function _bt(tag) {
-	return _b(_t(tag));
+function _bt(tag, bSpace) {
+	return _b(_t(tag), bSpace);
 }
 
 function _qCond(tag, bUnquote = false) {

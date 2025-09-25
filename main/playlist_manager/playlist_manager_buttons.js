@@ -1,12 +1,12 @@
 ﻿'use strict';
-//11/09/25
+//25/09/25
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
 
 /* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable, panel:readable, WshShell:readable, popup:readable, overwriteProperties:readable, FontStyle:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isFunction:readable */
+/* global isFunction:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global RGB:readable, _tt:readable, _scale:readable, _gdiFont:readable, _gr:readable, extendGR:readable, opaqueColor:readable, RGBA:readable */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -421,7 +421,7 @@ function _listButtons(bSetup = false) {
 				h: window.Height / 3,
 				text: 'Setup',
 				func: function () {
-					const answer = WshShell.Popup('First, before setup, be sure to close all Spider Monkey Panel windows.\nClicking ok will start the configuration of the panel. Read the popups and follow their instructions.\n\nPanel will be reloaded. Continue Setup?', 0, window.Name, popup.question + popup.yes_no);
+					const answer = WshShell.Popup('First, before setup, be sure to close all Spider Monkey Panel windows.\nClicking ok will start the configuration of the panel. Read the popups and follow their instructions.\n\nPanel will be reloaded. Continue Setup?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer === popup.yes) {
 						list.properties.bSetup[1] = false;
 						overwriteProperties(list.properties); // Updates panel
@@ -462,7 +462,7 @@ function _listButtons(bSetup = false) {
 				h: buttonCoordinatesOne.h,
 				text: () => list.getSortState(),
 				func: function () {
-					const test = new FbProfiler(window.Name + ': ' + 'Sorting - ' + list.getMethodState() + ' - ' + list.getSortState());
+					const test = new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'Sorting - ' + list.getMethodState() + ' - ' + list.getSortState());
 					let newSortState = list.getOppositeSortState(list.getSortState()); // This always returns a valid state
 					list.setSortState(newSortState);
 					list.sort(void (0), true); // Uses current state

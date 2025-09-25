@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/09/25
+//25/09/25
 
 /* exported _list */
 
@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, _qCond:readable, capitalize:readable, deepAssign:readable  */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, _qCond:readable, capitalize:readable, deepAssign:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -1217,7 +1217,7 @@ function _list(x, y, w, h) {
 			return this.colors.folder;
 		};
 		// Paint list
-		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'columns') : null;
+		const test = this.logOpt.profile ? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'columns') : null;
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		for (let i = 0; i < rows; i++) {
 			// Safety check: when deleted a playlist from data and paint fired before calling this.update()... things break silently. Better to catch it
@@ -3140,7 +3140,7 @@ function _list(x, y, w, h) {
 			for (let key in prop) {
 				const mask = (options.find((obj) => { return obj.key === key; }) || {}).mask || 'none';
 				const action = prop[key];
-				const func = (actions.find((obj) => { return obj.key === action; }) || {}).func || (() => { console.popup('Shortcut not properly set: ' + mouseBtn + ' ' + key + ' --> ' + action, window.Name); });
+				const func = (actions.find((obj) => { return obj.key === action; }) || {}).func || (() => { console.popup('Shortcut not properly set: ' + mouseBtn + ' ' + key + ' --> ' + action, window.Name + _ps(window.ScriptInfo.Name)); });
 				shortcuts[mask] = { key: action, func };
 			}
 		}
@@ -3569,7 +3569,7 @@ function _list(x, y, w, h) {
 				'\n\nTrace:' +
 				'\nadd' + _p({ playlistIndex, handleList, bAlsoHidden, bPaint }.toStr()) +
 				'\n\naddHandleToPlaylist' + _p({ handleList, playlistPath, relativePath: (this.bRelativePath ? this.playlistsPath : ''), bBOM: this.bBOM }.toStr())
-				, window.Name);
+				, window.Name + _ps(window.ScriptInfo.Name));
 			return false;
 		}
 		this.checkLibraryWarnings(handleList);
@@ -3608,14 +3608,14 @@ function _list(x, y, w, h) {
 					if (typeof expression === 'number') { value = [expression.toString()]; }
 					else if (expression.includes('$') || expression.includes('%')) { // TF or Tag remapping
 						try { value = fb.TitleFormat(expression).EvalWithMetadb(newHandles[i]).split(', '); }
-						catch (e) { fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name); } // eslint-disable-line no-unused-vars
+						catch (e) { fb.ShowPopupMessage('TF expression is not valid:\n' + expression, window.Name + _ps(window.ScriptInfo.Name)); } // eslint-disable-line no-unused-vars
 					} else if (expression.includes('JS:')) { // JS expression by function name at 'helpers_xxx_utils.js'
 						bFunc = true;
 						let funcName = expression.replace('JS:', '');
 						if (Object.hasOwn(funcDict, funcName)) {
 							try { ({ value, bOverWrite, bMultiple } = funcDict[funcName](pls)); }
-							catch (e) { fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name); } // eslint-disable-line no-unused-vars
-						} else { fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name); }
+							catch (e) { fb.ShowPopupMessage('JS expression failed:\n' + funcName, window.Name + _ps(window.ScriptInfo.Name)); } // eslint-disable-line no-unused-vars
+						} else { fb.ShowPopupMessage('JS function not found at \'helpers_xxx_utils.js\':\n' + funcName, window.Name + _ps(window.ScriptInfo.Name)); }
 					} else if (expression.includes(',')) { // Array (list sep by comma)
 						value = expression.split(',');
 						value = value.map((_) => { return _.trim(); });
@@ -3666,7 +3666,7 @@ function _list(x, y, w, h) {
 				if (idx !== -1 && item.extension !== '.ui') { duplicates.push(item.nameId); }
 			});
 			if (duplicates.length) {
-				fb.ShowPopupMessage('Check playlists loaded, duplicated names are not allowed when using auto-saving:\n\n' + duplicates.join(', '), window.Name);
+				fb.ShowPopupMessage('Check playlists loaded, duplicated names are not allowed when using auto-saving:\n\n' + duplicates.join(', '), window.Name + _ps(window.ScriptInfo.Name));
 				return;
 			}
 		}
@@ -3782,7 +3782,7 @@ function _list(x, y, w, h) {
 					}
 				});
 				if (duplicates.length) {
-					fb.ShowPopupMessage('Check playlists loaded, duplicated names are not allowed when using auto-saving:\n\n' + duplicates.join(', '), window.Name);
+					fb.ShowPopupMessage('Check playlists loaded, duplicated names are not allowed when using auto-saving:\n\n' + duplicates.join(', '), window.Name + _ps(window.ScriptInfo.Name));
 					return false;
 				}
 			}
@@ -3851,7 +3851,7 @@ function _list(x, y, w, h) {
 								'\n\nTrace:' +
 								'\nupdatePlaylist' + _p({ playlistIndex, bCallback, bForceLocked }.toStr()) +
 								'\n\nsavePlaylist' + _p({ playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, author: plsData.author, description: plsData.description, bBom: this.bBOM }.toStr())
-								, window.Name);
+								, window.Name + _ps(window.ScriptInfo.Name));
 							_restoreFile(playlistPath); // Since it failed we need to restore the original playlist back to the folder!
 							return false;
 						}
@@ -3993,7 +3993,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.importJson = ({ path = '', bOldVersion } = {}) => {
-		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'Load json file') : null;
+		const test = this.logOpt.profile ? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'Load json file') : null;
 		let externalPath = path;
 		if (!path || !path.length) {
 			try { externalPath = utils.InputBox(window.ID, 'Put here the path of the json file:', 'Playlist Manager: JSON path', _getClipboardData() || '', true); }
@@ -4010,7 +4010,7 @@ function _list(x, y, w, h) {
 		}
 		let answer = bOldVersion === void (0) ? WshShell.Popup('Are you loading a .json file created by Auto-playlist list by marc2003 script?\n(no = json file by this playlist manager)', 0, 'Playlist Manager: import from JSON', popup.question + popup.yes_no) : (bOldVersion ? popup.yes : popup.no);
 		let dataExternalPlaylists = [];
-		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name, answer === popup.no ? utf8 : 0);
+		const data = _jsonParseFileCheck(externalPath, 'Playlist json', window.Name + _ps(window.ScriptInfo.Name), answer === popup.no ? utf8 : 0);
 		if (!data) { fb.ShowPopupMessage('No data found: ' + externalPath, 'Playlist Manager: import from JSON'); return false; }
 		const libItems = fb.GetLibraryItems();
 		if (answer === popup.yes) {
@@ -4998,8 +4998,8 @@ function _list(x, y, w, h) {
 				const bUpdateTags = this.bAutoTrackTag && this.bAutoTrackTagAutoPls && (this.bUpdateAutoPlaylist || this.bAutoTrackTagAutoPlsInit && bInit);
 				const bColumns = this.isColumnsEnabled('size');
 				const bUpdateSize = this.bUpdateAutoPlaylist && (this.bShowSize || bUpdateTags || bColumns);
-				const test = (bUpdateSize || bUpdateTags) && this.logOpt.autoSize ? new FbProfiler(window.Name + ': ' + 'Refresh AutoPlaylists') : null;
-				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name, utf8);
+				const test = (bUpdateSize || bUpdateTags) && this.logOpt.autoSize ? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'Refresh AutoPlaylists') : null;
+				const data = _jsonParseFileCheck(this.filename, 'Playlists json', window.Name + _ps(window.ScriptInfo.Name), utf8);
 				if (!data) { return; }
 				let i = 0;
 				const promises = [];
@@ -5369,7 +5369,7 @@ function _list(x, y, w, h) {
 			else { dataNames.add(pls.name); }
 		});
 		if (reportDup.size) {
-			fb.ShowPopupMessage('Duplicated playlist names within the manager are not allowed. Rename them:\n\n' + [...reportDup].join('\n'), window.Name);
+			fb.ShowPopupMessage('Duplicated playlist names within the manager are not allowed. Rename them:\n\n' + [...reportDup].join('\n'), window.Name + _ps(window.ScriptInfo.Name));
 		}
 	};
 
@@ -5391,7 +5391,7 @@ function _list(x, y, w, h) {
 			playlistObj.nameId = newNameId;
 			let duplicated = plman.FindPlaylist(newNameId);
 			if (duplicated !== -1) { // Playlist already exists on foobar2000...
-				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name);
+				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.Name + _ps(window.ScriptInfo.Name));
 			} else {
 				const plsIdx = plman.FindPlaylist(oldNameId);
 				if (plsIdx !== -1) {
@@ -5422,7 +5422,7 @@ function _list(x, y, w, h) {
 									}
 								} else { bDone = true; }
 								if (!bDone) {
-									fb.ShowPopupMessage('Error editing playlist file: ' + oldNameId + ' --> ' + newNameId + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name);
+									fb.ShowPopupMessage('Error editing playlist file: ' + oldNameId + ' --> ' + newNameId + '\n\nPath: ' + path + '\n\nRestoring backup...', window.Name + _ps(window.ScriptInfo.Name));
 									_renameFile(backPath, path); // Restore backup in case something goes wrong
 									console.log('Playlist Manager: Restoring backup...');
 								} else {
@@ -5430,7 +5430,7 @@ function _list(x, y, w, h) {
 									this.updatePlman(newNameId, oldNameId); // Update with new id
 								}
 							}
-						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + path, window.Name); }
+						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + path, window.Name + _ps(window.ScriptInfo.Name)); }
 					}
 				}
 			}
@@ -5490,7 +5490,7 @@ function _list(x, y, w, h) {
 	this.backupRestore = () => {
 		const files = getFiles(this.playlistsPath, new Set(['.back']));
 		if (files.length) {
-			const answer = WshShell.Popup('Playlist(s) backup file(s) have been found.\nDo you want to restore them?\n(Pressing \'No\' will open the playlists folder)\n\n' + files.map((f) => f.replace(this.playlistsPath, '')).joinEvery(', ', 3), 0, window.Name, popup.question + popup.yes_no);
+			const answer = WshShell.Popup('Playlist(s) backup file(s) have been found.\nDo you want to restore them?\n(Pressing \'No\' will open the playlists folder)\n\n' + files.map((f) => f.replace(this.playlistsPath, '')).joinEvery(', ', 3), 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				files.forEach((file) => _renameFile(file, file.replace('.back', '')));
 				this.update({ currentItemIndex });
@@ -5561,7 +5561,7 @@ function _list(x, y, w, h) {
 
 	this.checkTrackedFolderChanged = () => {
 		if (this.bLiteMode) { return false; }
-		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'checkTrackedFolderChanged') : null;
+		const test = this.logOpt.profile ? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'checkTrackedFolderChanged') : null;
 		const playlistPathArray = getFiles(this.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 		const playlistPathArrayLength = playlistPathArray.length;
 		let bDone = false;
@@ -6573,7 +6573,7 @@ function _list(x, y, w, h) {
 		const oldName = pls.name;
 		const duplicated = getPlaylistIndexArray(oldNameId);
 		if (duplicated && duplicated.length > 1) {
-			fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name);
+			fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + oldName + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.Name + _ps(window.ScriptInfo.Name));
 			return loadPromise;
 		} else {
 			if (autoBackTimer && debouncedUpdate && !this.bLiteMode) { backup(this.properties.autoBackN[1], true, this.logOpt.profile); } // Async backup before future changes
@@ -6582,7 +6582,7 @@ function _list(x, y, w, h) {
 				if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
 				else { removePlaylistByName(oldNameId); }
 				if (!checkQuery(pls.query, true, true)) {
-					fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name);
+					fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name + _ps(window.ScriptInfo.Name));
 					return loadPromise;
 				}
 				plman.CreateAutoPlaylist(fbPlaylistIndex, oldName, pls.query, pls.sort, pls.bSortForced ? 1 : 0);
@@ -6622,7 +6622,7 @@ function _list(x, y, w, h) {
 						this.repaint(false, 'list');
 					});
 				} else {
-					fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
+					fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name + _ps(window.ScriptInfo.Name));
 					return loadPromise;
 				}
 			}
@@ -6788,7 +6788,7 @@ function _list(x, y, w, h) {
 			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
 			if (handleList) { this.updatePlaylistHandleMeta(pls, handleList, true, true); }
 		} else if (pls.isAutoPlaylist) { // AutoPlaylist
-			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name); }
+			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.Name + _ps(window.ScriptInfo.Name)); }
 			else {
 				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 				this.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
@@ -6799,14 +6799,14 @@ function _list(x, y, w, h) {
 			// Always use tracked folder relative path for reading, it will be discarded if playlist does not contain relative paths
 			const remDupl = pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls ? this.removeDuplicatesAutoPls : [];
 			if (pls.extension === '.xsp' && this.checkCircularXsp({ pls })) {
-				console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
+				console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name + _ps(window.ScriptInfo.Name));
 			} else {
 				handleList = getHandlesFromPlaylist({ playlistPath: pls.path, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, bLog });
 			}
 			// Update size on load for smart playlists
 			if (handleList) { this.updatePlaylistHandleMeta(pls, handleList, true, true); }
 		} else {
-			console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
+			console.popup('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name + _ps(window.ScriptInfo.Name));
 		}
 		return handleList || new FbMetadbHandleList();
 	};
@@ -6872,7 +6872,7 @@ function _list(x, y, w, h) {
 					path: newPath,
 				});
 			} else {
-				fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name);
+				fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name + _ps(window.ScriptInfo.Name));
 				return;
 			}
 		}
@@ -6893,7 +6893,7 @@ function _list(x, y, w, h) {
 		const oldNameId = pls.nameId;
 		const duplicated = plman.FindPlaylist(oldNameId);
 		const currentLocks = duplicated !== -1 ? plman.GetPlaylistLockedActions(duplicated) || [] : [];
-		if (currentLocks.includes('RemovePlaylist') && bUI) { fb.ShowPopupMessage('UI-Playlist is locked: ' + pls.name, window.Name); return; }
+		if (currentLocks.includes('RemovePlaylist') && bUI) { fb.ShowPopupMessage('UI-Playlist is locked: ' + pls.name, window.Name + _ps(window.ScriptInfo.Name)); return; }
 		if (pls.size) { this.totalFileSize -= pls.size; }
 		this.deletedItems.unshift(pls);
 		this.removeFromData(pls); // Use this instead of this.data.splice(idx, 1) to remove from all data arrays!
@@ -6948,7 +6948,7 @@ function _list(x, y, w, h) {
 		while (i < plman.PlaylistCount) {
 			if (plman.GetPlaylistName(i) === oldName) {
 				const currentLocks = plman.GetPlaylistLockedActions(i) || [];
-				if (currentLocks.includes('RenamePlaylist')) { i++; console.log('UI-Playlist is locked and can not be renamed: ' + oldName, window.Name); continue; }
+				if (currentLocks.includes('RenamePlaylist')) { i++; console.log(window.Name + _ps(window.ScriptInfo.Name) + ': UI-Playlist is locked and can not be renamed: ' + oldName); continue; }
 				else { plman.RenamePlaylist(i, name); }
 			} else {
 				i++;
@@ -7062,7 +7062,7 @@ function _list(x, y, w, h) {
 		pop.enable(true, 'Settings...', 'Sharing settings...\nPanel will be disabled during the process.', 'settings');
 		const answer = bForce
 			? popup.yes
-			: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.Name + ': Playlist Manager', popup.question + popup.yes_no);
+			: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.Name + _ps(window.ScriptInfo.Name) + ': Playlist Manager', popup.question + popup.yes_no);
 		if (answer === popup.yes) {
 			// List
 			['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle'].forEach((key) => {
@@ -7219,7 +7219,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.manualRefresh = () => {
-		const test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'Manual refresh') : null;
+		const test = this.logOpt.profile ? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'Manual refresh') : null;
 		if (test) { test.CheckPoint('Clear'); }
 		this.plsCache.clear();
 		fb.queryCache.clear();
@@ -7312,13 +7312,13 @@ function _list(x, y, w, h) {
 			this.properties['playlistsPath'][1] += '\\';
 			bDone = true;
 		}
-		if (!_isFolder(this.playlistsPathDisk + ':\\')) { fb.ShowPopupMessage('Disk associated to tracked folder doesn\'t exist:\nTracked folder:\t' + this.playlistsPath + '\nDrive letter:\t' + this.playlistsPathDisk + ':\\\n\nReconfigure it at the header menu if needed.', window.Name); }
+		if (!_isFolder(this.playlistsPathDisk + ':\\')) { fb.ShowPopupMessage('Disk associated to tracked folder doesn\'t exist:\nTracked folder:\t' + this.playlistsPath + '\nDrive letter:\t' + this.playlistsPathDisk + ':\\\n\nReconfigure it at the header menu if needed.', window.Name + _ps(window.ScriptInfo.Name)); }
 		// Check playlist extension
 		if (!writablePlaylistFormats.has(this.playlistsExtension)) {
 			if (writablePlaylistFormats.has(this.playlistsExtension.toLowerCase())) {
 				this.playlistsExtension = this.playlistsExtension.toLowerCase();
 			} else {
-				fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + [...writablePlaylistFormats].join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name);
+				fb.ShowPopupMessage('Wrong extension set at properties panel:' + '\n\'' + this.properties['extension'][0] + '\':\'' + this.playlistsExtension + '\'\n' + 'Only allowed ' + [...writablePlaylistFormats].join(', ') + '\nUsing \'.m3u8\' as fallback', window.Name + _ps(window.ScriptInfo.Name));
 				this.playlistsExtension = '.m3u8';
 			}
 			this.properties['extension'][1] = this.playlistsExtension;
@@ -7330,7 +7330,7 @@ function _list(x, y, w, h) {
 				this.bUseUUID = true;
 			} else { this.bUseUUID = false; }
 		} else {
-			fb.ShowPopupMessage('Wrong UUID method set at properties panel: \'' + this.optionUUID + '\'\n' + 'Only allowed: \n\n' + this.optionsUUID().join('\n') + '\n\nUsing default method as fallback', window.Name);
+			fb.ShowPopupMessage('Wrong UUID method set at properties panel: \'' + this.optionUUID + '\'\n' + 'Only allowed: \n\n' + this.optionsUUID().join('\n') + '\n\nUsing default method as fallback', window.Name + _ps(window.ScriptInfo.Name));
 			this.bUseUUID = false;
 		}
 		// No UUID for .pls playlists since we can not save it into the format (and .fpl are never saved with native format)
@@ -7340,7 +7340,7 @@ function _list(x, y, w, h) {
 		// Check sorting is valid
 		if (!Object.hasOwn(this.sortMethods(false), this.methodState)) {
 			if (!bSilentSorting) {
-				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name);
+				fb.ShowPopupMessage('Wrong sorting method set at properties panel: \'' + this.methodState + '\'\n' + 'Only allowed: \n\n' + Object.keys(this.sortMethods(false)).join('\n') + '\n\nUsing default method as fallback', window.Name + _ps(window.ScriptInfo.Name));
 			}
 			this.methodState = this.getMethodState(); // On first call first state of that method will be default
 			this.properties['methodState'][1] = this.methodState;
@@ -7348,7 +7348,7 @@ function _list(x, y, w, h) {
 		}
 		if (!Object.hasOwn(this.sortMethods(false)[this.methodState], this.sortState)) {
 			if (!bSilentSorting) {
-				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name);
+				fb.ShowPopupMessage('Wrong sorting order set at properties panel: \'' + this.sortState + '\'\n' + 'Only allowed: ' + Object.keys(this.sortMethods(false)[this.methodState]) + '\nUsing default sort state as fallback', window.Name + _ps(window.ScriptInfo.Name));
 			}
 			this.sortState = this.getSortState(); // On first call first state of that method will be default
 			this.properties['sortState'][1] = this.sortState;
@@ -7606,13 +7606,13 @@ function _list(x, y, w, h) {
 
 	this.loadConfigFile = (file = this.filename.replace('.json', '_config.json')) => {
 		if (!file.length) { this.configFile = null; return; }
-		if (_isFile(file)) { this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name, utf8); }
+		if (_isFile(file)) { this.configFile = _jsonParseFileCheck(file, 'Config json', window.Name + _ps(window.ScriptInfo.Name), utf8); }
 		else { this.configFile = null; }
 	};
 
 	this.loadSortingFile = (file = this.filename.replace('.json', '_sorting.json')) => {
 		if (!file.length) { this.sortingFile = []; return; }
-		if (_isFile(file)) { this.sortingFile = _jsonParseFileCheck(file, 'Sorting json', window.Name, utf8); }
+		if (_isFile(file)) { this.sortingFile = _jsonParseFileCheck(file, 'Sorting json', window.Name + _ps(window.ScriptInfo.Name), utf8); }
 		else { this.sortingFile = []; }
 	};
 
@@ -7703,7 +7703,7 @@ function _list(x, y, w, h) {
 			})();
 			menusGlobal.forEach((menu) => { listExport[menu.type] = []; });
 			return new Promise((resolve) => {
-				const test = new FbProfiler(window.Name + ': ' + 'createMainMenuDynamic()');
+				const test = new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'createMainMenuDynamic()');
 				menusGlobal.forEach((menu, i) => {
 					const type = menu.type;
 					const name = menu.name.split('\t').map((s) => s.cut(50)).join('\t');
@@ -7833,7 +7833,7 @@ function _list(x, y, w, h) {
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
 		if (!_isFolder(folders.data)) { _createFolder(folders.data); }
 		this.filename = folders.data + 'playlistManager_' + (this.bLiteMode ? this.uuid : this.playlistsPathDirName.replace(':', '')) + '.json'; // Replace for relative paths folder names!
-		let test = this.logOpt.profile ? new FbProfiler(window.Name + ': ' + 'Init') : null;
+		let test = this.logOpt.profile ? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'Init') : null;
 		// Make new backup and recycle old one
 		_renameFile(this.filename + '.old', this.filename + '.old2');
 		_copyFile(this.filename, this.filename + '.old');
@@ -8394,7 +8394,7 @@ function _list(x, y, w, h) {
 						'\n----------------------' +
 						'\n- Shift + Win + R. Click: open SMP panel menu.' +
 						'\n- Ctrl + Win + R. Click: open script panel menu.'
-						, window.Name + ': Quick help');
+						, window.Name + _ps(window.ScriptInfo.Name) + ': Quick help');
 				} else {
 					createMenuRightTop().btn_up(x, y, void (0), 'Open documentation...');
 				}
@@ -8415,7 +8415,7 @@ function _list(x, y, w, h) {
 function getQueryPlaylistHandles(pls, libItems = fb.GetLibraryItems()) {
 	let handleList = null;
 	if (!checkQuery(pls.query, false, true)) {
-		if (!pls.query.includes('#PLAYLIST# IS')) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name); }
+		if (!pls.query.includes('#PLAYLIST# IS')) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.Name + _ps(window.ScriptInfo.Name)); }
 	} else {
 		handleList = fb.GetQueryItemsCheck(libItems, stripSort(pls.query), true); // Cache output
 		if (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) {

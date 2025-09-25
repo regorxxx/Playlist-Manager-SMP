@@ -1,10 +1,12 @@
 ﻿'use strict';
-//09/06/25
+//25/09/25
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _isFolder:readable, doOnce:readable*/
+include('helpers_xxx_prototypes.js');
+/* global _ps:readable */
 
 /*
 	Properties
@@ -218,7 +220,7 @@ function checkProperty(property, withValue) {
 		bPass = false; report += 'Value obey this condition: ' + checks['func'] + '\n';
 	}
 	if (Object.hasOwn(checks, 'portable') && checks['portable'] && valToCheck !== property[3] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
-		console.log(window.Name + ' - Portable installation: property \'' + property[0] + '\'\n\t Replacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
+		console.log(window.Name + _ps(window.ScriptInfo.Name) + ' - Portable installation: property \'' + property[0] + '\'\n\t Replacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
 	}
 	if (!bPass) {
 		doOnce(

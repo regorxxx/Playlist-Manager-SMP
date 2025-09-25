@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/09/25
+//25/09/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -14,7 +14,7 @@ include('..\\..\\helpers\\callbacks_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global overwriteProperties:readable, checkProperty:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
@@ -68,13 +68,13 @@ function createMenuLeft(forcedIndex = -1) {
 	const menu = menuLbtn;
 	menu.clear(true); // Reset on every call
 	if (z === -1) {
-		fb.ShowPopupMessage('Selected index was -1 on createMenuLeft() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		fb.ShowPopupMessage('Selected index was -1 on createMenuLeft() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name + _ps(window.ScriptInfo.Name));
 		return menu;
 	}
 	/** @type {PlaylistObj} */
 	const pls = list.data[z];
 	if (!pls) {
-		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name + _ps(window.ScriptInfo.Name));
 		return menu;
 	}
 	const autoTags = ['bAutoLoad', 'bAutoLock', 'bMirrorChanges', 'bMultMenu', 'bSkipMenu', 'bPinnedFirst', 'bPinnedLast'];
@@ -176,7 +176,7 @@ function createMenuLeft(forcedIndex = -1) {
 			// Renames both playlist file and playlist within foobar2000. Only 1 instance allowed
 			menu.newEntry({
 				entryText: (!bIsLockPls && !bIsLockPlsRename ? 'Rename...' : (bIsAutoPls || bIsPlsUI ? 'Rename...' : 'Rename... (only filename)')) + list.getGlobalShortcut('rename'), func: () => {
-					const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name + ': ' + pls.name, 'My playlist', void (0), true);
+					const input = Input.string('string', pls.name, 'Enter playlist name:', window.Name + _ps(window.ScriptInfo.Name) + ': ' + pls.name, 'My playlist', void (0), true);
 					if (input === null) { return; }
 					renamePlaylist(list, z, input);
 				}, flags: bIsPlsUI && bIsLockPlsRename ? MF_GRAYED : MF_STRING
@@ -188,12 +188,12 @@ function createMenuLeft(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: 'Edit sort pattern...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						let bDone = false;
-						let input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name + ': ' + pls.name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
+						let input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.Name + _ps(window.ScriptInfo.Name) + ': ' + pls.name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
 						if (input === null) {
 							if (!Input.isLastEqual) { return; }
 							else { input = Input.lastInput; }
 						}
-						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name); return null; }
+						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.Name + _ps(window.ScriptInfo.Name)); return null; }
 						if (!Input.isLastEqual) {
 							list.editData(pls, {
 								sort: input,
@@ -202,7 +202,7 @@ function createMenuLeft(forcedIndex = -1) {
 							bDone = true;
 						}
 						if (pls.sort.length) { // And force sorting
-							const bSortForced = pls.extension === '.xsp' ? false : WshShell.Popup('Force sort?\n(currently ' + pls.bSortForced + ')', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
+							const bSortForced = pls.extension === '.xsp' ? false : WshShell.Popup('Force sort?\n(currently ' + pls.bSortForced + ')', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no) === popup.yes;
 							if (bSortForced !== pls.bSortForced) {
 								list.editData(pls, {
 									bSortForced,
@@ -223,20 +223,20 @@ function createMenuLeft(forcedIndex = -1) {
 					entryText: 'Edit query...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 						const bXsp = pls.extension === '.xsp';
 						let newQuery = '';
-						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (bXsp ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name, pls.query); }
+						try { newQuery = utils.InputBox(window.ID, 'Enter ' + (bXsp ? 'Smart Playlist' : 'AutoPlaylist') + ' query:', window.Name + _ps(window.ScriptInfo.Name), pls.query); }
 						catch (e) { return; } // eslint-disable-line no-unused-vars
 						const bPlaylist = newQuery.includes('#PLAYLIST# IS');
 						let sortFromQuery = newQuery;
 						newQuery = stripSort(newQuery);
 						sortFromQuery = sortFromQuery.replace(newQuery, '').trimStart();
-						if (!bPlaylist && !checkQuery(newQuery)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name); return; }
+						if (!bPlaylist && !checkQuery(newQuery)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, window.Name + _ps(window.ScriptInfo.Name)); return; }
 						if (bXsp) {
 							const { rules } = XSP.getRules(newQuery);
-							if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name); return; }
+							if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', window.Name + _ps(window.ScriptInfo.Name)); return; }
 							const jsp = XSP.emptyJSP('songs');
 							jsp.playlist.rules = rules;
 							if (list.checkCircularXsp({ jsp, name: pls.name })) {
-								console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name);
+								console.popup(pls.name + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}
 						if (newQuery !== pls.query || (sortFromQuery && sortFromQuery !== pls.sort)) {
@@ -268,7 +268,7 @@ function createMenuLeft(forcedIndex = -1) {
 				if (pls.extension === '.xsp') { // Smart Playlist Limit
 					menu.newEntry({
 						entryText: 'Edit limit...', func: () => {
-							let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name + ': ' + pls.name, 50);
+							let input = Input.number('int positive', pls.limit, 'Enter number of tracks:', window.Name + _ps(window.ScriptInfo.Name) + ': ' + pls.name, 50);
 							if (input === null) { return; }
 							if (!Number.isFinite(input)) { input = 0; }
 							const bDone = rewriteXSPLimit(pls, input);
@@ -316,15 +316,15 @@ function createMenuLeft(forcedIndex = -1) {
 								const oldName = pls.name;
 								const duplicated = getPlaylistIndexArray(oldNameId);
 								if (duplicated.length > 1) { // There is more than 1 playlist with same name
-									fb.ShowPopupMessage('You have more than one playlist with the same name: ' + oldName + '\n' + 'Please delete any duplicates and leave only the one you want.' + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name);
+									fb.ShowPopupMessage('You have more than one playlist with the same name: ' + oldName + '\n' + 'Please delete any duplicates and leave only the one you want.' + '\n' + 'The playlist file will be updated according to that unique playlist.', window.Name + _ps(window.ScriptInfo.Name));
 								} else {
 									let answer = popup.yes;
 									if (pls.isLocked) { // Safety check for locked files (but can be overridden)
-										answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+										answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 									}
 									if (answer === popup.yes) { list.updatePlaylist({ playlistIndex: z, bForceLocked: true }); }
 								}
-							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
+							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name + _ps(window.ScriptInfo.Name)); }
 						}, flags: bIsPlsLoaded && !bIsPlsUI ? MF_STRING : MF_GRAYED
 					});
 					// Updates active playlist name to the name set on the playlist file so they get bound and saves playlist content to the file.
@@ -336,13 +336,13 @@ function createMenuLeft(forcedIndex = -1) {
 								const newName = pls.name;
 								const duplicated = plman.FindPlaylist(newNameId);
 								if (duplicated !== -1) {
-									fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name);
+									fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.Name + _ps(window.ScriptInfo.Name));
 								} else {
 									list.updatePlman(newNameId, oldNameId);
 									const bDone = list.updatePlaylist({ playlistIndex: z });
 									if (!bDone) { list.updatePlman(oldNameId, newNameId); } // Reset change
 								}
-							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name); }
+							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.Name + _ps(window.ScriptInfo.Name)); }
 						}, flags: !bIsPlsActive && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED
 					});
 				}
@@ -357,7 +357,7 @@ function createMenuLeft(forcedIndex = -1) {
 					const menuName = menu.newMenu('Set category', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New category...', func: () => {
-							const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name + ': ' + pls.name, 'My category');
+							const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.Name + _ps(window.ScriptInfo.Name) + ': ' + pls.name, 'My category');
 							if (input === null) { return; }
 							setCategory(input, list, z);
 						}
@@ -382,7 +382,7 @@ function createMenuLeft(forcedIndex = -1) {
 								'array strings',
 								pls.tags,
 								'Tag(s) Name(s):\n(JSON)\n\nFor ex: ["Summer", "Cool"]',
-								window.Name + ': ' + pls.name,
+								window.Name + _ps(window.ScriptInfo.Name) + ': ' + pls.name,
 								'["TagA","TagB"]',
 								void (0),
 								true
@@ -412,12 +412,12 @@ function createMenuLeft(forcedIndex = -1) {
 					entryText: 'Automatically add tag(s) to tracks...', func: () => {
 						let tags = '';
 						const currValue = pls.trackTags && pls.trackTags.length ? JSON.stringify(pls.trackTags) : '';
-						try { tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name, currValue, true); }
+						try { tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"TAGNAME":"tagValue"},...]\n\nTagValue may be:\n- String (with quotes) or number (doesn\'t need quotes).\n- Value list separated by comma (,).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nValues will be split by comma in any case.\n\nFor ex:\n \t[{"MOOD":"Chill"}]\n\t[{"ADDEDDATE":"JS:todayDate"}, {"ENERGY":5}]\n\t[{"PLAYLISTNAME":"JS:playlistName"}]', window.Name + _ps(window.ScriptInfo.Name), currValue, true); }
 						catch (e) { return; } // eslint-disable-line no-unused-vars
 						const tagsString = tags;
 						if (tags.length) {
 							tags = tags.replaceAll('\'\'', '"'); // Replace quotes
-							try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; } // eslint-disable-line no-unused-vars
+							try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name + _ps(window.ScriptInfo.Name)); return; } // eslint-disable-line no-unused-vars
 						}
 						if (tagsString !== currValue) { setTrackTags(tags, list, z); }
 					}, flags: !bIsLockPls && bIsPlsEditable && bIsValidXSP && !bIsPlsUI ? MF_STRING : MF_GRAYED
@@ -580,7 +580,7 @@ function createMenuLeft(forcedIndex = -1) {
 							if (pls.playlist_mbid.length) {
 								console.log('Playlist Manager: Syncing playlist with ListenBrainz -> ' + pls.name);
 								playlist_mbid = await lb.syncPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
-								if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) { bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name); }
+								if (playlist_mbid.length && pls.playlist_mbid !== playlist_mbid) { bUpdateMBID = true; fb.ShowPopupMessage('Playlist had an MBID but no playlist was found with such MBID on server.\nA new one has been created. Check console.', window.Name + _ps(window.ScriptInfo.Name)); }
 							} else {
 								console.log('Exporting playlist to ListenBrainz: ' + pls.name);
 								playlist_mbid = await lb.exportPlaylist(pls, list.playlistsPath, token, bLookupMBIDs);
@@ -617,11 +617,11 @@ function createMenuLeft(forcedIndex = -1) {
 											if (!bXSPF) {
 												let bYouTube = false;
 												if (notFound.length && isYouTube) {
-													const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+													const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 													if (answer === popup.yes) { bYouTube = true; }
 												}
 												if (pls.isLocked) { // Safety check for locked files (but can be overridden)
-													let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name, popup.question + popup.yes_no);
+													let answer = WshShell.Popup('Are you sure you want to update a locked playlist?\nIt will continue being locked afterwards.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 													if (answer === popup.no) { return false; }
 												}
 												// Find missing tracks on youTube
@@ -783,7 +783,7 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newSeparator(subMenuName);
 					menu.newEntry({
 						menuName: subMenuName, entryText: 'Get URL...' + (pls.playlist_mbid ? '' : '\t(no MBID)'), func: async () => {
-							console.popup('Playlist URL:\n\t ' + lb.getPlaylistURL(pls), window.Name);
+							console.popup('Playlist URL:\n\t ' + lb.getPlaylistURL(pls), window.Name + _ps(window.ScriptInfo.Name));
 						}, flags: pls.playlist_mbid.length ? MF_STRING : MF_GRAYED
 					});
 					menu.newEntry({
@@ -1053,7 +1053,7 @@ function createMenuFolder(menu, folder, z) {
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Rename...' + list.getGlobalShortcut('rename'), func: () => {
-			const input = Input.string('string', folder.nameId, 'Enter folder name:', window.Name + ':' + folder.name, 'My folder', void (0), true);
+			const input = Input.string('string', folder.nameId, 'Enter folder name:', window.Name + _ps(window.ScriptInfo.Name) + ':' + folder.name, 'My folder', void (0), true);
 			if (input === null) { return; }
 			renameFolder(list, z, input);
 		}
@@ -1245,14 +1245,14 @@ function createMenuLeftMult(forcedIndexes = []) {
 	const menu = menuLbtnMult;
 	menu.clear(true); // Reset on every call
 	if (indexes.length === 0) {
-		fb.ShowPopupMessage('Selected indexes were empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		fb.ShowPopupMessage('Selected indexes were empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name + _ps(window.ScriptInfo.Name));
 		return menu;
 	}
 	const playlists = [];
 	for (let z of indexes) {
 		playlists.push(list.data[z]);
 		if (!playlists.slice(-1)[0]) {
-			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.Name);
+			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.Name + _ps(window.ScriptInfo.Name));
 			return menu;
 		}
 	}
@@ -1385,7 +1385,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newEntry({
 				menuName, entryText: 'New category...', func: () => {
 					let category = '';
-					try { category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name, playlists[0].category !== null ? playlists[0].category : '', true); }
+					try { category = utils.InputBox(window.ID, 'Category name (only 1):', window.Name + _ps(window.ScriptInfo.Name), playlists[0].category !== null ? playlists[0].category : '', true); }
 					catch (e) { return; } // eslint-disable-line no-unused-vars
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
@@ -1420,7 +1420,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 						'array strings',
 						playlists[0].tags,
 						'Tag(s) Name(s):\n(JSON)\n\nFor ex: ["Summer", "Cool"]',
-						window.Name + ': ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 50),
+						window.Name + _ps(window.ScriptInfo.Name) + ': ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 50),
 						'["TagA","TagB"]',
 						void (0),
 						true
@@ -1464,12 +1464,12 @@ function createMenuLeftMult(forcedIndexes = []) {
 				entryText: 'Automatically add tag(s) to tracks...', func: () => {
 					let tags = '';
 					const currValue = playlists[0].trackTags && playlists[0].trackTags.length ? JSON.stringify(playlists[0].trackTags) : '';
-					try { tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name, currValue, true); }
+					try { tags = utils.InputBox(window.ID, 'Enter data json-formatted: [{"tagName":"tagValue"}]\n\nTagValue may be:\n- String or number (doesn\'t need quotes).\n- TF expression applied to added track.\n- JS:+Function name (see helpers_xxx_utils.js).\n\nFor ex: [{"Mood":"Chill"}] or [{"Rating":5}]', window.Name + _ps(window.ScriptInfo.Name), currValue, true); }
 					catch (e) { return; } // eslint-disable-line no-unused-vars
 					const tagsString = tags;
 					if (tags.length) {
 						tags = tags.replaceAll('\'\'', '"'); // Replace quotes
-						try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name); return; } // eslint-disable-line no-unused-vars
+						try { tags = JSON.parse(tags); } catch (e) { fb.ShowPopupMessage('Input is not a valid JSON:\n' + tags, window.Name + _ps(window.ScriptInfo.Name)); return; } // eslint-disable-line no-unused-vars
 					}
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
@@ -1495,11 +1495,11 @@ function createMenuLeftMult(forcedIndexes = []) {
 			menu.newEntry({
 				entryText: 'Export and Copy Tracks to...', func: () => {
 					let path = '';
-					try { path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name, list.playlistsPath + 'Export\\', true)); }
+					try { path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:\n(don\'t forget adding \\ to copy to subfolder)', window.Name + _ps(window.ScriptInfo.Name), list.playlistsPath + 'Export\\', true)); }
 					catch (e) { return; } // eslint-disable-line no-unused-vars
 					if (!path.length) { return; }
 					if (path === list.playlistsPath) { console.log('Playlist Manager: can\'t export playlist(s) to original path.'); return; }
-					const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name, popup.question + popup.yes_no) === popup.yes;
+					const bSubFolder = WshShell.Popup('Create a subfolder per playlist?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no) === popup.yes;
 					indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder).forEach((z) => {
 						const plsPath = path + (bSubFolder ? list.data[z].name + '\\' : '');
 						exportPlaylistFileWithTracks({ list, z, bAsync: list.properties.bCopyAsync[1], bNoInput: true, defPath: plsPath, bOpenOnExport: false });
@@ -1587,7 +1587,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Get URL...' + (playlists.some((pls) => pls.playlist_mbid.length) ? '' : '\t(no MBID)'), func: async () => {
-				console.popup('Playlist URL:\n\t ' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t '), window.Name);
+				console.popup('Playlist URL:\n\t ' + playlists.map((pls) => pls.nameId + ': ' + lb.getPlaylistURL(pls)).join('\n\t '), window.Name + _ps(window.ScriptInfo.Name));
 			}, flags: playlists.some((pls) => pls.playlist_mbid.length) ? MF_STRING : MF_GRAYED
 		});
 	}
@@ -1649,7 +1649,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 								}
 							});
 							if (report.length) {
-								fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name);
+								fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}, flags
 					});
@@ -1676,7 +1676,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 							}
 						});
 						if (report.length) {
-							fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name);
+							fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name + _ps(window.ScriptInfo.Name));
 						}
 					}, flags
 				});
@@ -1694,7 +1694,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 							}
 						});
 						if (report.length) {
-							fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name);
+							fb.ShowPopupMessage('These playlists can not be changed since lock is set by another component:\n' + report.join('\n'), window.Name + _ps(window.ScriptInfo.Name));
 						}
 					}, flags
 				});
@@ -2022,7 +2022,7 @@ function createMenuRight() {
 						let i = 0;
 						while (list.dataAll.some((pls) => pls.nameId === name)) {
 							name = name.replace(/ \((\n\))/, '') + ' ' + _p(++i);
-							if (i > 10) { fb.ShowPopupMessage('There are more than 10 playlists with same name: ' + opt.name, window.Name); return; }
+							if (i > 10) { fb.ShowPopupMessage('There are more than 10 playlists with same name: ' + opt.name, window.Name + _ps(window.ScriptInfo.Name)); return; }
 						}
 						const pls = list.addAutoPlaylist({ sort: '', ...opt, name }, false, toFolder);
 						if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
@@ -2112,7 +2112,7 @@ function createMenuRight() {
 					}
 				}
 				const results = found.length ? found.join('\n') : 'None.';
-				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + results, window.Name);
+				fb.ShowPopupMessage('In case of multiple selection, a single track match will be enough\nto show a playlist. So not all results will contain all tracks.\n\nHint: Use playlist search (Ctrl + F) to find items on loaded playlists.\n\nSelected tracks found on these playlists: [Category:] - Playlist\n\n' + results, window.Name + _ps(window.ScriptInfo.Name));
 			}, flags: sel && sel.Count !== 0 ? MF_STRING : MF_GRAYED
 		});
 	}
@@ -2125,7 +2125,7 @@ function createMenuRight() {
 				entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 					if (!await checkLBToken()) { return Promise.resolve(false); }
 					let bDone = false;
-					let playlist_mbid = Input.string('string', menu.cache.playlist_mbid || '', 'Enter Playlist MBID:', window.Name, '866b5a46-c474-4fae-8782-0f46240a9507', [(mbid) => isUUID(mbid.replace(lb.regEx, ''))]);
+					let playlist_mbid = Input.string('string', menu.cache.playlist_mbid || '', 'Enter Playlist MBID:', window.Name + _ps(window.ScriptInfo.Name), '866b5a46-c474-4fae-8782-0f46240a9507', [(mbid) => isUUID(mbid.replace(lb.regEx, ''))]);
 					if (playlist_mbid === null) { playlist_mbid = Input.isLastEqual ? Input.lastInput : ''; }
 					if (playlist_mbid.length) {
 						playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
@@ -2138,7 +2138,7 @@ function createMenuRight() {
 								if (jspf) {
 									let bXSPF = false;
 									if (list.playlistsExtension !== '.xspf') {
-										const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.Name, popup.question + popup.yes_no);
+										const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 										if (answer === popup.yes) { bXSPF = true; }
 									} else { bXSPF = true; }
 									const data = lb.contentResolver(jspf);
@@ -2158,7 +2158,7 @@ function createMenuRight() {
 									if (!bXSPF) {
 										let bYouTube = false;
 										if (notFound.length && isYouTube) {
-											const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+											const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 											if (answer === popup.yes) { bYouTube = true; }
 										}
 										const playlistPath = list.playlistsPath + sanitize(playlistName) + list.playlistsExtension;
@@ -2196,7 +2196,7 @@ function createMenuRight() {
 														console.log('Playlist Manager: Found ' + foundLinks + ' tracks on YouTube');
 														const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 														if (_isFile(playlistPath)) {
-															let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+															let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 															if (answer === popup.no) { return false; }
 															_renameFile(playlistPath, backPath);
 														}
@@ -2218,7 +2218,7 @@ function createMenuRight() {
 											const handleList = data.handleList;
 											const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
 											if (_isFile(playlistPath)) {
-												let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name, popup.question + popup.yes_no);
+												let answer = WshShell.Popup('There is a playlist with same name/path.\nDo you want to overwrite it?.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 												if (answer === popup.no) { return false; }
 												_renameFile(playlistPath, backPath);
 											}
@@ -2329,10 +2329,10 @@ function createMenuRight() {
 		menu.newEntry({
 			menuName: subMenuName,
 			entryText: 'Import from file \\ url...', func: () => {
-				const path = Input.string('file|url', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
+				const path = Input.string('file|url', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.Name + _ps(window.ScriptInfo.Name), folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
 				if (path === null) { return; }
 				if (!/https?:\/\/|www./.test(path) && !_isFile(path)) {
-					fb.ShowPopupMessage('File not found:\n\n' + path, window.Name);
+					fb.ShowPopupMessage('File not found:\n\n' + path, window.Name + _ps(window.ScriptInfo.Name));
 					return;
 				}
 				// Presets
@@ -2347,7 +2347,7 @@ function createMenuRight() {
 					'string',
 					list.properties.importPlaylistMask[1].replace(/"/g, '\''),
 					'Enter pattern to retrieve tracks. Mask is saved for future use.\nPresets at bottom may also be loaded by their number ([x]).\n\nTo discard a section, use \'\' or "".\nTo match a section, put the exact chars to match.\nStrings with \'%\' are considered tags to extract.\n\n[\'. \', \'%TITLE%\', \' - \', \'%ALBUM ARTIST%\'] matches something like:\n1. Respect - Aretha Franklin' + (maskPresets.length ? '\n\n' + maskPresets.map((preset, i) => { return '[' + i + ']' + (preset.name.length ? ' ' + preset.name : '') + ': ' + preset.val; }).join('\n') : ''),
-					window.Name,
+					window.Name + _ps(window.ScriptInfo.Name),
 					maskPresets[0].val, void (0), true
 				) || Input.lastInput;
 				if (formatMask === null) { return; }
@@ -2371,7 +2371,7 @@ function createMenuRight() {
 						'string',
 						'',
 						'Any line starting with the following string will be skipped:\n(For ex. to skip lines starting with \'#BLABLABLA...\', write \'#\')',
-						window.Name
+						window.Name + _ps(window.ScriptInfo.Name)
 					) || Input.lastInput;
 					if (discardMask === null) { return; }
 				}
@@ -2399,7 +2399,7 @@ function createMenuRight() {
 							fb.ShowPopupMessage(reportPls, 'Not found list');
 							fb.ShowPopupMessage(report, 'Tracks not found at source');
 							if (notFoundFiltered.length && isYouTube) {
-								const answer = WshShell.Popup('Some imported tracks have not been found on library (see popup).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name, popup.question + popup.yes_no);
+								const answer = WshShell.Popup('Some imported tracks have not been found on library (see popup).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 								if (answer === popup.yes) { bYouTube = true; }
 							}
 						}
@@ -2465,7 +2465,7 @@ function createMenuRight() {
 			menu.newEntry({
 				menuName: subMenuName,
 				entryText: 'Export playlists as json file...', func: () => {
-					let answer = WshShell.Popup('Export only AutoPlaylists (yes) or both AutoPlaylists and other playlists -.fpl & .xsp- (no)?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Export only AutoPlaylists (yes) or both AutoPlaylists and other playlists -.fpl & .xsp- (no)?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					const path = list.exportJson({ idx: -1, bAllExt: answer !== popup.yes },); // All
 					if (_isFile(path)) { _explorer(path); }
 				}
@@ -2480,12 +2480,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Absolute/relative paths consistency
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Absolute/relative paths...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other environments.\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check if any of them has absolute and relative paths in the same file. That probably leads to unexpected results when using those playlists in other environments.\nDo you want to continue?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking absolute/relative paths...\nPanel will be disabled during the process.'); }
 					findMixedPaths().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with mixed relative and absolute paths:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2494,12 +2494,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// External items
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'External items...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for external items (i.e. items not found on library but present on their paths).\nDo you want to continue?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching external items...\nPanel will be disabled during the process.'); }
 					findExternal().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with items not present on library:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2508,12 +2508,12 @@ function createMenuRight() {
 		{	// Dead items
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Dead items...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for dead items (i.e. items that don\'t exist in their path).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for dead items (i.e. items that don\'t exist in their path).\nDo you want to continue?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching dead items...\nPanel will be disabled during the process.'); }
 					findDead().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with dead items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2522,12 +2522,12 @@ function createMenuRight() {
 		{	// Duplicates
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Duplicated items by Path...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for duplicated items (i.e. items that appear multiple times in a playlist).\nDo you want to continue?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
 					findDuplicatesByPath().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2536,24 +2536,24 @@ function createMenuRight() {
 		{	// Duplicates by TF
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Duplicated items by TF...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for duplicated items by TF:\n' + list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for duplicated items by TF:\n' + list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
 					findDuplicatesByTF(list.removeDuplicatesAutoPls, 'pls').then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
 			});
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Duplicated items by TF (AutoPlaylists)...', func: () => {
-					let answer = WshShell.Popup('Scan all AutoPlaylists to check for duplicated items by TF:\n' + list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all AutoPlaylists to check for duplicated items by TF:\n' + list.properties.removeDuplicatesAutoPls[1] + '\nDo you want to continue?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Searching...', 'Searching duplicated items...\nPanel will be disabled during the process.'); }
 					findDuplicatesByTF(list.removeDuplicatesAutoPls, 'autopls').then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with duplicated items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2562,12 +2562,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Size mismatch
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Playlist size mismatch...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for reported playlist size not matching number of tracks.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking playlist size mismatch...\nPanel will be disabled during the process.'); }
 					findSizeMismatch().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with size mismatch:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2576,12 +2576,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Duration mismatch
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Playlist duration mismatch...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for reported playlist duration not matching duration of tracks.', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for reported playlist duration not matching duration of tracks.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking playlist duration mismatch...\nPanel will be disabled during the process.'); }
 					findDurationMismatch().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (report.length ? report.join('\n') : 'None.') + (list.itemsFpl && report.length ? '\n\nAll .fpl playlists cached duration tags have also been updated.' : ''), window.Name);
+						fb.ShowPopupMessage('Found these playlists with duration mismatch:\n\n' + (report.length ? report.join('\n') : 'None.') + (list.itemsFpl && report.length ? '\n\nAll .fpl playlists cached duration tags have also been updated.' : ''), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2590,12 +2590,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Blank Lines
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Blank lines...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for blank lines (it may break playlist on other players).', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for blank lines (it may break playlist on other players).', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking blank lines...\nPanel will be disabled during the process.'); }
 					findBlank().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with blank lines:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with blank lines:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2604,12 +2604,12 @@ function createMenuRight() {
 		{	// Subsong items
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Subsong items...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).\n\nAutoPlaylists are skipped since they only work within foobar2000, but beware when converting them to other formats. Use the options for AutoPlaylists in such case.', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).\n\nAutoPlaylists are skipped since they only work within foobar2000, but beware when converting them to other formats. Use the options for AutoPlaylists in such case.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.'); }
 					findSubSongs('pls').then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2617,12 +2617,12 @@ function createMenuRight() {
 			if (list.dataAll.some((pls) => pls.isAutoPlaylist || pls.query)) {
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Subsong items (AutoPlaylists)...', func: () => {
-						let answer = WshShell.Popup('Scan all AutoPlaylists and Smart playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players after exporting them).', 0, window.Name, popup.question + popup.yes_no);
+						let answer = WshShell.Popup('Scan all AutoPlaylists and Smart playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players after exporting them).', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 						if (answer !== popup.yes) { return; }
 						if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.'); }
 						findSubSongs('autopls').then(({ found, report }) => {
 							if (found.length) { list.filter({ plsState: found }); }
-							fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+							fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 							pop.disable(true);
 						});
 					}
@@ -2632,12 +2632,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Format specific errors
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Format specific errors...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for errors on playlist structure or format.', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for errors on playlist structure or format.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking format errors...\nPanel will be disabled during the process.'); }
 					findFormatErrors().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with format errors:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with format errors:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2646,12 +2646,12 @@ function createMenuRight() {
 		if (!list.bLiteMode) {	// Circular references
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Circular references...', func: () => {
-					let answer = WshShell.Popup('Scan all playlists to check for circular references on Smart Playlists (.xsp).', 0, window.Name, popup.question + popup.yes_no);
+					let answer = WshShell.Popup('Scan all playlists to check for circular references on Smart Playlists (.xsp).', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
 					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking circular references...\nPanel will be disabled during the process.'); }
 					findCircularReferences().then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with circular references:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name);
+						fb.ShowPopupMessage('Found these playlists with circular references:\n\n' + (report.length ? report.join('\n') : 'None.'), window.Name + _ps(window.ScriptInfo.Name));
 						pop.disable(true);
 					});
 				}
@@ -2766,12 +2766,12 @@ function createMenuRightTop() {
 	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({
 			entryText: 'Set playlists folder...', func: () => {
-				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name, list.properties['playlistsPath'][3], void (0), true);
+				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name + _ps(window.ScriptInfo.Name), list.properties['playlistsPath'][3], void (0), true);
 				if (input === null) { return; }
 				let bDone = _isFolder(input);
 				if (!bDone) { bDone = _createFolder(input); }
 				if (!bDone) {
-					fb.ShowPopupMessage('Path can not be found or created:\n\'' + input + '\'', window.Name);
+					fb.ShowPopupMessage('Path can not be found or created:\n\'' + input + '\'', window.Name + _ps(window.ScriptInfo.Name));
 					return;
 				}
 				// Update property to save between reloads
@@ -2784,18 +2784,18 @@ function createMenuRightTop() {
 					if (!list.infoPopups.networkDrive) { list.setInfoPopup('networkDrive'); }
 					const file = folders.xxx + 'helpers\\readme\\playlist_manager_network.txt';
 					const readme = _open(file, utf8);
-					fb.ShowPopupMessage(readme, window.Name);
+					fb.ShowPopupMessage(readme, window.Name + _ps(window.ScriptInfo.Name));
 				} else { list.setInfoPopup('networkDrive', false); }
 				// Related features
 				const answer = list.bLiteMode
 					? popup.no
-					: WshShell.Popup('Enable \'Relative paths handling\' entries?\n\n(Only useful when tracking playlists which use relative paths for tracks)', 0, window.Name, popup.question + popup.yes_no);
+					: WshShell.Popup('Enable \'Relative paths handling\' entries?\n\n(Only useful when tracking playlists which use relative paths for tracks)', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 				if (answer === popup.yes) {
 					list.updateMenus({ menus: { 'Relative paths handling': true }, bSave: false });
 				}
 				overwriteProperties(list.properties);
 				bDone = list.checkConfig();
-				let test = new FbProfiler(window.Name + ': ' + 'Manual refresh');
+				let test = new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ': ' + 'Manual refresh');
 				list.headerTextUpdate();
 				list.bUpdateAutoPlaylist = true;
 				list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: z }); // Forces AutoPlaylist size update according to query and tags
@@ -2890,8 +2890,8 @@ function createMenuRightTop() {
 								list.bRelativePath = (i === 0);
 								list.properties['bRelativePath'][1] = list.bRelativePath;
 								overwriteProperties(list.properties);
-								if (i === 0) { fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name); }
-								else { fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name); }
+								if (i === 0) { fb.ShowPopupMessage('All new playlists (and those saved from now on) will have their tracks\' paths edited to be relative to:\n\'' + list.playlistsPath + '\'\n\nFor example, for a file like this:\n' + list.playlistsPath + 'Music\\Artist A\\01 - hjk.mp3\n' + '--> .\\Music\\Artist A\\01 - hjk.mp3\n' + '\n\nBeware adding files which are not in a relative path to the playlist folder, they will be added \'as is\' no matter this setting:\n' + 'A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n' + '-->A:\\OTHER_FOLDER\\Music\\Artist A\\01 - hjk.mp3\n\nAny playlist using absolute paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the absolute playlists (so they never get overwritten).', window.Name + _ps(window.ScriptInfo.Name)); }
+								else { fb.ShowPopupMessage('All new playlists (and those saved from now on) will use absolute paths.\n\nAny playlist using relative paths will be converted as soon as it gets updated/saved; apart from that, their usage remains the same.\nIf you want to mix relative and absolute playlists on the same tracked folder, you can do it locking the relative playlists (so they never get overwritten).', window.Name + _ps(window.ScriptInfo.Name)); }
 							}
 						});
 					});
@@ -2909,7 +2909,7 @@ function createMenuRightTop() {
 						menu.newEntry({
 							menuName: subMenuName, entryText: item, func: () => {
 								if (item === '.pls') {
-									let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name, popup.question + popup.yes_no);
+									let answer = WshShell.Popup('Are you sure you want to change extension?\n.pls format does not support UUIDs, Lock status, Categories nor Tags.\nUUID will be set to none for all playlists.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 									if (answer !== popup.yes) { return; }
 									menu.btn_up(void (0), void (0), void (0), 'Use UUIDs for playlist names...\\' + list.optionsUUID().pop()); // Force UUID change to no UUID using the menu routine
 								}
@@ -2924,7 +2924,7 @@ function createMenuRightTop() {
 				menu.newSeparator(subMenuName);
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Force on (auto)saving', func: () => {
-						const answer = WshShell.Popup('Apply default format in any case, not only to new playlists created.\n\nFormat of existing playlists will be changed to the default format whenever they are saved: Manually or on Auto-saving.\n\nOther saving related configuration may apply (like Smart Playlists being skipped or warning popups whenever format will be changed).', 0, window.Name, popup.question + popup.yes_no);
+						const answer = WshShell.Popup('Apply default format in any case, not only to new playlists created.\n\nFormat of existing playlists will be changed to the default format whenever they are saved: Manually or on Auto-saving.\n\nOther saving related configuration may apply (like Smart Playlists being skipped or warning popups whenever format will be changed).', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 						list.bSavingDefExtension = (answer === popup.yes);
 						if (list.properties['bSavingDefExtension'][1] !== list.bSavingDefExtension) {
 							list.properties['bSavingDefExtension'][1] = list.bSavingDefExtension;
@@ -2985,7 +2985,7 @@ function createMenuRightTop() {
 								list.bSavingXsp = (i === 1);
 								list.properties['bSavingXsp'][1] = list.bSavingXsp;
 								overwriteProperties(list.properties);
-								if (list.bSavingXsp) { fb.ShowPopupMessage('Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes against their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.', window.Name); }
+								if (list.bSavingXsp) { fb.ShowPopupMessage('Auto-saving Smart Playlists involves, by design, not having an Smart Playlist anymore but just a list of files (originated from their query).\n\nEnabling this option will allow Smart Playlists to be overwritten as an standard playlist whenever they are updated. Note this goes against their intended aim (like Auto-playlists) and therefore the query and other related data will be lost as soon as it\'s converted to a list of paths (*).\n\nOption not recommended for most users, use it at your own responsibility.\n\n(*) If this happens, remember the original playlist could still be found at the Recycle Bin.', window.Name + _ps(window.ScriptInfo.Name)); }
 							}
 						});
 					});
@@ -3004,7 +3004,7 @@ function createMenuRightTop() {
 							menuName: subMenuName, entryText: item, func: () => {
 								list.properties['bRwLock'][1] = !list.properties['bRwLock'][1];
 								overwriteProperties(list.properties);
-								if (list.properties['bRwLock'][1]) { fb.ShowPopupMessage('Selections from the album list or loading a folder or file(s) into foobar2000 may overwrite the active playlist with the new track(s). In such case, autosaving may also overwrite the associated playlist file which may be undesirable or happen without the user noticing it.\n\nWhen this option is enabled, the playlist will be restored back to the previous state automatically and no saving will be performed. Note playback will start anyway with the selected track(s) although now they will not be visible on any playlist.\n\nThis "overwrite lock" safeguard is only applied to playlists with a playlist file associated, not to UI-only playlists. Also, if enabled, some extra garbage logging may be produced when manually applying undo on a playlist (which can not be avoided since every undo action counts -internally- as deleting the entire playlist).', window.Name); }
+								if (list.properties['bRwLock'][1]) { fb.ShowPopupMessage('Selections from the album list or loading a folder or file(s) into foobar2000 may overwrite the active playlist with the new track(s). In such case, autosaving may also overwrite the associated playlist file which may be undesirable or happen without the user noticing it.\n\nWhen this option is enabled, the playlist will be restored back to the previous state automatically and no saving will be performed. Note playback will start anyway with the selected track(s) although now they will not be visible on any playlist.\n\nThis "overwrite lock" safeguard is only applied to playlists with a playlist file associated, not to UI-only playlists. Also, if enabled, some extra garbage logging may be produced when manually applying undo on a playlist (which can not be avoided since every undo action counts -internally- as deleting the entire playlist).', window.Name + _ps(window.ScriptInfo.Name)); }
 							}
 						});
 					});
@@ -3045,7 +3045,7 @@ function createMenuRightTop() {
 						list.properties['bAllPls'][1] = list.bAllPls;
 						overwriteProperties(list.properties);
 						if (list.bAllPls) {
-							fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom color to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name);
+							fb.ShowPopupMessage('UI-only playlists are non editable but they can be renamed, deleted or restored. Sending current selection to a playlist is also allowed.\nUI-only playlists have their own custom color to be easily identified.\n\nTo be able to use all the other features of the manager, consider creating playlist files instead. At any point you may use \'Create new playlist from Active playlist...\' to save UI-only playlists as tracked files.', window.Name + _ps(window.ScriptInfo.Name));
 						}
 						createMenuRight().btn_up(-1, -1, null, 'Manual refresh');
 					}
@@ -3130,7 +3130,7 @@ function createMenuRightTop() {
 				}
 				menu.newEntry({
 					menuName, entryText, func: () => {
-						const input = Input.number('int positive', Number(prop[1]), text, window.Name, lower, [(n) => checkProperty(prop, n)]);
+						const input = Input.number('int positive', Number(prop[1]), text, window.Name + _ps(window.ScriptInfo.Name), lower, [(n) => checkProperty(prop, n)]);
 						if (input === null) { return; }
 						prop[1] = input;
 						overwriteProperties(list.properties);
@@ -3169,7 +3169,7 @@ function createMenuRightTop() {
 				}
 				menu.newEntry({
 					menuName: subMenuName, entryText: entry + '\t' + _b((bEnabled ? list.delays[key] : 0) + ' ms'), func: () => {
-						const input = Input.number('int positive', list.delays[key], 'Enter value (ms):\n(>= 0)' + (info.length ? '\n\n' + info : ''), window.Name, 50, [(n) => Number.isFinite(n)]);
+						const input = Input.number('int positive', list.delays[key], 'Enter value (ms):\n(>= 0)' + (info.length ? '\n\n' + info : ''), window.Name + _ps(window.ScriptInfo.Name), 50, [(n) => Number.isFinite(n)]);
 						if (input === null) { return; }
 						list.delays[key] = input;
 						list.properties['delays'][1] = JSON.stringify(list.delays);
@@ -3249,7 +3249,7 @@ function createMenuRightTop() {
 						list.properties['bUpdateAutoPlaylist'][1] = i === 0; // True will force a refresh on script loading
 						overwriteProperties(list.properties);
 						if (list.properties['bUpdateAutoPlaylist'][1]) {
-							fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this setting.', window.Name);
+							fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to retrieve their tag count.(*)(**)\n\nIt\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Note enabling this option will not incur on additional processing if you already enabled Tracks Auto-tagging on startup for AutoPlaylists.\n(**) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what this setting.', window.Name + _ps(window.ScriptInfo.Name));
 						}
 					}
 				});
@@ -3356,7 +3356,7 @@ function createMenuRightTop() {
 						'array strings',
 						list.removeDuplicatesAutoPls,
 						'Enter tag(s) or TF expression(s):\n(JSON)',
-						window.Name,
+						window.Name + _ps(window.ScriptInfo.Name),
 						'["$ascii($lower($trim(%TITLE%)))","ARTIST","$year(%DATE%)"]',
 						void (0),
 						true
@@ -3393,7 +3393,7 @@ function createMenuRightTop() {
 						list.properties['xspfRules'][1] = JSON.stringify(list.xspfRules);
 						overwriteProperties(list.properties);
 						if (list.xspfRules.bLoadNotTrackedItems) {
-							fb.ShowPopupMessage('Non-tracked files on library are omitted by default. Enabling this setting, it will try to load the files if they exist outside the library (breaking the XSPF specs).', window.Name);
+							fb.ShowPopupMessage('Non-tracked files on library are omitted by default. Enabling this setting, it will try to load the files if they exist outside the library (breaking the XSPF specs).', window.Name + _ps(window.ScriptInfo.Name));
 						}
 					}
 				});
@@ -3404,7 +3404,7 @@ function createMenuRightTop() {
 						list.properties['xspfRules'][1] = JSON.stringify(list.xspfRules);
 						overwriteProperties(list.properties);
 						if (list.xspfRules.bFallbackComponentXSPF) {
-							fb.ShowPopupMessage('Additional support for non-tracked files with subsongs (.cue, .iso, etc.) can be added by installing foo_xspf_1 (*) and using appropriate settings (**). For files with subsongs which are tracked on library, it is not needed.\n\nEnabling this setting, it will try to load the files if they exist outside the library using the component as fallback (breaking the XSPF specs).\n\n\n(*) https://github.com/Chocobo1/foo_xspf_1\n(**)https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', window.Name);
+							fb.ShowPopupMessage('Additional support for non-tracked files with subsongs (.cue, .iso, etc.) can be added by installing foo_xspf_1 (*) and using appropriate settings (**). For files with subsongs which are tracked on library, it is not needed.\n\nEnabling this setting, it will try to load the files if they exist outside the library using the component as fallback (breaking the XSPF specs).\n\n\n(*) https://github.com/Chocobo1/foo_xspf_1\n(**)https://github.com/Chocobo1/foo_xspf_1/issues/1#issuecomment-176006843', window.Name + _ps(window.ScriptInfo.Name));
 						}
 					}, flags: list.xspfRules.bLoadNotTrackedItems ? MF_STRING : MF_GRAYED
 				});
@@ -3424,7 +3424,7 @@ function createMenuRightTop() {
 							list.fplRules.bNonTrackedSupport = true;
 							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
 							overwriteProperties(list.properties);
-							fb.ShowPopupMessage('Non-library files will be fully supported with a performance penalty. Additionally, tracks will be asynchronous loaded in some cases (affecting some checks).\n\nWARNING: This feature currently works for actions related to sending selections, playlist maintenance tools and playlist cloning. It doesn\'t work for search or playlist exporting.', window.Name);
+							fb.ShowPopupMessage('Non-library files will be fully supported with a performance penalty. Additionally, tracks will be asynchronous loaded in some cases (affecting some checks).\n\nWARNING: This feature currently works for actions related to sending selections, playlist maintenance tools and playlist cloning. It doesn\'t work for search or playlist exporting.', window.Name + _ps(window.ScriptInfo.Name));
 						}, flags: bSupported ? MF_STRING : MF_GRAYED
 					});
 					menu.newEntry({
@@ -3432,7 +3432,7 @@ function createMenuRightTop() {
 							list.fplRules.bNonTrackedSupport = false;
 							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
 							overwriteProperties(list.properties);
-							fb.ShowPopupMessage('Non-library files will be omitted when internally processing .fpl playlists on actions like searching or sending selection to playlists. This will improve performance a bit.\n\nNote: playlist loading always support non-library files anyway.', window.Name);
+							fb.ShowPopupMessage('Non-library files will be omitted when internally processing .fpl playlists on actions like searching or sending selection to playlists. This will improve performance a bit.\n\nNote: playlist loading always support non-library files anyway.', window.Name + _ps(window.ScriptInfo.Name));
 						}, flags: bSupported ? MF_STRING : MF_GRAYED
 					});
 					if (bSupported) { menu.newCheckMenuLast(() => list.fplRules.bNonTrackedSupport ? 0 : 1, 2); }
@@ -3444,7 +3444,7 @@ function createMenuRightTop() {
 							list.properties['fplRules'][1] = JSON.stringify(list.fplRules);
 							overwriteProperties(list.properties);
 							if (list.fplRules.bLockOnLoad) {
-								fb.ShowPopupMessage('.fpl playlists loaded will be automatically locked to avoid unwanted changes or conversion to other formats.', window.Name);
+								fb.ShowPopupMessage('.fpl playlists loaded will be automatically locked to avoid unwanted changes or conversion to other formats.', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}
 					});
@@ -3476,7 +3476,7 @@ function createMenuRightTop() {
 				menu.newSeparator(subMenuNameTwo);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Custom tag...', func: () => {
-						const tag = Input.string('trimmed string', options.join(','), 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name, 'summer,top');
+						const tag = Input.string('trimmed string', options.join(','), 'Enter tag(s) to be added to playlists on load:\nLeave it blank to deactivate auto-tagging.\n(sep by comma)', window.Name + _ps(window.ScriptInfo.Name), 'summer,top');
 						if (tag === null) { return; }
 						list.bAutoCustomTag = !!tag.length;
 						list.properties.bAutoCustomTag[1] = list.bAutoCustomTag;
@@ -3497,7 +3497,7 @@ function createMenuRightTop() {
 							list.bApplyAutoTags = (i === 0);
 							list.properties.bApplyAutoTags[1] = list.bApplyAutoTags;
 							overwriteProperties(list.properties);
-							fb.ShowPopupMessage('To see the list of special tags and their associated actions check the documentation' + list.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' or quick help' + list.getGlobalShortcut('quick help', { bTab: false, bParen: true }) + '.\n\nNote in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).', window.Name);
+							fb.ShowPopupMessage('To see the list of special tags and their associated actions check the documentation' + list.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' or quick help' + list.getGlobalShortcut('quick help', { bTab: false, bParen: true }) + '.\n\nNote in the case of \'bMultMenu\' and \'bSkipMenu\', actions are always applied at dynamic menu usage (the former) and creation (the latter).', window.Name + _ps(window.ScriptInfo.Name));
 							if (list.data.some((pls) => pls.tags.includes('bPinnedFirst') || pls.tags.includes('bPinnedLast'))) {
 								list.sort();
 							}
@@ -3517,7 +3517,7 @@ function createMenuRightTop() {
 				menu.newSeparator(subMenuNameTwo);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Standard playlists', func: () => {
-						if (!list.bAutoTrackTagPls) { fb.ShowPopupMessage('Tracks added to non-locked playlist will be automatically tagged.', window.Name); }
+						if (!list.bAutoTrackTagPls) { fb.ShowPopupMessage('Tracks added to non-locked playlist will be automatically tagged.', window.Name + _ps(window.ScriptInfo.Name)); }
 						list.bAutoTrackTagPls = !list.bAutoTrackTagPls;
 						list.properties['bAutoTrackTagPls'][1] = list.bAutoTrackTagPls;
 						overwriteProperties(list.properties);
@@ -3526,7 +3526,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTagPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Locked playlists', func: () => {
-						if (!list.bAutoTrackTagLockPls) { fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar2000) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name); }
+						if (!list.bAutoTrackTagLockPls) { fb.ShowPopupMessage('Changes on playlist will not be (automatically) saved to the playlist file since it will be locked, but tracks added to it (on foobar2000) will be automatically tagged.\n\nEnabling this option may allow to use a playlist only for tagging purposes (for ex. native playlists), not caring at all about saving the changes to the associated files.', window.Name + _ps(window.ScriptInfo.Name)); }
 						list.bAutoTrackTagLockPls = !list.bAutoTrackTagLockPls;
 						list.properties['bAutoTrackTagLockPls'][1] = list.bAutoTrackTagLockPls;
 						overwriteProperties(list.properties);
@@ -3535,7 +3535,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTagLockPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'AutoPlaylists', func: () => {
-						if (!list.bAutoTrackTagAutoPls) { fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar2000, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar2000 are omitted.\n\nAlternatively, using the manual refresh menu entry will force AutoPlaylists tagging (and size updating) on all of them.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name); }
+						if (!list.bAutoTrackTagAutoPls) { fb.ShowPopupMessage('Enabling this option will automatically tag all tracks retrieved by the AutoPlaylists\' queries.\n\nNote AutoPlaylists only load the tracks when they are loaded within foobar2000, therefore tagging only happens at that point. AutoPlaylists in the Playlist Manager but not loaded within foobar2000 are omitted.\n\nAlternatively, using the manual refresh menu entry will force AutoPlaylists tagging (and size updating) on all of them.\n\nIt may allow to automatically tag tracks according to some query or other tags (for ex. adding a tag \'Instrumental\' to all \'Jazz\' tracks automatically).\n\nUsing it in a creative way, AutoPlaylists may be used as pools which send tracks to other AutoPlaylists. For ex:\n- AutoPlaylist (A) which tags all \'Surf Rock\' or \'Beat Music\' tracks with \'Summer\'.\n- AutoPlaylist (B) which tags all tracks with from 2021 and rating 4 with \'Summer\'.\n- AutoPlaylist (C) filled with all tracks with a \'playlist\' tag equal to \'Summer\'. As result, this playlist will be filled with tracks from (A) and (C).', window.Name + _ps(window.ScriptInfo.Name)); }
 						list.bAutoTrackTagAutoPls = !list.bAutoTrackTagAutoPls;
 						list.properties['bAutoTrackTagAutoPls'][1] = list.bAutoTrackTagAutoPls;
 						overwriteProperties(list.properties);
@@ -3544,7 +3544,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTagAutoPls);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'AutoPlaylists (at startup)', func: () => {
-						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional processing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' setting is.', window.Name); }
+						if (!list.bAutoTrackTagAutoPlsInit) { fb.ShowPopupMessage('Enabling this option will also load -internally- all queries from AutoPlaylists at startup to tag their tracks (*)(**)(***).\n\nThis bypasses the natural limit of tagging only applying to loaded AutoPlaylists within foobar2000; it\'s done asynchronously so it should not take more time to load the script at startup as consequence.\n\n(*) Only those with tagging set, the rest are not loaded to optimize processing time.\n(**) Note enabling this option will not incur on additional processing if you already set AutoPlaylists size updating on startup too (both will be done asynchronously).\n(***) For the same reasons, AutoPlaylists which perform tagging will always get their size updated no matter what the \'Update AutoPlaylists size...\' setting is.', window.Name + _ps(window.ScriptInfo.Name)); }
 						list.bAutoTrackTagAutoPlsInit = !list.bAutoTrackTagAutoPlsInit;
 						list.properties['bAutoTrackTagAutoPlsInit'][1] = list.bAutoTrackTagAutoPlsInit;
 						overwriteProperties(list.properties);
@@ -3564,7 +3564,7 @@ function createMenuRightTop() {
 				const subMenuNameTwo = menu.newMenu('Enable auto-tagging', subMenuName);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'When saving and loading pls', func: () => {
-						if (!list.bAutoTrackTag) { fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load (AutoPlaylists) and/or save. Also on manual refresh (AutoPlaylists).\n\n(*) Use contextual menu.', window.Name); }
+						if (!list.bAutoTrackTag) { fb.ShowPopupMessage('Enables or disables the feature globally (all other options require this one to be switched on).\n\nEnabling this will automatically tag tracks added to playlist according to their set \'Track Tags\'. By default new playlist have none assigned, they must be configured per playlist (*).\n\nAutotagging is done while autosaving, on manual load (AutoPlaylists) and/or save. Also on manual refresh (AutoPlaylists).\n\n(*) Use contextual menu.', window.Name + _ps(window.ScriptInfo.Name)); }
 						list.bAutoTrackTag = !list.bAutoTrackTag;
 						list.properties['bAutoTrackTag'][1] = list.bAutoTrackTag;
 						overwriteProperties(list.properties);
@@ -3573,7 +3573,7 @@ function createMenuRightTop() {
 				menu.newCheckMenuLast(() => list.bAutoTrackTag);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Also adding tracks without autosave', func: () => {
-						if (!list.bAutoTrackTagAlways) { fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar2000 and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name); }
+						if (!list.bAutoTrackTagAlways) { fb.ShowPopupMessage('Auto-tagging is usually done at autosaving step. If autosave is disabled, playlist files will not reflect the changes done within foobar2000 and by default auto-tagging is skipped in that case.\n\nEnabling this option will make the changes to track\'s tags even if automatic playlist saving is disabled.', window.Name + _ps(window.ScriptInfo.Name)); }
 						list.bAutoTrackTagAlways = !list.bAutoTrackTagAlways;
 						list.properties['bAutoTrackTagAlways'][1] = list.bAutoTrackTagAlways;
 						overwriteProperties(list.properties);
@@ -3601,7 +3601,7 @@ function createMenuRightTop() {
 								'string',
 								folder,
 								'Set destination folder:\n(if it does not exist, a new one will be created)',
-								window.Name,
+								window.Name + _ps(window.ScriptInfo.Name),
 								'My new playlists'
 							);
 							if (input === null) { return; }
@@ -3678,7 +3678,7 @@ function createMenuRightTop() {
 					const subMenuNameTwo = menu.newMenu('Preset ' + (i + 1) + ': ' + pathName + extensionName + ': ' + dspName + ' ---> ' + tfName, subMenuName);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set default export folder...', func: () => {
-							const input = Input.string('path', preset.path, 'Enter output path:\n(At execution, the playlist name and extension will be appended and suggested as output)\n\nIf left empty, the default folder for the panel will be used instead.', window.Name, '');
+							const input = Input.string('path', preset.path, 'Enter output path:\n(At execution, the playlist name and extension will be appended and suggested as output)\n\nIf left empty, the default folder for the panel will be used instead.', window.Name + _ps(window.ScriptInfo.Name), '');
 							if (input === null) { return; }
 							preset.path = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
@@ -3689,7 +3689,7 @@ function createMenuRightTop() {
 					menu.newCheckMenuLast(() => !!preset.path.length);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set fixed export path...', func: () => {
-							const input = Input.string('file', playlistOutPath, 'Enter output path:\n(Left it empty to set output at execution)\n\n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.', window.Name, '');
+							const input = Input.string('file', playlistOutPath, 'Enter output path:\n(Left it empty to set output at execution)\n\n#EXPORT#, #PLAYLIST#, #EXT# and #PLAYLISTEXT# may also be used as placeholders for the default playlist export folder, playlist name, extension or name + extension.', window.Name + _ps(window.ScriptInfo.Name), '');
 							if (input === null) { return; }
 							preset.playlistOutPath = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
@@ -3730,7 +3730,7 @@ function createMenuRightTop() {
 					}
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set DSP preset...', func: () => {
-							let input = Input.string('string', preset.dsp, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name, 'my preset');
+							let input = Input.string('string', preset.dsp, 'Enter DSP preset name:\n(empty or ... will show converter window)', window.Name + _ps(window.ScriptInfo.Name), 'my preset');
 							if (input === null) { return; }
 							if (!input.length) { input = '...'; }
 							if (input !== preset.dsp) {
@@ -3743,7 +3743,7 @@ function createMenuRightTop() {
 					});
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set track filename expression...', func: () => {
-							const input = Input.string('string', preset.tf, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name, '.\\%FILENAME%.mp3', void (0), true);
+							const input = Input.string('string', preset.tf, 'Enter TF expression:\n(it should match the one at the converter preset)', window.Name + _ps(window.ScriptInfo.Name), '.\\%FILENAME%.mp3', void (0), true);
 							if (input === null) { return; }
 							preset.tf = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
@@ -3754,7 +3754,7 @@ function createMenuRightTop() {
 					menu.newSeparator(subMenuNameTwo);
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Set preset name...', func: () => {
-							const input = Input.string('string', Object.hasOwn(preset, 'name') ? preset.name : '', 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name, '-- Kodi --');
+							const input = Input.string('string', Object.hasOwn(preset, 'name') ? preset.name : '', 'Enter preset name:\n(Left it empty to use TF expression instead)', window.Name + _ps(window.ScriptInfo.Name), '-- Kodi --');
 							if (input === null) { return; }
 							preset.name = input;
 							list.properties['converterPreset'][1] = JSON.stringify(presets);
@@ -3766,7 +3766,7 @@ function createMenuRightTop() {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Clone preset...', func: () => {
 							const clone = { ...preset };
-							const input = Input.string('string', Object.hasOwn(clone, 'name') ? clone.name : '', 'Enter new preset name:\n(Left it empty to use TF expression instead)', window.Name, '-- Kodi --');
+							const input = Input.string('string', Object.hasOwn(clone, 'name') ? clone.name : '', 'Enter new preset name:\n(Left it empty to use TF expression instead)', window.Name + _ps(window.ScriptInfo.Name), '-- Kodi --');
 							if (input === null) {
 								if (!Input.isLastEqual) { return; }
 							} else { clone.name = input; }
@@ -3778,7 +3778,7 @@ function createMenuRightTop() {
 					});
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: 'Move preset...', func: () => {
-							const input = Input.number('int positive', i + 1, 'Enter new position:\n(from 1 to ' + presets.length + ')', window.Name, '3');
+							const input = Input.number('int positive', i + 1, 'Enter new position:\n(from 1 to ' + presets.length + ')', window.Name + _ps(window.ScriptInfo.Name), '3');
 							if (input === null) { return; }
 							presets.splice(i, 1);
 							presets.splice(input - 1, 0, preset);
@@ -3827,7 +3827,7 @@ function createMenuRightTop() {
 							'array strings',
 							JSON.parse(list.properties.importPlaylistFilters[1]),
 							'Enter array of queries to apply as consecutive conditions:\n\n["%CHANNELS% LESS 3", "' + globTags.rating + ' GREATER 2"]\n\nThe example would try to find matches with 2 or less channels, then filter those results with rating > 2. In case the later filter does not output at least a single track, then will be skipped and only the previous filter applied (channels)... and so on (for more filters).',
-							window.Name,
+							window.Name + _ps(window.ScriptInfo.Name),
 							JSON.parse(list.properties.importPlaylistFilters[3]),
 							void (0), true
 						);
@@ -3897,7 +3897,7 @@ function createMenuRightTop() {
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Personalize playlist icons...', func: () => {
 					let input;
-					try { input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name, list.properties['playlistIcons'][1], true); }
+					try { input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name + _ps(window.ScriptInfo.Name), list.properties['playlistIcons'][1], true); }
 					catch (e) { return; } // eslint-disable-line no-unused-vars
 					if (!input.length) { input = '{}'; }
 					if (input === list.properties['playlistIcons'][1]) { return; }
@@ -4067,7 +4067,7 @@ function createMenuRightTop() {
 						panel.colors.bFontOutline = !panel.colors.bFontOutline;
 						panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
 						if (panel.colors.bFontOutline) {
-							fb.ShowPopupMessage('Adds font shading to improve readability (usually along art background usage).\n\nIt may heavily affect performance on some systems.', window.Name);
+							fb.ShowPopupMessage('Adds font shading to improve readability (usually along art background usage).\n\nIt may heavily affect performance on some systems.', window.Name + _ps(window.ScriptInfo.Name));
 						}
 						overwriteProperties(panel.properties);
 						list.repaint();
@@ -4148,7 +4148,7 @@ function createMenuRightTop() {
 					menu.newSeparator(subMenuSecondName);
 					menu.newEntry({
 						menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
-							const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 50);
+							const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name + _ps(window.ScriptInfo.Name), 50);
 							if (input === null) { return; }
 							panel.properties.buttonsToolbarTransparency[1] = panel.colors.buttonsToolbarTransparency = input;
 							// Update property to save between reloads
@@ -4371,7 +4371,7 @@ function createMenuRightTop() {
 						panel.imageBackground.enabled = i === 0;
 						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 						if (panel.imageBackground.enabled) { // Add shadows by default
-							const answer = WshShell.Popup('Add font shading to improve readability?\n(it may heavily affect performance on some systems)', 0, window.Name, popup.question + popup.yes_no);
+							const answer = WshShell.Popup('Add font shading to improve readability?\n(it may heavily affect performance on some systems)', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 							panel.colors.bFontOutline = answer === popup.yes;
 						} else {
 							panel.colors.bFontOutline = false;
@@ -4399,7 +4399,7 @@ function createMenuRightTop() {
 										? panel.imageBackground.art.path
 										: JSON.parse(panel.properties.imageBackground[1]).art.path || '',
 									'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)',
-									window.Name,
+									window.Name + _ps(window.ScriptInfo.Name),
 									'myfile.jpg'
 								);
 								if (input === null) { return; }
@@ -4461,7 +4461,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Set transparency...\t' + _b(panel.imageBackground.transparency), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(0-100)', window.Name, 50, [(n) => n >= 0 && n <= 100]);
+					let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(0-100)', window.Name + _ps(window.ScriptInfo.Name), 50, [(n) => n >= 0 && n <= 100]);
 					if (input === null) { return; }
 					panel.imageBackground.transparency = input;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
@@ -4472,7 +4472,7 @@ function createMenuRightTop() {
 			});
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Set blur...\t' + _b(panel.imageBackground.blur), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(>= 0)', window.Name, 10);
+					let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(>= 0)', window.Name + _ps(window.ScriptInfo.Name), 10);
 					if (input === null) { return; }
 					panel.imageBackground.blur = input;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
@@ -4548,7 +4548,7 @@ function createMenuRightTop() {
 				menu.newSeparator(subMenuNameTwo);
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Custom...\t' + _b(list.scrollSettings.unit || autoScroll), func: () => {
-						const input = Input.number('int', list.scrollSettings.unit || 0, 'Enter number of rows per step:\n(int number)\n\nSet to 0 for auto.', window.Name, 2);
+						const input = Input.number('int', list.scrollSettings.unit || 0, 'Enter number of rows per step:\n(int number)\n\nSet to 0 for auto.', window.Name + _ps(window.ScriptInfo.Name), 2);
 						if (input === null) { return; }
 						list.scrollSettings.unit = input || null;
 						list.properties.scrollSettings[1] = JSON.stringify(list.scrollSettings);
@@ -4662,7 +4662,7 @@ function createMenuRightTop() {
 				// Width
 				menu.newEntry({
 					menuName: subMenuColumn, entryText: 'Width' + '\t' + _b(list.columns.width[i]), func: () => {
-						const input = Input.number('real positive', list.columns.width[i], 'Enter width: (px)\n(0 to set width automatically)', window.Name, 60);
+						const input = Input.number('real positive', list.columns.width[i], 'Enter width: (px)\n(0 to set width automatically)', window.Name + _ps(window.ScriptInfo.Name), 60);
 						if (input === null) { return; }
 						list.columns.width[i] = input || 'auto';
 						list.properties.columns[1] = JSON.stringify(list.columns);
@@ -4752,10 +4752,10 @@ function createMenuRightTop() {
 				options.forEach((opt) => {
 					menu.newEntry({
 						menuName: subMenuNameTwo, entryText: capitalize(opt) + '\t' + _b(list.columns.sizeUnits[opt]), func: () => {
-							const mode = WshShell.Popup('Use unicode char codes?\nFor example: (escape | input | display)\n\\u2665 | 2665 | \u2665\n\\u266A | 266A | \u266A\n\nMore info:\nhttps://www.rapidtables.com/code/text/unicode-characters.html', 0, window.Name, popup.question + popup.yes_no) === popup.yes
+							const mode = WshShell.Popup('Use unicode char codes?\nFor example: (escape | input | display)\n\\u2665 | 2665 | \u2665\n\\u266A | 266A | \u266A\n\nMore info:\nhttps://www.rapidtables.com/code/text/unicode-characters.html', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no) === popup.yes
 								? 'unicode'
 								: 'string';
-							const input = Input.string(mode, list.columns.sizeUnits[opt], 'Enter string to show as prefix/suffix:' + (mode === 'unicode' ? '\n(unicode chars are split by blank spaces)' : ''), window.Name, mode === 'unicode' ? '' : ' t.');
+							const input = Input.string(mode, list.columns.sizeUnits[opt], 'Enter string to show as prefix/suffix:' + (mode === 'unicode' ? '\n(unicode chars are split by blank spaces)' : ''), window.Name + _ps(window.ScriptInfo.Name), mode === 'unicode' ? '' : ' t.');
 							if (input === null) { return; }
 							list.columns.sizeUnits[opt] = input;
 							list.properties.columns[1] = JSON.stringify(list.columns);
@@ -4959,7 +4959,7 @@ function createMenuRightTop() {
 		{	// Max Depth
 			menu.newEntry({
 				menuName, entryText: 'Max level depth...\t(' + (Number.isFinite(list.folders.maxDepth) ? list.folders.maxDepth : '\u221E') + ')', func: () => {
-					const input = Input.number('int positive', list.folders.maxDepth, 'Enter positive integer value:', window.Name, 3);
+					const input = Input.number('int positive', list.folders.maxDepth, 'Enter positive integer value:', window.Name + _ps(window.ScriptInfo.Name), 3);
 					if (input === null) { return; }
 					list.folders.maxDepth = input;
 					list.properties.folders[1] = JSON.stringify(list.folders);
@@ -5011,7 +5011,7 @@ function createMenuRightTop() {
 						if (Object.values(item.icons).filter(Boolean).length !== 2) {
 							Object.keys(item.icons).forEach((key) => {
 								if (!item.icons[key]) {
-									const input = Input.string('unicode', list.folders.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode)\n\nLook for values at:\nhttps://www.fontawesomecheatsheet.com', window.Name, chars.downOutline, void (0), false);
+									const input = Input.string('unicode', list.folders.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode)\n\nLook for values at:\nhttps://www.fontawesomecheatsheet.com', window.Name + _ps(window.ScriptInfo.Name), chars.downOutline, void (0), false);
 									if (input === null) { return; }
 									item.icons[key] = input;
 								}
@@ -5060,7 +5060,7 @@ function createMenuRightTop() {
 							list.properties['lShortcuts'][1] = JSON.stringify(list.lShortcuts);
 							overwriteProperties(list.properties);
 							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}, flags
 					});
@@ -5097,7 +5097,7 @@ function createMenuRightTop() {
 							list.properties['rShortcuts'][1] = JSON.stringify(list.rShortcuts);
 							overwriteProperties(list.properties);
 							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}, flags
 					});
@@ -5133,7 +5133,7 @@ function createMenuRightTop() {
 							list.properties['mShortcuts'][1] = JSON.stringify(list.mShortcuts);
 							overwriteProperties(list.properties);
 							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}, flags
 					});
@@ -5173,7 +5173,7 @@ function createMenuRightTop() {
 							list.properties['lShortcutsHeader'][1] = JSON.stringify(list.lShortcutsHeader);
 							overwriteProperties(list.properties);
 							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}, flags
 					});
@@ -5210,7 +5210,7 @@ function createMenuRightTop() {
 							list.properties['mShortcutsHeader'][1] = JSON.stringify(list.mShortcutsHeader);
 							overwriteProperties(list.properties);
 							if (action === 'Multiple selection') {
-								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name);
+								fb.ShowPopupMessage('Allows to select multiple playlists at the same time and execute a shortcut action for every item. i.e. Loading playlist, locking, etc.\n\nNote opening the playlist menu will show a limited list of available actions according to the selection. To display the entire menu, use single selection instead. ', window.Name + _ps(window.ScriptInfo.Name));
 							}
 						}, flags
 					});
@@ -5235,7 +5235,7 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Enable F1-F12 keyboard actions', func: () => {
 					list.properties.bGlobalShortcuts[1] = !list.properties.bGlobalShortcuts[1];
 					overwriteProperties(list.properties);
-					if (list.properties.bGlobalShortcuts[1]) { fb.ShowPopupMessage(list.listGlobalShortcuts(), window.Name); }
+					if (list.properties.bGlobalShortcuts[1]) { fb.ShowPopupMessage(list.listGlobalShortcuts(), window.Name + _ps(window.ScriptInfo.Name)); }
 				}
 			});
 			menu.newCheckMenuLast(() => list.properties.bGlobalShortcuts[1]);
@@ -5243,11 +5243,11 @@ function createMenuRightTop() {
 		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Double click timer...', func: () => {
-				let input = Input.number('int positive', list.iDoubleClickTimer, 'Enter ms:\nHigher values will delay more single clicking actions.', window.Name, 300);
+				let input = Input.number('int positive', list.iDoubleClickTimer, 'Enter ms:\nHigher values will delay more single clicking actions.', window.Name + _ps(window.ScriptInfo.Name), 300);
 				if (input === null) { return; }
 				if (!Number.isFinite(input)) { return; }
 				list.iDoubleClickTimer = list.properties.iDoubleClickTimer[1] = input;
-				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x2)', 0, window.Name, popup.question + popup.yes_no) === popup.yes) {
+				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x2)', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no) === popup.yes) {
 					list.properties.iTooltipTimer[1] = input * 2;
 					list.tooltip.SetDelayTime(0, list.properties.iTooltipTimer[1]); // TTDT_AUTOMATIC
 				}
@@ -5326,7 +5326,7 @@ function createMenuRightTop() {
 					menuName: subMenuName, entryText: item, func: () => {
 						list.iDynamicMenus = i;
 						if (list.iDynamicMenus > 0) {
-							fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)\n\nPlaylists tagged with \'bMultMenu\' will be associated to these special\nmenu entries:\n\t-Load tagged playlists\n\t-Clone tagged playlists in UI', window.Name);
+							fb.ShowPopupMessage('Remember to set different panel names to every Playlist Manager panel, otherwise menus will not be properly associated to a single panel.\n\nShift + Win + R. Click -> Configure panel... (\'edit\' at top)\n\nPlaylists tagged with \'bMultMenu\' will be associated to these special\nmenu entries:\n\t-Load tagged playlists\n\t-Clone tagged playlists in UI', window.Name + _ps(window.ScriptInfo.Name));
 						}
 						list.properties['iDynamicMenus'][1] = list.iDynamicMenus;
 						overwriteProperties(list.properties);
@@ -5350,7 +5350,7 @@ function createMenuRightTop() {
 					window.NotifyOthers('xxx-scripts: lb token', null);
 					setTimeout(() => {
 						callbacksListener.lBrainzTokenListener = false;
-						fb.ShowPopupMessage('ListenBrainz token report:\n\nOld value:  ' + cache.toStr({ bClosure: true }) + '\nNew value:  ' + { token: list.properties.lBrainzToken[1], encrypted: list.properties.lBrainzEncrypt[1] }.toStr({ bClosure: true }), window.Name);
+						fb.ShowPopupMessage('ListenBrainz token report:\n\nOld value:  ' + cache.toStr({ bClosure: true }) + '\nNew value:  ' + { token: list.properties.lBrainzToken[1], encrypted: list.properties.lBrainzEncrypt[1] }.toStr({ bClosure: true }), window.Name + _ps(window.ScriptInfo.Name));
 					}, 1500);
 				}
 			});
@@ -5368,7 +5368,7 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Lookup for missing track MBIDs', func: () => {
 					list.properties.bLookupMBIDs[1] = !list.properties.bLookupMBIDs[1];
 					if (list.properties.bLookupMBIDs[1]) {
-						fb.ShowPopupMessage('Exporting a playlist requires tracks to have \'MUSICBRAINZ_TRACKID\' tags on files.\n\nWhenever such tag is missing, the file can not be sent to ListenBrainz\'s online playlist. As workaround, the script may try to lookup missing MBIDs before exporting.\n\nNote results depend on the success of MusicBrainz api, so it\'s not guaranteed to find the proper match in all cases. Tag properly your files with Picard or foo_musicbrainz in such case.\n\nApi used:\nhttps://labs.api.listenbrainz.org/mbid-mapping', window.Name);
+						fb.ShowPopupMessage('Exporting a playlist requires tracks to have \'MUSICBRAINZ_TRACKID\' tags on files.\n\nWhenever such tag is missing, the file can not be sent to ListenBrainz\'s online playlist. As workaround, the script may try to lookup missing MBIDs before exporting.\n\nNote results depend on the success of MusicBrainz api, so it\'s not guaranteed to find the proper match in all cases. Tag properly your files with Picard or foo_musicbrainz in such case.\n\nApi used:\nhttps://labs.api.listenbrainz.org/mbid-mapping', window.Name + _ps(window.ScriptInfo.Name));
 					}
 					overwriteProperties(list.properties);
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED
@@ -5378,12 +5378,12 @@ function createMenuRightTop() {
 				menuName: subMenuName, entryText: 'Export playlists to Spotify', func: () => {
 					list.properties.bSpotify[1] = !list.properties.bSpotify[1];
 					if (list.properties.bSpotify[1]) {
-						fb.ShowPopupMessage('Exporting a playlist to Spotify requires the service to be connected to your user profile, and \'Play music on ListenBrainz\' enabled.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
+						fb.ShowPopupMessage('Exporting a playlist to Spotify requires the service to be connected to your user profile, and \'Play music on ListenBrainz\' enabled.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name + _ps(window.ScriptInfo.Name));
 						const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
 						if (token) {
 							lb.retrieveUser(token).then((user) => lb.getUserServices(user, token)).then((services) => {
 								if (!services.includes('spotify')) {
-									fb.ShowPopupMessage('Spotify\'s service is not connected.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name);
+									fb.ShowPopupMessage('Spotify\'s service is not connected.\n\nMore info: https://listenbrainz.org/profile/music-services/details/', window.Name + _ps(window.ScriptInfo.Name));
 								}
 							});
 						}
@@ -5467,7 +5467,7 @@ function createMenuRightTop() {
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Lite mode', func: () => {
-			fb.ShowPopupMessage('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled.\n\nNote on lite mode, manager exclusively tracks UI-only playlists.', window.Name);
+			fb.ShowPopupMessage('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled.\n\nNote on lite mode, manager exclusively tracks UI-only playlists.', window.Name + _ps(window.ScriptInfo.Name));
 			list.bLiteMode = !list.bLiteMode;
 			list.properties['bLiteMode'][1] = list.bLiteMode;
 			if (list.bLiteMode) {
@@ -5534,16 +5534,16 @@ function createMenuRightTop() {
 			}
 			toMerge.forEach((d) => {
 				d.file = d.from;
-				d.from = _isFile(d.from) ? _jsonParseFileCheck(d.from, 'Data json', window.Name, utf8) : null;
+				d.from = _isFile(d.from) ? _jsonParseFileCheck(d.from, 'Data json', window.Name + _ps(window.ScriptInfo.Name), utf8) : null;
 			});
 			toDelete.forEach((f) => _recycleFile(f, true));
 			toCopy.forEach((f) => _copyFile(f.from, f.to));
 			toMerge.forEach((d) => {
 				if (d.from) {
 					let bDone = false;
-					d.to = _jsonParseFileCheck(d.to, 'Data json', window.Name, utf8);
+					d.to = _jsonParseFileCheck(d.to, 'Data json', window.Name + _ps(window.ScriptInfo.Name), utf8);
 					if (!d.to) {
-						console.popup('Error restoring old playlists data from:\n' + d.file, window.Name);
+						console.popup('Error restoring old playlists data from:\n' + d.file, window.Name + _ps(window.ScriptInfo.Name));
 						return;
 					}
 					switch (d.type) { // NOSONAR
@@ -5739,7 +5739,7 @@ function createMenuSearch() {
 								'\nWould match a search containing \'HD Tracks\' or \'Robinson\' but not \'Simon\'.' +
 								'\n\nDrag n\' drop integration:' +
 								'\nWhen using drag n\' drop over the search input box, the filename(s) of the selected track(s) will be automatically parsed for quick-searching. RegExp is used to search for multiple filenames at the same time.'
-								, window.Name
+								, window.Name + _ps(window.ScriptInfo.Name)
 							);
 						} else if (opt.key === 'bMetaPls') {
 							fb.ShowPopupMessage(
@@ -5747,7 +5747,7 @@ function createMenuSearch() {
 								'\n\nTags checked:' +
 								'ARTIST (*), TITLE, DURATION' +
 								'\n\n(*) Not available on .pls format.'
-								, window.Name
+								, window.Name + _ps(window.ScriptInfo.Name)
 							);
 						} else if (opt.key === 'bMetaTracks' || opt.key === 'bQuery') {
 							if (opt.key === 'bMetaTracks') {
@@ -5756,13 +5756,13 @@ function createMenuSearch() {
 									'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed. When enabled, playlists are cached at startup (may take up to 10 seconds after loading the panel), to greatly speed up the process. But note the cache is build after startup, so making the search filter permanent across sessions may impose a huge impact at loading time with this search mode enable. To account for this, enable the \'Reset search on startup\' option.' +
 									'\n\nTags checked:' +
 									list.searchMethod.meta.join(', ')
-									, window.Name
+									, window.Name + _ps(window.ScriptInfo.Name)
 								);
 							} else {
 								fb.ShowPopupMessage(
 									'This option performs an extended search retrieving all tracks from playlists files and looking for matches by query. If the query returns at least a track, it\'s considered a match.' +
 									'\n\nIt may produce some lag while searching if there are a lot of playlists, so disable it if not needed. When enabled, playlists are cached at startup (may take up to 10 seconds after loading the panel), to greatly speed up the process. But note the cache is build after startup, so making the search filter permanent across sessions may impose a huge impact at loading time with this search mode enable. To account for this, enable the \'Reset search on startup\' option.'
-									, window.Name
+									, window.Name + _ps(window.ScriptInfo.Name)
 								);
 							}
 							Promise.serial(list.dataAll.filter((pls) => !pls.isAutoPlaylist), cachePlaylist.bind(list), 100)
@@ -5782,7 +5782,7 @@ function createMenuSearch() {
 			list.searchMethod.dragDropPriority.forEach((method, i) => {
 				menu.newEntry({
 					menuName: subMenuTwo, entryText: (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')) + (!list.searchMethod[method] ? '\t(disabled)' : ''), func: () => {
-						let input = Input.number('int positive', (i + 1), 'Enter position: (between 1 and ' + max + ')', window.Name, 1, [(n) => n >= 1 && n <= max]);
+						let input = Input.number('int positive', (i + 1), 'Enter position: (between 1 and ' + max + ')', window.Name + _ps(window.ScriptInfo.Name), 1, [(n) => n >= 1 && n <= max]);
 						if (input === null) { return; }
 						else { input -= 1; }
 						const el = list.searchMethod.dragDropPriority.splice(i, 1);
@@ -5801,7 +5801,7 @@ function createMenuSearch() {
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Path level matching...' + '\t' + _b(list.searchMethod.pathLevel), func: () => {
-				let input = Input.number('int positive', list.searchMethod.pathLevel, 'Enter path level to search matches:', window.Name, 2);
+				let input = Input.number('int positive', list.searchMethod.pathLevel, 'Enter path level to search matches:', window.Name + _ps(window.ScriptInfo.Name), 2);
 				if (input === null) { return; }
 				list.searchMethod.pathLevel = input;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
@@ -5835,7 +5835,7 @@ function createMenuSearch() {
 						'\n\n\'Top\', \'top\' and /Top/ would match \'Top tracks\' but /top/ would not, since the first 2 queries are case insensitive but the rest are not. Searching for \'top\' or \'Top\' is thus equivalent to /top/i.' +
 						'\n\nFor more info see:' +
 						'\nhttps://regexr.com/'
-						, window.Name
+						, window.Name + _ps(window.ScriptInfo.Name)
 					);
 				}
 			}
@@ -5845,7 +5845,7 @@ function createMenuSearch() {
 			menuName: subMenu, entryText: 'Advanced fuzzy search (~)', func: () => {
 				fb.ShowPopupMessage(
 					'Fuzzy search may be enabled adding \'~\' to the beginning/end of the string.\nFor ex:\n\t"smmer~"\t-> Would match "summer"\n\nThe basic fuzzy search will only match simple words, but not sentences. Enable the advanced fuzzy search for those use cases (it will use an external library and may be slower).'
-					, window.Name
+					, window.Name + _ps(window.ScriptInfo.Name)
 				);
 				list.searchMethod.bSimpleFuzzy = !list.searchMethod.bSimpleFuzzy;
 				list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
@@ -6135,7 +6135,7 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 		const lb = ListenBrainz;
 		const encryptToken = '********-****-****-****-************';
 		const currToken = list.properties.lBrainzEncrypt[1] ? encryptToken : list.properties.lBrainzToken[1];
-		try { lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name, currToken, true); }
+		try { lBrainzToken = utils.InputBox(window.ID, 'Enter ListenBrainz user token:', window.Name + _ps(window.ScriptInfo.Name), currToken, true); }
 		catch (e) { return false; } // eslint-disable-line no-unused-vars
 		if (lBrainzToken === currToken || lBrainzToken === encryptToken) { return false; }
 		if (lBrainzToken.length) {
@@ -6143,10 +6143,10 @@ async function checkLBToken(lBrainzToken = list.properties.lBrainzToken[1]) {
 				lb.consoleError('Token can not be validated.');
 				return false;
 			}
-			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name, popup.question + popup.yes_no);
+			const answer = WshShell.Popup('Do you want to encrypt the token?', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				let pass = '';
-				try { pass = utils.InputBox(window.ID, 'Enter a password:\n(will be required on every use)', window.Name, pass, true); }
+				try { pass = utils.InputBox(window.ID, 'Enter a password:\n(will be required on every use)', window.Name + _ps(window.ScriptInfo.Name), pass, true); }
 				catch (e) { return false; } // eslint-disable-line no-unused-vars
 				if (!pass.length) { return false; }
 				lBrainzToken = new SimpleCrypto(pass).encrypt(lBrainzToken);
@@ -6283,7 +6283,7 @@ function quickSearchMenu(menu, menuName) {
 				list.properties.bQuickSearchName[1] = !list.properties.bQuickSearchName[1];
 				overwriteProperties(list.properties);
 				if (list.properties.bQuickSearchName[1]) {
-					fb.ShowPopupMessage('Enabling this option will force searching by name, without considering the current sorting method.\n\nIf searching by date, size, etc. is desired according to current sorting, disable it.', window.Name);
+					fb.ShowPopupMessage('Enabling this option will force searching by name, without considering the current sorting method.\n\nIf searching by date, size, etc. is desired according to current sorting, disable it.', window.Name + _ps(window.ScriptInfo.Name));
 				}
 			}
 		});
@@ -6293,7 +6293,7 @@ function quickSearchMenu(menu, menuName) {
 			menuName: subMenuName, entryText: 'Jump to next item on multiple presses', func: () => {
 				list.properties.bQuickSearchNext[1] = !list.properties.bQuickSearchNext[1];
 				overwriteProperties(list.properties);
-				fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name);
+				fb.ShowPopupMessage('Enabling this option will allow to jump between items starting with the same char, instead of reusing the previous string.\n\nFor ex: pressing two times \'a\' will look for a playlist starting with \'a\' on first pressing and then for the next one.\n\nWhen the option is disabled, it would just look for a playlist starting with \'aa\'.', window.Name + _ps(window.ScriptInfo.Name));
 			}
 		});
 		menu.newCheckMenuLast(() => list.properties.bQuickSearchNext[1]);
@@ -6302,7 +6302,7 @@ function quickSearchMenu(menu, menuName) {
 				list.properties.bQuickSearchCycle[1] = !list.properties.bQuickSearchCycle[1];
 				overwriteProperties(list.properties);
 				if (list.properties.bQuickSearchCycle[1]) {
-					fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name);
+					fb.ShowPopupMessage('Enabling this option will cycle between all the found items, not stopping on the last one but going back to the first one when no more items are found.', window.Name + _ps(window.ScriptInfo.Name));
 				}
 			}, flags: list.properties.bQuickSearchNext[1] ? MF_STRING : MF_GRAYED
 		});
@@ -6358,7 +6358,7 @@ function importSettingsMenu() {
 							})
 							.every((done) => {
 								if (!done) {
-									console.popup(panelName + ': failed importing playlist files.', window.Name);
+									console.popup(panelName + ': failed importing playlist files.', window.Name + _ps(window.ScriptInfo.Name));
 									return false;
 								}
 								return true;
@@ -6372,7 +6372,7 @@ function importSettingsMenu() {
 							})
 							.every((done) => {
 								if (!done) {
-									console.popup(panelName + ': failed importing playlist json.', window.Name);
+									console.popup(panelName + ': failed importing playlist json.', window.Name + _ps(window.ScriptInfo.Name));
 									return false;
 								}
 								return true;
@@ -6412,14 +6412,14 @@ function createMenuExport(forcedIndexes = []) {
 	const menu = menuLbtnMult;
 	menu.clear(true); // Reset on every call
 	if (indexes.length === 0) {
-		fb.ShowPopupMessage('Selected indexes were empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name);
+		fb.ShowPopupMessage('Selected indexes were empty on createMenuLeftMult() when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.', window.Name + _ps(window.ScriptInfo.Name));
 		return menu;
 	}
 	const playlists = [];
 	for (let z of indexes) {
 		playlists.push(list.data[z]);
 		if (!playlists.slice(-1)[0]) {
-			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.Name);
+			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.Name + _ps(window.ScriptInfo.Name));
 			return menu;
 		}
 	}
