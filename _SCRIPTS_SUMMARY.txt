@@ -39,8 +39,9 @@ It also contains these extra files which can be loaded externally:
 		- NOT meant to be used within foobar.
 		- Load the file in any browser to use it.
 
-All my scripts require these fonts: Font Awesome 4, Segoe UI and Arial Unicode MS. They can be found 
-at paths below within the package root folder:
-		- _resources\Font Awesome 4.ttf
-		- _resources\Segoe UI.zip\Windows [XX]\seguisym.ttf
-		- _resources\Arial Unicode MS.TTF
+All my scripts require these fonts: Font Awesome 4, Segoe UI and Arial Unicode MS.
+		- Font Awesome 4.ttf
+		- Segoe UI.zip\Windows [XX]\seguisym.ttf
+		- Arial Unicode MS.ttf
+
+They can be found at: https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts
