@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.20/09/2025
+REM Create packages (zip file) from js files v.26/09/2025
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -15,7 +15,7 @@ REM 	Number		If Number is provided, will build package without
 REM					user input
 REM 	foobarPath	If provided, will copy the package to the SMP
 REM					packages folder at profile, and run foobar2000
-REM					If it's already running, is qracefully quit first
+REM					If it's already running, is gracefully quit first
 REM					If set to '.', will search for the binary file
 REM					relative to the current folder (4 folders up)
 REM ------------------------------------------------------------------
