@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/05/25
+//26/09/25
 
 /*
 	Playlist Revive
@@ -48,7 +48,7 @@ function playlistRevive({
 
 	let cache = new Set();
 
-	if (bNotifyPlsMan) { window.NotifyOthers('Playlist Manager: addToSkipRwLock', { uiIdx: playlist }); }
+	if (bNotifyPlsMan) { window.NotifyOthers('Playlist-Manager-SMP: addToSkipRwLock', { uiIdx: playlist }); }
 
 	// Filter items which already exist
 	let items = new FbMetadbHandleList();

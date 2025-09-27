@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//26/09/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -4318,8 +4318,8 @@ function createMenuRightTop() {
 						list.properties.bOnNotifyColors[1] = !list.properties.bOnNotifyColors[1];
 						overwriteProperties(list.properties);
 						if (list.properties.bOnNotifyColors[1]) {
-							window.NotifyOthers('Colors: ask color scheme', 'Playlist Manager: set color scheme');
-							window.NotifyOthers('Colors: ask color', 'Playlist Manager: set colors');
+							window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
+							window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
 						}
 					}
 				});
@@ -5406,7 +5406,7 @@ function createMenuRightTop() {
 					list.activePlsStartup = list.activePlsStartup === name ? '' : name;
 					list.properties.activePlsStartup[1] = list.activePlsStartup;
 					overwriteProperties(list.properties);
-					window.NotifyOthers('Playlist Manager: change startup playlist', list.activePlsStartup);
+					window.NotifyOthers(window.ScriptInfo.Name + ': change startup playlist', list.activePlsStartup);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => (list.activePlsStartup === name));
@@ -5417,7 +5417,7 @@ function createMenuRightTop() {
 					list.activePlsStartup = input;
 					list.properties.activePlsStartup[1] = list.activePlsStartup;
 					overwriteProperties(list.properties);
-					window.NotifyOthers('Playlist Manager: change startup playlist', list.activePlsStartup);
+					window.NotifyOthers(window.ScriptInfo.Name + ': change startup playlist', list.activePlsStartup);
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name));
@@ -5460,7 +5460,7 @@ function createMenuRightTop() {
 			menuName, entryText: 'Check for updates...', func: () => {
 				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Playlist manager: Update check'));
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name + _ps(window.ScriptInfo.Name) + ': Update check'));
 			}
 		});
 	}
@@ -6316,7 +6316,7 @@ function importSettingsMenu() {
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Export panel settings...', func: () => {
-			const bData = WshShell.Popup('Also export playlists files and data?', 0, 'Playlist Manager: Export panel settings', popup.question + popup.yes_no) === popup.yes;
+			const bData = WshShell.Popup('Also export playlists files and data?', 0, window.ScriptInfo.Name + ': Export panel settings', popup.question + popup.yes_no) === popup.yes;
 			const playlistFilesMask = bData && list.playlistsPath.length
 				? Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext)
 				: [];
@@ -6325,7 +6325,7 @@ function importSettingsMenu() {
 				bData
 					? [...playlistFilesMask, list.filename, list.filename + '.old', list.filename.replace('.json', '_sorting.json'), list.filename.replace('.json', '_config.json')]
 					: [],
-				'Playlist Manager'
+				window.ScriptInfo.Name
 			);
 		}
 	});
@@ -6382,7 +6382,7 @@ function importSettingsMenu() {
 					}
 				},
 				{ playlistsPath: list.playlistsPath },
-				'Playlist Manager'
+				window.ScriptInfo.Name
 			);
 		}
 	});

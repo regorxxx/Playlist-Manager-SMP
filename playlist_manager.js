@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//26/09/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -83,7 +83,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 		libItemsAbsPaths = []; // NOSONAR
 		libItemsRelPaths = {}; // NOSONAR
 		precacheLibraryPathsAsync().then(() => {
-			window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
+			window.NotifyOthers('xxx-scripts: precacheLibraryPaths', [...libItemsAbsPaths]);
 			pop.disable(true);
 		}, () => {
 			// Already using data from other instance. See on_notify_data
@@ -112,7 +112,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 	} else {
 		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib waiting'); } // Disabled on notify
 		else { pop.setReason('cacheLib waiting'); }
-		window.NotifyOthers('precacheLibraryPaths ask', null);
+		window.NotifyOthers('xxx-scripts: precacheLibraryPaths ask', null);
 	}
 	return null;
 };
@@ -617,13 +617,13 @@ let plsRwLock;
 		}
 		// Create listener to check for same playlist path which usually requires a reminder to set another tracked folder
 		const callback = () => !pop.isEnabled() && list && list.bInit
-			? window.NotifyOthers('Playlist Manager: playlistPath', null)
+			? window.NotifyOthers(window.ScriptInfo.Name + ': playlistPath', null)
 			: setTimeout(callback, 3000);
 		setTimeout(callback, 6000);
 		const listener = addEventListener('on_notify_data', (name, info) => {
 			if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
 			switch (name) { // NOSONAR
-				case 'Playlist Manager: playlistPath': {
+				case window.ScriptInfo.Name + ': playlistPath': {
 					if (info) {
 						if (info === list.playlistsPath) {
 							fb.ShowPopupMessage('There is another Playlist Manager panel tracking the same folder (which is usually undesired), you may want to configure this panel to track a different playlist folder.\n\nIn case you want to track the same folder with multiple panels, read the \'Advanced Tips\' section at the PDF readme first. Don\'t forget to disable auto-saving and auto-backup on all but one of the panels if needed (to not process multiple times the same files).', 'Playlist Manager: found same tracked folder');
@@ -951,24 +951,30 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_notify_data', (name, info) => {
 		if (name === 'bio_imgChange' || name === 'biographyTags' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
 		switch (name) {
-			case 'Playlist Manager: playlistPath': {
-				if (!info) { window.NotifyOthers('Playlist Manager: playlistPath', list.playlistsPath); } // Share paths
+			// Internal use
+			case 'xxx-scripts: scrollbar hidden': {
+				window.RepaintRect(list.x + list.w - list.categoryHeaderOffset, list.y, list.x + list.w, list.y + list.h);
 				break;
 			}
-			case 'Playlist Manager: get handleList': {
+			// External use
+			case window.ScriptInfo.Name + ': playlistPath': {
+				if (!info) { window.NotifyOthers(window.ScriptInfo.Name + ': playlistPath', list.playlistsPath); } // Share paths
+				break;
+			}
+			case window.ScriptInfo.Name + ': get handleList': {
 				if (info && info.length) {
 					const plsName = info;
 					if (list.hasPlaylists([plsName])) {
-						window.NotifyOthers('Playlist Manager: handleList', Promise.resolve(list.getHandleFromPlaylists([plsName], false)));
+						window.NotifyOthers(window.ScriptInfo.Name + ': handleList', Promise.resolve(list.getHandleFromPlaylists([plsName], false)));
 					}
 				} // Share paths
 				break;
 			}
-			case 'Playlist Manager: switch tracking': {
+			case window.ScriptInfo.Name + ': switch tracking': {
 				list.switchTracking(info);
 				break;
 			}
-			case 'Playlist Manager: change startup playlist': {
+			case window.ScriptInfo.Name + ': change startup playlist': {
 				if (list.activePlsStartup !== info) {
 					list.activePlsStartup = info;
 					list.properties.activePlsStartup[1] = list.activePlsStartup;
@@ -976,13 +982,13 @@ if (!list.properties.bSetup[1]) {
 				}
 				break;
 			}
-			case 'Playlist Manager: addToSkipRwLock': {
+			case window.ScriptInfo.Name + ': addToSkipRwLock': {
 				if (info && (Object.hasOwn(info, 'uiIdx') || Object.hasOwn(info, 'name'))) {
 					list.addToSkipRwLock({ uiIdx: info.uiIdx, name: info.name });
 				}
 				break;
 			}
-			case 'precacheLibraryPaths': {
+			case 'xxx-scripts: precacheLibraryPaths': {
 				if (list.bLiteMode) { return; }
 				if (!info) {
 					cacheLib(void (0), void (0), void (0), true);
@@ -1008,12 +1014,12 @@ if (!list.properties.bSetup[1]) {
 				}
 				break;
 			}
-			case 'precacheLibraryPaths ask': {
+			case 'xxx-scripts: precacheLibraryPaths ask': {
 				if (list.bLiteMode || pop.isEnabled('cacheLib') || pop.isEnabled('cacheLib waiting')) { return; }
 				if (list.bLibraryChanged) {
-					window.NotifyOthers('precacheLibraryPaths', null);
+					window.NotifyOthers('xxx-scripts: precacheLibraryPaths', null);
 				} else if (libItemsAbsPaths && libItemsAbsPaths.length) {
-					window.NotifyOthers('precacheLibraryPaths', [...libItemsAbsPaths]);
+					window.NotifyOthers('xxx-scripts: precacheLibraryPaths', [...libItemsAbsPaths]);
 				}
 				break;
 			}
@@ -1033,15 +1039,11 @@ if (!list.properties.bSetup[1]) {
 				}
 				break;
 			}
-			case 'scrollbar hidden': {
-				window.RepaintRect(list.x + list.w - list.categoryHeaderOffset, list.y, list.x + list.w, list.y + list.h);
-				break;
-			}
-			case 'Playlist Manager: share UI settings': {
+			case window.ScriptInfo.Name + ': share UI settings': {
 				if (info) { list.applyUiSettings(clone(info)); }
 				break;
 			}
-			case 'Playlist Manager: set colors': { // Needs an array of 5 colors or an object {background, text, headerButtons, buttonsText, buttonsToolbar }
+			case window.ScriptInfo.Name + ': set colors': { // Needs an array of 5 colors or an object {background, text, headerButtons, buttonsText, buttonsToolbar }
 				if (info && list.properties.bOnNotifyColors[1]) {
 					const colors = clone(info);
 					const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'text', 'headerButtons', 'buttonsText', 'buttonsToolbar'].indexOf(key)];
@@ -1060,7 +1062,7 @@ if (!list.properties.bSetup[1]) {
 				break;
 			}
 			case 'Colors: set color scheme':
-			case 'Playlist Manager: set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
+			case window.ScriptInfo.Name + ': set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
 				if (info && list.properties.bOnNotifyColors[1]) {
 					const { main, sec, note, mainAlt, secAlt } = dynamicColors( // eslint-disable-line no-unused-vars
 						clone(info),
@@ -1480,8 +1482,8 @@ if (!list.properties.bSetup[1]) {
 
 	if (list.properties.bOnNotifyColors[1]) { // Ask color-servers at init
 		setTimeout(() => {
-			window.NotifyOthers('Colors: ask color scheme', 'Playlist Manager: set color scheme');
-			window.NotifyOthers('Colors: ask colors', 'Playlist Manager: set colors');
+			window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
+			window.NotifyOthers('Colors: ask colors', window.ScriptInfo.Name + ': set colors');
 		}, 1000);
 	}
 

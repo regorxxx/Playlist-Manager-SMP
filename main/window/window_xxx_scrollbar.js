@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/24
+//26/09/25
 
 /* exported _scrollBar */
 
@@ -82,7 +82,7 @@ function _scrollBar({
 		if (!this.visibleFunc(this.time)) {
 			if (this.visible) {
 				this.visible = false;
-				if (window.NotifyThis) { setTimeout(() => window.NotifyThis('scrollbar hidden', this.visible), this.timer); }
+				if (window.NotifyThis) { setTimeout(() => window.NotifyThis('xxx-scripts: scrollbar hidden', this.visible), this.timer); }
 			} else { // Small bar when not shown
 				this.wHidden = Math.max(this.w / 10, _scale(2));
 				gr.SetSmoothingMode(SmoothingMode.HighQuality);

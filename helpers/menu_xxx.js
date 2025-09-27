@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/09/25
+//26/09/25
 
 /* exported _menu */
 
@@ -392,12 +392,12 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {Function?} [o.func] - [=null] Function associated to entry and called on l. click.
 	 * @param {stringLike|() => String} [o.menuName] - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
 	 * @param {Number|() => Number} [o.flags] - [=MF_STRING] Flags for the text
-	 * @param {() =>(Boolean)} [checkFunc] - [=null] For Boolean checks  of a single entry only, just return true/false.
+	 * @param {() =>(Boolean)} [o.checkFunc] - [=null] For Boolean checks  of a single entry only, just return true/false.
 	 * @param {any?} [o.data] - [=null] Arbitrary data attached to the entry
 	 * @param {Boolean} [o.bAddInvisibleIds] -  [=false] Entries can have duplicate names without problems, but it may be difficult to use duplicate names for lookup. Invisible Ids may be automatically added to the entry name in such case setting this to true.
 	 * @returns {MenuEntry}
 	 */
-	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, checkFunc = null, data = null, bAddInvisibleIds = false, }) => {
+	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, checkFunc = null, data = null, bAddInvisibleIds = false }) => {
 		menuName = this.cleanEntryName(menuName);
 		entryText = this.cleanEntryName(entryText);
 		if (typeof entryText === 'string' && separator.test(entryText)) { func = null; flags = MF_GRAYED; }

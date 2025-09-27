@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//26/09/25
 
 /* exported _list */
 
@@ -5456,7 +5456,7 @@ function _list(x, y, w, h) {
 			this.cacheLibTimer = null;
 			this.bLibraryChanged = true;
 		}
-		if (bNotify) { window.NotifyOthers('Playlist Manager: switch tracking', this.bTracking); }
+		if (bNotify) { window.NotifyOthers(window.ScriptInfo.Name + ': switch tracking', this.bTracking); }
 		this.repaint(false, !this.bLiteMode && this.uiElements['Header buttons'].elements['Settings menu'].enabled ? 'all' : 'list');
 		return this.bTracking;
 	};
@@ -5534,7 +5534,7 @@ function _list(x, y, w, h) {
 		if (dataIdx !== -1) {
 			if (timer) { setTimeout(this.removeFromSkipRwLock, timer, { dataIdx }); }
 			this.skipRwLock.add(dataIdx);
-			if (bNotify) { window.NotifyOthers('Playlist Manager: addToSkipRwLock', { uiIdx, name }); }
+			if (bNotify) { window.NotifyOthers(window.ScriptInfo.Name + ': addToSkipRwLock', { uiIdx, name }); }
 			return true;
 		}
 		return false;
