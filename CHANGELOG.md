@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.2](#100-beta2---2025-09-29)
 - [1.0.0-beta.1](#100-beta1---2025-09-20)
 - [0.19.0](#0190---2024-10-09)
 - [0.18.1](#0181---2024-08-13)
@@ -62,6 +63,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.2] - 2025-09-29
 ### Added
 ### Changed
 - UI: color extraction from background art is now done before blur is applied. Done after blur returned gray tones in so many unintended cases.
@@ -1467,7 +1474,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.2...HEAD
+[1.0.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.19.0...v1.0.0-beta.1
 [0.19.0]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.1...v0.19.0
 [0.18.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.18.0...v0.18.1
