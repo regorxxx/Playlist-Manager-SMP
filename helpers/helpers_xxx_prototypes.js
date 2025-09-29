@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//29/09/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps */
 
@@ -525,7 +525,7 @@ function _b(value, bSpace) {
 }
 
 function _t(tag) {
-	return (tag.includes('%') || tag.includes('$') ? tag : '%' + tag + '%');
+	return (tag.toString().includes('%') || tag.toString().includes('$') ? tag : '%' + tag + '%');
 }
 
 function _bt(tag, bSpace) {
