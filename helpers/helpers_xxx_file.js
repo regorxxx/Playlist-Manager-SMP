@@ -1,7 +1,7 @@
 ﻿'use strict';
 //25/09/25
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -419,6 +419,19 @@ function _copyFolder(oldFolderPath, newFolderPath, bAsync = false) {
 		return (bAsync ? true : _isFolder(newFolderPath) && _isFolder(source)); // Must check afterwards for Async
 	}
 	return false;
+}
+
+function _copyDependencies(paths, root = folders.binaries, bAsync = false) {
+	paths.map((folder) => root + folder + (folder.endsWith('\\') ? '' : '\\')).forEach((path, i) => {
+		let bCopy = false;
+		if (!_isFolder(path)) { _createFolder(path); bCopy = i !== 0; }
+		else if (!_isFile(path + '_CHECKED') && i !== 0) { bCopy = true; }
+		if (bCopy) {
+			console.log('Adding dependencies at: ' + path);
+			_copyFile(path.replace(root, folders.xxx + 'helpers-external\\') + '*.*', path, bAsync);
+			_save(path + '_CHECKED', '');
+		}
+	});
 }
 
 // Sends file to recycle bin, can be undone

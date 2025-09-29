@@ -42,6 +42,11 @@ folders.xxxName = folders.getRoot();
  */
 folders.dataName = 'js_data\\';
 /**
+ * Binaries folder
+ * @type {string} - Ex: binaries\\
+ */
+folders.binariesName = 'binaries\\';
+/**
  * Absolute path to scripts installation root (adjusted for packages or script files)
  * @type {string} - Ex: [foobar profile]\\scripts\\SMP\\xxx-scripts\\ or [foobar profile]\\foo_spider_monkey_panel\\packages\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
  */
@@ -51,6 +56,11 @@ folders.xxx = fb.ProfilePath + folders.xxxName;
  * @type {string}- Ex: [foobar profile]\\js_data\\
  */
 folders.data = fb.ProfilePath + folders.dataName;
+/**
+ * Path to global binaries folder
+ * @type {string}- Ex: [foobar profile]\\binaries\\
+ */
+folders.binaries = fb.ProfilePath + folders.binariesName;
 /**
  * Path to local JS data folder (adjusted for packages, fallbacks to global JS data folder otherwise)
  * @type {string}- Ex: [foobar profile]\\js_data\\ or [foobar profile]\\foo_spider_monkey_panel\\package_data\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
@@ -156,6 +166,10 @@ const globProfiler = globSettings.bProfileInit
 	: { Print: () => void (0), Time: void (0), Reset: () => void (0) };
 
 if (!globSettings.bLogToFile) { console.disableFile(); }
+
+// Allow tweaking of binaries path
+folders.binaries = globSettings.binariesPath.replace('.\\profile\\', fb.ProfilePath);
+folders.binariesName = folders.binaries.replace(fb.ProfilePath, '');
 
 /*
 	SO features

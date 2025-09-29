@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.26/09/2025
+REM Create packages (zip file) from js files v.29/09/2025
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -603,7 +603,7 @@ SET name=Infinity-Tools-SMP
 SET id=2FCD04DE-E8BD-4EAD-9DCB-A37DAE9033AC
 SET description=https://github.com/regorxxx/Infinity-Tools-SMP\r\n\r\nA collection of Spider Monkey tools for foobar2000: from removing duplicates, to dynamic queries, status bars, advanced tagging, library reports, Music map and Genre explorer, Spotify-like playlist creation...\r\n\r\n• Toolbar can be modified to include the desired tools.\r\n• R. Click on toolbar to open settings menu.\r\n• Drag + R. Click to move buttons.\r\n• Configurable layout and colors.
 REM version
-FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" buttons_toolbar.js`) DO (SET version=%%F)
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" infinity_tools.js`) DO (SET version=%%F)
 IF "%version%"=="" (
 	ECHO Main file not found or wrong version string
 	PAUSE>NUL
@@ -618,7 +618,7 @@ REM global variable
 SET root=%packagesFolder%\%name: =-%
 REM package folder and file
 CALL :check_root
-CALL :copy_main buttons_toolbar.js
+CALL :copy_main infinity_tools.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
 CALL :copy_file _SCRIPTS_SUMMARY.txt
@@ -655,8 +655,6 @@ CALL :copy_file main\window\window_xxx_dynamic_colors.js
 REM Buttons
 CALL :copy_folder buttons
 CALL :copy_folder buttons\helpers
-CALL :copy_folder buttons\examples
-CALL :copy_folder buttons\toolbars
 REM Examples
 CALL :check_folder examples
 CALL :copy_file examples\track_list_to_import.txt
