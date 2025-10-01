@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//01/10/25
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -113,7 +113,7 @@ function _listButtons(bSetup = false) {
 			}
 			const wCalc = isFunction(this.w) ? this.w() : this.w;
 			const hCalc = isFunction(this.h) ? this.h() : this.h;
-			if (wCalc <= 0 || hCalc <= 0) { return; }
+			if (wCalc <= 1 || hCalc <= 1) { return; }
 			if (this.state === buttonStates.hide) { return; }
 			// Themed Button states
 			if (parent.useThemeManager()) {
