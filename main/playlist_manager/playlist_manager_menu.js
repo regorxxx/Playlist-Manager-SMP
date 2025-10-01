@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/25
+//01/10/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable */
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
 /* global exportSettings:readable, importSettings:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -6334,7 +6334,7 @@ function importSettingsMenu() {
 			let playlistsPath;
 			importSettings(
 				{
-					onUnzipSettings: (settings, bFound, panelName) => { // eslint-disable-line no-unused-vars
+					onLoadSettings: (settings, bFound, panelName) => { // eslint-disable-line no-unused-vars
 						if (settings) {
 							if (Array.isArray(settings.playlistsPath)) {
 								playlistsPath = settings.playlistsPath[1].startsWith('.')
@@ -6353,8 +6353,7 @@ function importSettingsMenu() {
 						let bDone = getFiles(importPath, loadablePlaylistFormats)
 							.map((file) => {
 								const newFile = file.replace(importPath, playlistsPath);
-								if (_isFile(newFile)) { _deleteFile(newFile); }
-								return _renameFile(file, newFile);
+								return _moveFile(file, newFile);
 							})
 							.every((done) => {
 								if (!done) {
@@ -6367,8 +6366,7 @@ function importSettingsMenu() {
 						bDone = bDone && getFiles(importPath, new Set(['.json', '.old']))
 							.map((file) => {
 								const newFile = file.replace(importPath, folders.data);
-								if (_isFile(newFile)) { _deleteFile(newFile); }
-								return _renameFile(file, newFile);
+								return _moveFile(file, newFile);
 							})
 							.every((done) => {
 								if (!done) {

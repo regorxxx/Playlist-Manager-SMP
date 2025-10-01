@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//01/10/25
 
 /* exported exportSettings, importSettings */
 
@@ -67,7 +67,7 @@ function exportSettings(properties, data = [], panelName = window.Name, toFile =
 function importSettings(callbacks, currSettings, panelName = window.Name) {
 	if (!callbacks) {
 		callbacks = {
-			onLoadSetting: (settings, bSettingsFound, panelName) => true, // eslint-disable-line no-unused-vars
+			onLoadSettings: (settings, bSettingsFound, panelName) => true, // eslint-disable-line no-unused-vars
 			onUnzipData: (importPath, panelName) => true, // eslint-disable-line no-unused-vars
 			onUnzipPresets: (importPath, panelName) => true, // eslint-disable-line no-unused-vars
 			onUnzipDelete: (importPath, bDone, panelName) => true, // eslint-disable-line no-unused-vars
@@ -90,7 +90,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 						: val;
 				}
 			);
-			if (callbacks.onLoadSetting && !callbacks.onLoadSetting(settings, true, panelName)) {
+			if (callbacks.onLoadSettings && !callbacks.onLoadSettings(settings, true, panelName)) {
 				console.popup(panelName + ': failed importing panel settings.', window.Name + _ps(window.ScriptInfo.Name));
 				return false;
 			}
@@ -98,7 +98,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 			_deleteFile(importPath + 'settings.json');
 			console.log(panelName + ': imported panel settings');
 		} else {
-			if (callbacks.onLoadSetting && !callbacks.onLoadSetting(currSettings, false, panelName)) {
+			if (callbacks.onLoadSettings && !callbacks.onLoadSettings(currSettings, false, panelName)) {
 				console.popup(panelName + ': failed importing panel settings.', window.Name + _ps(window.ScriptInfo.Name));
 				return false;
 			}
@@ -139,7 +139,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 					: val;
 			}
 		);
-		if (callbacks.onLoadSetting && !callbacks.onLoadSetting(settings, true, panelName)) {
+		if (callbacks.onLoadSettings && !callbacks.onLoadSettings(settings, true, panelName)) {
 			console.popup(panelName + ': failed importing panel settings.', window.Name + _ps(window.ScriptInfo.Name));
 			return false;
 		}
