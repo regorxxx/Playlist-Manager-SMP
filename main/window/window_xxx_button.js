@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//01/10/25
 
 /* exported _button */
 
@@ -24,7 +24,7 @@ function _button({
 	iDoubleClickTimer = 250, // ms
 } = {}) {
 	this.paint = (gr, color) => {
-		if (this.w <= 0) { return; }
+		if (this.w <= 1) { return; }
 		// Smooth visibility switch
 		let bLastStep = false;
 		if (this.isVisible && !this.isVisible(this.time, this.timer)) {

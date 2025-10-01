@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/25
+//01/10/25
 
 /* exported _scrollBar */
 
@@ -77,7 +77,7 @@ function _scrollBar({
 	};
 
 	this.paint = (gr) => { // on_paint
-		if (this.w <= 0) { return; }
+		if (this.w <= 1) { return; }
 		// Smooth visibility switch
 		if (!this.visibleFunc(this.time)) {
 			if (this.visible) {

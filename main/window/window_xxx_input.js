@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//01/10/25
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -22,7 +22,7 @@ function _check({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4
 	this.hoveredExtPad = this.size * 1 / 3;  // extra padding when hovered
 
 	this.paint = (gr) => { // on_paint
-		if (this.w <= 0) { return; }
+		if (this.w <= 1) { return; }
 		if (this.shape === 'square') {
 			if (this.value) {
 				gr.FillSolidRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, this.fillColor);
@@ -118,7 +118,7 @@ function _toggleControl({ x, y, size = _scale(10) * 1.5, value = false, color = 
 	this.hoveredExtPad = this.slideH * 2 / 3;  // extra padding when hovered
 
 	this.paint = (gr) => { // on_paint
-		if (this.w <= 0) { return; }
+		if (this.w <= 1) { return; }
 		gr.SetSmoothingMode(SmoothingMode.HighQuality);
 		let fillColor = this.value ? lightenColor(this.fillColor, 35) : RGB(172, 172, 172);
 		const fillY = this.y + this.slideH / 2;
@@ -363,7 +363,7 @@ function _dropdownList(
 	this.paint = function (gr, x = this.x, y = this.y, bOnTop = true) {
 		const wCalc = isFunction(this.w) ? this.w() : this.w;
 		const hCalc = isFunction(this.h) ? this.h() : this.h;
-		if (wCalc <= 0 || hCalc <= 0) { return; }
+		if (wCalc <= 1 || hCalc <= 1) { return; }
 		if (this.state === buttonStates.hide) {
 			return;
 		}
@@ -518,7 +518,7 @@ function _buttonList(
 	this.paint = function (gr, x = this.x, y = this.y) {
 		const wCalc = isFunction(this.w) ? this.w() : this.w;
 		const hCalc = isFunction(this.h) ? this.h() : this.h;
-		if (wCalc <= 0 || hCalc <= 0) { return; }
+		if (wCalc <= 1 || hCalc <= 1) { return; }
 		if (this.state === buttonStates.hide) {
 			return;
 		}
@@ -618,7 +618,7 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 	this.paint = function (gr, x = this.x, y = this.y) {
 		const wCalc = isFunction(this.w) ? this.w() : this.w;
 		const hCalc = isFunction(this.h) ? this.h() : this.h;
-		if (wCalc <= 0 || hCalc <= 0) { return; }
+		if (wCalc <= 1 || hCalc <= 1) { return; }
 		if (this.state === buttonStates.hide) {
 			return;
 		}
