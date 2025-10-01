@@ -68,6 +68,7 @@
 - Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
 ### Removed
 ### Fixed
+- UI: fix crash when setting columns width to anything other than auto (0).
 
 ## [1.0.0-beta.2] - 2025-09-29
 ### Added

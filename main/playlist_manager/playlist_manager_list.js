@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/25
+//01/10/25
 
 /* exported _list */
 
@@ -248,11 +248,15 @@ function _list(x, y, w, h) {
 	this.calcRowWidthCache = null;
 	this.calcRowWidth = (gr, w, columnIdx, plsIdx) => {
 		if (!this.calcRowWidthCache) { this.calcRowWidthCache = this.columns.labels.map(() => { return {}; }); }
-		let val = this.calcRowWidthCache[columnIdx][plsIdx];
-		if (!val) {
-			val = this.calcRowWidthCache[columnIdx][plsIdx] = w === 'auto'
-				? gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]), panel.fonts[this.columns.font[columnIdx] || 'normal'])
-				: (w < 1 ? w * (this.w - this.x) : w);
+		let val;
+		if (w === 'auto') {
+			val = this.calcRowWidthCache[columnIdx][plsIdx];
+			if (!val) {
+				val = gr.CalcTextWidth(this.calcColumnVal(this.columns.labels[columnIdx], this.data[plsIdx]), panel.fonts[this.columns.font[columnIdx] || 'normal']);
+				this.calcRowWidthCache[columnIdx][plsIdx] = val;
+			}
+		} else {
+			val = w < 1 ? w * (this.w - this.x) : w;
 		}
 		return val;
 	};
@@ -275,7 +279,7 @@ function _list(x, y, w, h) {
 						}
 						maxVal += columnOffset * ((i === this.columns.width.length - 1) ? 3 : 2);
 					} else {
-						maxVal = this.calcRowWidth(gr, val);
+						maxVal = this.calcRowWidth(void(0), val);
 					}
 					total += maxVal;
 					perLabel[this.columns.labels[i]] = maxVal;
