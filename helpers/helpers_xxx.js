@@ -152,7 +152,7 @@ console.MaxSize = 1000000;
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
-/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, globNoSplitArtist:readable, _ps:readable */
+/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, globNoSplitArtist:readable, _ps:readable, _resolvePath:readable */
 // Load user files used at helpers_xxx_global.js
 loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
@@ -168,8 +168,8 @@ const globProfiler = globSettings.bProfileInit
 if (!globSettings.bLogToFile) { console.disableFile(); }
 
 // Allow tweaking of binaries path
-folders.binaries = globSettings.binariesPath.replace('.\\profile\\', fb.ProfilePath);
-folders.binariesName = folders.binaries.replace(fb.ProfilePath, '');
+folders.binaries = _resolvePath(globSettings.binariesPath);
+folders.binariesName = folders.binaries.replace(fb.ProfilePath, '').replace(fb.FoobarPath, '');
 
 /*
 	SO features

@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/09/25
+//01/10/25
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -246,7 +246,12 @@ function _resolvePath(path) {
 	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
 	else if (path.startsWith(folders.xxxRootName)) { path = path.replace(folders.xxxRootName, folders.xxx); }
 	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
+	else { path = path.replace(/%fb2k_component_path%/gi, fb.ComponentPath).replace(/%fb2k_profile_path%/gi, fb.ProfilePath).replace(/%fb2k_path%/gi, fb.FoobarPath); }
 	return path;
+}
+
+function _foldPath(path) {
+	return path.replace(folders.xxx, folders.xxxRootName).replace(fb.ProfilePath, '.\\profile\\').replace(fb.FoobarPath, '.\\');
 }
 
 function _comparePaths(source, destination) {
@@ -346,6 +351,17 @@ function _renameFile(oldFilePath, newFilePath) {
 		return false;
 	}
 	return false;
+}
+
+function _moveFile(oldFilePath, newFilePath) {
+	if (_isFile(newFilePath)) {
+		_deleteFile(newFilePath + '.old');
+		_renameFile(newFilePath, newFilePath + '.old');
+	}
+	const bDone = _renameFile(oldFilePath, newFilePath);
+	if (!bDone) { _renameFile(newFilePath + '.old', newFilePath); }
+	else { _deleteFile(newFilePath + '.old'); }
+	return bDone;
 }
 
 // https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/movefolder-method
@@ -521,7 +537,7 @@ function _save(file, value, bBOM = false) {
 	file = _resolvePath(file);
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) { _createFolder(filePath); }
-	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.Name  + _ps(window.ScriptInfo.Name) + ': JSON saving'); }
+	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.Name + _ps(window.ScriptInfo.Name) + ': JSON saving'); }
 	if (_isFolder(filePath)) {
 		if (utils.WriteTextFile(file, value, bBOM) || _isFile(file) && value === '') {
 			return true;

@@ -65,6 +65,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
 ### Removed
 ### Fixed
 

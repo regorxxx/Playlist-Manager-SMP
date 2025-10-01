@@ -1,12 +1,12 @@
 ﻿'use strict';
-//25/09/25
+//01/10/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
 include('helpers_xxx.js');
 /* global folders:readable */
 include('helpers_xxx_file.js');
-/* global _isFile:readable, _jsonParseFileCheck:readable, utf8:readable, _save:readable */
+/* global _isFile:readable, _jsonParseFileCheck:readable, utf8:readable, _save:readable, _foldPath:readable */
 include('helpers_xxx_prototypes.js');
 /* global _ps:readable */
 
@@ -328,7 +328,7 @@ const globSettings = {
 	bTooltip: true,
 	bLogToFile: false,
 	instanceManager: 'v1',
-	binariesPath: folders.binaries.replace(fb.ProfilePath, '.\\profile\\')
+	binariesPath: _foldPath(folders.binaries)
 };
 
 // No-Split Artist: user replaceable with a presets file at folders.data
