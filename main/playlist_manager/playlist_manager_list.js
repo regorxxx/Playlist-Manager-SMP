@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/25
+//03/10/25
 
 /* exported _list */
 
@@ -3833,9 +3833,11 @@ function _list(x, y, w, h) {
 				if (bCallback && plsData.isAutoPlaylist) { return false; } // In case an UI playlist matches an AutoPlaylist on manager
 				if (bCallback && !this.bSavingXsp && plsData.extension === '.xsp') { return false; }
 				if (plsData.extension !== '.ui') {
-					if (this.bSavingWarnings && this.bSavingDefExtension && plsData.extension !== this.playlistsExtension) {
-						let answer = WshShell.Popup(playlistNameId + ':\n' + plsData.path + '\nUpdating the playlist will change the format from ' + plsData.extension + ' to ' + this.playlistsExtension + '\nDo you want to continue?', 0, 'Playlist Manager: ' + plsData.name, popup.question + popup.yes_no);
-						if (answer === popup.no) { return false; }
+					let bSavingDefExtension = this.bSavingDefExtension;
+					if (this.bSavingWarnings && bSavingDefExtension && plsData.extension !== this.playlistsExtension) {
+						let answer = WshShell.Popup(playlistNameId + ':\n' + plsData.path + '\n\nUpdating the playlist will change the format from ' + plsData.extension + ' to ' + this.playlistsExtension + '. Do you want to continue?\n\nClicking \'Yes\' will change playlist format, \'No\' will keep current one and \'Cancel\' abort saving.', 0, 'Playlist Manager: ' + plsData.name, popup.question + popup.yes_no_cancel);
+						if (answer === popup.cancel) { return false; }
+						else if (answer === popup.no) { bSavingDefExtension = false; }
 					}
 					const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer);
 					console.log('Playlist Manager: Updating playlist... ' + plsData.name);
@@ -3845,7 +3847,7 @@ function _list(x, y, w, h) {
 						bDeleted = _recycleFile(playlistPath, true);
 					} else { bDeleted = true; }
 					if (bDeleted) {
-						const extension = this.bSavingDefExtension || (plsData.extension === '.fpl' && !bFplWrite)
+						const extension = bSavingDefExtension || (plsData.extension === '.fpl' && !bFplWrite)
 							? this.playlistsExtension
 							: plsData.extension;
 						let done = savePlaylist({ playlistIndex: fbPlaylistIndex, playlistPath, ext: extension, playlistName, useUUID: this.optionsUUIDTranslate(), bLocked: plsData.isLocked, category: plsData.category, tags: plsData.tags, relPath: (this.bRelativePath ? this.playlistsPath : ''), trackTags: plsData.trackTags, playlist_mbid: plsData.playlist_mbid, author: plsData.author, description: plsData.description, bBom: this.bBOM });

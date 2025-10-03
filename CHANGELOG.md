@@ -65,6 +65,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Saving: popup which warns about saving before changing the playlist format to the default one now offers the possibility to do so, keep the current one or abort saving.
 - Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
 ### Removed
 ### Fixed
