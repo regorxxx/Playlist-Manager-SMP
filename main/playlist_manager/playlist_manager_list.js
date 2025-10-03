@@ -279,7 +279,7 @@ function _list(x, y, w, h) {
 						}
 						maxVal += columnOffset * ((i === this.columns.width.length - 1) ? 3 : 2);
 					} else {
-						maxVal = this.calcRowWidth(void(0), val);
+						maxVal = this.calcRowWidth(void (0), val);
 					}
 					total += maxVal;
 					perLabel[this.columns.labels[i]] = maxVal;
@@ -6609,8 +6609,9 @@ function _list(x, y, w, h) {
 					loadPromise.bDone = loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } });
 					loadPromise.bLoaded = Promise.resolve(true);
 					loadPromise.bDone.then((bDone) => {
-						if (!bDone) { plman.AddLocations(fbPlaylistIndex, [pls.path], true); }
-						else if (pls.query) { // Update size on load for smart playlists
+						if (!bDone && (pls.extension !== '.xspf' || utils.CheckComponent('foo_xspf_1'))) {
+							plman.AddLocations(fbPlaylistIndex, [pls.path], true);
+						} else if (pls.query) { // Update size on load for smart playlists
 							const handleList = this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, true, true);
 							if (this.bAutoTrackTag && this.bAutoTrackTagAutoPls && handleList.Count) {
 								this.updateTags(handleList, pls);

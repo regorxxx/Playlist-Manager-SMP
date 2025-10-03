@@ -69,6 +69,7 @@
 - Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
 ### Removed
 ### Fixed
+- XSPF: fixed situation where an empty .xspf playlist loaded, without [foo_xspf1](https://github.com/Chocobo1/foo_xspf_1) present, resulted in a playlist within UI with the playlist file handle loaded as track (instead of an empty playlist).
 - UI: fix crash when setting columns width to anything other than auto (0).
 
 ## [1.0.0-beta.2] - 2025-09-29
