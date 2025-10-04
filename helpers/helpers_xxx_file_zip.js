@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//03/10/25
 
 /* exported _zip, _unzip */
 
@@ -12,8 +12,11 @@ include('helpers_xxx_file.js');
 
 // NOSONAR [_zip(folders.xxx + 'test.txt','test.zip');]
 // NOSONAR [_zip(['test.txt', 'test2.txt'], 'test.zip');]
-function _zip(file, toPath, bAsync = false, relativePath = null, timeout = 0) {
-	const cmd = _q(folders.xxx + 'helpers-external\\7z\\' + (soFeat.x64 ? '7za' : '7za_32')+ '.exe') + ' a -tzip ' + _q(_resolvePath(toPath)) + ' ' + (isArrayStrings(file) ? file.map((f) => _q(_resolvePath(f))).join(' ') : _q(_resolvePath(file))); /* cspell:disable-line */
+function _zip(file, toPath, bAsync = false, relativePath = null, timeout = 0, cmdArgs) {
+	const cmd = _q(folders.xxx + 'helpers-external\\7z\\' + (soFeat.x64 ? '7za' : '7za_32')+ '.exe') +
+		' a -tzip ' + _q(_resolvePath(toPath)) + ' ' +
+		(isArrayStrings(file) ? file.map((f) => _q(_resolvePath(f))).join(' ') : _q(_resolvePath(file))) +
+		(cmdArgs ? ' ' + cmdArgs : '');
 	let relCmd;
 	if (timeout) {
 		if (relativePath) {
