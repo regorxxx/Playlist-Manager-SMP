@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/09/25
+//04/10/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps */
 
@@ -383,7 +383,7 @@ Object.defineProperty(Promise, 'serial', {
 			acc$.then(acc => {
 				return (timeout
 					? new Promise((resolve) => { setTimeout(() => resolve(mapper(inputValue, i)), timeout); })
-					: mapper(inputValue, i)
+					: new Promise((resolve) => resolve(mapper(inputValue, i)))
 				).then(result => acc.push(result) && acc);
 			});
 		return inputValues.reduce(reducer, Promise.resolve([]));
