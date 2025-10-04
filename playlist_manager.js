@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/09/25
+//04/10/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -755,7 +755,7 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_colours_changed', () => {
 		panel.colorsChanged();
-		list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true }));
+		if (list.checkConfig({ bResetColors: true })) { overwriteProperties(list.properties); }
 		list.repaint();
 	});
 
@@ -1056,7 +1056,7 @@ if (!list.properties.bSetup[1]) {
 					if (panel.colors.buttonsTextColor !== -1 && hasColor('buttonsText')) { panel.colors.buttonsTextColor = getColor('buttonsText'); }
 					if (panel.colors.buttonsToolbarColor !== -1 && hasColor('buttonsToolbar')) { panel.colors.buttonsToolbarColor = getColor('buttonsToolbar'); }
 					panel.colorsChanged();
-					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true, bPreferBgColor: true })); // Ensure related settings is set properly
+					if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); } // Ensure related settings is set properly
 					list.repaint();
 				}
 				break;
@@ -1077,7 +1077,7 @@ if (!list.properties.bSetup[1]) {
 					if (panel.colors.buttonsTextColor !== -1) { panel.colors.buttonsTextColor = blendColors(mostContrastColor(panel.getColorBackground()).color, note, 0.6); }
 					if (panel.colors.buttonsToolbarColor !== -1) { panel.colors.buttonsToolbarColor = mainAlt; }
 					panel.colorsChanged();
-					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true, bPreferBgColor: true })); // Ensure related settings is set properly
+					if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); } // Ensure related settings is set properly
 					list.repaint();
 				}
 				break;
