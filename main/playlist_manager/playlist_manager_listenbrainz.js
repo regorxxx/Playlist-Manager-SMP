@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//05/10/25
 
 /* exported ListenBrainz */
 
@@ -807,8 +807,8 @@ ListenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 				return false;
 			},
 			(reject) => {
-				if (!bRetry) { console.log('sendFeedback: ' + reject.status + ' ' + reject.responseText); }
-				else { console.log('sendFeedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...'); }
+				if (!bRetry) { console.log('ListenBrainz send feedback: ' + reject.status + ' ' + reject.responseText); }
+				else { console.log('ListenBrainz send feedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...'); }
 				return bRetry ? Promise.wait(retryMs).then(() => this.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, false)) : false;
 			}
 		)
@@ -819,7 +819,7 @@ ListenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 			} else {
 				const passed = results.filter(Boolean).length;
 				const nError = mbidLen - passed;
-				console.log('sendFeedback: ' + mbidLen + ' tracks' + (nError ? ' (' + nError + ' failed)' : ''));
+				console.log('ListenBrainz send feedback: ' + mbidLen + ' tracks' + (nError ? ' (' + nError + ' failed)' : ''));
 				if (!missingCount && nError && !byMbid) {
 					let report = ['List of failed tracks:'];
 					results.forEach((result, i) => {
