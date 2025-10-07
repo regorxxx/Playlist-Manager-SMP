@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//07/10/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
@@ -9,7 +9,7 @@ include('helpers_xxx.js');
 include('helpers_xxx_prototypes.js');
 /* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable, round:readable, toType:readable, _ps:readable */
 include('helpers_xxx_file.js');
-/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable */
+/* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable, _resolvePath:readable */
 include('helpers_xxx_tags.js');
 /* global checkQuery:readable, getSortObj:readable, getHandleListTagsV2:readable, queryCombinations:readable, isSubsongPath:readable, fileRegex:readable */
 include('helpers_xxx_playlists.js');
@@ -91,6 +91,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
 		return false;
 	}
+	playlistPath = _resolvePath(playlistPath);
 	if (!_isFile(playlistPath)) {
 		if (!handleList) { handleList = plman.GetPlaylistItems(playlistIndex); }
 		const itemsCount = handleList.Count;
@@ -290,6 +291,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
  * @returns {boolean} Success flag
  */
 function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = false) {
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!writablePlaylistFormats.has(extension)) {
 		console.log('addHandleToPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
@@ -492,6 +494,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
  * @returns {boolean} Success flag
  */
 function addHandleToPlaylistV2(handleList, playlistPath, relPath = '', bBOM = false) { // eslint-disable-line no-unused-vars
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!writablePlaylistFormats.has(extension)) {
 		console.log('addHandleToPlaylistV2(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
@@ -532,6 +535,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
 		return paths;
 	}
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!readablePlaylistFormats.has(extension)) {
 		console.log('getFilePathsFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
@@ -647,6 +651,7 @@ function getFileMetaFromPlaylist(playlistPath) {
 		console.log('getFileMetaFromPlaylist(): no playlist path was provided');
 		return meta;
 	}
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!new Set(['.m3u8', '.m3u', '.pls', '.xspf']).has(extension)) {
 		console.log('getFileMetaFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
@@ -800,6 +805,7 @@ function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', rem
 		console.log('loadTracksFromPlaylist(): no playlist path was provided');
 		return bDone;
 	}
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	if (!readablePlaylistFormats.has(extension)) {
 		console.log('loadTracksFromPlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...readablePlaylistFormats].join(', '));
@@ -854,6 +860,7 @@ function loadTracksFromPlaylist({ playlistPath, playlistIndex, relPath = '', rem
 // Better to find matches on the library (by path) and use those! A query or addLocation approach is easily 100x times slower
 function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bMultiple = false, bLog = true, bProfile = false, xspfRules = { bFallbackComponentXSPF: false }, poolItems = fb.GetLibraryItems() } = {}) {
 	const test = bProfile ? new FbProfiler('getHandlesFromPlaylist') : null;
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	let handlePlaylist = null, pathsNotFound = null, locationsByOrder = [];
 	if (extension === '.xsp') {
@@ -1096,6 +1103,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 }
 
 function getHandlesFromPlaylistV2({ playlistPath, relPath = '', bOmitNotFound = false, remDupl = []/*['$ascii($lower($trim(%TITLE%)))','ARTIST','$year(%DATE%)']*/, bReturnNotFound = false, bAdvTitle = false, bMultiple = false, bLog = true, bProfile = false, xspfRules = { bFallbackComponentXSPF: false }, poolItems = fb.GetLibraryItems() } = {}) { // eslint-disable-line no-unused-vars
+	playlistPath = _resolvePath(playlistPath);
 	const extension = utils.SplitFilePath(playlistPath)[2].toLowerCase();
 	const out = getHandlesFromPlaylist(...arguments);
 	if (extension === '.fpl' && fb.AddLocationsAsyncV2) {
@@ -1153,6 +1161,7 @@ function loadPlaylists(playlistArray) {
 }
 
 function loadXspPlaylist(playlistPath, bSaveCache = true) {
+	playlistPath = _resolvePath(playlistPath);
 	const bCache = xspCache.has(playlistPath);
 	let playlistText = '';
 	if (!bCache) {

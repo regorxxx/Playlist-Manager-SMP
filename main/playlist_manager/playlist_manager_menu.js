@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/25
+//07/10/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, findRelPathInAbsPath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable */
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
 /* global exportSettings:readable, importSettings:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -2766,7 +2766,7 @@ function createMenuRightTop() {
 	if (!list.bLiteMode) {	// Playlist folder
 		menu.newEntry({
 			entryText: 'Set playlists folder...', func: () => {
-				const input = Input.string('path', list.playlistsPath, 'Enter path of tracked folder:\nRelative paths must begin with \'.\\\'.', window.Name + _ps(window.ScriptInfo.Name), list.properties['playlistsPath'][3], void (0), true);
+				const input = Input.string('path', _foldPath(list.playlistsPath), 'Enter path of tracked folder:\n\nRelative paths (to foobar2000\'s profile) are also allowed. For ex:\n\'.\\profile\\playlist_manager\\\'', window.Name + _ps(window.ScriptInfo.Name), _foldPath(list.properties['playlistsPath'][3]), void (0), true);
 				if (input === null) { return; }
 				let bDone = _isFolder(input);
 				if (!bDone) { bDone = _createFolder(input); }
@@ -2776,7 +2776,7 @@ function createMenuRightTop() {
 				}
 				// Update property to save between reloads
 				list.properties['playlistsPath'][1] = input;
-				list.playlistsPath = input.startsWith('.') ? findRelPathInAbsPath(input) : input;
+				list.playlistsPath = _resolvePath(input);
 				list.playlistsPathDirName = list.playlistsPath.split('\\').filter(Boolean).pop();
 				list.playlistsPathDisk = list.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 				// Tracking network drive?
@@ -6337,9 +6337,7 @@ function importSettingsMenu() {
 					onLoadSettings: (settings, bFound, panelName) => { // eslint-disable-line no-unused-vars
 						if (settings) {
 							if (Array.isArray(settings.playlistsPath)) {
-								playlistsPath = settings.playlistsPath[1].startsWith('.')
-									? findRelPathInAbsPath(settings.playlistsPath[1], fb.ProfilePath)
-									: settings.playlistsPath[1];
+								playlistsPath = _resolvePath(settings.playlistsPath[1]);
 								console.log(panelName + ': setting new  tracked folder\n\t ' + playlistsPath);
 							} else {
 								playlistsPath = settings.playlistsPath;

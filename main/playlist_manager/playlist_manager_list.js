@@ -25,7 +25,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, findRelPathInAbsPath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable */
+/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, _resolvePath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable, _foldPath:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
 /* global funcDict:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
@@ -381,7 +381,7 @@ function _list(x, y, w, h) {
 	};
 
 	this.headerTooltip = (mask, bActions = true, bForceActions = false) => {
-		let tooltipText = this.playlistsPath;
+		let tooltipText = _foldPath(this.playlistsPath);
 		tooltipText += '\n' + 'Categories: ' + (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)');
 		tooltipText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ? this.lockStates[0] : '(All)');
 		const autoPlsCount = this.data.reduce((sum, pls) => { return (pls.query.length ? sum + 1 : sum); }, 0); // Counts autoplaylists and smart playlists
@@ -950,7 +950,7 @@ function _list(x, y, w, h) {
 						? ''
 						: 'No playlists in foobar2000.';
 				} else {
-					emptyText = 'Playlist folder is currently empty:\n\'' + this.playlistsPath + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them.' + '\n\nSet the tracked folder at header: \'Set playlists folder...\'.' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
+					emptyText = 'Playlist folder is currently empty:\n\'' + _foldPath(this.playlistsPath) + '\'\n\nAdd playlist files moving them to tracked folder, creating new playlists or importing them.' + '\n\nSet the tracked folder at header: \'Set playlists folder...\'.' + '\n\nReadable playlist formats:\n\'' + [...loadablePlaylistFormats].join('\', \'') + '\'\nWritable formats:\n\'' + [...writablePlaylistFormats].join('\', \'') + '\'';
 				}
 			}
 			const cache = this.rows;
@@ -3970,7 +3970,7 @@ function _list(x, y, w, h) {
 			}
 		}
 		if (!path || !path.length) {
-			try { path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', 'Playlist Manager: export to JSON', this.playlistsPath + 'Export\\' + name, true)); }
+			try { path = sanitizePath(utils.InputBox(window.ID, 'Path to save the json file:', 'Playlist Manager: export to JSON', folders.export + name, true)); }
 			catch (e) { return ''; } // eslint-disable-line no-unused-vars
 		}
 		if (!path.length) { return ''; }
@@ -4991,7 +4991,7 @@ function _list(x, y, w, h) {
 		const bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
 		if (!bReuseData) { // Recalculates from files
 			// AutoPlaylist and FPL From json
-			if (bLog) { console.log('Playlist Manager: reading files from ' + _q(this.playlistsPath)); }
+			if (bLog) { console.log('Playlist Manager: reading playlist files from\n\t ' + _foldPath(this.playlistsPath)); }
 			const mirrorPls = this.dataAll.filter((pls) => pls.tags.includes('bMirrorChanges'));
 			this.dataAutoPlaylists = [];
 			this.dataFpl = [];
@@ -8009,9 +8009,7 @@ function _list(x, y, w, h) {
 	// Properties
 	this.defaultProperties = clone(properties); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.properties = getPropertiesPairs(properties, 'plm_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
-	this.playlistsPath = this.properties['playlistsPath'][1].startsWith('.')
-		? findRelPathInAbsPath(this.properties['playlistsPath'][1], fb.ProfilePath)
-		: this.properties['playlistsPath'][1];
+	this.playlistsPath = _resolvePath(this.properties['playlistsPath'][1]);
 	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
 	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1].toLowerCase();
