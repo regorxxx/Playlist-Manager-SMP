@@ -67,6 +67,7 @@
 ### Changed
 - Saving: popup which warns about saving before changing the playlist format to the default one now offers the possibility to do so, keep the current one or abort saving.
 - Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
+- Export settings: now uses '[FOOBAR PROFILE FOLDER]\js_data\export' folder at exporting.
 ### Removed
 ### Fixed
 - XSPF: fixed situation where an empty .xspf playlist loaded, without [foo_xspf1](https://github.com/Chocobo1/foo_xspf_1) present, resulted in a playlist within UI with the playlist file handle loaded as track (instead of an empty playlist).

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/10/25
+//07/10/25
 
 /* exported _list */
 
@@ -7053,7 +7053,7 @@ function _list(x, y, w, h) {
 				return false;
 			}
 			case 'path': {
-				const input = Input.string('file', folders.data + 'ui_settings_' + window.Name + '.json', 'File name name:', 'Playlist Manager: export UI settings', folders.data + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+				const input = Input.string('file', folders.export + 'ui_settings_' + window.Name + '.json', 'File name name:', 'Playlist Manager: export UI settings', folders.export + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
 				if (input === null) { return null; }
 				return _save(input, JSON.stringify(settings, null, '\t').replace(/\n/g, '\r\n'))
 					? input

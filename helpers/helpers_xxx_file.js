@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/25
+//07/10/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -29,6 +29,7 @@ include('helpers_xxx.js');
 
 // Create global folders
 _createFolder(folders.data);
+_createFolder(folders.export);
 _createFolder(folders.userHelpers);
 _createFolder(folders.temp);
 _createFolder(folders.userPresets);
@@ -40,7 +41,8 @@ console.disable();
 	folders.userHelpers + '_XXX-SCRIPTS_CONFIG_FILES',
 	folders.userPresets + '_XXX-SCRIPTS_CONFIG_FILES',
 	folders.userPresetsGlobal + '_DELETE_globQuery_TO_REFRESH_TAGS',
-	folders.temp + '_SAFE_TO_REMOVE_TEMP_FILES'
+	folders.temp + '_SAFE_TO_REMOVE_TEMP_FILES',
+	folders.export + '_EXPORTED_FILES'
 ].forEach((file) => {
 	if (!_isFile(file)) { _save(file, ''); }
 });

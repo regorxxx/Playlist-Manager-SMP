@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//07/10/25
 
 /**
  * Global folders setting
@@ -76,6 +76,11 @@ folders.temp = folders.data + 'temp\\';
  * @type {string}- Ex: [foobar profile]\\js_data\\temp\\ or [foobar profile]\\foo_spider_monkey_panel\\temp\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
  */
 folders.tempPackage = folders.dataPackage + 'temp\\';
+/**
+ * Path to global JS export folder
+ * @type {string} - Ex: [foobar profile]\\js_data\\temp\\
+ */
+folders.export = folders.data + 'export\\';
 /**
  * Path to global JS user helpers folder
  * @type {string} - Ex: [foobar profile]\\js_data\\helpers\\

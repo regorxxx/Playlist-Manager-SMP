@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//07/10/25
 
 /* exported ImportTextPlaylist */
 
@@ -43,7 +43,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @returns {Promise.<{idx: Number, handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}>}
 	 */
 	getPlaylist: function getPlaylist({
-		path = folders.data + 'playlistImport.txt',
+		path = folders.export + 'playlistImport.txt',
 		formatMask = ['', '. ', '%TITLE%', ' - ', globTags.artist],
 		discardMask = '',
 		queryFilters = [globQuery.noLiveNone, globQuery.notLowRating],
@@ -71,7 +71,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @returns {Promise.<{idx: Number, handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}>}
 	 */
 	getHandles: function getHandles({
-		path = folders.data + 'playlistImport.txt',
+		path = folders.export + 'playlistImport.txt',
 		formatMask = ['', '. ', '%TITLE%', ' - ', globTags.artist],
 		discardMask = '',
 		queryFilters = [globQuery.noLiveNone, globQuery.notLowRating],

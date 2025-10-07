@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/25
+//07/10/25
 
 /* exported exportSettings, importSettings */
 
@@ -24,9 +24,9 @@ function exportSettings(properties, data = [], panelName = window.Name, toFile =
 	if (!toFile) {
 		toFile = Input.string(
 			'file',
-			folders.data + 'settings_' + window.Name.replace(/\s/g, '_') + (bZip ? '_' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip' : '.json'),
+			folders.export + 'settings_' + window.Name.replace(/\s/g, '_') + (bZip ? '_' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip' : '.json'),
 			'File name:', panelName + ': Export panel settings',
-			folders.data + 'settings' + (bZip ? '.zip' : '.json'),
+			folders.export + 'settings' + (bZip ? '.zip' : '.json'),
 			void (0), true
 		) || (Input.isLastEqual ? Input.lastInput : null);
 		if (toFile === null) { return null; }
