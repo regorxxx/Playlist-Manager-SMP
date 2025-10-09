@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//09/10/25
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -226,6 +226,21 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		return true;
 	};
 
+	this.SetValueThrottled = (value, bForceActivate, timeout = this.throttle) => {
+		if (timerId) { return timerId; }
+		timerId = setTimeout(() => {
+			this.SetValue(value, bForceActivate);
+			timerId = null;
+		}, timeout);
+		return timerId;
+	};
+
+	this.SetValueDebounced = (value, bForceActivate, timeout = this.throttle) => {
+		clearTimeout(timerId);
+		timerId = setTimeout(() => this.SetValue(value, bForceActivate), timeout);
+		return timerId;
+	};
+
 	this.SetFont = (name, size, style = 0) => {
 		if (!globSettings.bTooltip) { return true; }
 		if (!this.tooltip && !this.init()) { return false; }
@@ -278,15 +293,19 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		this.SetMaxWidth(this.width);
 		this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
 		this.tooltip.Text = this.text;
+		if (timerId) { clearTimeout(timerId); }
+		timerId = null;
 		return true;
 	};
 
+	let timerId = null;
 	this.tooltip = null;
 	this.width = width;
 	this.text = value;
 	this.font = { name: font, size: fontSize, style: 0 };
 	this.bActive = false;
 	this.oldDelay = 100;
+	this.throttle = 250;
 	this.init();
 }
 
