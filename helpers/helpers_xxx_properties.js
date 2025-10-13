@@ -1,12 +1,12 @@
 ﻿'use strict';
-//25/09/25
+//13/10/25
 
-/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
+/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues,checkJsonProperties */
 
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _isFolder:readable, doOnce:readable*/
 include('helpers_xxx_prototypes.js');
-/* global _ps:readable */
+/* global _ps:readable, isJSON:readable */
 
 /*
 	Properties
@@ -21,7 +21,7 @@ include('helpers_xxx_prototypes.js');
 // For ex. for setting properties with UI buttons after initialization.
 function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bForce = false) {
 	const bNumber = count > 0;
-	const propertiesDescriptorOut = {...propertiesDescriptor};
+	const propertiesDescriptorOut = { ...propertiesDescriptor };
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		const property = propertiesDescriptorOut[k] = [...propertiesDescriptor[k]];
@@ -229,4 +229,31 @@ function checkProperty(property, withValue) {
 		)();
 	}
 	return bPass;
+}
+
+function checkJsonProperties(propertiesDescriptor) {
+	let bSave = false;
+	for (const k in propertiesDescriptor) {
+		const prop = propertiesDescriptor[k];
+		const checks = prop[2];
+		let bReplace = false;
+		if (checks && checks['forceDefaults'] && checks['func'] === isJSON) {
+			const obj = JSON.parse(prop[1]);
+			if (!Array.isArray(obj)) {
+				const def = JSON.parse(prop[3]);
+				for (let key in def) {
+					if (!Object.hasOwn(obj, key)) {
+						obj[key] = def[key];
+						bSave = true;
+						bReplace = true;
+						console.log(window.Name + _ps(window.ScriptInfo.Name) + ': Adding missing key (' + key + ') to property \'' + prop[0] + '\'');
+					}
+				}
+				if (bReplace) {
+					prop[1] = JSON.stringify(obj);
+				}
+			}
+		}
+	}
+	if (bSave) { overwriteProperties(propertiesDescriptor); }
 }
