@@ -1675,7 +1675,7 @@ ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 				const value = row[key];
 				if (value && value.length) {
 					if (key === 'identifier') { identifier = decodeURI(value).replace(this.regEx, ''); }
-					lookup[look.queryKey] = queryKey + ' IS ' + this.sanitizeQueryValue(key === 'identifier' ? identifier : value);
+					lookup[look.queryKey] = queryKey + ' IS ' + (this.sanitizeQueryValue(key === 'identifier' ? identifier : value).toLowerCase());
 				}
 			}
 		});

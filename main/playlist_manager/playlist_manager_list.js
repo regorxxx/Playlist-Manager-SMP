@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//13/10/25
 
 /* exported _list */
 
@@ -3174,7 +3174,7 @@ function _list(x, y, w, h) {
 						const tags = getHandleListTags(selItems, [globTags.title, globTags.artistRaw]);
 						const trackQueries = tags.map((trackTags) => {
 							return queryJoin([
-								_qCond(globTags.title) + ' IS ' + sanitizeQueryVal(trackTags[0][0]),
+								_qCond(globTags.title) + ' IS ' + sanitizeQueryVal(trackTags[0][0]).toLowerCase(),
 								globTags.artistRaw !== 'ARTIST'
 									? queryJoin([
 										queryCombinations(trackTags[1].map(s => s.toLowerCase()), globTags.artist, 'AND'),

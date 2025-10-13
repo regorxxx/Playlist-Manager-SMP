@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//13/10/25
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
 
@@ -1012,13 +1012,13 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 								if (bMultiple) {
 									lookup[queryKey] = key === 'identifier'
 										? queryCombinations(
-											keyVal.map((val) => decodeURI(val).replace(regExListenBrainz, ''))
+											keyVal.map((val) => decodeURI(val).replace(regExListenBrainz, '').toLowerCase())
 											, queryKey
 											, 'OR'
 										)
-										: queryCombinations(keyVal, queryKey, 'OR');
+										: queryCombinations(keyVal.map((s) => s.toString().toLowerCase()), queryKey, 'OR');
 								} else {
-									lookup[queryKey] = queryKey + ' IS ' + keyVal;
+									lookup[queryKey] = queryKey + ' IS ' + keyVal.toString().toLowerCase();
 								}
 							}
 						}
