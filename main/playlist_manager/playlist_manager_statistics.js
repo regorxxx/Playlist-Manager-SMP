@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//16/10/25
 
 /* exported _listStatistics */
 
@@ -268,6 +268,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	};
 
 	this.onLbtnUpPoint = function onLbtnUpPoint(point, x, y, mask) { // eslint-disable-line no-unused-vars
+		if (!point) { return; }
 		const filters = [];
 		switch (parent.source) { // NOSONAR
 			case 'property': {
