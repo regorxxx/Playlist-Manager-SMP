@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//16/10/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -619,18 +619,18 @@ function _jsonParseFileSplit(filePath, codePage = 0) {
 	return result;
 }
 
-function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name + _ps(window.ScriptInfo.Name), codePage = 0) {
+function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name + _ps(window.ScriptInfo.Name), codePage = 0, notFoundText, corruptText) {
 	file = _resolvePath(file);
 	let data = null;
 	if (_isFile(file)) {
 		data = _jsonParseFile(file, codePage);
 		if (!data && utils.GetFileSize(file)) {
-			console.log(fileName + ' file is corrupt:\n\t', file); // DEBUG
-			fb.ShowPopupMessage(fileName + ' file is corrupt:\n' + file, popupName);
+			console.log(fileName + ' file is corrupt:\n\t ' + file + (corruptText || '')); // DEBUG
+			fb.ShowPopupMessage(fileName + ' file is corrupt:\n' + file + (corruptText || ''), popupName);
 		}
 	} else {
-		console.log(fileName + ' file not found:\n\t', file); // DEBUG
-		fb.ShowPopupMessage(fileName + ' file not found:\n' + file, popupName);
+		console.log(fileName + ' file not found:\n\t ' + file + (notFoundText || '')); // DEBUG
+		fb.ShowPopupMessage(fileName + ' file not found:\n' + file + (notFoundText || ''), popupName);
 	}
 	return data;
 }
