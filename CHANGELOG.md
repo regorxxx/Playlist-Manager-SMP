@@ -74,6 +74,7 @@
 - UI: fix crash when setting columns width to anything other than auto (0).
 - UI: fix crash when pressing 'END' or 'HOME' keys to scroll in some cases.
 - UI: fix wrong order of some init methods due to usage of 'listen to color-servers' setting which resulted on tag filtering not being properly applied.
+- UI: fix crash using dynamic colors on pseudo-transparent panels.
 
 ## [1.0.0-beta.2] - 2025-09-29
 ### Added

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/09/25
+//15/10/25
 
 /* exported _panel */
 
@@ -110,8 +110,6 @@ function _panel(customBackground = false, bSetup = false) {
 	this.getColorBackground = () => {
 		let col;
 		switch (true) {
-			case window.IsTransparent:
-				return;
 			case !this.customBackground:
 			case this.colors.mode === 0:
 				col = this.colors.background;
