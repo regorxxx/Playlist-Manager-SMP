@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/25
+//17/10/25
 
 /* exported _scrollBar */
 
@@ -273,7 +273,7 @@ function _scrollBar({
 		} else if (this.bHoveredDown || this.bHoveredUp) {
 			const oldRow = this.currRow;
 			this.currRow = this.bHoveredUp ? 0 : this.rows;
-			if (oldRow !== this.currRow) { this.scrollFunc({ current: this.currRow, delta: oldRow - this.currRow }); }
+			if (oldRow !== this.currRow) { this.scrollFunc({ current: this.currRow, delta: this.bHoveredUp ? Infinity : -Infinity}); }
 			this.repaint();
 		}
 		return true;
