@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/10/25
+//13/10/25
 
 /* exported _list */
 
@@ -1517,28 +1517,19 @@ function _list(x, y, w, h) {
 		return x > button.x && x < (button.x + button.w) && y > button.y && y < (button.y + button.h);
 	};
 
-	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10), bDirect = false} = {}) => {
+	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10) } = {}) => {
 		if (this.trace(this.mx, this.my) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				if (!Number.isInteger(s)) { s = Math.round(s); }
-				if (this.scrollSettings.bSmooth && !bDirect) {
+				if (this.scrollSettings.bSmooth) {
 					const delta = Math.min(Math.abs(s * scrollDelta), this.items);
 					if (delta > 1) {
 						const dir = Math.sign(s * scrollDelta);
-						const end = s * scrollDelta + this.offset + this.rows;
-						const toEnd = end >= this.items || end <= 0;
-						if (toEnd) { // Apply a serie of Sum of n steps, calculating n to match required position
-							Promise.serial(
-								Array.from({ length: Math.round((-1 + Math.sqrt(1 + 4 * delta * 2)) /2) }, () => dir),
-								(s, i) => this.wheel({ s, bPaint, bForce, scrollDelta: 1 + i, bDirect: true }),
-								20
-							);
-						} else {
-							Promise.serial(
-								Array.from({ length: delta }, () => dir),
-								(s) => this.wheel({ s, bPaint, bForce, scrollDelta: 1, bDirect: true })
-							);
-						}
+						Promise.serial(
+							Array.from({ length: delta }, () => dir),
+							(s) => this.wheel({ s, bPaint, bForce, scrollDelta: 1 }),
+							delta !== this.items ? 30 : 0
+						);
 						return true;
 					}
 				}
