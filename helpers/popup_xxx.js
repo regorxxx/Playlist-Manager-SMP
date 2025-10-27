@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/02/24
+//27/10/25
 
 /* exported _popup */
 
@@ -79,7 +79,7 @@ function _popup({
 			centerY = this.y + this.h / 2 + sizeIcon + offsetY;
 			count = 8;
 		}
-		let sizeX = Math.round(scaleX * this.w / 2);
+		let sizeX = Math.round(scaleX * this.w * 3 / 4);
 		let sizeY = Math.round(scaleY * this.h / 3) + sizeIcon * 3;
 		let textOffset = scaleX * this.w * 1 / 20;
 		let popX = this.x + this.w / 2 - sizeX / 2 + offsetX;
