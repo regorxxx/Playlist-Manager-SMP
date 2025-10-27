@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/10/25
+//17/10/25
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
 
@@ -320,7 +320,8 @@ function RGBA(r, g, b, a) {
 }
 
 function RGB(r, g, b) {
-	return (0xff000000 | (r << 16) | (g << 8) | (b));
+	const c = (0xff000000 | (r << 16) | (g << 8) | (b));
+	return c < 0 ? 4294967296 + c : c;
 }
 
 function toRGB(color) { // returns an array like [192, 0, 0]
