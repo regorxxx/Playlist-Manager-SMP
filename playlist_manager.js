@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/10/25
+//28/10/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -202,7 +202,7 @@ let properties = {
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }],
 	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }],
 	bQuickSearchName: ['Quick-search forced by name', true, { func: isBoolean }],
-	_placeholder3_: ['', false, { func: isBoolean }],
+	deletePlsStartup:  ['Delete playlists on startup', JSON.stringify([]), { func: isJSON }],
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }],
 	bSavingXsp: ['Auto-save .xsp playlists', false, { func: isBoolean }],
 	bAllPls: ['Track UI-only playlists', false, { func: isBoolean }],
@@ -210,7 +210,7 @@ let properties = {
 	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }],
 	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }],
 	bSavingDefExtension: ['Try to save playlists always as default format', true, { func: isBoolean }],
-	_placeholder4_: ['', false, { func: isBoolean }],
+	deletePlsStartupFiles: ['Delete playlists files on startup', false, { func: isBoolean }],
 	bOpenOnExport: ['Open folder on export actions', true, { func: isBoolean }],
 	bShowIcons: ['Show playlist icons', true, { func: isBoolean }],
 	playlistIcons: ['Playlist icons codes (Font Awesome)', JSON.stringify(

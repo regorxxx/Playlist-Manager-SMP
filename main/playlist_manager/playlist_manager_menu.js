@@ -5415,8 +5415,9 @@ function createMenuRightTop() {
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => (list.activePlsStartup === name));
+			menu.newSeparator(subMenuName);
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Input name...', func: () => {
+				menuName: subMenuName, entryText: 'By name...', func: () => {
 					const input = Input.string('string', list.activePlsStartup, 'Input playlist name: (empty to disable)\n\nIn case the playlist is present on the manager, it\'s required to set \'bAutoLoad\' tag on playlist file to load it on startup too (otherwise playlist will not be loaded on startup).', 'Playlist Manager', 'My playlist');
 					if (input === null) { return; }
 					list.activePlsStartup = input;
@@ -5426,6 +5427,29 @@ function createMenuRightTop() {
 				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => (list.activePlsStartup.length !== 0 && list.activePlsStartup !== name));
+		}
+		{	// Startup auto-delete playlist
+			const subMenuName = menu.newMenu('Startup auto-delete playlists', menuName);
+			menu.newEntry({ menuName: subMenuName, entryText: 'Delete playlists at startup:', flags: MF_GRAYED });
+			menu.newSeparator(subMenuName);
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'By name...', func: () => {
+					const input = Input.json('array strings', list.deletePlsStartup, 'Input playlist names:\n(JSON)\n\nRegExp are allowed in /[expression]/[flags] form. For ex: \\library\\i', 'Playlist Manager', '["Filter results", "Library viewer"]', void (0), true);
+					if (input === null) { return; }
+					list.deletePlsStartup = input;
+					list.properties.deletePlsStartup[1] = JSON.stringify(list.deletePlsStartup);
+					overwriteProperties(list.properties);
+				}
+			});
+			menu.newCheckMenuLast(() => list.deletePlsStartup.length !== 0);
+			menu.newSeparator(subMenuName);
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Also delete playlist file', func: () => {
+					list.properties.deletePlsStartupFiles[1] = !list.properties.deletePlsStartupFiles[1];
+					overwriteProperties(list.properties);
+				}, flags: list.deletePlsStartup.length ? MF_STRING : MF_GRAYED
+			});
+			menu.newCheckMenuLast(() => list.deletePlsStartup.length !== 0 && list.properties.deletePlsStartupFiles[1]);
 		}
 	}
 	{

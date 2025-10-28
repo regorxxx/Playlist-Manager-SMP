@@ -64,6 +64,7 @@
 
 ## [Unreleased][]
 ### Added
+- Configuration: new setting (at 'Settings\Integration') to auto-delete playlists at startup (both UI-only playlists and playlist files) by name or RegExp. See [here](https://hydrogenaudio.org/index.php/topic,128626.msg1071737).
 ### Changed
 - Saving: popup which warns about saving before changing the playlist format to the default one now offers the possibility to do so, keep the current one or abort saving.
 - Configuration: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.

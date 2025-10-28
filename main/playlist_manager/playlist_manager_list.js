@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/10/25
+//28/10/25
 
 /* exported _list */
 
@@ -6747,6 +6747,14 @@ function _list(x, y, w, h) {
 		return plsArr;
 	};
 
+	this.getPlaylistsIdxByRegExp = (regExps = []) => {
+		let plsArr = [];
+		this.dataAll.forEach((pls, idx) => {
+			if (regExps.some((regExp) => regExp.test(pls.name))) { plsArr.push(idx); }
+		});
+		return plsArr;
+	};
+
 	this.getPlaylistsIdxByObj = (objPls = []) => {
 		let plsArr = [];
 		const plsSet = new Set(objPls);
@@ -6835,7 +6843,7 @@ function _list(x, y, w, h) {
 		const sources = playlists.map((pls) => pls.nameId);
 		playlists.forEach((pls) => {
 			// Index change on every removal so it has to be recalculated
-			const z = this.getIndex(pls);
+			const z = this.getIndex(pls, bAlsoHidden);
 			if (z !== -1) { this.removePlaylist(z, bAlsoHidden, true); }
 		});
 		if (this.bAutoRefreshXsp) {
@@ -7216,6 +7224,7 @@ function _list(x, y, w, h) {
 		this.bCheckDuplWarnings = this.properties['bCheckDuplWarnings'][1];
 		this.bAllPls = this.properties['bAllPls'][1];
 		this.activePlsStartup = this.properties['activePlsStartup'][1];
+		this.deletePlsStartup = JSON.parse(this.properties['deletePlsStartup'][1]);
 		this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 		this.uuid = this.properties['panelUUID'][1];
 		this.statusIcons = JSON.parse(this.properties['statusIcons'][1]);
@@ -7815,27 +7824,57 @@ function _list(x, y, w, h) {
 		} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
 		if (bRegExp) {
 			const playlists = getPlaylistNames();
-			const pls = (playlists.find((pls) => { return name.test(pls.name); }) || { idx: -1 }).idx;
-			idx = pls.idx;
+			idx = (playlists.find((pls) => { return name.test(pls.name); }) || { idx: -1 }).idx;
 		} else {
 			idx = plman.FindPlaylist(name);
 		}
 		if (idx === -1 && !bOnlyUI) { // Give priority to playlist on UI, then to manager playlists
-			const plsIdx = this.getPlaylistsIdxByName([name]);
-			if (plsIdx.length) {
-				idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId);
-			}
+			const plsIdx = bRegExp
+				? this.getPlaylistsIdxByRegExp([name])
+				: this.getPlaylistsIdxByName([name]);
+			if (plsIdx.length) { idx = plman.FindPlaylist(this.dataAll[plsIdx[0]].nameId); }
 		}
 		if (idx !== -1 && plman.ActivePlaylist !== idx) { plman.ActivePlaylist = idx; }
 		else if (!bOnlyUI) { console.log('Playlist Manager: active playlist at startup not found - ' + name); }
 		return idx;
+	};
 
-
+	this.startupDeletePlaylists = (names = this.deletePlsStartup, bOnlyUI = false) => {
+		const playlists = getPlaylistNames();
+		let bDone = false;
+		names.forEach((name) => {
+			let re, flag, idx = [], bRegExp = false;
+			try {
+				[, re, flag] = name.match(/\/(.*)\/([a-z]+)?/);
+				if (re) {
+					name = new RegExp(re, flag);
+					bRegExp = true;
+				}
+			} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
+			idx = bRegExp
+				? playlists.filter((pls) => name.test(pls.name)).map((pls) => pls.idx)
+				: playlists.filter((pls) => name === pls.name).map((pls) => pls.idx);
+			idx.reverse().forEach((i) => {
+				plman.RemovePlaylist(i);
+				bDone = true;
+			});
+			if (!bOnlyUI) {
+				const plsIdx = bRegExp
+					? this.getPlaylistsIdxByRegExp([name])
+					: this.getPlaylistsIdxByName([name]);
+				if (plsIdx.length) {
+					console.log('Playlist Manager: deleted playlist file(s) at startup - ' + plsIdx.map((idx) => this.dataAll[idx].name)).join(', ');
+					this.removePlaylists(plsIdx, true);
+				}
+			}
+		});
+		return bDone;
 	};
 
 	this.init = () => {
 		let startPls = -1;
 		if (this.activePlsStartup.length) { startPls = this.startupPlaylist(void (0), true); }
+		if (this.deletePlsStartup.length && !this.properties.deletePlsStartupFiles[1]) { this.startupDeletePlaylists(void (0), true); }
 		this.methodState = this.getMethodState(); // On first call first method will be default
 		this.sortState = this.getSortState(); // On first call first state of that method will be default
 		if (!_isFolder(folders.data)) { _createFolder(folders.data); }
@@ -7879,6 +7918,7 @@ function _list(x, y, w, h) {
 		return promise.then(() => {
 			if (pop.isEnabled('loading')) { pop.disable(true); }
 			if (intId !== -1) { clearInterval(intId); }
+			if (this.deletePlsStartup.length && this.properties.deletePlsStartupFiles[1]) { this.startupDeletePlaylists(void (0), false); }
 			if (stats.bEnabled) { stats.init(); }
 			this.checkConfigPostUpdate(bDone);
 			this.updatePlaylistIcons();
@@ -8073,6 +8113,7 @@ function _list(x, y, w, h) {
 	this.bAllPls = this.properties['bAllPls'][1];
 	this.iDynamicMenus = this.properties['iDynamicMenus'][1];
 	this.activePlsStartup = this.properties['activePlsStartup'][1];
+	this.deletePlsStartup = JSON.parse(this.properties['deletePlsStartup'][1]);
 	this.searchMethod = JSON.parse(this.properties['searchMethod'][1]);
 	this.bForceCachePls = this.properties['bForceCachePls'][1];
 	this.bTracking = true;
