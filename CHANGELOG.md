@@ -77,6 +77,7 @@
 - UI: smooth scrolling fixes.
 - UI: fix wrong order of some init methods due to usage of 'listen to color-servers' setting which resulted on tag filtering not being properly applied.
 - UI: fix crash using dynamic colors on pseudo-transparent panels.
+- Fix crash renaming/moving files in some cases.
 
 ## [1.0.0-beta.2] - 2025-09-29
 ### Added

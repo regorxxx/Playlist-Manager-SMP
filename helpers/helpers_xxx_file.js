@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/10/25
+//28/10/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -494,7 +494,7 @@ function _restoreFile(file) {
 			numItems = items.Count;
 		} catch (e) { return false; } // eslint-disable-line no-unused-vars
 		for (let i = 0; i < numItems; i++) {
-			if (items.Item(i).Nam.toLowerCase() === originalFileName.toLowerCase()) {
+			if (items.Item(i).Name.toLowerCase() === originalFileName.toLowerCase()) {
 				_renameFile(items.Item(i).Path, file);
 				break;
 			}
