@@ -70,6 +70,7 @@
 - Configuration: improved handling of user definition files found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\' in case they got corrupted. The corrupted file will be backed up at the same folder and a new one created. Popups will warn about it, no longer requiring user actions. See [here](https://hydrogenaudio.org/index.php/topic,120978.msg1071225.html#msg1071225).
 - Export settings: now uses '[FOOBAR PROFILE FOLDER]\js_data\export' folder at exporting.
 ### Removed
+- Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for JSplitter since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available.
 ### Fixed
 - XSPF: fixed situation where an empty .xspf playlist loaded, without [foo_xspf1](https://github.com/Chocobo1/foo_xspf_1) present, resulted in a playlist within UI with the playlist file handle loaded as track (instead of an empty playlist).
 - UI: fix crash when setting columns width to anything other than auto (0).

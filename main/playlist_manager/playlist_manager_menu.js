@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//28/10/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -810,15 +810,19 @@ function createMenuLeft(forcedIndex = -1) {
 			// Locks UI playlist
 			if (showMenus['UI playlist locks']) {
 				if (bIsPlsUI || bIsPlsLoaded) {
+					// BUG: SMP if any lock is applied, playback doesn't work unless this is added
+					const bBugWorkaround = !isCompatible('1.6.2.25.10.28', 'smp') && !isCompatible('3.6.1.2', 'jsplitter');
 					const lockTypes = [
 						{ type: 'AddItems', entryText: 'Adding items' },
 						{ type: 'RemoveItems', entryText: 'Removing items' },
 						{ type: 'ReplaceItems', entryText: 'Replacing items' },
 						{ type: 'ReorderItems', entryText: 'Sorting items' },
 						{ type: 'RenamePlaylist', entryText: 'Renaming playlist' },
-						{ type: 'RemovePlaylist', entryText: 'Deleting playlist' }
-						// { type: 'ExecuteDefaultAction', entryText: 'Default action' } // BUG: SMP
-					];
+						{ type: 'RemovePlaylist', entryText: 'Deleting playlist' },
+						...(bBugWorkaround
+							? []
+							: [{ type: 'ExecuteDefaultAction', entryText: 'Default action' }])
+					].filter(Boolean);
 					const index = plman.FindPlaylist(pls.nameId);
 					const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 					const lockName = plman.GetPlaylistLockName(index);
@@ -835,13 +839,14 @@ function createMenuLeft(forcedIndex = -1) {
 								} else {
 									currentLocks.add(lock.type);
 								}
-								// BUG: SMP if any lock is applied, playback doesn't wor unless this is added
-								const locksNum = currentLocks.size;
-								if (locksNum) {
-									if (locksNum === 1 && currentLocks.has('ExecuteDefaultAction')) {
-										currentLocks.delete('ExecuteDefaultAction');
-									} else {
-										currentLocks.add('ExecuteDefaultAction');
+								if (bBugWorkaround) {
+									const locksNum = currentLocks.size;
+									if (locksNum) {
+										if (locksNum === 1 && currentLocks.has('ExecuteDefaultAction')) {
+											currentLocks.delete('ExecuteDefaultAction');
+										} else {
+											currentLocks.add('ExecuteDefaultAction');
+										}
 									}
 								}
 								plman.SetPlaylistLockedActions(index, [...currentLocks]);
