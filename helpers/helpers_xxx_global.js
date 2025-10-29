@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/10/25
+//28/10/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -248,7 +248,7 @@ const globQuery = {
 	_file: folders.userPresetsGlobal + 'globQuery.json',
 	_description: 'These are queries used across all the tools, being the default values. In case you want to expand the default queries with additional tags or values feel free to do so here. Every new panel installed will use the new values by default (not requiring manual editing on every panel). Already existing panels will only load these values when using the "Reset to defaults" option (if available).',
 	_usage: 'Queries built with the globTags file. This file can be deleted to recreate it from the tags file. Otherwise feel free to fine-tune the queries. Special characters like single quotes (\') or backslash (\\) must be properly escaped. Remember to also properly escape special characters according to TF and query rules!',
-	filter: 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1) AND NOT (' + globTags.style + ' IS live AND NOT ' + globTags.style + ' IS hi-fi) AND %CHANNELS% LESS 3 AND NOT COMMENT HAS quad',
+	filter: 'NOT (' + globTags.rating + ' EQUAL 2 OR ' + globTags.rating + ' EQUAL 1) AND NOT (' + globTags.style + ' IS live AND NOT ' + globTags.style + ' IS hi-fi) AND %CHANNELS% LESS 3 AND NOT COMMENT HAS quad AND %LENGTH_SECONDS% LESS 720 AND %LENGTH_SECONDS% GREATER 60',
 	female: '(' + globTags.style + ' IS female vocal OR ' + globTags.style + ' IS female OR ' + globTags.genre + ' IS female vocal OR ' + globTags.genre + ' IS female OR GENDER IS female)',
 	instrumental: '(' + globTags.style + ' IS instrumental OR ' + globTags.genre + ' IS instrumental OR SPEECHNESS EQUAL 0 OR LANGUAGE IS zxx)',
 	acoustic: '(' + globTags.style + ' IS acoustic OR ' + globTags.genre + ' IS acoustic OR ACOUSTICNESS GREATER 75)',
@@ -256,7 +256,9 @@ const globQuery = {
 	ratingGr2: globTags.rating + ' GREATER 2',
 	ratingGr3: globTags.rating + ' GREATER 3',
 	ratingTop: globTags.rating + ' EQUAL 5',
-	shortLength: '%LENGTH_SECONDS% LESS 360',
+	shortLength: '%LENGTH_SECONDS% LESS 60',
+	mediumLength: '%LENGTH_SECONDS% LESS 360',
+	longLength: '%LENGTH_SECONDS% LESS 720',
 	stereo: '(%CHANNELS% LESS 3 AND NOT COMMENT HAS quad)',
 	noRating: globTags.rating + ' MISSING',
 	live: '(' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live)',
@@ -265,7 +267,7 @@ const globQuery = {
 	lastPlayedFunc: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% #QUERYEXPRESSION#))',
 	firstPlayedFunc: '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% MISSING AND %FIRST_PLAYED% #QUERYEXPRESSION#))',
 	addedFunc: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_ADDED% PRESENT AND %2003_ADDED% #QUERYEXPRESSION#) OR (%2003_ADDED% MISSING AND %ADDED% #QUERYEXPRESSION#))',
-	loved: globTags.feedback + ' IS 1 OR %2003_LOVED% IS 1',
+	loved: '(' + globTags.feedback + ' IS 1 OR %2003_LOVED% IS 1)',
 	hated: globTags.feedback + ' IS -1'
 };
 

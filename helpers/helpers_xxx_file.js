@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/25
+//29/10/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -8,7 +8,7 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx_basic_js.js');
 /* global tryMethod:readable */
 include('helpers_xxx_prototypes.js');
-/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable, _ps:readable */
+/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable, _ps:readable, isCompatible:readable */
 
 /*
 	Global Variables
@@ -25,7 +25,7 @@ const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(
 
 
 include('helpers_xxx.js');
-/* global folders:readable, isCompatible:readable, lastStartup:readable, VK_SHIFT:readable */
+/* global folders:readable, lastStartup:readable, VK_SHIFT:readable */
 
 // Create global folders
 _createFolder(folders.data);

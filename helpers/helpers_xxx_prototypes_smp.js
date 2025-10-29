@@ -1,7 +1,7 @@
 ﻿'use strict';
-//07/08/25
+//29/10/25
 
-/* exported extendGR */
+/* exported extendGR, checkCompatible */
 
 /*
 	Object
@@ -474,4 +474,43 @@ if (!window.Parent) {
 			? 'foo_uie_jsplitter'
 			: 'foo_spider_monkey_panel'
 	});
+}
+
+/* SMP bugs */
+
+if (!window.Bugs) { window.Bugs = {}; }
+
+window.Bugs.SetPlaylistLockedActions = ![
+	{ version: '1.6.2.25.10.29', target: 'smp' },
+	{ version: '3.6.1.2', target: 'jsplitter' }
+].some((host) => isCompatible(host.version, host.target));
+
+/* Helpers */
+
+function compareVersions(from, to) {
+	if (typeof from === 'string') { from = from.split('.'); }
+	if (typeof to === 'string') { to = to.split('.'); }
+	for (let i = 0; i < to.length; ++i) {
+		if (to[i] !== from[i]) {
+			return typeof from[i] === 'undefined'
+				? false
+				: to[i].localeCompare(from[i], void (0), { numeric: true }) < 0;
+		}
+	}
+	return true;
+}
+
+function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
+	target = target.toLowerCase();
+	return target === 'smp' || target === 'jsplitter'
+		? compareVersions(utils.Version.split('.'), requiredVersionStr.split('.')) && (target === 'jsplitter' ? fb.ComponentPath.includes('foo_uie_jsplitter') : true)
+		: compareVersions(fb.Version.split('.'), requiredVersionStr.split('.'));
+}
+
+function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
+	target = target.toLowerCase();
+	if (!isCompatible(requiredVersionStr)) {
+		const isJsHost = target === 'smp' || target === 'jsplitter';
+		console.popup('This script requires v' + requiredVersionStr + '. Current ' + (isJsHost ? 'component' : 'Foobar2000') + ' version is v' + (isJsHost ? utils : fb).Version + '.', window.Name + ' (' + window.ScriptInfo.Name + ')');
+	}
 }
