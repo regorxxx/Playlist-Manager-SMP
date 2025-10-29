@@ -1,11 +1,11 @@
 ﻿'use strict';
-//28/10/25
+//29/10/25
 
 /* exported _list */
 
 /* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, properties:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable, scrollBar:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable*/
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -2344,18 +2344,9 @@ function _list(x, y, w, h) {
 								}
 								indexes.forEach((idx, i) => {
 									if (playlists[i].extension === '.ui') {
-										const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist'];
 										const index = plman.FindPlaylist(playlists[i].nameId);
 										if (index === -1) { return false; }
-										const currentLocks = plman.GetPlaylistLockedActions(index) || [];
-										const lockName = plman.GetPlaylistLockName(index);
-										if (lockName === window.Parent || !lockName) {
-											if (currentLocks.length) {
-												plman.SetPlaylistLockedActions(index, []);
-											} else {
-												plman.SetPlaylistLockedActions(index, lockTypes);
-											}
-										}
+										setLocks(index, ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist', 'RemovePlaylist'], 'globalswitch');
 									} else { switchLock(this, idx, true); }
 								});
 								return true;
@@ -6617,7 +6608,7 @@ function _list(x, y, w, h) {
 								this.updateTags(handleList, pls);
 							}
 							if (pls.extension === '.xsp') {
-								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : '', 'ExecuteDefaultAction'].filter(Boolean));
+								setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems', 'ReplaceItems', pls.sort ? 'ReorderItems' : ''].filter(Boolean));
 							}
 						} else {
 							this.updatePlaylistHandleMeta(pls, fbPlaylistIndex, void (0), void (0), ['.xspf'].includes(pls.extension));

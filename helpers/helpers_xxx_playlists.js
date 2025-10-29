@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/08/25
+//29/10/25
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS */
 
@@ -174,7 +174,7 @@ function getLocks(plsNameOrIdx) {
 	return { isLocked, isSMPLock, name, types, index };
 }
 
-function setLocks(playlistIndex, lockTypes, logic = 'add' /* add|switch|remove*/) {
+function setLocks(playlistIndex, lockTypes, logic = 'replace' /* add|switch|remove|replace|globalswitch*/) {
 	if (playlistIndex === -1) { return false; }
 	let newLocks = new Set(plman.GetPlaylistLockedActions(playlistIndex) || []);
 	const lockName = plman.GetPlaylistLockName(playlistIndex);
@@ -183,15 +183,29 @@ function setLocks(playlistIndex, lockTypes, logic = 'add' /* add|switch|remove*/
 			case 'switch':
 				lockTypes.forEach((lock) => {
 					if (newLocks.has(lock)) { newLocks.delete(lock); }
-					else { newLocks.add(lock.type); }
+					else { newLocks.add(lock); }
 				});
+				break;
+			case 'globalswitch':
+				newLocks = newLocks.size
+					? new Set()
+					: new Set(lockTypes);
 				break;
 			case 'remove':
 				newLocks = newLocks.difference(new Set(lockTypes));
 				break;
+			case 'replace':
+				newLocks = new Set(lockTypes);
+				break;
 			case 'add':
 			default:
 				newLocks = newLocks.union(new Set(lockTypes));
+		}
+		// BUG: SMP if any lock is applied, playback doesn't work unless this is added
+		if (window.Bugs.SetPlaylistLockedActions) {
+			const locksNum = newLocks.size;
+			if (locksNum === 1 && newLocks.has('ExecuteDefaultAction')) { newLocks.delete('ExecuteDefaultAction'); }
+			else if (locksNum > 0) { newLocks.add('ExecuteDefaultAction'); }
 		}
 		plman.SetPlaylistLockedActions(playlistIndex, [...newLocks]);
 		return true;

@@ -1,12 +1,12 @@
 ﻿'use strict';
-//28/10/25
+//29/10/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable, scrollBar:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, isCompatible:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable */
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers\\callbacks_xxx.js');
@@ -14,7 +14,7 @@ include('..\\..\\helpers\\callbacks_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global overwriteProperties:readable, checkProperty:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, _ps:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, _ps:readable, isCompatible:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
@@ -26,7 +26,7 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getPlaylistIndexArray:readable, sendToPlaylist:readable, MAX_QUEUE_ITEMS:readable, fileRegex:readable */
+/* global getPlaylistIndexArray:readable, sendToPlaylist:readable, MAX_QUEUE_ITEMS:readable, fileRegex:readable, setLocks:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
@@ -810,8 +810,6 @@ function createMenuLeft(forcedIndex = -1) {
 			// Locks UI playlist
 			if (showMenus['UI playlist locks']) {
 				if (bIsPlsUI || bIsPlsLoaded) {
-					// BUG: SMP if any lock is applied, playback doesn't work unless this is added
-					const bBugWorkaround = !isCompatible('1.6.2.25.10.28', 'smp') && !isCompatible('3.6.1.2', 'jsplitter');
 					const lockTypes = [
 						{ type: 'AddItems', entryText: 'Adding items' },
 						{ type: 'RemoveItems', entryText: 'Removing items' },
@@ -819,7 +817,7 @@ function createMenuLeft(forcedIndex = -1) {
 						{ type: 'ReorderItems', entryText: 'Sorting items' },
 						{ type: 'RenamePlaylist', entryText: 'Renaming playlist' },
 						{ type: 'RemovePlaylist', entryText: 'Deleting playlist' },
-						...(bBugWorkaround
+						...(window.Bugs.SetPlaylistLockedActions
 							? []
 							: [{ type: 'ExecuteDefaultAction', entryText: 'Default action' }])
 					].filter(Boolean);
@@ -834,22 +832,7 @@ function createMenuLeft(forcedIndex = -1) {
 					lockTypes.forEach((lock) => {
 						menu.newEntry({
 							menuName: subMenuName, entryText: lock.entryText, func: () => {
-								if (currentLocks.has(lock.type)) {
-									currentLocks.delete(lock.type);
-								} else {
-									currentLocks.add(lock.type);
-								}
-								if (bBugWorkaround) {
-									const locksNum = currentLocks.size;
-									if (locksNum) {
-										if (locksNum === 1 && currentLocks.has('ExecuteDefaultAction')) {
-											currentLocks.delete('ExecuteDefaultAction');
-										} else {
-											currentLocks.add('ExecuteDefaultAction');
-										}
-									}
-								}
-								plman.SetPlaylistLockedActions(index, [...currentLocks]);
+								setLocks(index, [lock.type], 'switch');
 							}, flags
 						});
 						menu.newCheckMenuLast(() => currentLocks.has(lock.type));
@@ -857,12 +840,12 @@ function createMenuLeft(forcedIndex = -1) {
 					menu.newSeparator(subMenuName);
 					menu.newEntry({
 						menuName: subMenuName, entryText: 'All locks' + (bIsPlsUI && !currentLocks.size ? list.getGlobalShortcut('lock ui') : ''), func: () => {
-							plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
+							setLocks(index, lockTypes.map((lock) => lock.type));
 						}, flags
 					});
 					menu.newEntry({
 						menuName: subMenuName, entryText: 'None' + (bIsPlsUI && currentLocks.size ? list.getGlobalShortcut('lock ui') : ''), func: () => {
-							plman.SetPlaylistLockedActions(index, []);
+							setLocks(index, []);
 						}, flags
 					});
 				}
@@ -1619,8 +1602,10 @@ function createMenuLeftMult(forcedIndexes = []) {
 					{ type: 'ReorderItems', entryText: 'Sorting items' },
 					{ type: 'RenamePlaylist', entryText: 'Renaming playlist' },
 					{ type: 'RemovePlaylist', entryText: 'Deleting playlist' },
-					{ type: 'ExecuteDefaultAction', entryText: 'Default action' }
-				];
+					...(window.Bugs.SetPlaylistLockedActions
+						? []
+						: [{ type: 'ExecuteDefaultAction', entryText: 'Default action' }])
+				].filter(Boolean);
 				let bSMPLock = false, lockName = new Set();
 				playlistsLoaded.forEach((pls) => {
 					const index = plman.FindPlaylist(pls.nameId);
@@ -1639,16 +1624,10 @@ function createMenuLeftMult(forcedIndexes = []) {
 							const report = [];
 							playlistsLoaded.forEach((pls) => {
 								const index = plman.FindPlaylist(pls.nameId);
-								const currentLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
 								const lockName = plman.GetPlaylistLockName(index);
 								const bSMPLock = lockName === window.Parent || !lockName;
 								if (bSMPLock) {
-									if (currentLocks.has(lock.type)) {
-										currentLocks.delete(lock.type);
-									} else {
-										currentLocks.add(lock.type);
-									}
-									plman.SetPlaylistLockedActions(index, [...currentLocks]);
+									setLocks(index, [lock.type], 'switch');
 								} else {
 									report.push('\t- ' + pls.nameId + ': ' + lockName);
 								}
@@ -1675,7 +1654,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 							const lockName = plman.GetPlaylistLockName(index);
 							const bSMPLock = lockName === window.Parent || !lockName;
 							if (bSMPLock) {
-								plman.SetPlaylistLockedActions(index, lockTypes.map((lock) => lock.type));
+								setLocks(index, lockTypes.map((lock) => lock.type));
 							} else {
 								report.push('\t- ' + pls.nameId + ': ' + lockName);
 							}
@@ -1693,7 +1672,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 							const lockName = plman.GetPlaylistLockName(index);
 							const bSMPLock = lockName === window.Parent || !lockName;
 							if (bSMPLock) {
-								plman.SetPlaylistLockedActions(index, []);
+								setLocks(index, []);
 							} else {
 								report.push('\t- ' + pls.nameId + ': ' + lockName);
 							}

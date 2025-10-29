@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//29/10/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -17,7 +17,7 @@ include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_clipboard.js');
 /* global _setClipboardData:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global getPlaylistIndexArray:readable, getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable,  */
+/* global getPlaylistIndexArray:readable, getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable, setLocks:readable  */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global loadablePlaylistFormats:readable, fplCache:readable, xmlDomCache:readable , getFilePathsFromPlaylist:readable, _explorer:readable, savePlaylist:readable, xspCache:readable, xspfCache:readable, arePathsInMediaLibrary:readable, pathTF:readable, loadXspPlaylist:readable, getHandlesFromPlaylistV2:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_fpl.js');
@@ -551,15 +551,9 @@ function switchLockUI(list, z, bAlsoHidden = false) {
 		return false;
 	}
 	const pls = bAlsoHidden ? list.dataAll[z] : list.data[z];
-	const lockTypes = ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist'];
 	const index = plman.FindPlaylist(pls.nameId);
 	if (index === -1) { return false; }
-	const playlistLockTypes = new Set(plman.GetPlaylistLockedActions(index));
-	const lockName = plman.GetPlaylistLockName(index);
-	const bSMPLock = lockName === window.Parent || !lockName;
-	const bLocked = !bSMPLock || playlistLockTypes.size;
-	const newLock = bLocked ? [] : lockTypes; // This filters blank values
-	plman.SetPlaylistLockedActions(index, newLock);
+	setLocks(index, ['AddItems', 'RemoveItems', 'ReplaceItems', 'ReorderItems', 'RenamePlaylist'], 'globalswitch');
 	list.editData(pls, { isLocked: !pls.isLocked, modified: Date.now() });
 	list.update({ bReuseData: true, bNotPaint: true });
 	list.filter();
