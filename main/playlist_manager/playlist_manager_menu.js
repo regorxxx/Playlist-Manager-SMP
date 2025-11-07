@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/25
+//07/11/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -28,7 +28,7 @@ include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getPlaylistIndexArray:readable, sendToPlaylist:readable, MAX_QUEUE_ITEMS:readable, fileRegex:readable, setLocks:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable */
+/* global loadablePlaylistFormats:readable, writablePlaylistFormats:readable, savePlaylist:readable, relPathSplit:readable, resolveTrackRelativePath:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 /* global XSPF:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
@@ -712,7 +712,7 @@ function createMenuLeft(forcedIndex = -1) {
 												handleArr.forEach((handle, i) => {
 													if (!handle) { return; }
 													const relPath = '';
-													const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+													const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', 'PATH', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
 													const title = tags[0][0][0];
 													const creator = tags[1][0].join(', ');
 													const album = tags[2][0][0];
@@ -2247,7 +2247,7 @@ function createMenuRight() {
 											const trackNum = Number(tags[3][0][0]);
 											const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
 											totalDuration += Math.round(Number(tags[4][0][0])); // In s
-											let trackPath = tags[5][0][0].replace(fileRegex, '');
+											let trackPath = resolveTrackRelativePath(tags[5][0][0].replace(fileRegex, ''));
 											const bLink = _isLink(trackPath);
 											trackPath = relPath.length && !_isLink(trackPath)
 												? getRelPath(trackPath, relPathSplit)

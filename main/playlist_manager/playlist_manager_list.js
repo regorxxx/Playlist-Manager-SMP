@@ -21,11 +21,11 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global getLocks:readable, getPlaylistIndexArray:readable, getHandlesFromUIPlaylists:readable, arePlaylistNamesDuplicated:readable, findPlaylistNamesDuplicated:readable, clearPlaylistByName:readable, getPlaylistNames:readable, setLocks:readable, MAX_QUEUE_ITEMS:readable, removePlaylistByName:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, addHandleToPlaylistV2:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable */
+/* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, addHandleToPlaylistV2:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable, _isTrack:readable, pathTF:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _isLink:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, _resolvePath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable, _foldPath:readable */
+/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, _resolvePath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable, _foldPath:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
 /* global funcDict:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
@@ -3333,8 +3333,10 @@ function _list(x, y, w, h) {
 		} else if (!pls.isAutoPlaylist && !pls.query && (pls.extension !== '.fpl' || bFplWrite) && pls.size) {
 			const selItems = fb.GetSelections(1);
 			if (selItems && selItems.Count) {
-				const filePaths = pls.extension !== '.ui' ? new Set(getFilePathsFromPlaylist(pls.path)) : new Set(fb.TitleFormat('%path%').EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])));
-				const selItemsPaths = fb.TitleFormat('%path%').EvalWithMetadbs(selItems);
+				const filePaths = pls.extension !== '.ui'
+					? new Set(getFilePathsFromPlaylist(pls.path))
+					: new Set(fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])));
+				const selItemsPaths = fb.TitleFormat(pathTF).EvalWithMetadbs(selItems);
 				if (filePaths.intersectionSize(new Set(selItemsPaths))) {
 					if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsPaths }; }
 					bDup = true;
@@ -3460,7 +3462,8 @@ function _list(x, y, w, h) {
 				if (selItems && selItems.Count) {
 					// Warn about dead items
 					selItems.Convert().some((handle, i) => {
-						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+						if (!_isTrack(handle.Path)) {
+							console.log(_isTrack(handle.Path), handle.Path);
 							fb.ShowPopupMessage('Warning: There is at least one dead item among the tracks on current selection, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + pls.name);
 							return true;
 						}
@@ -3885,7 +3888,7 @@ function _list(x, y, w, h) {
 							const selItems = handleList.Convert();
 							if (selItems && selItems.length) {
 								selItems.some((handle, i) => {
-									if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+									if (!_isTrack(handle.Path)) {
 										fb.ShowPopupMessage('Warning: There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + plsData.name);
 										return true;
 									}
@@ -6100,7 +6103,7 @@ function _list(x, y, w, h) {
 				const selItems = plman.GetPlaylistItems(idx).Convert();
 				if (selItems && selItems.length) {
 					selItems.some((handle, i) => {
-						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+						if (!_isTrack(handle.Path)) {
 							console.popup('Warning: There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
 							return true;
 						}
@@ -6503,7 +6506,7 @@ function _list(x, y, w, h) {
 				const selItems = plman.GetPlaylistItems(plman.ActivePlaylist).Convert();
 				if (selItems && selItems.length) {
 					selItems.some((handle, i) => {
-						if (!_isLink(handle.Path) && !_isFile(handle.Path)) {
+						if (!_isTrack(handle.Path)) {
 							console.popup('Warning: There is at least one dead item among the tracks used to create the playlist, there may be more.\n\n(' + i + ') ' + handle.RawPath, 'Playlist Manager: ' + newName, bShowPopups);
 							return true;
 						}
