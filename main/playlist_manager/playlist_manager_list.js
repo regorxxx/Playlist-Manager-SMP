@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/25
+//07/11/25
 
 /* exported _list */
 
@@ -2852,7 +2852,7 @@ function _list(x, y, w, h) {
 				};
 			}
 			const found = [...this.dataAll].filter((pls) => {
-				if (pls.isFolder) { return this.searchMethod.bName && match(pls.name); } // Folders only have name
+				if (pls.isFolder) { return this.searchMethod.bName && !bIsQuery && match(pls.name); } // Folders only have name
 				if (this.searchMethod.bQuery && bIsQuery) { return match(pls); } // Breaks here
 				if (this.searchMethod.bName && match(pls.name)) { return true; }
 				else if (this.searchMethod.bTags && match(pls.tags)) { return true; } // NOSONAR [explicit branches]

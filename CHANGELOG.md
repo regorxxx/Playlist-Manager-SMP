@@ -69,6 +69,7 @@
 ### Removed
 - Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for newest marc2003's SMP mod versions since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1071792.html#msg1071792).
 ### Fixed
+- Fix crash using search in some cases along folders.
 
 ## [1.0.0-beta.3] - 2025-10-28
 ### Added
