@@ -1,7 +1,7 @@
 ﻿'use strict';
-//13/10/25
+//07/11/25
 
-/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2 */
+/* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2, _isTrack */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
@@ -70,7 +70,7 @@ const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
-const pathTF = '$puts(ext,$lower($ext(%_PATH_RAW%)))$replace(%_PATH_RAW%,\'file://\',,\'file-relative://\',)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
+const pathTF = '$puts(path,$replace($if($strstr(%_PATH_RAW%,file:$char(47)$char(47)),%_PATH_RAW%,%PATH%),.zip|,.zip$char(92),.rar|,.rar$char(92),.7z|,.7z$char(92),$char(47),$char(92)))$puts(ext,$lower($ext($get(path))))$replace($get(path),file:$char(47)$char(47),,)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
 
 /*
 	Playlist file manipulation
@@ -219,7 +219,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					const duration = Math.round(Number(tags[4][i][0] * 1000)); // In ms
 					totalDuration += Math.round(Number(tags[4][i][0])); // In s
 					const bLink = _isLink(tags[5][i][0]);
-					const trackPath = tags[5][i][0].replace(fileRegex, '');
+					const trackPath = resolveTrackRelativePath(tags[5][i][0].replace(fileRegex, ''));
 					const location = [
 						relPath.length && !bLink
 							? getRelPath(trackPath, relPathSplit)
@@ -431,7 +431,7 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				newTrackText = newTrackText.map((item) => { // Encode file paths as URI
 					[pre, trackPath, post] = item.split(/<location>|<\/location>/);
 					const bLink = _isLink(trackPath);
-					trackPath = trackPath.replace(fileRegex, '');
+					trackPath = resolveTrackRelativePath(trackPath.replace(fileRegex, ''));
 					trackPath = bRel && !bLink
 						? getRelPath(trackPath, relPathSplit)
 						: trackPath; // Relative path conversion
@@ -1177,4 +1177,52 @@ function loadXspPlaylist(playlistPath, bSaveCache = true) {
 	const jsp = bCache ? xspCache.get(playlistPath) : XSP.toJSP(xmldom);
 	if (bSaveCache && !bCache) { xspCache.set(playlistPath, jsp); }
 	return jsp;
+}
+
+function resolveTrackRelativePath(relPath) {
+	if (relPath.startsWith('.\\')) { return relPath.replace('.\\', fb.FoobarPath); }
+	else if (relPath.startsWith('..\\')) {
+		const relPathArr = relPath.split('\\').filter(Boolean);
+		const absPathArr = fb.FoobarPath.split('\\').filter(Boolean);
+		let bIntersect = new Set(relPathArr).intersectionSize(new Set(absPathArr));
+		if (bIntersect) {
+			bIntersect = false;
+			for (let i = relPathArr.length - 1; i >= 0; i--) {
+				for (let j = absPathArr.length - 1; j >= 0; j--) {
+					if (bIntersect) {
+						if (relPathArr[i] === '..') { relPathArr[i] = ''; }
+						else if (relPathArr[i].toLowerCase() !== absPathArr[i].toLowerCase()) { relPathArr[i] = absPathArr[j]; }
+					} else { bIntersect = relPathArr[i].toLowerCase() === absPathArr[j].toLowerCase(); }
+				}
+			}
+			relPath = relPathArr.join('\\');
+		} else {
+			relPath = relPathArr.map((folder) => { return (folder !== '..' ? folder : ''); }).filter(Boolean);
+			relPath = absPathArr.slice(0, absPathArr.length - (relPathArr.length - relPath.length)).concat(relPath);
+			relPath = relPath.join('\\');
+		}
+		if (relPath.length && relPath.endsWith('\\') && !relPath.endsWith('\\')) { relPath += '\\'; }
+		return relPath;
+	}
+	return relPath;
+}
+
+function resolveTrackContainer(path) {
+	path = path.replace('|', '\\');
+	const container = ['zip', 'rar', '7z'];
+	for (let c of container) {
+		if (path.includes('.' + c + '\\')) {
+			path = path.split(new RegExp('(\\.' + c + ')\\\\', 'i'), 2).join('');
+			break;
+		}
+	}
+	return path;
+}
+
+function _isTrack(path) {
+	return _isLink(path) || _isFile(path) || _isFile(resolveTrackContainer(
+		path.startsWith('unpack://')
+			? resolveTrackRelativePath(path.replace(fileRegex, ''))
+			: path
+	));
 }
