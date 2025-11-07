@@ -1,7 +1,7 @@
 ﻿'use strict';
-//04/10/25
+//03/11/25
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable */
@@ -320,6 +320,14 @@ class BiMap {
 
 function isFunction(obj) {
 	return !!(obj && obj.constructor && obj.call && obj.apply);
+}
+
+function isGetter(obj, prop) {
+	return !!Object.getOwnPropertyDescriptor(obj, prop)['get'];
+}
+
+function isSetter(obj, prop) {
+	return !!Object.getOwnPropertyDescriptor(obj, prop)['set'];
 }
 
 Function.prototype.applyInChunks = function applyInChunks() { // NOSONAR
