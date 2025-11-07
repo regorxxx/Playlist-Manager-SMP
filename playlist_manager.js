@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/10/25
+//05/11/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -289,6 +289,7 @@ let properties = {
 		bQuery: true,
 		bMetaQuery: true,
 		dragDropPriority: ['bPath', 'bQuery', 'bMetaTracks'],
+		dragDropTags: [globTags.title, globTags.artistRaw],
 		text: '',
 	}), { func: isJSON }],
 	uiElements: ['UI elements', JSON.stringify({

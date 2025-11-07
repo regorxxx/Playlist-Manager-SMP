@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, _qCond:readable, capitalize:readable, deepAssign:readable, _ps:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, capitalize:readable, deepAssign:readable, _ps:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -23,7 +23,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 /* global PlaylistObj:readable, playlistDescriptors:readable, loadablePlaylistFormats:readable, writablePlaylistFormats:readable, addHandleToPlaylist:readable, addHandleToPlaylistV2:readable, savePlaylist:readable, loadTracksFromPlaylist:readable, rewriteHeader:readable, getHandlesFromPlaylist:readable, getFileMetaFromPlaylist:readable, loadXspPlaylist:readable, _isTrack:readable, pathTF:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, sanitizeQueryVal:readable, queryCombinations:readable, isSubsong:readable */
+/* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, _resolvePath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable, _foldPath:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
@@ -3164,25 +3164,28 @@ function _list(x, y, w, h) {
 								.filter(Boolean)
 								.map(escapeRegExpV2);
 							search = '/' + paths.join('|') + '/i';
-
 						} else {
 							search = fb.GetLibraryRelativePath(selItems[0]).split('\\').slice(-1)[0];
 						}
 						return true;
 					} else if (method === 'bQuery' && this.searchMethod.bQuery) {
-						const tags = getHandleListTags(selItems, [globTags.title, globTags.artistRaw]);
-						const trackQueries = tags.map((trackTags) => {
-							return queryJoin([
-								_qCond(globTags.title) + ' IS ' + sanitizeQueryVal(trackTags[0][0]).toLowerCase(),
-								globTags.artistRaw !== 'ARTIST'
-									? queryJoin([
-										queryCombinations(trackTags[1].map(s => s.toLowerCase()), globTags.artist, 'AND'),
-										queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
-									], 'OR')
-									: queryCombinations(trackTags[1].map(s => s.toLowerCase()), 'ARTIST', 'AND'),
-							], 'AND');
-						});
-						search = queryJoin(trackQueries, 'OR');
+						const searchTags = this.searchMethod.dragDropTags;
+						const trackQueries = getHandleListTags(selItems, searchTags)
+							.map((trackTags) => {
+								return queryJoin(
+									searchTags.map((searchTag, i) => {
+										const values = [...new Set(trackTags[i].map(s => s.toLowerCase()))];
+										return searchTag.toUpperCase() === 'ALBUM ARTIST'
+											? queryJoin([
+												queryCombinations(values, 'ALBUM ARTIST', 'AND'),
+												queryCombinations(values, 'ARTIST', 'AND'),
+											], 'OR')
+											: queryCombinations(values, searchTag, 'AND');
+									}),
+									'AND'
+								);
+							});
+						search = queryJoin([...new Set(trackQueries)], 'OR');
 						return true;
 					} else if (method === 'bMetaTracks' && this.searchMethod.bMetaTracks) {
 						if (selItems.Count > 1) {
@@ -7425,19 +7428,21 @@ function _list(x, y, w, h) {
 			this.searchInput.borderColor = panel.getColorBackground();
 			this.searchInput.backSelectionColor = this.colors.selectedPlaylist;
 		}
+		// Drag n drop and search
+		const searchMethodDef = JSON.parse(this.properties['searchMethod'][3]);
 		if (typeof this.searchMethod.text === 'undefined' || this.searchMethod.text === null) {
 			this.searchMethod.text = '';
 			this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
 			bDone = true;
 		}
-		const dragDropPriority = ['bPath', 'bQuery', 'bMetaTracks'];
-		if (this.searchMethod.dragDropPriority) {
-			if (!Array.isArray(this.searchMethod.dragDropPriority) || !new Set(dragDropPriority).isEqual(new Set(this.searchMethod.dragDropPriority))) {
-				this.searchMethod.dragDropPriority = dragDropPriority;
-				bDone = true;
-			}
-		} else {
-			this.searchMethod.dragDropPriority = dragDropPriority;
+		if (!this.searchMethod.dragDropPriority || (!Array.isArray(this.searchMethod.dragDropPriority) || !new Set(searchMethodDef.dragDropPriority).isEqual(new Set(this.searchMethod.dragDropPriority)))) {
+			this.searchMethod.dragDropPriority = searchMethodDef.dragDropPriority;
+			this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
+			bDone = true;
+		}
+		if (!this.searchMethod.dragDropTags || !isArrayStrings(this.searchMethod.dragDropTags)) {
+			this.searchMethod.dragDropTags = searchMethodDef.dragDropTags;
+			this.properties['searchMethod'][1] = JSON.stringify(this.searchMethod);
 			bDone = true;
 		}
 		// Check Shortcuts

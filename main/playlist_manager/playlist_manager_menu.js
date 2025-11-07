@@ -5783,7 +5783,7 @@ function createMenuSearch() {
 		});
 		menu.newSeparator(subMenu);
 		{
-			const subMenuTwo = menu.newMenu('Drag n\' drop...', subMenu);
+			const subMenuTwo = menu.newMenu('Drag n\' drop', subMenu);
 			const max = list.searchMethod.dragDropPriority.length;
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'Method used by priority:', func: null, flags: MF_GRAYED });
 			menu.newSeparator(subMenuTwo);
@@ -5800,6 +5800,24 @@ function createMenuSearch() {
 					},
 					flags: list.searchMethod[method] ? MF_STRING : MF_GRAYED
 				});
+			});
+			menu.newSeparator(subMenuTwo);
+			menu.newEntry({
+				menuName: subMenuTwo, entryText: 'Query tags...', func: () => {
+					const input = Input.json(
+						'array strings',
+						list.searchMethod.dragDropTags,
+						'Enter tag(s) or TF expression(s):\n(JSON)',
+						window.Name + _ps(window.ScriptInfo.Name),
+						'["$ascii($lower($trim(%TITLE%)))","ARTIST","$year(%DATE%)"]',
+						void (0),
+						true
+					);
+					if (input === null) { return; }
+					list.searchMethod.dragDropTags = input;
+					list.properties.searchMethod[1] = JSON.stringify(list.searchMethod);
+					overwriteProperties(list.properties);
+				}
 			});
 		}
 		if (showMenus['Quick-search']) {	// QuickSearch

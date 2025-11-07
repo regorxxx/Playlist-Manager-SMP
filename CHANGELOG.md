@@ -65,6 +65,7 @@
 
 ## [Unreleased][]
 ### Added
+- Search: added configurable tags for query creation at track drag n' drop into search input box. By default it uses TITLE and ALBUM ARTIST (the previous behavior). Similar to [Library Tree mode feature](https://hydrogenaudio.org/index.php/topic,111060.msg1072147.html#msg1072147).
 - Paths: added support for compressed files in playlists. They can now reference tracks within zipped files like 'B:\The better life.zip\The better life\02 - Loser.mp3'.
 ### Changed
 - UI: tooltip on search input box will now show the entire expression along some info about the current search.
