@@ -65,14 +65,14 @@
 
 ## [Unreleased][]
 ### Added
-- Added support for compressed files in playlists. They can now reference tracks within zipped files like 'B:\The better life.zip\The better life\02 - Loser.mp3'.
+- Paths: added support for compressed files in playlists. They can now reference tracks within zipped files like 'B:\The better life.zip\The better life\02 - Loser.mp3'.
 ### Changed
 - UI: tooltip on search input box will now show the entire expression along some info about the current search.
 ### Removed
 - Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for newest marc2003's SMP mod versions since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1071792.html#msg1071792).
 ### Fixed
-- Fix crash using search in some cases along folders.
-- Fix relative path protocol handling on foobar2000 v2.25+. Mostly an internal rewrite. 2 warnings: paths will be written as absolute paths on playlists unless specified otherwise at the settings. And when using relative paths for playlists, the actual path written to files will be relative to the playlist folder (not to foobar2000 executable), otherwise playlist would be broken when loaded as file on any software.
+- Search: fix crash using search in some cases along folders.
+- Relative paths: fix relative path protocol handling on foobar2000 v2.25+. Mostly an internal rewrite. 2 warnings: paths will be written as absolute paths on playlists unless specified otherwise at the settings. And when using relative paths for playlists, the actual path written to files will be relative to the playlist folder (not to foobar2000 executable), otherwise playlist would be broken when loaded as file on any software.
 
 ## [1.0.0-beta.3] - 2025-10-28
 ### Added
