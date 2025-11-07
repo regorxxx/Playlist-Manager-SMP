@@ -66,6 +66,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: tooltip on search input box will now show the entire expression along some info about the current search.
 ### Removed
 - Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for newest marc2003's SMP mod versions since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1071792.html#msg1071792).
 ### Fixed

@@ -441,6 +441,14 @@ function _list(x, y, w, h) {
 		return tooltipText;
 	};
 
+	this.searchTooltip = () => {
+		if (!this.searchInput.text) { return ''; }
+		let tooltipText = this.searchInput.text;
+		tooltipText += '\n----------------------------------------------';
+		tooltipText += '\nFound ' + this.items + ' items';
+		return tooltipText;
+	};
+
 	this.plsTooltip = (pls, mask) => {
 		const path = (pls.path) ? '(' + pls.path.replace(this.playlistsPath, '') + ')' : '';
 		const locks = getLocks(pls.nameId);
@@ -1750,7 +1758,7 @@ function _list(x, y, w, h) {
 					this.searchInput.check('move', x, y, bDragDrop);
 				}
 				if (this.searchInput && this.searchInput.trackCheck(x, y)) {
-					const headerText = this.headerTooltip(mask, false);
+					const headerText = this.searchTooltip() || this.headerTooltip(mask, false);
 					this.tooltip.SetValue(headerText, true);
 				} else {
 					if (bMoved) { window.SetCursor(IDC_ARROW); }
