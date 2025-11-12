@@ -73,6 +73,7 @@
 - Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for newest marc2003's SMP mod versions since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1071792.html#msg1071792).
 ### Fixed
 - Search: fix crash using search in some cases along folders.
+- Search: fix crash using search in some cases with queries disabled.
 - Relative paths: fix relative path protocol handling on foobar2000 v2.25+. Mostly an internal rewrite. 2 warnings: paths will be written as absolute paths on playlists unless specified otherwise at the settings. And when using relative paths for playlists, the actual path written to files will be relative to the playlist folder (not to foobar2000 executable), otherwise playlist would be broken when loaded as file on any software.
 
 ## [1.0.0-beta.3] - 2025-10-28
