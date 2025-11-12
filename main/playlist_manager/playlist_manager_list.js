@@ -3174,17 +3174,17 @@ function _list(x, y, w, h) {
 							.map((trackTags) => {
 								return queryJoin(
 									searchTags.map((searchTag, i) => {
-										const values = [...new Set(trackTags[i].map(s => s.toLowerCase()))];
+										const values = [...new Set(trackTags[i].filter(Boolean).map(s => s.toLowerCase()))];
 										return searchTag.toUpperCase() === 'ALBUM ARTIST'
 											? queryJoin([
 												queryCombinations(values, 'ALBUM ARTIST', 'AND'),
 												queryCombinations(values, 'ARTIST', 'AND'),
-											], 'OR')
+											].filter(Boolean), 'OR')
 											: queryCombinations(values, searchTag, 'AND');
-									}),
+									}).filter(Boolean),
 									'AND'
 								);
-							});
+							}).filter(Boolean);
 						search = queryJoin([...new Set(trackQueries)], 'OR');
 						return true;
 					} else if (method === 'bMetaTracks' && this.searchMethod.bMetaTracks) {

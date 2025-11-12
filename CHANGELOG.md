@@ -74,6 +74,7 @@
 ### Fixed
 - Search: fix crash using search in some cases along folders.
 - Search: fix crash using search in some cases with queries disabled.
+- Search: fix invalid queries using search in cases where tag values were empty for drag n' drop query tags.
 - Relative paths: fix relative path protocol handling on foobar2000 v2.25+. Mostly an internal rewrite. 2 warnings: paths will be written as absolute paths on playlists unless specified otherwise at the settings. And when using relative paths for playlists, the actual path written to files will be relative to the playlist folder (not to foobar2000 executable), otherwise playlist would be broken when loaded as file on any software.
 
 ## [1.0.0-beta.3] - 2025-10-28
