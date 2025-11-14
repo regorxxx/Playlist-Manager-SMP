@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/11/25
+//14/11/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -3881,7 +3881,7 @@ function createMenuRightTop() {
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Personalize playlist icons...', func: () => {
 					let input;
-					try { input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background.\nSee also: https://fontawesome.com/v5/cheatsheet\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name + _ps(window.ScriptInfo.Name), list.properties['playlistIcons'][1], true); }
+					try { input = utils.InputBox(window.ID, 'Edit Unicode values: {".ext": {"icon": "fxxx", "iconBg": "fxxx"}, ...}\n\nNull will disable the icon or background. Look for values at:\ngithub.com/regorxxx/foobar2000-assets/blob/main/Fonts/FA_4_7_0.pdf\n\nExample: {".m3u8":{"icon":"f15c","iconBg":null}}', window.Name + _ps(window.ScriptInfo.Name), list.properties['playlistIcons'][1], true); }
 					catch (e) { return; } // eslint-disable-line no-unused-vars
 					if (!input.length) { input = '{}'; }
 					if (input === list.properties['playlistIcons'][1]) { return; }
@@ -4995,7 +4995,7 @@ function createMenuRightTop() {
 						if (Object.values(item.icons).filter(Boolean).length !== 2) {
 							Object.keys(item.icons).forEach((key) => {
 								if (!item.icons[key]) {
-									const input = Input.string('unicode', list.folders.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode)\n\nLook for values at:\nhttps://www.fontawesomecheatsheet.com', window.Name + _ps(window.ScriptInfo.Name), chars.downOutline, void (0), false);
+									const input = Input.string('unicode', list.folders.icons[key] || chars.downOutline, 'Enter folder\'s icon: (unicode - fxxx)\n\nLook for values at:\ngithub.com/regorxxx/foobar2000-assets/blob/main/Fonts/FA_4_7_0.pdf', window.Name + _ps(window.ScriptInfo.Name), chars.downOutline, void (0), false);
 									if (input === null) { return; }
 									item.icons[key] = input;
 								}

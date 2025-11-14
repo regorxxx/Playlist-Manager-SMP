@@ -72,6 +72,7 @@
 ### Removed
 - Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for newest marc2003's SMP mod versions since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1071792.html#msg1071792).
 ### Fixed
+- UI: replaced offline font awesome cheatsheet link at some places. See [Issue 89](https://github.com/regorxxx/Playlist-Manager-SMP/issues/89).
 - Search: fix crash using search in some cases along folders.
 - Search: fix crash using search in some cases with queries disabled.
 - Search: fix invalid queries using search in cases where tag values were empty for drag n' drop query tags.
