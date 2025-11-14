@@ -51,7 +51,7 @@ IF %ERRORLEVEL% EQU 2 GOTO playlist_manager
 IF %ERRORLEVEL% EQU 3 GOTO not_a_waveform_seekbar
 IF %ERRORLEVEL% EQU 4 GOTO timeline
 IF %ERRORLEVEL% EQU 5 GOTO volume_seekbar
-IF %ERRORLEVEL% EQU 6 GOTO playlist_tools
+IF %ERRORLEVEL% EQU 6 GOTO infinity_tools
 IF ERRORLEVEL 6 (
 	ECHO Package ^(%1^) not recognized.
 	GOTO:EOF
@@ -595,7 +595,7 @@ REM package info, zip and report
 CALL :finish
 GOTO:EOF
 
-:playlist_tools
+:infinity_tools
 REM package variables
 REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
@@ -692,6 +692,7 @@ CALL :copy_file helpers\helpers_xxx_playlists_files_xspf.js
 CALL :copy_file helpers\helpers_xxx_properties.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
+CALL :copy_file helpers\helpers_xxx_prototypes_smp_post.js
 CALL :copy_file helpers\helpers_xxx_so.js
 CALL :copy_file helpers\helpers_xxx_statistics.js
 CALL :copy_file helpers\helpers_xxx_tags.js
