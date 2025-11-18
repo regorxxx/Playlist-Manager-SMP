@@ -1,7 +1,7 @@
 ﻿'use strict';
-//29/10/25
+//15/11/25
 
-/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS */
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS, focusOnItem */
 
 include('helpers_xxx_prototypes.js');
 /* global range:readable, isArrayNumbers:readable */
@@ -244,4 +244,15 @@ function getSource(type, arg) {
 		case 'library':
 		default: return fb.GetLibraryItems();
 	}
+}
+
+function focusOnItem(plsIdx, idx, selection = [], bClear = true) {
+	if (plsIdx === -1) { return; }
+	if (idx === -1) { idx = 0; }
+	plman.ActivePlaylist = plsIdx;
+	if (bClear) { plman.ClearPlaylistSelection(plsIdx); }
+	if (selection && selection.length) { plman.SetPlaylistSelection(plman.ActivePlaylist, selection, true); }
+	plman.SetPlaylistSelectionSingle(plsIdx, idx, true);
+	plman.SetPlaylistFocusItem(plsIdx, idx);
+	plman.EnsurePlaylistItemVisible(plsIdx, idx);
 }

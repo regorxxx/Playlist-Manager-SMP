@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/25
+//14/11/25
 
 /* exported extendGR, checkCompatible */
 
@@ -369,6 +369,8 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 		return true;
 	}
 };
+
+if (!plman.GetGUID) { plman.GetGUID = () => null; }
 
 /*
 	Paint

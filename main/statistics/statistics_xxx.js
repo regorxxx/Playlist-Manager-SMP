@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/10/25
+//16/11/25
 
 /* exported _chart */
 
@@ -787,7 +787,7 @@ function _chart({
 								}
 								if (this.axis.x.labels && i === 0 || !this.axis.x.bSingleLabels) { // keys
 									label.xAxis = { x: 0, y: 0, w: 0, h: 0 };
-									const labelText = xAxisValues[j].split('|')[0].cut(25);
+									const labelText = xAxisValues[j].toString().split('|')[0].cut(25);
 									const tickH = label.xAxis.h = gr.CalcTextHeight(labelText, this.gFont);
 									const tickW = label.xAxis.w = gr.CalcTextWidth(labelText, this.gFont);
 									const border = labelOver.r / seriesLen * (seriesLen - i);
@@ -878,7 +878,7 @@ function _chart({
 							series.forEach((value) => {
 								const axisIdx = Math.abs(xAxisValuesLen - xAxisValues.indexOf(value.x) - 1); // Idx reversed
 								let topMax = value.y / (maxY || 1) * (w - x);
-								const valueX = value.x.split('|')[0];
+								const valueX = value.x.toString().split('|')[0];
 								let yLabel = y - axisIdx * tickW;
 								const flags = (this.axis.x.bAltLabels ? DT_CENTER : DT_LEFT) | DT_END_ELLIPSIS | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX;
 								gr.GdiDrawText(valueX, this.gFont, xAxisColor, x + this.axis.y.width * 2, yLabel - tickW, topMax - this.axis.y.width, tickW, flags);
@@ -987,7 +987,7 @@ function _chart({
 						const drawLabelW = bFitTicks ? tickW : tickW * 3;
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
-							valueX = valueX.split('|')[0].cut(25);
+							valueX = valueX.toString().split('|')[0].cut(25);
 							const xLabel = x + i * tickW;
 							// Don't paint labels when they can't be fitted properly
 							if (!bFitTicks) {
@@ -1034,7 +1034,7 @@ function _chart({
 					if (!bFitTicks) { offsetTickText -= tickW; }
 					let lastLabel = x;
 					xAxisValues.forEach((valueX, i) => {
-						valueX = valueX.split('|')[0].cut(25);
+						valueX = valueX.toString().split('|')[0].cut(25);
 						let xLabel = x + i * tickW;
 						// Don't paint labels when they can't be fitted properly
 						if (!bFitTicks) {
@@ -1167,7 +1167,7 @@ function _chart({
 						if (!bFitTicks) { offsetTickText -= tickW; }
 						let lastLabel = x;
 						xAxisValues.forEach((valueX, i) => {
-							valueX = valueX.split('|')[0].cut(25);
+							valueX = valueX.toString().split('|')[0].cut(25);
 							const xTickH = gr.CalcTextHeight(valueX, this.gFont);
 							const xTickW = gr.CalcTextWidth(valueX, this.gFont);
 							let xLabel = x + i * tickW;
@@ -2870,7 +2870,13 @@ function _chart({
 	/** @type {Map[]>} */
 	this.dataTotal = [];
 	/** @type {{sort: {x:string|null, y:string|null, z:string|null, my:string|null, mz:string|null}, filter: null|function, slice: [number, number], distribution: null|string, probabilityPlot: null|string, group: number}} */
-	this.dataManipulation = { ...this.dataManipulation, ...(dataManipulation || {}) };
+	this.dataManipulation;
+	if (dataManipulation) {
+		if (dataManipulation.sort) { this.dataManipulation.sort = {...this.dataManipulation.sort, ...dataManipulation.sort }; }
+		Object.keys(this.dataManipulation).filter((key) => !['sort'].includes(key)).forEach((key) => {
+			if (dataManipulation[key] !== null) { this.dataManipulation[key] = dataManipulation[key]; }
+		});
+	}
 	/** @type {null|{x:string|null, y:string|null, z:string|null, my:string|null, mz:string|null}}} */
 	this.sortKey = null;
 	/** @type {number}} */
@@ -2883,17 +2889,23 @@ function _chart({
 	this.colors = colors;
 	/** @type {{scheme: 'diverging'|'qualitative'|'sequential'|'random'|number[], colorBlindSafe: Boolean, interpolation: 'lrgb'|'rgb'|'lab'|'hsl'|'lch'}} @see https://vis4.net/chromajs/#color-scales */
 	this.chroma = { ...this.chroma, ...(chroma || {}) };
+	/** @type {{x: {show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string, bSingleLabels:boolean, bAltLabels:boolean}, y: {show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}, z: {show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}}} */
+	this.axis;
 	if (axis) {
 		if (axis.x) { this.axis.x = { ...this.axis.x, ...axis.x }; }
 		if (axis.y) { this.axis.y = { ...this.axis.y, ...axis.y }; }
 		if (axis.z) { this.axis.z = { ...this.axis.z, ...axis.z }; }
 	}
+	/** @type {{x: {show:boolean, color:number, width:number}, y: {show:boolean, color:number, width:number}}} */
+	this.grid;
 	if (grid) {
 		if (grid.x) { this.grid.x = { ...this.grid.x, ...grid.x }; }
 		if (grid.y) { this.grid.y = { ...this.grid.y, ...grid.y }; }
 	}
 	/** @type {{left: number, right: number, top: number, bottom: number}} */
 	this.margin = { ...this.margin, ...(margin || {}) };
+	/** @type {{timeline: {bAxisCenteredX:boolean}} */
+	this.graphSpecs;
 	if (graphSpecs) {
 		if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
 	}

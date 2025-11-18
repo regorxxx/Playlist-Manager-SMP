@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/25
+//15/11/25
 
 /*
 	Playlist Revive
@@ -22,6 +22,8 @@ include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
 /* global similarity:readable */
+include('..\\..\\helpers\\helpers_xxx_playlists.js');
+/* global focusOnItem:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, queryCombinations:readable, queryJoin:readable, fileRegex:readable */
 
@@ -297,8 +299,7 @@ function playlistRevive({
 				});
 				plman.ClearPlaylist(playlist);
 				plman.InsertPlaylistItems(playlist, 0, listItems);
-				plman.SetPlaylistSelection(playlist, selectedIdx, true);
-				plman.SetPlaylistFocusItem(plman.ActivePlaylist, selectedIdx[selectedIdx.length - 1]);
+				focusOnItem(playlist, selectedIdx[selectedIdx.length - 1]);
 			} else { 	// Just replace entire playlist
 				plman.ClearPlaylist(playlist);
 				plman.InsertPlaylistItems(playlist, 0, selItems);
@@ -342,12 +343,11 @@ function findDeadItems() {
 /* exported selectDeadItems */
 function selectDeadItems(playlistIndex) {
 	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return; }
-	plman.ClearPlaylistSelection(playlistIndex);
 	let deadItems = getDeadItems(playlistIndex);
 	if (deadItems.length) {
-		plman.ActivePlaylist = playlistIndex;
-		plman.SetPlaylistSelection(playlistIndex, deadItems.map((_) => _.idx), true);
-		plman.SetPlaylistFocusItem(playlistIndex, deadItems[0].idx);
+		focusOnItem(playlistIndex, deadItems[0].idx, deadItems.map((_) => _.idx));
+	} else {
+		plman.ClearPlaylistSelection(playlistIndex);
 	}
 	return deadItems;
 }
