@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.4](#100-beta4---2025-11-19)
 - [1.0.0-beta.3](#100-beta3---2025-10-28)
 - [1.0.0-beta.2](#100-beta2---2025-09-29)
 - [1.0.0-beta.1](#100-beta1---2025-09-20)
@@ -65,9 +66,15 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.4] - 2025-11-19
 - Search: added configurable tags for query creation at track drag n' drop into search input box. By default it uses TITLE and ALBUM ARTIST (the previous behavior). Similar to [Library Tree mode feature](https://hydrogenaudio.org/index.php/topic,111060.msg1072147.html#msg1072147).
 - Paths: added support for compressed files in playlists. They can now reference tracks within zipped files like 'B:\The better life.zip\The better life\02 - Loser.mp3'.
 ### Changed
+- Exporting Playlists: changed TF expression for 'FiiO (playlists folder)' preset to better handle non latin chars.
 - UI: tooltip on search input box will now show the entire expression along some info about the current search.
 ### Removed
 - Playlist locks: removed workaround (introduced at [0.16.0](#0160---2024-04-22)) for bugged SMP playlists locks for newest marc2003's SMP mod versions since it was fixed at the component level. 'ExecuteDefaultAction' lock is now available. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1071792.html#msg1071792).
@@ -1503,7 +1510,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.3...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.4...HEAD
+[1.0.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.3...v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.2...v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v0.19.0...v1.0.0-beta.1
