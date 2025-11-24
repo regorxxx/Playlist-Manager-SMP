@@ -66,6 +66,8 @@
 
 ## [Unreleased][]
 ### Added
+- UI: UI elements are now resizable using Alt + Ctrl + Mouse wheel. Like the 'Font scaling' submenu, the scale change is applied depending on the mouse position.
+- UI: added mouse wheel actions (data and resizing) to statistics mode.
 ### Changed
 ### Removed
 ### Fixed

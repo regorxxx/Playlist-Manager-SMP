@@ -169,6 +169,13 @@ function _button({
 		}
 		return false;
 	};
+	this.resize = (x, y, w, h) => {
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		if (this.h !== h) { this.font = _gdiFont('FontAwesome', h); }
+		this.h = h;
+	};
 	this.hover = false;
 	this.bDown = false;
 	this.text = text;

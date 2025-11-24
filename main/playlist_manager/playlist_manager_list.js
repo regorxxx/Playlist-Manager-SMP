@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/25
+//21/11/25
 
 /* exported _list */
 
@@ -1521,8 +1521,12 @@ function _list(x, y, w, h) {
 		return x >= 0 && x < panel.w && y >= 0 && y < headerH;
 	};
 
-	this.traceHeaderButton = (x, y, button) => { // On Header
+	this.traceHeaderButton = (x, y, button) => { // On button
 		return x > button.x && x < (button.x + button.w) && y > button.y && y < (button.y + button.h);
+	};
+
+	this.traceHeaderButtons = (x, y) => { // On Header buttons
+		return Object.values(this.headerButtons).some((button) => this.traceHeaderButton(x, y, button));
 	};
 
 	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10) } = {}) => {
@@ -1567,6 +1571,35 @@ function _list(x, y, w, h) {
 		} else {
 			return false;
 		}
+	};
+
+	this.wheelResize = (s) => {
+		if (this.trace(this.mx, this.my)) {
+			let key;
+			switch (true) {
+				case this.isTopButtonsEnabled() && this.traceHeaderButtons(this.mx, this.my): key = 'headerSize'; break;
+				case !this.uiElements['Search filter'].enabled && this.traceHeader(this.mx, this.my): key = 'headerSize'; break;
+				case this.uiElements['Search filter'].enabled && this.traceHeader(this.mx, this.my): key = 'inputSize'; break;
+				case this.uiElements['Bottom toolbar'].enabled && bottomToolbar.curBtn !== null: key = 'buttons'; break;
+			}
+			if (!key) {
+				panel.fonts.size += Math.sign(s);
+				panel.fonts.size = Math.max(1, panel.fonts.size);
+				panel.properties['fontSize'][1] = panel.fonts.size;
+				key = 'main';
+			} else {
+				panel.fonts.scale[key] += Math.sign(s) * 0.1;
+				panel.fonts.scale[key] = Math.max(0.01, panel.fonts.scale[key]);
+				panel.properties['fontScale'][1] = JSON.stringify(panel.fonts.scale);
+			}
+			overwriteProperties(panel.properties);
+			panel.fontChanged();
+			this.repaint(true);
+			scrollBar.resize();
+			this.repaint(true);
+			return key;
+		}
+		return null;
 	};
 
 	this.jumpToIndex = (idx, options = { bScroll: false, bCenter: true }) => { // Puts selected playlist in the middle of the window, if possible

@@ -1,9 +1,9 @@
 ﻿'use strict';
-//16/10/25
+//21/11/25
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, _ps:readable */
+/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, _ps:readable, VK_CONTROL:readable, VK_ALT:readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable, Input:readable */
 include('..\\statistics\\statistics_xxx_menu.js');
@@ -19,12 +19,24 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 	let nCharts = [];
 	let charts = [];
 
+	const saveSettings = function () { // Must be bound to chart context
+		const config = this.exportConfig();
+		const keys = new Set(['graph', 'dataManipulation', 'grid', 'axis', 'margin', 'buttons']);
+		Object.keys(config).forEach((key) => {
+			if (!keys.has(key)) { delete config[key]; }
+		});
+		config.dataManipulation.sort = this.exportSortLabel();
+		config.data = { source: parent.source.toLowerCase(), sourceArg: parent.sourceArg, option: parent.option.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
+		list.properties['statsConfig'][1] = JSON.stringify(config);
+		overwriteProperties(list.properties);
+	};
+
 	this.attachCallbacks = () => {
 		addEventListener('on_paint', (gr) => {
 			if (!window.ID || !this.bEnabled) { return; }
 			if (!window.Width || !window.Height) { return; }
 			panel.paintImage(gr, { w: window.Width, h: window.Height, x: 0, y: 0, offsetH: 0 });
-			charts.forEach((chart) => { chart.paint(gr); });
+			charts.forEach((chart) => chart.paint(gr));
 		});
 
 		addEventListener('on_size', () => {
@@ -44,22 +56,29 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 
 		addEventListener('on_mouse_move', (x, y, mask) => {
 			if (!window.ID || !this.bEnabled) { return; }
-			charts.some((chart) => { return chart.move(x, y, mask); });
+			charts.some((chart) => chart.move(x, y, mask));
 		});
 
 		addEventListener('on_mouse_leave', () => {
 			if (!this.bEnabled) { return; }
-			charts.forEach((chart) => { chart.leave(); });
+			charts.forEach((chart) => chart.leave());
 		});
 
 		addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 			if (!this.bEnabled) { return true; }
-			charts.some((chart) => { return chart.lbtnUp(x, y, mask); });
+			charts.some((chart) => chart.lbtnUp(x, y, mask));
 		});
 
 		addEventListener('on_mouse_lbtn_dblclk', (x, y, mask) => {
 			if (!window.ID || !this.bEnabled) { return; }
-			charts.some((chart) => { return chart.lbtnDblClk(x, y, mask); });
+			charts.some((chart) => chart.lbtnDblClk(x, y, mask));
+		});
+
+		addEventListener('on_mouse_wheel', (step) => {
+			if (!window.ID || !this.bEnabled) { return; }
+			if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {
+				charts.some((chart) => chart.mouseWheelResize(step, void(0), { bSaveProperties: true }));
+			} else { charts.some((chart) => chart.mouseWheel(step)); }
 		});
 	};
 
@@ -128,17 +147,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		this.tooltip.SetValue(null);
 		if (!this.settingsMenu) {
 			this.settingsMenu = new _menu({
-				onBtnUp: () => {
-					const config = this.exportConfig();
-					const keys = new Set(['graph', 'dataManipulation', 'grid', 'axis', 'margin']);
-					Object.keys(config).forEach((key) => {
-						if (!keys.has(key)) { delete config[key]; }
-					});
-					config.dataManipulation.sort = this.exportSortLabel();
-					config.data = { source: parent.source.toLowerCase(), sourceArg: parent.sourceArg, option: parent.option.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
-					list.properties['statsConfig'][1] = JSON.stringify(config);
-					overwriteProperties(list.properties);
-				}
+				onBtnUp: saveSettings.bind(this)
 			});
 		}
 		const menu = this.settingsMenu;
@@ -253,17 +262,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			menuKey: 'displayMenu',
 			bShowMulti: false,
 			hideCharts: new Set(['timeline']),
-			onBtnUp: () => {
-				const config = this.exportConfig();
-				const keys = new Set(['graph', 'dataManipulation', 'grid', 'axis', 'margin']);
-				Object.keys(config).forEach((key) => {
-					if (!keys.has(key)) { delete config[key]; }
-				});
-				config.dataManipulation.sort = this.exportSortLabel();
-				config.data = { option: parent.option.toLowerCase(), arg: parent.arg }; // Similar to this.exportDataLabels()
-				list.properties['statsConfig'][1] = JSON.stringify(config);
-				overwriteProperties(list.properties);
-			}
+			onBtnUp: saveSettings.bind(this)
 		});
 	};
 
@@ -439,7 +438,10 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				display: { onLbtnUp: function (x, y, mask) { return parent.onLbtnUpDisplay.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars
 				custom: { onLbtnUp: parent.exit, tooltip: 'Exit statistics mode...' },
 				config: {
-					backgroundColor: () => [panel.getColorBackground()]
+					backgroundColor: () => [panel.getColorBackground()],
+					change: function (config, changeArgs, callbackArgs) {
+						if (callbackArgs && callbackArgs.bSaveProperties) {	saveSettings.call(this); }
+					},
 				},
 			},
 			buttons: { settings: true, display: true, custom: true },

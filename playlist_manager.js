@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/11/25
+//21/11/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -11,7 +11,7 @@
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist-Manager-SMP', { author: 'regorxxx', version: '1.0.0-beta.4', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
-/* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, globProfiler:readable, globQuery:readable */
+/* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable,, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, globProfiler:readable, globQuery:readable, VK_ALT:readable */
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable, dropMask:readable */
 include('helpers\\helpers_xxx_properties.js');
@@ -202,7 +202,7 @@ let properties = {
 	bRemoveDuplicatesSmartPls: ['Smart Playlists, filtering enabled', true, { func: isBoolean }],
 	bSavingWarnings: ['Warnings when saving to another format', true, { func: isBoolean }],
 	bQuickSearchName: ['Quick-search forced by name', true, { func: isBoolean }],
-	deletePlsStartup:  ['Delete playlists on startup', JSON.stringify([]), { func: isJSON }],
+	deletePlsStartup: ['Delete playlists on startup', JSON.stringify([]), { func: isJSON }],
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }],
 	bSavingXsp: ['Auto-save .xsp playlists', false, { func: isBoolean }],
 	bAllPls: ['Track UI-only playlists', false, { func: isBoolean }],
@@ -869,7 +869,9 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_mouse_wheel', (s) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		list.wheel({ s: list.scrollSettings.bReversed ? -s : s });
+		if (list.scrollSettings.bReversed) { s = -s; }
+		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {	list.wheelResize(s); }
+		else { list.wheel({ s }); }
 	});
 
 	addEventListener('on_paint', (gr) => {
