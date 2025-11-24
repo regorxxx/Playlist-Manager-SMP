@@ -36,14 +36,15 @@ ECHO (3) Not-a-Waveform-Seekbar-SMP
 ECHO (4) Timeline-SMP
 ECHO (5) Volume-Seekbar-SMP
 ECHO (6) Infinity-Tools-SMP
+ECHO (7) Library-Tree-SMP
 ECHO.
 IF [%~1]==[] (
-	CHOICE /C 123456 /N /M "CHOOSE PACKAGE TO BUILD (1-6): "
+	CHOICE /C 1234567 /N /M "CHOOSE PACKAGE TO BUILD (1-7): "
 ) ELSE (
 	IF [%1] EQU [0] (
 		ECHO 9| CHOICE /C 123456789 /N >NUL
 	) ELSE (
-		ECHO %1| CHOICE /C 123456789 /N /M "CHOOSE PACKAGE TO BUILD (1-6): "
+		ECHO %1| CHOICE /C 123456789 /N /M "CHOOSE PACKAGE TO BUILD (1-7): "
 	)
 )
 IF %ERRORLEVEL% EQU 1 GOTO world_map
@@ -52,7 +53,8 @@ IF %ERRORLEVEL% EQU 3 GOTO not_a_waveform_seekbar
 IF %ERRORLEVEL% EQU 4 GOTO timeline
 IF %ERRORLEVEL% EQU 5 GOTO volume_seekbar
 IF %ERRORLEVEL% EQU 6 GOTO infinity_tools
-IF ERRORLEVEL 6 (
+IF %ERRORLEVEL% EQU 7 GOTO library_tree
+IF ERRORLEVEL 7 (
 	ECHO Package ^(%1^) not recognized.
 	GOTO:EOF
 )
@@ -609,7 +611,7 @@ IF "%version%"=="" (
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.Name) { window.DefineScript('Infinity-Tools-SMP', { author: 'regorxxx', version: '=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Infinity-Tools-SMP', { author: 'regorxxx', version: '=%
 SET version=%version:', features: { drag_n_drop: false } }); }=%
 REM features
 SET enableDragDrop=false
@@ -789,6 +791,69 @@ CALL :copy_folder images\wrapped\fallback
 CALL :copy_folder images\wrapped\genres
 CALL :copy_folder images\wrapped\month
 CALL :copy_folder images\wrapped\soundcity
+REM package info, zip and report
+CALL :finish
+GOTO:EOF
+
+:library_tree
+REM package variables
+REM version is automatically retrieved from main js file
+REM any text must be JSON encoded
+SET name=Library-Tree-SMP
+SET id=E85C9EF0-778B-46DD-AF20-F4BE831360DD
+SET description=https://github.com/regorxxx/Library-Tree-SMP\r\n\r\nFeature rich media library viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• New facets\r\n• Statistics\r\n• Album art flow mode\r\n\r\nFor guidance on setting up new facets / multiple panel mode, see help on views tab\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" library_tree.js`) DO (SET version=%%F)
+IF "%version%"=="" (
+	ECHO Main file not found or wrong version string
+	PAUSE>NUL
+	EXIT /B 1
+)
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Library-Tree-SMP', { author: 'WilB and regorxxx', version: '=%
+SET version=%version:', features: { drag_n_drop: true, grab_focus: true } }); }=%
+REM features
+SET enableDragDrop=true
+SET shouldGrabFocus=true
+REM global variable
+SET root=%packagesFolder%\%name: =-%
+REM package folder and file
+CALL :check_root
+CALL :copy_main library_tree.js
+REM docs
+CALL :copy_file _INSTALLATION.txt
+CALL :copy_file _SCRIPTS_SUMMARY.txt
+CALL :copy_file _TIPS.txt
+CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
+REM main
+CALL :copy_folder main\library_tree
+REM helpers
+CALL :check_folder helpers
+CALL :copy_file helpers\callbacks_xxx.js
+CALL :copy_file helpers\helpers_xxx.js
+CALL :copy_file helpers\helpers_xxx_basic_js.js
+CALL :copy_file helpers\helpers_xxx_console.js
+CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_flags.js
+CALL :copy_file helpers\helpers_xxx_foobar.js
+CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
+CALL :copy_file helpers\helpers_xxx_prototypes.js
+CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
+CALL :copy_file helpers\helpers_xxx_prototypes_smp_post.js
+CALL :copy_file helpers\helpers_xxx_so.js
+REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
+REM assets
+CALL :check_folder assets\library_tree
+CALL :copy_folder assets\library_tree\html
+CALL :check_folder assets\library_tree\images
+CALL :copy_folder assets\library_tree\images\noArtist
+CALL :copy_folder assets\library_tree\images\noArtist\small
+CALL :copy_folder assets\library_tree\images\noCover
+CALL :copy_folder assets\library_tree\images\noCover\small
+CALL :copy_folder assets\library_tree\images\root
+CALL :copy_folder assets\library_tree\images\root\small
+CALL :copy_folder assets\library_tree\licences
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
