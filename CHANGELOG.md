@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.5](#100-beta5---2025-11-25)
 - [1.0.0-beta.4](#100-beta4---2025-11-19)
 - [1.0.0-beta.3](#100-beta3---2025-10-28)
 - [1.0.0-beta.2](#100-beta2---2025-09-29)
@@ -66,11 +67,18 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.5] - 2025-11-25
+### Added
 - UI: UI elements are now resizable using Alt + Ctrl + Mouse wheel. Like the 'Font scaling' submenu, the scale change is applied depending on the mouse position.
 - UI: added mouse wheel actions (data and resizing) to statistics mode.
 ### Changed
 ### Removed
 ### Fixed
+- Statistics: minor fixes.
 
 ## [1.0.0-beta.4] - 2025-11-19
 - Search: added configurable tags for query creation at track drag n' drop into search input box. By default it uses TITLE and ALBUM ARTIST (the previous behavior). Similar to [Library Tree mode feature](https://hydrogenaudio.org/index.php/topic,111060.msg1072147.html#msg1072147).
@@ -1512,7 +1520,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.4...HEAD
+[Unreleased]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.5...HEAD
+[1.0.0-beta.5]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.4...v1.0.0-beta.5
 [1.0.0-beta.4]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.3...v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.2...v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/regorxxx/Playlist-Manager-SMP/compare/v1.0.0-beta.1...v1.0.0-beta.2
