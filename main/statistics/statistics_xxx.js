@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/11/25
+//25/11/25
 
 /* exported _chart */
 
@@ -1725,7 +1725,7 @@ function _chart({
 
 	let prevX = null;
 	const cleanPrevX = debounce((release) => { !utils.IsKeyPressed(release) && (prevX = null); }, 500);
-	this.calcScrollSlice = (x, currSlice = this.dataManipulation.slice, points = this.getMaxRange()) => {
+	this.calcScrollSlice = (x, currSlice = this.getLeftRange(), points = this.getMaxRange()) => {
 		if (!prevX) { prevX = x; return []; }
 		const diff = prevX - x;
 		if (Math.abs(diff) < _scale(30)) { return []; }
@@ -1920,7 +1920,7 @@ function _chart({
 		return false;
 	};
 
-	this.mouseWheel = (step, bForce) => {
+	this.wheel = (step, bForce) => {
 		if (this.inFocus || bForce) {
 			this.callbacks.focus.onMouseWheel.call(this, step);
 			return true;
@@ -1928,8 +1928,8 @@ function _chart({
 		return false;
 	};
 
-	this.mouseWheelResize = (step, bForce, callbackArgs) => {
-		if (this.inFocus || bForce) {
+	this.wheelResize = (step, bForce, callbackArgs) => {
+		if ((this.inFocus || bForce) && step !== 0) {
 			const newConfig = {};
 			if (this.isInPoint(this.mx, this.my, false)) {
 				newConfig.graph = { borderWidth: Math.max(0.5, this.graph.borderWidth + Math.sign(step)) };
@@ -2524,6 +2524,13 @@ function _chart({
 					this.sortKey = null;
 				}
 			}
+			if (this.dataManipulation.slice && Object.hasOwn(dataManipulation, 'filter') && !Object.hasOwn(dataManipulation, 'slice')) {
+				const max = this.getMaxRange();
+				const range = Math.max(this.dataManipulation.slice[1] - Math.max(this.dataManipulation.slice[0], 0), 1);
+				if (this.dataManipulation.slice[0] >= max) { this.dataManipulation.slice[0] = 0; }
+				if (range >= max) { this.dataManipulation.slice[1] = Infinity; }
+				else { this.dataManipulation.slice[1] = this.dataManipulation.slice[0] + range; }
+			}
 		}
 		if (graph) {
 			if (graph.type && graph.type !== this.graph.type) {
@@ -2575,15 +2582,6 @@ function _chart({
 			if (dataAsync) { this.initDataAsync(); }
 			else if (bCheckColors && this.dataAsync) { this.dataAsync.then(() => this.checkColors()); } // NOSONAR
 		} // May be managed by the chart or externally
-		if (dataManipulation && Object.hasOwn(dataManipulation, 'filter') && !Object.hasOwn(dataManipulation, 'slice')) {
-			const back = [...this.dataManipulation.slice];
-			const max = this.getMaxRange();
-			const range = Math.max(this.dataManipulation.slice[1] - Math.max(this.dataManipulation.slice[0], 0), 1);
-			if (this.dataManipulation.slice[0] >= max) { this.dataManipulation.slice[0] = 0; }
-			if (range >= max) { this.dataManipulation.slice[1] = Infinity; }
-			else { this.dataManipulation.slice[1] = this.dataManipulation.slice[0] + range; }
-			if (back[0] !== this.dataManipulation.slice[0] || back[1] !== this.dataManipulation.slice[1]) { this.initData(); }
-		}
 		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(), arguments[0], callbackArgs); }
 		if (bPaint) { this.repaint(); }
 		return this;

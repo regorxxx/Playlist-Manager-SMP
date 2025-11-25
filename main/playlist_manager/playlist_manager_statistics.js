@@ -1,9 +1,9 @@
 ﻿'use strict';
-//21/11/25
+//25/11/25
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, _ps:readable, VK_CONTROL:readable, VK_ALT:readable */
+/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, VK_CONTROL:readable, VK_ALT:readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable, Input:readable */
 include('..\\statistics\\statistics_xxx_menu.js');
@@ -77,8 +77,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		addEventListener('on_mouse_wheel', (step) => {
 			if (!window.ID || !this.bEnabled) { return; }
 			if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {
-				charts.some((chart) => chart.mouseWheelResize(step, void(0), { bSaveProperties: true }));
-			} else { charts.some((chart) => chart.mouseWheel(step)); }
+				charts.some((chart) => chart.wheelResize(step, void(0), { bSaveProperties: true }));
+			} else { charts.some((chart) => chart.wheel(step)); }
 		});
 	};
 
@@ -158,7 +158,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
 		menu.newSeparator();
 		{	// Data
-			const subMenu = menu.newMenu('Data...');
+			const subMenu = menu.newMenu('Data');
 			menu.newEntry({ menuName: subMenu, entryText: 'From playlists:', flags: MF_GRAYED });
 			menu.newSeparator(subMenu);
 			[
@@ -201,14 +201,14 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						axis: {
 							x: { key: option.args.axis }
 						},
-						title: window.Name + ' - ' + this.axis.y.key + ' per ' + option.entryText
+						title: window.PanelName + ' - ' + this.axis.y.key + ' per ' + option.entryText
 					}
 				);
 			}));
 		}
 		menu.newSeparator();
 		{
-			const subMenu = menu.newMenu('Data source...');
+			const subMenu = menu.newMenu('Data source');
 			menu.newEntry({ menuName: subMenu, entryText: 'Select source for playlists:', flags: MF_GRAYED });
 			menu.newSeparator(subMenu);
 			[
@@ -240,7 +240,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			].forEach(createMenuOption('data', null, subMenu, true, (option) => {
 				if (Object.hasOwn(option.args.data, 'sourceArg')) {
 					if (option.args.data.sourceArg === null) {
-						const input = Input.string('string', parent.sourceArg || '', 'Enter playlist name(s):\n(separated by ;)', window.Name + _ps(window.ScriptInfo.Name), 'My Playlist;Other Playlist', void (0), true) || Input.lastInput;
+						const input = Input.string('string', parent.sourceArg || '', 'Enter playlist name(s):\n(separated by ;)', window.FullPanelName, 'My Playlist;Other Playlist', void (0), true) || Input.lastInput;
 						if (input === null) { return; }
 						parent.sourceArg = input.split(';');
 					} else {
@@ -470,7 +470,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				const y = window.Height / rows * i;
 				const defaultConfig = this.defaultConfig();
 				const axis = (newConfig[i][j].axis || defaultConfig.axis);
-				const title = window.Name + ' - ' + axis.y.key + ' per ' + axis.x.key;
+				const title = window.PanelName + ' - ' + axis.y.key + ' per ' + axis.x.key;
 				return new _chart({ ...defaultConfig, x, y, w, h }).changeConfig({ ...newConfig[i][j], bPaint: false, title });
 			});
 		});
