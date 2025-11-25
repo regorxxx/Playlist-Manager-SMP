@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//25/11/25
 
 /* exported exportSettings, importSettings */
 
@@ -12,7 +12,7 @@ include('helpers_xxx_file_zip.js');
 include('helpers_xxx_input.js');
 /* global Input:readable */
 include('helpers_xxx_prototypes.js');
-/* global _ps:readable */
+/* global _ps:readable */ /* window.FullPanelName:readable */
 include('helpers_xxx_properties.js');
 /* global overwriteProperties:readable */
 
@@ -59,7 +59,7 @@ function exportSettings(properties, data = [], panelName = window.Name, toFile =
 		console.log(panelName + ': exported panel settings to\n\t ' + toFile);
 		_explorer(toFile);
 	} else {
-		console.popup(panelName + ': failed exporting panel settings.', window.Name + _ps(window.ScriptInfo.Name));
+		console.popup(panelName + ': failed exporting panel settings.', window.FullPanelName);
 	}
 	return bDone;
 };
@@ -91,7 +91,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 				}
 			);
 			if (callbacks.onLoadSettings && !callbacks.onLoadSettings(settings, true, panelName)) {
-				console.popup(panelName + ': failed importing panel settings.', window.Name + _ps(window.ScriptInfo.Name));
+				console.popup(panelName + ': failed importing panel settings.', window.FullPanelName);
 				return false;
 			}
 			overwriteProperties(settings);
@@ -99,32 +99,32 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 			console.log(panelName + ': imported panel settings');
 		} else {
 			if (callbacks.onLoadSettings && !callbacks.onLoadSettings(currSettings, false, panelName)) {
-				console.popup(panelName + ': failed importing panel settings.', window.Name + _ps(window.ScriptInfo.Name));
+				console.popup(panelName + ': failed importing panel settings.', window.FullPanelName);
 				return false;
 			}
 			console.log(panelName + ': no panel settings file found (settings.json)');
 		}
 		if (callbacks.onUnzipData && !callbacks.onUnzipData(importPath, panelName)) {
-			console.popup(panelName + ': failed importing data files.', window.Name + _ps(window.ScriptInfo.Name));
+			console.popup(panelName + ': failed importing data files.', window.FullPanelName);
 			return false;
 		}
 		if (_isFolder(importPath + 'presets\\')) {
 			bDone = _renameFolder(folders.userPresets.replace(/\\$/gi, ''), importPath + 'back\\');
 			if (bDone) {
 				if (callbacks.onUnzipPresets && !callbacks.onUnzipPresets(importPath + 'presets\\', panelName)) {
-					console.popup(panelName + ': failed importing user global presets.', window.Name + _ps(window.ScriptInfo.Name));
+					console.popup(panelName + ': failed importing user global presets.', window.FullPanelName);
 					bDone = false;
 				}
 				bDone = bDone && _renameFolder(importPath + 'presets', folders.data);
 				if (bDone) {
 					_deleteFolder(importPath + 'back\\presets');
-					console.log(panelName + ': imported user global presets.', window.Name + _ps(window.ScriptInfo.Name));
+					console.log(panelName + ': imported user global presets.', window.FullPanelName);
 				} else {
 					if (_isFolder(folders.userPresets)) { _deleteFolder(folders.userPresets); }
 					_renameFolder(importPath + 'back\\presets', folders.data);
-					console.popup(panelName + ': failed importing user global presets.', window.Name + _ps(window.ScriptInfo.Name));
+					console.popup(panelName + ': failed importing user global presets.', window.FullPanelName);
 				}
-			} else { console.popup(panelName + ': failed importing user global presets.', window.Name + _ps(window.ScriptInfo.Name)); }
+			} else { console.popup(panelName + ': failed importing user global presets.', window.FullPanelName); }
 		}
 		if (bDone) { console.log(panelName + ': imported data files'); }
 		if (callbacks.onUnzipDelete) { callbacks.onUnzipDelete(importPath + 'presets\\', bDone, panelName); }
@@ -140,7 +140,7 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 			}
 		);
 		if (callbacks.onLoadSettings && !callbacks.onLoadSettings(settings, true, panelName)) {
-			console.popup(panelName + ': failed importing panel settings.', window.Name + _ps(window.ScriptInfo.Name));
+			console.popup(panelName + ': failed importing panel settings.', window.FullPanelName);
 			return false;
 		}
 		overwriteProperties(settings);
@@ -148,10 +148,10 @@ function importSettings(callbacks, currSettings, panelName = window.Name) {
 		bDone = true;
 	}
 	if (bDone && callbacks.onReload && !callbacks.onReload(panelName)) {
-		console.popup(panelName + ': failed reloading panel.', window.Name + _ps(window.ScriptInfo.Name));
+		console.popup(panelName + ': failed reloading panel.', window.FullPanelName);
 		return false;
 	}
-	if (bDone) { fb.ShowPopupMessage(panelName + ':\n\nSuccessfully imported panel settings from:\n' + input, window.Name + _ps(window.ScriptInfo.Name)); }
+	if (bDone) { fb.ShowPopupMessage(panelName + ':\n\nSuccessfully imported panel settings from:\n' + input, window.FullPanelName); }
 	console.log(panelName + ': reloading panel...');
 	window.Reload();
 }

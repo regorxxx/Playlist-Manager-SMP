@@ -1,12 +1,12 @@
 ﻿'use strict';
-//13/10/25
+//25/11/25
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues,checkJsonProperties */
 
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _isFolder:readable, doOnce:readable*/
 include('helpers_xxx_prototypes.js');
-/* global _ps:readable, isJSON:readable */
+/* global isJSON:readable */ /* window.FullPanelName:readable */
 
 /*
 	Properties
@@ -220,7 +220,7 @@ function checkProperty(property, withValue) {
 		bPass = false; report += 'Value obey this condition: ' + checks['func'] + '\n';
 	}
 	if (Object.hasOwn(checks, 'portable') && checks['portable'] && valToCheck !== property[3] && _isFile(fb.FoobarPath + 'portable_mode_enabled') && !_isFile(valToCheck) && !_isFolder(valToCheck)) {
-		console.log(window.Name + _ps(window.ScriptInfo.Name) + ' - Portable installation: property \'' + property[0] + '\'\n\t Replacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
+		console.log(window.FullPanelName + ' - Portable installation: property \'' + property[0] + '\'\n\t Replacing path \'' + valToCheck + '\' --> \'' + property[3] + '\''); // Silent?
 	}
 	if (!bPass) {
 		doOnce(
@@ -246,7 +246,7 @@ function checkJsonProperties(propertiesDescriptor) {
 						obj[key] = def[key];
 						bSave = true;
 						bReplace = true;
-						console.log(window.Name + _ps(window.ScriptInfo.Name) + ': Adding missing key (' + key + ') to property \'' + prop[0] + '\'');
+						console.log(window.FullPanelName + ': Adding missing key (' + key + ') to property \'' + prop[0] + '\'');
 					}
 				}
 				if (bReplace) {

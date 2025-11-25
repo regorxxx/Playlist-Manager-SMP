@@ -1,12 +1,12 @@
 ﻿'use strict';
-//29/10/25
+//25/11/25
 
 /* exported memoryUsed, isPortable, lastStartup, memoryPrint*/
 
 include('helpers_xxx_file.js');
 /* global _isFile:readable, lastModified:readable */
 include('helpers_xxx_prototypes.js');
-/* global round:readable, roughSizeOfObject:readable, _ps:readable */
+/* global round:readable, roughSizeOfObject:readable, _ps:readable */ /* window.FullPanelName:readable */
 include('helpers_xxx_console.js');
 
 /*
@@ -16,7 +16,7 @@ include('helpers_xxx_console.js');
 function memoryUsed(bConsole = false) { // In Mbs
 	let memUsage = -1;
 	memUsage = round(window.JsMemoryStats.MemoryUsage / 1000000, 2);
-	if (bConsole) { console.log(window.Name + _ps(window.ScriptInfo.Name) + ' mem usage: ' + memUsage + ' Mb'); }
+	if (bConsole) { console.log(window.FullPanelName + ' mem usage: ' + memUsage + ' Mb'); }
 	return memUsage;
 }
 
@@ -37,7 +37,7 @@ function isPortable(propertyText, bWarn = true) {
 	const bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
 	if (bPort && bWarn) {
 		if (Array.isArray(propertyText)) { propertyText = propertyText.join('\n - '); }
-		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n\n - ' + propertyText, window.Name + _ps(window.ScriptInfo.Name));
+		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n\n - ' + propertyText, window.FullPanelName);
 	}
 	return bPort;
 }

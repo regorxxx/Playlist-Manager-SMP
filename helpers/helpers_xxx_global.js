@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/11/25
+//25/11/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -8,7 +8,7 @@ include('helpers_xxx.js');
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _jsonParseFileCheck:readable, utf8:readable, _save:readable, _foldPath:readable, _moveFile:readable */
 include('helpers_xxx_prototypes.js');
-/* global _ps:readable */
+/* window.FullPanelName:readable */
 
 /*
 	Global tags, queries, RegExp
@@ -17,7 +17,7 @@ function loadUserDefFile(def) {
 	let bSave = false;
 	let bBackup = false;
 	if (_isFile(def._file)) {
-		const data = _jsonParseFileCheck(def._file, 'User definition', window.Name + _ps(window.ScriptInfo.Name), utf8, '', '\n\nFile will be recreated and a backup of the corrupted file will be placed at same folder. Note any personalized setting will be lost.');
+		const data = _jsonParseFileCheck(def._file, 'User definition', window.FullPanelName, utf8, '', '\n\nFile will be recreated and a backup of the corrupted file will be placed at same folder. Note any personalized setting will be lost.');
 		if (data) {
 			const handleList = new FbMetadbHandleList();
 			const skipCheckKeys = ['_description', '_usage'];

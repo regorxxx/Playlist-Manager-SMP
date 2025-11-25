@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/10/25
+//25/11/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -8,7 +8,7 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx_basic_js.js');
 /* global tryMethod:readable */
 include('helpers_xxx_prototypes.js');
-/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable, _ps:readable, isCompatible:readable */
+/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable, isCompatible:readable */ /* window.FullPanelName:readable */
 
 /*
 	Global Variables
@@ -539,7 +539,7 @@ function _save(file, value, bBOM = false) {
 	file = _resolvePath(file);
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) { _createFolder(filePath); }
-	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.Name + _ps(window.ScriptInfo.Name) + ': JSON saving'); }
+	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.FullPanelName + ': JSON saving'); }
 	if (_isFolder(filePath)) {
 		if (utils.WriteTextFile(file, value, bBOM) || _isFile(file) && value === '') {
 			return true;
@@ -619,7 +619,7 @@ function _jsonParseFileSplit(filePath, codePage = 0) {
 	return result;
 }
 
-function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.Name + _ps(window.ScriptInfo.Name), codePage = 0, notFoundText, corruptText) {
+function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.FullPanelName, codePage = 0, notFoundText, corruptText) {
 	file = _resolvePath(file);
 	let data = null;
 	if (_isFile(file)) {

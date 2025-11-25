@@ -1,7 +1,7 @@
 ﻿'use strict';
-//01/08/25
+//25/11/25
 
-/* exported clone, getNested, setNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
+/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
 
 // https://github.com/angus-c/just
 /*
@@ -71,6 +71,17 @@ function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
 		if (obj && len === idx && Object.hasOwn(obj, level)) { obj[level] = value; }
+		return obj && obj[level];
+	}, obj);
+}
+
+function addNested(obj, value, ...args) {
+	const len = args.length - 1;
+	return args.reduce((obj, level, idx) => {
+		if (obj) {
+			if (len === idx) { obj[level] = value; }
+			else if (!Object.hasOwn(obj, level)) { obj[level] = {}; }
+		}
 		return obj && obj[level];
 	}, obj);
 }

@@ -480,6 +480,26 @@ if (!window.Parent) {
 	});
 }
 
+if (!window.PanelName) {
+	Object.defineProperty(window, 'PanelName', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: /{.{8}-.{4}-.{4}-.{4}-.{12}}/.test(window.Name)
+			? window.ScriptInfo.Name
+			: window.Name
+	});
+}
+
+if (!window.FullPanelName) {
+	Object.defineProperty(window, 'FullPanelName', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: window.Name + ' (' + window.ScriptInfo.Name + ')'
+	});
+}
+
 /* SMP bugs */
 
 if (!window.Bugs) { window.Bugs = {}; }
