@@ -3,35 +3,35 @@ or symbols following the standard behavior found at other Windows
 input boxes, like the Library Search, Album List filter,  etc.
 
 Mouse:
-	L. CLICK: Move cursor / Set input focus
-	R. CLICK: Contextual menu
-	DBL L. CLICK: Select all
+	• L. Click: Move cursor / Set input focus
+	• R. Click: Contextual menu
+	• Double L. Click: Select all
 
 Standard keys:
-	RETURN: Search
-	ESCAPE: Delete text / Cancel input focus
-	HOME: Move cursor to beginning
-	END: Move cursor to end
-	LEFT: Move cursor to left
-	RIGHT: Move cursor to right
+	• RETURN: Search
+	• ESCAPE: Delete text / Cancel input focus
+	• HOME: Move cursor to beginning
+	• END: Move cursor to end
+	• LEFT: Move cursor to left
+	• RIGHT: Move cursor to right
 
 Pressing SHIFT:
-	SHIFT + HOME: Select to beginning
-	SHIFT + END: Select to end
-	SHIFT + LEFT: Select to left
-	SHIFT + RIGHT: Select to right
+	• SHIFT + HOME: Select to beginning
+	• SHIFT + END: Select to end
+	• SHIFT + LEFT: Select to left
+	• SHIFT + RIGHT: Select to right
 
 Pressing CTRL:
-	CTRL + A: Select All
-	CTRL + C: Copy
-	CTRL + X: Cut
-	CTRL + Z: Undo
-	CTRL + V: Paste
-	CTRL + BACK: Delete previous word
-	CTRL + DEL: Delete next word
-	CTRL + LEFT: Move cursor to previous word
-	CTRL + RIGHT: Move cursor to next word
+	• CTRL + A: Select All
+	• CTRL + C: Copy
+	• CTRL + X: Cut
+	• CTRL + Z: Undo
+	• CTRL + V: Paste
+	• CTRL + BACK: Delete previous word
+	• CTRL + DEL: Delete next word
+	• CTRL + LEFT: Move cursor to previous word
+	• CTRL + RIGHT: Move cursor to next word
 
 Pressing CTRL + SHIFT:
-	CTRL + SHIFT: + LEFT: Select previous word
-	CTRL + SHIFT: + RIGHT: Select next word
+	• CTRL + SHIFT: + LEFT: Select previous word
+	• CTRL + SHIFT: + RIGHT: Select next word
