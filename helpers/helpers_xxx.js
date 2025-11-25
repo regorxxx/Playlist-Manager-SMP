@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//25/11/25
 
 /**
  * Global folders setting
@@ -111,7 +111,7 @@ include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_basic_js.js');
 include('helpers_xxx_console.js');
 include('helpers_xxx_foobar.js');
-/* global isCompatible:readable */
+/* global isCompatible:readable */ /* window.FullPanelName:readable */
 include('helpers_xxx_so.js');
 /* global getSoFeatures:readable, initCheckFeatures:readable */
 
@@ -216,9 +216,9 @@ if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if s
 if (globSettings.bCheckInstallationPath && /\w:\\.*/i.test(folders.xxxName)) {
 	const message = 'Script has been installed in a folder outside foobar2000 profile folder, which is not supported. Errors are expected at some point.\n\nCurrent script path:\t' + folders.xxxName + '\nExpected path (*):\t' + fb.ProfilePath  + folders.xxxName.replace(/\w:\\.*\\profile\\/i, '').replace(/\w:\\.*\\xxx-scripts\\/i, 'xxx-scripts') + '\n\n(*) Note this path is just a guess based on your original path, may not be 100% accurate.';
 	if (globSettings.bPopupOnCheckInstallationPath) {
-		fb.ShowPopupMessage(message, 'Installation error: ' + window.Name + _ps(window.ScriptInfo.Name));
+		fb.ShowPopupMessage(message, 'Installation error: ' + window.FullPanelName);
 	}
-	console.log('Installation error: ' + window.Name + _ps(window.ScriptInfo.Name) + '\n\t ' + message.replace(/\n/g,'\n\t'));
+	console.log('Installation error: ' + window.FullPanelName + '\n\t ' + message.replace(/\n/g,'\n\t'));
 }
 
 globProfiler.Print('helpers_xxx');
