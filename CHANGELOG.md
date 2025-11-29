@@ -70,6 +70,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: fixed minor tooltip glitches.
 
 ## [1.0.0-beta.5] - 2025-11-25
 ### Added

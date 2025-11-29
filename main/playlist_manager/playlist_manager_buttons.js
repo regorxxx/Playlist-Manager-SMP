@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//29/11/25
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -341,6 +341,7 @@ function _listButtons(bSetup = false) {
 		this.gDown = false;
 		if (this.curBtn) {
 			this.curBtn.changeState(buttonStates.normal);
+			this.curBtn = null;
 			list.repaint();
 		}
 	};
