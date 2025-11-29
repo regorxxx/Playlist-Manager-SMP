@@ -1,6 +1,6 @@
 INFO:
 -----
-This is general info for all the scripts. Within all files you will find 5 [*] big scripts: Playlist
+This is general info for all the scripts. Within all files you will find 6 [*] big scripts: Playlist
 Manager, Timeline, World Map, Not a Waveform Seekbar and Infinity Tools (toolbar).
 
 Every script has a github page with images, descriptions, etc. and updates must be get from there.
@@ -32,6 +32,14 @@ The root folder (with this readme) contains these scripts which can be loaded in
 		  device priority, Music Map, ListenBrainz, last.fm, etc.
 		- Fully configurable buttons using menus.
 		- Every button and tool has a readme which will be shown when you add them.
+
+	+ volume_seekbar.js [*]
+		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/volume-seekbar-smp/
+		- Volume bar and seekbar, with fully configurable UI and actions.
+
+	+ library_tree.js [*]
+		- https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/library-tree-smp/
+		- Feature rich media library viewer, based on original Library Tree by WilB.
 
 It also contains these extra files which can be loaded externally:
 	+ Draw Graph.html

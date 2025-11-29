@@ -526,9 +526,9 @@ GOTO:EOF
 REM package variables
 REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
-SET name=Volume-Seekbar-Slider-SMP
+SET name=Volume-Seekbar-SMP
 SET id=82303AA1-3DA0-4817-BE47-85A4AE09D5CD
-SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume\\time.\r\n• Double L. Click on button to mute\\set full volume (volume).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
+SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider\\seekbar for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume (volume bar) or time (seekbar).\r\n• Double L. Click on button to mute\\set full volume (volume bar).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout, buttons, actions and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" volume_seekbar.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -840,6 +840,7 @@ CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp_post.js
+CALL :copy_file helpers\helpers_xxx_tags.js
 CALL :copy_file helpers\helpers_xxx_so.js
 REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
