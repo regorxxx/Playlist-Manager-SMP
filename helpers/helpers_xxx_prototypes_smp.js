@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/11/25
+//27/11/25
 
 /* exported extendGR, checkCompatible */
 
@@ -101,6 +101,7 @@ Object.defineProperty(fb, 'tfCache', {
 		if (!bCache) { fb.tfCache[arguments[0]] = that; }
 		return that;
 	};
+	Object.defineProperty(FbTitleFormat, Symbol.hasInstance, { value(instance) { return instance instanceof old; } });
 }
 
 /*
@@ -445,6 +446,7 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		}).bind(that);
 		return that;
 	};
+	Object.defineProperty(FbProfiler, Symbol.hasInstance, { value(instance) { return instance instanceof old; } });
 }
 
 if (fb.AddLocationsAsync) {
