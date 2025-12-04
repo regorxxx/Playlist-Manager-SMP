@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//03/12/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -161,7 +161,7 @@ function addGlobValues(type) {
 			globTags.isLoved = '$ifequal($if2(' + _t(globTags.feedback) + ',%2003_LOVED%),1,1$not(0),0)';
 			globTags.isHated = '$ifequal($if2(' + _t(globTags.feedback) + '%2003_LOVED%),-1,1$not(0),0)';
 			globTags.isRatedTop = '$ifequal(' + _t(globTags.rating) + ',5,1$not(0),0)';
-			globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
+			globTags.remDupl = [globTags.title, globTags.artist];
 			globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
 			globTags.playCountRateSinceAdded = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub($year(' + globTags.sortLastPlayed + '),$year(' + globTags.sortAdded + ')),365),$mul($sub($month(' + globTags.sortLastPlayed + '),$month(' + globTags.sortAdded + ')),30),$sub($day_of_month(' + globTags.sortLastPlayed + '),$day_of_month(' + globTags.sortAdded + ')))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4))$get(val)$iflonger($get(val),1,,.00)';
 			globTags.playCountRateSincePlayed = '$puts(val,$puts(pcr,$div($mul(' + globTags.playCount + ',100000),$add($mul($sub($year(' + globTags.sortLastPlayed + '),$year(' + globTags.sortFirstPlayed + ')),365),$mul($sub($month(' + globTags.sortLastPlayed + '),$month(' + globTags.sortFirstPlayed + ')),30),$sub($day_of_month(' + globTags.sortLastPlayed + '),$day_of_month(' + globTags.sortFirstPlayed + ')))))$left($ifgreater($mod($get(pcr),100000),0,$ifgreater($get(pcr),100000,,0)$insert($div($get(pcr),10000),\'.\',$sub($len($div($get(pcr),10000)),1))$ifgreater($mod($get(pcr),10000),0,$insert($div($get(pcr),1000),,$sub($len($div($get(pcr),1000)),1)),0),$div($get(pcr),100000)),4)$get(val)$iflonger($get(val),1,,.00)';

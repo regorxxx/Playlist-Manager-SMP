@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/01/25
+//04/12/25
 
 /* exported chars */
 
@@ -18,6 +18,7 @@ const chars = {
 	ratingOff		: '\uf006',
 	heartOn			: '\uf004',
 	heartOff		: '\uf08A',
+	heartHalf		: '\uf21e',
 	music			: '\uf001',
 	headphones 		: '\uf025',
 	speaker 		: '\uf028',
