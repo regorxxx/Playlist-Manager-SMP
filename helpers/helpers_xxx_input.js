@@ -7,7 +7,7 @@
 // Provides extensive error popups on output to give feedback to the user
 // Returns null when default value (oldVal) matches output
 // Ex input.json('array numbers', [0, 2], 'Input an Array of numbers:', 'Input', JSON.stringify([0, 2])),
-const Input = Object.seal(Object.freeze({
+const Input = Object.freeze({
 	// Data validation
 	data: Object.seal({ last: null, lastInput: null }),
 	/**
@@ -331,4 +331,4 @@ const Input = Object.seal(Object.freeze({
 		const disk = (value.match(/^\w:\\/g) || [''])[0];
 		return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
 	}
-}));
+});

@@ -1,10 +1,10 @@
 ﻿'use strict';
-//03/11/25
+//01/12/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter */
 
 include('helpers_xxx_basic_js.js');
-/* global require:readable */
+/* global require:readable, strNumCollator:readable */
 
 /*
 	SMP
@@ -115,8 +115,8 @@ function compareObjects(a, b, enforcePropertiesOrder = false, cyclic = false) {
 }
 
 function compareKeys(a, b) {
-	const aKeys = Object.keys(a).sort((a, b) => a.localeCompare(b));
-	const bKeys = Object.keys(b).sort((a, b) => a.localeCompare(b));
+	const aKeys = Object.keys(a).sort(strNumCollator.compare);
+	const bKeys = Object.keys(b).sort(strNumCollator.compare);
 	return JSON.stringify(aKeys) === JSON.stringify(bKeys);
 }
 
@@ -751,7 +751,7 @@ if (!Array.prototype.partialSort) {
 
 if (!Array.prototype.schwartzianSort) {
 	// https://en.wikipedia.org/wiki/Schwartzian_transform
-	// or (a, b) => a[1].localeCompare(b[1], void(0), { sensitivity: 'base' })
+	// or (a, b) => strNumCollator.compare(a[1], b[1]))
 	Array.prototype.schwartzianSort = function (processFunc, sortFunc = (a, b) => a[1] - b[1]) { // NOSONAR
 		return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
 	};

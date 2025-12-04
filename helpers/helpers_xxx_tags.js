@@ -1,12 +1,12 @@
 ﻿'use strict';
-//07/11/25
+//01/12/25
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
 include('helpers_xxx_prototypes.js');
-/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable */
+/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable, strNumCollator:readable */
 include('helpers_xxx_cache_volatile.js');
 /* global VolatileCache:readable */
 include('callbacks_xxx.js');
@@ -156,7 +156,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 	if (handle && handle instanceof FbMetadbHandleList) {
 		const queryArr = [...new Set(
 			handle.Convert().map((h) => queryReplaceWithCurrent(query, h, { bToLowerCase: true }))
-		)].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base' }));
+		)].sort(strNumCollator.compare);
 		return queryArr.length ? queryJoin(queryArr, 'OR') : '';
 	}
 	// global queries without handle required
@@ -394,7 +394,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 		query = query.replace(/#PLSTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
 		query = query.replace(/#PLSISAUTOPLS#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
 		query = query.replace(/#PLSISLOCKED#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
-		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base' })).join(', ') : '');
+		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort(strNumCollator.compare).join(', ') : '');
 		query = query.replace(/#PLSLOCKNAME#/gi, pls !== -1 ? plman.GetPlaylistLockName(pls) || '' : '');
 	}
 	if (/#(PLSPLAY(IDX|NAME|TRACKS))#/i.test(query)) {

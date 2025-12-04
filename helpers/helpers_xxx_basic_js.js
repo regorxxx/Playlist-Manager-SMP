@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/11/25
+//01/12/25
 
-/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested */
+/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator */
 
 // https://github.com/angus-c/just
 /*
@@ -304,6 +304,8 @@ function SetReplacer(key, value) {
 function MapReplacer(key, value) {
 	return (typeof value === 'object' && value instanceof Map ? [...value.entries()] : value);
 }
+
+const strNumCollator = new Intl.Collator(void (0), { sensitivity: 'base', numeric: true });
 
 /*
 	Script including

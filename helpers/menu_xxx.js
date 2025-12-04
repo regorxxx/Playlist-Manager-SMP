@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/25
+//01/12/25
 
 /* exported _menu */
 
@@ -1152,6 +1152,10 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			return id;
 		};
 	})());
+	/** @type {Intl.Collator} - Helper to compare strings */
+	const collator = typeof strNumCollator !== 'undefined'
+		? strNumCollator // eslint-disable-line no-undef
+		: new Intl.Collator(void (0), { sensitivity: 'base', numeric: true });
 	/**
 	 * Helper to compare keys of 2 objects
 	 *
@@ -1161,8 +1165,8 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @returns {Boolean}
 	*/
 	function compareKeys(a, b) {
-		const aKeys = Object.keys(a).sort((a, b) => a.localeCompare(b));
-		const bKeys = Object.keys(b).sort((a, b) => a.localeCompare(b));
+		const aKeys = Object.keys(a).sort(collator.compare);
+		const bKeys = Object.keys(b).sort(collator.compare);
 		return JSON.stringify(aKeys) === JSON.stringify(bKeys);
 	}
 	/**

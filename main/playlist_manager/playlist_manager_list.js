@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//01/12/25
 
 /* exported _list */
 
@@ -15,7 +15,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, capitalize:readable, deepAssign:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, capitalize:readable, deepAssign:readable, strNumCollator:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -4163,8 +4163,8 @@ function _list(x, y, w, h) {
 								? { nameId: subPls.nameId, isFolder: subPls.isFolder }
 								: { nameId: subPls.nameId, extension: subPls.extension };
 						});
-						oldPlsClean.pls.sort((a, b) => a.nameId.localeCompare(b.nameId, void (0), { sensitivity: 'base', numeric: true }));
-						if (newPls.isFolder) { newPls.pls.sort((a, b) => a.nameId.localeCompare(b.nameId, void (0), { sensitivity: 'base', numeric: true })); }
+						oldPlsClean.pls.sort((a, b) => strNumCollator.compare(a.nameId, b.nameId));
+						if (newPls.isFolder) { newPls.pls.sort((a, b) => strNumCollator.compare(a.nameId, b.nameId)); }
 						// If it's not a folder it will shown an error later
 					}
 					if (!compareObjects(oldPlsClean, newPls)) {
@@ -4308,8 +4308,8 @@ function _list(x, y, w, h) {
 		let categories = new Set();
 		this.dataAll.forEach((playlist) => { if (playlist.category.length) { categories.add(playlist.category); } });
 		return idx
-			? [defCategory, ...[...categories].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))][idx]
-			: [defCategory, ...[...categories].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))];
+			? [defCategory, ...[...categories].sort(strNumCollator.compare)][idx]
+			: [defCategory, ...[...categories].sort(strNumCollator.compare)];
 	};
 	this.categoryState = [];
 	this.tags = (idx = null) => {
@@ -4318,8 +4318,8 @@ function _list(x, y, w, h) {
 		let tags = new Set();
 		this.dataAll.forEach((playlist) => { if (playlist.tags.length) { playlist.tags.forEach((tag) => { tags.add(tag); }); } });
 		return idx
-			? [defTag, ...[...tags].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))][idx]
-			: [defTag, ...[...tags].sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))];
+			? [defTag, ...[...tags].sort(strNumCollator.compare)][idx]
+			: [defTag, ...[...tags].sort(strNumCollator.compare)];
 	};
 	this.tagState = [];
 	// By pls
@@ -4551,7 +4551,7 @@ function _list(x, y, w, h) {
 			'Lock state',
 			showMenus['Online sync'] && bListenBrainz ? 'MBID' : '',
 			'Playlist type', showMenus['Tags'] ? 'Tag' : ''
-		].filter(Boolean).sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }));
+		].filter(Boolean).sort(strNumCollator.compare);
 	};
 	this.filterData = ({ data = null, autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSearch = false } = {}) => {
 		if (!data) { throw new Error('No data provided for filtering'); }
@@ -4670,20 +4670,20 @@ function _list(x, y, w, h) {
 		return {
 			'By name':
 			{
-				'Az': (a, b) => { return a.name.localeCompare(b.name, void (0), { sensitivity: 'base', numeric: true }); },
-				'Za': (a, b) => { return 0 - a.name.localeCompare(b.name, void (0), { sensitivity: 'base', numeric: true }); }
+				'Az': (a, b) => strNumCollator.compare(a.name, b.name),
+				'Za': (a, b) => -strNumCollator.compare(a.name, b.name)
 			},
 			'By size':
 			{
-				'(S) Asc.': (a, b) => { return propertyGet(a, 'size') - propertyGet(b, 'size'); },
-				'(S) Des.': (a, b) => { return propertyGet(b, 'size') - propertyGet(a, 'size'); }
+				'(S) Asc.': (a, b) => propertyGet(a, 'size') - propertyGet(b, 'size'),
+				'(S) Des.': (a, b) => propertyGet(b, 'size') - propertyGet(a, 'size')
 			},
 			...(showMenus['Category']
 				? {
 					'By category':
 					{
-						'(C) Az': (a, b) => { return a.category.localeCompare(b.category, void (0), { sensitivity: 'base', numeric: true }); },
-						'(C) Za': (a, b) => { return 0 - a.category.localeCompare(b.category, void (0), { sensitivity: 'base', numeric: true }); }
+						'(C) Az': (a, b) => strNumCollator.compare(a.category, b.category),
+						'(C) Za': (a, b) => -strNumCollator.compare(a.category, b.category)
 					}
 				}
 				: {}
@@ -4692,42 +4692,42 @@ function _list(x, y, w, h) {
 				? {
 					'By tags\t-first one-':
 					{
-						'(T) Az': (a, b) => { return (a.tags[0] || '').localeCompare((b.tags[0] || ''), void (0), { sensitivity: 'base', numeric: true }); },
-						'(T) Za': (a, b) => { return 0 - (a.tags[0] || '').localeCompare((b.tags[0] || ''), void (0), { sensitivity: 'base', numeric: true }); }
+						'(T) Az': (a, b) => strNumCollator.compare(a.tags[0] || '', b.tags[0] || ''),
+						'(T) Za': (a, b) => -strNumCollator.compare(a.tags[0] || '', b.tags[0] || '')
 					}
 				}
 				: {}
 			),
 			'By date\t-last modified-':
 			{
-				'(D) Asc.': (a, b) => { return a.modified - b.modified; },
-				'(D) Des.': (a, b) => { return b.modified - a.modified; }
+				'(D) Asc.': (a, b) => a.modified - b.modified,
+				'(D) Des.': (a, b) => b.modified - a.modified
 			},
 			'By date\t-created-':
 			{
-				'(D) Asc.': (a, b) => { return a.created - b.created; },
-				'(D) Des.': (a, b) => { return b.created - a.created; }
+				'(D) Asc.': (a, b) => a.created - b.created,
+				'(D) Des.': (a, b) => b.created - a.created
 			},
 			'By duration':
 			{
-				'(D) Asc.': (a, b) => { return propertyGet(a, 'duration') - propertyGet(b, 'duration'); },
-				'(D) Des.': (a, b) => { return propertyGet(b, 'duration') - propertyGet(a, 'duration'); }
+				'(D) Asc.': (a, b) => propertyGet(a, 'duration') - propertyGet(b, 'duration'),
+				'(D) Des.': (a, b) => propertyGet(b, 'duration') - propertyGet(a, 'duration')
 			},
 			'By file size':
 			{
-				'(Fs) Asc.': (a, b) => { return propertyGet(a, 'fileSize') - propertyGet(b, 'fileSize'); },
-				'(Fs) Des.': (a, b) => { return propertyGet(b, 'fileSize') - propertyGet(a, 'fileSize'); }
+				'(Fs) Asc.': (a, b) => propertyGet(a, 'fileSize') - propertyGet(b, 'fileSize'),
+				'(Fs) Des.': (a, b) => propertyGet(b, 'fileSize') - propertyGet(a, 'fileSize')
 			},
 			'By track size':
 			{
-				'(Ts) Asc.': (a, b) => { return propertyGet(a, 'trackSize') - propertyGet(b, 'trackSize'); },
-				'(Ts) Des.': (a, b) => { return propertyGet(b, 'trackSize') - propertyGet(a, 'trackSize'); }
+				'(Ts) Asc.': (a, b) => propertyGet(a, 'trackSize') - propertyGet(b, 'trackSize'),
+				'(Ts) Des.': (a, b) => propertyGet(b, 'trackSize') - propertyGet(a, 'trackSize')
 			},
 			// Manual
 			'Manual sorting':
 			{
-				'(M) Asc.': (a, b) => { return a.sortIdx - b.sortIdx; },
-				'(M) Des.': (a, b) => { return b.sortIdx - a.sortIdx; }
+				'(M) Asc.': (a, b) => a.sortIdx - b.sortIdx,
+				'(M) Des.': (a, b) => b.sortIdx - a.sortIdx
 			},
 			// Internal
 			// Only getOppositeSortState work with these
@@ -6002,7 +6002,7 @@ function _list(x, y, w, h) {
 				.filter((folder) => this.data.includes(folder) || this.data.includes(this.getTopFolder(folder)))
 			: this.dataAll.filter((pls) => pls.isFolder)
 		)
-			.sort((a, b) => a.nameId.localeCompare(b.nameId, void (0), { sensitivity: 'base', numeric: true }))
+			.sort((a, b) => strNumCollator.compare(a.nameId, b.nameId))
 			.map((folder) => {
 				return {
 					name: folder.nameId,

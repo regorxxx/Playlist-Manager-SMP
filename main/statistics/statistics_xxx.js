@@ -1,10 +1,10 @@
 ﻿'use strict';
-//25/11/25
+//01/12/25
 
 /* exported _chart */
 
 include('statistics_xxx_helper.js');
-/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable */
+/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable */
 
 /**
  * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
@@ -2107,7 +2107,7 @@ function _chart({
 	};
 
 	this.normalApply = (seriesArr, bInverse = false) => { // Sort as normal distribution
-		const sortX = (a, b) => a.x.localeCompare(b.x, void (0), { numeric: true });
+		const sortX = (a, b) => strNumCollator.compare(a.x, b.x);
 		const sortY = bInverse
 			? (a, b) => b.y - a.y
 			: (a, b) => a.y - b.y;
@@ -2563,7 +2563,7 @@ function _chart({
 		}
 		if (margin) { this.margin = { ...this.margin, ...margin }; }
 		if (buttons) {
-			this.buttons = {...this.buttons, ...buttons};
+			this.buttons = { ...this.buttons, ...buttons };
 			bResizeButtons = true;
 		}
 		if (bResizeButtons) { this.resizeButtons(); }
@@ -2764,10 +2764,10 @@ function _chart({
 							this.dataManipulation.sort[label] = function reverseNum(a, b) { return b[axis] - a[axis]; };
 							break;
 						case 'string natural':
-							this.dataManipulation.sort[label] = function naturalString(a, b) { return a[axis].localeCompare(b[axis], void (0), { sensitivity: 'base', numeric: true }); };
+							this.dataManipulation.sort[label] = function naturalString(a, b) { return strNumCollator.compare(a[axis], b[axis]); };
 							break;
 						case 'string reverse':
-							this.dataManipulation.sort[label] = function reverseString(a, b) { return 0 - a[axis].localeCompare(b[axis], void (0), { sensitivity: 'base', numeric: true }); };
+							this.dataManipulation.sort[label] = function reverseString(a, b) { return -strNumCollator.compare(a[axis], b[axis]); };
 							break;
 						case 'random':
 							this.dataManipulation.sort[label] = Array.prototype.shuffle;

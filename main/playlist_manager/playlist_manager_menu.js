@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/11/25
+//01/12/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -14,7 +14,7 @@ include('..\\..\\helpers\\callbacks_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global overwriteProperties:readable, checkProperty:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, isCompatible:readable */
+/* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, isCompatible:readable, strNumCollator:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
@@ -2081,7 +2081,7 @@ function createMenuRight() {
 						found.push({ name: list.dataAll[i].name, category: list.dataAll[i].category });
 					}
 				}
-				found.sort((a, b) => a.category.localeCompare(b.category, void (0), { sensitivity: 'base', numeric: true }));
+				found.sort((a, b) => strNumCollator.compare(a.category, b.category));
 				for (let i = 0, prevCat = null; i < found.length; i++) {
 					if (prevCat !== found[i].category) {
 						prevCat = found[i].category;
@@ -5611,7 +5611,7 @@ function createMenuRightSort() {
 	// Entries
 	{	// Sorting
 		const options = Object.keys(list.sortMethods(false)).slice(0, -1)
-			.sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))
+			.sort(strNumCollator.compare)
 			.concat(['sep', list.manualMethodState()]);
 		menu.newEntry({ entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newSeparator();
@@ -5724,7 +5724,7 @@ function createMenuSearch() {
 			{ entryText: 'By tracks\' path', key: 'bPath' },
 			{ entryText: 'By query (applied to tracks)', key: 'bQuery' },
 			{ entryText: 'By query (string search)', key: 'bMetaQuery' }
-		].filter(Boolean).sort((a, b) => a.entryText.localeCompare(b.entryText, void (0), { sensitivity: 'base', numeric: true }));
+		].filter(Boolean).sort((a, b) => strNumCollator.compare(a.entryText, b.entryText));
 		menu.newEntry({ menuName: subMenu, entryText: 'Change filtering method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);
 		options.forEach((opt) => {
@@ -5926,7 +5926,7 @@ function createMenuFilterSorting() {
 	{	// Sorting method
 		const subMenuName = menu.newMenu('Sorting method');
 		const options = Object.keys(list.sortMethods(false)).slice(0, -1)
-			.sort((a, b) => a.localeCompare(b, void (0), { sensitivity: 'base', numeric: true }))
+			.sort(strNumCollator.compare)
 			.concat(['sep', list.manualMethodState()]);
 		menu.newEntry({ menuName: subMenuName, entryText: 'Change sorting method:', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
