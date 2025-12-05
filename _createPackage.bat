@@ -801,7 +801,7 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Library-Tree-SMP
 SET id=E85C9EF0-778B-46DD-AF20-F4BE831360DD
-SET description=https://github.com/regorxxx/Library-Tree-SMP\r\n\r\nFeature rich media library viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• New facets\r\n• Statistics\r\n• Album art flow mode\r\n\r\nFor guidance on setting up new facets / multiple panel mode, see help on views tab\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)
+SET description=https://github.com/regorxxx/Library-Tree-SMP\r\n\r\nFeature rich media library viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• New facets\r\n• Statistics\r\n• Album art flow mode\r\n\r\nFor guidance on setting up new facets / multiple panel mode, see help on views tab\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)\r\n• Original Library Tree design (2023): WilB
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" library_tree.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -809,7 +809,7 @@ IF "%version%"=="" (
 	PAUSE>NUL
 	EXIT /B 1
 )
-SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Library-Tree-SMP', { author: 'WilB and regorxxx', version: '=%
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Library-Tree-SMP', { author: 'regorxxx', version: '=%
 SET version=%version:', features: { drag_n_drop: true, grab_focus: true } }); }=%
 REM features
 SET enableDragDrop=true
@@ -837,6 +837,7 @@ CALL :copy_file helpers\helpers_xxx_flags.js
 CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
 CALL :copy_file helpers\helpers_xxx_global_post.js
+CALL :copy_file helpers\helpers_xxx_language.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp_post.js

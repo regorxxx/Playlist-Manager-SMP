@@ -1,20 +1,8 @@
 ﻿'use strict';
-//04/12/25
+//05/12/25
 
 /* global VK_CONTROL:readable, VK_ALT:readable, VK_SHIFT:readable, MK_LBUTTON:readable, MK_CONTROL:readable, MK_SHIFT:readable */
-/* exported buttonStates, getKeyboardMask, dropEffect, dropMask, VK_LWIN, VK_RWIN, Flag, PlaybackOrder */
-
-if (typeof PlaybackOrder === 'undefined') {
-	var PlaybackOrder = {
-		Default: 0,
-		RepeatPlaylist: 1,
-		RepeatTrack: 2,
-		Random: 3,
-		ShuffleTracks: 4,
-		ShuffleAlbums: 5,
-		ShuffleFolders: 6
-	};
-}
+/* exported buttonStates, getKeyboardMask, dropEffect, dropMask, VK_LWIN, VK_RWIN, Flag */
 
 const kMask = {
 	none: 0,
