@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/12/25
+//09/12/25
 
 /* exported _chart */
 
@@ -7,7 +7,7 @@ include('statistics_xxx_helper.js');
 /* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable */
 
 /**
- * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
+ * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'lines-hq'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
  */
 
 /**
@@ -764,6 +764,7 @@ function _chart({
 		/*
 			Draw for all graphs
 		*/
+		const minTickW = Math.min(w / 15, _scale(40));
 		switch (graphType) {
 			case 'doughnut':
 			case 'pie':
@@ -983,7 +984,6 @@ function _chart({
 				if (this.axis.x.show) {
 					if (this.axis.x.show && this.axis.x.labels) {
 						const yPos = (y - h) + this.margin.top - this.graph.borderWidth / 2 - (this.axis.x.bAltLabels ? 0 : (y - h) / 2);
-						const minTickW = w / 30;
 						const bFitTicks = w / tickW < 30;
 						const drawLabelW = bFitTicks ? tickW : tickW * 3;
 						let lastLabel = x;
@@ -1030,7 +1030,6 @@ function _chart({
 			case 'bars': // NOSONAR [fallthrough]
 				if (this.axis.x.show && this.axis.x.labels && this.axis.x.bAltLabels && graphType !== 'timeline') {
 					const yLabel = (y - h) / 2;
-					const minTickW = w / 30;
 					const bFitTicks = w / tickW < 30;
 					if (!bFitTicks) { offsetTickText -= tickW; }
 					let lastLabel = x;
@@ -1162,7 +1161,6 @@ function _chart({
 					if (graphType !== 'timeline') {
 						const last = xAxisValuesLen - 1;
 						const borderColor = RGBA(...toRGB(this.mostContrastColor(xAxisColor).color), 150);
-						const minTickW = w / 30;
 						const bFitTicks = w / tickW < 30;
 						const drawLabelW = bFitTicks ? tickW : tickW * 3;
 						if (!bFitTicks) { offsetTickText -= tickW; }
@@ -2043,6 +2041,24 @@ function _chart({
 
 	this.filter = () => { // Filter points with user provided function
 		if (!this.dataManipulation.filter) { return; }
+		if (typeof this.dataManipulation.filter === 'string') {
+			let filter = null;
+			const matches = this.dataManipulation.filter.match(/function ?(?:.*)?\((.*)\n?\) {\n?((?:.|\n)*)?\n?}/i);
+			if (matches) {
+				const args = (matches[1] || '').split(',');
+				const body = matches[2] || null;
+				if (args.length && body) { try { filter = Function(...args, body); } catch (e) { /* empty */ } } // eslint-disable-line no-unused-vars
+			}
+			if (filter) {
+				console.log('Statistics: parsed filter as Function');
+				if (this.configuration.bDebug) { console.log(filter); }
+			} else {
+				console.log('Statistics: error parsing filter as Function');
+				if (this.configuration.bDebug) { console.log(this.dataManipulation.filter); }
+			}
+			this.dataManipulation.filter = filter;
+			if (!this.dataManipulation.filter) { return; }
+		}
 		if (this.configuration.bProfile) { this.profile.CheckPoint('Filter data'); }
 		this.dataDraw = this.dataDraw.map((series) => series.filter(this.dataManipulation.filter));
 		if (this.configuration.bDebug) { memoryPrint('filter', this.dataDraw); }
@@ -2863,6 +2879,10 @@ function _chart({
 
 	this.exportSortLabel = () => {
 		return this.sortKey;
+	};
+
+	this.serializeFunction = (func) => {
+		return func.toString().replaceAll('\n', '').replace('function anonymous', 'function ');
 	};
 
 	this.initData = () => {

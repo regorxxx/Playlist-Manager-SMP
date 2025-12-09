@@ -90,9 +90,9 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 		}.bind(this);
 	};
-	const filterGreat = (num) => ((a) => a.y > num);
-	const filterLow = (num) => ((a) => a.y < num);
-	const filterBetween = (lim) => ((a) => a.y > lim[0] && a.y < lim[1]);
+	const filterGreat = (num) => Function('p', 'return p.y > ' + num + ';');
+	const filterLow = (num) => Function('p', 'return p.y < ' + num + ';');
+	const filterBetween = (lim) => Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';');
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
 	// Header
