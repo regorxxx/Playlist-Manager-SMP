@@ -56,7 +56,7 @@ include('statistics_xxx_helper.js');
  * @param {_chartSorting} [o.dataManipulation.sort.z] - [=null] Sorts the series by Z-value, used when o.graph.multi is true
  * @param {_chartSorting} [o.dataManipulation.sort.my] - [='reverse num'] Sorts every Z-group by Y-value, used when o.graph.multi is true
  * @param {_chartSorting} [o.dataManipulation.sort.mz] - [='reverse num'] Sorts every Z-group by Z-value, used when o.graph.multi is true
- * @param {(point: {x: string, y: number, total: number}, idx: number, series: any[]) => boolean} [o.dataManipulation.filter] - [=null]
+ * @param {string|(point: {x: string, y: number, total: number}, idx: number, series: any[]) => boolean} [o.dataManipulation.filter] - [=null]
  * @param {boolean} [o.dataManipulation.mFilter] - [=true]
  * @param {[number, number]} [o.dataManipulation.slice] - [=[0,10]] Displays only these range of values (by pos) of every series
  * @param {_chartDistrPlot} [o.dataManipulation.distribution] - [=null] Fits the data into a distribution function
@@ -2932,7 +2932,7 @@ function _chart({
 	this.dataCoords = this.dataDraw.map(() => []);
 	/** @type {Map[]>} */
 	this.dataTotal = [];
-	/** @type {{sort: {x:string|null, y:string|null, z:string|null, my:string|null, mz:string|null}, filter: null|function, slice: [number, number], distribution: null|string, probabilityPlot: null|string, group: number}} */
+	/** @type {{sort: {x:string|null, y:string|null, z:string|null, my:string|null, mz:string|null}, filter: null|string|function, slice: [number, number], distribution: null|string, probabilityPlot: null|string, group: number}} */
 	this.dataManipulation;
 	if (dataManipulation) {
 		if (dataManipulation.sort) { this.dataManipulation.sort = { ...this.dataManipulation.sort, ...dataManipulation.sort }; }
