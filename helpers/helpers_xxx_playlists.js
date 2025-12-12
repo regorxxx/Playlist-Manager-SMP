@@ -163,6 +163,15 @@ function getHandlesFromUIPlaylists(names = [], bSort = true) {
 	return output;
 }
 
+/**
+ * Gets playlist locked actions, along lock owner and lock state
+ *
+ * @function
+ * @name getLocks
+ * @kind function
+ * @param {number|string} plsNameOrIdx
+ * @returns {{ isLocked: boolean, isSMPLock: boolean, name: string, types: ('AddItems'|'RemoveItems'|'ReorderItems'|'ReplaceItems'|'RenamePlaylist'|'RemovePlaylist'|'ExecuteDefaultAction')[], index: number }}
+ */
 function getLocks(plsNameOrIdx) {
 	const index = typeof plsNameOrIdx === 'string'
 		? plman.FindPlaylist(plsNameOrIdx)
@@ -174,10 +183,24 @@ function getLocks(plsNameOrIdx) {
 	return { isLocked, isSMPLock, name, types, index };
 }
 
-function setLocks(playlistIndex, lockTypes, logic = 'replace' /* add|switch|remove|replace|globalswitch*/) {
-	if (playlistIndex === -1) { return false; }
-	let newLocks = new Set(plman.GetPlaylistLockedActions(playlistIndex) || []);
-	const lockName = plman.GetPlaylistLockName(playlistIndex);
+/**
+ * Sets playlist locked actions
+ *
+ * @function
+ * @name setLocks
+ * @kind function
+ * @param {number|string} plsNameOrIdx
+ * @param {('AddItems'|'RemoveItems'|'ReorderItems'|'ReplaceItems'|'RenamePlaylist'|'RemovePlaylist'|'ExecuteDefaultAction')[]} lockTypes
+ * @param {'add'|'switch'|'remove'|'replace'|'globalswitch'} logic? - [='replace']
+ * @returns {boolean}
+ */
+function setLocks(plsNameOrIdx, lockTypes, logic = 'replace') {
+	const index = typeof plsNameOrIdx === 'string'
+		? plman.FindPlaylist(plsNameOrIdx)
+		: plsNameOrIdx;
+	if (index === -1) { return false; }
+	let newLocks = new Set(plman.GetPlaylistLockedActions(index) || []);
+	const lockName = plman.GetPlaylistLockName(index);
 	if (lockName === window.Parent || !lockName) {
 		switch (logic.toLowerCase()) {
 			case 'switch':
@@ -207,7 +230,7 @@ function setLocks(playlistIndex, lockTypes, logic = 'replace' /* add|switch|remo
 			if (locksNum === 1 && newLocks.has('ExecuteDefaultAction')) { newLocks.delete('ExecuteDefaultAction'); }
 			else if (locksNum > 0) { newLocks.add('ExecuteDefaultAction'); }
 		}
-		plman.SetPlaylistLockedActions(playlistIndex, [...newLocks]);
+		plman.SetPlaylistLockedActions(index, [...newLocks]);
 		return true;
 	}
 	return false;

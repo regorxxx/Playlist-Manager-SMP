@@ -1,7 +1,7 @@
 ﻿'use strict';
-//05/12/25
+//11/12/25
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable, strNumCollator:readable */
@@ -896,6 +896,10 @@ function isInt(n) {
 
 function isFloat(n) {
 	return Number(n) === n && Number.isFinite(n) && n % 1 !== 0;
+}
+
+function isReal(n) {
+	return isFloat(n) || isInt(n);
 }
 
 // Adds/subtracts 'offset' to 'reference' considering the values must follow cyclic logic within 'limits' range (both values included)
