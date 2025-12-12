@@ -826,11 +826,18 @@ CALL :copy_file _TIPS.txt
 CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :copy_folder main\library_tree
+CALL :check_folder main\sort
+CALL :copy_file main\sort\harmonic_mixing.js
+CALL :copy_file main\sort\scatter_by_tags.js
+CALL :check_folder main\filter_and_query
+CALL :copy_file main\filter_and_query\remove_duplicates.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
+CALL :copy_file helpers\camelot_wheel_xxx.js
 CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
+CALL :copy_file helpers\helpers_xxx_cache_volatile.js
 CALL :copy_file helpers\helpers_xxx_console.js
 CALL :copy_file helpers\helpers_xxx_file.js
 CALL :copy_file helpers\helpers_xxx_flags.js
@@ -838,10 +845,12 @@ CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
 CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_language.js
+CALL :copy_file helpers\helpers_xxx_playlists.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
 CALL :copy_file helpers\helpers_xxx_prototypes_smp_post.js
 CALL :copy_file helpers\helpers_xxx_tags.js
+CALL :copy_file helpers\helpers_xxx_tags_cache.js
 CALL :copy_file helpers\helpers_xxx_so.js
 REM helpers external
 CALL :copy_folder helpers-external\bitmasksorterjs
