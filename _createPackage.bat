@@ -403,7 +403,9 @@ REM helpers external
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\audiowaveform
 CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
+CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
@@ -509,7 +511,9 @@ REM helpers external
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\natsort
+CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
+CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
 CALL :check_folder helpers-external\ngraph
@@ -589,7 +593,9 @@ CALL :copy_file helpers\readme\volume_seekbar.txt
 REM helpers external
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\checkso
 CALL :copy_folder helpers-external\chroma.js
+CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
@@ -853,7 +859,11 @@ CALL :copy_file helpers\helpers_xxx_tags.js
 CALL :copy_file helpers\helpers_xxx_tags_cache.js
 CALL :copy_file helpers\helpers_xxx_so.js
 REM helpers external
+CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\checkso
+CALL :copy_folder helpers-external\cmdutils
+CALL :copy_folder helpers-external\curl
 REM assets
 CALL :check_folder assets\library_tree
 CALL :copy_folder assets\library_tree\html

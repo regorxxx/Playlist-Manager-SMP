@@ -28,6 +28,7 @@ jobs:
             ${{ 'Timeline-SMP' == github.event.repository.name }} => '4'
             ${{ 'Volume-Seekbar-SMP' == github.event.repository.name }} => '5'
             ${{ 'Infinity-Tools-SMP' == github.event.repository.name }} => '6'
+            ${{ 'Library-Tree-SMP' == github.event.repository.name }} => '7'
       - uses: actions/checkout@v4.1.1
         if: ${{ steps.package.outputs.match != '0' }}
       - name: 'Create package'
