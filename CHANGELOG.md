@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.6](#100-beta6---2025-12-12)
 - [1.0.0-beta.5](#100-beta5---2025-11-25)
 - [1.0.0-beta.4](#100-beta4---2025-11-19)
 - [1.0.0-beta.3](#100-beta3---2025-10-28)
@@ -66,6 +67,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.6] - 2025-12-12
 ### Added
 ### Changed
 ### Removed
@@ -1522,7 +1529,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.5...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.6...HEAD
+[1.0.0-beta.6]: ../../compare/v1.0.0-beta.5...v1.0.0-beta.6
 [1.0.0-beta.5]: ../../compare/v1.0.0-beta.4...v1.0.0-beta.5
 [1.0.0-beta.4]: ../../compare/v1.0.0-beta.3...v1.0.0-beta.4
 [1.0.0-beta.3]: ../../compare/v1.0.0-beta.2...v1.0.0-beta.3
