@@ -170,9 +170,10 @@ Tracking playlists within a network drive requires additional steps to make use 
  1. [Menu-Framework-SMP](https://github.com/regorxxx/Menu-Framework-SMP): Helper which allows to easily create customizable and dynamic menus.
  
 ## Requirements (only one host component required)
- 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): JavaScript host component required to install this. Only x32. **(host component)**
- 2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): JavaScript host component required to install this. Both x32 and x64. **(host component)**
- 3. [Required fonts](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts): FontAwesome, Segoe UI, Arial Unicode MS
+ 1. [Spider Monkey Panel (foobar2000 v2.x)](hydrogenaudio.org/index.php/topic,116669.new.html#new): JavaScript host component required to install this. Both [x86](https://github.com/marc2k3/spider-monkey-panel-x86) and [x64](https://github.com/marc2k3/spider-monkey-panel-x64). **(host component)**
+ 2. [Spider Monkey Panel (foobar2000 v1.6.x)](https://theqwertiest.github.io/foo_spider_monkey_panel):  JavaScript host component required to install this. Only x86. **(host component)**
+ 3. [JSplitter (any foobar2000 version)](https://foobar2000.ru/forum/viewtopic.php?t=6378): JavaScript host component required to install this. Both x86 and x64. **(host component)**
+ 4. [Required fonts](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts): FontAwesome, Segoe UI, Arial Unicode MS
  
 ## Installation
 See the [Wiki](https://github.com/regorxxx/Playlist-Manager-SMP/wiki/Installation). There are more extensive instructions at the [Readme (pdf)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/readmes/playlist_manager.pdf) or [_INSTALLATION (txt)](https://github.com/regorxxx/Playlist-Manager-SMP/blob/main/_INSTALLATION.txt) file.
