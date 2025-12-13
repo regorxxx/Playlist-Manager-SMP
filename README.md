@@ -144,7 +144,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * **Shortcuts:** modifiers allow to directly apply different actions on playlists. See manual.
 * **Wine - Unix - non IE SOs compatible:** all the UI, tools, popups, configuration and external helpers have been carefully designed to work in all systems without requiring IE installation, HTML popups or editing the panel properties. Scripts are expected to work 100% the same in any SO.
 * **Other scripts integration:**
-  * [Playlist-Tools-SMP](https://github.com/regorxxx/Playlist-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
+  * [Infinity-Tools-SMP](https://github.com/regorxxx/Infinity-Tools-SMP): Pools may use tracks from playlists files tracked by the manager, not requiring to have playlists loaded within foobar. i.e. Random Pools component-like playlist creation, using not only queries as sources, but also other playlists or playlists files.
   * [ajquery-xxx](https://github.com/regorxxx/ajquery-xxx): Online controller fully compatible with the manager, allows to browse playlist files, load, edit them, etc.
   * **SMP Dynamic menus:** playlist actions are also available as main menu entries -if enabled-, which allows to bind them to keyboard shortcuts, toolbar buttons or executing them using command line.
 
