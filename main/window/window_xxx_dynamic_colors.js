@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/25
+//14/12/25
 
 /* exported dynamicColors */
 
@@ -53,6 +53,10 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 					cMain = cMain.luminance(cMain.luminance() + (cMain.luminance() > 0.3 ? 0.1 : - 0.1));
 					cSec = cSec.luminance(cSec.luminance() + (cSec.luminance() > 0.3 ? 0.1 : -0.1));
 				}
+			}
+			if (Chroma.deltaE(cMain, cSec) < 15) {
+				cMain = cMain.luminance(cMain.luminance() - 0.15);
+				if (cMain.get('hsl.s') > 0.3) { cMain = cMain.desaturate(2); }
 			}
 		}
 		main = cMain.android();
