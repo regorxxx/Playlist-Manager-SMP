@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/12/25
+//14/12/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -5434,9 +5434,11 @@ function createMenuRightTop() {
 	{
 		menu.newSeparator();
 		const subMenuName = menu.newMenu('Logging');
+		menu.newEntry({ menuName: subMenuName, entryText: 'Console loging', flags: MF_GRAYED });
+		menu.newSeparator(subMenuName);
 		[
 			{ key: 'autoSize', entryText: 'Autoplaylists updates' },
-			{ key: 'loadPls', entryText: 'Load playlist' },
+			{ key: 'loadPls', entryText: 'Playlist loading' },
 			{ key: 'profile', entryText: 'Global profiling' },
 			{ key: 'mainMenu', entryText: 'Dynamic menus' },
 		].forEach((opt) => {
