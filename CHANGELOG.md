@@ -72,6 +72,7 @@
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
 ### Removed
 ### Fixed
+- UI: mouse wheel scaling of UI elements not working for any element but global font size.
 
 ## [1.0.0-beta.6] - 2025-12-12
 ### Added
