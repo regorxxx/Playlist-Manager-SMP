@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/11/25
+//16/12/25
 
-/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup */
+/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
@@ -420,3 +420,35 @@ function _gdiFont(name, size, style) {
 function _textWidth(value, font) {
 	return _gr.CalcTextWidth(value, font);
 }
+
+/*
+	Imgs
+*/
+
+/**
+ * Applies manipulations to image (applyCallback) on a region defined by 'maskCallback' (use white color to skip processing)
+ *
+ * @function
+ * @name applyAsMask
+ * @param {GdiBitmap} img - Img to manipulate
+ * @param {(img:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} applyCallback - Img manipulation logic. Width and height are from original img.
+ * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img).
+ * @param {boolean} bInvertMask - Prefills mask with white.
+ * @returns {GdiBitmap}
+ */
+function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
+	const mask = gdi.CreateImage(img.Width, img.Height);
+	const maskGr = mask.GetGraphics();
+	maskGr.FillSolidRect(0, 0, img.Width, img.Height, bInvertMask ? 0xFFFFFFFF : 0xFF000000 );
+	maskCallback(mask, maskGr, img.Width, img.Height);
+	mask.ReleaseGraphics(maskGr);
+	const clone = img.Clone(0, 0, img.Width, img.Height);
+	const cloneGr = mask.GetGraphics();
+	applyCallback(clone, cloneGr, clone.Width, clone.Height);
+	clone.ReleaseGraphics(cloneGr);
+	clone.ApplyMask(mask);
+	const imgGr = img.GetGraphics();
+	imgGr.DrawImage(clone, 0, 0, img.Width, img.Height, 0, 0, img.Width, img.Height);
+	img.ReleaseGraphics(imgGr);
+	return img;
+};
