@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//18/12/25
 
 /* exported checkUpdate */
 
@@ -14,7 +14,7 @@ include('helpers_xxx_web.js');
 
 function checkUpdate({
 	scriptName = window.ScriptInfo.Name,
-	repository = 'https://github.com/' + window.ScriptInfo.Author + '/' + scriptName.replace(/ /g, '-') + (scriptName.endsWith('-SMP') ? '' : '-SMP'),
+	repository = 'https://github.com/' + window.ScriptInfo.Author + '/' + (scriptName || '').replace(/ /g, '-') + ((scriptName || '').endsWith('-SMP') ? '' : '-SMP'),
 	version = window.ScriptInfo.Version,
 	bDownload = false,
 	bOpenWeb = true,
