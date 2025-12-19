@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/12/25
+//19/12/25
 
 /* exported _chart */
 
@@ -2050,8 +2050,10 @@ function _chart({
 				if (args.length && body) { try { filter = Function(...args, body); } catch (e) { /* empty */ } } // eslint-disable-line no-unused-vars
 			}
 			if (filter) {
-				console.log('Statistics: parsed filter as Function');
-				if (this.configuration.bDebug) { console.log(filter); }
+				if (this.configuration.bDebug) {
+					console.log('Statistics: parsed filter as Function');
+					console.log(filter);
+				}
 			} else {
 				console.log('Statistics: error parsing filter as Function');
 				if (this.configuration.bDebug) { console.log(this.dataManipulation.filter); }
