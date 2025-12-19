@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//19/12/25
 
 /* exported createStatisticsMenu */
 
@@ -35,7 +35,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	const menu = this[menuKey];
 	if (bClear) { menu.clear(true); } // Reset on every call
 	// helper
-	const createMenuOption = (key, subKey, menuName = menu.getMainMenuName(), bCheck = true, addFunc = null) => {
+	const createMenuOption = (key, subKey, menuName = menu.getMainMenuName(), bCheck = true, addFunc = null, postFunc = null) => {
 		return function (option) {
 			if (menu.isSeparator(option) && !menu.isSeparator(menu.getEntries().pop())) { menu.newSeparator(menuName); return; } // Add sep only if any entry has been added
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
@@ -57,6 +57,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 							}
 						}
 						else { this.changeConfig({ [key]: option.newValue, callbackArgs: { bSaveProperties: true } }); }
+						if (postFunc) { postFunc(option); }
 					}, flags: Object.hasOwn(option, 'flags') ? option.flags : MF_STRING
 				});
 				if (bCheck) {
@@ -421,6 +422,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	}
 	{
 		const bHasDynColor = this.callbacks.config.artColors && Object.hasOwn(this.configuration, 'bDynSeriesColor');
+		const bUsesListenColor = this.properties && Object.hasOwn(this.properties, 'bOnNotifyColors') && this.properties.bOnNotifyColors[1];
 		const bUsesDynColor = bHasDynColor && this.configuration.bDynSeriesColor;
 		const subMenu = menu.newMenu('Color palette');
 		[
@@ -457,14 +459,21 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}, flags: this.chroma.scheme === 'random' || bUsesDynColor ? MF_GRAYED : MF_STRING
 		});
 		menu.newCheckMenu(subMenu, 'Colorblind safe', void (0), () => this.chroma.colorBlindSafe && this.chroma.scheme !== 'random' && !bUsesDynColor);
-		if (this.callbacks.config.artColors && Object.hasOwn(this.configuration, 'bDynSeriesColor')) {
+		if (bHasDynColor) {
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
 			[
-				{ isEq: null, key: this.configuration.bDynSeriesColor, value: null, newValue: !this.configuration.bDynSeriesColor, entryText: 'Use art colors (background cover mode)' },
-			].forEach(createMenuOption('configuration', 'bDynSeriesColor', subMenuTwo, true));
+				{ isEq: null, key: this.configuration.bDynSeriesColor, value: null, newValue: !this.configuration.bDynSeriesColor, entryText: 'Use art colors (background art mode)' },
+			].forEach(createMenuOption('configuration', 'bDynSeriesColor', subMenuTwo, true, void(0), () => {
+				if (this.configuration.bDynSeriesColor && bUsesListenColor) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are DOMStringList.', (window.ScriptInfo && window.ScriptInfo.Name || 'Statistics') + ': Dynamic colors'); }
+			}));
 			[
-				{ isEq: null, key: this.configuration.bDynBgColor, value: null, newValue: !this.configuration.bDynBgColor, entryText: 'Also apply to background color', flags: bUsesDynColor ? MF_STRING : MF_GRAYED },
-			].forEach(createMenuOption('configuration', 'bDynBgColor', subMenuTwo, true));
+				{ isEq: null, key: this.configuration.bDynBgColor, value: null, newValue: !this.configuration.bDynBgColor, entryText: 'Also apply to background color', flags: bUsesDynColor || bUsesListenColor ? MF_STRING : MF_GRAYED },
+			].forEach(createMenuOption('configuration', 'bDynBgColor', subMenuTwo, true, void(0), () => {
+				if (bUsesListenColor && window.ScriptInfo && window.ScriptInfo.Name) {
+					window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
+					window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
+				}
+			}));
 		}
 	}
 	{

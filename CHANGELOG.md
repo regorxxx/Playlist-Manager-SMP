@@ -70,6 +70,7 @@
 ### Added
 ### Changed
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
+- UI: improvements to dynamic colors handling for background and server-color sources. Added warning when trying to activate both at the same time.
 ### Removed
 ### Fixed
 - UI: mouse wheel scaling of UI elements not working for any element but global font size.
