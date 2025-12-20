@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.29/09/2025
+REM Create packages (zip file) from js files v.20/12/2025
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -89,9 +89,7 @@ CALL :check_root
 CALL :copy_main world_map.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :check_folder main
 CALL :check_folder main\filter_and_query
@@ -222,9 +220,7 @@ CALL :check_root
 CALL :copy_main playlist_manager.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :check_folder main
 CALL :check_folder main\filter_and_query
@@ -363,9 +359,7 @@ CALL :check_root
 CALL :copy_main not_a_waveform_seekbar.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :copy_folder main\seekbar
 CALL :check_folder main\window
@@ -441,9 +435,7 @@ CALL :check_root
 CALL :copy_main timeline.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :copy_folder main\timeline
 CALL :copy_folder main\statistics
@@ -552,9 +544,7 @@ CALL :check_root
 CALL :copy_main volume_seekbar.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :copy_folder main\volume_seekbar
 CALL :check_folder main\window
@@ -629,9 +619,7 @@ CALL :check_root
 CALL :copy_main infinity_tools.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :copy_folder main\autobackup
 CALL :copy_folder main\bio
@@ -827,9 +815,7 @@ CALL :check_root
 CALL :copy_main library_tree.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
-CALL :copy_file _SCRIPTS_SUMMARY.txt
 CALL :copy_file _TIPS.txt
-CALL :copy_file _FOUND_AN_ERROR_FOLLOW_THIS.png
 REM main
 CALL :copy_folder main\library_tree
 CALL :check_folder main\sort

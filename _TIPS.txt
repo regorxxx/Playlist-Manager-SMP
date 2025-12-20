@@ -1,14 +1,14 @@
 PORTABLE TIP:
 -------------
 Some scripts have configurable paths to save databases, track playlists, etc. Those can be found on
-the properties panel. Instead of using the menus and adding an absolute path, it would be advisable
-to edit them manually to ensure they are relative too:
+the properties panel or using the menus and adding an absolute path. It's recommended to use relative
+paths in these case whenever possible.
+
 For ex. for the playlist manager, the tracked folder:
-H:\MySoftware\foobar2000\profile\playlist_manager\	--> .\profile\playlist_manager\	(>= 1.6:)
-													--> .\playlist_manager\			(<= 1.5:)
+H:\MySoftware\foobar2000\profile\playlist_manager\  --> .\profile\playlist_manager\ (>= 1.6.x or 2.x)
 
 When an script is being loaded within a portable installation, it will set the default paths using
-relative paths. It will also warn with popups and/or the console about the -non recommended- use of
+relative paths. It may also warn with popups and/or the console about the -non recommended- use of
 absolute paths on portable installations. If you are using a portable installation on fixed discs with
 absolute paths on panels it has no repercussion, but it becomes a problem as soon as you use it in a
 removable device (whose disk letter changes). The configured paths would look for a disk letter which
@@ -22,15 +22,8 @@ recommended to add 'js_data' and 'playlist_manager' folders at
 'js_data' contains config json data for most of these scripts, while 'playlist_manager' folder is the
 default folder to save playlists files for the playlist manager (*).
 
-Note the same tip applies if using the JSplitter\SMP script replacement Autobackup-SMP:
-https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/autobackup-smp/
-
-(*) When the default path is changed or when using multiple playlist manager panels (and thus different
-paths), don't forget to add them to Autosave config too. There is a limit though, paths outside the
-profile folder can not be autosaved by the component. That happens when tracking a playlist folder at
-the place where the music resides (for relative paths playlist usage), network locations, etc. In some
-cases this limitation can be bypassed by creating a SymLink at the profile folder to the external path.
-For ex: C:\Foobar2000\profile\my_external_folder\ -> symlink -> H:\Music\
+Note the same tip applies if using the JSplitter\SMP script replacement Infinity-Tools-SMP (auto-backup tool):
+https://github.com/regorxxx/Infinity-Tools-SMP
 
 Presets TIP:
 -------------
