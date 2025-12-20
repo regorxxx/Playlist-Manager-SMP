@@ -9,6 +9,7 @@ foobar2000 v2.x
 
 Foobar2000 v1.6.x
 	- SMP x86: https://github.com/regorxxx/foobar2000-assets/raw/main/Spider%20Monkey%20Panel/foo_spider_monkey_panel-v1.6.1-mod.fb2k-component
+	- JSplitter x86: https://foobar2000.club/forum/viewtopic.php?t=6378 | https://hydrogenaud.io/index.php/topic,126743.0.html
 
 If you need more info about the JS-hosts check the wiki of this script or ask at HA forums to their component authors.
 
@@ -23,7 +24,7 @@ They can be found at: https://github.com/regorxxx/foobar2000-assets/tree/main/Fo
 
 INSTALLATION AS PACKAGE:
 ------------------------
-Your download should have a file named like 'XXX-SMP-X-X-X-package.zip' which contains this txt file inside. You have
+Your download should have a file named like '*-SMP-*-*-*-package.zip' which contains this txt file inside. You have
 to load shuch package file as is into your JS-Host. If you have unzipped the package at a random location and
 trying to load any js file inside... then you are doing it wrong :)
 
