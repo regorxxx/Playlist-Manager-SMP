@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/12/25
+//21/12/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -2313,7 +2313,9 @@ function createMenuRight() {
 		menu.newEntry({
 			menuName: subMenuName,
 			entryText: 'Import from file \\ url...', func: () => {
-				const path = Input.string('file|url', folders.xxx + 'examples\\track_list_to_import.txt', 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.FullPanelName, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
+				let path = folders.export + 'track_list_to_import.txt';
+				if (!_isFile(path) && !_copyFile(folders.xxx + 'examples\\track_list_to_import.txt', path)) { path = folders.xxx + 'examples\\track_list_to_import.txt'; }
+				path = Input.string('file|url', _foldPath(path), 'Enter path to text file with list of tracks:\n(URLs are also allowed as long as they point to a text file)', window.FullPanelName, folders.xxx + 'examples\\track_list_to_import.txt', void (0), true) || Input.lastInput;
 				if (path === null) { return; }
 				if (!/https?:\/\/|www./.test(path) && !_isFile(path)) {
 					fb.ShowPopupMessage('File not found:\n\n' + path, window.FullPanelName);

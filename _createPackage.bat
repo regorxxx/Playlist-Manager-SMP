@@ -327,6 +327,7 @@ CALL :copy_file examples\playlist_xsp_example.xsp
 CALL :copy_file examples\playlist_xsp_exampleTwo.xsp
 CALL :copy_file examples\playlist_xspf_example.xspf
 CALL :copy_file examples\playlist_codepages.zip
+CALL :copy_file examples\track_list_to_import.txt
 CALL :check_folder presets
 CALL :copy_folder presets\Network
 REM package info, zip and report

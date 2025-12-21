@@ -73,6 +73,7 @@
 - UI: improvements to dynamic colors handling for background and server-color sources. Added warning when trying to activate both at the same time.
 ### Removed
 ### Fixed
+- Importing file: added missing example file.
 - UI: mouse wheel scaling of UI elements not working for any element but global font size.
 
 ## [1.0.0-beta.6] - 2025-12-12
