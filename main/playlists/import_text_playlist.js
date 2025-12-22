@@ -268,9 +268,9 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		const sortBiasTF = sortBias.length ? fb.TitleFormat(sortBias) : null;
 		tags.forEach((handleTags, idx) => {
 			if (Object.keys(handleTags).length) {
-				const queryTags = Object.keys(handleTags).map((key) => {
+				const queriesFromTags = Object.keys(handleTags).map((key) => {
 					if (typeof handleTags[key] === 'undefined' || handleTags[key] === null || handleTags[key] === '') { return; }
-					const query = key + ' IS ' + handleTags[key];
+					const query = queryJoin([key + ' IS ' + handleTags[key], key.replaceAll('%', '') + ' IS ' + handleTags[key]], 'OR');
 					if (key === '%ARTIST%' || key === '%ALBUM ARTIST%' || key === '%TITLE%') {
 						const tfoKey = '"$stripprefix(' + key + ',' + stripPrefix.join(',') + ')"';
 						const tagVal = sanitizeTagTfo(handleTags[key]); // Quote special chars
@@ -281,7 +281,6 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 						let extraQuery = [];
 						extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + handleTags[key] + '))" IS 1');
 						if ((key === '%ARTIST%' || key === '%ALBUM ARTIST%') && !handleTags[key].startsWith('the')) {
-							extraQuery.push(key.replaceAll('%', '') + ' IS ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
 							extraQuery.push(key.replaceAll('%', '') + ' IS the ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
 							extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(the ' + handleTags[key] + '))" IS 1');
 						} else if (key === '%TITLE%') {
@@ -293,14 +292,14 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 							extraQuery.push('"$replace(' + key + ',\',\',)" IS ' + handleTags[key]);
 							extraQuery.push('"$stricmp($ascii($replace(' + key + ',\',\',)),$ascii(' + handleTags[key] + '))" IS 1');
 						}
-						if (extraQuery.length) { extraQuery = queryJoin(extraQuery, 'OR'); }
-						return query + ' OR ' + tfoQuery + (extraQuery.length ? ' OR ' + extraQuery : '');
+						extraQuery = extraQuery.length ? queryJoin(extraQuery, 'OR') : '';
+						return queryJoin([query, tfoQuery, extraQuery], 'OR');
 					} else {
 						return query;
 					}
 				}).filter(Boolean);
-				if (!queryTags.length) { return; }
-				const query = queryJoin(queryTags, 'AND');
+				if (!queriesFromTags.length) { return; }
+				const query = queryJoin(queriesFromTags, 'AND');
 				const handles = queryCache.has(query)
 					? queryCache.get(query)
 					: (
@@ -344,6 +343,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				}
 			}
 		});
+		queryCache.clear();
 		return { handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound };
 	},
 }));
