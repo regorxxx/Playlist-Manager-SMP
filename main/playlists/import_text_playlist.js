@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/25
+//23/12/25
 
 /* exported ImportTextPlaylist */
 
@@ -200,6 +200,8 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		if (typeof text !== 'undefined' && text.length) {
 			const maskLength = formatMask.length;
 			let lines = text.length;
+			const tagRe = /%(\w|\s)*%|\$\w+?\((\w|\s)*\)/i;
+			const formatTags = formatMask.map((mask) => tagRe.test(mask) ? mask : null);
 			for (let j = 0; j < lines; j++) {
 				const line = text[j];
 				if (discardMask.length && line.startsWith(discardMask)) { continue; }
@@ -209,7 +211,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				formatMask.forEach((mask, index) => {
 					if (mask.length) { // It's a string to extract
 						const nextIdx = line.indexOf(mask, prevIdx);
-						if (!mask.includes('%')) { // It's breakpoint
+						if (formatTags[index] === null) { // It's breakpoint
 							if (nextIdx !== -1 && bPrevTag) { breakPoint.push(nextIdx); }
 							bPrevTag = false;
 						} else if (index === 0) { // Or fist value is a tag, so extract from start
@@ -228,12 +230,10 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				let lineTags = {};
 				if (breakPoint.length) {
 					let idx = 0;
-					formatMask.forEach((tag) => {
-						if (tag.length) { // It's a string to extract
-							if (tag.includes('%')) { // It's a tag to extract
-								lineTags[tag.replace(/%/g, '').toLowerCase()] = line.slice(breakPoint[idx], breakPoint[idx + 1]).toLowerCase();
-								idx += 2;
-							}
+					formatTags.forEach((tag) => {
+						if (tag !== null) { // It's a tag to extract
+							lineTags[tag.toUpperCase()] = line.slice(breakPoint[idx], breakPoint[idx + 1]).toLowerCase();
+							idx += 2;
 						}
 					});
 				}
@@ -271,26 +271,27 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				const queryTags = Object.keys(handleTags).map((key) => {
 					if (typeof handleTags[key] === 'undefined' || handleTags[key] === null || handleTags[key] === '') { return; }
 					const query = key + ' IS ' + handleTags[key];
-					if (key === 'artist' || key === 'album artist' || key === 'title') {
-						const tfoKey = '"$stripprefix(%' + key + '%,' + stripPrefix.join(',') + ')"';
+					if (key === '%ARTIST%' || key === '%ALBUM ARTIST%' || key === '%TITLE%') {
+						const tfoKey = '"$stripprefix(' + key + ',' + stripPrefix.join(',') + ')"';
 						const tagVal = sanitizeTagTfo(handleTags[key]); // Quote special chars
 						const tfo = '$stripprefix(' + tagVal + ',' + stripPrefix.join(',') + ')';
 						const tfoKeyVal = fb.TitleFormat(tfo).Eval(true);
 						if (!tfoKeyVal.length) { console.log('Error creating query: ' + tfo); }
 						const tfoQuery = tfoKey + ' IS ' + tfoKeyVal;
 						let extraQuery = [];
-						extraQuery.push('"$stricmp($ascii(%' + key + '%),$ascii(' + handleTags[key] + '))" IS 1');
-						if ((key === 'artist' || key === 'album artist') && !handleTags[key].startsWith('the')) {
-							extraQuery.push(key + ' IS the ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
-							extraQuery.push('"$stricmp($ascii(%' + key + '%),$ascii(the ' + handleTags[key] + '))" IS 1');
-						} else if (key === 'title') {
+						extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + handleTags[key] + '))" IS 1');
+						if ((key === '%ARTIST%' || key === '%ALBUM ARTIST%') && !handleTags[key].startsWith('the')) {
+							extraQuery.push(key.replaceAll('%', '') + ' IS ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
+							extraQuery.push(key.replaceAll('%', '') + ' IS the ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
+							extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(the ' + handleTags[key] + '))" IS 1');
+						} else if (key === '%TITLE%') {
 							if (handleTags[key].includes(',')) {
 								const val = handleTags[key].replace(/,/g, '');
 								extraQuery.push(key + ' IS ' + val);
-								extraQuery.push('"$stricmp($ascii(%' + key + '%),$ascii(' + val + '))" IS 1');
+								extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + val + '))" IS 1');
 							}
-							extraQuery.push('"$replace(%' + key + '%,\',\',)" IS ' + handleTags[key]);
-							extraQuery.push('"$stricmp($ascii($replace(%' + key + '%,\',\',)),$ascii(' + handleTags[key] + '))" IS 1');
+							extraQuery.push('"$replace(' + key + ',\',\',)" IS ' + handleTags[key]);
+							extraQuery.push('"$stricmp($ascii($replace(' + key + ',\',\',)),$ascii(' + handleTags[key] + '))" IS 1');
 						}
 						if (extraQuery.length) { extraQuery = queryJoin(extraQuery, 'OR'); }
 						return query + ' OR ' + tfoQuery + (extraQuery.length ? ' OR ' + extraQuery : '');
