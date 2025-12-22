@@ -336,7 +336,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 					const lookup = {};
 					Object.keys(handleTags).forEach((key) => {
 						tags[key] = handleTags[key];
-						const lookupKey = lookupKeys.get(key.toUpperCase());
+						const lookupKey = lookupKeys.get(key.toUpperCase().replaceAll('%', ''));
 						if (lookupKey) { lookup[lookupKey] = handleTags[key]; } // For youTube search
 					});
 					handleArr.push(void (0));
