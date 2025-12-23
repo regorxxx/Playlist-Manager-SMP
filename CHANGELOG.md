@@ -77,6 +77,7 @@
 - Importing file: added missing example file.
 - Importing file: fixed errors with remapped fields by foobar2000 (artist, track, filename, ...).
 - UI: mouse wheel scaling of UI elements not working for any element but global font size.
+- Relative paths: fix path protocol handling for non-portable foobar2000 installations.
 
 ## [1.0.0-beta.6] - 2025-12-12
 ### Added
