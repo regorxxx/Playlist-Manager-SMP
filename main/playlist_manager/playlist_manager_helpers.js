@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//23/12/25
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -887,30 +887,70 @@ async function clonePlaylistFile(list, z, ext, toFolder) {
 	return bDone;
 }
 
-function exportPlaylistFile(list, z, defPath = '') {
+async function exportPlaylistFile(list, z, ext, defPath = '') {
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 		fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.FullPanelName);
 		return bDone;
 	}
-	const playlistPath = pls.path;
-	const playlistName = utils.SplitFilePath(playlistPath).slice(1).join('');
-	let path = '';
-	try { path = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.FullPanelName, defPath.length ? defPath + playlistName : list.playlistsPath + 'Export\\' + playlistName, true)); }
+	if (ext === '.ui') { return bDone; }
+	const oriPath = pls.path;
+	const oriName = oriPath
+		? typeof ext === 'undefined'
+			? utils.SplitFilePath(oriPath).slice(1).join('')
+			: utils.SplitFilePath(oriPath)[1] + ext
+		: pls.name + ext;
+	let newPath = '';
+	try { newPath = sanitizePath(utils.InputBox(window.ID, 'Enter destination path:', window.FullPanelName, defPath.length ? defPath + oriName : list.playlistsPath + 'Export\\' + oriName, true)); }
 	catch (e) { return bDone; } // eslint-disable-line no-unused-vars
-	if (!path.length) { return bDone; }
-	if (path === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
-	if (_isFile(path)) {
+	if (!newPath.length) { return bDone; }
+	if (newPath === oriPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return bDone; }
+	if (_isFile(newPath)) {
 		let answer = WshShell.Popup('There is a file with same name. Overwrite?', 0, window.FullPanelName, popup.question + popup.yes_no);
 		if (answer === popup.no) { return bDone; }
-		bDone = _recycleFile(path, true);
+		bDone = _recycleFile(newPath, true);
 	}
-	bDone = _copyFile(playlistPath, path);
+	if (typeof ext === 'undefined') {
+		if (!oriPath) { return bDone; } // Can not copy autoplaylists
+		bDone = _copyFile(oriPath, newPath);
+		if (!bDone) { !fb.ShowPopupMessage('Failed when copying playlist file to \'' + newPath + '\'. May be locked or there is already a file with such name.', window.FullPanelName); }
+	} else {
+		const bUI = pls.extension === '.ui'
+			|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
+		if (pls.isAutoPlaylist && !bUI && !checkQuery(pls.query, true, true)) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.FullPanelName); return { bDone, handleList: null }; }
+		// Create new playlist and check paths
+		const handleList = !bUI
+			? pls.extension === '.fpl' && list.fplRules.bNonTrackedSupport
+				? (await getHandlesFromPlaylistV2({ playlistPath: pls.path, bOmitNotFound: true, bReturnNotFound: true })).handlePlaylist
+				: pls.isAutoPlaylist
+					? fb.GetQueryItems(fb.GetLibraryItems(), stripSort(pls.query))
+					: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: list.playlistsPath, bOmitNotFound: true })
+			: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
+		const paths = !bUI && !pls.isAutoPlaylist
+			? getFilePathsFromPlaylist(pls.path)
+			: handleList
+				? fb.TitleFormat(pathTF).EvalWithMetadbs(handleList)
+				: [];
+		const report = [];
+		const subsongRe = subsongRegex;
+		paths.forEach((trackPath) => {
+			if (!testPath(trackPath.replace(subsongRe, ''), list.playlistsPath) && !_isLink(trackPath)) { report.push(trackPath); }
+		});
+		if (handleList) {
+			if (report.length) { fb.ShowPopupMessage('Tracks not found:\n\n' + report.join('\n'), window.FullPanelName); }
+			if (handleList.Count) {
+				// Retrieve new paths
+				bDone = savePlaylist({ handleList, playlistPath: newPath, ext, playlistName: oriName, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
+			}
+		}
+		bDone = bDone && _isFile(newPath); // Debug popups are already handled at prev line
+		if (!bDone) { !fb.ShowPopupMessage('Failed when creating playlist file at \'' + newPath + '\'. May be locked or there is already a file with such name.', window.FullPanelName); }
+	}
 	if (bDone) {
-		if (list.properties.bOpenOnExport[1]) { _explorer(path); }
-		console.log('Playlist Manager: exporting -> ' + playlistName);
-	} else { fb.ShowPopupMessage('Failed when copying playlist file to \'' + path + '\'. May be locked or there is already a file with such name.', window.FullPanelName); }
+		if (list.properties.bOpenOnExport[1]) { _explorer(newPath); }
+		console.log('Playlist Manager: exporting -> ' + oriName);
+	}
 	return bDone;
 }
 

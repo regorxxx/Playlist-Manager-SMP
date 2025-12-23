@@ -497,13 +497,13 @@ function createMenuLeft(forcedIndex = -1) {
 				if (showMenus['Export and copy']) {
 					// Copy
 					menu.newEntry({
-						entryText: 'Copy playlist file to...', func: () => {
+						entryText: 'Copy Playlist file to...', func: () => {
 							exportPlaylistFile(list, z);
 						}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED
 					});
 					// Export and copy
 					menu.newEntry({
-						entryText: 'Export and Copy Tracks to...', func: () => {
+						entryText: 'Copy Playlist and Tracks to...', func: () => {
 							exportPlaylistFileWithTracks({ list, z, bAsync: list.properties.bCopyAsync[1] });
 						}, flags: bWritableFormat ? MF_STRING : MF_GRAYED
 					});
@@ -515,11 +515,28 @@ function createMenuLeft(forcedIndex = -1) {
 					}
 				});
 			}
+			if (list.bLiteMode || showMenus['Export and copy']) {
+				{
+					const presets = [...writablePlaylistFormats];
+					const subMenuName = menu.newMenu('Export Playlist file to');
+					menu.newEntry({ menuName: subMenuName, entryText: 'Select a format:', flags: MF_GRAYED });
+					menu.newSeparator(subMenuName);
+					presets.forEach((ext) => {
+						const entryText = ext;
+						if (menu.isSeparator(ext)) { menu.newEntry({ menuName: subMenuName, entryText, flags: MF_GRAYED }); return; }
+						menu.newEntry({
+							menuName: subMenuName, entryText, func: () => {
+								exportPlaylistFile(list, z, ext);
+							}
+						});
+					});
+				}
+			}
 			if (showMenus['Export and copy']) {
 				{	// Export and Convert
 					const presets = JSON.parse(list.properties.converterPreset[1]);
 					const flags = bWritableFormat || bIsPlsUI || bIsAutoPls && bIsValidXSP ? MF_STRING : MF_GRAYED;
-					const subMenuName = menu.newMenu('Export and Convert Tracks to...', void (0), presets.length ? flags : MF_GRAYED);
+					const subMenuName = menu.newMenu('Export and Convert Tracks to', void (0), presets.length ? flags : MF_GRAYED);
 					menu.newEntry({ menuName: subMenuName, entryText: 'Shift + Click to skip tracks conversion:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
 					presets.forEach((preset) => {
@@ -568,7 +585,7 @@ function createMenuLeft(forcedIndex = -1) {
 			}
 			if (showMenus['Online sync']) {
 				{	// Export to ListenBrainz
-					const subMenuName = menu.newMenu('Online sync...', void (0), bIsValidXSP ? MF_STRING : MF_GRAYED);
+					const subMenuName = menu.newMenu('Online sync', void (0), bIsValidXSP ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
 							if (!await checkLBToken()) { return false; }
@@ -1498,7 +1515,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 		{	// Export
 			const presets = JSON.parse(list.properties.converterPreset[1]);
-			const subMenuName = menu.newMenu('Export and Convert Tracks to...', void (0), presets.length ? flags : MF_GRAYED);
+			const subMenuName = menu.newMenu('Export and Convert Tracks to', void (0), presets.length ? flags : MF_GRAYED);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Shift + Click to skip tracks conversion:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			presets.forEach((preset) => {
@@ -1565,7 +1582,7 @@ function createMenuLeftMult(forcedIndexes = []) {
 		}
 	}
 	if (showMenus['Online sync']) { // ListenBrainz
-		const subMenuName = menu.newMenu('Online sync...', void (0), bIsValidXSPEvery ? MF_STRING : MF_GRAYED);
+		const subMenuName = menu.newMenu('Online sync', void (0), bIsValidXSPEvery ? MF_STRING : MF_GRAYED);
 		const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Export to ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
@@ -6469,7 +6486,7 @@ function createMenuExport(forcedIndexes = []) {
 	// Enabled menus
 	const flags = (bWritableFormat || bIsPlsUISome || bIsAutoPlsSome) && bIsValidXSPEvery && !bIsFolderEvery ? MF_STRING : MF_GRAYED;
 	const presets = JSON.parse(list.properties.converterPreset[1]);
-	const subMenuName = menu.newMenu('Export and Convert Tracks to...', void (0), presets.length ? flags : MF_GRAYED);
+	const subMenuName = menu.newMenu('Export and Convert Tracks to', void (0), presets.length ? flags : MF_GRAYED);
 	menu.newEntry({ menuName: subMenuName, entryText: 'Shift + Click to skip tracks conversion:', flags: MF_GRAYED });
 	menu.newSeparator(subMenuName);
 	presets.forEach((preset) => {
