@@ -2323,7 +2323,7 @@ function createMenuRight() {
 				}
 				let codePage = utils.DetectCharset(path);
 				if (codePage !== utf8) {
-					codePage = convertCharsetToCodepage(Input.string('string', 'UTF-8', 'Automatic codepage detection has identified a non UTF-8 file.\n\nYou can force a codepage below or use the one detected by clicking cancel (' + codePage + '):\n', window.FullPanelName, 'UTF-8', void (0), true) || '') || codePage || utf8;
+					codePage = convertCharsetToCodepage(Input.string('string', 'UTF-8', 'Automatic codepage detection has identified a non UTF-8 file.\n\nYou can force a codepage below or use the one detected by clicking cancel (' + codePage + '):\n', window.FullPanelName, 'UTF-8', void (0), true) || (Input.isLastEqual ? Input.lastInput : '')) || codePage || utf8;
 				}
 				// Presets
 				const maskPresets = [
