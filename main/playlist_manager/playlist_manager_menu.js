@@ -2369,7 +2369,7 @@ function createMenuRight() {
 				if (!pop.isEnabled()) { // Display animation except for UI playlists
 					pop.enable(true, 'Importing...', 'Importing file / url...\nPanel will be disabled during the process.', 'importing');
 				}
-				ImportTextPlaylist.getHandles({ path, formatMask, discardMask, queryFilters })
+				ImportTextPlaylist.getHandles({ path, formatMask, discardMask, queryFilters, codePage })
 					.then((data) => {
 						if (pop.isEnabled('importing')) { pop.disable(true); }
 						let bYouTube = false;
