@@ -6,7 +6,7 @@
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global folders:readable, globTags:readable, globQuery:readable  */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global sanitizeTagTfo:readable, queryJoin:readable, queryCache:readable, checkQuery:readable */
+/* global sanitizeTagTfo:readable, queryJoin:readable, queryCache:readable, checkQuery:readable, sanitizeQueryVal:readable, fallbackTagsQuery:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global capitalize:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -269,28 +269,33 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		tags.forEach((handleTags, idx) => {
 			if (Object.keys(handleTags).length) {
 				const queriesFromTags = Object.keys(handleTags).map((key) => {
-					if (typeof handleTags[key] === 'undefined' || handleTags[key] === null || handleTags[key] === '') { return; }
-					const query = queryJoin([key + ' IS ' + handleTags[key], key.replaceAll('%', '') + ' IS ' + handleTags[key]], 'OR');
+					const handleTagVal = handleTags[key];
+					if (typeof handleTagVal === 'undefined' || handleTagVal === null || handleTagVal === '') { return; }
+					const handleTagValForQuery = sanitizeQueryVal(handleTagVal);
+					const handleTagValForTF = sanitizeTagTfo(handleTagVal);
+					const query = queryJoin([key + ' IS ' + handleTagValForQuery, fallbackTagsQuery(key.replaceAll('%', ''), handleTagValForQuery)], 'OR');
 					if (key === '%ARTIST%' || key === '%ALBUM ARTIST%' || key === '%TITLE%') {
 						const tfoKey = '"$stripprefix(' + key + ',' + stripPrefix.join(',') + ')"';
-						const tagVal = sanitizeTagTfo(handleTags[key]); // Quote special chars
-						const tfo = '$stripprefix(' + tagVal + ',' + stripPrefix.join(',') + ')';
-						const tfoKeyVal = fb.TitleFormat(tfo).Eval(true);
+						const tfo = '$stripprefix(' + handleTagValForTF + ',' + stripPrefix.join(',') + ')';
+						const tfoKeyVal = sanitizeQueryVal(fb.TitleFormat(tfo).Eval(true) || '');
 						if (!tfoKeyVal.length) { console.log('Error creating query: ' + tfo); }
 						const tfoQuery = tfoKey + ' IS ' + tfoKeyVal;
 						let extraQuery = [];
-						extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + handleTags[key] + '))" IS 1');
-						if ((key === '%ARTIST%' || key === '%ALBUM ARTIST%') && !handleTags[key].startsWith('the')) {
-							extraQuery.push(key.replaceAll('%', '') + ' IS the ' + handleTags[key]); // Done to match multi-valued tags with 'the' on any item
-							extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(the ' + handleTags[key] + '))" IS 1');
-						} else if (key === '%TITLE%') {
-							if (handleTags[key].includes(',')) {
-								const val = handleTags[key].replace(/,/g, '');
-								extraQuery.push(key + ' IS ' + val);
-								extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + val + '))" IS 1');
+						extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + handleTagValForTF + '))" IS 1');
+						if ((key === '%ARTIST%' || key === '%ALBUM ARTIST%') && !handleTagVal.startsWith('the')) {
+							extraQuery.push(fallbackTagsQuery(key.replaceAll('%', ''), 'the ' + tfoKeyVal)); // Done to match multi-valued tags with 'the' on any item
+							extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(the ' + handleTagValForTF + '))" IS 1');
+							if (key === '%ALBUM ARTIST%') {
+								extraQuery.push('(ALBUM ARTIST PRESENT AND ("$stricmp($ascii(%ALBUM ARTIST%),$ascii(the ' + handleTagValForTF + '))" IS 1)) OR (ALBUM ARTIST MISSING AND ("$stricmp($ascii(%ARTIST%),$ascii(the ' + handleTagValForTF + '))" IS 1))');
 							}
-							extraQuery.push('"$replace(' + key + ',\',\',)" IS ' + handleTags[key]);
-							extraQuery.push('"$stricmp($ascii($replace(' + key + ',\',\',)),$ascii(' + handleTags[key] + '))" IS 1');
+						} else if (key === '%TITLE%') {
+							if (handleTagVal.includes(',')) {
+								const val = handleTagVal.replace(/,/g, '');
+								extraQuery.push(key + ' IS ' + sanitizeQueryVal(val));
+								extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + sanitizeTagTfo(val) + '))" IS 1');
+							}
+							extraQuery.push('"$replace(' + key + ',\',\',)" IS ' + handleTagValForQuery);
+							extraQuery.push('"$stricmp($ascii($replace(' + key + ',\',\',)),$ascii(' + handleTagValForTF + '))" IS 1');
 						}
 						extraQuery = extraQuery.length ? queryJoin(extraQuery, 'OR') : '';
 						return queryJoin([query, tfoQuery, extraQuery], 'OR');
@@ -300,7 +305,8 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				}).filter(Boolean);
 				if (!queriesFromTags.length) { return; }
 				const query = queryJoin(queriesFromTags, 'AND');
-				const handles = queryCache.has(query)
+				if (this.bDebug) { console.log(query); }
+				const handles = queryCache.has(query) // TODO: fb.GetQueryItemsCheck
 					? queryCache.get(query)
 					: (
 						checkQuery(query, true)
@@ -343,7 +349,8 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				}
 			}
 		});
-		queryCache.clear();
+		queryCache.clear(); // TODO: fb.GetQueryItemsCheck
 		return { handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound };
 	},
+	bDebug: false,
 }));
