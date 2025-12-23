@@ -73,7 +73,7 @@
 ### Removed
 ### Fixed
 
-## [1.0.0-beta.67 - 2025-12-23
+## [1.0.0-beta.7] - 2025-12-23
 ### Added
 - Importing file: added codepage popup when imported file is detected as a non UTF-8 file by Windows/SMP, so the user can force an specific codepage or rely on the detected one. See [here](https://hydrogenaudio.org/index.php/topic,128838.msg1074594.html#msg1074594).
 - Exporting Playlists: added new menu to export any playlist file to any writable format, both in lite and non-lite mode.
