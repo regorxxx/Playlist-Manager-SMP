@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.7](#100-beta7---2025-12-23)
 - [1.0.0-beta.6](#100-beta6---2025-12-12)
 - [1.0.0-beta.5](#100-beta5---2025-11-25)
 - [1.0.0-beta.4](#100-beta4---2025-11-19)
@@ -67,6 +68,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.67 - 2025-12-23
 ### Added
 - Importing file: added codepage popup when imported file is detected as a non UTF-8 file by Windows/SMP, so the user can force an specific codepage or rely on the detected one. See [here](https://hydrogenaudio.org/index.php/topic,128838.msg1074594.html#msg1074594).
 - Exporting Playlists: added new menu to export any playlist file to any writable format, both in lite and non-lite mode.
@@ -1537,7 +1544,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.6...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.7...HEAD
+[1.0.0-beta.7]: ../../compare/v1.0.0-beta.6...v1.0.0-beta.7
 [1.0.0-beta.6]: ../../compare/v1.0.0-beta.5...v1.0.0-beta.6
 [1.0.0-beta.5]: ../../compare/v1.0.0-beta.4...v1.0.0-beta.5
 [1.0.0-beta.4]: ../../compare/v1.0.0-beta.3...v1.0.0-beta.4
