@@ -70,7 +70,7 @@ const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
 const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
-const pathTF = '$puts(path,$replace($if($strstr(%_PATH_RAW%,file:$char(47)$char(47)),%_PATH_RAW%,%PATH%),.zip|,.zip$char(92),.rar|,.rar$char(92),.7z|,.7z$char(92),file:$char(47)$char(47),,$char(47),$char(92)))$puts(ext,$lower($ext($get(path))))$replace($get(path),file:$char(47)$char(47),,)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
+const pathTF = '$puts(path,$replace($if($strstr(%_PATH_RAW%,file:$char(47)$char(47)),%_PATH_RAW%,%PATH%),.zip|,.zip$char(92),.rar|,.rar$char(92),.7z|,.7z$char(92),$char(47),$char(92)))$puts(ext,$lower($ext($get(path))))$replace($get(path),file:$char(92)$char(92),)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
 
 /*
 	Playlist file manipulation
