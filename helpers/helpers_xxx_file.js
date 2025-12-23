@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//23/12/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -753,7 +753,7 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	} else if (bAdvancedCheck) {
 		if (plsText.length && plsText.some((line) => {
 			line = line.toLowerCase();
-			return (line.includes('ã©') || line.includes('ã¨') || line.includes('ã¼') || line.includes('ãº'));
+			return (line.includes('ã©') || line.includes('ã¨') || line.includes('ã¼') || line.includes('ãº') || line.includes('â€™') || line.includes('§×'));
 		})) {
 			codepage = utf8;
 		} else if (plsText.length && plsText.some((line) => { line = line.toLowerCase(); return (line.includes('�')); })) {
