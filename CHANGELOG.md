@@ -68,6 +68,7 @@
 
 ## [Unreleased][]
 ### Added
+- Importing file: added codepage popup when imported file is detected as a non UTF-8 file by Windows/SMP, so the user can force an specific codepage or rely on the detected one. See [here](https://hydrogenaudio.org/index.php/topic,128838.msg1074594.html#msg1074594).
 ### Changed
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
 - UI: improvements to dynamic colors handling for background and server-color sources. Added warning when trying to activate both at the same time.

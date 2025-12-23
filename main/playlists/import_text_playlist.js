@@ -47,10 +47,11 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		formatMask = ['', '. ', '%TITLE%', ' - ', globTags.artist],
 		discardMask = '',
 		queryFilters = [globQuery.noLiveNone, globQuery.notLowRating],
-		sortBias = globQuery.remDuplBias
+		sortBias = globQuery.remDuplBias,
+		codePage = 0
 	} = {}) {
 		const data = { idx: -1, handleList: new FbMetadbHandleList, handleArr: [], notFound: [] };
-		return this.importFile(path)
+		return this.importFile(path, codePage)
 			.then((text) => typeof text !== 'undefined' && text.length
 				? { ...data, ...this.createPlaylist(text, formatMask, discardMask, queryFilters, sortBias) }
 				: data
@@ -76,9 +77,10 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		discardMask = '',
 		queryFilters = [globQuery.noLiveNone, globQuery.notLowRating],
 		sortBias = globQuery.remDuplBias,
+		codePage = 0
 	} = {}) {
 		const data = { handleList: new FbMetadbHandleList, handleArr: [], notFound: [] };
-		return this.importFile(path)
+		return this.importFile(path, codePage)
 			.then((text) => typeof text !== 'undefined' && text.length
 				? this.getHandlesFromText(text, formatMask, discardMask, queryFilters, sortBias)
 				: data
@@ -94,16 +96,18 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @param {string} path
 	 * @returns {Promise.<string>}
 	 */
-	importFile: function importFile(path) {
+	importFile: function importFile(path, codePage = 0) {
 		if (!path || !path.length) {
 			console.log('ImportTexTPlaylist.importFile(): no file was provided');
 			return Promise.resolve('');
 		}
 		if (_isFile(path)) {
-			let text = _open(path);
+			let text = _open(path, codePage);
 			if (!text.length) { return Promise.resolve(''); }
-			const codePage = checkCodePage(text.split(/\r\n|\n\r|\n|\r/), '.' + path.split('.').pop(), true);
-			if (codePage !== -1) { text = _open(path, codePage); }
+			if (codePage === 0) { // Add extra codepage detection logic
+				codePage = checkCodePage(text.split(/\r\n|\n\r|\n|\r/), '.' + path.split('.').pop(), true);
+				if (codePage !== -1) { text = _open(path, codePage); }
+			}
 			return Promise.resolve(text || '');
 		} else if (/https?:\/\/|www./.test(path)) {
 			return send({

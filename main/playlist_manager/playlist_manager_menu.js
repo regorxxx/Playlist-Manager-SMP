@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/12/25
+//23/12/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, _qCond:readable, _t:readable, range:readable, isCompatible:readable, strNumCollator:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable */
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable, convertCharsetToCodepage:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
 /* global exportSettings:readable, importSettings:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -2320,6 +2320,10 @@ function createMenuRight() {
 				if (!/https?:\/\/|www./.test(path) && !_isFile(path)) {
 					fb.ShowPopupMessage('File not found:\n\n' + path, window.FullPanelName);
 					return;
+				}
+				let codePage = utils.DetectCharset(path);
+				if (codePage !== utf8) {
+					codePage = convertCharsetToCodepage(Input.string('string', 'UTF-8', 'Automatic codepage detection has identified a non UTF-8 file.\n\nYou can force a codepage below or use the one detected by clicking cancel (' + codePage + '):\n', window.FullPanelName, 'UTF-8', void (0), true) || '') || codePage || utf8;
 				}
 				// Presets
 				const maskPresets = [
