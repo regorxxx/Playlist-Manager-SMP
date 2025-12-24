@@ -8,7 +8,7 @@
 
 /* exported delayAutoUpdate, plsRwLock */
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist-Manager-SMP', { author: 'regorxxx', version: '1.0.0-beta.7', features: { drag_n_drop: true, grab_focus: true } }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist-Manager-SMP', { author: 'regorxxx', version: '1.0.0-beta.8', features: { drag_n_drop: true, grab_focus: true } }); }
 
 include('helpers\\helpers_xxx.js');
 /* global globSettings:readable, folders:readable, checkCompatible:readable, checkUpdate:readable globTags:readable, popup:readable, debounce:readable, repeatFn:readable, isPortable:readable, MK_CONTROL:readable, VK_SHIFT:readable, dropEffect:readable, IDC_WAIT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, globProfiler:readable, globQuery:readable, VK_ALT:readable */
