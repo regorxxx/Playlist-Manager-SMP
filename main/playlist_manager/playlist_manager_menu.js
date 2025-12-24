@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/25
+//24/12/25
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -3122,16 +3122,16 @@ function createMenuRightTop() {
 				switch (key) {
 					case 'autoSave':
 						entryText = 'Auto-saving interval...\t(' + prop[1] + ' ms)';
-						text = 'Save changes within foobar2000 playlists into tracked files periodically.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)';
+						text = 'Save changes within foobar2000 playlists into tracked files periodically.\nEnter integer number ≥' + lower + ' (ms):\n(0 to disable it)';
 						break;
 					case 'autoUpdate':
 						entryText = 'Auto-loading interval...\t(' + prop[1] + ' ms)';
-						text = 'Check periodically the tracked folder for changes and update the list.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)';
+						text = 'Check periodically the tracked folder for changes and update the list.\nEnter integer number ≥' + lower + ' (ms):\n(0 to disable it)';
 						if (list.bLiteMode) { return; }
 						break;
 					case 'autoBack':
 						entryText = 'Auto-backup interval...\t(' + (Number.isFinite(prop[1]) ? prop[1] : '\u221E') + ' ms)';
-						text = 'Backup to zip periodically the tracked folder.\nEnter number >= ' + lower + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)';
+						text = 'Backup to zip periodically the tracked folder.\nEnter integer number ≥' + lower + ' (ms):\n(0 to disable it)\n(\'Infinity\' only on script unloading / playlist loading)';
 						if (list.bLiteMode) { return; }
 						break;
 				}
@@ -3176,7 +3176,7 @@ function createMenuRightTop() {
 				}
 				menu.newEntry({
 					menuName: subMenuName, entryText: entry + '\t' + _b((bEnabled ? list.delays[key] : 0) + ' ms'), func: () => {
-						const input = Input.number('int positive', list.delays[key], 'Enter value (ms):\n(>= 0)' + (info.length ? '\n\n' + info : ''), window.FullPanelName, 50, [(n) => Number.isFinite(n)]);
+						const input = Input.number('int positive', list.delays[key], 'Enter value (ms):\n(integer number ≥0)' + (info.length ? '\n\n' + info : ''), window.FullPanelName, 50, [(n) => Number.isFinite(n)]);
 						if (input === null) { return; }
 						list.delays[key] = input;
 						list.properties['delays'][1] = JSON.stringify(list.delays);
@@ -3967,7 +3967,7 @@ function createMenuRightTop() {
 								if (panel.fonts.size === item) { return; }
 								panel.fonts.size = item;
 							} else {
-								const input = Input.number('int positive', panel.fonts.size, 'Input a number:\n(>= 6)', 'Font size', 13, [(n) => n > 0]);
+								const input = Input.number('int positive', panel.fonts.size, 'Input a number:\n(integer number ≥6)', 'Font size', 13, [(n) => n > 0]);
 								if (!input) { return; }
 								panel.fonts.size = input;
 							}
@@ -4468,7 +4468,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Set transparency...\t' + _b(panel.imageBackground.transparency), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(0-100)', window.FullPanelName, 50, [(n) => n >= 0 && n <= 100]);
+					let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', window.FullPanelName, 50, [(n) => n >= 0 && n <= 100]);
 					if (input === null) { return; }
 					panel.imageBackground.transparency = input;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
@@ -4479,7 +4479,7 @@ function createMenuRightTop() {
 			});
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Set blur...\t' + _b(panel.imageBackground.blur), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(>= 0)', window.FullPanelName, 10);
+					let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(integer number ≥0)', window.FullPanelName, 10);
 					if (input === null) { return; }
 					panel.imageBackground.blur = input;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
