@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/25
+//25/12/25
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -344,12 +344,8 @@ let properties = {
 	}), { func: isJSON }],
 	bStatsMode: ['Stats mode enabled', false, { func: isBoolean }],
 	statsConfig: ['Stats mode configuration', JSON.stringify({
-		// graph: {/* type, borderWidth, point */},
-		// dataManipulation = {/* sort, filter, slice, distribution , probabilityPlot*/},
 		background: { color: null },
-		margin: { left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15) },
-		// grid = {x: {/* show, color, width */}, y: {/* ... */}},
-		// axis = {x: {/* show, color, width, ticks, labels, key, bSingleLabels */}, y: {/* ... */}}
+		margin: { left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15) }
 	}), { func: isJSON }],
 	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	panelUUID: ['Panel UUID', UUID(), { func: isUUID }],
@@ -875,6 +871,8 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_paint', (gr) => {
+		if (!window.ID) { return; }
+		if (!window.Width || !window.Height) { return; }
 		if (globSettings.bDebugPaint) { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true, Repaint: true }); }
 		else { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true }); }
 		list.prePaint();
@@ -916,23 +914,23 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
 		if (list.statusIcons.playing.enabled) { list.repaint(false, 'list'); }
-		if (panel.imageBackground.mode === 1) { panel.updateImageBg(); }
+		if (panel.imageBackground.enabled && panel.imageBackground.mode === 1) { panel.updateImageBg(); }
 	});
 
 	addEventListener('on_selection_changed', () => {
-		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
 	});
 
 	addEventListener('on_item_focus_change', () => {
-		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
 	});
 
 	addEventListener('on_playlist_switch', () => {
-		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
 		if (list.statusIcons.active.enabled) { list.repaint(false, 'list'); }
@@ -940,12 +938,12 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_playback_stop', (/** @type {number} */ reason) => {
 		if (reason !== 2) { // Invoked by user or Starting another track
-			if (panel.imageBackground.mode === 1) { panel.updateImageBg(); }
+			if (panel.imageBackground.enabled && panel.imageBackground.mode === 1) { panel.updateImageBg(); }
 		}
 	});
 
 	addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
-		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
 		if (['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(false, 'list'); }
@@ -1227,7 +1225,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
-		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
 		if (!list.isAutosave(name)) { return; }
@@ -1253,7 +1251,7 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlist_items_added', (/** @type {number} */ playlistIndex, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
-		if (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying) {
+		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
 		if (!list.isAutosave(name)) { return; }
@@ -1520,6 +1518,8 @@ if (!list.properties.bSetup[1]) {
 		bottomToolbar.on_mouse_leave_buttn();
 	});
 	addEventListener('on_paint', (gr) => {
+		if (!window.ID) { return; }
+		if (!window.Width || !window.Height) { return; }
 		panel.paint(gr);
 		bottomToolbar.on_paint_buttn(gr);
 	});

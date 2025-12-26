@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/10/25
+//25/12/25
 
 /* exported _popup */
 
@@ -66,6 +66,7 @@ function _popup({
 
 	// Paint
 	this.paint = (gr) => { // on_paint
+		if (!window.ID) { return; }
 		if (!this.w || !this.h) { return; }
 		if (!this.bEnabled) { return; }
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.color.panel);
