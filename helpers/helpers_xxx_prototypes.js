@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/12/25
+//25/12/25
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal */
 
@@ -707,7 +707,7 @@ if (!Array.prototype.joinEvery) {
 		let i = 0;
 		let str = '';
 		while (i < len) {
-			str += (str.length ? sep + newLineChar : '') + this.slice(i, i + n).join(sep);
+			str += (str.length ? sep + newLineChar : '') + this.slice(i + 1, i + n).join(sep);
 			i += n;
 		}
 		return str;
