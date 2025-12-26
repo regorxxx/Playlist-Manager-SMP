@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/25
+//25/12/25
 
 /* exported _chart */
 
@@ -186,7 +186,7 @@ function _chart({
 		this.configuration = {
 			bLoadAsyncData: true,
 			bAltVerticalText: false,
-			bPopupBackground: false,
+			bPopupBackground: true,
 			bDebug: false,
 			bProfile: false,
 			bSlicePerKey: true,
@@ -1300,7 +1300,9 @@ function _chart({
 					w -= xOffsetKey;
 				}
 		}
-		gr.GdiDrawText('~ No data ~' + (!this.configuration.bLoadAsyncData ? '\n\nDouble L. Click to refresh' : ''), this.gFont, RGBA(...toRGB(xAxisColorInverted), 200), x, y, w, h, DT_CENTER | DT_VCENTER | DT_CALCRECT);
+		if (!this.pop.bEnabled) {
+			gr.GdiDrawText('~ No data ~' + (!this.configuration.bLoadAsyncData ? '\n\nDouble L. Click to refresh' : ''), this.gFont, RGBA(...toRGB(xAxisColorInverted), 200), x, y, w, h, DT_CENTER | DT_VCENTER | DT_CALCRECT);
+		}
 	};
 
 	this.paint = (gr) => {
