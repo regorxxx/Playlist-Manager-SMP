@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/12/25
+//27/12/25
 
 /* exported _menu */
 
@@ -68,7 +68,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @property  {Function} condFunc
 	 */
 	/** @typedef {object} MenuSeparator
-	 * @property  {Separator} entryText
+	 * @property  {_menu.Separator} entryText
 	 * @property  {String|() => String} menuName
 	 * @property  {0x00000001} flags - MF_GRAYED
 	 * @property  {false} bIsMenu
@@ -104,7 +104,9 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	const idxMap = new Map();
 	/** @type {number} - Internal menu idx count */
 	let idx = 0;
-	/** @typedef {'sep'|'separator'} Separator - Allowed separator strings. Case insensitive. */
+	/** @type {_menu.Separator} - Separator string identifier to be used by externally */
+	this.separator = void(0);
+	Object.defineProperty(this, 'separator', { get() { return _menu.separator; } });
 	/** @type {RegExp} - Expression to check for separator entries */
 	const separator = /(?:^|\\)(?:sep|separator)$/i;
 	/** @type {object} - Properties object to simplify usage along other scripts */
@@ -189,7 +191,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @memberof _menu
 	 * @name isLastEntry
 	 * @param {string} name - Entry name for lookup
-	 * @param {('entry'|'cond'|'menu'|'sep')} [type] - [='entry'] Entry type.
+	 * @param {('entry'|'cond'|'menu'|_menu.Separator)} [type] - [='entry'] Entry type.
 	 * @returns {boolean}
 	 */
 	this.isLastEntry = (name, type = 'entry') => {
@@ -199,7 +201,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 				return last.entryText === name;
 			} else if (type === 'menu' && last.bIsMenu) {
 				return last.menuName === name;
-			} else if (type === 'sep') {
+			} else if (separator.test(type)) {
 				return this.isSeparator(last);
 			}
 		}
@@ -214,7 +216,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name isLastEntrySep
 	 */
 	this.isLastEntrySep = void (0); // Defined so JSDOC works properly
-	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry(void (0), 'sep'); } });
+	Object.defineProperty(this, 'isLastEntrySep', { get() { return this.isLastEntry(void (0), this.separator); } });
 	/**
 	 * Gets last menu entry created from specific submenu.
 	 *
@@ -233,7 +235,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name isLastEntryFrom
 	 * @param {string} name - Entry name for lookup
 	 * @param {string} menuName - Menu name for lookup
-	 * @param {('entry'|'cond'|'menu'|'sep')} [type] - [='entry'] Entry type.
+	 * @param {('entry'|'cond'|'menu'|_menu.Separator)} [type] - [='entry'] Entry type.
 	 * @returns {boolean}
 	 */
 	this.isLastEntryFrom = (name, menuName, type = 'entry') => {
@@ -243,7 +245,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 				return last.entryText === name;
 			} else if (type === 'menu' && last.bIsMenu) {
 				return last.menuName === name;
-			} else if (type === 'sep') {
+			} else if (separator.test(type)) {
 				return this.isSeparator(last);
 			}
 		}
@@ -258,7 +260,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {string} menuName - Menu name for lookup
 	 * @returns {boolean}
 	 */
-	this.isLastEntrySepFrom = (menuName) => this.isLastEntryFrom(void (0), menuName, 'sep');
+	this.isLastEntrySepFrom = (menuName) => this.isLastEntryFrom(void (0), menuName, this.separator);
 	/**
 	 * Gets all submenu entries, but those created by conditional entries are not set yet!
 	 *
@@ -388,7 +390,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @memberof _menu
 	 * @name newEntry
 	 * @param {object} o - Arguments
-	 * @param {stringLike|() => String} [o.entryText] - [=''] Entry name. Using 'sep' or 'separator' adds a dummy separator.
+	 * @param {stringLike|() => String} [o.entryText] - [=''] Entry name. Using {@link _menu.Separator} adds a dummy separator.
 	 * @param {Function?} [o.func] - [=null] Function associated to entry and called on l. click.
 	 * @param {stringLike|() => String} [o.menuName] - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
 	 * @param {Number|() => Number} [o.flags] - [=MF_STRING] Flags for the text
@@ -430,7 +432,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @returns {MenuSeparator}
 	 */
 	this.newSeparator = (menuName = this.getMainMenuName()) => {
-		return this.newEntry({ entryText: 'sep', menuName });
+		return this.newEntry({ entryText: this.separator, menuName });
 	};
 	/**
 	 * Creates a check attached to a parent menu and menu entries (the bullet or check mark on UI).
@@ -800,7 +802,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @kind method
 	 * @memberof _menu
 	 * @name initMenu
-	 * @param {(_menu|Separator|MenuLikeObject)} object? - Another instance of this constructor, a separator string or any object which has a btn_up() and btn_up_done() methods
+	 * @param {(_menu|_menu.Separator|MenuLikeObject)} object? - Another instance of this constructor, a separator string or any object which has a btn_up() and btn_up_done() methods
 	 * @param {{pos:number, args:any}?} [bindArgs] - [=null] Arguments passed to conditional entries, which are only executed at menu call. If pos is 0 or not present, then it's passed directly as first argument; otherwise, the conditional entry function is executed with arguments set to undefined -so it will use default variables- up to pos (where args is used).
 	 * @returns {void}
 	 */
@@ -871,7 +873,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 							const playlistItems = plman.GetPlaylistItems(idx);
 							const count = playlistItems.Count;
 							this.addToMenu({ entryText: name + ': ' + count + ' tracks', func: null, menuName: subMenuName, flags: MF_GRAYED });
-							this.addToMenu({ entryText: 'sep', menuName: subMenuName });
+							this.addToMenu({ entryText: this.separator, menuName: subMenuName });
 							if (count > 0) {
 								contextMenu = fb.CreateContextMenuManager();
 								contextMenu.InitContext(playlistItems);
@@ -957,7 +959,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name btn_up
 	 * @param {number} x - X position in px
 	 * @param {number} y - Y position in px
-	 * @param {(_menu|Separator|MenuLikeObject)[]} [object] - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
+	 * @param {(_menu|_menu.Separator|MenuLikeObject)[]} [object] - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
 	 * @param {string} [forcedEntry] - [=''] Call an specific menu entry by name and omit creation of menu on UI.
 	 * @param {boolean} [bExecute] - [=true] Wether to execute the entry function or not. May be used to simulate calls.
 	 * @param {function} [replaceFunc] - [=null] Function to execute instead of the entry function if 'bExecute' is set to false. The entry name is passed as argument.
@@ -1287,6 +1289,34 @@ _menu.bindInstance = function bindInstance(parent, menu, mouse = 'r') {
 _menu.isFunction = function isFunction(obj) {
 	return !!(obj && obj.constructor && obj.call && obj.apply);
 };
+
+/** @typedef {'sep'|'separator'} _menu.Separator - Allowed separator strings. Case insensitive. */
+/**
+ * Separator identifier
+ *
+ * @kind property
+ * @memberof _menu
+ * @static
+ * @name separator
+ * @type {_menu.Separator}
+*/
+_menu.separator = void(0);
+Object.defineProperty(_menu, 'separator', { get() { return this.separators[0]; } });
+/**
+ * Separators identifier
+ *
+ * @kind property
+ * @memberof _menu
+ * @static
+ * @name separator
+ * @type {string[]}
+*/
+_menu.separators = void(0);
+Object.defineProperty(_menu, 'separators', {
+	configurable: false,
+	writable: false,
+	value: ['sep', 'separator']
+});
 
 // Add ES2022 method
 // https://github.com/tc39/proposal-accessible-object-hasownproperty
