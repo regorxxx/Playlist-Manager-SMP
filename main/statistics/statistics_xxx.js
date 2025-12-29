@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/25
+//29/12/25
 
 /* exported _chart */
 
@@ -1528,7 +1528,7 @@ function _chart({
 			else {
 				let bInButton = false;
 				if (this.buttons.xScroll) {
-					if (this.leftBtn.move(x, y) || this.rightBtn.move(x, y)) {
+					if (this.getLeftRange() !== 0 && this.leftBtn.move(x, y) || this.getRightRange() !== this.getMaxRange() && this.rightBtn.move(x, y)) {
 						bHand = bInButton = true;
 						ttText = this.callbacks.xScroll.tooltip
 							? isFunction(this.callbacks.xScroll.tooltip)

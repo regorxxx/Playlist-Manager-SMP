@@ -72,6 +72,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: mouse cursor being shown as hand when over left/right buttons even if they were not shown while using statistics modes.
 
 ## [1.0.0-beta.7] - 2025-12-23
 ### Added
