@@ -437,16 +437,11 @@ function _textWidth(value, font) {
  * @returns {GdiBitmap}
  */
 function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
-	const mask = gdi.CreateImage(img.Width, img.Height);
-	const maskGr = mask.GetGraphics();
-	maskGr.FillSolidRect(0, 0, img.Width, img.Height, bInvertMask ? 0xFFFFFFFF : 0xFF000000 );
-	maskCallback(mask, maskGr, img.Width, img.Height);
-	mask.ReleaseGraphics(maskGr);
 	const clone = img.Clone(0, 0, img.Width, img.Height);
-	const cloneGr = mask.GetGraphics();
+	const cloneGr = clone.GetGraphics();
 	applyCallback(clone, cloneGr, clone.Width, clone.Height);
 	clone.ReleaseGraphics(cloneGr);
-	clone.ApplyMask(mask);
+	applyMask(clone, maskCallback, bInvertMask);
 	const imgGr = img.GetGraphics();
 	imgGr.DrawImage(clone, 0, 0, img.Width, img.Height, 0, 0, img.Width, img.Height);
 	img.ReleaseGraphics(imgGr);
