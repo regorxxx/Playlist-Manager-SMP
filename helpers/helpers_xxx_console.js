@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/12/25
+//01/01/26
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -94,23 +94,17 @@ console.formatArg = (arg) => {
 						if (typeof v !== 'undefined' && v !== null) {
 							if (v.RawPath && v.Path) {
 								return 'FbMetadbHandle ' + JSON.stringify({ FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
-							}
-							else if (v instanceof FbMetadbHandleList) {
+							} else if (v instanceof FbMetadbHandleList) {
 								return 'FbMetadbHandleList ' + JSON.stringify({ Count: v.Count }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '');
-							}
-							else if (v instanceof Set) {
+							} else if (v instanceof Set) {
 								return 'Set ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-							}
-							else if (v instanceof Map) {
+							} else if (v instanceof Map) {
 								return 'Map ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-							}
-							else if (v instanceof WeakMap) {
+							} else if (v instanceof WeakMap) {
 								return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-							}
-							else if (v instanceof WeakSet) {
+							} else if (v instanceof WeakSet) {
 								return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
-							}
-							else if (v instanceof Error) {
+							} else if (v instanceof Error) {
 								return 'Error ' + arg.toString().replace(/["\n]/g, '');
 							} else if (typeof v === 'function') {
 								return 'Function ' + v.name || 'anonymous';
@@ -118,6 +112,8 @@ console.formatArg = (arg) => {
 								return 'INFINITY';
 							} else if (v === -Infinity) {
 								return '-INFINITY';
+							} else if (v instanceof GdiFont) {
+								return 'GdiFont ' + JSON.stringify({ name: v.Name, height: v.Height, size: v.Size, style: v.Style }).replace(/["\n]/g, '');
 							}
 						}
 						return v;

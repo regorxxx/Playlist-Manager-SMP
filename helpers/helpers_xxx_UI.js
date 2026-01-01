@@ -1,7 +1,7 @@
 ﻿'use strict';
-//16/12/25
+//29/12/25
 
-/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask */
+/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
@@ -450,5 +450,25 @@ function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
 	const imgGr = img.GetGraphics();
 	imgGr.DrawImage(clone, 0, 0, img.Width, img.Height, 0, 0, img.Width, img.Height);
 	img.ReleaseGraphics(imgGr);
+	return img;
+};
+
+/**
+ * Applies image on a region defined by 'maskCallback' (use white color to skip processing)
+ *
+ * @function
+ * @name applsMask
+ * @param {GdiBitmap} img - Img to manipulate
+ * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img).
+ * @param {boolean} bInvertMask - Prefills mask with white.
+ * @returns {GdiBitmap}
+ */
+function applyMask(img, maskCallback, bInvertMask) {
+	const mask = gdi.CreateImage(img.Width, img.Height);
+	const maskGr = mask.GetGraphics();
+	maskGr.FillSolidRect(0, 0, img.Width, img.Height, bInvertMask ? 0xFFFFFFFF : 0xFF000000 );
+	maskCallback(mask, maskGr, img.Width, img.Height);
+	mask.ReleaseGraphics(maskGr);
+	img.ApplyMask(mask);
 	return img;
 };
