@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/25
+//01/01/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -663,6 +663,7 @@ globProfiler.Print('init');
 // List and other UI elements
 const list = new _list(LM, TM, 0, 0);
 const stats = new _listStatistics(LM, TM, 0, 0, list.properties.bStatsMode[1], JSON.parse(list.properties.statsConfig[1]));
+/** @type {_scrollBar} */
 let scrollBar; // eslint-disable-line no-redeclare
 
 const autoSaveTimer = Number(list.properties.autoSave[1]);
@@ -753,12 +754,12 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_colours_changed', () => {
 		panel.colorsChanged();
 		if (list.checkConfig({ bResetColors: true })) { overwriteProperties(list.properties); }
-		list.repaint();
+		if (window.IsVisible) { list.repaint(); }
 	});
 
 	addEventListener('on_font_changed', () => {
 		panel.fontChanged();
-		list.repaint();
+		if (window.IsVisible) { list.repaint(); }
 	});
 
 	addEventListener('on_char', (code) => {
@@ -866,7 +867,7 @@ if (!list.properties.bSetup[1]) {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
 		if (list.scrollSettings.bReversed) { s = -s; }
-		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {	list.wheelResize(s); }
+		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) { list.wheelResize(s); }
 		else { list.wheel({ s }); }
 	});
 
@@ -913,7 +914,7 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
-		if (list.statusIcons.playing.enabled) { list.repaint(false, 'list'); }
+		if (window.IsVisible && list.statusIcons.playing.enabled) { list.repaint(false, 'list'); }
 		if (panel.imageBackground.enabled && panel.imageBackground.mode === 1) { panel.updateImageBg(); }
 	});
 
@@ -933,7 +934,7 @@ if (!list.properties.bSetup[1]) {
 		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
-		if (list.statusIcons.active.enabled) { list.repaint(false, 'list'); }
+		if (window.IsVisible && list.statusIcons.active.enabled) { list.repaint(false, 'list'); }
 	});
 
 	addEventListener('on_playback_stop', (/** @type {number} */ reason) => {
@@ -946,7 +947,7 @@ if (!list.properties.bSetup[1]) {
 		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
 			panel.updateImageBg();
 		}
-		if (['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(false, 'list'); }
+		if (window.IsVisible && ['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(false, 'list'); }
 	});
 
 	addEventListener('on_notify_data', (name, info) => {
@@ -954,7 +955,7 @@ if (!list.properties.bSetup[1]) {
 		switch (name) {
 			// Internal use
 			case 'xxx-scripts: scrollbar hidden': {
-				window.RepaintRect(list.x + list.w - list.categoryHeaderOffset, list.y, list.x + list.w, list.y + list.h);
+				if (window.IsVisible) { window.RepaintRect(list.x + list.w - list.categoryHeaderOffset, list.y, list.x + list.w, list.y + list.h); }
 				break;
 			}
 			// External use
@@ -1058,7 +1059,7 @@ if (!list.properties.bSetup[1]) {
 					if (panel.colors.buttonsToolbarColor !== -1 && hasColor('buttonsToolbar')) { panel.colors.buttonsToolbarColor = getColor('buttonsToolbar'); }
 					panel.colorsChanged();
 					if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); } // Ensure related settings is set properly
-					list.repaint();
+					if (window.IsVisible) { list.repaint(); }
 				}
 				break;
 			}
@@ -1079,7 +1080,7 @@ if (!list.properties.bSetup[1]) {
 					if (panel.colors.buttonsToolbarColor !== -1) { panel.colors.buttonsToolbarColor = mainAlt; }
 					panel.colorsChanged();
 					if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); } // Ensure related settings is set properly
-					list.repaint();
+					if (window.IsVisible) { list.repaint(); }
 				}
 				break;
 			}
@@ -1353,7 +1354,7 @@ if (!list.properties.bSetup[1]) {
 			if (list.index !== -1) {
 				if (!list.data[list.index].isFolder) { list.index = -1; }
 				else { bToFolder = true; }
-				list.repaint(false, 'list');
+				if (window.IsVisible) { list.repaint(false, 'list'); }
 			}
 		}
 		// Force scrolling so the list doesn't get blocked at current view
@@ -1438,7 +1439,7 @@ if (!list.properties.bSetup[1]) {
 				list.clearSelPlaylistCache();
 				fb.queryCache.clear();
 			} else if (!list.bLiteMode) {
-				if (list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
+				if (window.IsVisible && list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
 			}
 		}
 	});
@@ -1451,7 +1452,7 @@ if (!list.properties.bSetup[1]) {
 				list.clearSelPlaylistCache();
 				fb.queryCache.clear();
 			} else if (!list.bLiteMode) {
-				if (list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
+				if (window.IsVisible && list.uiElements['Header buttons'].elements['Settings menu'].enabled) { list.repaint(false, 'header'); }
 			}
 		}
 	});
