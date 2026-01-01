@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/12/25
+//01/01/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask */
 
@@ -433,7 +433,7 @@ function _textWidth(value, font) {
  * @param {GdiBitmap} img - Img to manipulate
  * @param {(img:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} applyCallback - Img manipulation logic. Width and height are from original img.
  * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img).
- * @param {boolean} bInvertMask - Prefills mask with white.
+ * @param {boolean} bInvertMask - If true, prefills mask with white.
  * @returns {GdiBitmap}
  */
 function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
@@ -452,10 +452,10 @@ function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
  * Applies image on a region defined by 'maskCallback' (use white color to skip processing)
  *
  * @function
- * @name applsMask
+ * @name applyMask
  * @param {GdiBitmap} img - Img to manipulate
  * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img).
- * @param {boolean} bInvertMask - Prefills mask with white.
+ * @param {boolean} bInvertMask -  If true, prefills mask with white.
  * @returns {GdiBitmap}
  */
 function applyMask(img, maskCallback, bInvertMask) {
