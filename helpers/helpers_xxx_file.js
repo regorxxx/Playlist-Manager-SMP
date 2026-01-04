@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/25
+//04/01/25
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -8,7 +8,7 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx_basic_js.js');
 /* global tryMethod:readable */
 include('helpers_xxx_prototypes.js');
-/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable, isCompatible:readable */ /* window.FullPanelName:readable */
+/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */ /* window.FullPanelName:readable */
 
 /*
 	Global Variables
@@ -268,12 +268,13 @@ function _isFile(file) {
 }
 
 function _isFolder(folder) {
+	if (!isString(folder)) { return false; }
 	folder = _resolvePath(folder);
-	if (isCompatible('1.4.0', 'smp') || isCompatible('3.6.1', 'jsplitter')) { try { return utils.IsDirectory(folder); } catch (e) { return false; } } // eslint-disable-line no-unused-vars
-	else { return isString(folder) ? fso.FolderExists(folder) : false; }
+	try { return utils.IsDirectory(folder); } catch (e) { return fso.FolderExists(folder); } // eslint-disable-line no-unused-vars
 }
 
 function _isLink(path) {
+	if (!isString(path)) { return false; }
 	path = path.toLowerCase().replace(/\\\\/g, '//');
 	return ['http://', 'https://', 'fy+', '3dydfy:', 'youtube.', 'www.'].some((prefix) => path.startsWith(prefix)); /* cspell:disable-line */
 }

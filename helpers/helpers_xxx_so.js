@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/25
+//14/10/25
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -76,20 +76,25 @@ function getSoFeatures() {
 	}
 	globProfiler.Print('getSoFeatures.ui');
 	// OS
-	const soArchFile = folders.temp + 'soArch.txt';
-	if (!utils.IsFile(soArchFile)) {
-		const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
-		const run = function () { try { WshShell.Run(Array.from(arguments, (arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } }; // eslint-disable-line no-unused-vars
-		run(soBat, soArchFile);
+	const arch = fb.TitleFormat('[%_CPU_ARCH%]').Eval(true) || '';
+	if (arch) {
+		if (!arch.startsWith('x64')) { soFeat.x64 = false; }
+	} else {
+		const soArchFile = folders.temp + 'soArch.txt';
+		if (!utils.IsFile(soArchFile)) {
+			const soBat = folders.xxx + 'helpers-external\\checkso\\checkso.bat';
+			const run = function () { try { WshShell.Run(Array.from(arguments, (arg) => '"' + arg + '"').join(' '), 0, true); } catch (e) { /* continue */ } }; // eslint-disable-line no-unused-vars
+			run(soBat, soArchFile);
+		}
+		if (utils.IsFile(soArchFile) && !(utils.ReadTextFile(soArchFile) || '').startsWith('x64')) { soFeat.x64 = false; }
 	}
-	if (utils.IsFile(soArchFile) && !(utils.ReadTextFile(soArchFile) || '').startsWith('x64')) { soFeat.x64 = false; }
 	globProfiler.Print('getSoFeatures.os');
 	return soFeat;
 }
 
 function checkSoFeatures(soFeat, bPopup = true) {
 	let bPass = true;
-	const tip = '\n\nTip:\nIn case you don\'t plan to fix the error, it can be hidden by changing \'bPopupOnCheckSOFeatures\' setting found at \'[FOOBAR PROFILE FOLDER]\\js_data\\presets\\global\\globSettings.json\'.';
+	const tip = '\n\nTip:\nIn case you don\'t plan to fix the error, it can be hidden by changing \'bPopupOnCheckSOFeatures\' setting found at \'[foobar profile]\\js_data\\presets\\global\\globSettings.json\'.';
 	// Internals
 	if (!soFeat.gecko) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.' + '\n\nFeatures affected:\nHTML file manipulation may not work (usually used for clipboard manipulation).' + tip + '\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');
