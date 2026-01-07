@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/25
+//07/01/26
 
 /* exported createStatisticsMenu */
 
@@ -463,12 +463,12 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
 			[
 				{ isEq: null, key: this.configuration.bDynSeriesColor, value: null, newValue: !this.configuration.bDynSeriesColor, entryText: 'Use art colors (background art mode)' },
-			].forEach(createMenuOption('configuration', 'bDynSeriesColor', subMenuTwo, true, void(0), () => {
-				if (this.configuration.bDynSeriesColor && bUsesListenColor) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are DOMStringList.', (window.ScriptInfo && window.ScriptInfo.Name || 'Statistics') + ': Dynamic colors'); }
+			].forEach(createMenuOption('configuration', 'bDynSeriesColor', subMenuTwo, true, void (0), () => {
+				if (this.configuration.bDynSeriesColor && bUsesListenColor) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are doing.', (window.ScriptInfo && window.ScriptInfo.Name || 'Statistics') + ': Dynamic colors'); }
 			}));
 			[
 				{ isEq: null, key: this.configuration.bDynBgColor, value: null, newValue: !this.configuration.bDynBgColor, entryText: 'Also apply to background color', flags: bUsesDynColor || bUsesListenColor ? MF_STRING : MF_GRAYED },
-			].forEach(createMenuOption('configuration', 'bDynBgColor', subMenuTwo, true, void(0), () => {
+			].forEach(createMenuOption('configuration', 'bDynBgColor', subMenuTwo, true, void (0), () => {
 				if (bUsesListenColor && window.ScriptInfo && window.ScriptInfo.Name) {
 					window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
 					window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/12/25
+//05/01/26
 
 /* exported _chart */
 
@@ -460,8 +460,8 @@ function _chart({
 		if (this.background.color !== null || this.configuration.bDynLabelColor && this.callbacks.config.backgroundColor) {
 			const bgColor = this.configuration.bDynLabelColor && !!this.callbacks.config.backgroundColor
 				? this.configuration.bDynLabelColorBW
-					? Chroma(invert(this.callbacks.config.backgroundColor()[0], true)).alpha(0.3).android()
-					: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
+					? Chroma(invert(this.callbacks.config.backgroundColor(), true)).alpha(0.3).android()
+					: this.callbacks.config.backgroundColor()
 				: this.background.color;
 			gr.FillPolygon(bgColor, 0, circleArr);
 		}
@@ -554,8 +554,8 @@ function _chart({
 		const bDynLabelColor = this.configuration.bDynLabelColor && this.callbacks.config.backgroundColor;
 		const bgColor = bDynLabelColor
 			? this.configuration.bDynLabelColorBW
-				? invert(this.callbacks.config.backgroundColor()[0], true)
-				: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
+				? invert(this.callbacks.config.backgroundColor(), true)
+				: this.callbacks.config.backgroundColor()
 			: this.background.color;
 		const xAxisColor = bDynLabelColor ? bgColor : this.axis.x.color || bgColor;
 		const xAxisColorInverted = xAxisColor === this.axis.x.color
@@ -1221,7 +1221,7 @@ function _chart({
 							: 0
 						);
 						const lineW = Math.min(w + (this.axis.y.show ? this.margin.leftAuto - this.axis.y.width : 0), this.w - this.margin.right);
-						gr.DrawLine(x, yTick, lineW, yTick, this.grid.y.width, this.callbacks.config.backgroundColor ? invert(this.callbacks.config.backgroundColor()[0], true) : yGridColor);
+						gr.DrawLine(x, yTick, lineW, yTick, this.grid.y.width, this.callbacks.config.backgroundColor ? invert(this.callbacks.config.backgroundColor(), true) : yGridColor);
 					});
 				}
 				if (this.grid.x.show) {
@@ -1235,7 +1235,7 @@ function _chart({
 	};
 
 	this.paintButtons = (gr, bHideToolbar = false) => {
-		const color = invert(this.callbacks.config.backgroundColor ? this.callbacks.config.backgroundColor()[0] : this.background.color || this.axis.x.color, true);
+		const color = invert(this.callbacks.config.backgroundColor ? this.callbacks.config.backgroundColor() : this.background.color || this.axis.x.color, true);
 		if (this.buttons.xScroll && this.getCurrentRange() < this.getMaxRange()) {
 			if (this.getLeftRange() !== 0) { this.leftBtn.paint(gr, color); }
 			if (this.getRightRange() !== this.getMaxRange()) { this.rightBtn.paint(gr, color); }
@@ -1260,8 +1260,8 @@ function _chart({
 		const bDynLabelColor = this.configuration.bDynLabelColor && this.callbacks.config.backgroundColor;
 		const bgColor = bDynLabelColor
 			? this.configuration.bDynLabelColorBW
-				? invert(this.callbacks.config.backgroundColor()[0], true)
-				: Chroma.average(this.callbacks.config.backgroundColor(), void (0), [0.6, 0.4]).android()
+				? invert(this.callbacks.config.backgroundColor(), true)
+				: this.callbacks.config.backgroundColor()
 			: this.background.color;
 		const xAxisColor = bDynLabelColor ? bgColor : this.axis.x.color || bgColor;
 		const xAxisColorInverted = xAxisColor === this.axis.x.color
