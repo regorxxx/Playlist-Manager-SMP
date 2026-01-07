@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/01/26
+//07/01/26
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -193,15 +193,20 @@ console.enableFile = () => { console.EnabledFile = true; };
 console.disableFile = () => { console.EnabledFile = false; };
 
 // Rewrap FbProfiler to expose Name variable
-if (FbProfiler.prototype) {
+if (FbProfiler) {
 	const oldProto = FbProfiler.prototype;
-	const oldFunc = FbProfiler;
+	const old = FbProfiler;
 	FbProfiler = function (name) { // NOSONAR
-		const obj = oldFunc(name);
-		obj.Name = name;
-		return obj;
+		const that = old(name);
+		that.Name = name;
+		return that;
 	};
+	Object.defineProperty(FbProfiler, Symbol.hasInstance, { value(instance) { return instance instanceof old; } });
 	FbProfiler.prototype = oldProto;
+
+	fb.CreateProfiler = function CreateProfiler(name) {
+		return new FbProfiler(name);
+	};
 }
 
 // Rewrap FbProfiler to also log to file
@@ -210,11 +215,11 @@ if (FbProfiler.prototype.Print) {
 	FbProfiler.prototype.Print = function (additionalMsgOpt = '', printComponentInfoOpt = true) {
 		// Recreate the message format
 		let message = '';
-		if (printComponentInfoOpt) { message += 'Spider Monkey Panel v' + utils.Version + ': '; }
+		if (printComponentInfoOpt) { message += (fb.ComponentPath.includes('foo_uie_jsplitter') ? 'JSplitter' : 'Spider Monkey Panel') + ' v' + utils.Version + ': '; }
 		message += 'profiler (' + this.Name + '): ';
 		if (additionalMsgOpt && additionalMsgOpt.length) { message += additionalMsgOpt + ' '; }
 		message += this.Time + 'ms';
-		console.log(message); // Instead of using the original method, just use the basic log routine with debounce
+		console.log(message); // Instead of using the original method, just use the basic log routine with
 	};
 	console.checkSize();
 }

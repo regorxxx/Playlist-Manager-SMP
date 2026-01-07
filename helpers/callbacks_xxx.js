@@ -1,7 +1,7 @@
 'use strict';
-//14/11/25
+//07/01/26
 
-/* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, registerAllCallbacks */
+/* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
 
 
 /*
@@ -34,11 +34,11 @@
 
 const callbacks = {
 	on_always_on_top_changed: { listeners: [], bRegistered: false },
-	on_button_click: { listeners: [], bRegistered: false }, // Jstplitter
+	on_button_click: { listeners: [], bRegistered: false }, // JSplitter
 	on_char: { listeners: [], bRegistered: false },
 	on_colours_changed: { listeners: [], bRegistered: false },
 	on_cursor_follow_playback_changed: { listeners: [], bRegistered: false },
-	on_download_file_done: { listeners: [], bRegistered: false }, // Jstplitter | SMP mod
+	on_download_file_done: { listeners: [], bRegistered: false }, // JSplitter | SMP mod
 	on_drag_drop: { listeners: [], bRegistered: false },
 	on_drag_enter: { listeners: [], bRegistered: false },
 	on_drag_leave: { listeners: [], bRegistered: false },
@@ -47,7 +47,7 @@ const callbacks = {
 	on_focus: { listeners: [], bRegistered: false },
 	on_font_changed: { listeners: [], bRegistered: false },
 	on_get_album_art_done: { listeners: [], bRegistered: false },
-	on_http_request_done: { listeners: [], bRegistered: false }, // Jstplitter | SMP mod
+	on_http_request_done: { listeners: [], bRegistered: false }, // JSplitter | SMP mod
 	on_item_focus_change: { listeners: [], bRegistered: false },
 	on_item_played: { listeners: [], bRegistered: false },
 	on_key_down: { listeners: [], bRegistered: false },
@@ -76,8 +76,8 @@ const callbacks = {
 	on_notify_data: { listeners: [], bRegistered: false },
 	on_output_device_changed: { listeners: [], bRegistered: false },
 	on_paint: { listeners: [], bRegistered: false },
-	on_panel_mouse_leave: { listeners: [], bRegistered: false }, // Jstplitter
-	on_panel_mouse_move: { listeners: [], bRegistered: false }, // Jstplitter
+	on_panel_mouse_leave: { listeners: [], bRegistered: false }, // JSplitter
+	on_panel_mouse_move: { listeners: [], bRegistered: false }, // JSplitter
 	on_playback_dynamic_info: { listeners: [], bRegistered: false },
 	on_playback_dynamic_info_track: { listeners: [], bRegistered: false },
 	on_playback_edited: { listeners: [], bRegistered: false },
@@ -121,7 +121,7 @@ parentWindow.eventListener = { event: null, id: null };
  * @param {smpEvents} event - Event type
  * @param {Function} listener - Callback function
  * @param {boolean} bRegister? - Add to global context
- * @returns {false | { event: any; id: string; }}
+ * @returns {false | { event: smpEvents; id: string; }}
  */
 function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
 	if (!Object.hasOwn(callbacks, event)) { console.log('addEventListener: event does not exist -> ' + event); return false; }
@@ -187,6 +187,25 @@ function removeEventListeners(event) {
 
 // Should only be called within an event listener, since 'this' points to 'parentWindow'
 const removeEventListenerSelf = () => removeEventListener(this.eventListener.event, null, this.eventListener.id);
+
+/**
+ * Changes execution order of a listener from any SMP callback
+ *
+ * @function
+ * @name moveEventListener
+ * @kind function
+ * @param {{ event: smpEvents, listener: function, id: string }} evenListener
+ * @param {number} pos? - [=0] New position, by default to top
+ * @returns {boolean}
+ */
+function moveEventListener(evenListener, pos = 0) { // eslint-disable-line no-redeclare
+	const event = evenListener.event;
+	if (!event && !Object.hasOwn(callbacks, event)) { return false; }
+	const idx = findEventListener(event, evenListener.listener, evenListener.id);
+	return idx !== -1
+		? !!callbacks[event].listeners.splice(pos, 0, ...callbacks[event].listeners.splice(idx, 1))
+		: false;
+}
 
 /*
 	Register callbacks

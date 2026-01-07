@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/12/25
+//07/01/26
 
 /* exported extendGR, checkCompatible */
 
@@ -93,6 +93,7 @@ Object.defineProperty(fb, 'tfCache', {
 
 // Augment FbTitleFormat() constructor with 'Expression' property and add caching
 {
+	const oldProto = FbProfiler.prototype;
 	const old = FbTitleFormat;
 	FbTitleFormat = function FbTitleFormat() { // NOSONAR
 		const bCache = Object.hasOwn(fb.tfCache, arguments[0]);
@@ -102,6 +103,7 @@ Object.defineProperty(fb, 'tfCache', {
 		return that;
 	};
 	Object.defineProperty(FbTitleFormat, Symbol.hasInstance, { value(instance) { return instance instanceof old; } });
+	FbTitleFormat.prototype = oldProto;
 }
 
 /*
@@ -406,7 +408,8 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 });
 
 // Augment FbProfiler() constructor
-{
+if (FbProfiler) {
+	const oldProto = FbProfiler.prototype;
 	const old = FbProfiler;
 	FbProfiler = function FbProfiler() { // NOSONAR
 		const that = old(...arguments);
@@ -447,6 +450,11 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		return that;
 	};
 	Object.defineProperty(FbProfiler, Symbol.hasInstance, { value(instance) { return instance instanceof old; } });
+	FbProfiler.prototype = oldProto;
+
+	fb.CreateProfiler = function CreateProfiler(name) {
+		return new FbProfiler(name);
+	};
 }
 
 if (fb.AddLocationsAsync) {
