@@ -648,7 +648,10 @@ CALL :copy_file main\timeline\timeline_helpers.js
 CALL :check_folder main\world_map
 CALL :copy_file main\world_map\world_map_tables.js
 CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_dynamic_colors.js
+CALL :copy_file main\window\window_xxx_helpers.js
 REM Buttons
 CALL :copy_folder buttons
 CALL :copy_folder buttons\helpers
