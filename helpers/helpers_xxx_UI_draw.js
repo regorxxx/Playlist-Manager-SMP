@@ -1,11 +1,13 @@
 ﻿'use strict';
-//07/08/25
+//05/01/26
 
 /* exported _sb, fillWithPattern */
 
-/* global getClosestDivisor:readable, SF_CENTRE:readable, IDC_HAND:readable */
+/* global SF_CENTRE:readable, IDC_HAND:readable */
 include('helpers_xxx_UI.js');
 /* global _gdiFont:readable, _scale:readable */
+include('helpers_xxx_math.js');
+/* global getClosestDivisor:readable */
 
 function _sb(t, x, y, w, h, v, fn) {
 	this.paint = (gr, colour, colorBg = null) => {
