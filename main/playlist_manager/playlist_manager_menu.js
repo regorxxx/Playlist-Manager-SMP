@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/25
+//08/01/26
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -4154,10 +4154,10 @@ function createMenuRightTop() {
 					menu.newCheckMenuLast(() => (panel.colors.buttonsToolbarColor === defaultCol ? 0 : 1), optionsLength);
 					menu.newSeparator(subMenuSecondName);
 					menu.newEntry({
-						menuName: subMenuSecondName, entryText: 'Set transparency...', func: () => {
-							const input = Input.number('int positive', panel.colors.buttonsToolbarTransparency, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.FullPanelName, 50);
+						menuName: subMenuSecondName, entryText: 'Set opacity...', func: () => {
+							const input = Input.number('int positive', panel.colors.buttonsToolbarOpacity, 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.FullPanelName, 50);
 							if (input === null) { return; }
-							panel.properties.buttonsToolbarTransparency[1] = panel.colors.buttonsToolbarTransparency = input;
+							panel.properties.buttonsToolbarOpacity[1] = panel.colors.buttonsToolbarOpacity = input;
 							// Update property to save between reloads
 							overwriteProperties(panel.properties);
 							panel.colorsChanged();
@@ -4467,10 +4467,10 @@ function createMenuRightTop() {
 			}
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Set transparency...\t' + _b(panel.imageBackground.transparency), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.transparency, 'Set transparency:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', window.FullPanelName, 50, [(n) => n >= 0 && n <= 100]);
+				menuName: subMenuName, entryText: 'Set opacity...\t' + _b(panel.imageBackground.opacity), func: () => {
+					let input = Input.number('int positive', panel.imageBackground.opacity, 'Set opacity:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', window.FullPanelName, 50, [(n) => n >= 0 && n <= 100]);
 					if (input === null) { return; }
-					panel.imageBackground.transparency = input;
+					panel.imageBackground.opacity = input;
 					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
 					overwriteProperties(panel.properties);
 					panel.updateImageBg();

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/10/25
+//08/01/26
 
 /* exported _panel */
 
@@ -26,12 +26,12 @@ function _panel(customBackground = false, bSetup = false) {
 		bToolbar: ['Use toolbar mode', true, { func: isBoolean }],
 		bButtonsBackground: ['Use buttons background', false, { func: isBoolean }],
 		buttonsToolbarColor: ['Buttons\' toolbar color', RGB(0, 0, 0), { func: isInt }],
-		buttonsToolbarTransparency: ['Buttons\' toolbar transparency', 5, { func: isInt, range: [[0, 100]] }],
+		buttonsToolbarOpacity: ['Buttons\' toolbar opacity', 5, { func: isInt, range: [[0, 100]] }],
 		imageBackground: ['Image background config', JSON.stringify({
 			enabled: true,
 			mode: 1,
 			art: { path: '', image: null, id: '' },
-			transparency: 60,
+			opacity: 60,
 			bProportions: true,
 			bFill: true,
 			blur: 10,
@@ -77,7 +77,7 @@ function _panel(customBackground = false, bSetup = false) {
 		bottomToolbar.config.partAndStateID = this.colors.bButtonsBackground ? 1 : 6; // buttons_xxx.js
 		bottomToolbar.config.textColor = this.colors.buttonsTextColor; // buttons_xxx.js
 		bottomToolbar.config.toolbarColor = this.colors.buttonsToolbarColor; // buttons_xxx.js
-		bottomToolbar.config.toolbarTransparency = this.colors.buttonsToolbarTransparency; // buttons_xxx.js
+		bottomToolbar.config.toolbarOpacity = this.colors.buttonsToolbarOpacity; // buttons_xxx.js
 	};
 
 	this.fontChanged = () => {
@@ -170,31 +170,31 @@ function _panel(customBackground = false, bSetup = false) {
 		});
 	}, 250);
 
-	this.paintImage = (gr, limits = { x: 0, y: 0, w: this.w, h: this.h, offsetH: 0 }, fill = null /* {transparency: 20} */) => { // NOSONAR
+	this.paintImage = (gr, limits = { x: 0, y: 0, w: this.w, h: this.h, offsetH: 0 }, fill = null /* {opacity: 20} */) => { // NOSONAR
 		if (this.imageBackground.enabled && this.imageBackground.art.image) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.imageBackground.art.image;
 			if (fill) {
-				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.transparency);
+				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.opacity);
 			} else {
 				if (this.imageBackground.bFill) { // NOSONAR
 					if (this.imageBackground.bProportions) {
 						const prop = limits.w / (limits.h - limits.offsetH);
 						if (prop > 1) {
 							const offsetY = img.Height / prop;
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, 0, this.imageBackground.transparency);
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, 0, this.imageBackground.opacity);
 						} else {
 							const offsetX = img.Width * prop;
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.transparency);
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.opacity);
 						}
 					} else {
-						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.opacity);
 					}
 				} else {
 					let w, h;
 					if (this.imageBackground.bProportions) { w = h = Math.min(limits.w, limits.h - limits.offsetH); }
 					else { [w, h] = [limits.w, limits.h]; }
-					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.transparency);
+					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.opacity);
 				}
 			}
 			gr.SetInterpolationMode(InterpolationMode.Default);
@@ -266,7 +266,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.bToolbar = this.properties.bToolbar[1];
 	this.colors.bButtonsBackground = this.properties.bButtonsBackground[1];
 	this.colors.buttonsToolbarColor = this.properties.buttonsToolbarColor[1];
-	this.colors.buttonsToolbarTransparency = this.properties.buttonsToolbarTransparency[1];
+	this.colors.buttonsToolbarOpacity = this.properties.buttonsToolbarOpacity[1];
 	this.colors.bFontOutline = this.properties.bFontOutline[1];
 	this.colors.bBold = this.properties.bBold[1];
 	this.imageBackground = deepAssign()(

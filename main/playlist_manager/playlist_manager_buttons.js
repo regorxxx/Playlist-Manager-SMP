@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/11/25
+//08/01/26
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -16,7 +16,7 @@ function _listButtons(bSetup = false) {
 	// General config
 	this.config = {
 		toolbarColor: RGB(0, 0, 0), // Toolbar color
-		toolbarTransparency: 5, // Toolbar color
+		toolbarOpacity: 5, // Toolbar color
 		bToolbar: false, // Change this on buttons bars files to set the background color
 		textColor: RGB(0, 0, 0),
 		bUseThemeManager: true,
@@ -146,7 +146,7 @@ function _listButtons(bSetup = false) {
 				const x = xCalc + 1; const y = yCalc; const w = Math.max(wCalc - 4, 0); const h = Math.max(hCalc - 2, 0); const arc = Math.min(w, h, _scale(5)) / 2;
 				if (w > 0 && h > 0 && arc > 0) {
 					gr.SetSmoothingMode(2); // Antialias for lines
-					const toolbarAlpha = Math.min(parent.config.toolbarTransparency * 10, 100);
+					const toolbarAlpha = Math.min(parent.config.toolbarOpacity * 10, 100);
 					switch (this.state) {
 						case buttonStates.normal:
 							if (bDrawBackground) {
@@ -295,14 +295,14 @@ function _listButtons(bSetup = false) {
 	this.on_paint_buttn = (gr) => {
 		if (bSetup) { // Overrides panel settings
 			this.config.bToolbar = false;
-			this.config.toolbarTransparency = 0;
+			this.config.toolbarOpacity = 0;
 			this.config.partAndStateID = 1;
 			this.config.bUseThemeManager = false;
 		}
 		[this.x, this.y, this.w, this.h] = retrieveBarCoords();
 		if (this.config.bToolbar) { // When not merged with panels
-			gr.FillSolidRect(this.x, this.y, this.w, this.h, opaqueColor(this.config.toolbarColor, this.config.toolbarTransparency));
-			gr.DrawLine(this.x, this.y, this.w, this.y, 1, opaqueColor(this.config.toolbarColor, Math.min(this.config.toolbarTransparency * 10, 100)));
+			gr.FillSolidRect(this.x, this.y, this.w, this.h, opaqueColor(this.config.toolbarColor, this.config.toolbarOpacity));
+			gr.DrawLine(this.x, this.y, this.w, this.y, 1, opaqueColor(this.config.toolbarColor, Math.min(this.config.toolbarOpacity * 10, 100)));
 		}
 		drawAllButtons(gr);
 	};

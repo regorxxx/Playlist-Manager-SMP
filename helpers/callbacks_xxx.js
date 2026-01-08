@@ -1,5 +1,5 @@
 'use strict';
-//07/01/26
+//08/01/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
 
@@ -277,7 +277,7 @@ const callbacksListener = {
 		r = 255 - r; g = 255 - g; b = 255 - b;
 		return (0xff000000 | (r << 16) | (g << 8) | (b));
 	})(),
-	transparency: ((c = window.InstanceType ? window.GetColourDUI(1) : window.GetColourCUI(3), alpha = 15) => {
+	opacity: ((c = window.InstanceType ? window.GetColourDUI(1) : window.GetColourCUI(3), alpha = 15) => {
 		// RGB
 		const a = c - 0xFF000000;
 		let [r, g, b] = [a >> 16, a >> 8 & 0xFF, a & 0xFF];
@@ -334,7 +334,7 @@ addEventListener('on_key_down', (k) => {
 
 addEventListener('on_paint', (gr) => { // Make it flash 3 times
 	if (callbacksListener.highlight) {
-		gr.FillSolidRect(0, 0, window.Width, window.Height, callbacksListener.transparency);
+		gr.FillSolidRect(0, 0, window.Width, window.Height, callbacksListener.opacity);
 		gr.DrawRect(0, 0, window.Width - 2, window.Height - 2, 1, callbacksListener.color);
 		callbacksListener.step++;
 	}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/01/26
+//08/01/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -884,7 +884,7 @@ if (!list.properties.bSetup[1]) {
 					panel.paintImage(
 						gr,
 						{ w: window.Width, h: bottomToolbar.h, x: 0, y: bottomToolbar.y, offsetH: _scale(1) },
-						{ transparency: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
+						{ opacity: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
 					);
 				}
 				if (list.uiElements['Bottom toolbar'].enabled) { bottomToolbar.on_paint_buttn(gr); }

@@ -70,6 +70,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: all settings mentioning transparency have been changed to opacity, some properties will be lost on update as result.
 ### Removed
 ### Fixed
 - UI: mouse cursor being shown as hand when over left/right buttons even if they were not shown while using statistics modes.

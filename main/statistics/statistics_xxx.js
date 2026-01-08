@@ -48,7 +48,7 @@ include('statistics_xxx_helper.js');
  * @param {boolean} [o.graph.multi] - [=false] Flag to expand {x,y,z} data into multiple {x,y} series to draw 3D data.
  * @param {number} [o.graph.borderWidth] - [=_scale(1)] Point size (scatter) or point border size
  * @param {_chartGraphPoint} [o.graph.point] - [=null] Point type for display (scatter only). If invalid, fallbacks to 'circle'
- * @param {number} [o.graph.pointAlpha] - [=255] Point transparency [0-255]
+ * @param {number} [o.graph.pointAlpha] - [=255] Point opacity [0-255]
  * @param {object} [o.dataManipulation] - Data manipulation settings
  * @param {object} [o.dataManipulation.sort] - Sort settings
  * @param {_chartSorting} [o.dataManipulation.sort.x] - [='natural'] Sorts the series by X-value
@@ -80,7 +80,7 @@ include('statistics_xxx_helper.js');
  * @param {boolean} [o.buttons.display] - [=false] Display settings button at right
  * @param {boolean} [o.buttons.zoom] - [=false] Zoom button at right
  * @param {boolean} [o.buttons.custom] - [=false] Custom button at right
- * @param {number} [o.buttons.alpha] - [=25] Transparency [0-255]
+ * @param {number} [o.buttons.alpha] - [=25] Opacity [0-255]
  * @param {number} [o.buttons.timer] - [=1500] Timer to hide buttons in ms
  * @param {number} [o.buttons.size] - [=_scale(24)] Size
  * @param {object} [o.callbacks] - Callback functions

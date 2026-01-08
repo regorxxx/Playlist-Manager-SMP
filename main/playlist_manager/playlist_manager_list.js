@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/12/25
+//08/01/26
 
 /* exported _list */
 
@@ -885,7 +885,7 @@ function _list(x, y, w, h) {
 						panel.paintImage(
 							gr,
 							{ w: this.x + this.w - iconOffsetRight, h: this.searchInput.h, x: 0, y: this.searchInput.y, offsetH: _scale(1) },
-							{ transparency: (getBrightness(...toRGB(panelBgColor)) < 50 ? 50 : 20) }
+							{ opacity: (getBrightness(...toRGB(panelBgColor)) < 50 ? 50 : 20) }
 						);
 					}
 				} else {
@@ -7084,7 +7084,7 @@ function _list(x, y, w, h) {
 		const settings = Object.fromEntries([
 			...['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements', 'listColors']
 				.map((key) => [key, clone(this.properties[key].slice(0, 2))]),
-			...['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground', 'customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarTransparency', 'buttonsTextColor', 'customBackground', 'fontSize', 'imageBackground']
+			...['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground', 'customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarOpacity', 'buttonsTextColor', 'customBackground', 'fontSize', 'imageBackground']
 				.map((key) => [key, clone(panel.properties[key].slice(0, 2))])
 		]);
 		switch (mode.toLowerCase()) {
@@ -7135,7 +7135,7 @@ function _list(x, y, w, h) {
 				panel.properties[key][1] = !!settings[key][1];
 				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = panel.properties[key][1]; }
 			});
-			['customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarTransparency', 'buttonsTextColor', 'customBackground'].forEach((key) => {
+			['customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarOpacity', 'buttonsTextColor', 'customBackground'].forEach((key) => {
 				panel.properties[key][1] = Number(settings[key][1]);
 				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = Number(panel.properties[key][1]); }
 			});
