@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/26
+//08/01/26
 
 /* exported extendGR, checkCompatible */
 
@@ -546,7 +546,7 @@ function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
 
 function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
 	target = target.toLowerCase();
-	if (!isCompatible(requiredVersionStr)) {
+	if (!isCompatible(requiredVersionStr, target)) {
 		const isJsHost = target === 'smp' || target === 'jsplitter';
 		console.popup('This script requires v' + requiredVersionStr + '. Current ' + (isJsHost ? 'component' : 'Foobar2000') + ' version is v' + (isJsHost ? utils : fb).Version + '.', window.Name + ' (' + window.ScriptInfo.Name + ')');
 	}
