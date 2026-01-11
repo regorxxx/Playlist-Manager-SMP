@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/26
+//11/01/26
 
 /* exported _list */
 
@@ -1529,19 +1529,29 @@ function _list(x, y, w, h) {
 		return Object.values(this.headerButtons).some((button) => this.traceHeaderButton(x, y, button));
 	};
 
-	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10) } = {}) => {
+	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10), bSmooth = true } = {}) => {
 		if (this.trace(this.mx, this.my) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				if (!Number.isInteger(s)) { s = Math.round(s); }
-				if (this.scrollSettings.bSmooth) {
+				if (this.scrollSettings.bSmooth && bSmooth) {
 					const delta = Math.min(Math.abs(s * scrollDelta), this.items);
 					if (delta > 1) {
 						const dir = Math.sign(s * scrollDelta);
-						Promise.serial(
-							Array.from({ length: delta }, () => dir),
-							(s) => this.wheel({ s, bPaint, bForce, scrollDelta: 1 }),
-							delta !== this.items ? 30 : 0
-						);
+						if (this.offset - dir * delta > 0 && this.offset - dir * delta < this.items - this.rows) {
+							Promise.serial(
+								Array.from({ length: delta }, () => dir),
+								(s) => this.wheel({ s, bPaint, bForce, scrollDelta: 1 }),
+								30
+							);
+						} else {
+							Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: Math.ceil(delta / 5), bSmooth: false }))
+								.then(() => Promise.wait(30))
+								.then(() => this.wheel({ s: dir, bPaint, bForce, scrollDelta: Math.ceil(delta / 4), bSmooth: false }))
+								.then(() => Promise.wait(30))
+								.then(() => this.wheel({ s: dir, bPaint, bForce, scrollDelta: Math.ceil(delta / 3), bSmooth: false }))
+								.then(() => Promise.wait(30))
+								.then(() => this.wheel({ s: dir, bPaint, bForce, scrollDelta: delta - Math.ceil(delta / 3) - Math.ceil(delta / 4) + Math.ceil(delta / 5), bSmooth: false }));
+						}
 						return true;
 					}
 				}
@@ -1582,7 +1592,7 @@ function _list(x, y, w, h) {
 			case this.uiElements['Bottom toolbar'].enabled && bottomToolbar.curBtn !== null: key = 'buttons'; break;
 			case this.trace(this.mx, this.my): key = 'global'; break;
 		}
-		if (!key) { return key;}
+		if (!key) { return key; }
 		if (key === 'global') {
 			panel.fonts.size += Math.sign(s);
 			panel.fonts.size = Math.max(1, panel.fonts.size);

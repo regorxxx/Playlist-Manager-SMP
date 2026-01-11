@@ -71,10 +71,12 @@
 ### Added
 ### Changed
 - UI: all settings mentioning transparency have been changed to opacity, some properties will be lost on update as result.
+- UI: smooth scrolling improvements.
 ### Removed
 ### Fixed
 - UI: mouse cursor being shown as hand when over left/right buttons even if they were not shown while using statistics modes.
 - UI: button repainting glitch (also affecting tooltip) if mouse moved from a button to the scrollbar without leaving the panel is some cases.
+- UI: smooth scrolling fixes.
 
 ## [1.0.0-beta.7] - 2025-12-23
 ### Added
