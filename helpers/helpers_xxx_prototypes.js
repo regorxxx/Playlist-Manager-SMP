@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/25
+//11/01/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal */
 
@@ -484,10 +484,11 @@ if (!String.prototype.count) {
 }
 
 if (!String.prototype.cut) {
-	const cutRegex = {};
-	String.prototype.cut = function cut(c) { // NOSONAR
-		if (!cutRegex.hasOwnProperty(c)) { cutRegex[c] = new RegExp('^(.{' + c + '}).{2,}', 'g'); } // eslint-disable-line no-prototype-builtins
-		return this.replace(cutRegex[c], '$1\u2026'); // ...
+	const cutRegex = { multiLine: {}, singleLine: {} };
+	String.prototype.cut = function cut(c, bMultiLine) { // NOSONAR
+		if (!bMultiLine && !cutRegex.singleLine.hasOwnProperty(c)) { cutRegex.singleLine[c] = new RegExp('^([^]{' + c + '})[^]{2,}', 'g'); } // eslint-disable-line no-prototype-builtins
+		else if (bMultiLine && !cutRegex.multiLine.hasOwnProperty(c)) { cutRegex.multiLine[c] = new RegExp('^(.{' + c + '}).{2,}', 'gm'); } // eslint-disable-line no-prototype-builtins
+		return this.replace(bMultiLine ? cutRegex.multiLine[c] : cutRegex.singleLine[c], '$1\u2026'); // …
 	};
 }
 
@@ -612,10 +613,10 @@ function isArrayEqual(arrayA, arrayB) {
 if (!Array.prototype.rotate) {
 	// Cycles an array n times. Changes the original variable.
 	// Use this to change states on buttons on click. So every click changes to next state.
-	// arr = [0,1,2]; arr.rotate(1); -> [1,2,0]
+	// arr = [0,1,2]; arr.rotate(); -> [1,2,0]
 	Array.prototype.rotate = (function () { // NOSONAR
 		const unshift = Array.prototype.unshift, splice = Array.prototype.splice;
-		return function (count) {
+		return function (count = 1) {
 			const len = this.length >>> 0;
 			count = count >> 0;
 			unshift.apply(this, splice.call(this, count % len, len));

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/26
+//11/01/26
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -564,11 +564,11 @@ function doFilter(parent) {
 		case 'Extension': {
 			const initial = list.extStates[0];
 			const defaultState = list.constExtStates()[0];
-			list.extStates.rotate(1);
+			list.extStates.rotate();
 			// Filter non present extensions
 			if (list.extStates[0] !== defaultState) {
 				while (!list.dataAll.some((pls) => { return pls.extension === list.extStates[0] || list.extStates[0] === defaultState; })) {
-					list.extStates.rotate(1);
+					list.extStates.rotate();
 				}
 			}
 			// Only update UI when there is a change
@@ -579,19 +579,19 @@ function doFilter(parent) {
 			break;
 		}
 		case 'Lock state': {
-			list.lockStates.rotate(1);
+			list.lockStates.rotate();
 			list.update({ bReuseData: true, bNotPaint: true });
 			list.filter(); // Current filter states
 			break;
 		}
 		case 'MBID': {
-			list.mbidStates.rotate(1);
+			list.mbidStates.rotate();
 			list.update({ bReuseData: true, bNotPaint: true });
 			list.filter(); // Current filter states
 			break;
 		}
 		case 'Playlist type': {
-			list.autoPlaylistStates.rotate(1);
+			list.autoPlaylistStates.rotate();
 			list.update({ bReuseData: true, bNotPaint: true });
 			list.filter(); // Current filter states
 			break;
