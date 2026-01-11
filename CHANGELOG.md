@@ -72,6 +72,8 @@
 ### Changed
 - UI: all settings mentioning transparency have been changed to opacity, some properties will be lost on update as result.
 - UI: smooth scrolling improvements.
+- UI: performance improvements on tooltip processing for playlist elements.
+- UI: cut lines length on playlist tooltips if it exceeds 1024 chars in total, to comply with SMP limits. See [here](https://github.com/marc2k3/spider-monkey-panel-x64/commit/7f0defba4f2d64e7377db27ccd9a3f4c8213ab3d).
 ### Removed
 ### Fixed
 - UI: mouse cursor being shown as hand when over left/right buttons even if they were not shown while using statistics modes.

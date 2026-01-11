@@ -465,11 +465,11 @@ function _list(x, y, w, h) {
 				}
 			}
 			if (showMenus['Category'] && showTt.category) {
-				tooltipText += '\n' + 'Category: ' + (pls.category ? pls.category : '-');
+				tooltipText += '\n' + 'Category: ' + (pls.category ? pls.category.cut(50) : '-');
 			}
 			if (showMenus['Tags'] && showTt.tags) {
-				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ') : '-');
-				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => Object.keys(_)[0]).join(', ') : '-');
+				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ').cut(200) : '-');
+				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => Object.keys(_)[0]).join(', ').cut(100) : '-');
 			}
 		} else {
 			const total = pls.pls.lengthDeep;
@@ -493,8 +493,8 @@ function _list(x, y, w, h) {
 		}
 		// Text for AutoPlaylists
 		if (showTt.query && (pls.isAutoPlaylist || pls.query)) {
-			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
-			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
+			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query.cut(400) : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
+			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort.cut(100) + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
 			tooltipText += '\n' + 'Limit: ' + (pls.limit && Number.isFinite(pls.limit) ? pls.limit : '\u221E') + ' tracks';
 		}
 		const timeFormat = { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -620,6 +620,13 @@ function _list(x, y, w, h) {
 		if (this.bLibraryChanged && !this.bLiteMode && !pls.isAutoPlaylist && pls.extension !== '.fpl' && pls.extension !== '.ui') { warningText += '\nWarning: Library paths cache is outdated,\nloading playlists may be slower than intended...'; }
 		if (pls.extension === '.xsp' && pls.type !== 'songs') { warningText += '\nWarning: XSP playlist with non compatible type ' + _p(pls.type) + '.'; }
 		if (warningText.length) { tooltipText += '\n' + warningText; }
+		let len = 1024 - tooltipText.length; // Max SMP tooltip size
+		let i = 1;
+		while (len < 0) {
+			tooltipText = tooltipText.cut(400 - i * 40, true);
+			i++;
+			if (i >= 5) { break; }
+		}
 		return tooltipText;
 	};
 
@@ -1759,7 +1766,7 @@ function _list(x, y, w, h) {
 			this.cacheLastPosition(this.offset + Math.round(this.rows / 2 - 1));
 		}
 		this.index = -1;
-		this.mx = -1; this.my = -1;
+		this.mx = -1; this.my = -1; this.mmask = 0;
 		this.bMouseOver = false;
 		this.clearSelPlaylistCache();
 		this.up_btn.hover = false;
@@ -1776,9 +1783,11 @@ function _list(x, y, w, h) {
 	this.move = (x, y, mask, bDragDrop = false, bTooltipOverride = false) => {
 		this.bIsDragDrop = bDragDrop;
 		this.bMouseOver = x !== -1 && y !== -1;
+		const bChangedMask = this.mmask !== mask;
 		const bMoved = this.mx !== x || this.my !== y;
 		this.mx = x;
 		this.my = y;
+		this.mmask = mask;
 		let paintMode = 'all';
 		if (this.traceHeader(x, y)) { // Tooltip for header
 			let bButtonTrace = false;
@@ -1875,12 +1884,14 @@ function _list(x, y, w, h) {
 								} else {
 									this.dropUp = this.dropDown = this.dropIn = false;
 								}
-								const playlistDataText = this.plsTooltip(pls, mask);
-								if (this.tooltip.text !== playlistDataText) {
-									if (bMoved) { this.tooltip.Deactivate(); }
-									this.tooltip.SetValue(playlistDataText, true);
-								} else {
-									this.tooltip.SetValue(playlistDataText, true);
+								if (this.index !== this.lastIndex || bChangedMask) {
+									const playlistDataText = this.plsTooltip(pls, mask);
+									if (this.tooltip.text !== playlistDataText) {
+										if (bMoved) { this.tooltip.Deactivate(); }
+										this.tooltip.SetValue(playlistDataText, true);
+									} else {
+										this.tooltip.SetValue(playlistDataText, true);
+									}
 								}
 							}
 							break;
@@ -8068,6 +8079,7 @@ function _list(x, y, w, h) {
 	this.h = h;
 	this.mx = -1;
 	this.my = -1;
+	this.mmask = 0;
 	this.bMouseOver = false;
 	this.index = -1;
 	this.indexes = [];
