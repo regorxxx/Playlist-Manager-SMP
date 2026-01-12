@@ -15,7 +15,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable, dropMask:readable */
 include('helpers\\helpers_xxx_properties.js');
-/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, getPropertyByKey:readable */
+/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, deleteProperties:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
@@ -385,8 +385,18 @@ let properties = {
 	}), { func: isJSON }],
 };
 Object.keys(properties).forEach(p => properties[p].push(properties[p][1]));
-setProperties(properties, 'plm_');
-properties = getPropertiesPairs(properties, 'plm_');
+{ 	// Change internals for next releases
+	if (getPropertiesValues(properties, 'plm_').filter(Boolean).length === 0) {
+		setProperties(properties, '', 0);
+		properties = getPropertiesPairs(properties, '', 0);
+	} else {
+		setProperties(properties, 'plm_');
+		properties = getPropertiesPairs(properties, 'plm_');
+		deleteProperties(properties);
+		for (let key in properties) { properties[key][0] = properties[key][0].replace(/plm_\d\d\./, ''); }
+		overwriteProperties(properties);
+	}
+}
 {	// Check if is a setup or normal init
 	const infoPopups = JSON.parse(properties.infoPopups[1]);
 	if (infoPopups.firstInit && properties.bSetup[1]) { properties.bSetup[1] = false; overwriteProperties(properties); } // Don't apply on already existing installations

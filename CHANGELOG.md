@@ -70,6 +70,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Settings: internal changes at properties for future releases. This update MUST be installed before any possible future release to ensure settings are not lost on upgrading.
 - UI: all settings mentioning transparency have been changed to opacity, some properties will be lost on update as result.
 - UI: smooth scrolling improvements.
 - UI: performance improvements on tooltip processing for playlist elements.
