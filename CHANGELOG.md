@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.8](#100-beta8---2026-01-12)
 - [1.0.0-beta.7](#100-beta7---2025-12-23)
 - [1.0.0-beta.6](#100-beta6---2025-12-12)
 - [1.0.0-beta.5](#100-beta5---2025-11-25)
@@ -68,6 +69,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.8] - 2026-01-12
 ### Added
 ### Changed
 - Settings: internal changes at properties for future releases. This update MUST be installed before any possible future release to ensure settings are not lost on upgrading.
@@ -1552,7 +1559,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.7...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.8...HEAD
+[1.0.0-beta.8]: ../../compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: ../../compare/v1.0.0-beta.6...v1.0.0-beta.7
 [1.0.0-beta.6]: ../../compare/v1.0.0-beta.5...v1.0.0-beta.6
 [1.0.0-beta.5]: ../../compare/v1.0.0-beta.4...v1.0.0-beta.5
